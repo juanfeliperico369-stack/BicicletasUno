@@ -1,0 +1,331 @@
+/* =====================================================================
+   INTERFAZ (revista) + BUCLE DEL JUEGO
+   ===================================================================== */
+JE.URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
+const STARS_UNLOCK_INFO = 'Gana estrellas en los turnos para ascender en el escalafón.';
+const TIPS = [
+  'EnCicla nació en 2011 y lo gestiona el Área Metropolitana del Valle de Aburrá.',
+  'El préstamo es gratis: te registras y prestas la bici en cualquier estación.',
+  'Máximo 1 hora por préstamo: devuelve a tiempo y evita sanciones.',
+  'Horario de referencia: L-V 5:30 a.m.–10 p.m., sáb. 6:30 a.m.–9 p.m., dom. 8 a.m.–4 p.m.',
+  'Entre 2024 y mediados de 2026 se registraron más de 3 millones de préstamos.',
+  'Más de 130 estaciones habilitadas en el área metropolitana (2026).',
+  'Usa casco, respeta los semáforos y prefiere la ciclorruta.',
+  'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).'
+];
+
+const UI = JE.ui = {
+  cur: 'sCover', tab: 'ruta',
+  init() {
+    $('#ver').textContent = 'v' + JE.version;
+    $('#bPlay').onclick = () => { this.go('sHome'); };
+    $('#bReto').onclick = () => this.reto();
+    $('#bHow').onclick = () => this.howto();
+    $('#bShare').onclick = () => this.share('🚲 Juega EnCicla: el videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. ¡Pruébalo!');
+    $('#bHomeCover').onclick = () => this.go('sCover');
+    $$('#tabs button').forEach(b => b.onclick = () => { Snd.sfx('tap'); this.setTab(b.dataset.tab); });
+    $('#bPause').onclick = () => Game.pause();
+    $('#fileIn').onchange = e => this.importFile(e);
+    document.addEventListener('pointerdown', () => { Snd.init(); Snd.resume(); if (this.cur !== 'sGame') Snd.music(true); }, { passive: true });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { Snd.music(false); if (Game.mode && !Game.paused) Game.pause(); } });
+    this.coverLoop();
+  },
+  go(id) {
+    $$('.scr').forEach(s => s.classList.toggle('on', s.id === id)); this.cur = id;
+    if (id === 'sHome') this.renderHome();
+    if (id === 'sCover') this.coverLoop();
+  },
+  coverLoop() {
+    const cv = $('#coverArt'), x = cv.getContext('2d'); x.imageSmoothingEnabled = false; let last = 0;
+    const f = t => { if (this.cur !== 'sCover') return; if (t - last > 50) { last = t; Art.cover(x, cv.width, cv.height, t / 1000); } requestAnimationFrame(f); };
+    requestAnimationFrame(f);
+  },
+  /* ---------- progreso ---------- */
+  stars(id) { return Save.data.stars[id] || [0, 0, 0]; },
+  totalStars() { let n = 0; for (const r of ROLES) n += this.stars(r.id).reduce((a, b) => a + b, 0); return n; },
+  level() { return 1 + Math.floor(Math.sqrt(Save.data.xp / 120)); },
+  unlocked(r) { return this.totalStars() >= r.unlock || JE.debugUnlock; },
+  turnoOk(r, t) { return this.unlocked(r) && (t === 1 || this.stars(r.id)[t - 2] > 0 || JE.debugUnlock); },
+  setTab(t) { this.tab = t; $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $$('.tab').forEach(d => d.classList.toggle('on', d.id === 'tab-' + t)); this.renderTab(); },
+  renderHome() { $('#hLvl').textContent = this.level(); $('#hStars').textContent = this.totalStars(); this.renderTab(); },
+  renderTab() { ({ ruta: () => this.renderRuta(), album: () => this.renderAlbum(), parts: () => this.renderParts(), mas: () => this.renderMas() })[this.tab](); },
+  starStr(n, of = 3) { return '★'.repeat(n) + '<i>' + '★'.repeat(of - n) + '</i>'; },
+  renderRuta() {
+    const S = Save.data, tot = this.totalStars();
+    let h = `<div class="pag">PAG 1 · ${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de 81</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
+    h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: 9 oficios · 3 turnos cada uno</div>`;
+    if (S.perks.length) h += `<div class="pag">Mejoras activas (se pierden si fallas un turno)</div><div class="perks">${S.perks.map(p => `<span class="chip"><img class="px" width="20" height="20" src="${Art.iconURL(PERKS[p].icon, 2)}" alt="">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
+    if (!S.settings.seen.profile) h += `<div class="paper" style="margin:0 0 16px"><div class="t">Crea tu ciclista</div><p style="margin:6px 0 10px">Elige tu nombre y colores antes de empezar.</p><button class="btn sm" data-act="avatar">Personalizar</button></div>`;
+    for (const r of ROLES) {
+      const ok = this.unlocked(r), st = this.stars(r.id);
+      h += `<div class="role ${ok ? '' : 'lock'}"><span class="num">${r.n}</span><div><div class="tier">${esc(r.tier)}</div><h3><img class="px" src="${Art.iconURL(r.icon)}" alt="">${esc(r.name)}</h3><div class="vista">${esc(r.vista)}</div></div>`;
+      h += `<div class="d">${esc(r.desc)}</div>`;
+      if (!ok) h += `<div class="lockmsg">🔒 Se desbloquea con ${r.unlock} ★ (tienes ${tot})</div>`;
+      else {
+        h += `<div class="turnos">`;
+        for (let t = 1; t <= 3; t++) h += `<button data-role="${r.id}" data-t="${t}" ${this.turnoOk(r, t) ? '' : 'disabled'}>Turno ${t}<small>${'★'.repeat(st[t - 1])}${'☆'.repeat(3 - st[t - 1])}</small></button>`;
+        h += `<button class="free" data-role="${r.id}" data-free="1">Libre<small>práctica</small></button></div>`;
+      }
+      h += `</div>`;
+    }
+    h += `<div class="squig"></div><p class="m">${STARS_UNLOCK_INFO} Cada turno tiene 3 metas: la primera es obligatoria. Al aprobar eliges una mejora (estilo roguelite): si fallas, la pierdes.</p>`;
+    const el = $('#tab-ruta'); el.innerHTML = h;
+    $$('button[data-role]', el).forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(b.dataset.role, +b.dataset.t || 1, { free: !!b.dataset.free }); });
+    const av = $('[data-act=avatar]', el); if (av) av.onclick = () => this.avatar();
+  },
+  renderAlbum() {
+    const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot');
+    let h = `<div class="pag">PAG 2 · Postales del valle</div><div class="sect"><span class="outline">${got.length}</span><h2 class="mega">Álbum<br><span style="color:var(--vd)">de postales</span></h2></div><p class="m">Visita los lugares del Valle de Aburrá en modo Usuario para coleccionarlos. Tienes ${got.length} de ${list.length}.</p><div class="album">`;
+    list.forEach((L, i) => { const have = got.includes(L.id); h += `<div class="post ${have ? '' : 'lock'}" style="--r:${(h2(i, 3) - .5) * 3}deg"><canvas width="120" height="90" data-lm="${LANDMARKS.indexOf(L)}"></canvas><b>${have ? esc(L.name) : '???'}</b><small>${have ? esc(L.fact) : esc(L.muni) + ' · aún sin visitar'}</small></div>`; });
+    h += `</div>`;
+    const el = $('#tab-album'); el.innerHTML = h;
+    $$('canvas[data-lm]', el).forEach(c => this.drawPost(c, +c.dataset.lm));
+  },
+  drawPost(c, i) {
+    const x = c.getContext('2d'), L = LANDMARKS[i], src = JE.map.landmarkCanvas(i); x.imageSmoothingEnabled = false;
+    x.fillStyle = '#5d9c4b'; x.fillRect(0, 0, c.width, c.height);
+    const k = Math.min((c.width - 8) / src.width, (c.height - 8) / src.height); const w = src.width * k, h = src.height * k;
+    x.drawImage(src, (c.width - w) / 2, (c.height - h) / 2, w, h);
+  },
+  renderParts() {
+    const S = Save.data, st = S.stats;
+    let h = `<div class="pag">PAG 3 · Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
+    h += `<div class="stat"><div><b>${fmtInt(st.plays)}</b><span>turnos jugados</span></div><div><b>${fmtInt(S.xp)}</b><span>experiencia</span></div><div><b>${fmtInt(st.trips)}</b><span>viajes en bici</span></div><div><b>${fmtInt(st.leaves)}</b><span>hojas verdes</span></div><div><b>${S.bestStreak}</b><span>mejor racha</span></div><div><b>${S.postales.length}</b><span>postales</span></div></div>`;
+    h += `<div class="row" style="margin:12px 0"><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
+    if (!S.history.length) h += `<p class="m">Aún no has jugado. ¡Empieza por el Usuario!</p>`;
+    else { h += `<table class="hist">`; for (const e of S.history.slice(0, 60)) { const d = new Date(e.d); h += `<tr><td>${d.toLocaleDateString('es-CO')} ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(ROLE[e.m] ? ROLE[e.m].name : e.m)} ${e.free ? 'libre' : 'T' + e.t}${e.reto ? ' · reto' : ''}</td><td>${fmtInt(e.s)} pts</td><td style="color:var(--amb)">${'★'.repeat(e.st)}</td></tr>`; } h += `</table>`; }
+    const el = $('#tab-parts'); el.innerHTML = h;
+    $('#bExp').onclick = () => this.exportSave(); $('#bImp').onclick = () => $('#fileIn').click();
+    $('#bDel').onclick = () => this.confirm('¿Borrar todas tus partidas y progreso?', () => { Save.reset(); this.renderHome(); this.toast('Progreso borrado'); });
+  },
+  renderMas() {
+    const S = Save.data.settings;
+    let h = `<div class="pag">PAG 4 · Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
+    h += `<div class="opt"><span>Efectos de sonido</span><button class="sw ${S.sfx ? 'on' : ''}" data-sw="sfx" aria-label="Sonido"></button></div>`;
+    h += `<div class="opt"><span>Música</span><button class="sw ${S.music ? 'on' : ''}" data-sw="music" aria-label="Música"></button></div>`;
+    h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
+    h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
+    h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
+    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn" data-act="avatar">Mi ciclista</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
+    h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
+    const el = $('#tab-mas'); el.innerHTML = h;
+    $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !S[k]; Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); Snd.sfx('tap'); });
+    $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
+    $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ avatar: () => this.avatar(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+  },
+  /* ---------- briefing ---------- */
+  brief(roleId, turno, o = {}) {
+    const r = ROLE[roleId], seed = o.seed != null ? o.seed : ((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
+    const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : rng.pick(NOVEDADES));
+    const tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free });
+    const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
+    let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : 'TURNO ' + turno}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
+    h += `<div class="boxh">Sesión ${r.n}: ${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
+    h += `<div class="howto">${r.how.map((t, i) => `<div><b>${i + 1}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
+    if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas del turno</div><ul class="goals">${goals}</ul>`;
+    h += `<div class="paper" style="margin:14px 0"><div class="t">Novedad del día: ${esc(nov.name)}</div><p style="margin:6px 0 0">${esc(nov.desc)}</p></div>`;
+    if (!o.free && Save.data.perks.length) h += `<div class="perks">${Save.data.perks.map(p => `<span class="chip">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
+    h += `<div class="row" style="margin-top:16px"><button class="btn pri" id="bGo" style="flex:1">▶ Empezar ${o.free ? 'práctica' : 'turno'}</button></div>`;
+    h += `<p class="m" style="margin-top:14px">💡 ${esc(TIPS[(seed >>> 3) % TIPS.length])}</p>`;
+    $('#briefBody').innerHTML = h; this.go('sBrief');
+    $('#bBack').onclick = () => this.go(o.reto ? 'sCover' : 'sHome');
+    $('#bGo').onclick = () => { Snd.init(); Snd.resume(); Game.start(roleId, turno, Object.assign({}, o, { seed, nov })); };
+  },
+  /* ---------- resultados ---------- */
+  result(res, meta, prog) {
+    const r = ROLE[meta.roleId], S = Save.data;
+    const msg = res.pass ? (res.stars === 3 ? '¡Turno perfecto! Eres un orgullo paisa.' : '¡Turno aprobado! Puedes mejorar las estrellas.') : '¡Casi! La meta obligatoria no se cumplió. Inténtalo otra vez.';
+    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : 'TURNO ' + meta.turno} · ${esc(meta.nov.name)}</div>`;
+    h += `<div class="sect"><span class="outline">${r.n}</span><h2 class="mega">${esc(r.name)}</h2></div>`;
+    if (!meta.free) h += `<div class="stars">${this.starStr(res.stars)}</div>`;
+    h += `<div class="kick" style="margin:6px 0">${msg}</div>`;
+    h += `<div class="stat"><div><b>${fmtInt(res.score)}</b><span>puntos</span></div><div><b>+${prog.xp}</b><span>experiencia</span></div><div><b>${S.streak}</b><span>racha</span></div><div><b>${Math.round(meta.dur)} s</b><span>duración</span></div></div>`;
+    if (prog.best) h += `<div class="chip" style="margin:4px 0 8px">¡Nuevo récord en este turno!</div>`;
+    h += `<ul class="goals">${res.goals.map(g => `<li class="${g.ok ? 'ok' : 'no'} ${g.main ? 'main' : ''}"><b>${g.ok ? '✓' : '✗'}</b><span>${esc(g.txt)}</span></li>`).join('')}</ul>`;
+    if (prog.unlocks.length) h += `<div class="paper" style="margin:10px 0"><div class="t">¡Ascenso!</div><p style="margin:6px 0 0">Desbloqueaste: ${prog.unlocks.map(esc).join(', ')}</p></div>`;
+    if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
+    if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
+    const nextOk = !meta.free && !meta.reto && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
+    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:14px">`;
+    if (nextOk) h += `<button class="btn pri" id="bNext">▶ Siguiente turno</button>`;
+    h += `<button class="btn ${nextOk ? '' : 'pri'}" id="bAgain">↻ Repetir</button>`;
+    if (meta.reto) h += `<button class="btn amb" id="bShareR">Compartir mi reto</button>`;
+    h += `<button class="btn gh" id="bEsc">Escalafón</button></div>`;
+    $('#resBody').innerHTML = h; this.go('sResult'); $('#sResult .scroll').scrollTop = 0;
+    $$('[data-perk]').forEach(b => b.onclick = () => { $$('[data-perk]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); const P = S.perks; if (!P.includes(b.dataset.perk)) { P.push(b.dataset.perk); if (P.length > 3) P.shift(); } Save.save(); Snd.sfx('star'); this.toast('Mejora: ' + PERKS[b.dataset.perk].name); });
+    if (nextOk) $('#bNext').onclick = () => this.brief(meta.roleId, meta.turno + 1);
+    $('#bAgain').onclick = () => this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined });
+    $('#bEsc').onclick = () => this.go('sHome');
+    if (meta.reto) $('#bShareR').onclick = () => this.share(`🚲 Juega EnCicla · Reto del día: hice ${fmtInt(res.score)} puntos como ${r.name} (${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}). Código: ${this.code(meta)} ¿Me superas?`);
+    Snd.sfx(res.pass ? 'win' : 'lose');
+  },
+  /* ---------- reto / código ---------- */
+  code(meta) { return ROLE[meta.roleId].n + '-' + meta.turno + '-' + (meta.seed >>> 0).toString(36).toUpperCase(); },
+  parseCode(c) { const m = String(c).trim().toUpperCase().match(/^(\d)-(\d)-([0-9A-Z]+)$/); if (!m) return null; const r = ROLES[+m[1] - 1], t = +m[2]; if (!r || t < 1 || t > 3) return null; return { roleId: r.id, turno: t, seed: parseInt(m[3], 36) >>> 0 }; },
+  reto() {
+    const seed = todaySeed(), av = ROLES.filter(r => this.unlocked(r)), r = av[seed % av.length], t = Math.min(2, this.turnoOk(r, 2) ? 2 : 1);
+    const rng = new RNG(seed); this.brief(r.id, t, { reto: true, seed, nov: rng.pick(NOVEDADES) });
+  },
+  multi() {
+    this.modal(`<h2>Jugar con amigos</h2><p class="m"><b>Reto con código (ya disponible, sin internet):</b> todos juegan el mismo día con las mismas condiciones y comparan puntos. Pide el código a tu amigo o comparte el tuyo al terminar un reto.</p>
+    <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn pri" id="bCode">Jugar ese código</button></div>
+    <div class="squig"></div><p class="m"><b>Próximamente:</b> sala local por Wi-Fi (un celular crea la sala y los demás se unen con un código QR), modo competitivo y servidores en línea.</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
+      $('#bCode').onclick = () => { const p = this.parseCode($('#codeIn').value); if (!p) return this.toast('Código no válido'); if (!this.unlocked(ROLE[p.roleId])) return this.toast('Aún no tienes ese oficio'); this.closeModal(); this.brief(p.roleId, p.turno, { reto: true, seed: p.seed, nov: new RNG(p.seed).pick(NOVEDADES) }); };
+    });
+  },
+  /* ---------- modales ---------- */
+  modal(html, bind) { $('#mBody').innerHTML = html; $('#modal').hidden = false; const c = $('#mClose'); if (c) c.onclick = () => this.closeModal(); if (bind) bind(); },
+  closeModal() { $('#modal').hidden = true; },
+  confirm(q, yes) { this.modal(`<h2>¿Seguro?</h2><p class="m">${esc(q)}</p><div class="col"><button class="btn amb" id="mYes">Sí</button><button class="btn gh" id="mClose">No</button></div>`, () => { $('#mYes').onclick = () => { this.closeModal(); yes(); }; }); },
+  howto() {
+    this.modal(`<h2>Cómo jugar</h2><div class="howto">
+    <div><b>1</b><span><b>Pedalear:</b> arrastra el dedo en cualquier parte de la pantalla hacia donde quieres ir (o usa flechas/WASD). La línea punteada te guía.</span></div>
+    <div><b>2</b><span><b>Ciclorrutas verdes:</b> son más rápidas y seguras. Evita los carros: ¡usa el timbre!</span></div>
+    <div><b>3</b><span><b>Minimapa:</b> tócalo para ver la vista general del valle.</span></div>
+    <div><b>4</b><span><b>Turnos:</b> cada oficio tiene 3 turnos con 3 metas. La primera es obligatoria. Gana estrellas para ascender.</span></div>
+    <div><b>5</b><span><b>Mejoras:</b> al aprobar eliges una; si fallas un turno, las pierdes (roguelite).</span></div>
+    <div><b>6</b><span><b>Ritmo tranquilo</b> en Más: más tiempo para niños y abuelos.</span></div></div><div class="col"><button class="btn pri" id="mClose">¡Listo!</button></div>`);
+  },
+  credits() {
+    this.modal(`<h2>Créditos</h2><p class="m">Juega EnCicla v${JE.version} · demo presentada a EnCicla por Juan Felipe Rico. Diseño evolucionado de la revista EMSAY y Doc Element.</p>
+    <p class="m">Juego de demostración NO oficial. EnCicla es el sistema de bicicletas públicas del Área Metropolitana del Valle de Aburrá. Mapa estilizado y datos aproximados con fines didácticos; consulta la información oficial de EnCicla.</p>
+    <p class="m">Tipografías: TeX Gyre Heros Condensed (GUST) e Inter (OFL). Gráficos, música y sonidos generados por código.</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`);
+  },
+  avatar() {
+    const P = Save.data.profile;
+    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => `<button data-k="${key}" data-i="${i}" class="${P[key] === i ? 'on' : ''}" style="background:${c}" aria-label="${key} ${i + 1}"></button>`).join('')}</div>`;
+    this.modal(`<h2>Mi ciclista</h2><canvas id="avPrev" width="80" height="50"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
+      <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}<div class="col"><button class="btn pri" id="avOk">Guardar</button></div>`, () => {
+      const draw = () => { const c = $('#avPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); };
+      draw(); $$('.swatches button').forEach(b => b.onclick = () => { P[b.dataset.k] = +b.dataset.i; $$(`.swatches button[data-k=${b.dataset.k}]`).forEach(x => x.classList.toggle('on', x === b)); draw(); Snd.sfx('tap'); });
+      $('#avOk').onclick = () => { P.name = ($('#avName').value || 'Ciclista').trim().slice(0, 16) || 'Ciclista'; Save.data.settings.seen.profile = 1; Save.save(); this.closeModal(); this.renderHome(); Snd.sfx('ok'); };
+    });
+  },
+  diag() {
+    this.modal(`<h2>Bot de pruebas</h2><p class="m">Juega partidas automáticas de los 9 oficios a alta velocidad y revisa errores, números imposibles y bicis perdidas. No cambia tu progreso.</p><div class="col"><button class="btn pri" id="dRun">Probar 27 partidas</button></div><pre class="rep" id="dOut">Listo para probar.</pre><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
+      $('#dRun').onclick = async () => { $('#dRun').disabled = true; const out = $('#dOut'); out.textContent = 'Probando…'; const rep = await JE.bot.run({ n: 27, onProgress: (i, n) => out.textContent = 'Partida ' + i + ' de ' + n + '…' }); out.textContent = JE.bot.format(rep); $('#dRun').disabled = false; };
+    });
+  },
+  /* ---------- exportar / importar / compartir ---------- */
+  exportSave() {
+    const txt = Save.exportText(), d = new Date(), name = 'juega-encicla-partidas-' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.json';
+    const blob = new Blob([txt], { type: 'application/json' });
+    try {
+      const file = new File([blob], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] }) && /Android|iPhone|iPad/i.test(navigator.userAgent)) { navigator.share({ files: [file], title: 'Partidas de Juega EnCicla' }).catch(() => this.download(blob, name)); return; }
+    } catch (e) { }
+    this.download(blob, name);
+  },
+  download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); this.toast('Partidas exportadas: ' + name); },
+  importFile(e) {
+    const f = e.target.files && e.target.files[0]; if (!f) return; const rd = new FileReader();
+    rd.onload = () => { try { Save.importText(rd.result); this.toast('Partidas importadas ✓'); this.renderHome(); } catch (err) { this.toast('No se pudo importar: ' + err.message); } e.target.value = ''; };
+    rd.readAsText(f);
+  },
+  share(text) {
+    const url = /^https?:/.test(location.protocol) && !/localhost|127\.0/.test(location.host) ? location.href.split('#')[0].split('?')[0] : JE.URL;
+    if (navigator.share) navigator.share({ title: 'Juega EnCicla', text, url }).catch(() => { });
+    else window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank');
+  },
+  toast(t) { const el = $('#toast'); if (!el) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
+  postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }
+};
+
+/* ---------------- bucle de juego ---------------- */
+const Game = JE.game = {
+  mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
+  start(roleId, turno, o) {
+    const role = ROLE[roleId];
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto });
+    this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, seed: o.seed, nov: o.nov, dur: 0 };
+    UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
+    $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : ' · T' + turno); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
+    this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
+    this.raf = requestAnimationFrame(t => this.loop(t));
+  },
+  applyView() { const a = this.mode.sub || this.mode, v = a.view || { kind: 'map' }, k = v.kind + v.dw + v.dh; if (this._vk !== k) { this._vk = k; View.setMode(v.kind, v.dw, v.dh); } },
+  loop(t) {
+    if (!this.mode) return;
+    const dt = Math.min(.05, Math.max(0, (t - this.last) / 1000)); this.last = t;
+    try {
+      if (!this.paused) this.mode.update(dt);
+      this.draw(); this.dom(dt);
+    } catch (e) { JE.errors.push('loop: ' + e.message); console.error(e); }
+    if (this.mode.done) return this.finish();
+    this.raf = requestAnimationFrame(t2 => this.loop(t2));
+  },
+  draw() {
+    this.applyView(); const a = this.mode.sub || this.mode, V = View;
+    a.render(V); V.present(); V.ctx.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
+    if (this.mode.sub && this.mode.ride) { a.hud(V); } else this.mode.hud(V);
+  },
+  dom(dt) {
+    const M = this.mode, inf = M.info(), a = M.sub || M;
+    const key = inf.clock + '|' + inf.score + '|' + inf.chips.map(c => c.t + c.c).join(',');
+    if (key !== this.hudKey) { this.hudKey = key; $('#hudClock').textContent = '⏱ ' + inf.clock; $('#hudScore').textContent = '★ ' + fmtInt(inf.score); $('#hudChips').innerHTML = inf.chips.map(c => `<span class="chip ${c.c || ''}">${esc(c.t)}</span>`).join(''); }
+    const co = $('#coach'), ct = a.coach || '';
+    if (co.textContent !== ct) { co.textContent = ct; this.coachT = 0; co.style.opacity = 1; }
+    this.coachT = (this.coachT || 0) + dt; if (M.ride && !M.sub && this.coachT > 8) co.style.opacity = 0;
+    const cb = 'calc(var(--sab) + ' + (a.coachB || 12) + 'px)'; if (co.style.bottom !== cb) co.style.bottom = cb;
+    const gm = $('#goalsMini'), hide = a.hideGoals ? 'none' : ''; if (gm.style.display !== hide) gm.style.display = hide;
+    this.goalT -= dt; if (this.goalT <= 0) { this.goalT = .4; $('#goalsMini').innerHTML = M.free && M.id === 'usuario' ? '' : M.goals.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join(''); }
+    const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
+    if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn" data-i="${i}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
+  },
+  pause() {
+    if (!this.mode) return; this.paused = true; Snd.music(false); const map = !!this.mode.ride;
+    UI.modal(`<h2>Pausa</h2><p class="m">${esc(ROLE[this.mode.id].name)} · ${this.meta.free ? 'práctica' : 'turno ' + this.meta.turno} · ${esc(this.mode.nov.name)}</p><div class="col"><button class="btn pri" id="pGo">▶ Continuar</button>${map ? '<button class="btn" id="pMap">Vista general</button>' : ''}<button class="btn" id="pRe">↻ Reiniciar</button><button class="btn" id="pSnd">Sonido: ${Save.data.settings.sfx ? 'sí' : 'no'}</button><button class="btn gh" id="pEnd">${this.meta.free ? 'Terminar práctica' : 'Salir del turno'}</button></div>`, () => {
+      $('#pGo').onclick = () => this.resume();
+      if (map) $('#pMap').onclick = () => { this.mode.ride.big = true; this.resume(); };
+      $('#pRe').onclick = () => { UI.closeModal(); const m = this.meta; this.stop(); Game.start(m.roleId, m.turno, { free: m.free, reto: m.reto, seed: m.reto ? m.seed : ((Date.now() ^ 0x9e3779b9) >>> 0), nov: m.nov }); };
+      $('#pSnd').onclick = () => { const S = Save.data.settings; S.sfx = S.music = !S.sfx; Save.save(); $('#pSnd').textContent = 'Sonido: ' + (S.sfx ? 'sí' : 'no'); };
+      $('#pEnd').onclick = () => { UI.closeModal(); if (this.meta.free) { this.paused = false; this.mode.end(); this.finish(); } else { this.stop(); UI.go('sHome'); } };
+    });
+  },
+  resume() { UI.closeModal(); this.paused = false; this.last = performance.now(); Snd.music(true); },
+  stop() { cancelAnimationFrame(this.raf); this.mode = null; Input.joy.on = false; },
+  finish() {
+    cancelAnimationFrame(this.raf); const M = this.mode, meta = this.meta; meta.dur = M.t; this.mode = null; Input.joy.on = false;
+    const res = M.result(), prog = Progress.apply(res, meta, M);
+    UI.result(res, meta, prog);
+  },
+  key(e) { if (!this.mode) return; if (e.code === 'Escape' || e.code === 'KeyP') { this.paused ? this.resume() : this.pause(); return; } const a = this.mode.sub || this.mode; if (a.key) a.key(e); }
+};
+
+const Progress = JE.progress = {
+  apply(res, meta, M) {
+    const S = Save.data, out = { xp: 0, unlocks: [], perkOpts: null, lost: false, best: false };
+    const before = ROLES.filter(r => UI.unlocked(r)).map(r => r.id);
+    out.xp = Math.round(res.score / 10) + res.stars * 20 + (meta.reto ? 15 : 0); if (meta.free) out.xp = Math.round(out.xp / 3);
+    S.xp += out.xp; S.stats.plays++;
+    if (!meta.free) {
+      const st = S.stars[meta.roleId] || [0, 0, 0]; if (res.stars > st[meta.turno - 1]) st[meta.turno - 1] = res.stars; S.stars[meta.roleId] = st;
+      const k = meta.roleId + meta.turno; if (res.score > (S.best[k] || 0)) { out.best = !!S.best[k]; S.best[k] = res.score; }
+      if (res.pass) {
+        S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak);
+        const pool = Object.keys(PERKS).filter(p => !S.perks.includes(p)), rng = new RNG((Date.now() ^ meta.seed) >>> 0);
+        out.perkOpts = rng.shuffle(pool).slice(0, 3);
+      } else { S.streak = 0; if (S.perks.length) { S.perks = []; out.lost = true; } }
+    }
+    S.stats.km += Math.round((M.ride ? M.ride.stats.dist * M_PER_PX : 0)) / 1000;
+    Save.addHistory({ d: Date.now(), m: meta.roleId, t: meta.turno, s: res.score, st: res.stars, p: res.pass, free: meta.free, reto: meta.reto, nov: meta.nov.id, dur: Math.round(meta.dur), seed: meta.seed });
+    out.unlocks = ROLES.filter(r => UI.unlocked(r) && !before.includes(r.id)).map(r => r.name);
+    Save.save(); return out;
+  }
+};
+
+/* ---------------- entrada sobre el lienzo ---------------- */
+function bindCanvas() {
+  const cv = $('#cv'), pos = e => { const r = cv.getBoundingClientRect(); return { cx: e.clientX - r.left, cy: e.clientY - r.top }; };
+  cv.addEventListener('pointerdown', e => {
+    e.preventDefault(); Snd.init(); Snd.resume(); const M = Game.mode; if (!M || Game.paused) return;
+    const { cx, cy } = pos(e), v = View.toV(cx, cy), a = M.sub || M;
+    const used = a.pointer('down', v.x, v.y, cx, cy);
+    if (!used && !M.sub && M.ride && M.view.kind === 'map' && !Input.joy.on) { Input.joy = { on: true, id: e.pointerId, ox: cx, oy: cy, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { } }
+  });
+  cv.addEventListener('pointermove', e => { const j = Input.joy; if (j.on && e.pointerId === j.id) { const { cx, cy } = pos(e); j.x = cx; j.y = cy; } });
+  const up = e => { const j = Input.joy; if (j.on && e.pointerId === j.id) j.on = false; const M = Game.mode; if (M) { const a = M.sub || M, { cx, cy } = pos(e), v = View.toV(cx, cy); a.pointer('up', v.x, v.y, cx, cy); } };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+}

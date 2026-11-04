@@ -1,0 +1,22 @@
+{
+ "version": "0.1.0",
+ "hash": "5b9492d8",
+ "cache": "juega-encicla-v0.1.0-5b9492d8",
+ "files": [
+  "00-core.js",
+  "10-art.js",
+  "20-map.js",
+  "30-ride.js",
+  "40-mg.js",
+  "50-modes.js",
+  "60-ui.js",
+  "90-bot.js",
+  "95-promo.js",
+  "99-boot.js"
+ ],
+ "bytes": {
+  "single": 338028,
+  "web": 339035,
+  "js": 239335
+ }
+}
