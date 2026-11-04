@@ -36,6 +36,12 @@ const Art = JE.art = {
   map(rows, pal) { const h = rows.length, w = rows[0].length; return this.mk(w, h, x => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const col = pal[rows[j][i]]; if (col) { x.fillStyle = col; x.fillRect(i, j, 1, 1); } } }); },
 
   /* ---- vista cenital: ciclista mirando al norte (7x12) ---- */
+  hand() {
+    return this.cache.get('hand') || this.cache.set('hand', this.map([
+      '.....kk.........', '....kwwk........', '....kwwk........', '....kwwk........', '....kwwkkk.kk...', '....kwwkwwkwwk..', '.kk.kwwkwwkwwkk.',
+      'kwwkkwwwwwwwwwwk', 'kwwwkwwwwwwwwwwk', '.kwwwwwwwwwwwwwk', '..kwwwwwwwwwwwk.', '...kwwwwwwwwwwk.', '....kwwwwwwwwk..', '.....kwwwwwwwk..', '.....kkkkkkkkk..'
+    ], { k: '#0a2342', w: '#ffffff' })).get('hand');
+  },
   riderTop(shirt, helmet, skin) {
     const k = 'rt' + shirt + helmet + skin; let c = this.cache.get(k); if (c) return c;
     c = this.map([

@@ -30,6 +30,8 @@ src/js/20-map.js      mapa del Valle de Aburrá (150x260 baldosas de 8 px), esta
 src/js/30-ride.js     StationSim (demanda de préstamos) + Ride (bici/camión, tráfico, metro, GPS, minimapa) + drawOverview
 src/js/40-mg.js       minijuegos: MGAnfitrion, MGMecanico, MGBodega, MGApertura(cierre), MGCables, MGSimon, MGInspeccion
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
+src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
+src/js/70-net.js      Net: sala WebRTC sin servidor (código comprimido que se comparte por WhatsApp)
 src/js/60-ui.js       UI (portada, escalafón, briefing, resultados, álbum, partidas, ajustes), Game (bucle), Progress
 src/js/90-bot.js      bot de pruebas (JE.bot.run): juega partidas y valida invariantes
 src/js/95-promo.js    íconos de la app e imagen OG 1200x630
@@ -92,6 +94,21 @@ Las estaciones del metro son las reales (líneas A y B). Los municipios del jueg
 El mapa es **estilizado**: río de sur a norte, autopistas, ciclorrutas verdes, comunas de ladrillo en las laderas y 26 lugares con postal.
 El "Centro de Operaciones EnCicla" es ficticio.
 
+**Semáforos:** solo en los cruces de avenida con avenida (`map.lights`). Ciclo de 10 s: el este-oeste está 4,2 s en verde
+y 0,8 s en amarillo, y luego el norte-sur igual. Los carros paran; pasar en rojo resta 5 puntos y suma a `ride.stats.reds`
+(hay 0,7 s de tolerancia por inercia). Usuario T2 exige 0 en rojo. El bot espera el verde y solo cede a carros que van en su mismo sentido.
+
+**Racha de ciclorruta:** 4, 8 y 15 s seguidos en ciclorruta dan bonos (x2, x3, x4) y líneas de velocidad.
+**Sello de revista:** cada postal muestra un sello grande en pantalla (`ride.stamp`).
+**Mano guía:** cada modo o minijuego tiene `hint(V)`, que devuelve el punto (en px CSS) a tocar o la dirección a arrastrar.
+Sale mientras no hayas aprobado el turno 1 de ese oficio y se apaga en Más > Mano guía.
+Los botones con `{key}` guardan su centro en `this.rects`.
+
+**Multijugador (Carrera):** el anfitrión crea la oferta (`Net.host()`), el invitado responde (`Net.join(código)`) y el anfitrión la acepta (`Net.accept`).
+Los códigos son `JE1o…`/`JE1a…`, es decir, el SDP comprimido con deflate-raw y en base64url (unos 560 caracteres).
+Mensajes: `hi` (nombre y camiseta), `start` (semilla) y `p` (posición cada 0,1 s), además de `fin` y `bye`.
+En la misma Wi-Fi funciona sin internet. Entre redes distintas usa STUN de Google, pero las redes con NAT simétrico necesitarían un servidor TURN (pendiente).
+
 ## 5. Convenciones de código
 
 - La lógica está separada del dibujo. Cada modo o minijuego tiene `update(dt)`, `render(V)` (búfer pixelado), `hud(V)` (texto nítido),
@@ -110,6 +127,7 @@ El "Centro de Operaciones EnCicla" es ficticio.
 - 100 partidas del bot (los 9 oficios × 3 turnos × novedades × mejoras) sin excepciones, sin NaN, sin bicis perdidas y todas terminan.
 - Prueba de humo de la interfaz: portada, escalafón, briefing, juego, dedo, resultados, mejora, pestañas, modales, bot desde Ajustes y código de reto.
 - Rendimiento con CPU 4x lenta: mediana del cuadro < 40 ms.
+- Multijugador: dos páginas crean la sala, se conectan, arrancan la misma carrera y cada una ve al rival en tiempo real.
 
 ## 7. Publicación web (GitHub Pages)
 
@@ -130,7 +148,7 @@ El "Centro de Operaciones EnCicla" es ficticio.
 ## 9. Pendientes / ideas (feedback del usuario)
 
 - Pulir cada oficio con el conocimiento real del equipo EnCicla (procesos de anfitrión, relevos, balanceo, taller).
-- Multijugador por Wi-Fi/LAN: WebRTC con intercambio de oferta por código QR (sin servidor) y, más adelante, servidor externo.
+- Multijugador: ya hay carrera 1 contra 1 por código. Faltan salas de más de 2 jugadores, código QR, TURN y modos cooperativos (por ejemplo, Monitoreo con Balance).
 - Bluetooth: solo en la app nativa (plugin de Capacitor); los navegadores no permiten Bluetooth entre celulares.
 - Más lugares (Biblioteca España, Metrocable, Tranvía de Ayacucho), peatones y semáforos.
 - Página oficial con donaciones. Tiendas: Play Store primero; después iOS/Mac, Steam, Microsoft Store, Epic y Amazon (con Capacitor o Electron).

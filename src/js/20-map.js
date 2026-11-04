@@ -146,7 +146,7 @@ const CityMap = JE.map = {
     for (let y = 116; y <= 134; y++) { const c = rxi(y); for (let d = 6; d <= 10; d++) { const v = this.get(c + d, y); if (v !== TT.AVE && v !== TT.ROAD && v !== TT.BRIDGE) this.set(c + d, y, (d === 8 || y % 6 === 0) ? TT.PLAZA : TT.GRASS); } }
     // estaciones
     this.stations = STATIONS_DEF.map((s, i) => this.carveStation(s, i));
-    this.marks(); this.buildLanes(); this.buildMetro(); this.buildMini();
+    this.marks(); this.buildLights(); this.buildLanes(); this.buildMetro(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h - 1) * TS, name: dp.name };
   },
   paintLandmark(L, i) {
@@ -208,6 +208,20 @@ const CityMap = JE.map = {
       for (let x = bn.r; x < bn.r + bn.w; x++) { for (const y of [be.r - 1, be.r + be.w]) if (road(this.get(x, y))) M[this.idx(x, y)] = 8; }
     }
   },
+  /* semáforos en los cruces con avenida */
+  buildLights() {
+    this.lights = []; this.lightAt = new Int16Array(MW * MH).fill(-1);
+    const road = v => v === TT.ROAD || v === TT.AVE || v === TT.BRIDGE;
+    this.bandsEW.forEach((be, i) => this.bandsNS.forEach((bn, j) => {
+      if (be.w !== 3 || bn.w !== 3) return;
+      for (let y = be.r; y < be.r + be.w; y++) for (let x = bn.r; x < bn.r + bn.w; x++) if (!road(this.get(x, y))) return;
+      const id = this.lights.length;
+      this.lights.push({ id, x0: bn.r * TS, x1: (bn.r + bn.w) * TS, y0: be.r * TS, y1: (be.r + be.w) * TS, off: h2(i, j, 77) * 10 });
+      for (let y = be.r; y < be.r + be.w; y++) for (let x = bn.r; x < bn.r + bn.w; x++) this.lightAt[this.idx(x, y)] = id;
+    }));
+  },
+  /* ciclo de 10 s: [estado este-oeste, estado norte-sur]  g=verde a=amarillo r=rojo */
+  lightState(L, t) { const p = ((t + L.off) % 10 + 10) % 10; return p < 4.2 ? 'gr' : p < 5 ? 'ar' : p < 9.2 ? 'rg' : 'ra'; },
   buildLanes() {
     const L = this.lanes = [], drive = v => v === TT.ROAD || v === TT.AVE || v === TT.BRIDGE || v === TT.AUTO;
     const scan = (axis, fixed, dir, spd, name) => {
@@ -220,7 +234,15 @@ const CityMap = JE.map = {
     };
     for (const b of this.bandsEW) { scan('x', b.r, -1, b.w === 3 ? 34 : 26, AVE_EW[b.r]); scan('x', b.r + b.w - 1, 1, b.w === 3 ? 34 : 26, AVE_EW[b.r]); }
     for (const b of this.bandsNS) { scan('y', b.r, 1, b.w === 3 ? 34 : 26, AVE_NS[b.r]); scan('y', b.r + b.w - 1, -1, b.w === 3 ? 34 : 26, AVE_NS[b.r]); }
-    for (const [d, dir] of [[-5, 1], [-3, 1], [3, -1], [5, -1]]) L.push({ ax: 'r', d, a: 0, b: MH * TS, dir, spd: 46, name: d < 0 ? 'Avenida Regional' : 'Autopista Norte-Sur' });
+    for (const ln of L) {
+      ln.lights = [];
+      for (const g of this.lights) {
+        if (ln.ax === 'x' && ln.c >= g.y0 && ln.c < g.y1 && g.x1 > ln.a && g.x0 < ln.b) ln.lights.push({ p0: g.x0, p1: g.x1, g });
+        if (ln.ax === 'y' && ln.c >= g.x0 && ln.c < g.x1 && g.y1 > ln.a && g.y0 < ln.b) ln.lights.push({ p0: g.y0, p1: g.y1, g });
+      }
+      ln.lights.sort((a, b) => a.p0 - b.p0);
+    }
+    for (const [d, dir] of [[-5, 1], [-3, 1], [3, -1], [5, -1]]) L.push({ ax: 'r', d, a: 0, b: MH * TS, dir, spd: 46, lights: [], name: d < 0 ? 'Avenida Regional' : 'Autopista Norte-Sur' });
   },
   buildMetro() {
     this.metroA = METRO_A.map((n, i) => { const y = Math.round(8 + i * (244 / (METRO_A.length - 1))); return { name: n, py: y * TS + 4, px: (RX[y] + 9) * TS }; });

@@ -78,6 +78,15 @@ class MapMode extends Mode {
     this.tick(dt);
   }
   tick() { }
+  onRed() { this.score -= 5; }
+  onStreak(lv) { this.score += 5 * lv; }
+  /* mano guía: arrastrar hacia la ruta mientras no se haya movido */
+  hint(V) {
+    if (this.sub || !this.ride || this.ride.stats.dist > 60 || this.ride.big) return null;
+    const R = this.ride, g = R.gps[1] || R.gps[0] || R.target; if (!g) return null;
+    const dx = g.x - R.p.x, dy = g.y - R.p.y, l = Math.hypot(dx, dy) || 1;
+    return { x: V.w / 2 - dx / l * 30, y: V.h * .62 - dy / l * 30, dx: dx / l * 80, dy: dy / l * 80, drag: true, txt: 'Arrastra' };
+  }
   render(V) { this.ride.render(V, this.clock); }
   hud(V) { this.btns = []; this.ride.hud(V); this.hud2(V); }
   hud2() { }
@@ -97,8 +106,15 @@ class MapMode extends Mode {
     const P = this.ride.p, D = JE.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), P.veh === 'truck');
     let tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS);
     if (D[ty * MW + tx] >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + 4, n.y * TS + 4); return; }
-    let c = { x: tx, y: ty }; for (let i = 0; i < 2; i++) { const n = JE.map.nextStep(D, c.x, c.y); if (!n) break; c = n; }
+    let c = { x: tx, y: ty }; const h0 = this.botHist; const cur = JE.map.lightAt[ty * MW + tx];
+    for (let i = 0; i < 2; i++) {
+      const n = JE.map.nextStep(D, c.x, c.y); if (!n) break;
+      const li = JE.map.lightAt[n.y * MW + n.x];
+      if (li >= 0 && li !== cur && JE.map.lightAt[c.y * MW + c.x] !== li) { const ew = Math.abs(n.x - c.x) >= Math.abs(n.y - c.y), st = JE.map.lightState(JE.map.lights[li], this.t)[ew ? 0 : 1]; if (st !== 'g') { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
+      c = n;
+    }
     if (c.x === tx && c.y === ty) this.botDir = this.dirTo(T.x, T.y); else this.botDir = this.dirTo(c.x * TS + 4, c.y * TS + 4);
+    for (const car of this.ride.cars) { const dx = car.x - P.x, dy = car.y - P.y, al = dx * this.botDir.x + dy * this.botDir.y, lat = Math.abs(-dx * this.botDir.y + dy * this.botDir.x); if (al > 0 && al < (P.veh === 'truck' ? 24 : 16) && lat < 8 && Math.cos(car.ang) * this.botDir.x + Math.sin(car.ang) * this.botDir.y > .5) { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
     // si no avanza en 1 s, retrocede/gira al azar un momento
     const h = this.botHist || (this.botHist = { x: P.x, y: P.y, t: this.t, esc: 0 });
     if (h.esc > this.t) { this.botDir = h.dir; return; }
@@ -121,7 +137,7 @@ class ModeUsuario extends MapMode {
       this.goal(T === 1 ? 'Devuelve la bici a tiempo (≤ 60 min)' : 'Haz ' + T + ' viajes y devuelve a tiempo', true, () => this.okLegs >= T, () => this.okLegs + '/' + T);
       const cic = [0, 50, 55, 60][T]; this.goal('Rueda ≥ ' + cic + '% por ciclorruta', false, () => this.cicPct() >= cic, () => this.cicPct() + '%');
       if (T === 1) this.goal('Recoge 5 hojas verdes', false, () => this.leavesGot >= 5, () => this.leavesGot + '/5');
-      else if (T === 2) this.goal('Máximo 1 choque', false, () => this.ride.stats.crashes <= 1, () => this.ride.stats.crashes + ' choques');
+      else if (T === 2) this.goal('Respeta los semáforos (0 en rojo)', false, () => this.ride.stats.reds === 0, () => this.ride.stats.reds + ' en rojo');
       else this.goal('8 hojas y máximo 2 choques', false, () => this.leavesGot >= 8 && this.ride.stats.crashes <= 2, () => this.leavesGot + ' hojas');
     }
     this.coach = 'Arrastra el dedo en cualquier parte para pedalear. Sigue la línea punteada.';
@@ -152,7 +168,7 @@ class ModeUsuario extends MapMode {
     const m = this.ride.marker({ x: s.x, y: s.y, r: 18, col: PAL.vd, label: s.name, num: 2, enter: () => this.dock() });
     this.ride.target = m; this.toast('Ahora devuelve la bici en EnCicla ' + s.name);
   }
-  collect(L) { if (!Save.data.postales.includes(L.id)) { Save.data.postales.push(L.id); this.newPost++; this.score += 15; if (JE.ui) JE.ui.postal(L); } }
+  collect(L) { const nw = !Save.data.postales.includes(L.id); this.ride.stamp = { t: 1.8, title: nw ? '¡NUEVA POSTAL!' : '¡POSTAL!', sub: L.name }; if (nw) { Save.data.postales.push(L.id); this.newPost++; this.score += 15; } }
   dock() {
     if (this.phase !== 'return') return; const lm = this.loanMin(), late = lm > 60;
     if (late) { this.lateLegs++; this.score -= 20; Snd.sfx('lose'); this.toast('Devolviste tarde (' + lm + ' min): sanción'); }
@@ -391,7 +407,7 @@ class ModeMonitoreo extends Mode {
   best(s) { let b = null, bc = 1e9; for (const t of this.trucks) { const c = t.q.length * 900 + dist(t.x, t.y, s.x, s.y); if (c < bc) { bc = c; b = t; } } return b; }
   order(s, type) {
     const n = Math.max(2, Math.round(Math.abs(s.bikes - s.cap * .5))), t = this.best(s);
-    this.addJob(t, { type, s, n }); this.flags.set(s, type); Snd.sfx('truck'); this.say('🚚 Camión ' + t.id + ' → ' + (type === 'llevar' ? 'lleva ' : 'recoge ') + n + ' · ' + s.name);
+    this.addJob(t, { type, s, n }); this.flags.set(s, type); this.ordered = (this.ordered || 0) + 1; Snd.sfx('truck'); this.say('🚚 Camión ' + t.id + ' → ' + (type === 'llevar' ? 'lleva ' : 'recoge ') + n + ' · ' + s.name);
     this.sel = null;
   }
   home() { for (const t of this.trucks) this.addJob(t, { type: 'home' }); this.say('🏠 Todos los camiones regresan a la bodega'); Snd.sfx('tap'); }
@@ -441,8 +457,8 @@ class ModeMonitoreo extends Mode {
       V.text(s.name + ' · ' + s.muni, x + 12, yy + 24, { size: 17, color: PAL.az });
       V.text(s.bikes + ' de ' + s.cap + ' bicis' + (s.broken ? ' · DAÑADA' : ''), x + 12, yy + 46, { size: 15, color: s.bikes <= 0 ? '#c0392b' : PAL.az2, body: true });
       const half = (w - 36) / 2;
-      this.button(V, x + 12, yy + 62, half, 54, 'LLEVAR +' + Math.max(2, Math.round(s.cap * .5 - s.bikes)), () => this.order(s, 'llevar'), { bg: PAL.vd2, size: 18 });
-      this.button(V, x + 24 + half, yy + 62, half, 54, 'RECOGER −' + Math.max(2, Math.round(s.bikes - s.cap * .5)), () => this.order(s, 'recoger'), { bg: '#b0651a', size: 18 });
+      this.button(V, x + 12, yy + 62, half, 54, 'LLEVAR +' + Math.max(2, Math.round(s.cap * .5 - s.bikes)), () => this.order(s, 'llevar'), { bg: PAL.vd2, size: 18, key: 'lle' });
+      this.button(V, x + 24 + half, yy + 62, half, 54, 'RECOGER −' + Math.max(2, Math.round(s.bikes - s.cap * .5)), () => this.order(s, 'recoger'), { bg: '#b0651a', size: 18, key: 'rec' });
     } else {
       this.button(V, 10, V.h - 74, bw, 58, '🏠 Regresar camiones', () => this.home(), { size: 16 });
       V.text('Bodega: ' + this.sim.depot + ' bicis · ' + this.trucks.map(t => '🚚' + t.id + ':' + t.load).join('  '), V.w - 10, V.h - 40, { size: 13, align: 'right', color: '#c4ec7c', body: true });
@@ -453,6 +469,12 @@ class ModeMonitoreo extends Mode {
     const r = this.rect; if (!r) return false; let best = null, bd = 30;
     for (const s of this.sim.st) { const d = dist(cx, cy, r.x + s.x * r.k, r.y + s.y * r.k); if (d < bd) { bd = d; best = s; } }
     this.sel = best === this.sel ? null : best; if (best) Snd.sfx('tap'); return true;
+  }
+  hint() {
+    if (this.ordered >= 2 || !this.rect) return null; const R = this.rects || {};
+    if (this.sel) return R[this.sel.bikes / this.sel.cap < .5 ? 'lle' : 'rec'] || null;
+    const s = this.sim.st.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0], r = this.rect;
+    return { x: r.x + s.x * r.k, y: r.y + s.y * r.k, txt: s.name };
   }
   info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: 'Servicio ' + Math.round(this.sim.service() * 100) + '%' }] }; }
   bot() {
@@ -551,15 +573,21 @@ class ModeSupervisor extends MapMode {
     }
   }
   get hideGoals() { return this.phase === 'staff'; }
+  hint(V) {
+    if (this.phase !== 'staff') return super.hint(V); const R = this.rects || {};
+    const i = this.assign.findIndex(a => a < 0); if (i < 0) return null;
+    if (this.selStaff < 0) { const z = this.staffSt[i].zone; let k = this.staff.findIndex((p, j) => p.zone === z && !this.assign.includes(j)); if (k < 0) k = this.staff.findIndex((p, j) => !this.assign.includes(j)); return R['st' + k] || null; }
+    return R['sl' + i] || null;
+  }
   staffPanel(V) {
     const c = V.ctx, w = Math.min(460, V.w - 16), x = (V.w - w) / 2, y = 60, n = this.staffSt.length, h = 112 + n * 40 + 80;
     c.fillStyle = PAL.crema; c.fillRect(x, y, w, h); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(x + 2, y + 2, w - 4, h - 4);
     c.fillStyle = PAL.az; c.fillRect(x, y, w, 26); V.text('5:00 A.M. · APERTURA DEL SISTEMA', x + 10, y + 18, { size: 15, color: PAL.vd1 });
     V.text('1) Toca un anfitrión  2) Toca la estación de SU zona', x + 10, y + 46, { size: 13, color: PAL.az, body: true });
     const cw = (w - 20) / Math.min(5, this.staff.length);
-    this.staff.forEach((s, k) => { const bx = x + 10 + (k % 5) * cw, by = y + 56 + Math.floor(k / 5) * 44, used = this.assign.includes(k); this.button(V, bx, by, cw - 6, 38, s.name + ' · ' + s.zone[0].toUpperCase(), () => this.tapStaff(k), { size: 14, bg: this.selStaff === k ? PAL.amb : used ? '#56657c' : PAL.az1, color: this.selStaff === k ? PAL.az : '#fff', border: this.selStaff === k ? PAL.az : '#fff' }); });
+    this.staff.forEach((s, k) => { const bx = x + 10 + (k % 5) * cw, by = y + 56 + Math.floor(k / 5) * 44, used = this.assign.includes(k); this.button(V, bx, by, cw - 6, 38, s.name + ' · ' + s.zone[0].toUpperCase(), () => this.tapStaff(k), { key: 'st' + k, size: 14, bg: this.selStaff === k ? PAL.amb : used ? '#56657c' : PAL.az1, color: this.selStaff === k ? PAL.az : '#fff', border: this.selStaff === k ? PAL.az : '#fff' }); });
     let yy = y + 56 + Math.ceil(this.staff.length / 5) * 44 + 6;
-    this.staffSt.forEach((s, i) => { const a = this.assign[i]; this.button(V, x + 10, yy, w - 20, 34, s.name + ' (' + s.zone + ') ← ' + (a >= 0 ? this.staff[a].name + ' (' + this.staff[a].zone + ')' : 'toca para asignar'), () => this.tapSlot(i), { size: 14, bg: a >= 0 ? (this.staff[a].zone === s.zone ? PAL.vd2 : '#b0651a') : PAL.az2 }); yy += 40; });
+    this.staffSt.forEach((s, i) => { const a = this.assign[i]; this.button(V, x + 10, yy, w - 20, 34, s.name + ' (' + s.zone + ') ← ' + (a >= 0 ? this.staff[a].name + ' (' + this.staff[a].zone + ')' : 'toca para asignar'), () => this.tapSlot(i), { key: 'sl' + i, size: 14, bg: a >= 0 ? (this.staff[a].zone === s.zone ? PAL.vd2 : '#b0651a') : PAL.az2 }); yy += 40; });
     this.button(V, x + w / 2 - 110, yy + 6, 220, 50, 'ABRIR EL SISTEMA ▶', () => this.confirmStaff(), { bg: PAL.vd2, size: 18 });
   }
   pointer(type, vx, vy, cx, cy) { if (this.phase === 'staff') { Mode.prototype.pointer.call(this, type, vx, vy, cx, cy); return true; } return super.pointer(type, vx, vy, cx, cy); }

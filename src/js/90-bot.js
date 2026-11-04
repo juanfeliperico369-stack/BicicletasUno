@@ -6,7 +6,7 @@ const Bot = JE.bot = {
   async run(o = {}) {
     const n = o.n || 27, err = o.err != null ? o.err : .08, dt = 1 / 30, maxT = o.maxT || 600;
     const rep = { games: [], errs0: JE.errors.length, t0: performance.now() }, backup = JSON.stringify(Save.data), wasHeadless = JE.headless;
-    JE.headless = true; const roles = o.roles || ROLES.map(r => r.id);
+    JE.headless = true; const roles = o.roles || ROLES.map(r => r.id).concat(['carrera']);
     for (let i = 0; i < n; i++) {
       const roleId = roles[i % roles.length], turno = o.turno || (1 + Math.floor(i / roles.length) % 3), seed = ((o.seed || 20261104) + i * 7919) >>> 0, nov = NOVEDADES[i % NOVEDADES.length];
       const g = { roleId, turno, seed, nov: nov.id, issues: [] };

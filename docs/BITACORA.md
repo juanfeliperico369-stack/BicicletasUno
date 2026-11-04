@@ -53,3 +53,24 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - 27 partidas del bot y humo de interfaz después del cambio.
 
 **Qué falta:** probarlo en un celular real, firmar el APK de release para Play Store y recibir feedback de EnCicla.
+
+## 2026-11-04 · v0.2.0 · Ciudad viva y multijugador
+
+**Qué cambió**
+1. Semáforos en los cruces de avenida con avenida: los carros paran y pasar en rojo resta puntos. Nueva meta en Usuario T2: "0 en rojo".
+2. Racha de ciclorruta con bonos y líneas de velocidad, sello grande de revista al ganar una postal y confeti al aprobar.
+3. Mano guía animada en los 9 oficios y la carrera: muestra qué tocar o hacia dónde arrastrar en los primeros turnos. Se puede apagar.
+4. **Carrera de postales:** contra el bot (tranquilo, veloz, turbo) o contra un amigo en otro celular por WebRTC, con código compartible y sin servidor.
+5. Los carros frenan detrás del jugador. El bot respeta los semáforos y cede a los carros que van en su mismo sentido.
+
+**Qué se probó**
+- 100 partidas del bot (ahora con Carrera) sin fallas.
+- Humo de interfaz y rendimiento con CPU 4x lenta (mediana de 16,7 ms por cuadro).
+- Sala WebRTC real entre dos páginas: códigos generados, ambas inician la carrera con la misma semilla y el invitado ve al anfitrión en tiempo real.
+
+**Errores encontrados por el bot y corregidos**
+- Bloqueo en cruces donde la ruta gira: el bot revisaba dos ejes del semáforo a la vez.
+- El camión pasaba ~40 % del tiempo en semáforos: se dejaron solo en los cruces de avenida con avenida.
+- Choques en cadena porque los carros se arrastraban hasta el camión, y bloqueo frente a frente entre carro y camión.
+
+**Qué falta:** probar en celulares reales (en especial la sala entre redes distintas), código QR, salas de más de 2 jugadores y feedback de EnCicla.

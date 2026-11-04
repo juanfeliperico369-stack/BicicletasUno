@@ -18,7 +18,7 @@ class MG {
     c.fillStyle = o.bg || PAL.az1; c.fillRect(x, y, w, h); c.strokeStyle = o.border || '#fff'; c.lineWidth = 3; c.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
     if (o.icon) { c.imageSmoothingEnabled = false; const s = Math.min(h - 14, 32); c.drawImage(Art.icon(o.icon), x + w / 2 - s / 2, y + 5, s, s); if (label) V.text(label, x + w / 2, y + h - 6, { size: Math.min(13, h * .28), align: 'center', color: o.color || '#fff' }); }
     else V.text(label, x + w / 2, y + h / 2 + (o.size || 18) * .35, { size: o.size || 18, align: 'center', color: o.color || '#fff' });
-    this.btns.push({ x, y, w, h, fn });
+    this.btns.push({ x, y, w, h, fn }); if (o.key) (this.rects || (this.rects = {}))[o.key] = { x: x + w / 2, y: y + h / 2 };
   }
   pointer(type, vx, vy, cx, cy) {
     if (type === 'down') for (const b of this.btns) if (cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h) { Snd.sfx('tap'); b.fn(); return true; }
@@ -214,18 +214,27 @@ class MGAnfitrion extends MG {
         V.text(u.valid ? '✓ ACTIVA' : '✗ ' + u.reason.toUpperCase(), x + 12, y + 72, { size: 18, color: u.valid ? PAL.vd2 : '#c0392b' });
         if (this.msg) V.text(this.msg, x + w - 12, y + 72, { size: 13, color: '#b0651a', align: 'right' });
         const bw = (w - 36) / 2;
-        this.button(V, x + 12, y + h - 52, bw, 42, '✓ PRESTAR', () => this.decide(true), { bg: PAL.vd2 });
-        this.button(V, x + 24 + bw, y + h - 52, bw, 42, '✗ NEGAR', () => this.decide(false), { bg: '#7a2a24' });
+        this.button(V, x + 12, y + h - 52, bw, 42, '✓ PRESTAR', () => this.decide(true), { bg: PAL.vd2, key: 'si' });
+        this.button(V, x + 24 + bw, y + h - 52, bw, 42, '✗ NEGAR', () => this.decide(false), { bg: '#7a2a24', key: 'no' });
       } else {
         V.text('Bici Nº ' + u.bike.id + ' de ' + u.name, x + 12, y + 46, { size: 16, color: PAL.az });
         V.text('Préstamo: ' + u.mins + ' min' + (u.late ? '  (¡tarde!)' : ''), x + 12, y + 68, { size: 15, color: u.late ? '#c0392b' : PAL.az2 });
         V.text('Estado: ' + (u.bike.dmg ? DANOS[u.bike.dmg] : 'sin daños'), x + 12, y + 88, { size: 15, color: u.bike.dmg ? '#c0392b' : PAL.vd2 });
         const bw = (w - 36) / 2;
-        this.button(V, x + 12, y + h - 50, bw, 40, 'CERRAR OK', () => this.closeLoan(false), { bg: PAL.vd2, size: 16 });
-        this.button(V, x + 24 + bw, y + h - 50, bw, 40, 'CON NOVEDAD', () => this.closeLoan(true), { bg: '#b0651a', size: 16 });
+        this.button(V, x + 12, y + h - 50, bw, 40, 'CERRAR OK', () => this.closeLoan(false), { bg: PAL.vd2, size: 16, key: 'ok' });
+        this.button(V, x + 24 + bw, y + h - 50, bw, 40, 'CON NOVEDAD', () => this.closeLoan(true), { bg: '#b0651a', size: 16, key: 'nov' });
       }
     }
     this.drawPops(V);
+  }
+  hint(V) {
+    if (this.served >= 3 || !this.L) return null; const s = V.s, L = this.L, u = this.cur, R = this.rects || {};
+    if (!u) { const q = this.queue[0]; return q && q.st === 'wait' ? { x: q.x * s, y: (L.qy - 12) * s, txt: 'Toca' } : null; }
+    if (this.step === 'card') return R[u.valid && this.goodSlots().length ? 'si' : 'no'] || null;
+    if (this.step === 'close') return R[u.late || u.bike.dmg ? 'nov' : 'ok'] || null;
+    if (this.step === 'pick') { const i = this.goodSlots()[0]; return i >= 0 ? { x: this.slotX(i) * s, y: (this.slotY(i) - 8) * s } : null; }
+    if (this.step === 'place') { if (u.bike.dmg) return { x: (L.vw - 15) * s, y: (L.gy - 13) * s }; const f = this.freeSlots()[0]; return f >= 0 ? { x: this.slotX(f) * s, y: (this.slotY(f) - 8) * s } : { x: (L.vw - 15) * s, y: (L.gy - 39) * s }; }
+    return null;
   }
   tap(vx, vy) {
     const L = this.L; if (!L) return false;
@@ -329,10 +338,16 @@ class MGMecanico extends MG {
     const n = TOOLS.length, pad = 6, bw = Math.min(110, (V.w - pad * (n + 1)) / n), bh = Math.min(76, Math.max(58, V.h * .11)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + (this.gauge ? 96 : 26);
     TOOLS.forEach(([id, label], i) => {
       const col = Object.values(FAULTS).find(f => f.tool === id).col;
-      this.button(V, x0 + i * (bw + pad), y, bw, bh, label, () => this.useTool(id), { icon: id, border: col, color: col });
+      this.button(V, x0 + i * (bw + pad), y, bw, bh, label, () => this.useTool(id), { icon: id, border: col, color: col, key: 't_' + id });
     });
-    if (this.gauge) this.button(V, V.w / 2 - 80, y - 74, 160, 58, '¡YA!', () => this.pump(), { bg: PAL.vd2, size: 26 });
+    if (this.gauge) this.button(V, V.w / 2 - 80, y - 74, 160, 58, '¡YA!', () => this.pump(), { bg: PAL.vd2, size: 26, key: 'ya' });
     this.drawPops(V);
+  }
+  hint(V) {
+    const B = this.bike, R = this.rects || {}; if (this.fixed >= 1 || !B || this.slide > 0) return null;
+    if (this.gauge) return R.ya ? Object.assign({ txt: 'En verde' }, R.ya) : null;
+    const h = B.faults.find(f => !f.ok && !f.seen); if (h) { const p = this.hot(h); return { x: p.x * V.s, y: p.y * V.s }; }
+    const f = B.faults.find(f => !f.ok); return f ? R['t_' + FAULTS[f.k].tool] || null : null;
   }
   tap(vx, vy) {
     if (!this.bike) return false;
@@ -406,9 +421,10 @@ class MGBodega extends MG {
     V.text('Camión ' + this.truck + '/10', this.L.vw * .87 * s, (this.L.belt + 26) * s, { size: 12, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 2 });
     V.text('Bicis nuevas: ' + this.newBikes + '  ·  Precisión ' + Math.round(this.acc() * 100) + '%', 12, 66, { size: 14, color: PAL.vd1 });
     const n = this.cats.length, pad = 6, bw = Math.min(120, (V.w - pad * (n + 1)) / n), bh = Math.min(84, Math.max(60, V.h * .12)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + 26;
-    this.cats.forEach((c, i) => this.button(V, x0 + i * (bw + pad), y, bw, bh, CATS[c].name, () => this.sort(c), { icon: c, border: CATS[c].col, color: CATS[c].col }));
+    this.cats.forEach((c, i) => this.button(V, x0 + i * (bw + pad), y, bw, bh, CATS[c].name, () => this.sort(c), { icon: c, border: CATS[c].col, color: CATS[c].col, key: 'c_' + c }));
     this.drawPops(V);
   }
+  hint() { const f = this.front(), R = this.rects || {}; return this.ok < 4 && f && this.L && f.x > this.L.vw * .3 ? R['c_' + f.cat] || null : null; }
   bot(err) { const f = this.front(); if (f && f.x > (this.L ? this.L.vw : 200) * .3) this.sort(this.rng.f() < err ? this.rng.pick(this.cats) : f.cat); }
 }
 
@@ -449,8 +465,8 @@ class MGApertura extends MG {
   hud(V) {
     this.btns = []; const s = V.s; if (!this.L) return;
     V.text(this.mode === 'apertura' ? 'APERTURA DE ESTACIÓN' : 'CIERRE DE ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
-    if (this.step === 'power' || this.step === 'off') this.button(V, V.w / 2 - 110, V.h - 110, 220, 70, this.holding ? 'SOSTÉN… ' + Math.round(this.hold / .8 * 100) + '%' : (this.step === 'power' ? '⏻ ENCENDER' : '⏻ APAGAR'), () => this.press(true), { bg: PAL.vd2, size: 22 });
-    if (this.step === 'count' && this.opts) { const bw = Math.min(110, (V.w - 40) / 3); this.opts.forEach((v, i) => this.button(V, V.w / 2 - (bw * 3 + 20) / 2 + i * (bw + 10), V.h - 100, bw, 64, String(v), () => this.answer(v), { size: 30 })); }
+    if (this.step === 'power' || this.step === 'off') this.button(V, V.w / 2 - 110, V.h - 110, 220, 70, this.holding ? 'SOSTÉN… ' + Math.round(this.hold / .8 * 100) + '%' : (this.step === 'power' ? '⏻ ENCENDER' : '⏻ APAGAR'), () => this.press(true), { bg: PAL.vd2, size: 22, key: 'pw' });
+    if (this.step === 'count' && this.opts) { const bw = Math.min(110, (V.w - 40) / 3); this.opts.forEach((v, i) => this.button(V, V.w / 2 - (bw * 3 + 20) / 2 + i * (bw + 10), V.h - 100, bw, 64, String(v), () => this.answer(v), { size: 30, key: 'n' + v })); }
     this.drawPops(V);
   }
   tap(vx, vy) {
@@ -460,6 +476,14 @@ class MGApertura extends MG {
     return false;
   }
   release() { this.press(false); }
+  hint(V) {
+    const L = this.L, R = this.rects || {}, s = V.s; if (!L) return null;
+    if (this.step === 'unlock') return { x: 25 * s, y: (L.gy - 19) * s, txt: 'Toca' };
+    if (this.step === 'power' || this.step === 'off') return R.pw ? Object.assign({ txt: 'Mantén' }, R.pw) : null;
+    if (this.step === 'docks' || this.step === 'lock') { const i = this.docks.findIndex(d => this.step === 'docks' ? !d.on : d.on); return i >= 0 ? { x: this.dockX(i) * s, y: (L.gy - 13) * s } : null; }
+    if (this.step === 'count' && this.errors === 0) return null;
+    return null;
+  }
   bot() {
     if (this.step === 'unlock') this.unlock(); else if (this.step === 'power' || this.step === 'off') this.press(true);
     else if (this.step === 'docks') this.dock(this.docks.findIndex(d => !d.on)); else if (this.step === 'lock') this.dock(this.docks.findIndex(d => d.on));
@@ -491,6 +515,7 @@ class MGCables extends MG {
   }
   hud(V) { this.btns = []; V.text('REPARA EL ANCLAJE', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
   tap(vx, vy) { for (let i = 0; i < this.n; i++) { const l = this.pos(0, i), r = this.pos(1, i); if (dist(vx, vy, l.x - 3, l.y) < 12) { this.pickL(i); return true; } if (dist(vx, vy, r.x + 3, r.y) < 12) { this.pickR(i); return true; } } return false; }
+  hint(V) { if (this.links.some(l => l >= 0) || !this.L) return null; const p = this.sel < 0 ? this.pos(0, 0) : this.pos(1, this.right.indexOf(this.sel)); return { x: (p.x + (this.sel < 0 ? -3 : 3)) * V.s, y: p.y * V.s }; }
   bot(err) { if (this.sel < 0) { const i = this.links.findIndex(l => l < 0); if (i >= 0) this.pickL(i); } else { const j = this.rng.f() < err ? this.rng.i(0, this.n - 1) : this.right.indexOf(this.sel); this.pickR(j); } }
 }
 

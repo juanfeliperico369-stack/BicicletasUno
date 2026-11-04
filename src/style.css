@@ -165,3 +165,8 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 pre.rep{white-space:pre-wrap;font-family:var(--fm);font-size:12px;background:#000;padding:10px;border:2px solid var(--az3);max-height:40vh;overflow:auto;color:var(--vd1)}
 @media (prefers-reduced-motion:reduce){.chip.bad{animation:none}}
 @media (min-width:900px){#goalsMini{max-width:34%}}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.confetti i{position:absolute;top:-24px;height:14px;animation:fall 2.6s linear forwards;transform:rotate(15deg)}
+@keyframes fall{to{transform:translateY(110vh) rotate(760deg)}}
+.paper.race{margin:0 0 16px;background:var(--vd1);border-color:var(--az)}
+.paper.race .btn{box-shadow:3px 3px 0 var(--az)}

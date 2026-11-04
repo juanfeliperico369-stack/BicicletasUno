@@ -56,6 +56,7 @@ const UI = JE.ui = {
     h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: 9 oficios · 3 turnos cada uno</div>`;
     if (S.perks.length) h += `<div class="pag">Mejoras activas (se pierden si fallas un turno)</div><div class="perks">${S.perks.map(p => `<span class="chip"><img class="px" width="20" height="20" src="${Art.iconURL(PERKS[p].icon, 2)}" alt="">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     if (!S.settings.seen.profile) h += `<div class="paper" style="margin:0 0 16px"><div class="t">Crea tu ciclista</div><p style="margin:6px 0 10px">Elige tu nombre y colores antes de empezar.</p><button class="btn sm" data-act="avatar">Personalizar</button></div>`;
+    h += `<div class="paper race"><div class="pag" style="color:var(--az2)">Multijugador · nuevo</div><div class="t">Carrera de postales</div><p style="margin:6px 0 10px">Pasa por 4 lugares del valle y llega primero a la meta. Contra un bot o contra un amigo en otro celular.</p><div class="row"><button class="btn sm" data-race="1">Bot tranquilo</button><button class="btn sm" data-race="2">Bot veloz</button><button class="btn sm" data-race="3">Bot turbo</button><button class="btn sm pri" data-act="multi">Con un amigo</button></div></div>`;
     for (const r of ROLES) {
       const ok = this.unlocked(r), st = this.stars(r.id);
       h += `<div class="role ${ok ? '' : 'lock'}"><span class="num">${r.n}</span><div><div class="tier">${esc(r.tier)}</div><h3><img class="px" src="${Art.iconURL(r.icon)}" alt="">${esc(r.name)}</h3><div class="vista">${esc(r.vista)}</div></div>`;
@@ -72,6 +73,8 @@ const UI = JE.ui = {
     const el = $('#tab-ruta'); el.innerHTML = h;
     $$('button[data-role]', el).forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(b.dataset.role, +b.dataset.t || 1, { free: !!b.dataset.free }); });
     const av = $('[data-act=avatar]', el); if (av) av.onclick = () => this.avatar();
+    $$('[data-race]', el).forEach(b => b.onclick = () => this.brief('carrera', +b.dataset.race, { nov: NOVEDADES[0] }));
+    const mu = $('[data-act=multi]', el); if (mu) mu.onclick = () => this.multi();
   },
   renderAlbum() {
     const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot');
@@ -103,13 +106,14 @@ const UI = JE.ui = {
     let h = `<div class="pag">PAG 4 · Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
     h += `<div class="opt"><span>Efectos de sonido</span><button class="sw ${S.sfx ? 'on' : ''}" data-sw="sfx" aria-label="Sonido"></button></div>`;
     h += `<div class="opt"><span>Música</span><button class="sw ${S.music ? 'on' : ''}" data-sw="music" aria-label="Música"></button></div>`;
+    h += `<div class="opt"><span>Mano guía (ayudas)</span><button class="sw ${S.hints !== false ? 'on' : ''}" data-sw="hints" aria-label="Ayudas"></button></div>`;
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn" data-act="avatar">Mi ciclista</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
     const el = $('#tab-mas'); el.innerHTML = h;
-    $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !S[k]; Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); Snd.sfx('tap'); });
+    $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !(S[k] !== false); Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); Snd.sfx('tap'); });
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
     $$('[data-act]', el).forEach(b => b.onclick = () => ({ avatar: () => this.avatar(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
@@ -120,10 +124,10 @@ const UI = JE.ui = {
     const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : rng.pick(NOVEDADES));
     const tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free });
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
-    let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : 'TURNO ' + turno}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
+    let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : 'TURNO ' + turno}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
     h += `<div class="boxh">Sesión ${r.n}: ${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
     h += `<div class="howto">${r.how.map((t, i) => `<div><b>${i + 1}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
-    if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas del turno</div><ul class="goals">${goals}</ul>`;
+    if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas ${roleId === 'carrera' ? 'de la carrera' : 'del turno'}</div><ul class="goals">${goals}</ul>`;
     h += `<div class="paper" style="margin:14px 0"><div class="t">Novedad del día: ${esc(nov.name)}</div><p style="margin:6px 0 0">${esc(nov.desc)}</p></div>`;
     if (!o.free && Save.data.perks.length) h += `<div class="perks">${Save.data.perks.map(p => `<span class="chip">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     h += `<div class="row" style="margin-top:16px"><button class="btn pri" id="bGo" style="flex:1">▶ Empezar ${o.free ? 'práctica' : 'turno'}</button></div>`;
@@ -146,7 +150,7 @@ const UI = JE.ui = {
     if (prog.unlocks.length) h += `<div class="paper" style="margin:10px 0"><div class="t">¡Ascenso!</div><p style="margin:6px 0 0">Desbloqueaste: ${prog.unlocks.map(esc).join(', ')}</p></div>`;
     if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
     if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
-    const nextOk = !meta.free && !meta.reto && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
+    const nextOk = !meta.free && !meta.reto && meta.roleId !== 'carrera' && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:14px">`;
     if (nextOk) h += `<button class="btn pri" id="bNext">▶ Siguiente turno</button>`;
     h += `<button class="btn ${nextOk ? '' : 'pri'}" id="bAgain">↻ Repetir</button>`;
@@ -155,10 +159,10 @@ const UI = JE.ui = {
     $('#resBody').innerHTML = h; this.go('sResult'); $('#sResult .scroll').scrollTop = 0;
     $$('[data-perk]').forEach(b => b.onclick = () => { $$('[data-perk]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); const P = S.perks; if (!P.includes(b.dataset.perk)) { P.push(b.dataset.perk); if (P.length > 3) P.shift(); } Save.save(); Snd.sfx('star'); this.toast('Mejora: ' + PERKS[b.dataset.perk].name); });
     if (nextOk) $('#bNext').onclick = () => this.brief(meta.roleId, meta.turno + 1);
-    $('#bAgain').onclick = () => this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined });
+    $('#bAgain').onclick = () => { if (meta.net) { if (Net.status !== 'open') return this.toast('Se perdió la conexión: crea otra sala'); if (Net.role === 'host') this.netStartRace(); else this.toast('Pídele a quien creó la sala que inicie otra carrera'); return; } this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined }); };
     $('#bEsc').onclick = () => this.go('sHome');
     if (meta.reto) $('#bShareR').onclick = () => this.share(`🚲 Juega EnCicla · Reto del día: hice ${fmtInt(res.score)} puntos como ${r.name} (${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}). Código: ${this.code(meta)} ¿Me superas?`);
-    Snd.sfx(res.pass ? 'win' : 'lose');
+    Snd.sfx(res.pass ? 'win' : 'lose'); if (res.pass) confetti(res.stars);
   },
   /* ---------- reto / código ---------- */
   code(meta) { return ROLE[meta.roleId].n + '-' + meta.turno + '-' + (meta.seed >>> 0).toString(36).toUpperCase(); },
@@ -168,12 +172,38 @@ const UI = JE.ui = {
     const rng = new RNG(seed); this.brief(r.id, t, { reto: true, seed, nov: rng.pick(NOVEDADES) });
   },
   multi() {
-    this.modal(`<h2>Jugar con amigos</h2><p class="m"><b>Reto con código (ya disponible, sin internet):</b> todos juegan el mismo día con las mismas condiciones y comparan puntos. Pide el código a tu amigo o comparte el tuyo al terminar un reto.</p>
-    <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn pri" id="bCode">Jugar ese código</button></div>
-    <div class="squig"></div><p class="m"><b>Próximamente:</b> sala local por Wi-Fi (un celular crea la sala y los demás se unen con un código QR), modo competitivo y servidores en línea.</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
+    const net = Net.supported();
+    this.modal(`<h2>Jugar con amigos</h2>
+    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera en 2 celulares</div><p style="margin:6px 0 0;font-size:14px">1) Uno toca <b>Crear sala</b> y envía el código. 2) El otro toca <b>Unirme</b>, pega el código y devuelve la respuesta. 3) Quien creó la sala pega la respuesta y ¡arranca la carrera! En la misma red Wi-Fi funciona sin internet.</p></div>
+    ${net ? '<div class="row"><button class="btn pri" id="nHost">Crear sala</button><button class="btn" id="nJoin">Unirme</button></div><div id="nBox" style="margin-top:10px"></div>' : '<p class="m">Este navegador no permite salas (WebRTC).</p>'}
+    <div class="squig"></div><p class="m"><b>Reto con código</b> (sin internet): todos juegan las mismas condiciones y comparan puntos.</p>
+    <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn" id="bCode">Jugar ese código</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
       $('#bCode').onclick = () => { const p = this.parseCode($('#codeIn').value); if (!p) return this.toast('Código no válido'); if (!this.unlocked(ROLE[p.roleId])) return this.toast('Aún no tienes ese oficio'); this.closeModal(); this.brief(p.roleId, p.turno, { reto: true, seed: p.seed, nov: new RNG(p.seed).pick(NOVEDADES) }); };
+      if (!net) return;
+      const box = $('#nBox'), codeUI = (title, code, next) => `<p class="pag">${title}</p><textarea class="txtin" rows="3" readonly id="nCode" style="font-size:11px">${esc(code)}</textarea><div class="row" style="margin:8px 0"><button class="btn sm" id="nCopy">Copiar</button><button class="btn sm" id="nShare">Compartir</button></div>${next}`;
+      const bindCopy = code => { $('#nCopy').onclick = () => { const t = $('#nCode'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => this.toast('Código copiado ✓')).catch(() => { document.execCommand('copy'); this.toast('Código copiado ✓'); }); }; $('#nShare').onclick = () => this.shareCode(code); };
+      Net.onstatus = s => { const st = $('#nStat'); if (st) st.textContent = { open: '¡Conectados! Empezando…', failed: 'No se pudo conectar. Intenten en la misma red Wi-Fi.', disconnected: 'Conexión perdida', closed: 'Conexión cerrada', waiting: 'Esperando…' }[s] || s; if (s === 'open') { Net.send({ t: 'hi', name: Save.data.profile.name, shirt: SHIRTS[Save.data.profile.shirt] }); } };
+      Net.onmsg = m => this.netLobbyMsg(m);
+      $('#nHost').onclick = async () => {
+        box.innerHTML = '<p class="m">Preparando la sala…</p>';
+        try { const code = await Net.host(); box.innerHTML = codeUI('1) Envía este código a tu amigo', code, '<p class="pag">2) Pega aquí su respuesta</p><textarea class="txtin" rows="3" id="nAns" style="font-size:11px" placeholder="JE1a…"></textarea><div class="col"><button class="btn pri" id="nGo">Conectar</button></div><p class="m" id="nStat"></p>'); bindCopy(code);
+          $('#nGo').onclick = async () => { try { await Net.accept($('#nAns').value); $('#nStat').textContent = 'Conectando…'; } catch (e) { this.toast(e.message); } };
+        } catch (e) { box.innerHTML = '<p class="m">No se pudo crear la sala: ' + esc(e.message) + '</p>'; }
+      };
+      $('#nJoin').onclick = () => {
+        box.innerHTML = '<p class="pag">Pega el código de la sala</p><textarea class="txtin" rows="3" id="nOff" style="font-size:11px" placeholder="JE1o…"></textarea><div class="col"><button class="btn pri" id="nAnsB">Generar respuesta</button></div>';
+        $('#nAnsB').onclick = async () => { try { box.innerHTML = '<p class="m">Generando respuesta…</p>'; const code = await Net.join(this._off = ($('#nOff') || {}).value || this._off); box.innerHTML = codeUI('Envía esta respuesta a quien creó la sala', code, '<p class="m" id="nStat">Esperando que conecte…</p>'); bindCopy(code); } catch (e) { box.innerHTML = '<p class="m">' + esc(e.message) + '</p>'; } };
+        const ta = $('#nOff'); ta.oninput = () => { this._off = ta.value; };
+      };
     });
   },
+  shareCode(code) { const t = 'Juega EnCicla · código de sala: ' + code; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else { const wa = 'https://wa.me/?text=' + encodeURIComponent(t); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); } },
+  netLobbyMsg(m) {
+    if (m.t === 'hi') { this.netOpp = { name: String(m.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(m.shirt) ? m.shirt : PAL.cor }; if (Net.role === 'host') this.netStartRace(); }
+    else if (m.t === 'start' && Net.role === 'guest') this.netRace(m.seed, m.lvl || 2);
+  },
+  netStartRace() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0; Net.send({ t: 'start', seed, lvl: 2 }); this.netRace(seed, 2); },
+  netRace(seed, lvl) { this.closeModal(); if (Game.mode) Game.stop(); const o = this.netOpp || { name: 'Amigo', shirt: PAL.cor }; Game.start('carrera', lvl, { seed, nov: NOVEDADES[0], net: true, oppName: o.name, oppShirt: o.shirt }); },
   /* ---------- modales ---------- */
   modal(html, bind) { $('#mBody').innerHTML = html; $('#modal').hidden = false; const c = $('#mClose'); if (c) c.onclick = () => this.closeModal(); if (bind) bind(); },
   closeModal() { $('#modal').hidden = true; },
@@ -242,8 +272,9 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto });
-    this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, seed: o.seed, nov: o.nov, dur: 0 };
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || roleId === 'carrera' ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt });
+    this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
+    this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
     $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : ' · T' + turno); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
@@ -264,6 +295,7 @@ const Game = JE.game = {
     this.applyView(); const a = this.mode.sub || this.mode, V = View;
     a.render(V); V.present(); V.ctx.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
     if (this.mode.sub && this.mode.ride) { a.hud(V); } else this.mode.hud(V);
+    if (this.hintsOn && !this.paused && a.hint) { const h = a.hint(V); if (h) drawHand(V, h); }
   },
   dom(dt) {
     const M = this.mode, inf = M.info(), a = M.sub || M;
@@ -304,7 +336,7 @@ const Progress = JE.progress = {
     const before = ROLES.filter(r => UI.unlocked(r)).map(r => r.id);
     out.xp = Math.round(res.score / 10) + res.stars * 20 + (meta.reto ? 15 : 0); if (meta.free) out.xp = Math.round(out.xp / 3);
     S.xp += out.xp; S.stats.plays++;
-    if (!meta.free) {
+    if (!meta.free && meta.roleId !== 'carrera') {
       const st = S.stars[meta.roleId] || [0, 0, 0]; if (res.stars > st[meta.turno - 1]) st[meta.turno - 1] = res.stars; S.stars[meta.roleId] = st;
       const k = meta.roleId + meta.turno; if (res.score > (S.best[k] || 0)) { out.best = !!S.best[k]; S.best[k] = res.score; }
       if (res.pass) {
@@ -333,4 +365,21 @@ function bindCanvas() {
   const up = e => { const j = Input.joy; if (j.on && e.pointerId === j.id) j.on = false; const M = Game.mode; if (M) { const a = M.sub || M, { cx, cy } = pos(e), v = View.toV(cx, cy); a.pointer('up', v.x, v.y, cx, cy); } };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+/* mano guía animada */
+function drawHand(V, h) {
+  const c = V.ctx, t = performance.now() / 1000; let x = h.x, y = h.y;
+  if (h.drag) { const k = (t % 1.7) / 1.2, kk = Math.min(1, k); x += h.dx * kk; y += h.dy * kk; c.globalAlpha = k > 1 ? Math.max(0, 1 - (k - 1) * 2.5) : 1; c.strokeStyle = '#ffffffaa'; c.lineWidth = 4; c.setLineDash([6, 7]); c.beginPath(); c.moveTo(h.x, h.y); c.lineTo(x, y); c.stroke(); c.setLineDash([]); }
+  else { const r = (t * 1.4 % 1) * 24; c.strokeStyle = 'rgba(255,255,255,' + (1 - r / 24).toFixed(2) + ')'; c.lineWidth = 3; c.beginPath(); c.arc(x, y, r + 6, 0, TAU); c.stroke(); y += 6 + Math.abs(Math.sin(t * 5)) * 8; }
+  c.imageSmoothingEnabled = false; c.drawImage(Art.hand(), x - 11, y - 1, 32, 30);
+  if (h.txt) V.text(h.txt, x + 6, y + 44, { size: 13, align: 'center', bg: PAL.az, color: '#fff', pad: 3 });
+  c.globalAlpha = 1;
+}
+/* confeti de revista al aprobar */
+function confetti(n) {
+  if (JE.headless || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const d = document.createElement('div'); d.className = 'confetti'; const cols = ['#9bd341', '#ffffff', '#ffc93c', '#56c7ff', '#c4ec7c'];
+  for (let i = 0; i < 30 + n * 20; i++) { const e = document.createElement('i'); e.style.left = (Math.random() * 100) + '%'; e.style.background = cols[i % cols.length]; e.style.animationDelay = (Math.random() * .8) + 's'; e.style.animationDuration = (2 + Math.random() * 1.4) + 's'; e.style.width = (6 + Math.random() * 6) + 'px'; d.appendChild(e); }
+  document.body.appendChild(d); setTimeout(() => d.remove(), 4200);
 }

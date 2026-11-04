@@ -68,5 +68,28 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   ok(!errs.length, 'sin errores de consola al final ' + errs.slice(0, 3).join(' | '));
   await b.close();
+
+  console.log('5) Multijugador: sala WebRTC entre dos dispositivos');
+  const b2 = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] }), c2 = await b2.newContext({ viewport: { width: 390, height: 780 } });
+  const host = await c2.newPage(), guest = await c2.newPage(), nerr = [];
+  for (const pg of [host, guest]) { pg.on('pageerror', e => nerr.push(e.message)); await pg.goto('file://' + FILE); await pg.waitForFunction(() => window.JE && JE.ready); }
+  await host.evaluate(() => { Save.data.profile.name = 'Anfitriona'; UI.multi(); });
+  await guest.evaluate(() => { Save.data.profile.name = 'Invitado'; UI.multi(); });
+  await host.click('#nHost'); await host.waitForSelector('#nCode', { timeout: 15000 }); const offer = await host.inputValue('#nCode');
+  ok(/^JE[01]o/.test(offer), 'código de sala generado (' + offer.length + ' caracteres)');
+  await guest.click('#nJoin'); await guest.fill('#nOff', offer); await guest.click('#nAnsB'); await guest.waitForSelector('#nCode', { timeout: 15000 }); const ans = await guest.inputValue('#nCode');
+  ok(/^JE[01]a/.test(ans), 'código de respuesta generado');
+  await host.fill('#nAns', ans); await host.click('#nGo');
+  const started = await Promise.all([host, guest].map(pg => pg.waitForFunction(() => JE.game.mode && JE.game.mode.id === 'carrera' && JE.game.mode.net, null, { timeout: 20000 }).then(() => true).catch(() => false)));
+  ok(started.every(Boolean), 'carrera en red iniciada en ambos dispositivos');
+  if (started.every(Boolean)) {
+    await host.waitForTimeout(3600); await host.evaluate(() => { JE.game.mode.ride.p.x += 40; }); await guest.waitForTimeout(800);
+    const seen = await guest.evaluate(() => { const o = JE.game.mode.opp; return { name: o.name, x: Math.round(o.x), hostSeed: JE.game.meta.seed }; });
+    const hseed = await host.evaluate(() => ({ x: Math.round(JE.game.mode.ride.p.x), seed: JE.game.meta.seed }));
+    ok(seen.name === 'Anfitriona' && Math.abs(seen.x - hseed.x) < 25 && seen.hostSeed === hseed.seed, 'el invitado ve al anfitrión en tiempo real (misma semilla)');
+    if (SHOTS) await guest.screenshot({ path: path.join(OUT, 'carrera-red.png') });
+  }
+  ok(!nerr.length, 'multijugador sin errores ' + nerr.slice(0, 2).join(' | '));
+  await b2.close();
   console.log(fails ? '\n✗ ' + fails + ' prueba(s) fallaron' : '\n✓ TODAS LAS PRUEBAS PASARON'); process.exit(fails ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

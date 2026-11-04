@@ -52,7 +52,7 @@ class Ride {
     const s = o.start; this.p = { x: s.x, y: s.y, a: o.ang != null ? o.ang : -Math.PI / 2, v: 0, veh: o.veh || 'bike', stun: 0, load: o.load || 0, cap: o.cap || 20 };
     this.cam = { x: s.x, y: s.y }; this.cars = []; this.markers = []; this.target = null; this.fx = []; this.leaves = []; this.drops = [];
     this.traffic = o.traffic != null ? o.traffic : 1; this.zone = o.zone || null;
-    this.stats = { dist: 0, ciclo: 0, crashes: 0, bells: 0 }; this.shake = 0; this.gps = []; this.gpsT = 0; this.big = false; this.spawnT = 0; this.honkT = 0;
+    this.stats = { dist: 0, ciclo: 0, crashes: 0, bells: 0, reds: 0 }; this.cicT = 0; this.offC = 0; this.cicLv = 0; this.lastLight = -1; this.stamp = null; this.opps = []; this.shake = 0; this.gps = []; this.gpsT = 0; this.big = false; this.spawnT = 0; this.honkT = 0;
     this.trains = [0, .25, .5, .75].map((f, i) => ({ l: 'A', p: f * MH * TS, dir: i % 2 ? 1 : -1, wait: 0 })).concat([{ l: 'B', p: 0, dir: 1, wait: 0 }]);
     if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), this.p.veh === 'truck'); this.p.x = n.x * TS + 4; this.p.y = n.y * TS + 4; }
     this.bx0 = 12 * TS; this.bx1 = (RX[LINEB_Y] + 9) * TS; this.mmRect = null; this.joyDraw = null; this.ox = 0; this.oy = 0;
@@ -93,7 +93,20 @@ class Ride {
       if (!moved) { if (!this.blocked(nx, P.y, S.r)) { P.x = nx; P.v *= .9; } else if (!this.blocked(P.x, ny, S.r)) { P.y = ny; P.v *= .9; } else P.v *= .25; }
     }
     P.x = clamp(P.x, 4, MW * TS - 4); P.y = clamp(P.y, 4, MH * TS - 4);
-    this.stats.dist += st; if (this.tileAt() === TT.CICLO) this.stats.ciclo += st;
+    this.stats.dist += st; const onC = this.tileAt() === TT.CICLO; if (onC) this.stats.ciclo += st;
+    const ti = Math.floor(P.y / TS) * MW + Math.floor(P.x / TS), li = this.map.lightAt[ti];
+    if (li >= 0 && li !== this.lastLight && P.v > 6 && this.mode.t > 2) {
+      const ew = Math.abs(Math.cos(P.a)) > Math.abs(Math.sin(P.a)), LT = this.map.lights[li], s = this.map.lightState(LT, this.mode.t)[ew ? 0 : 1] === 'r' && this.map.lightState(LT, this.mode.t - .7)[ew ? 0 : 1] === 'r' ? 'r' : 'ok';
+      if (s === 'r') { this.stats.reds++; this.float('¡En rojo!', PAL.cor); Snd.sfx('bad'); vib(40); if (this.mode.onRed) this.mode.onRed(); if (!this.redTold) { this.redTold = 1; JE.ui && JE.ui.toast('🚦 En rojo se espera: ¡respeta el semáforo!'); } }
+    }
+    this.lastLight = li;
+    if (P.veh === 'bike') {
+      if (onC && P.v > 20) { this.cicT += dt; this.offC = 0; } else if ((this.offC += dt) > .7) this.cicT = 0;
+      const lv = this.cicT >= 15 ? 3 : this.cicT >= 8 ? 2 : this.cicT >= 4 ? 1 : 0;
+      if (lv > this.cicLv) { this.float('¡Racha ciclorruta x' + (lv + 1) + '!', PAL.vd1); Snd.sfx('coin'); if (this.mode.onStreak) this.mode.onStreak(lv); }
+      this.cicLv = lv;
+      if (lv && P.v > 35 && !JE.headless && this.rng.f() < .5) this.fx.push({ k: 'p', x: P.x - Math.cos(P.a) * 6 + (this.rng.f() - .5) * 4, y: P.y - Math.sin(P.a) * 6 + (this.rng.f() - .5) * 4, vx: -Math.cos(P.a) * 30, vy: -Math.sin(P.a) * 30, t: .3, col: lv > 1 ? '#ffffff' : PAL.vd1 });
+    }
     this.updCars(dt); this.updTrains(dt);
     // marcadores
     for (const m of this.markers.slice()) {
@@ -104,6 +117,7 @@ class Ride {
     // hojas
     for (const l of this.leaves) if (!l.got && Math.abs(l.x - P.x) < 7 && Math.abs(l.y - P.y) < 7) { l.got = true; Snd.sfx('leaf'); this.float('+5', PAL.vd1); if (M.onLeaf) M.onLeaf(l); }
     // efectos
+    if (this.stamp && (this.stamp.t -= dt) <= 0) this.stamp = null;
     for (const f of this.fx) { f.t -= dt; if (f.k === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= .9; f.vy *= .9; } else f.y -= 14 * dt; }
     this.fx = this.fx.filter(f => f.t > 0);
     if (rain && !JE.headless) { while (this.drops.length < 70) this.drops.push({ x: this.rng.f() * 400, y: this.rng.f() * 400, s: 160 + this.rng.f() * 80 }); for (const d of this.drops) { d.y += d.s * dt; d.x -= d.s * .2 * dt; if (d.y > 400) { d.y -= 400; d.x = this.rng.f() * 400; } if (d.x < 0) d.x += 400; } }
@@ -142,8 +156,13 @@ class Ride {
       let v = c.spd * (this.mode.mods.rain ? .85 : 1); if (c.stop > 0) { c.stop -= dt; v = 0; } if (c.yield > 0) { c.yield -= dt; v *= .35; }
       const len = c.kind === 'bus' ? 30 : 14;
       for (const o of this.cars) { if (o === c || o.L !== c.L) continue; const ahead = (o.p - c.p) * c.L.dir; if (ahead > 0 && ahead < len + 4) v = Math.min(v, o.v * .9); }
+      const LL = c.L.lights; if (LL.length) {
+        const front = c.p + len / 2 * c.L.dir, axis = c.L.ax === 'x' ? 0 : 1; let s = null;
+        if (c.L.dir > 0) { for (const q of LL) if (q.p0 >= front - 1) { s = q; break; } } else { for (let k = LL.length - 1; k >= 0; k--) if (LL[k].p1 <= front + 1) { s = LL[k]; break; } }
+        if (s) { const d = c.L.dir > 0 ? s.p0 - front : front - s.p1, st = this.map.lightState(s.g, this.mode.t)[axis]; if (d < 24 && (st === 'r' || (st === 'a' && d > 6))) v = Math.min(v, Math.max(0, (d - 2) * 3)); }
+      }
       const fx = Math.cos(c.ang), fy = Math.sin(c.ang), dx = P.x - c.x, dy = P.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
-      if (along > 0 && along < 22 && lat < 6) { v = Math.min(v, 4); if (this.honkT <= 0 && P.v > 2 && dist(P.x, P.y, c.x, c.y) < 60) { this.honkT = 2.5; Snd.sfx('honk'); } }
+      const pr = this.stats_().r; if (along > 0 && along < 20 + pr * 2 && lat < 4 + pr) { v = along < 12 + pr * 2 ? 0 : Math.min(v, 6); if (this.honkT <= 0 && P.v > 2 && dist(P.x, P.y, c.x, c.y) < 60) { this.honkT = 2.5; Snd.sfx('honk'); } }
       c.v = v; c.p += v * c.L.dir * dt; this.carPos(c);
       // choque con el jugador
       const hw = (c.ax === 'x' ? (c.kind === 'bus' ? 13 : 6) : 3) + this.stats_().r, hh = (c.ax === 'x' ? 3 : (c.kind === 'bus' ? 13 : 6)) + this.stats_().r;
@@ -222,6 +241,15 @@ class Ride {
       if (!inV(c.x, c.y)) continue; const sp = Art.carTop(c.col, c.kind);
       b.save(); b.translate(Math.round(c.x - ox), Math.round(c.y - oy)); b.rotate(c.ang + Math.PI / 2); b.fillStyle = '#0004'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 1, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
     }
+    // semáforos
+    const LC = { g: '#4cff6a', a: '#ffc93c', r: '#ff4b3a' };
+    for (const L of this.map.lights) {
+      if (!inV(L.x0, L.y0, 30)) continue; const s = this.map.lightState(L, this.mode.t);
+      const lamp = (x, y, k) => { prect(b, x - ox, y - oy, 3, 3, '#11151d'); prect(b, x - ox + 1, y - oy + 1, 1, 1, LC[k]); };
+      lamp(L.x0 - 3, L.y0 - 3, s[0]); lamp(L.x1, L.y1, s[0]); lamp(L.x1, L.y0 - 3, s[1]); lamp(L.x0 - 3, L.y1, s[1]);
+    }
+    // rivales (carrera)
+    for (const o of this.opps) { if (!inV(o.x, o.y)) continue; const so = Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]); b.save(); b.translate(Math.round(o.x - ox), Math.round(o.y - oy)); b.rotate(o.a + Math.PI / 2); b.globalAlpha = .9; b.drawImage(so, -3, -6); b.restore(); }
     // jugador
     const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1]);
     b.save(); b.translate(Math.round(P.x - ox), Math.round(P.y - oy)); b.rotate(P.a + Math.PI / 2); b.fillStyle = '#0005'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 2, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
@@ -246,6 +274,8 @@ class Ride {
       for (const st of this.map.stations) { const x = sx(st.x), y = sy(st.y) - 16 * s / 3; if (x > -60 && x < V.w + 60 && y > 40 && y < V.h) V.text(st.name, x, y, { size: 11, align: 'center', bg: '#0a2342dd', color: '#c4ec7c', pad: 3 }); }
       for (const L of LANDMARKS) { const x = sx((L.x + L.w / 2) * TS), y = sy((L.y + L.h / 2) * TS); if (x > -80 && x < V.w + 80 && y > 40 && y < V.h) V.text(L.name, x, y, { size: 12, align: 'center', stroke: '#0a2342', sw: 4, color: '#fff' }); }
     }
+    for (const o of this.opps) { const x = sx(o.x), y = sy(o.y) - 14; if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
+    if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .38); c.rotate(-.08); const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
     for (const f of this.fx) if (f.k === 't') V.text(f.txt, sx(f.x), sy(f.y), { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col });
     for (const m of this.markers) if (m.label && m.num) { const x = sx(m.x), y = sy(m.y); if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(String(m.num), x, y + 5, { size: 14, align: 'center', stroke: '#0a2342', sw: 4, color: m.col || PAL.amb }); }
     // flecha al objetivo
@@ -270,6 +300,7 @@ class Ride {
       if (this.sim) for (const st of this.sim.st) { c.fillStyle = this.sim.ratioCol(st); c.fillRect(x + st.x * k - 1.5, y + st.y * k - 1.5, 3, 3); }
       else { c.fillStyle = '#fff'; for (const st of this.map.stations) c.fillRect(x + st.x * k - 1, y + st.y * k - 1, 2, 2); }
       const blink = (performance.now() / 300 | 0) % 2;
+      for (const o of this.opps) { c.fillStyle = o.shirt || PAL.cor; c.fillRect(x + o.x * k - 2.5, y + o.y * k - 2.5, 5, 5); }
       for (const m of this.markers) { c.fillStyle = m.col || PAL.amb; const r = m === T ? (blink ? 4 : 3) : 2.5; c.fillRect(x + m.x * k - r, y + m.y * k - r, r * 2, r * 2); }
       c.fillStyle = '#ff2fb3'; c.beginPath(); c.arc(x + P.x * k, y + P.y * k, 3, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
       V.text('MAPA', x + w / 2, y + h + 14, { size: 11, align: 'center', color: '#c4ec7c', bg: '#0a2342cc', pad: 2 });
