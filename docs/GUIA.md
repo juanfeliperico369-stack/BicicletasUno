@@ -26,7 +26,7 @@ src/style.css         estilos de revista (tokens en :root)
 src/assets/           fuentes woff/woff2 (se incrustan en base64)
 src/js/00-core.js     utilidades, RNG con semilla, Save (localStorage + exportar/importar), Snd (WebAudio 8 bits), Input, View
 src/js/10-art.js      arte pixel: personas, bicis (cenital, lateral, frontal), camión, carros, panorámica, íconos 16x16, portada
-src/js/20-map.js      mapa del Valle de Aburrá de Caldas a Barbosa (150x432 baldosas de 8 px), 106 estaciones, 38 lugares, carriles, metro, ruta (Dial), dibujo por bloques
+src/js/20-map.js      mapa del Valle de Aburrá de Caldas a Barbosa (203x583 baldosas de 8 px, escala SC=1.35), 106 estaciones, 38 lugares, carriles, metro, ruta (Dial), dibujo por bloques
 src/js/30-ride.js     StationSim (demanda de préstamos) + Ride (bici/camión, tráfico, metro, GPS, minimapa) + drawOverview
 src/js/35-life.js     vida urbana: Tranvía de Ayacucho (calle sin carros), Metrocable K/P/J/H, peatones, luces de noche
 src/js/40-mg.js       minijuegos: MGAnfitrion, MGMecanico, MGBodega, MGApertura(cierre), MGCables, MGSimon, MGInspeccion
@@ -87,7 +87,11 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   - Flores: aparecen silleteros en las aceras.
 
 **Mapa v0.4 (Caldas → Barbosa):** sigue las capturas de la app oficial que compartió el usuario.
-- `OY = 120` filas al norte. Los datos se escriben en coordenadas "yy" (las del mapa original) y se desplazan +OY.
+- **Escala v0.4.1:** `SC = 1.35`. Todo se diseña en coordenadas de diseño (x 0..150, yy -120..312) y se convierte con `X(x)` y `Y(yy)`.
+  - El mapa real mide 203×583 baldosas.
+  - Las avenidas se ajustan a la cuadrícula con `snapRow`/`snapCol`, y `fitLM` mueve cada lugar para no tapar avenidas ni el río.
+  - Las distancias de los oficios (sub-zonas, órdenes, tiempos límite) se multiplican por `SC`.
+  - Para cambiar el tamaño del mapa basta con cambiar `SC` y correr las pruebas (verifican que todo sea alcanzable).
 - Al norte de Bello el río gira al noreste (`bendN`) y el valle se vuelve un corredor (`mW`/`mE`) con pueblos (`TOWNS_N`: Copacabana, Girardota y Barbosa).
   Entre pueblos el terreno es rural: potreros, sin calles menores.
 - 106 estaciones con nombres de barrio (`STATIONS_DEF`, 10 municipios). Son aproximados: **pedirle al usuario la lista oficial por zonas**.

@@ -57,7 +57,7 @@ class Ride {
     this.trains = [0, .25, .5, .75].map((f, i) => ({ l: 'A', p: f * MH * TS, dir: i % 2 ? 1 : -1, wait: 0 })).concat([{ l: 'B', p: 0, dir: 1, wait: 0 }]);
     if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), this.p.veh === 'truck'); this.p.x = n.x * TS + 4; this.p.y = n.y * TS + 4; }
     this.initLife();
-    this.bx0 = 12 * TS; this.bx1 = (RX[LINEB_Y] + 9) * TS; this.mmRect = null; this.joyDraw = null; this.ox = 0; this.oy = 0;
+    this.bx0 = X(12) * TS; this.bx1 = (RX[LINEB_Y] + 9) * TS; this.mmRect = null; this.joyDraw = null; this.ox = 0; this.oy = 0;
   }
   stats_() { return this.p.veh === 'truck' ? { max: 50, acc: 55, dec: 95, turn: 2.7, r: 3.4 } : { max: 60, acc: 120, dec: 150, turn: 5.6, r: 2.5 }; }
   solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }

@@ -12,7 +12,7 @@ class ModeCarrera extends MapMode {
     this.setupRide({ sim: this.sim, start: { x: st0.x - 5, y: st0.y } });
     const pool = PUBLIC_LM(); let cur = { x: st0.x / TS, y: st0.y / TS }; this.cps = [];
     for (let k = 0; k < 4; k++) {
-      const free = pool.filter(l => !this.cps.includes(l)), c = free.filter(l => { const d = Math.hypot(l.x + l.w / 2 - cur.x, l.y + l.h / 2 - cur.y); return d >= 22 && d <= 70; });
+      const free = pool.filter(l => !this.cps.includes(l)), c = free.filter(l => { const d = Math.hypot(l.x + l.w / 2 - cur.x, l.y + l.h / 2 - cur.y); return d >= 22 * SC && d <= 70 * SC; });
       const pick = R.pick(c.length ? c : free); this.cps.push(pick); cur = { x: pick.x + pick.w / 2, y: pick.y + pick.h / 2 };
     }
     const meta = JE.map.stations.filter(s => s !== st0).sort((a, b) => Math.hypot(a.x / TS - cur.x, a.y / TS - cur.y) - Math.hypot(b.x / TS - cur.x, b.y / TS - cur.y))[0];

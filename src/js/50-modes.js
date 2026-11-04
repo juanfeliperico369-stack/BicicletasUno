@@ -116,7 +116,7 @@ class MapMode extends Mode {
   /* sub-zona: estaciones a menos de rad baldosas de un centro al azar (el mapa es grande: Caldas → Barbosa) */
   subZone(list, rad, cx, cy) {
     if (cx == null) { const c = this.rng.pick(list); cx = c.x; cy = c.y; }
-    const r = list.filter(s => dist(s.x, s.y, cx, cy) <= rad * TS); return r.length >= 5 ? r : list.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 8);
+    const r = list.filter(s => dist(s.x, s.y, cx, cy) <= rad * TS * SC); return r.length >= 5 ? r : list.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 8);
   }
   /* bot: sigue el flujo de ruta hacia el objetivo */
   botDrive() {
@@ -170,7 +170,7 @@ class ModeUsuario extends MapMode {
   }
   onLeaf() { this.leavesGot++; this.score += 5; Save.data.stats.leaves++; }
   nextLeg(from) {
-    const R = this.rng, T = this.turno, minD = [0, 35, 50, 60][T], maxD = [0, 80, 110, 130][T];
+    const R = this.rng, T = this.turno, minD = [0, 35, 50, 60][T] * SC, maxD = [0, 80, 110, 130][T] * SC;
     const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
     const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
     const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
@@ -372,7 +372,7 @@ class ModeBalance extends MapMode {
     this.orders = []; this.doneN = 0; this.expired = 0; this.ordT = 0; this.maxOrd = T === 3 ? 3 : 2; this.ordN = 0;
     this.depM = this.ride.marker({ x: dp.x, y: dp.y, r: 20, col: PAL.cie, label: 'Bodega', enter: () => this.atDepot() });
     this.newOrder(); this.newOrder();
-    const tg = [0, 4, 6, 7][T];
+    const tg = [0, 4, 5, 6][T];
     this.goal('Cumple ' + tg + ' órdenes de Monitoreo', true, () => this.doneN >= tg, () => this.doneN + '/' + tg);
     this.goal(T === 1 ? 'Ninguna orden vencida' : 'Máximo 1 orden vencida', false, () => this.expired <= (T === 1 ? 0 : 1), () => this.expired + ' vencidas');
     this.goal('Máximo ' + (T === 3 ? 1 : 2) + ' choques', false, () => this.ride.stats.crashes <= (T === 3 ? 1 : 2), () => this.ride.stats.crashes + ' choques');
@@ -381,11 +381,11 @@ class ModeBalance extends MapMode {
   newOrder() {
     const used = new Set(this.orders.map(o => o.s)); const st = this.sim.st.filter(s => !used.has(s) && s.open);
     st.sort((a, b) => a.bikes / a.cap - b.bikes / b.cap);
-    const P = this.ride.p, far = s => { const d = dist(s.x, s.y, P.x, P.y); return d > 120 && d < 900; };
+    const P = this.ride.p, far = s => { const d = dist(s.x, s.y, P.x, P.y); return d > 120 && d < 900 * SC; };
     const low = st.filter(far).slice(0, 4), high = st.filter(far).slice(-4);
     const takeLow = this.rng.f() < .55; const s = this.rng.pick(takeLow ? low : high) || st[0]; if (!s) return;
     const type = s.bikes / s.cap < .5 ? 'llevar' : 'recoger', n = Math.max(3, Math.round(Math.abs(s.bikes - s.cap * .55)));
-    const o = { s, type, n, due: this.clock + [0, 130, 110, 90][this.turno] * (this.timeMul > 1 ? 1.2 : 1), id: ++this.ordN };
+    const o = { s, type, n, due: this.clock + [0, 130, 110, 90][this.turno] * SC * (this.timeMul > 1 ? 1.2 : 1), id: ++this.ordN };
     o.m = this.ride.marker({ x: s.x, y: s.y, r: 20, col: type === 'llevar' ? PAL.vd : PAL.amb, label: s.name, num: o.id, enter: () => this.atStation(o) });
     this.orders.push(o); this.retarget(); if (JE.ui && this.t > 1) JE.ui.toast('📻 Orden ' + o.id + ': ' + (type === 'llevar' ? 'LLEVA ' : 'RECOGE ') + n + ' bicis · ' + s.name);
   }
@@ -433,7 +433,7 @@ class ModeMonitoreo extends Mode {
     const xs = this.zs.map(s => s.x), ys = this.zs.map(s => s.y), m = 10 * TS; this.crop = { x0: Math.max(0, Math.min(...xs) - m), y0: Math.max(0, Math.min(...ys) - m), x1: Math.min(MW * TS, Math.max(...xs) + m), y1: Math.min(MH * TS, Math.max(...ys) + m) };
     const dp = this.base; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
     this.sel = null; this.radio = []; this.flags = new Map(); this.view = { kind: 'map' };
-    const sv = [0, 75, 82, 86][T];
+    const sv = [0, 70, 80, 85][T];
     this.goal('Nivel de servicio ≥ ' + sv + '%', true, () => this.serv() * 100 >= sv, () => Math.round(this.serv() * 100) + '%');
     this.goal('Al cierre, ninguna estación vacía', false, () => this.zs.every(s => s.bikes > 0), () => this.zs.filter(s => s.bikes <= 0).length + ' vacías');
     this.goal('Camiones descargados en la bodega', false, () => this.trucks.every(t => t.load === 0 && !t.path && dist(t.x, t.y, dp.x, dp.y) < 30), () => this.trucks.filter(t => t.load === 0 && !t.path).length + '/' + this.trucks.length);
@@ -532,11 +532,11 @@ class ModeSupervisor extends MapMode {
     this.setupRide({ sim: this.sim, start: { x: dp.x, y: dp.y + 6 } }); this.sim.trucks.push(this.ride.p);
     this.depM = this.ride.marker({ x: dp.x, y: dp.y, r: 20, col: PAL.cie, label: 'Bodega', enter: () => this.atDepot(), leave: () => { this.inDepot = false; } });
     // personal por asignar
-    this.area = this.sim.st.filter(s => dist(s.x, s.y, dp.x, dp.y) < 100 * TS); const mans = R.shuffle(this.area.filter(s => s.type === 'm')).slice(0, 3 + T);
+    this.area = this.sim.st.filter(s => dist(s.x, s.y, dp.x, dp.y) < 100 * TS * SC); const mans = R.shuffle(this.area.filter(s => s.type === 'm')).slice(0, 3 + T);
     this.staffSt = mans; this.staff = mans.map((s, i) => ({ name: STAFF_NAMES[i], zone: R.f() < .75 ? s.zone : R.pick(['norte', 'centro', 'sur']) }));
     R.shuffle(this.staff); this.assign = new Array(mans.length).fill(-1); this.phase = 'staff'; this.selStaff = -1;
     this.inc = []; this.incT = 6; this.solved = 0; this.expiredN = 0; this.incN = 0; this.cierre = false;
-    const tg = [0, 5, 7, 9][T];
+    const tg = [0, 4, 6, 7][T];
     this.goal('Resuelve ' + tg + ' avisos del día', true, () => this.solved >= tg, () => this.solved + '/' + tg);
     this.goal('Apertura perfecta: cada anfitrión en su zona', false, () => this.perfectOpen === true, () => this.perfectOpen ? 'sí' : '-');
     this.goal('Cierre del sistema a tiempo', false, () => this.cierre === true, () => this.cierre ? 'sí' : 'pendiente');
@@ -555,11 +555,11 @@ class ModeSupervisor extends MapMode {
     const R = this.rng, types = ['relevo', 'bici', 'anclaje', 'balance', 'bodega', 'transito']; let type = R.pick(types);
     if (this.inc.some(i => i.type === 'bodega') && type === 'bodega') type = 'bici';
     let s = type === 'bodega' ? null : R.pick(type === 'relevo' ? this.area.filter(x => x.type === 'm') : this.area);
-    if (type === 'transito') { const L = R.pick(JE.map.lights), dp0 = JE.map.depot; s = null; const id0 = ++this.incN, it0 = { id: id0, type, s: null, due: this.clock + 150, txt: 'Semáforo dañado', px: (L.x0 + L.x1) / 2, py: (L.y0 + L.y1) / 2 }; void dp0;
+    if (type === 'transito') { const L = R.pick(JE.map.lights), dp0 = JE.map.depot; s = null; const id0 = ++this.incN, it0 = { id: id0, type, s: null, due: this.clock + 150 * SC, txt: 'Semáforo dañado', px: (L.x0 + L.x1) / 2, py: (L.y0 + L.y1) / 2 }; void dp0;
       it0.m = this.ride.marker({ x: it0.px, y: it0.py, r: 20, col: '#ff8a3d', label: 'Semáforo', num: id0, enter: () => this.solve(it0) }); this.inc.push(it0); this.retarget(); JE.ui && JE.ui.toast('📻 Aviso ' + id0 + ': semáforo dañado en un cruce: ¡dirige el tránsito!'); return; }
     if (type === 'balance') { const ex = this.area.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0]; s = ex; }
     const dp = JE.map.depot, x = s ? s.x : dp.x, y = s ? s.y : dp.y, id = ++this.incN;
-    const it = { id, type, s, due: this.clock + 150, txt: { relevo: 'Relevo de almuerzo', bici: 'Bici dañada', anclaje: 'Anclajes sin señal', balance: s && s.bikes / s.cap < .5 ? 'Estación casi vacía' : 'Estación casi llena', bodega: 'Llegó un lote a bodega' }[type] };
+    const it = { id, type, s, due: this.clock + 150 * SC, txt: { relevo: 'Relevo de almuerzo', bici: 'Bici dañada', anclaje: 'Anclajes sin señal', balance: s && s.bikes / s.cap < .5 ? 'Estación casi vacía' : 'Estación casi llena', bodega: 'Llegó un lote a bodega' }[type] };
     if (type === 'anclaje' && s) s.broken = true;
     it.m = this.ride.marker({ x, y, r: 18, col: type === 'balance' ? PAL.amb : type === 'bodega' ? PAL.cie : PAL.cor, label: s ? s.name : 'Bodega', num: id, enter: () => this.solve(it) });
     this.inc.push(it); this.retarget(); JE.ui && JE.ui.toast('📻 Aviso ' + id + ': ' + it.txt + (s ? ' · ' + s.name : ''));

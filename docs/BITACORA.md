@@ -137,3 +137,20 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - La lista oficial de estaciones por zona (el usuario la ofreció) para reemplazar los nombres aproximados.
 - La leyenda de colores de los pines de la app oficial.
 - Pruebas en celulares reales y el permiso escrito de EnCicla para publicar.
+
+## 2026-11-04 · v0.4.1 · Mapa ampliado ×1.35
+
+**Qué cambió**
+- El mapa pasó de 150×432 a 203×583 baldosas: más cuadras, más laderas y comunas más anchas, y una avenida nueva (Carrera 30).
+  Ahora hay 68 cruces con semáforo.
+- Escala parametrizada (`SC`, `X()`, `Y()`, `snapRow`, `snapCol`, `fitLM`): el mapa se puede agrandar o achicar cambiando un solo número.
+- Las distancias y tiempos de los oficios se ajustaron a la escala.
+  - Metas de Balance (4/5/6 órdenes) y Supervisor (4/6/7 avisos).
+  - Servicio de Monitoreo 70/80/85 %.
+
+**Qué se probó**
+- 106 estaciones y 38 lugares alcanzables, y el camión llega a todas.
+- 100 partidas del bot, sala de 3 dispositivos y CPU 4x lenta (mediana de 16,7 ms).
+
+**Errores encontrados y corregidos**
+- Madera quedó dentro del río y Barbosa Norte en el borde del mapa: se reubicaron.
