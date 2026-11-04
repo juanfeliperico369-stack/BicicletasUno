@@ -39,3 +39,17 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
   Chrome reporta 0 errores de instalabilidad y og:image, apple-touch-icon y manifest responden 200.
 
 **Qué falta:** APK (en proceso con Capacitor), feedback del equipo EnCicla.
+
+## 2026-11-04 · v0.1.0 · APK Android
+
+**Qué cambió**
+- Proyecto Capacitor 7 (`app/`) con íconos pixel, pantalla de inicio azul y pantalla completa.
+- Flujo de GitHub Actions para compilar el APK.
+- En la app, exportar abre un cuadro para copiar el respaldo y compartir abre WhatsApp.
+
+**Qué se probó**
+- `aapt2 badging`: paquete, etiqueta, versión y actividad correctos.
+- El HTML dentro del APK es idéntico a `dist/juega-encicla.html`.
+- 27 partidas del bot y humo de interfaz después del cambio.
+
+**Qué falta:** probarlo en un celular real, firmar el APK de release para Play Store y recibir feedback de EnCicla.

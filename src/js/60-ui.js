@@ -211,6 +211,11 @@ const UI = JE.ui = {
   exportSave() {
     const txt = Save.exportText(), d = new Date(), name = 'juega-encicla-partidas-' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.json';
     const blob = new Blob([txt], { type: 'application/json' });
+    if (window.Capacitor) { // en la app Android: copiar el respaldo (las descargas blob no existen en el WebView)
+      this.modal(`<h2>Exportar partidas</h2><p class="m">Copia este texto y guárdalo (notas, correo o WhatsApp). Para recuperarlo usa Importar con un archivo .json.</p><textarea class="txtin" id="expTxt" rows="7" readonly style="font-size:11px">${esc(txt)}</textarea><div class="col"><button class="btn pri" id="bCopy">Copiar</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
+        $('#bCopy').onclick = () => { const t = $('#expTxt'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => this.toast('Copiado ✓')).catch(() => { document.execCommand('copy'); this.toast('Copiado ✓'); }); };
+      }); return;
+    }
     try {
       const file = new File([blob], name, { type: 'application/json' });
       if (navigator.canShare && navigator.canShare({ files: [file] }) && /Android|iPhone|iPad/i.test(navigator.userAgent)) { navigator.share({ files: [file], title: 'Partidas de Juega EnCicla' }).catch(() => this.download(blob, name)); return; }
@@ -226,7 +231,7 @@ const UI = JE.ui = {
   share(text) {
     const url = /^https?:/.test(location.protocol) && !/localhost|127\.0/.test(location.host) ? location.href.split('#')[0].split('?')[0] : JE.URL;
     if (navigator.share) navigator.share({ title: 'Juega EnCicla', text, url }).catch(() => { });
-    else window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank');
+    else { const wa = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); }
   },
   toast(t) { const el = $('#toast'); if (!el) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
   postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }

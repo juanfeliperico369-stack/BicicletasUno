@@ -37,7 +37,7 @@ src/js/99-boot.js     arranque y registro del service worker
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
 tests/run.js          pruebas: sintaxis, N partidas con el bot, humo de interfaz, rendimiento con CPU 4x lenta
-android/              proyecto Capacitor (se genera; ver sección 8)
+app/                  proyecto Capacitor (Android); ver sección 8
 ```
 
 Todos los `.js` se concatenan en orden alfabético dentro de **un solo `<script>`**, así que las constantes de nivel superior se comparten entre archivos.
@@ -121,8 +121,11 @@ El "Centro de Operaciones EnCicla" es ficticio.
 
 ## 8. Android (APK)
 
-Capacitor con `webDir = dist/capacitor` (copia de `juega-encicla.html` como `index.html`).
-Se compila con el flujo de GitHub Actions `.github/workflows/android.yml`, que adjunta el APK de depuración a un *release*.
+- Proyecto Capacitor 7 en `app/`. `app/www/index.html` es una copia de `dist/juega-encicla.html`. El id del paquete es `com.juanfeliperico.juegaencicla`, con minSdk 23 y targetSdk 35.
+- Compilar en local: `cd app && ANDROID_HOME=/opt/android-sdk npm run build:debug`. El APK sale en `app/android/app/build/outputs/apk/debug/`.
+- En CI: `.github/workflows/android.yml` (ejecución manual o etiquetas `v*`). Sube el APK como artefacto y lo adjunta al *release*.
+- Dentro de la app, exportar abre un cuadro para copiar el respaldo (el WebView no descarga blobs) y compartir abre WhatsApp.
+- Pendiente para Play Store: firmar un AAB de release con keystore propio, versión 1.0, ficha y política de privacidad.
 
 ## 9. Pendientes / ideas (feedback del usuario)
 
