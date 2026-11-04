@@ -209,7 +209,7 @@ class Ride {
     }
     // ruta GPS
     const ph = (t * 4) | 0;
-    this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : PAL.vd1; prect(b, g.x - ox - 1, g.y - oy - 1, 3, 3, '#0a2342'); prect(b, g.x - ox, g.y - oy, 1, 1, c); });
+    const gc = this.target && this.target.col || PAL.amb; this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, '#0a2342'); prect(b, g.x - ox - 1, g.y - oy - 1, 2, 2, c); });
     // marcadores (aros que laten)
     for (const m of this.markers) {
       if (!inV(m.x, m.y, 40)) continue; const pr = m.r * .7 + Math.sin(t * 5) * 2, col = m.col || PAL.amb;
@@ -251,10 +251,11 @@ class Ride {
     // flecha al objetivo
     const T = this.target;
     if (T) {
-      const tx = sx(T.x), ty = sy(T.y), d = dist(P.x, P.y, T.x, T.y) * M_PER_PX, m = 34, top = 60;
-      if (tx < m || tx > V.w - m || ty < top || ty > V.h - m - 70) {
-        const cx = V.w / 2, cy = V.h / 2, a = Math.atan2(ty - cy, tx - cx), k = Math.min(Math.abs((V.w / 2 - m) / Math.cos(a)), Math.abs((V.h / 2 - m - 40) / Math.sin(a)));
-        const ax = cx + Math.cos(a) * k, ay = cy + Math.sin(a) * k;
+      const tx = sx(T.x), ty = sy(T.y), d = dist(P.x, P.y, T.x, T.y) * M_PER_PX, L = 30, Rr = V.w - 30 - (V.w > 600 ? 0 : 0), Tt = Math.min(160, V.h * .3), B = V.h - 110;
+      if (tx < L || tx > Rr || ty < 60 || ty > V.h - 70) {
+        const cx = (L + Rr) / 2, cy = (Tt + B) / 2, dx = tx - cx, dy = ty - cy, a = Math.atan2(dy, dx);
+        const k = Math.min(dx > 0 ? (Rr - cx) / dx : dx < 0 ? (L - cx) / dx : 1e9, dy > 0 ? (B - cy) / dy : dy < 0 ? (Tt - cy) / dy : 1e9);
+        const ax = cx + dx * k, ay = cy + dy * k;
         c.save(); c.translate(ax, ay); c.rotate(a); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 3; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -11); c.lineTo(-3, 0); c.lineTo(-8, 11); c.closePath(); c.stroke(); c.fill(); c.restore();
         V.text(d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d / 10) * 10 + ' m', ax - Math.cos(a) * 26, ay - Math.sin(a) * 26 + 5, { size: 13, align: 'center', bg: '#0a2342ee', color: '#fff', pad: 3 });
       }

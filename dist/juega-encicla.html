@@ -62,8 +62,8 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .srf{font-family:var(--fs);color:var(--bl);text-transform:uppercase;font-size:clamp(12px,3.4vw,18px);line-height:1.25;letter-spacing:.03em}
 .cbody .mega{font-size:clamp(78px,27vw,200px);width:100%;position:relative;z-index:2;text-shadow:5px 5px 0 var(--az)}
 .cbody .mega.b2{margin-top:-.06em;font-size:clamp(60px,20vw,160px)}
-#coverArt{width:min(92vw,560px);aspect-ratio:16/10;margin:-34px auto -30px;position:relative;z-index:1;image-rendering:pixelated;border:4px solid var(--bl);box-shadow:8px 8px 0 var(--vd2);display:block}
-.cbody .kick{position:relative;z-index:3;margin:14px 0 2px;font-size:clamp(16px,4.4vw,22px)}
+#coverArt{width:min(92vw,560px);aspect-ratio:16/10;margin:-34px auto 0;position:relative;z-index:1;image-rendering:pixelated;border:4px solid var(--bl);box-shadow:8px 8px 0 var(--vd2);display:block}
+.cbody .kick{position:relative;z-index:3;margin:18px 0 2px;font-size:clamp(16px,4.4vw,22px)}
 .ctag{font-family:var(--fd);text-transform:uppercase;font-size:clamp(26px,8vw,52px);line-height:.86;color:var(--vd1);text-align:left;align-self:flex-start;margin:10px 0 4px;max-width:92%}
 .cbtns{display:flex;flex-direction:column;gap:12px;width:min(100%,380px);margin:12px 0 20px}
 .cfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px calc(10px + var(--sab));background:var(--crema);color:var(--az);border-top:4px solid var(--vd)}
@@ -408,7 +408,7 @@ const View = JE.view = {
   setMode(kind, dw, dh) { this.kind = kind; this.dw = dw || 200; this.dh = dh || 150; this.apply(); },
   apply() {
     let s;
-    if (this.kind === 'map') s = clamp(Math.round(Math.min(this.w, this.h) / 125) + (Save.data ? Save.data.settings.zoom | 0 : 0), 2, 8);
+    if (this.kind === 'map') { s = Math.round(Math.min(this.w, this.h) / 125); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / 330)); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 2, 8); }
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
@@ -1345,7 +1345,7 @@ class Ride {
     }
     // ruta GPS
     const ph = (t * 4) | 0;
-    this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : PAL.vd1; prect(b, g.x - ox - 1, g.y - oy - 1, 3, 3, '#0a2342'); prect(b, g.x - ox, g.y - oy, 1, 1, c); });
+    const gc = this.target && this.target.col || PAL.amb; this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, '#0a2342'); prect(b, g.x - ox - 1, g.y - oy - 1, 2, 2, c); });
     // marcadores (aros que laten)
     for (const m of this.markers) {
       if (!inV(m.x, m.y, 40)) continue; const pr = m.r * .7 + Math.sin(t * 5) * 2, col = m.col || PAL.amb;
@@ -1387,10 +1387,11 @@ class Ride {
     // flecha al objetivo
     const T = this.target;
     if (T) {
-      const tx = sx(T.x), ty = sy(T.y), d = dist(P.x, P.y, T.x, T.y) * M_PER_PX, m = 34, top = 60;
-      if (tx < m || tx > V.w - m || ty < top || ty > V.h - m - 70) {
-        const cx = V.w / 2, cy = V.h / 2, a = Math.atan2(ty - cy, tx - cx), k = Math.min(Math.abs((V.w / 2 - m) / Math.cos(a)), Math.abs((V.h / 2 - m - 40) / Math.sin(a)));
-        const ax = cx + Math.cos(a) * k, ay = cy + Math.sin(a) * k;
+      const tx = sx(T.x), ty = sy(T.y), d = dist(P.x, P.y, T.x, T.y) * M_PER_PX, L = 30, Rr = V.w - 30 - (V.w > 600 ? 0 : 0), Tt = Math.min(160, V.h * .3), B = V.h - 110;
+      if (tx < L || tx > Rr || ty < 60 || ty > V.h - 70) {
+        const cx = (L + Rr) / 2, cy = (Tt + B) / 2, dx = tx - cx, dy = ty - cy, a = Math.atan2(dy, dx);
+        const k = Math.min(dx > 0 ? (Rr - cx) / dx : dx < 0 ? (L - cx) / dx : 1e9, dy > 0 ? (B - cy) / dy : dy < 0 ? (Tt - cy) / dy : 1e9);
+        const ax = cx + dx * k, ay = cy + dy * k;
         c.save(); c.translate(ax, ay); c.rotate(a); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 3; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -11); c.lineTo(-3, 0); c.lineTo(-8, 11); c.closePath(); c.stroke(); c.fill(); c.restore();
         V.text(d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d / 10) * 10 + ' m', ax - Math.cos(a) * 26, ay - Math.sin(a) * 26 + 5, { size: 13, align: 'center', bg: '#0a2342ee', color: '#fff', pad: 3 });
       }
@@ -1501,7 +1502,7 @@ class MGAnfitrion extends MG {
     this.dur = o.dur || 150; this.min = o.clock0 || 330; this.rate = o.rate || 1.6; this.cap = o.cap || (6 + T * 2);
     this.slots = []; for (let i = 0; i < this.cap; i++) this.slots.push(this.rng.f() < .6 ? this.newBike(T > 1 ? .12 : .06) : null);
     this.queue = []; this.leaving = []; this.cur = null; this.step = null; this.msg = '';
-    this.served = 0; this.abandons = 0; this.happy = 0; this.taller = 0; this.aux = 0; this.spawnT = 1.2; this.tiltT = 14; this.tiltTime = 0; this.truckT = o.short ? 1e9 : 55; this.truck = null; this.bikeId = 100 + this.rng.i(0, 800);
+    this.served = 0; this.abandons = 0; this.happy = 0; this.taller = 0; this.aux = 0; this.spawnT = .25; this.tiltT = 14; this.tiltTime = 0; this.truckT = o.short ? 1e9 : 55; this.truck = null; this.bikeId = 100 + this.rng.i(0, 800);
     this.patMax = (o.short ? 26 : [0, 32, 26, 23][T]) * (parent.has('sonrisa') ? 1.25 : 1) * (parent.patMul || 1);
     this.coach = 'Toca al usuario de la fila para atenderlo.';
   }

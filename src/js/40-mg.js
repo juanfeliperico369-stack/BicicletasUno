@@ -52,7 +52,7 @@ class MGAnfitrion extends MG {
     this.dur = o.dur || 150; this.min = o.clock0 || 330; this.rate = o.rate || 1.6; this.cap = o.cap || (6 + T * 2);
     this.slots = []; for (let i = 0; i < this.cap; i++) this.slots.push(this.rng.f() < .6 ? this.newBike(T > 1 ? .12 : .06) : null);
     this.queue = []; this.leaving = []; this.cur = null; this.step = null; this.msg = '';
-    this.served = 0; this.abandons = 0; this.happy = 0; this.taller = 0; this.aux = 0; this.spawnT = 1.2; this.tiltT = 14; this.tiltTime = 0; this.truckT = o.short ? 1e9 : 55; this.truck = null; this.bikeId = 100 + this.rng.i(0, 800);
+    this.served = 0; this.abandons = 0; this.happy = 0; this.taller = 0; this.aux = 0; this.spawnT = .25; this.tiltT = 14; this.tiltTime = 0; this.truckT = o.short ? 1e9 : 55; this.truck = null; this.bikeId = 100 + this.rng.i(0, 800);
     this.patMax = (o.short ? 26 : [0, 32, 26, 23][T]) * (parent.has('sonrisa') ? 1.25 : 1) * (parent.patMul || 1);
     this.coach = 'Toca al usuario de la fila para atenderlo.';
   }

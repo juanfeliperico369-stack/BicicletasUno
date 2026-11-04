@@ -183,7 +183,7 @@ const View = JE.view = {
   setMode(kind, dw, dh) { this.kind = kind; this.dw = dw || 200; this.dh = dh || 150; this.apply(); },
   apply() {
     let s;
-    if (this.kind === 'map') s = clamp(Math.round(Math.min(this.w, this.h) / 125) + (Save.data ? Save.data.settings.zoom | 0 : 0), 2, 8);
+    if (this.kind === 'map') { s = Math.round(Math.min(this.w, this.h) / 125); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / 330)); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 2, 8); }
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
