@@ -1406,7 +1406,7 @@ class Ride {
         const cx = (L + Rr) / 2, cy = (Tt + B) / 2, dx = tx - cx, dy = ty - cy, a = Math.atan2(dy, dx);
         const k = Math.min(dx > 0 ? (Rr - cx) / dx : dx < 0 ? (L - cx) / dx : 1e9, dy > 0 ? (B - cy) / dy : dy < 0 ? (Tt - cy) / dy : 1e9);
         const ax = cx + dx * k, ay = cy + dy * k;
-        c.save(); c.translate(ax, ay); c.rotate(a); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 3; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -11); c.lineTo(-3, 0); c.lineTo(-8, 11); c.closePath(); c.stroke(); c.fill(); c.restore();
+        c.save(); c.translate(ax, ay); c.rotate(a); c.scale(1.35, 1.35); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 3; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -11); c.lineTo(-3, 0); c.lineTo(-8, 11); c.closePath(); c.stroke(); c.fill(); c.restore();
         V.text(d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d / 10) * 10 + ' m', ax - Math.cos(a) * 26, ay - Math.sin(a) * 26 + 5, { size: 13, align: 'center', bg: '#0a2342ee', color: '#fff', pad: 3 });
       }
     }
@@ -2803,6 +2803,11 @@ const UI = JE.ui = {
   exportSave() {
     const txt = Save.exportText(), d = new Date(), name = 'juega-encicla-partidas-' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.json';
     const blob = new Blob([txt], { type: 'application/json' });
+    if (window.Capacitor) { // en la app Android: copiar el respaldo (las descargas blob no existen en el WebView)
+      this.modal(`<h2>Exportar partidas</h2><p class="m">Copia este texto y guárdalo (notas, correo o WhatsApp). Para recuperarlo usa Importar con un archivo .json.</p><textarea class="txtin" id="expTxt" rows="7" readonly style="font-size:11px">${esc(txt)}</textarea><div class="col"><button class="btn pri" id="bCopy">Copiar</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
+        $('#bCopy').onclick = () => { const t = $('#expTxt'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => this.toast('Copiado ✓')).catch(() => { document.execCommand('copy'); this.toast('Copiado ✓'); }); };
+      }); return;
+    }
     try {
       const file = new File([blob], name, { type: 'application/json' });
       if (navigator.canShare && navigator.canShare({ files: [file] }) && /Android|iPhone|iPad/i.test(navigator.userAgent)) { navigator.share({ files: [file], title: 'Partidas de Juega EnCicla' }).catch(() => this.download(blob, name)); return; }
@@ -2818,7 +2823,7 @@ const UI = JE.ui = {
   share(text) {
     const url = /^https?:/.test(location.protocol) && !/localhost|127\.0/.test(location.host) ? location.href.split('#')[0].split('?')[0] : JE.URL;
     if (navigator.share) navigator.share({ title: 'Juega EnCicla', text, url }).catch(() => { });
-    else window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank');
+    else { const wa = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); }
   },
   toast(t) { const el = $('#toast'); if (!el) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
   postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }
