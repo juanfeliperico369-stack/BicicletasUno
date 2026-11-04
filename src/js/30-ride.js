@@ -256,7 +256,7 @@ class Ride {
         const cx = (L + Rr) / 2, cy = (Tt + B) / 2, dx = tx - cx, dy = ty - cy, a = Math.atan2(dy, dx);
         const k = Math.min(dx > 0 ? (Rr - cx) / dx : dx < 0 ? (L - cx) / dx : 1e9, dy > 0 ? (B - cy) / dy : dy < 0 ? (Tt - cy) / dy : 1e9);
         const ax = cx + dx * k, ay = cy + dy * k;
-        c.save(); c.translate(ax, ay); c.rotate(a); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 3; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -11); c.lineTo(-3, 0); c.lineTo(-8, 11); c.closePath(); c.stroke(); c.fill(); c.restore();
+        c.save(); c.translate(ax, ay); c.rotate(a); c.scale(1.35, 1.35); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 3; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -11); c.lineTo(-3, 0); c.lineTo(-8, 11); c.closePath(); c.stroke(); c.fill(); c.restore();
         V.text(d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d / 10) * 10 + ' m', ax - Math.cos(a) * 26, ay - Math.sin(a) * 26 + 5, { size: 13, align: 'center', bg: '#0a2342ee', color: '#fff', pad: 3 });
       }
     }
