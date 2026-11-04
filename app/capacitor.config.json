@@ -1,0 +1,8 @@
+{
+  "appId": "com.juanfeliperico.juegaencicla",
+  "appName": "Juega EnCicla",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0a2342"
+  }
+}

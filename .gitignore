@@ -6,3 +6,12 @@ android/app/build/
 android/build/
 android/.gradle/
 *.log
+app/node_modules/
+app/www/
+app/android/.gradle/
+app/android/build/
+app/android/app/build/
+app/android/local.properties
+app/android/capacitor-cordova-android-plugins/build/
+app/android/app/src/main/assets/public/
+dist/*.apk
