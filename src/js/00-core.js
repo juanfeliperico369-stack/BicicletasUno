@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.2.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.3.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -42,9 +42,9 @@ const Save = JE.save = {
   def() {
     return {
       v: 1, created: Date.now(), profile: { name: 'Ciclista', skin: 1, shirt: 0, helmet: 0 },
-      xp: 0, stars: {}, best: {}, history: [], postales: [], perks: [], streak: 0, bestStreak: 0,
-      settings: { sfx: true, music: true, pace: 'normal', zoom: 0, vib: true, seen: {} },
-      stats: { km: 0, trips: 0, served: 0, fixed: 0, sorted: 0, plays: 0, leaves: 0 }
+      xp: 0, stars: {}, best: {}, history: [], postales: [], perks: [], streak: 0, bestStreak: 0, logros: [], flags: {},
+      settings: { sfx: true, music: true, pace: 'normal', zoom: 0, vib: true, hints: true, big: false, seen: {} },
+      stats: { km: 0, trips: 0, served: 0, fixed: 0, sorted: 0, plays: 0, leaves: 0, bells: 0 }
     };
   },
   merge(d, s) {
@@ -197,7 +197,7 @@ const View = JE.view = {
   },
   /* texto nítido en coordenadas CSS */
   text(t, x, y, o = {}) {
-    const c = this.ctx, sz = o.size || 14;
+    const c = this.ctx, sz = Math.round((o.size || 14) * (Save.data && Save.data.settings.big ? 1.15 : 1));
     c.font = (o.bold === false ? '' : '700 ') + sz + 'px ' + (o.body ? 'Cuerpo,system-ui,sans-serif' : 'Titulos,"Arial Narrow",Impact,sans-serif');
     c.textAlign = o.align || 'left'; c.textBaseline = o.base || 'alphabetic';
     if (o.bg) { const w = c.measureText(t).width, p = o.pad || 4; let bx = x - (c.textAlign === 'center' ? w / 2 : c.textAlign === 'right' ? w : 0) - p; c.fillStyle = o.bg; c.fillRect(bx, y - sz * .82 - p * .6, w + p * 2, sz + p * 1.1); if (o.border) { c.strokeStyle = o.border; c.lineWidth = 2; c.strokeRect(bx, y - sz * .82 - p * .6, w + p * 2, sz + p * 1.1); } }

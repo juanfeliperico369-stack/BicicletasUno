@@ -55,6 +55,7 @@ class Ride {
     this.stats = { dist: 0, ciclo: 0, crashes: 0, bells: 0, reds: 0 }; this.cicT = 0; this.offC = 0; this.cicLv = 0; this.lastLight = -1; this.stamp = null; this.opps = []; this.shake = 0; this.gps = []; this.gpsT = 0; this.big = false; this.spawnT = 0; this.honkT = 0;
     this.trains = [0, .25, .5, .75].map((f, i) => ({ l: 'A', p: f * MH * TS, dir: i % 2 ? 1 : -1, wait: 0 })).concat([{ l: 'B', p: 0, dir: 1, wait: 0 }]);
     if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), this.p.veh === 'truck'); this.p.x = n.x * TS + 4; this.p.y = n.y * TS + 4; }
+    this.initLife();
     this.bx0 = 12 * TS; this.bx1 = (RX[LINEB_Y] + 9) * TS; this.mmRect = null; this.joyDraw = null; this.ox = 0; this.oy = 0;
   }
   stats_() { return this.p.veh === 'truck' ? { max: 50, acc: 55, dec: 95, turn: 2.7, r: 4 } : { max: 60, acc: 120, dec: 150, turn: 5.6, r: 2.5 }; }
@@ -66,7 +67,7 @@ class Ride {
   }
   marker(m) { m.inside = false; m.r = m.r || 14; this.markers.push(m); return m; }
   removeMarker(m) { const i = this.markers.indexOf(m); if (i >= 0) this.markers.splice(i, 1); if (this.target === m) this.target = null; }
-  bell() { if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2; }
+  bell() { if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); this.bellPeds(); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2; }
   float(txt, col) { this.fx.push({ k: 't', x: this.p.x, y: this.p.y - 10, t: 1.1, txt, col: col || '#fff' }); }
   burst(x, y, col, n = 10) { for (let i = 0; i < n; i++) { const a = this.rng.f() * TAU, s = 20 + this.rng.f() * 40; this.fx.push({ k: 'p', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: .5 + this.rng.f() * .3, col }); } }
 
@@ -103,11 +104,12 @@ class Ride {
     if (P.veh === 'bike') {
       if (onC && P.v > 20) { this.cicT += dt; this.offC = 0; } else if ((this.offC += dt) > .7) this.cicT = 0;
       const lv = this.cicT >= 15 ? 3 : this.cicT >= 8 ? 2 : this.cicT >= 4 ? 1 : 0;
+      if (lv === 3 && !JE.headless) Save.data.flags.cic4 = 1;
       if (lv > this.cicLv) { this.float('¡Racha ciclorruta x' + (lv + 1) + '!', PAL.vd1); Snd.sfx('coin'); if (this.mode.onStreak) this.mode.onStreak(lv); }
       this.cicLv = lv;
       if (lv && P.v > 35 && !JE.headless && this.rng.f() < .5) this.fx.push({ k: 'p', x: P.x - Math.cos(P.a) * 6 + (this.rng.f() - .5) * 4, y: P.y - Math.sin(P.a) * 6 + (this.rng.f() - .5) * 4, vx: -Math.cos(P.a) * 30, vy: -Math.sin(P.a) * 30, t: .3, col: lv > 1 ? '#ffffff' : PAL.vd1 });
     }
-    this.updCars(dt); this.updTrains(dt);
+    this.updCars(dt); this.updTrains(dt); this.updLife(dt);
     // marcadores
     for (const m of this.markers.slice()) {
       const r = m.r + (P.veh === 'truck' ? 22 : 0), d = dist(P.x, P.y, m.x, m.y);
@@ -248,6 +250,7 @@ class Ride {
       const lamp = (x, y, k) => { prect(b, x - ox, y - oy, 3, 3, '#11151d'); prect(b, x - ox + 1, y - oy + 1, 1, 1, LC[k]); };
       lamp(L.x0 - 3, L.y0 - 3, s[0]); lamp(L.x1, L.y1, s[0]); lamp(L.x1, L.y0 - 3, s[1]); lamp(L.x0 - 3, L.y1, s[1]);
     }
+    this.drawGround(b, ox, oy, inV);
     // rivales (carrera)
     for (const o of this.opps) { if (!inV(o.x, o.y)) continue; const so = Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]); b.save(); b.translate(Math.round(o.x - ox), Math.round(o.y - oy)); b.rotate(o.a + Math.PI / 2); b.globalAlpha = .9; b.drawImage(so, -3, -6); b.restore(); }
     // jugador
@@ -259,12 +262,14 @@ class Ride {
       if (tr.l === 'A') { for (let k = -1; k <= 1; k++) { const py = tr.p + k * 17; if (!inV((rxf(py) + 9) * TS, py)) continue; b.drawImage(tc, Math.round((rxf(py) + 9) * TS - 3 - ox), Math.round(py - 8 - oy)); } }
       else { const px = this.bx0 + tr.p; for (let k = -1; k <= 1; k++) { const x = px + k * 17; if (!inV(x, LINEB_Y * TS)) continue; b.save(); b.translate(Math.round(x - ox), Math.round(LINEB_Y * TS + 4 - oy)); b.rotate(Math.PI / 2); b.drawImage(tc, -3, -8); b.restore(); } }
     }
+    this.drawSky(b, ox, oy);
     // partículas
     for (const f of this.fx) if (f.k === 'p') prect(b, f.x - ox, f.y - oy, 1, 1, f.col);
     // lluvia
     if (this.mode.mods.rain) { b.fillStyle = '#cfe8ff88'; for (const d of this.drops) { const x = (d.x * V.vw / 400) | 0, y = (d.y * V.vh / 400) | 0; b.fillRect(x, y, 1, 3); } b.fillStyle = '#0a234222'; b.fillRect(0, 0, V.vw, V.vh); }
     // noche
     const n = Art.night(min); if (n > 0) { b.fillStyle = 'rgba(8,18,52,' + (n * .5).toFixed(3) + ')'; b.fillRect(0, 0, V.vw, V.vh); }
+    this.drawGlow(b, ox, oy, inV, n);
   }
   /* ---- capa nítida: etiquetas, flecha, minimapa, joystick ---- */
   hud(V, opts = {}) {
@@ -276,6 +281,7 @@ class Ride {
     }
     for (const o of this.opps) { const x = sx(o.x), y = sy(o.y) - 14; if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
     if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .38); c.rotate(-.08); const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
+    this.hudLife(V, sx, sy);
     for (const f of this.fx) if (f.k === 't') V.text(f.txt, sx(f.x), sy(f.y), { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col });
     for (const m of this.markers) if (m.label && m.num) { const x = sx(m.x), y = sy(m.y); if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(String(m.num), x, y + 5, { size: 14, align: 'center', stroke: '#0a2342', sw: 4, color: m.col || PAL.amb }); }
     // flecha al objetivo

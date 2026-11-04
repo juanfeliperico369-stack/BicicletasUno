@@ -80,6 +80,8 @@ class MapMode extends Mode {
   tick() { }
   onRed() { this.score -= 5; }
   onStreak(lv) { this.score += 5 * lv; }
+  onPed() { this.score -= 3; }
+  onThanks() { this.score += 1; }
   /* mano guía: arrastrar hacia la ruta mientras no se haya movido */
   hint(V) {
     if (this.sub || !this.ride || this.ride.stats.dist > 60 || this.ride.big) return null;
@@ -551,7 +553,7 @@ class ModeSupervisor extends MapMode {
   atDepot() { this.inDepot = true; if (this.cierreM && !this.cierre && !this.sub) this.runSub(new MGApertura(this, { cierre: true, clock0: this.clock }), mg => { this.cierre = this.clock <= this.endClock; this.score += 40 + mg.score; this.ride.removeMarker(this.cierreM); this.cierreM = null; this.endT = 1; }); }
   tick(dt) {
     this.sim.step(this.rate * dt / this.timeMul, this.clock);
-    if (this.phase === 'staff') { this.clock = 300; this.coach = 'Apertura: toca un anfitrión y luego la estación de SU zona.'; return; }
+    if (this.phase === 'staff') { this.clock = 300; this.coach = ''; return; }
     for (const s of this.sim.st) if (s.lateOpen && this.clock > 420) { s.open = true; s.lateOpen = false; }
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
     if (this.clock < 1260) { this.incT -= dt; if (this.incT <= 0 && this.inc.length < 4) { this.incT = [0, 18, 15, 12][this.turno] * this.timeMul * this.rng.range(.7, 1.3); this.newInc(); } }
@@ -580,15 +582,15 @@ class ModeSupervisor extends MapMode {
     return R['sl' + i] || null;
   }
   staffPanel(V) {
-    const c = V.ctx, w = Math.min(460, V.w - 16), x = (V.w - w) / 2, y = 60, n = this.staffSt.length, h = 112 + n * 40 + 80;
+    const c = V.ctx, w = Math.min(460, V.w - 16), x = (V.w - w) / 2, y = V.h < 500 ? 50 : 60, n = this.staffSt.length, sr = Math.ceil(this.staff.length / 5), rh = clamp(Math.floor((V.h - y - 10 - 56 - sr * 44 - 64) / n), 28, 40), h = 56 + sr * 44 + n * rh + 64;
     c.fillStyle = PAL.crema; c.fillRect(x, y, w, h); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(x + 2, y + 2, w - 4, h - 4);
     c.fillStyle = PAL.az; c.fillRect(x, y, w, 26); V.text('5:00 A.M. · APERTURA DEL SISTEMA', x + 10, y + 18, { size: 15, color: PAL.vd1 });
     V.text('1) Toca un anfitrión  2) Toca la estación de SU zona', x + 10, y + 46, { size: 13, color: PAL.az, body: true });
     const cw = (w - 20) / Math.min(5, this.staff.length);
     this.staff.forEach((s, k) => { const bx = x + 10 + (k % 5) * cw, by = y + 56 + Math.floor(k / 5) * 44, used = this.assign.includes(k); this.button(V, bx, by, cw - 6, 38, s.name + ' · ' + s.zone[0].toUpperCase(), () => this.tapStaff(k), { key: 'st' + k, size: 14, bg: this.selStaff === k ? PAL.amb : used ? '#56657c' : PAL.az1, color: this.selStaff === k ? PAL.az : '#fff', border: this.selStaff === k ? PAL.az : '#fff' }); });
     let yy = y + 56 + Math.ceil(this.staff.length / 5) * 44 + 6;
-    this.staffSt.forEach((s, i) => { const a = this.assign[i]; this.button(V, x + 10, yy, w - 20, 34, s.name + ' (' + s.zone + ') ← ' + (a >= 0 ? this.staff[a].name + ' (' + this.staff[a].zone + ')' : 'toca para asignar'), () => this.tapSlot(i), { key: 'sl' + i, size: 14, bg: a >= 0 ? (this.staff[a].zone === s.zone ? PAL.vd2 : '#b0651a') : PAL.az2 }); yy += 40; });
-    this.button(V, x + w / 2 - 110, yy + 6, 220, 50, 'ABRIR EL SISTEMA ▶', () => this.confirmStaff(), { bg: PAL.vd2, size: 18 });
+    this.staffSt.forEach((s, i) => { const a = this.assign[i]; this.button(V, x + 10, yy, w - 20, rh - 6, s.name + ' (' + s.zone + ') ← ' + (a >= 0 ? this.staff[a].name + ' (' + this.staff[a].zone + ')' : 'toca para asignar'), () => this.tapSlot(i), { key: 'sl' + i, size: 14, bg: a >= 0 ? (this.staff[a].zone === s.zone ? PAL.vd2 : '#b0651a') : PAL.az2 }); yy += rh; });
+    this.button(V, x + w / 2 - 110, yy + 6, 220, 48, 'ABRIR EL SISTEMA ▶', () => this.confirmStaff(), { bg: PAL.vd2, size: 18 });
   }
   pointer(type, vx, vy, cx, cy) { if (this.phase === 'staff') { Mode.prototype.pointer.call(this, type, vx, vy, cx, cy); return true; } return super.pointer(type, vx, vy, cx, cy); }
   update(dt) { if (this.phase === 'staff') { this.t += dt; this.tick(dt); return; } super.update(dt); }

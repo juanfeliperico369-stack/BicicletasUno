@@ -2,7 +2,7 @@
    ARRANQUE
    ===================================================================== */
 (function boot() {
-  Save.load(); View.init(); JE.map.generate(); UI.init(); bindCanvas();
+  Save.load(); document.body.classList.toggle('big', !!Save.data.settings.big); View.init(); JE.map.generate(); UI.init(); bindCanvas();
   const q = new URLSearchParams(location.search);
   if (q.get('unlock')) JE.debugUnlock = true;
   const standalone = /*STANDALONE*/false;

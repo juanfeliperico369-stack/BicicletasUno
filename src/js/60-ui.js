@@ -18,7 +18,7 @@ const UI = JE.ui = {
   cur: 'sCover', tab: 'ruta',
   init() {
     $('#ver').textContent = 'v' + JE.version;
-    $('#bPlay').onclick = () => { this.go('sHome'); };
+    $('#bPlay').onclick = () => { if (!Save.data.settings.seen.intro) this.intro(() => this.go('sHome')); else this.go('sHome'); };
     $('#bReto').onclick = () => this.reto();
     $('#bHow').onclick = () => this.howto();
     $('#bShare').onclick = () => this.share('🚲 Juega EnCicla: el videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. ¡Pruébalo!');
@@ -97,6 +97,7 @@ const UI = JE.ui = {
     h += `<div class="row" style="margin:12px 0"><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
     if (!S.history.length) h += `<p class="m">Aún no has jugado. ¡Empieza por el Usuario!</p>`;
     else { h += `<table class="hist">`; for (const e of S.history.slice(0, 60)) { const d = new Date(e.d); h += `<tr><td>${d.toLocaleDateString('es-CO')} ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(ROLE[e.m] ? ROLE[e.m].name : e.m)} ${e.free ? 'libre' : 'T' + e.t}${e.reto ? ' · reto' : ''}</td><td>${fmtInt(e.s)} pts</td><td style="color:var(--amb)">${'★'.repeat(e.st)}</td></tr>`; } h += `</table>`; }
+    h += Logros.html();
     const el = $('#tab-parts'); el.innerHTML = h;
     $('#bExp').onclick = () => this.exportSave(); $('#bImp').onclick = () => $('#fileIn').click();
     $('#bDel').onclick = () => this.confirm('¿Borrar todas tus partidas y progreso?', () => { Save.reset(); this.renderHome(); this.toast('Progreso borrado'); });
@@ -106,17 +107,18 @@ const UI = JE.ui = {
     let h = `<div class="pag">PAG 4 · Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
     h += `<div class="opt"><span>Efectos de sonido</span><button class="sw ${S.sfx ? 'on' : ''}" data-sw="sfx" aria-label="Sonido"></button></div>`;
     h += `<div class="opt"><span>Música</span><button class="sw ${S.music ? 'on' : ''}" data-sw="music" aria-label="Música"></button></div>`;
+    h += `<div class="opt"><span>Letra grande</span><button class="sw ${S.big ? 'on' : ''}" data-sw="big" aria-label="Letra grande"></button></div>`;
     h += `<div class="opt"><span>Mano guía (ayudas)</span><button class="sw ${S.hints !== false ? 'on' : ''}" data-sw="hints" aria-label="Ayudas"></button></div>`;
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
-    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn" data-act="avatar">Mi ciclista</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
+    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="avatar">Mi ciclista</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
     const el = $('#tab-mas'); el.innerHTML = h;
-    $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !(S[k] !== false); Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); Snd.sfx('tap'); });
+    $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !(S[k] !== false); Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); if (k === 'big') document.body.classList.toggle('big', !!S.big); Snd.sfx('tap'); });
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
-    $$('[data-act]', el).forEach(b => b.onclick = () => ({ avatar: () => this.avatar(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
   },
   /* ---------- briefing ---------- */
   brief(roleId, turno, o = {}) {
@@ -148,6 +150,7 @@ const UI = JE.ui = {
     if (prog.best) h += `<div class="chip" style="margin:4px 0 8px">¡Nuevo récord en este turno!</div>`;
     h += `<ul class="goals">${res.goals.map(g => `<li class="${g.ok ? 'ok' : 'no'} ${g.main ? 'main' : ''}"><b>${g.ok ? '✓' : '✗'}</b><span>${esc(g.txt)}</span></li>`).join('')}</ul>`;
     if (prog.unlocks.length) h += `<div class="paper" style="margin:10px 0"><div class="t">¡Ascenso!</div><p style="margin:6px 0 0">Desbloqueaste: ${prog.unlocks.map(esc).join(', ')}</p></div>`;
+    if (prog.logros && prog.logros.length) h += `<div class="logros" style="margin:10px 0">${prog.logros.map(l => `<div class="logro ok nuevo"><img class="px" src="${Art.iconURL(l.icon, 2)}" alt=""><b>🏅 ${esc(l.name)}</b><small>${esc(l.desc)}</small></div>`).join('')}</div>`;
     if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
     if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
     const nextOk = !meta.free && !meta.reto && meta.roleId !== 'carrera' && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
@@ -155,12 +158,14 @@ const UI = JE.ui = {
     if (nextOk) h += `<button class="btn pri" id="bNext">▶ Siguiente turno</button>`;
     h += `<button class="btn ${nextOk ? '' : 'pri'}" id="bAgain">↻ Repetir</button>`;
     if (meta.reto) h += `<button class="btn amb" id="bShareR">Compartir mi reto</button>`;
+    h += `<button class="btn" id="bShareImg">📷 Compartir mi resultado</button>`;
     h += `<button class="btn gh" id="bEsc">Escalafón</button></div>`;
     $('#resBody').innerHTML = h; this.go('sResult'); $('#sResult .scroll').scrollTop = 0;
     $$('[data-perk]').forEach(b => b.onclick = () => { $$('[data-perk]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); const P = S.perks; if (!P.includes(b.dataset.perk)) { P.push(b.dataset.perk); if (P.length > 3) P.shift(); } Save.save(); Snd.sfx('star'); this.toast('Mejora: ' + PERKS[b.dataset.perk].name); });
     if (nextOk) $('#bNext').onclick = () => this.brief(meta.roleId, meta.turno + 1);
     $('#bAgain').onclick = () => { if (meta.net) { if (Net.status !== 'open') return this.toast('Se perdió la conexión: crea otra sala'); if (Net.role === 'host') this.netStartRace(); else this.toast('Pídele a quien creó la sala que inicie otra carrera'); return; } this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined }); };
     $('#bEsc').onclick = () => this.go('sHome');
+    $('#bShareImg').onclick = () => this.shareCard(res, meta);
     if (meta.reto) $('#bShareR').onclick = () => this.share(`🚲 Juega EnCicla · Reto del día: hice ${fmtInt(res.score)} puntos como ${r.name} (${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}). Código: ${this.code(meta)} ¿Me superas?`);
     Snd.sfx(res.pass ? 'win' : 'lose'); if (res.pass) confetti(res.stars);
   },
@@ -304,7 +309,8 @@ const Game = JE.game = {
     const co = $('#coach'), ct = a.coach || '';
     if (co.textContent !== ct) { co.textContent = ct; this.coachT = 0; co.style.opacity = 1; }
     this.coachT = (this.coachT || 0) + dt; if (M.ride && !M.sub && this.coachT > 8) co.style.opacity = 0;
-    const cb = 'calc(var(--sab) + ' + (a.coachB || 12) + 'px)'; if (co.style.bottom !== cb) co.style.bottom = cb;
+    const top = !!a.coachB && View.h < 520; co.classList.toggle('coachTop', top);
+    const cb = top ? '' : 'calc(var(--sab) + ' + (a.coachB || 12) + 'px)'; if (co.style.bottom !== cb) co.style.bottom = cb;
     const gm = $('#goalsMini'), hide = a.hideGoals ? 'none' : ''; if (gm.style.display !== hide) gm.style.display = hide;
     this.goalT -= dt; if (this.goalT <= 0) { this.goalT = .4; $('#goalsMini').innerHTML = M.free && M.id === 'usuario' ? '' : M.goals.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join(''); }
     const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
@@ -345,9 +351,10 @@ const Progress = JE.progress = {
         out.perkOpts = rng.shuffle(pool).slice(0, 3);
       } else { S.streak = 0; if (S.perks.length) { S.perks = []; out.lost = true; } }
     }
-    S.stats.km += Math.round((M.ride ? M.ride.stats.dist * M_PER_PX : 0)) / 1000;
-    Save.addHistory({ d: Date.now(), m: meta.roleId, t: meta.turno, s: res.score, st: res.stars, p: res.pass, free: meta.free, reto: meta.reto, nov: meta.nov.id, dur: Math.round(meta.dur), seed: meta.seed });
+    S.stats.km += Math.round((M.ride ? M.ride.stats.dist * M_PER_PX : 0)) / 1000; if (M.ride) S.stats.bells += M.ride.stats.bells;
+    Save.addHistory({ d: Date.now(), m: meta.roleId, t: meta.turno, s: res.score, st: res.stars, p: res.pass, free: meta.free, reto: meta.reto, net: meta.net, nov: meta.nov.id, dur: Math.round(meta.dur), seed: meta.seed });
     out.unlocks = ROLES.filter(r => UI.unlocked(r) && !before.includes(r.id)).map(r => r.name);
+    out.logros = Logros.check();
     Save.save(); return out;
   }
 };

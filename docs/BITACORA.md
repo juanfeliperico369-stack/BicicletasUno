@@ -74,3 +74,19 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - Choques en cadena porque los carros se arrastraban hasta el camión, y bloqueo frente a frente entre carro y camión.
 
 **Qué falta:** probar en celulares reales (en especial la sala entre redes distintas), código QR, salas de más de 2 jugadores y feedback de EnCicla.
+
+## 2026-11-04 · v0.3.0 · Medellín viva, logros y accesibilidad
+
+**Qué cambió**
+1. Tranvía de Ayacucho (calle exclusiva, 6 estaciones, se mueve y puede chocarte) y Metrocable K, P, J y H con cabinas animadas sobre las comunas.
+2. Peatones en aceras y plazas: si los atropellas pierdes puntos, y el timbre los aparta ("¡Gracias!").
+3. Noche: faroles, estaciones iluminadas y luces de los carros.
+4. 16 logros que se ven en la pestaña Partidas y aparecen en los resultados.
+5. Introducción "¿Qué es EnCicla?" (4 páginas) al primer Jugar, y sección "Apoya la bici pública" con el sitio oficial.
+6. Opción de letra grande, imagen de resultado para compartir (1080×1350, estilo revista) y mejoras en horizontal.
+
+**Qué se probó**
+- 100 partidas del bot, humo de interfaz (introducción, logros, tarjeta, letra grande y modales), multijugador entre dos páginas y CPU 4x lenta.
+- Capturas en horizontal (844×390) de 6 modos.
+
+**Qué falta:** probar en celulares reales, feedback de EnCicla y sonido ambiente diferente por zona.

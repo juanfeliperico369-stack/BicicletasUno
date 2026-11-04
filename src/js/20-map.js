@@ -146,7 +146,7 @@ const CityMap = JE.map = {
     for (let y = 116; y <= 134; y++) { const c = rxi(y); for (let d = 6; d <= 10; d++) { const v = this.get(c + d, y); if (v !== TT.AVE && v !== TT.ROAD && v !== TT.BRIDGE) this.set(c + d, y, (d === 8 || y % 6 === 0) ? TT.PLAZA : TT.GRASS); } }
     // estaciones
     this.stations = STATIONS_DEF.map((s, i) => this.carveStation(s, i));
-    this.marks(); this.buildLights(); this.buildLanes(); this.buildMetro(); this.buildMini();
+    this.marks(); this.buildLights(); this.buildTram(); this.buildLanes(); this.buildMetro(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h - 1) * TS, name: dp.name };
   },
   paintLandmark(L, i) {
@@ -234,6 +234,12 @@ const CityMap = JE.map = {
     };
     for (const b of this.bandsEW) { scan('x', b.r, -1, b.w === 3 ? 34 : 26, AVE_EW[b.r]); scan('x', b.r + b.w - 1, 1, b.w === 3 ? 34 : 26, AVE_EW[b.r]); }
     for (const b of this.bandsNS) { scan('y', b.r, 1, b.w === 3 ? 34 : 26, AVE_NS[b.r]); scan('y', b.r + b.w - 1, -1, b.w === 3 ? 34 : 26, AVE_NS[b.r]); }
+    const T = this.tram, keep = [];
+    for (const ln of L) {
+      if (T && ln.ax === 'x' && ln.c >= T.y - TS && ln.c < T.y + TS && ln.b > T.x0 && ln.a < T.x1) { if (T.x0 - ln.a >= 8 * TS) keep.push(Object.assign({}, ln, { b: T.x0 })); if (ln.b - T.x1 >= 8 * TS) keep.push(Object.assign({}, ln, { a: T.x1 })); }
+      else keep.push(ln);
+    }
+    L.length = 0; L.push(...keep);
     for (const ln of L) {
       ln.lights = [];
       for (const g of this.lights) {
@@ -244,10 +250,23 @@ const CityMap = JE.map = {
     }
     for (const [d, dir] of [[-5, 1], [-3, 1], [3, -1], [5, -1]]) L.push({ ax: 'r', d, a: 0, b: MH * TS, dir, spd: 46, lights: [], name: d < 0 ? 'Avenida Regional' : 'Autopista Norte-Sur' });
   },
+  /* Tranvía de Ayacucho (calle exclusiva: sin carros) */
+  buildTram() {
+    const y = 112, x0 = (rxi(y) + 9) * TS, x1 = (this.mE(y) - 9) * TS, names = ['San Antonio', 'San José', 'Bicentenario', 'Buenos Aires', 'Miraflores', 'Oriente'];
+    this.tram = { y: (y + 1) * TS, x0, x1, st: names.map((n, i) => ({ name: n, px: lerp(x0 + 12, x1 - 12, i / (names.length - 1)) })) };
+  },
   buildMetro() {
     this.metroA = METRO_A.map((n, i) => { const y = Math.round(8 + i * (244 / (METRO_A.length - 1))); return { name: n, py: y * TS + 4, px: (RX[y] + 9) * TS }; });
     const x0 = (RX[LINEB_Y] + 9) * TS, x1 = 12 * TS;
     this.metroB = METRO_B.map((n, i) => ({ name: n, px: lerp(x0, x1, i / (METRO_B.length - 1)), py: LINEB_Y * TS + 4 }));
+    const ac = this.metroA.find(s => s.name === 'Acevedo'), sj = this.metroB[this.metroB.length - 1], T = this.tram;
+    const mk = (name, col, ax, ay, bx, by) => ({ name, col, ax, ay, bx, by, len: Math.hypot(bx - ax, by - ay), st: [0, .36, .7, 1] });
+    this.cables = [
+      mk('Metrocable K · Santo Domingo', '#f2a900', ac.px + 6, ac.py, (this.mE(30) - 1) * TS, 30 * TS),
+      mk('Metrocable P · El Progreso', '#d14b9a', ac.px - 6, ac.py + 4, (this.mW(34) + 1) * TS, 34 * TS),
+      mk('Metrocable J · La Aurora', '#e8641f', sj.px, sj.py, (this.mW(94) + 1) * TS, 94 * TS),
+      mk('Metrocable H · Villa Sierra', '#7a5cc4', T.x1, T.y, (this.mE(122) - 1) * TS, 122 * TS)
+    ];
   },
   buildMini() {
     this.mini = Art.mk(MW, MH, c => {
@@ -256,6 +275,8 @@ const CityMap = JE.map = {
       c.putImageData(img, 0, 0);
       c.fillStyle = '#d6dde6'; for (let y = 0; y < MH; y++) c.fillRect(Math.round(RX[y] + 9), y, 1, 1);
       c.fillRect(12, LINEB_Y, Math.round(RX[LINEB_Y] + 9) - 12, 1);
+      c.fillStyle = PAL.cie; c.fillRect(Math.round(this.tram.x0 / TS), Math.round(this.tram.y / TS), Math.round((this.tram.x1 - this.tram.x0) / TS), 1);
+      c.lineWidth = 1; for (const cb of this.cables) { c.strokeStyle = cb.col; c.beginPath(); c.moveTo(cb.ax / TS, cb.ay / TS); c.lineTo(cb.bx / TS, cb.by / TS); c.stroke(); }
     });
   },
 
@@ -331,6 +352,9 @@ const CityMap = JE.map = {
       prect(c, mx - 2, py - py0, 6, 1, '#00000033'); prect(c, mx - 3, py - py0, 6, 1, '#c9ccd1'); prect(c, mx - 2, py - py0, 1, 1, '#7d838c'); prect(c, mx + 1, py - py0, 1, 1, '#7d838c');
       if (py % 48 === 0) prect(c, mx - 1, py - py0 + 1, 3, 3, '#00000044');
     }
+    const TR = this.tram; if (TR) { const ry = TR.y - py0, a = Math.max(TR.x0, px0) - px0, e = Math.min(TR.x1, px0 + CH * TS) - px0;
+      if (ry > -6 && ry < CH * TS + 6 && e > a) { for (let x = a - (a % 4); x < e; x += 4) prect(c, x, ry - 3, 1, 6, '#5d5446'); prect(c, a, ry - 2, e - a, 1, '#a7adb5'); prect(c, a, ry + 2, e - a, 1, '#a7adb5'); }
+      for (const s of TR.st) { const sx = s.px - px0; if (sx > -12 && sx < CH * TS + 12 && ry > -14 && ry < CH * TS + 14) { prect(c, sx - 8, ry - 13, 16, 4, '#dfe5ec'); prect(c, sx - 8, ry - 13, 16, 1, PAL.cie); prect(c, sx - 8, ry + 10, 16, 4, '#dfe5ec'); prect(c, sx - 8, ry + 13, 16, 1, PAL.cie); } } }
     const by = LINEB_Y * TS + 4 - py0, bx1 = (RX[LINEB_Y] + 9) * TS - px0, bx0 = 12 * TS - px0;
     if (by > -6 && by < CH * TS + 6) { prect(c, bx0, by - 2, bx1 - bx0, 6, '#00000033'); prect(c, bx0, by - 3, bx1 - bx0, 6, '#c9ccd1'); prect(c, bx0, by - 2, bx1 - bx0, 1, '#7d838c'); prect(c, bx0, by + 1, bx1 - bx0, 1, '#7d838c'); }
     for (const st of this.metroA) { const sx = st.px - px0, sy = st.py - py0; if (sx > -20 && sx < CH * TS + 20 && sy > -30 && sy < CH * TS + 30) { prect(c, sx - 6, sy - 10, 12, 20, '#e8ebef'); prect(c, sx - 6, sy - 10, 12, 2, PAL.vd); prect(c, sx - 6, sy + 8, 12, 2, PAL.vd); prect(c, sx - 2, sy - 8, 4, 16, '#7d838c'); } }

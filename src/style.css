@@ -170,3 +170,23 @@ pre.rep{white-space:pre-wrap;font-family:var(--fm);font-size:12px;background:#00
 @keyframes fall{to{transform:translateY(110vh) rotate(760deg)}}
 .paper.race{margin:0 0 16px;background:var(--vd1);border-color:var(--az)}
 .paper.race .btn{box-shadow:3px 3px 0 var(--az)}
+.logros{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+.logro{border:2px dashed var(--az3);padding:8px;display:flex;flex-direction:column;gap:3px;opacity:.55;background:var(--az)}
+.logro img{width:28px;height:28px}
+.logro b{font-family:var(--fd);font-size:17px;text-transform:uppercase;line-height:1}
+.logro small{font-size:12px;color:var(--bl2);line-height:1.25}
+.logro.ok{opacity:1;border:3px solid var(--vd);background:var(--az1)}
+.logro.nuevo{border-color:var(--amb);box-shadow:4px 4px 0 #0008;animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.06)}100%{transform:scale(1)}}
+.introimg{display:flex;justify-content:center;margin:10px 0;background:var(--az2);border:3px solid var(--bl);box-shadow:5px 5px 0 var(--vd2);padding:10px}
+.introimg img{width:96px;height:96px}
+.dots{display:flex;gap:6px;justify-content:center;margin:10px 0}
+.dots i{width:10px;height:10px;background:var(--az3)}.dots i.on{background:var(--vd)}
+body.big{font-size:17px}
+body.big .m,body.big .goals li,body.big .howto div,body.big .role .d{font-size:17px}
+body.big #coach{font-size:17px}
+body.big #goalsMini div{font-size:14px}
+body.big .chip{font-size:19px}
+body.big .btn{font-size:23px}
+body.big .turnos button{font-size:21px}
+#coach.coachTop{top:calc(var(--sat) + 52px);bottom:auto;left:auto;right:calc(12px + var(--sar));transform:none;max-width:42%}

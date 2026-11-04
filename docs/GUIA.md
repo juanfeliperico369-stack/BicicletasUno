@@ -28,9 +28,11 @@ src/js/00-core.js     utilidades, RNG con semilla, Save (localStorage + exportar
 src/js/10-art.js      arte pixel: personas, bicis (cenital, lateral, frontal), camión, carros, panorámica, íconos 16x16, portada
 src/js/20-map.js      mapa del Valle de Aburrá (150x260 baldosas de 8 px), estaciones, lugares, carriles, metro, ruta (Dial), dibujo por bloques
 src/js/30-ride.js     StationSim (demanda de préstamos) + Ride (bici/camión, tráfico, metro, GPS, minimapa) + drawOverview
+src/js/35-life.js     vida urbana: Tranvía de Ayacucho (calle sin carros), Metrocable K/P/J/H, peatones, luces de noche
 src/js/40-mg.js       minijuegos: MGAnfitrion, MGMecanico, MGBodega, MGApertura(cierre), MGCables, MGSimon, MGInspeccion
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
+src/js/65-extra.js    logros (16), introducción «¿Qué es EnCicla?», «Apoya la bici pública», tarjeta de resultado 1080x1350
 src/js/70-net.js      Net: sala WebRTC sin servidor (código comprimido que se comparte por WhatsApp)
 src/js/60-ui.js       UI (portada, escalafón, briefing, resultados, álbum, partidas, ajustes), Game (bucle), Progress
 src/js/90-bot.js      bot de pruebas (JE.bot.run): juega partidas y valida invariantes
@@ -108,6 +110,17 @@ Los botones con `{key}` guardan su centro en `this.rects`.
 Los códigos son `JE1o…`/`JE1a…`, es decir, el SDP comprimido con deflate-raw y en base64url (unos 560 caracteres).
 Mensajes: `hi` (nombre y camiseta), `start` (semilla) y `p` (posición cada 0,1 s), además de `fin` y `bye`.
 En la misma Wi-Fi funciona sin internet. Entre redes distintas usa STUN de Google, pero las redes con NAT simétrico necesitarían un servidor TURN (pendiente).
+
+**Vida urbana (v0.3):**
+- **Tranvía:** va y viene por la calle 112 con 6 estaciones y te choca si te atraviesas.
+- **Metrocable:** cuatro líneas en diagonal hacia las laderas, con cabinas animadas.
+- **Peatones:** caminan por aceras y plazas. Atropellar resta 3 puntos y el timbre los aparta (suma 1 punto).
+- **Noche:** faroles junto a las avenidas, estaciones iluminadas y luces de los carros.
+
+**Logros:** `LOGROS` (id, nombre, prueba sobre `Save.data`). Se revisan al final de cada turno con `Logros.check()`. `Save.data.flags` guarda hitos puntuales.
+
+**Accesibilidad:** «Letra grande» pone la clase `body.big` y multiplica por 1,15 el texto del canvas. «Mano guía» se puede apagar.
+En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derecha.
 
 ## 5. Convenciones de código
 
