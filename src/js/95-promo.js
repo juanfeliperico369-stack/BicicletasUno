@@ -25,7 +25,7 @@ Art.shareImage = function (w = 1200, h = 630) {
   x.textBaseline = 'alphabetic'; x.fillStyle = '#fff'; x.font = '700 190px Titulos, Impact, sans-serif'; x.fillText('JUEGA', 36, 250); x.fillStyle = PAL.vd; x.font = '700 150px Titulos, Impact, sans-serif'; x.fillText('ENCICLA', 40, 390);
   x.fillStyle = PAL.amb; x.font = 'italic 34px Georgia, serif'; x.fillText('¿Sabes cuántas bicis mueve tu ciudad?', 44, 450);
   x.save(); x.translate(ax + aw - 60, ay + ah - 10); x.rotate(-.12); x.fillStyle = PAL.amb; x.fillRect(-120, -34, 240, 64); x.strokeStyle = PAL.az; x.lineWidth = 5; x.strokeRect(-120, -34, 240, 64); x.fillStyle = PAL.az; x.font = '700 40px Titulos, Impact, sans-serif'; x.textAlign = 'center'; x.fillText('¡9 OFICIOS!', 0, 14); x.restore();
-  x.fillStyle = PAL.crema; x.fillRect(0, h - 90, w, 90); x.fillStyle = PAL.vd; x.fillRect(0, h - 96, w, 6); x.fillStyle = PAL.az; x.font = '700 46px Titulos, Impact, sans-serif'; x.textAlign = 'left'; x.fillText('LA REVISTA ARCADE MÁS PEDALEADA', 40, h - 30);
-  x.font = '700 24px Cuerpo, sans-serif'; x.textAlign = 'right'; x.fillText('Juega sin internet · Web y Android', w - 40, h - 36);
+  x.fillStyle = PAL.crema; x.fillRect(0, h - 90, w, 90); x.fillStyle = PAL.vd; x.fillRect(0, h - 96, w, 6); x.fillStyle = PAL.az; x.font = '700 44px Titulos, Impact, sans-serif'; x.textAlign = 'left'; x.fillText('LA REVISTA ARCADE MÁS PEDALEADA', 40, h - 30); const tw = x.measureText('LA REVISTA ARCADE MÁS PEDALEADA').width;
+  x.font = '700 22px Cuerpo, sans-serif'; x.textAlign = 'right'; if (w - 40 - x.measureText('Juega sin internet · Web y Android').width > 40 + tw + 30) x.fillText('Juega sin internet · Web y Android', w - 40, h - 36);
   return c;
 };
