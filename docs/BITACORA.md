@@ -24,3 +24,18 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - Atascos en esquinas (se añadió asistencia de esquinas).
 
 **Qué falta:** feedback del equipo EnCicla, multijugador por red, APK firmado para Play Store.
+
+## 2026-11-04 · v0.1.0 · Publicación y pulido
+
+**Qué cambió**
+- Publicado en GitHub Pages (rama `gh-pages`, solo `dist/web/`).
+- Portada sin textos encimados, zoom del mapa adaptado a escritorio, ruta GPS más visible, flecha al objetivo fuera de la lista de metas,
+  el primer usuario del Anfitrión llega enseguida.
+- Ayuda contextual que no tapa los botones de los minijuegos y metas ocultas mientras hay tarjetas abiertas.
+
+**Qué se probó**
+- 100 partidas del bot y humo de interfaz.
+- En el enlace publicado (`tests/verify-live.js`): carga sin errores, service worker activado, abre y se juega sin conexión,
+  Chrome reporta 0 errores de instalabilidad y og:image, apple-touch-icon y manifest responden 200.
+
+**Qué falta:** APK (en proceso con Capacitor), feedback del equipo EnCicla.
