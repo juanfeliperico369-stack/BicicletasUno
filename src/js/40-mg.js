@@ -5,7 +5,7 @@
 class MG {
   constructor(parent, o = {}) {
     this.p = parent; this.o = o; this.t = 0; this.done = false; this.score = 0; this.errors = 0; this.coach = ''; this.btns = []; this.pops = []; this.flash = 0;
-    this.view = { kind: 'px', dw: 200, dh: 150 }; this.rng = parent.rng; this.L = null;
+    this.view = { kind: 'px', dw: 200, dh: 150 }; this.rng = parent.rng; this.L = null; this.hideGoals = !!parent.ride;
   }
   has(k) { return this.p.has(k); }
   pop(txt, x, y, col) { this.pops.push({ txt, x, y, t: 1, col: col || '#fff' }); }
@@ -27,7 +27,8 @@ class MG {
     return false;
   }
   card(V, w, h, title) {
-    const c = V.ctx, x = (V.w - w) / 2, y = 58; c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
+    const hudB = (($('#hud') || {}).getBoundingClientRect ? $('#hud').getBoundingClientRect().bottom : 50) || 50;
+    const c = V.ctx, x = (V.w - w) / 2, y = Math.max(58, Math.round(hudB) + 8); c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
     c.fillStyle = PAL.crema; c.fillRect(x, y, w, h); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(x + 2, y + 2, w - 4, h - 4);
     c.fillStyle = PAL.az; c.fillRect(x, y, w, 24); V.text(title, x + 10, y + 17, { size: 15, color: PAL.vd1 });
     return { x, y };

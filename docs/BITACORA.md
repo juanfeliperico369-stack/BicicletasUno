@@ -90,3 +90,50 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - Capturas en horizontal (844×390) de 6 modos.
 
 **Qué falta:** probar en celulares reales, feedback de EnCicla y sonido ambiente diferente por zona.
+
+## 2026-11-04 · v0.4.0 · De Caldas a Barbosa, Easter eggs y nuevos minijuegos
+
+**Qué cambió**
+1. **Mapa de Caldas a Barbosa** (según las capturas de la app oficial): 150×432 baldosas.
+   - Al norte de Bello, corredor que gira al noreste con Copacabana, Girardota, Barbosa y campo entre pueblos.
+   - Al sur: Envigado, Itagüí, Sabaneta, La Estrella y Caldas.
+   - 106 estaciones con nombres de barrio en 10 municipios.
+   - 12 lugares nuevos, entre ellos el Alto de San Miguel (nacimiento del río), Quitasol, Fabricato, Ditaires y Otraparte.
+   - La línea A del metro termina en Niquía.
+2. **Minijuegos nuevos inspirados en tus referencias:**
+   - Circuito (Infinity Loop) y Señal láser (Laser) en Técnico.
+   - Semaforero (Traffix) en los avisos del Supervisor.
+   - Desvíos (Package Inc) en Bodega T3.
+   - Maquinista (Railways/Tiny Rails), como Easter egg.
+   - Laberinto de Moravia, como Easter egg.
+3. **Easter eggs:**
+   - El Metro secreto ("Próximamente: Juega Metro").
+   - El laberinto de Moravia.
+   - La bici dorada (7 toques al título o código Konami).
+   - La postal secreta de las Tres Cruces.
+   - 5 logros nuevos, 3 de ellos secretos.
+4. **Multijugador:** salas de hasta 4 jugadores (estrella con reenvío), invitación con **código QR** y escáner con la cámara (cuando el equipo lo permite).
+5. Monitoreo por zona con vista recortada, minimapa tipo radar y sub-zonas para que el mapa grande no alargue los turnos.
+6. **Ciclovía** con avenidas cerradas y conos, y **Feria de las Flores** con silleteros.
+7. **Play Store y página oficial:**
+   - `landing/pagina.html` y `privacidad.html`, con APK descargable en `descargas/`.
+   - Guía `docs/PLAY_STORE.md`, imágenes de tienda (`tools/store.js`) y firma de release.
+   - Permiso de cámara (QR) y versionCode 400.
+
+**Qué se probó**
+- Integridad del mapa: 106 estaciones y 38 lugares alcanzables en bici; todas las estaciones al alcance del camión.
+- Los 6 minijuegos nuevos completos con el bot.
+- 100 partidas del bot.
+- Sala de 3 dispositivos (anfitrión y 2 invitados) en la que el invitado 2 ve al anfitrión y al invitado 1.
+- QR verificado en las versiones 1 a 40 (idéntico a la referencia Nayuki, leído por zxing y OpenCV).
+
+**Errores encontrados y corregidos**
+- La plaza de Girardota cortaba la avenida y el camión no llegaba.
+- El camión se atascaba en pasos de 1 baldosa: se redujo su radio de colisión.
+- Todos los invitados quedaban con id 0 y el reenvío fallaba.
+- La línea A del metro llegaba hasta Barbosa.
+
+**Qué falta:**
+- La lista oficial de estaciones por zona (el usuario la ofreció) para reemplazar los nombres aproximados.
+- La leyenda de colores de los pines de la app oficial.
+- Pruebas en celulares reales y el permiso escrito de EnCicla para publicar.

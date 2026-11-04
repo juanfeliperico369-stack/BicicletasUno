@@ -190,3 +190,6 @@ body.big .chip{font-size:19px}
 body.big .btn{font-size:23px}
 body.big .turnos button{font-size:21px}
 #coach.coachTop{top:calc(var(--sat) + 52px);bottom:auto;left:auto;right:calc(12px + var(--sar));transform:none;max-width:42%}
+.qrbox{display:flex;justify-content:center;background:#fff;padding:8px;border:3px solid var(--az);margin:6px 0}
+.qrbox canvas{max-width:100%;height:auto;image-rendering:pixelated}
+.roster{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}

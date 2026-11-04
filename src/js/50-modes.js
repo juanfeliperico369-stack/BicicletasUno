@@ -30,8 +30,8 @@ const NOVEDADES = [
   { id: 'sincarro', name: 'Día sin carro', desc: 'Casi no hay carros y salen más bicis.', mods: { traffic: .2, demand: 1.2 } },
   { id: 'pico', name: 'Hora pico', desc: 'Más tráfico y más usuarios.', mods: { traffic: 1.5, demand: 1.2, pico: true } },
   { id: 'partido', name: 'Partido en el Atanasio', desc: 'Mucha gente pedalea hacia el Estadio.', mods: { demand: 1.1, extra: { id: 'estadio', mult: 3 } } },
-  { id: 'flores', name: 'Feria de las Flores', desc: 'Turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3 } },
-  { id: 'ciclovia', name: 'Ciclovía', desc: 'Menos carros y la bici rueda más rápido.', mods: { traffic: .5, ciclovia: true } }
+  { id: 'flores', name: 'Feria de las Flores', desc: 'Silleteros por las aceras y turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3 } },
+  { id: 'ciclovia', name: 'Ciclovía', desc: 'Avenida El Poblado, Avenida 80 y Las Vegas cerradas a los carros: ¡conos y bicis por todas partes!', mods: { traffic: .5, ciclovia: true } }
 ];
 
 class Mode {
@@ -81,6 +81,17 @@ class MapMode extends Mode {
   onRed() { this.score -= 5; }
   onStreak(lv) { this.score += 5 * lv; }
   onPed() { this.score -= 3; }
+  /* Easter eggs: minijuegos secretos */
+  easter(kind) {
+    if (this.sub || this.done) return;
+    const metro = kind === 'metro', mg = metro ? new MGRutas(this, { theme: 'metro', dur: 45, clock0: this.clock }) : new MGLaberinto(this, { n: 9, clock0: this.clock });
+    JE.ui && JE.ui.toast(metro ? '🚇 ¡Encontraste al Maquinista secreto!' : '🌼 ¡Encontraste el Laberinto secreto de Moravia!');
+    this.runSub(mg, s => {
+      this.score += Math.round(s.score / 2); Save.data.flags[metro ? 'metroEgg' : 'mazeEgg'] = 1;
+      this.ride.stamp = { t: 2.4, title: metro ? 'PRÓXIMAMENTE: JUEGA METRO' : '¡LABERINTO RESUELTO!', sub: metro ? 'El juego 11 de la saga: Metro, Metroplús y buses' : 'Moravia: de basurero a jardín', bg: metro ? PAL.cie : '#ffd84a' };
+      Snd.sfx('star');
+    });
+  }
   onThanks() { this.score += 1; }
   /* mano guía: arrastrar hacia la ruta mientras no se haya movido */
   hint(V) {
@@ -102,6 +113,11 @@ class MapMode extends Mode {
   key(e) { if (e.code === 'Space' && this.ride && this.ride.p.veh === 'bike') this.ride.bell(); if (e.code === 'KeyM' && this.ride) this.ride.big = !this.ride.big; }
   actions() { return this.ride && this.ride.p.veh === 'bike' ? [{ id: 'bell', icon: 'timbre', label: 'Timbre', fn: () => { this.ride.bell(); if (this.has('timbre')) this.score += 1; } }] : []; }
   stationZone(z) { return JE.map.stations.filter(s => !z || s.zone === z); }
+  /* sub-zona: estaciones a menos de rad baldosas de un centro al azar (el mapa es grande: Caldas → Barbosa) */
+  subZone(list, rad, cx, cy) {
+    if (cx == null) { const c = this.rng.pick(list); cx = c.x; cy = c.y; }
+    const r = list.filter(s => dist(s.x, s.y, cx, cy) <= rad * TS); return r.length >= 5 ? r : list.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 8);
+  }
   /* bot: sigue el flujo de ruta hacia el objetivo */
   botDrive() {
     const T = this.ride.target; if (!T) { this.botDir = { x: 0, y: 0, m: 0 }; return; }
@@ -155,8 +171,8 @@ class ModeUsuario extends MapMode {
   onLeaf() { this.leavesGot++; this.score += 5; Save.data.stats.leaves++; }
   nextLeg(from) {
     const R = this.rng, T = this.turno, minD = [0, 35, 50, 60][T], maxD = [0, 80, 110, 130][T];
-    const cands = LANDMARKS.filter(l => l.id !== 'depot').filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
-    const L = R.pick(cands.length ? cands : LANDMARKS.filter(l => l.id !== 'depot')); this.lm = L;
+    const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
+    const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
     const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
     this.ret = R.pick(near).s; this.phase = 'go';
     this.ride.markers = [];
@@ -181,7 +197,7 @@ class ModeUsuario extends MapMode {
     else { const at = this.ret; this.loan0 = this.clock; this.takeBike(at); this.nextLeg(at); this.toast('Nuevo préstamo en ' + at.name + ': ahora ve a ' + this.lm.name); }
   }
   freeSetup() {
-    const todo = LANDMARKS.filter(l => l.id !== 'depot' && !Save.data.postales.includes(l.id));
+    const todo = PUBLIC_LM().filter(l => !Save.data.postales.includes(l.id));
     for (const L of todo) this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6, r: Math.max(L.w, L.h) * TS / 2 + 10, col: PAL.amb, label: L.name, enter: (m) => { this.collect(L); this.score += 20; Snd.sfx('star'); this.ride.float('¡Postal!', PAL.amb); this.ride.removeMarker(m); this.pickFreeTarget(); } });
     this.pickFreeTarget();
   }
@@ -245,21 +261,30 @@ class ModeMecanico extends ModeSub {
 /* ======================= 4. BODEGA ======================= */
 class ModeBodega extends ModeSub {
   constructor(role, T, opt) {
-    super(role, T, opt); this.sub = new MGBodega(this, { turno: T, dur: 120 * this.timeMul }); this.view = this.sub.view; const S = this.sub; S.min = 420;
+    super(role, T, opt);
+    if (T === 3) { // turno 3: bandas con desvíos (estilo Package Inc)
+      const S = this.sub = new MGRutas(this, { dur: 120 * this.timeMul }); this.view = S.view; S.min = 420;
+      this.goal('Entrega 28 piezas en su bahía', true, () => S.ok >= 28, () => S.ok + '/28');
+      this.goal('Precisión ≥ 85%', false, () => S.acc() * 100 >= 85, () => Math.round(S.acc() * 100) + '%');
+      this.goal('Combo de 8 seguidas', false, () => S.best >= 8, () => 'combo ' + S.best);
+      return;
+    }
+    this.sub = new MGBodega(this, { turno: T, dur: 120 * this.timeMul }); this.view = this.sub.view; const S = this.sub; S.min = 420;
     const tg = [0, 25, 35, 45][T], acc = [0, 85, 88, 90][T], tr = [0, 1, 2, 1][T];
     this.goal('Clasifica ' + tg + ' piezas', true, () => S.ok >= tg, () => S.ok + '/' + tg);
     this.goal('Precisión ≥ ' + acc + '%', false, () => S.acc() * 100 >= acc, () => Math.round(S.acc() * 100) + '%');
     this.goal('Llena ' + tr + ' camión' + (tr > 1 ? 'es' : ''), false, () => S.trucks >= tr, () => S.trucks + '/' + tr);
   }
   update(dt) { this.sub.min += dt * 3; super.update(dt); }
-  info() { return { clock: fmtClock(this.sub.min), score: this.sub.score, chips: [{ t: 'Combo x' + Math.min(5, 1 + Math.floor(this.sub.combo / 4)) }] }; }
+  info() { return { clock: fmtClock(this.sub.min), score: this.sub.score, chips: [{ t: this.turno === 3 ? 'Combo ' + this.sub.combo : 'Combo x' + Math.min(5, 1 + Math.floor(this.sub.combo / 4)) }] }; }
 }
 
 /* ======================= 5. APOYO ======================= */
 class ModeApoyo extends MapMode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.zone = [null, 'centro', 'sur', 'norte'][T]; this.rate = 2.4; this.clock = 420; this.endClock = 900;
-    const zs = this.stationZone(this.zone), autos = R.shuffle(zs.filter(s => s.type === 'a')), mans = R.shuffle(zs.filter(s => s.type === 'm'));
+    const zs = this.subZone(this.stationZone(this.zone), 60), autos = R.shuffle(zs.filter(s => s.type === 'a')), mans = R.shuffle(zs.filter(s => s.type === 'm'));
+    if (!mans.length) mans.push(R.pick(zs)); if (!autos.length) autos.push(R.pick(zs));
     const plan = [['apertura', autos[0]], ['relevo', mans[0]], ['inspeccion', R.pick(zs)]];
     if (T >= 2) plan.push(['apertura', autos[1] || autos[0]]), plan.push(['cierre', autos[2] || autos[0]]);
     if (T >= 3) plan.push(['relevo', mans[1] || mans[0]]);
@@ -298,7 +323,7 @@ class ModeApoyo extends MapMode {
 class ModeTecnico extends MapMode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.zone = [null, 'centro', 'norte', 'sur'][T]; this.rate = 2; this.clock = 420; this.endClock = 780;
-    this.sim = new StationSim(R, { demand: this.mods.demand }); this.zs = this.sim.st.filter(s => s.zone === this.zone);
+    this.sim = new StationSim(R, { demand: this.mods.demand }); this.zs = this.subZone(this.sim.st.filter(s => s.zone === this.zone), 55).slice(0, 12);
     const home = this.zs[0]; this.setupRide({ sim: this.sim, start: { x: home.x, y: home.y } });
     this.breakEvery = [0, 22, 17, 13][T] * this.timeMul; this.breakT = 3; this.fixed = 0; this.opSum = 0; this.opT = 0; this.mgErr = 0; this.brk = new Map();
     this.breakOne();
@@ -317,8 +342,12 @@ class ModeTecnico extends MapMode {
   }
   retarget() { const P = this.ride.p; let best = null, bd = 1e9; for (const m of this.brk.values()) { const d = dist(m.x, m.y, P.x, P.y); if (d < bd) { bd = d; best = m; } } this.ride.target = best; }
   repair(s, kind, m) {
-    if (this.sub || !s.broken) return; const T = this.turno;
-    this.runSub(kind === 'totem' ? new MGSimon(this, { len: 2 + T }) : new MGCables(this, { n: 2 + T }), mg => {
+    if (this.sub || !s.broken) return; const T = this.turno, R = this.rng;
+    // variedad de reparaciones según el turno: cables, memoria del tótem, circuito (piezas) y señal láser (espejos)
+    let mgN;
+    if (kind === 'totem') mgN = T === 3 && R.f() < .5 ? new MGLaser(this, { n: 5, turns: 3 }) : T >= 2 && R.f() < .35 ? new MGLaser(this, { n: 4, turns: 2 }) : new MGSimon(this, { len: 2 + T });
+    else mgN = T >= 2 && R.f() < .5 ? new MGLoop(this, { n: T === 3 ? 5 : 4 }) : new MGCables(this, { n: 2 + T });
+    this.runSub(mgN, mg => {
       s.broken = false; this.fixed++; this.mgErr += mg.errors; this.errors += mg.errors; const pts = Math.round((30 + mg.score) * (this.has('radio') ? 1.2 : 1)); this.score += pts;
       this.ride.removeMarker(m); this.brk.delete(s); this.ride.float('+' + pts + ' ¡Reparada!', PAL.vd1); Snd.sfx('win'); this.retarget();
     });
@@ -352,7 +381,7 @@ class ModeBalance extends MapMode {
   newOrder() {
     const used = new Set(this.orders.map(o => o.s)); const st = this.sim.st.filter(s => !used.has(s) && s.open);
     st.sort((a, b) => a.bikes / a.cap - b.bikes / b.cap);
-    const P = this.ride.p, far = s => dist(s.x, s.y, P.x, P.y) > 120;
+    const P = this.ride.p, far = s => { const d = dist(s.x, s.y, P.x, P.y); return d > 120 && d < 900; };
     const low = st.filter(far).slice(0, 4), high = st.filter(far).slice(-4);
     const takeLow = this.rng.f() < .55; const s = this.rng.pick(takeLow ? low : high) || st[0]; if (!s) return;
     const type = s.bikes / s.cap < .5 ? 'llevar' : 'recoger', n = Math.max(3, Math.round(Math.abs(s.bikes - s.cap * .55)));
@@ -397,14 +426,20 @@ class ModeMonitoreo extends Mode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.clock = 330; this.endClock = 1320; this.rate = (this.endClock - this.clock) / (220 * this.timeMul);
     this.sim = new StationSim(R, { demand: this.mods.demand * (1 + .1 * (T - 1)), depot: 60, extra: this.mods.extra });
-    const dp = JE.map.depot; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
+    // sala de monitoreo por zona (el sistema va de Caldas a Barbosa): T1 centro, T2 sur, T3 norte
+    this.zone = [null, 'centro', 'sur', 'norte'][T]; const zl = this.sim.st.filter(s => s.zone === this.zone), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
+    this.zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16);
+    const bs = this.zs[0]; this.base = { x: bs.x + 14, y: bs.y + 10 };
+    const xs = this.zs.map(s => s.x), ys = this.zs.map(s => s.y), m = 10 * TS; this.crop = { x0: Math.max(0, Math.min(...xs) - m), y0: Math.max(0, Math.min(...ys) - m), x1: Math.min(MW * TS, Math.max(...xs) + m), y1: Math.min(MH * TS, Math.max(...ys) + m) };
+    const dp = this.base; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
     this.sel = null; this.radio = []; this.flags = new Map(); this.view = { kind: 'map' };
-    const sv = [0, 80, 85, 88][T];
-    this.goal('Nivel de servicio ≥ ' + sv + '%', true, () => this.sim.service() * 100 >= sv, () => Math.round(this.sim.service() * 100) + '%');
-    this.goal('Al cierre, ninguna estación vacía', false, () => this.sim.st.every(s => s.bikes > 0), () => this.sim.st.filter(s => s.bikes <= 0).length + ' vacías');
+    const sv = [0, 75, 82, 86][T];
+    this.goal('Nivel de servicio ≥ ' + sv + '%', true, () => this.serv() * 100 >= sv, () => Math.round(this.serv() * 100) + '%');
+    this.goal('Al cierre, ninguna estación vacía', false, () => this.zs.every(s => s.bikes > 0), () => this.zs.filter(s => s.bikes <= 0).length + ' vacías');
     this.goal('Camiones descargados en la bodega', false, () => this.trucks.every(t => t.load === 0 && !t.path && dist(t.x, t.y, dp.x, dp.y) < 30), () => this.trucks.filter(t => t.load === 0 && !t.path).length + '/' + this.trucks.length);
     this.coach = 'Toca una estación: si está vacía (rojo) LLEVA bicis; si está llena (azul) RECÓGELAS.';
   }
+  serv() { const T = Math.max(1, this.sim.elapsed) * this.zs.length; let bad = 0; for (const s of this.zs) bad += s.emptyT + s.fullT; return clamp(1 - bad / T, 0, 1); }
   addJob(t, job) { t.q.push(job); }
   best(s) { let b = null, bc = 1e9; for (const t of this.trucks) { const c = t.q.length * 900 + dist(t.x, t.y, s.x, s.y); if (c < bc) { bc = c; b = t; } } return b; }
   order(s, type) {
@@ -417,7 +452,7 @@ class ModeMonitoreo extends Mode {
   go(t, x, y) { t.path = [{ x, y: t.y }, { x, y }]; }
   update(dt) {
     this.t += dt; const dm = this.rate * dt; this.clock += dm; this.sim.step(dm, this.clock);
-    const dp = JE.map.depot, spd = 60 * dm * (this.has('camion') ? 1.15 : 1);
+    const dp = this.base, spd = 60 * dm * (this.has('camion') ? 1.15 : 1);
     for (const t of this.trucks) {
       if (t.path) {
         const p = t.path[0], d = dist(t.x, t.y, p.x, p.y);
@@ -432,12 +467,12 @@ class ModeMonitoreo extends Mode {
       }
     }
     // radio: avisos de estaciones críticas
-    for (const s of this.sim.st) { const st = s.bikes <= 0 ? 'vacía' : s.bikes >= s.cap ? 'llena' : ''; if (st && s._r !== st) this.say('📻 ' + s.name + ' está ' + st); s._r = st; }
+    for (const s of this.zs) { const st = s.bikes <= 0 ? 'vacía' : s.bikes >= s.cap ? 'llena' : ''; if (st && s._r !== st) this.say('📻 ' + s.name + ' está ' + st); s._r = st; }
     if (this.clock > 1260 && !this.warn) { this.warn = 1; this.say('⏰ ¡Se acerca el cierre! Regresa los camiones vacíos.'); JE.ui && JE.ui.toast('¡Se acerca el cierre! Usa "Regresar camiones".'); }
     if (this.clock >= this.endClock) this.end();
   }
   arrive(t) {
-    const j = t.q[0]; if (!j) return; const dp = JE.map.depot;
+    const j = t.q[0]; if (!j) return;
     if (j.stage === 'home') { this.sim.depot += t.load; t.load = 0; t.q.shift(); return; }
     if (j.stage === 'depot') { const k = Math.min(t.cap - t.load, Math.max(j.n - t.load, 0) + 2, this.sim.depot); t.load += k; this.sim.depot -= k; j.loaded = true; t.wait = 8; return; }
     const s = j.s; let moved = 0;
@@ -447,7 +482,7 @@ class ModeMonitoreo extends Mode {
   }
   render(V) { V.b.fillStyle = PAL.az; V.b.fillRect(0, 0, V.vw, V.vh); }
   hud(V) {
-    this.btns = []; const o = { sim: this.sim, trucks: this.trucks, sel: this.sel, top: 58, bot: this.sel ? 150 : 90, noBg: true };
+    this.btns = []; const o = { sim: this.sim, stations: this.zs, base: this.base, crop: this.crop, trucks: this.trucks, sel: this.sel, top: 58, bot: this.sel ? 150 : 90, noBg: true };
     const r = drawOverview(V, o); this.rect = r; const c = V.ctx;
     for (const [s, ty] of this.flags) { c.fillStyle = ty === 'llevar' ? PAL.vd : PAL.amb; c.fillRect(r.x + s.x * r.k + 7, r.y + s.y * r.k - 12, 6, 6); }
     // radio
@@ -463,27 +498,27 @@ class ModeMonitoreo extends Mode {
       this.button(V, x + 24 + half, yy + 62, half, 54, 'RECOGER −' + Math.max(2, Math.round(s.bikes - s.cap * .5)), () => this.order(s, 'recoger'), { bg: '#b0651a', size: 18, key: 'rec' });
     } else {
       this.button(V, 10, V.h - 74, bw, 58, '🏠 Regresar camiones', () => this.home(), { size: 16 });
-      V.text('Bodega: ' + this.sim.depot + ' bicis · ' + this.trucks.map(t => '🚚' + t.id + ':' + t.load).join('  '), V.w - 10, V.h - 40, { size: 13, align: 'right', color: '#c4ec7c', body: true });
+      V.text('Zona ' + this.zone + ' · Base: ' + this.sim.depot + ' bicis · ' + this.trucks.map(t => '🚚' + t.id + ':' + t.load).join('  '), V.w - 10, V.h - 40, { size: 13, align: 'right', color: '#c4ec7c', body: true });
     }
   }
   pointer(type, vx, vy, cx, cy) {
     if (type !== 'down') return false; if (super.pointer(type, vx, vy, cx, cy)) return true;
     const r = this.rect; if (!r) return false; let best = null, bd = 30;
-    for (const s of this.sim.st) { const d = dist(cx, cy, r.x + s.x * r.k, r.y + s.y * r.k); if (d < bd) { bd = d; best = s; } }
+    for (const s of this.zs) { const d = dist(cx, cy, r.x + s.x * r.k, r.y + s.y * r.k); if (d < bd) { bd = d; best = s; } }
     this.sel = best === this.sel ? null : best; if (best) Snd.sfx('tap'); return true;
   }
   hint() {
     if (this.ordered >= 2 || !this.rect) return null; const R = this.rects || {};
     if (this.sel) return R[this.sel.bikes / this.sel.cap < .5 ? 'lle' : 'rec'] || null;
-    const s = this.sim.st.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0], r = this.rect;
+    const s = this.zs.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0], r = this.rect;
     return { x: r.x + s.x * r.k, y: r.y + s.y * r.k, txt: s.name };
   }
-  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: 'Servicio ' + Math.round(this.sim.service() * 100) + '%' }] }; }
+  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: 'Servicio ' + Math.round(this.serv() * 100) + '%' }] }; }
   bot() {
     if (this.t < (this.botNext || 0)) return; this.botNext = this.t + .9;
     if (this.clock > 1240) { if (!this.sentHome) { this.sentHome = 1; this.home(); } return; }
     const busy = new Set(this.flags.keys());
-    const cand = this.sim.st.filter(s => !busy.has(s)).map(s => ({ s, r: s.bikes / s.cap })).sort((a, b) => Math.abs(b.r - .5) - Math.abs(a.r - .5))[0];
+    const cand = this.zs.filter(s => !busy.has(s)).map(s => ({ s, r: s.bikes / s.cap })).sort((a, b) => Math.abs(b.r - .5) - Math.abs(a.r - .5))[0];
     if (cand && Math.abs(cand.r - .5) > .3 && this.trucks.some(t => t.q.length < 2)) this.order(cand.s, cand.r < .5 ? 'llevar' : 'recoger');
   }
 }
@@ -497,7 +532,7 @@ class ModeSupervisor extends MapMode {
     this.setupRide({ sim: this.sim, start: { x: dp.x, y: dp.y + 6 } }); this.sim.trucks.push(this.ride.p);
     this.depM = this.ride.marker({ x: dp.x, y: dp.y, r: 20, col: PAL.cie, label: 'Bodega', enter: () => this.atDepot(), leave: () => { this.inDepot = false; } });
     // personal por asignar
-    const mans = R.shuffle(this.sim.st.filter(s => s.type === 'm')).slice(0, 3 + T);
+    this.area = this.sim.st.filter(s => dist(s.x, s.y, dp.x, dp.y) < 100 * TS); const mans = R.shuffle(this.area.filter(s => s.type === 'm')).slice(0, 3 + T);
     this.staffSt = mans; this.staff = mans.map((s, i) => ({ name: STAFF_NAMES[i], zone: R.f() < .75 ? s.zone : R.pick(['norte', 'centro', 'sur']) }));
     R.shuffle(this.staff); this.assign = new Array(mans.length).fill(-1); this.phase = 'staff'; this.selStaff = -1;
     this.inc = []; this.incT = 6; this.solved = 0; this.expiredN = 0; this.incN = 0; this.cierre = false;
@@ -517,10 +552,12 @@ class ModeSupervisor extends MapMode {
   tapStaff(k) { this.selStaff = k; Snd.sfx('tap'); }
   tapSlot(i) { if (this.selStaff < 0) return; const prev = this.assign.indexOf(this.selStaff); if (prev >= 0) this.assign[prev] = -1; this.assign[i] = this.selStaff; this.selStaff = -1; Snd.sfx('coin'); }
   newInc() {
-    const R = this.rng, types = ['relevo', 'bici', 'anclaje', 'balance', 'bodega']; let type = R.pick(types);
+    const R = this.rng, types = ['relevo', 'bici', 'anclaje', 'balance', 'bodega', 'transito']; let type = R.pick(types);
     if (this.inc.some(i => i.type === 'bodega') && type === 'bodega') type = 'bici';
-    let s = type === 'bodega' ? null : R.pick(type === 'relevo' ? this.sim.st.filter(x => x.type === 'm') : this.sim.st);
-    if (type === 'balance') { const ex = this.sim.st.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0]; s = ex; }
+    let s = type === 'bodega' ? null : R.pick(type === 'relevo' ? this.area.filter(x => x.type === 'm') : this.area);
+    if (type === 'transito') { const L = R.pick(JE.map.lights), dp0 = JE.map.depot; s = null; const id0 = ++this.incN, it0 = { id: id0, type, s: null, due: this.clock + 150, txt: 'Semáforo dañado', px: (L.x0 + L.x1) / 2, py: (L.y0 + L.y1) / 2 }; void dp0;
+      it0.m = this.ride.marker({ x: it0.px, y: it0.py, r: 20, col: '#ff8a3d', label: 'Semáforo', num: id0, enter: () => this.solve(it0) }); this.inc.push(it0); this.retarget(); JE.ui && JE.ui.toast('📻 Aviso ' + id0 + ': semáforo dañado en un cruce: ¡dirige el tránsito!'); return; }
+    if (type === 'balance') { const ex = this.area.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0]; s = ex; }
     const dp = JE.map.depot, x = s ? s.x : dp.x, y = s ? s.y : dp.y, id = ++this.incN;
     const it = { id, type, s, due: this.clock + 150, txt: { relevo: 'Relevo de almuerzo', bici: 'Bici dañada', anclaje: 'Anclajes sin señal', balance: s && s.bikes / s.cap < .5 ? 'Estación casi vacía' : 'Estación casi llena', bodega: 'Llegó un lote a bodega' }[type] };
     if (type === 'anclaje' && s) s.broken = true;
@@ -536,7 +573,8 @@ class ModeSupervisor extends MapMode {
       case 'relevo': this.runSub(new MGAnfitrion(this, { turno: 2, short: true, dur: 28 * this.timeMul, cap: 6, clock0: c0, rate: 1.6 }), done); break;
       case 'bici': this.runSub(new MGMecanico(this, { turno: 1, short: true, target: 2, maxBikes: 3, dur: 40, faults: [1, 2], timePer: 18 }), done); break;
       case 'anclaje': this.runSub(new MGCables(this, { n: 3 + (this.turno > 2 ? 1 : 0) }), mg => { if (it.s) it.s.broken = false; done(mg); }); break;
-      case 'bodega': this.runSub(new MGBodega(this, { turno: 1, dur: 22 }), done); break;
+      case 'bodega': this.runSub(this.rng.f() < .5 ? new MGBodega(this, { turno: 1, dur: 22 }) : new MGRutas(this, { dur: 25 }), done); break;
+      case 'transito': this.runSub(new MGTraffix(this, { dur: 28, target: 8 + this.turno * 2 }), done); break;
       case 'balance':
         if (this.ride.p.veh === 'truck') { const s = it.s, P = this.ride.p, need = Math.round(s.cap * .5 - s.bikes); if (need > 0) { const k = Math.min(need, P.load); P.load -= k; s.bikes += k; } else { const k = Math.min(-need, P.cap - P.load); P.load += k; s.bikes -= k; } done({ score: 10, errors: 0 }); }
         else JE.ui && JE.ui.toast('Toca 🚚 en la lista de avisos para enviar un camión, o ven en camión.');
@@ -568,7 +606,7 @@ class ModeSupervisor extends MapMode {
     for (const it of this.inc) {
       const late = it.due - this.clock < 30, act = () => { this.ride.target = it.m; Snd.sfx('tap'); };
       const c = V.ctx; c.fillStyle = '#0a2342e6'; c.fillRect(x, y, w, 34); c.strokeStyle = this.ride.target === it.m ? PAL.amb : late ? PAL.cor : '#ffffff55'; c.lineWidth = 2; c.strokeRect(x + 1, y + 1, w - 2, 32);
-      V.text(it.id + '. ' + it.txt, x + 8, y + 15, { size: 12, color: '#fff', body: true }); V.text((it.s ? it.s.name : 'Bodega') + ' · antes de ' + fmtClock(it.due), x + 8, y + 29, { size: 11, color: late ? PAL.cor : '#c4ec7c', body: true });
+      V.text(it.id + '. ' + it.txt, x + 8, y + 15, { size: 12, color: '#fff', body: true }); V.text((it.s ? it.s.name : it.type === 'transito' ? 'Cruce de avenidas' : 'Bodega') + ' · antes de ' + fmtClock(it.due), x + 8, y + 29, { size: 11, color: late ? PAL.cor : '#c4ec7c', body: true });
       this.btns.push({ x, y, w: w - (it.type === 'balance' ? 44 : 0), h: 34, fn: act });
       if (it.type === 'balance') this.button(V, x + w - 40, y + 2, 36, 30, it.sent ? '…' : '🚚', () => this.dispatch(it), { size: 15 });
       y += 40;

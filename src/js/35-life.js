@@ -12,6 +12,12 @@ Ride.prototype.initLife = function () {
 Ride.prototype.updLife = function (dt) {
   if (!this.peds) this.initLife();
   const T = this.map.tram, tr = this.trm, P = this.p, r = this.stats_().r;
+  // postal secreta (Easter egg): Cerro de las Tres Cruces
+  const sc = LM.trescruces;
+  if (sc && !this.secretGot && Math.abs(P.x - (sc.x + sc.w / 2) * TS) < sc.w * TS / 2 + 16 && Math.abs(P.y - (sc.y + sc.h / 2) * TS) < sc.h * TS / 2 + 16) {
+    this.secretGot = true;
+    if (!JE.headless && !Save.data.postales.includes(sc.id)) { Save.data.postales.push(sc.id); this.stamp = { t: 2.4, title: '¡POSTAL SECRETA!', sub: sc.name, bg: '#ff8fc7' }; Snd.sfx('star'); this.mode.score += 50; }
+  }
   // tranvía: va y viene, para en sus estaciones
   if (tr.stop > 0) tr.stop -= dt; else if (tr.wait > 0) tr.wait -= dt;
   else {
@@ -29,7 +35,7 @@ Ride.prototype.updLife = function (dt) {
       const tx = Math.floor(cam.x / TS) + this.rng.i(-18, 18), ty = Math.floor(cam.y / TS) + this.rng.i(-24, 24);
       if (!PED_OK(this.map.get(tx, ty))) continue; const x = tx * TS + 4, y = ty * TS + 4; if (dist(x, y, P.x, P.y) < 50) continue;
       const d = this.rng.pick([[1, 0], [-1, 0], [0, 1], [0, -1]]);
-      this.peds.push({ x, y, dx: d[0], dy: d[1], spd: this.rng.range(6, 11), col: this.rng.pick(['#ff6b5a', '#56c7ff', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#7fd1b9']), skin: this.rng.pick(SKINS), ph: this.rng.f(), hit: 0, side: 0 });
+      this.peds.push({ x, y, dx: d[0], dy: d[1], spd: this.rng.range(6, 11), col: this.rng.pick(['#ff6b5a', '#56c7ff', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#7fd1b9']), skin: this.rng.pick(SKINS), ph: this.rng.f(), hit: 0, side: 0, sil: !!this.mode.mods.flores && this.rng.f() < .45 });
       break;
     }
   }
@@ -59,7 +65,7 @@ Ride.prototype.drawGround = function (b, ox, oy, inV) {
   const tr = this.trm; if (!tr) return;
   for (let k = -1; k <= 1; k++) { const x = tr.x + k * 14; if (!inV(x, tr.y)) continue; prect(b, x - ox - 6, tr.y - oy - 2, 13, 6, '#0004'); prect(b, x - ox - 7, tr.y - oy - 3, 13, 6, '#f1f4f7'); prect(b, x - ox - 7, tr.y - oy - 2, 13, 1, '#1d2c44'); prect(b, x - ox - 7, tr.y - oy + 2, 13, 1, PAL.cie); }
   prect(b, tr.x - ox + (tr.dir > 0 ? 19 : -22), tr.y - oy - 1, 1, 2, '#fff3a0');
-  for (const q of this.peds) { if (!inV(q.x, q.y, 6)) continue; const bob = (q.ph * 4 | 0) % 2, x = Math.round(q.x - ox), y = Math.round(q.y - oy); prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
+  for (const q of this.peds) { if (!inV(q.x, q.y, 6)) continue; const bob = (q.ph * 4 | 0) % 2, x = Math.round(q.x - ox), y = Math.round(q.y - oy); prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.sil) { prect(b, x - 3, y + 1, 7, 4, '#7a5230'); prect(b, x - 3, y + 1, 2, 2, '#ff8fc7'); prect(b, x - 1, y + 1, 2, 2, '#ffd84a'); prect(b, x + 1, y + 1, 2, 2, '#ff6b5a'); prect(b, x - 2, y + 3, 2, 1, '#b07cff'); prect(b, x + 1, y + 3, 2, 1, '#fff'); } if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
 };
 Ride.prototype.drawSky = function (b, ox, oy) {
   const t = this.mode.t, vw = View.vw, vh = View.vh;

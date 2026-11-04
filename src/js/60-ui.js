@@ -11,7 +11,12 @@ const TIPS = [
   'Entre 2024 y mediados de 2026 se registraron más de 3 millones de préstamos.',
   'Más de 130 estaciones habilitadas en el área metropolitana (2026).',
   'Usa casco, respeta los semáforos y prefiere la ciclorruta.',
-  'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).'
+  'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).',
+  'El sistema va desde Caldas, donde nace el río, hasta Copacabana al norte del valle.',
+  'Dicen que si tocas el timbre tres veces bajo una estación del Metro… pasa algo.',
+  'En Moravia, tres timbrazos abren algo que florece.',
+  'El título de la portada guarda un secreto dorado.',
+  'Hay una postal que no aparece en el álbum hasta que la encuentras pedaleando.'
 ];
 
 const UI = JE.ui = {
@@ -23,6 +28,11 @@ const UI = JE.ui = {
     $('#bHow').onclick = () => this.howto();
     $('#bShare').onclick = () => this.share('🚲 Juega EnCicla: el videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. ¡Pruébalo!');
     $('#bHomeCover').onclick = () => this.go('sCover');
+    // Easter egg: bici dorada (7 toques al título o código Konami)
+    let taps = [], seq = []; const KON = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+    const gold = () => { const F = Save.data.flags; F.gold = !F.gold; F.goldSeen = 1; Save.save(); Snd.sfx('star'); this.toast(F.gold ? '✨ ¡Bici dorada activada! (repite para quitarla)' : 'Bici dorada desactivada'); };
+    $('#sCover h1.mega.g').addEventListener('pointerdown', () => { const t = performance.now(); taps = taps.filter(x => t - x < 4000); taps.push(t); if (taps.length >= 7) { taps = []; gold(); } });
+    window.addEventListener('keydown', e => { if (this.cur !== 'sCover') return; seq.push(e.code); seq = seq.slice(-10); if (seq.join() === KON.join()) { seq = []; gold(); } });
     $$('#tabs button').forEach(b => b.onclick = () => { Snd.sfx('tap'); this.setTab(b.dataset.tab); });
     $('#bPause').onclick = () => Game.pause();
     $('#fileIn').onchange = e => this.importFile(e);
@@ -77,7 +87,7 @@ const UI = JE.ui = {
     const mu = $('[data-act=multi]', el); if (mu) mu.onclick = () => this.multi();
   },
   renderAlbum() {
-    const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot');
+    const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot' && (!l.secret || Save.data.postales.includes(l.id)));
     let h = `<div class="pag">PAG 2 · Postales del valle</div><div class="sect"><span class="outline">${got.length}</span><h2 class="mega">Álbum<br><span style="color:var(--vd)">de postales</span></h2></div><p class="m">Visita los lugares del Valle de Aburrá en modo Usuario para coleccionarlos. Tienes ${got.length} de ${list.length}.</p><div class="album">`;
     list.forEach((L, i) => { const have = got.includes(L.id); h += `<div class="post ${have ? '' : 'lock'}" style="--r:${(h2(i, 3) - .5) * 3}deg"><canvas width="120" height="90" data-lm="${LANDMARKS.indexOf(L)}"></canvas><b>${have ? esc(L.name) : '???'}</b><small>${have ? esc(L.fact) : esc(L.muni) + ' · aún sin visitar'}</small></div>`; });
     h += `</div>`;
@@ -179,36 +189,62 @@ const UI = JE.ui = {
   multi() {
     const net = Net.supported();
     this.modal(`<h2>Jugar con amigos</h2>
-    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera en 2 celulares</div><p style="margin:6px 0 0;font-size:14px">1) Uno toca <b>Crear sala</b> y envía el código. 2) El otro toca <b>Unirme</b>, pega el código y devuelve la respuesta. 3) Quien creó la sala pega la respuesta y ¡arranca la carrera! En la misma red Wi-Fi funciona sin internet.</p></div>
+    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera hasta 4 jugadores</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos: <b>¡Empezar!</b> En la misma red Wi-Fi funciona sin internet.</p></div>
     ${net ? '<div class="row"><button class="btn pri" id="nHost">Crear sala</button><button class="btn" id="nJoin">Unirme</button></div><div id="nBox" style="margin-top:10px"></div>' : '<p class="m">Este navegador no permite salas (WebRTC).</p>'}
     <div class="squig"></div><p class="m"><b>Reto con código</b> (sin internet): todos juegan las mismas condiciones y comparan puntos.</p>
     <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn" id="bCode">Jugar ese código</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
       $('#bCode').onclick = () => { const p = this.parseCode($('#codeIn').value); if (!p) return this.toast('Código no válido'); if (!this.unlocked(ROLE[p.roleId])) return this.toast('Aún no tienes ese oficio'); this.closeModal(); this.brief(p.roleId, p.turno, { reto: true, seed: p.seed, nov: new RNG(p.seed).pick(NOVEDADES) }); };
       if (!net) return;
-      const box = $('#nBox'), codeUI = (title, code, next) => `<p class="pag">${title}</p><textarea class="txtin" rows="3" readonly id="nCode" style="font-size:11px">${esc(code)}</textarea><div class="row" style="margin:8px 0"><button class="btn sm" id="nCopy">Copiar</button><button class="btn sm" id="nShare">Compartir</button></div>${next}`;
-      const bindCopy = code => { $('#nCopy').onclick = () => { const t = $('#nCode'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => this.toast('Código copiado ✓')).catch(() => { document.execCommand('copy'); this.toast('Código copiado ✓'); }); }; $('#nShare').onclick = () => this.shareCode(code); };
-      Net.onstatus = s => { const st = $('#nStat'); if (st) st.textContent = { open: '¡Conectados! Empezando…', failed: 'No se pudo conectar. Intenten en la misma red Wi-Fi.', disconnected: 'Conexión perdida', closed: 'Conexión cerrada', waiting: 'Esperando…' }[s] || s; if (s === 'open') { Net.send({ t: 'hi', name: Save.data.profile.name, shirt: SHIRTS[Save.data.profile.shirt] }); } };
+      const box = $('#nBox'); this.netRoster = null; this.netPlayers = {};
+      Net.onstatus = s => { const st = $('#nStat'); if (st) st.textContent = { open: '¡Conectados!', failed: 'No se pudo conectar. Intenten en la misma red Wi-Fi.', disconnected: 'Conexión perdida', closed: 'Conexión cerrada', waiting: 'Esperando…' }[s] || s; if (Net.role === 'host') this.renderLobby(); };
       Net.onmsg = m => this.netLobbyMsg(m);
-      $('#nHost').onclick = async () => {
-        box.innerHTML = '<p class="m">Preparando la sala…</p>';
-        try { const code = await Net.host(); box.innerHTML = codeUI('1) Envía este código a tu amigo', code, '<p class="pag">2) Pega aquí su respuesta</p><textarea class="txtin" rows="3" id="nAns" style="font-size:11px" placeholder="JE1a…"></textarea><div class="col"><button class="btn pri" id="nGo">Conectar</button></div><p class="m" id="nStat"></p>'); bindCopy(code);
-          $('#nGo').onclick = async () => { try { await Net.accept($('#nAns').value); $('#nStat').textContent = 'Conectando…'; } catch (e) { this.toast(e.message); } };
-        } catch (e) { box.innerHTML = '<p class="m">No se pudo crear la sala: ' + esc(e.message) + '</p>'; }
-      };
+      $('#nHost').onclick = () => { Net.reset(); Net.role = 'host'; this.netPlayers = {}; this.renderLobby(); };
       $('#nJoin').onclick = () => {
-        box.innerHTML = '<p class="pag">Pega el código de la sala</p><textarea class="txtin" rows="3" id="nOff" style="font-size:11px" placeholder="JE1o…"></textarea><div class="col"><button class="btn pri" id="nAnsB">Generar respuesta</button></div>';
-        $('#nAnsB').onclick = async () => { try { box.innerHTML = '<p class="m">Generando respuesta…</p>'; const code = await Net.join(this._off = ($('#nOff') || {}).value || this._off); box.innerHTML = codeUI('Envía esta respuesta a quien creó la sala', code, '<p class="m" id="nStat">Esperando que conecte…</p>'); bindCopy(code); } catch (e) { box.innerHTML = '<p class="m">' + esc(e.message) + '</p>'; } };
-        const ta = $('#nOff'); ta.oninput = () => { this._off = ta.value; };
+        box.innerHTML = '<p class="pag">Escanea el QR de la sala o pega su código</p>' + (QR.canScan() ? '<div class="col"><button class="btn amb" id="nScan">📷 Escanear QR</button></div>' : '') + '<textarea class="txtin" rows="3" id="nOff" style="font-size:11px;margin-top:8px" placeholder="JE1o…"></textarea><div class="col"><button class="btn pri" id="nAnsB">Generar respuesta</button></div>';
+        const gen = async txt => { try { box.innerHTML = '<p class="m">Generando respuesta…</p>'; const code = await Net.join(txt); box.innerHTML = this.codeUI('Muestra este QR (o envía la respuesta) a quien creó la sala', code, '<p class="m" id="nStat">Esperando que conecte…</p><div id="nRoster"></div>'); this.bindCode(code); } catch (e) { box.innerHTML = '<p class="m">' + esc(e.message) + '</p>'; } };
+        $('#nAnsB').onclick = () => gen($('#nOff').value);
+        const sc = $('#nScan'); if (sc) sc.onclick = () => QR.startScan(t => gen(t), e => this.toast(e));
       };
     });
   },
+  codeUI(title, code, next) { return `<p class="pag">${title}</p><div class="qrbox" id="nQR"></div><textarea class="txtin" rows="2" readonly id="nCode" style="font-size:10px">${esc(code)}</textarea><div class="row" style="margin:8px 0"><button class="btn sm" id="nCopy">Copiar</button><button class="btn sm" id="nShare">Compartir</button></div>${next}`; },
+  bindCode(code) {
+    try { const q = $('#nQR'); if (q) q.appendChild(QR.canvas(code, 3, 3)); } catch (e) { }
+    $('#nCopy').onclick = () => { const t = $('#nCode'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => this.toast('Código copiado ✓')).catch(() => { document.execCommand('copy'); this.toast('Código copiado ✓'); }); };
+    $('#nShare').onclick = () => this.shareCode(code);
+  },
+  /* sala del anfitrión: lista de jugadores, invitar (QR/código) y empezar */
+  renderLobby() {
+    const box = $('#nBox'); if (!box || Net.role !== 'host') return;
+    const me = Save.data.profile, ps = [{ id: 0, name: me.name + ' (tú)' }].concat(Object.entries(this.netPlayers).map(([id, p]) => ({ id: +id, name: p.name })));
+    const pend = Net.pending, canInv = Net.peers.length < Net.MAX && !pend, ready = Object.keys(this.netPlayers).length > 0;
+    if (this._lobbyBusy) return;
+    box.innerHTML = `<p class="pag">Sala · ${ps.length} de 4 jugadores</p><div class="roster">${ps.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('')}</div>
+      <div id="nInv"></div><div class="col">${canInv ? '<button class="btn" id="nInvite">+ Invitar jugador</button>' : ''}<button class="btn pri" id="nStart" ${ready ? '' : 'disabled'}>▶ ¡Empezar carrera!</button></div><p class="m" id="nStat"></p>`;
+    const inv = $('#nInvite'); if (inv) inv.onclick = async () => {
+      this._lobbyBusy = true; $('#nInv').innerHTML = '<p class="m">Preparando invitación…</p>';
+      try { const code = await Net.host(); $('#nInv').innerHTML = this.codeUI('Invitación ' + Net.peers.length + ': que tu amigo escanee este QR', code, '<p class="pag">Luego escanea o pega su respuesta</p>' + (QR.canScan() ? '<div class="col"><button class="btn amb" id="nScanA">📷 Escanear respuesta</button></div>' : '') + '<textarea class="txtin" rows="2" id="nAns" style="font-size:10px" placeholder="JE1a…"></textarea><div class="col"><button class="btn pri" id="nGo">Conectar</button></div>'); this.bindCode(code);
+        const acc = async t => { try { await Net.accept(t); this._lobbyBusy = false; this.toast('Conectando…'); setTimeout(() => this.renderLobby(), 300); } catch (e) { this.toast(e.message); } };
+        $('#nGo').onclick = () => acc($('#nAns').value); const sa = $('#nScanA'); if (sa) sa.onclick = () => QR.startScan(t => acc(t), e => this.toast(e));
+      } catch (e) { this._lobbyBusy = false; $('#nInv').innerHTML = '<p class="m">No se pudo crear la invitación: ' + esc(e.message) + '</p>'; }
+    };
+    const st = $('#nStart'); if (st) st.onclick = () => this.netStartRace();
+  },
   shareCode(code) { const t = 'Juega EnCicla · código de sala: ' + code; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else { const wa = 'https://wa.me/?text=' + encodeURIComponent(t); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); } },
   netLobbyMsg(m) {
-    if (m.t === 'hi') { this.netOpp = { name: String(m.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(m.shirt) ? m.shirt : PAL.cor }; if (Net.role === 'host') this.netStartRace(); }
-    else if (m.t === 'start' && Net.role === 'guest') this.netRace(m.seed, m.lvl || 2);
+    const P = Save.data.profile, clean = p => ({ id: p.id | 0, name: String(p.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(p.shirt) ? p.shirt : PAL.cor });
+    if (m.t === 'id' && Net.role === 'guest') { Net.myId = m.id | 0; Net.send({ t: 'hi', name: P.name, shirt: SHIRTS[P.shirt] }); }
+    else if (m.t === 'hi' && Net.role === 'host') { this.netPlayers[m.from] = Object.assign(clean(m), { id: m.from | 0 }); this._lobbyBusy = false; Net.send({ t: 'roster', players: this.roster() }); this.renderLobby(); Snd.sfx('coin'); }
+    else if (m.t === 'roster' && Net.role === 'guest') { this.netRoster = (m.players || []).slice(0, 4).map(clean); const r = $('#nRoster'); if (r) r.innerHTML = '<div class="roster">' + this.netRoster.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('') + '</div>'; const st = $('#nStat'); if (st) st.textContent = '¡En la sala! Esperando que empiece la carrera…'; }
+    else if (m.t === 'start' && Net.role === 'guest') this.netRace(m.seed >>> 0, m.lvl || 2, (m.players || []).map(clean));
+    else if (m.t === 'bye' && Net.role === 'host') { delete this.netPlayers[m.from]; this.renderLobby(); }
   },
-  netStartRace() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0; Net.send({ t: 'start', seed, lvl: 2 }); this.netRace(seed, 2); },
-  netRace(seed, lvl) { this.closeModal(); if (Game.mode) Game.stop(); const o = this.netOpp || { name: 'Amigo', shirt: PAL.cor }; Game.start('carrera', lvl, { seed, nov: NOVEDADES[0], net: true, oppName: o.name, oppShirt: o.shirt }); },
+  roster() { const P = Save.data.profile; return [{ id: 0, name: P.name, shirt: SHIRTS[P.shirt] }].concat(Object.values(this.netPlayers)); },
+  netStartRace() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, players = this.roster(); Net.send({ t: 'start', seed, lvl: 2, players }); this.netRace(seed, 2, players); },
+  netRace(seed, lvl, players) {
+    this.closeModal(); if (Game.mode) Game.stop(); const others = (players || []).filter(p => p.id !== Net.myId);
+    Game.start('carrera', lvl, { seed, nov: NOVEDADES[0], net: true, players: others.length ? others : [{ id: 0, name: 'Amigo', shirt: PAL.cor }] });
+  },
   /* ---------- modales ---------- */
   modal(html, bind) { $('#mBody').innerHTML = html; $('#modal').hidden = false; const c = $('#mClose'); if (c) c.onclick = () => this.closeModal(); if (bind) bind(); },
   closeModal() { $('#modal').hidden = true; },
@@ -277,7 +313,7 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || roleId === 'carrera' ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || roleId === 'carrera' ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();

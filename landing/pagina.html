@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Juega EnCicla · el videojuego de la bici pública</title>
+<meta name="description" content="Juega EnCicla: videojuego arcade en pixel art sobre el sistema de bicicletas públicas del Valle de Aburrá. 9 oficios, 27 turnos y carrera multijugador. Gratis, sin anuncios y sin internet.">
+<meta name="theme-color" content="#0a2342"><meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://juanfeliperico369-stack.github.io/BicicletasUno/pagina.html">
+<link rel="icon" type="image/png" href="arte/icono.png">
+<meta property="og:type" content="website"><meta property="og:locale" content="es_CO"><meta property="og:site_name" content="Juega EnCicla">
+<meta property="og:title" content="Juega EnCicla · el videojuego de la bici pública">
+<meta property="og:description" content="Del usuario al supervisor: vive los 9 oficios que hacen posible cada préstamo. Gratis, sin anuncios y sin internet. Web, Android e iPhone.">
+<meta property="og:url" content="https://juanfeliperico369-stack.github.io/BicicletasUno/pagina.html">
+<meta property="og:image" content="https://juanfeliperico369-stack.github.io/BicicletasUno/compartir.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Portada de Juega EnCicla: ciclista en la ciclorruta al atardecer y el título en letras gigantes">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fuentes/titulos.woff" as="font" type="font/woff" crossorigin>
+<style>
+@font-face{font-family:"Titulos";src:url(fuentes/titulos.woff) format("woff");font-display:swap}
+@font-face{font-family:"Cuerpo";font-weight:100 900;src:url(fuentes/cuerpo.woff2) format("woff2");font-display:swap}
+:root{--az:#0a2342;--az1:#0e2d55;--az2:#143a6b;--az3:#2a5a92;--vd:#9bd341;--vd1:#c4ec7c;--vd2:#5e9a1e;--bl:#fff;--bl2:#dfe9f5;--dim:#8aa3c4;--crema:#f4efd8;--amb:#ffc93c;
+--fd:"Titulos","Arial Narrow",Impact,sans-serif;--fb:"Cuerpo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--fs:Georgia,"Times New Roman",serif;
+--gl:max(16px,env(safe-area-inset-left));--gr:max(16px,env(safe-area-inset-right));color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;background:var(--az)}
+body{margin:0;background:var(--az);color:var(--bl);font:16px/1.55 var(--fb)}
+img{max-width:100%;height:auto}
+a{color:var(--vd1)}
+a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--amb);outline-offset:3px}
+.px{image-rendering:pixelated;image-rendering:crisp-edges}
+.halftone{background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.5px);background-size:7px 7px}
+.wrap{max-width:1040px;margin:0 auto;padding-left:var(--gl);padding-right:var(--gr)}
+.salto{position:absolute;left:-999px;top:8px;z-index:9;background:var(--amb);color:var(--az);padding:8px 12px;font-weight:800}
+.salto:focus{left:16px}
+/* tipografía de revista */
+.mega{font-family:var(--fd);font-weight:400;text-transform:uppercase;line-height:.84;margin:0;letter-spacing:-.01em}
+.g{color:var(--vd)}
+.outline{font-family:var(--fd);color:transparent;-webkit-text-stroke:2px var(--vd);line-height:.8}
+.kick{font-family:var(--fs);font-style:italic;color:var(--amb);font-size:clamp(18px,4.6vw,24px);margin:18px 0 6px}
+.pag{font-weight:800;font-size:12px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:0 0 6px}
+.m{color:var(--bl2);margin:0 0 12px}
+.boxh{border:4px solid var(--bl);padding:10px 14px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;font-size:clamp(15px,4.2vw,21px);line-height:1.35;margin:8px 0 18px;background:var(--az1);box-shadow:6px 6px 0 var(--vd2)}
+.squig{height:16px;margin:14px 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16'%3E%3Cpath d='M0 8 Q10 0 20 8 T40 8' fill='none' stroke='%239bd341' stroke-width='4'/%3E%3C/svg%3E") repeat-x;background-size:40px 16px}
+.sticker{position:absolute;transform:rotate(-8deg);background:var(--amb);color:var(--az);font-family:var(--fd);text-transform:uppercase;padding:5px 10px;border:3px solid var(--az);box-shadow:4px 4px 0 #0007;font-size:clamp(18px,5vw,26px);line-height:1;z-index:3}
+/* botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:3px solid var(--bl);padding:10px 16px;font-family:var(--fd);font-size:21px;text-transform:uppercase;letter-spacing:.03em;color:var(--bl);background:var(--az1);box-shadow:5px 5px 0 var(--vd2);min-height:52px;text-decoration:none;text-align:center;line-height:1.05;transition:transform .05s}
+.btn.pri{background:var(--vd);color:var(--az);border-color:var(--az);box-shadow:5px 5px 0 #000a}
+.btn.amb{background:var(--amb);color:var(--az);border-color:var(--az);box-shadow:5px 5px 0 #000a}
+.btn.sm{font-size:17px;min-height:44px;padding:6px 12px;box-shadow:3px 3px 0 var(--vd2)}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--vd2)}
+/* banda y portada */
+.cband{display:flex;min-height:50px;background:var(--vd);color:var(--az);padding-top:env(safe-area-inset-top)}
+.cband>div{flex:1;display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.28em;font-size:11px;text-transform:uppercase;text-align:center;padding:4px 8px}
+.cband>div+div{background:var(--az);color:var(--vd1);border:3px solid var(--vd);margin:5px;letter-spacing:.18em;font-weight:700}
+.hero{overflow:hidden;border-bottom:4px solid var(--vd)}
+.hero .wrap{max-width:760px;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:14px;padding-bottom:30px}
+.srf{font-family:var(--fs);text-transform:uppercase;font-size:clamp(12px,3.4vw,17px);line-height:1.25;letter-spacing:.03em;margin:0 0 6px}
+.hero h1{margin:0;width:100%;position:relative;z-index:2}
+.hero h1 .mega{display:block;font-size:clamp(78px,27vw,190px);text-shadow:5px 5px 0 var(--az)}
+.hero h1 .g{font-size:clamp(60px,20vw,150px);margin-top:-.04em}
+.cover{position:relative;margin:-.5em 0 0;width:min(100%,560px);font-size:clamp(16px,5vw,34px)}
+.cover img{display:block;width:100%;aspect-ratio:16/10;border:4px solid var(--bl);box-shadow:8px 8px 0 var(--vd2);background:var(--az2)}
+.cover .sticker{right:-4px;bottom:-14px}
+.lead{font-size:clamp(16px,4.3vw,19px);color:var(--bl2);max-width:620px;margin:0 0 6px}
+.cta{display:flex;flex-direction:column;gap:14px;width:min(100%,400px);margin:18px 0 10px}
+.fine{font-size:13px;color:var(--dim);letter-spacing:.06em;margin:4px 0 0}
+.nota{display:inline-block;margin-top:12px;font-size:13px;border:2px dashed var(--az3);padding:6px 10px;color:var(--bl2)}
+.ios .apk{display:none}.ios .b-ios{background:var(--amb);color:var(--az);border-color:var(--az);box-shadow:5px 5px 0 #000a}
+.android .b-ios{display:none}
+/* cifras */
+.cifras{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:28px 0 8px}
+.cifras div{border:3px solid var(--az3);background:var(--az1);padding:10px 12px}
+.cifras b{display:block;font-family:var(--fd);font-weight:400;font-size:clamp(40px,12vw,60px);line-height:.9;color:var(--vd)}
+.cifras span{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--bl2)}
+@media (min-width:720px){.cifras{grid-template-columns:repeat(4,1fr)}}
+/* secciones */
+.sec{padding:34px 0 30px;border-bottom:4px solid var(--az3)}
+.sect{display:flex;align-items:flex-end;gap:12px;margin:4px 0 12px}
+.sect .outline{font-size:clamp(70px,20vw,120px);flex:none}
+.sect h2{font-size:clamp(36px,10.5vw,68px)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 18px;padding:0;list-style:none}
+.chips li{border:2px solid var(--vd);padding:3px 9px;font-family:var(--fd);font-size:17px;text-transform:uppercase;background:var(--az1);line-height:1.2}
+.chips li.amb{border-color:var(--amb);color:var(--amb)}
+/* oficios */
+.roles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
+.role{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;border:4px solid var(--vd);background:var(--az1);padding:12px;box-shadow:7px 7px 0 #0009;align-content:start}
+.role .num{font-family:var(--fd);font-size:clamp(70px,18vw,92px);line-height:.78;color:transparent;-webkit-text-stroke:2px var(--vd);grid-row:span 2}
+.role .tier{font-weight:800;letter-spacing:.24em;font-size:10px;color:var(--vd1);text-transform:uppercase;align-self:end}
+.role h3{font-family:var(--fd);font-weight:400;font-size:clamp(30px,8vw,38px);margin:0;line-height:.9;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.role h3 img{width:36px;height:36px;flex:none}
+.role .d{grid-column:1/-1;font-size:15px;color:var(--bl2);line-height:1.45;margin:8px 0 2px}
+.role .vista{grid-column:1/-1;font-family:var(--fs);font-style:italic;color:var(--amb);font-size:15px;margin:0}
+.role details{grid-column:1/-1;margin-top:8px;border-top:2px solid var(--az3);padding-top:8px}
+.role summary{cursor:pointer;font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--vd1);min-height:32px;display:flex;align-items:center}
+.role summary::-webkit-details-marker{display:none}
+.role summary::after{content:"+";margin-left:auto;font-family:var(--fd);font-size:24px;line-height:1}
+.role details[open] summary::after{content:"–"}
+.role details ol{margin:6px 0 0;padding-left:22px;color:var(--bl2);font-size:15px}
+.role.race{background:var(--vd1);color:var(--az);border-color:var(--az);box-shadow:7px 7px 0 var(--vd2)}
+.role.race .num{-webkit-text-stroke-color:var(--az)}
+.role.race .tier,.role.race .d,.role.race summary,.role.race details ol{color:var(--az)}
+.role.race .vista{color:#5b3d00}
+.role.race details{border-top-color:var(--az)}
+/* capturas */
+.strip{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px var(--gr) 22px var(--gl);margin:0 auto;max-width:1040px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.strip figure{flex:none;width:min(58vw,210px);margin:0;scroll-snap-align:center}
+.strip a{display:block;border:4px solid var(--bl);box-shadow:6px 6px 0 var(--vd2);background:#000}
+.strip img{display:block;width:100%;aspect-ratio:9/16}
+.strip figcaption{font-family:var(--fd);text-transform:uppercase;font-size:18px;margin-top:10px;line-height:1}
+.strip figcaption small{display:block;font-family:var(--fb);text-transform:none;font-size:13px;color:var(--bl2);margin-top:4px;line-height:1.35}
+.desliza{font-size:13px;color:var(--dim);margin:0 0 8px}
+@media (min-width:1000px){.strip{justify-content:center}.strip figure{width:150px}.desliza{display:none}}
+dialog{padding:0;border:4px solid var(--bl);background:var(--az1);color:var(--bl);box-shadow:8px 8px 0 var(--vd2);max-width:min(92vw,440px);width:auto}
+dialog::backdrop{background:#0a2342e8}
+dialog img{display:block;max-height:74vh;width:auto;margin:0 auto}
+dialog .bar{display:flex;align-items:center;gap:8px;padding:10px;border-top:3px solid var(--bl)}
+dialog figcaption{flex:1;font-family:var(--fd);text-transform:uppercase;font-size:18px;line-height:1}
+dialog button{font:inherit;font-family:var(--fd);font-size:20px;min-width:44px;min-height:44px;border:3px solid var(--bl);background:var(--az);color:var(--bl);cursor:pointer}
+/* instalar */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
+.card{border:4px solid var(--bl);background:var(--az1);padding:14px;box-shadow:6px 6px 0 var(--vd2);display:flex;flex-direction:column;gap:10px}
+.card h3{font-family:var(--fd);font-weight:400;text-transform:uppercase;font-size:30px;line-height:.95;margin:0}
+.card ol{margin:0;padding-left:22px;color:var(--bl2)}
+.card li{margin-bottom:6px}
+.card .btn{align-self:flex-start;margin-top:auto}
+.tu{display:none;align-self:flex-start;background:var(--amb);color:var(--az);font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px}
+.ios .c-ios .tu,.android .c-and .tu{display:inline-block}
+.ios .c-ios,.android .c-and{border-color:var(--amb)}
+/* apoya */
+.paper{background:var(--crema);color:var(--az);border:4px solid var(--az);box-shadow:8px 8px 0 #000a;padding:18px 16px;position:relative}
+.paper h2{font-size:clamp(40px,12vw,72px);color:var(--az)}
+.paper p{margin:10px 0}
+.paper ul{margin:10px 0 16px;padding-left:20px}
+.paper .btn{box-shadow:4px 4px 0 var(--az)}
+.dona{border:3px dashed var(--az);padding:12px;margin-top:18px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.dona b{font-family:var(--fd);font-weight:400;font-size:28px;text-transform:uppercase;line-height:1}
+.dona span{background:var(--az);color:var(--amb);font-family:var(--fd);text-transform:uppercase;font-size:20px;padding:4px 10px;transform:rotate(-3deg)}
+/* pie */
+footer{background:var(--crema);color:var(--az);border-top:6px solid var(--vd);padding:22px 0 calc(26px + env(safe-area-inset-bottom))}
+footer a{color:var(--az);font-weight:700}
+footer .mega{font-size:clamp(34px,10vw,52px)}
+footer .mega .g{color:#3f7a0c}
+footer p{margin:8px 0;font-size:14px;line-height:1.5}
+.aviso{border:3px solid var(--az);padding:10px 12px;font-weight:600;background:#fff}
+.enlaces{display:flex;flex-wrap:wrap;gap:6px 18px;margin:14px 0 6px;padding:0;list-style:none}
+.enlaces a{display:inline-block;padding:6px 0}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+</style>
+</head>
+<body>
+<a class="salto" href="#contenido">Saltar al contenido</a>
+
+<header class="hero halftone">
+ <div class="cband"><div>Valle de Aburrá · Edición digital</div><div>Gratis todos los días</div></div>
+ <div class="wrap">
+  <p class="srf">Préstamos, estaciones, ciclorrutas, balanceo, taller y más</p>
+  <h1><span class="mega">Juega</span> <span class="mega g">EnCicla</span></h1>
+  <figure class="cover">
+   <img class="px" src="arte/portada.png" width="400" height="250" alt="Pixel art de la portada: una ciclista pedalea por la ciclorruta al atardecer, con las montañas y las luces del Valle de Aburrá al fondo">
+   <span class="sticker">¡9 oficios!</span>
+  </figure>
+  <p class="kick">¿Sabes cuántas bicis mueve tu ciudad?</p>
+  <p class="lead">El videojuego arcade de la bici pública del Valle de Aburrá. Empieza pedaleando como usuario y descubre todo lo que pasa detrás de cada préstamo, hasta llegar a supervisor.</p>
+  <div class="cta" id="contenido">
+   <a class="btn pri" href="./">▶ Jugar ahora</a>
+   <a class="btn amb apk" href="descargas/JuegaEnCicla.apk" download="JuegaEnCicla.apk">⇩ Descargar para Android (APK)</a>
+   <a class="btn b-ios" href="#iphone">En iPhone: añádelo a tu inicio</a>
+  </div>
+  <p class="fine">Gratis · sin anuncios · sin registro · funciona sin internet</p>
+  <p class="nota">Demo no oficial, creada por un ciudadano como propuesta para EnCicla.</p>
+ </div>
+</header>
+
+<main>
+ <section class="sec" aria-labelledby="t-juego">
+  <div class="wrap">
+   <p class="pag">Pag 01 · El juego</p>
+   <div class="sect"><span class="outline" aria-hidden="true">01</span><h2 class="mega" id="t-juego">Pedalea <span class="g">el valle</span></h2></div>
+   <p class="m">Juega EnCicla es una revista arcade en pixel art. Recorres un mapa estilizado del Valle de Aburrá con ciclorrutas, metro, tranvía de Ayacucho, Metrocable, semáforos y peatones, y vives cada oficio del sistema en turnos cortos de pocos minutos.</p>
+   <p class="m">Se juega con un dedo, la dificultad sube poco a poco y está pensado para todas las edades: de los niños a los abuelos. Cada turno trae una novedad del día:</p>
+   <ul class="chips" aria-label="Novedades del día">
+    <li>Aguacero paisa</li><li>Día sin carro</li><li>Hora pico</li><li>Partido en el Atanasio</li><li>Feria de las Flores</li><li>Ciclovía</li>
+   </ul>
+   <div class="cifras">
+    <div><b>9</b><span>oficios</span></div>
+    <div><b>27</b><span>turnos</span></div>
+    <div><b>1 vs 1</b><span>carrera multijugador</span></div>
+    <div><b>0</b><span>anuncios y registros</span></div>
+   </div>
+  </div>
+ </section>
+
+ <section class="sec halftone" id="oficios" aria-labelledby="t-oficios">
+  <div class="wrap">
+   <p class="pag">Pag 02 · Escalafón EnCicla</p>
+   <div class="sect"><span class="outline" aria-hidden="true">9</span><h2 class="mega" id="t-oficios">Del usuario <span class="g">al supervisor</span></h2></div>
+   <p class="boxh">9 oficios · 3 turnos cada uno</p>
+   <p class="m">Gana estrellas en cada turno para abrir el siguiente oficio. Cada uno se juega distinto: conducción, puzzle, estrategia o arcade.</p>
+   <ol class="roles">
+    <li class="role"><span class="num" aria-hidden="true">1</span><span class="tier">Ciudadanía</span><h3><img class="px" src="arte/usuario.png" width="64" height="64" alt="">Usuario</h3>
+     <p class="d">Toma una bici y recorre el valle por las ciclorrutas. Devuélvela antes de 60 minutos.</p><p class="vista">Vista cenital · mundo libre</p>
+     <details><summary>Cómo se juega</summary><ol><li>Arrastra el dedo para pedalear (o usa las flechas).</li><li>Sigue la línea punteada y la flecha amarilla.</li><li>Recoge hojas verdes y postales de la ciudad.</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">2</span><span class="tier">Operación de estación</span><h3><img class="px" src="arte/anfitrion.png" width="64" height="64" alt="">Anfitrión</h3>
+     <p class="d">Atiende la ventanilla: presta, recibe, revisa tarjetas y organiza las bicis.</p><p class="vista">Vista panorámica · arcade</p>
+     <details><summary>Cómo se juega</summary><ol><li>Toca al usuario de la fila.</li><li>Revisa la tarjeta y elige una bici con luz verde.</li><li>Las bicis dañadas van al taller (caja roja).</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">3</span><span class="tier">Taller</span><h3><img class="px" src="arte/mecanico.png" width="64" height="64" alt="">Mecánico</h3>
+     <p class="d">Repara bicis contra el reloj: cada falla tiene su herramienta.</p><p class="vista">Vista lateral · puzzle de rapidez</p>
+     <details><summary>Cómo se juega</summary><ol><li>Mira la falla que parpadea en la bici.</li><li>Toca la herramienta del mismo color.</li><li>Con la bomba, toca ¡YA! en la zona verde.</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">4</span><span class="tier">Taller</span><h3><img class="px" src="arte/bodega.png" width="64" height="64" alt="">Bodega</h3>
+     <p class="d">Clasifica los repuestos y carga las bicis nuevas al camión.</p><p class="vista">Vista lateral · organización rápida</p>
+     <details><summary>Cómo se juega</summary><ol><li>Espera que la pieza llegue al escáner.</li><li>Toca la caja de su mismo color.</li><li>Llena el camión con 10 bicis nuevas.</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">5</span><span class="tier">Operación de campo</span><h3><img class="px" src="arte/apoyo.png" width="64" height="64" alt="">Apoyo</h3>
+     <p class="d">Recorre tu zona: abre estaciones automáticas, haz relevos y verifica estaciones.</p><p class="vista">Vista cenital · estrategia</p>
+     <details><summary>Cómo se juega</summary><ol><li>Cada número en el mapa es una tarea.</li><li>Tú eliges el orden: ¡ojo con las horas límite!</li><li>Al llegar, resuelve la tarea.</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">6</span><span class="tier">Operación de campo</span><h3><img class="px" src="arte/tecnico.png" width="64" height="64" alt="">Técnico</h3>
+     <p class="d">Las estaciones se dañan: llega rápido y repáralas para mantener la operatividad.</p><p class="vista">Vista cenital · acción</p>
+     <details><summary>Cómo se juega</summary><ol><li>Las estaciones con marca roja están dañadas.</li><li>Llega y repara: cables o tótem.</li><li>Mantén la operatividad alta.</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">7</span><span class="tier">Operación de campo</span><h3><img class="px" src="arte/balance.png" width="64" height="64" alt="">Balance</h3>
+     <p class="d">Maneja el camión: lleva bicis a estaciones vacías y recoge de las llenas.</p><p class="vista">Vista cenital · conducción</p>
+     <details><summary>Cómo se juega</summary><ol><li>Monitoreo te envía órdenes numeradas.</li><li>Conduce por las vías: el camión no cabe en las ciclorrutas.</li><li>Pasa por la bodega para cargar o descargar.</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">8</span><span class="tier">Centro de control</span><h3><img class="px" src="arte/monitoreo.png" width="64" height="64" alt="">Monitoreo</h3>
+     <p class="d">Desde la sala de control, envía camiones para que ninguna estación quede vacía o llena.</p><p class="vista">Vista general · estrategia</p>
+     <details><summary>Cómo se juega</summary><ol><li>Toca una estación para ver sus bicis.</li><li>Envía un camión: llevar o recoger.</li><li>Antes del cierre, regresa los camiones vacíos a la bodega.</li></ol></details></li>
+    <li class="role"><span class="num" aria-hidden="true">9</span><span class="tier">Coordinación</span><h3><img class="px" src="arte/supervisor.png" width="64" height="64" alt="">Supervisor</h3>
+     <p class="d">Abre y cierra el sistema, asigna al personal y resuelve todo lo que pase en el día.</p><p class="vista">Todas las vistas</p>
+     <details><summary>Cómo se juega</summary><ol><li>Asigna cada anfitrión a su zona.</li><li>Atiende los avisos: viaja y resuélvelos.</li><li>En la bodega puedes tomar el camión.</li></ol></details></li>
+    <li class="role race"><span class="num" aria-hidden="true">+</span><span class="tier">Multijugador</span><h3><img class="px" src="arte/carrera.png" width="64" height="64" alt="">Carrera</h3>
+     <p class="d">Carrera de postales: pasa por 4 lugares del valle en orden y llega primero a la estación de meta. Juega contra un bot (3 niveles) o contra un amigo en otro celular.</p><p class="vista">Vista cenital · competitivo</p>
+     <details><summary>¿Cómo se conecta con un amigo?</summary><ol><li>Uno crea la sala y comparte el código (por WhatsApp o copiando el texto).</li><li>El otro pega el código y devuelve su respuesta.</li><li>Los dos celulares se conectan directo, sin servidor del juego. En la misma red Wi-Fi funciona incluso sin internet.</li></ol></details></li>
+   </ol>
+  </div>
+ </section>
+
+ <section class="sec" id="capturas" aria-labelledby="t-capturas">
+  <div class="wrap">
+   <p class="pag">Pag 03 · Galería</p>
+   <div class="sect"><span class="outline" aria-hidden="true">03</span><h2 class="mega" id="t-capturas">Así se <span class="g">ve</span></h2></div>
+   <p class="desliza">Desliza para ver más · toca una imagen para ampliarla</p>
+  </div>
+  <div class="strip" role="region" aria-label="Capturas del juego" tabindex="0">
+   <figure><a href="capturas/1-portada.png"><img class="px" src="capturas/1-portada.png" width="540" height="960" loading="lazy" alt="Captura de la portada del juego con el título Juega EnCicla, el arte de la ciclista y los botones Jugar y Reto del día"></a><figcaption>Portada<small>La revista arcade más pedaleada.</small></figcaption></figure>
+   <figure><a href="capturas/2-escalafon.png"><img class="px" src="capturas/2-escalafon.png" width="540" height="960" loading="lazy" alt="Captura del escalafón: personalización del ciclista y la tarjeta de Carrera de postales con los bots"></a><figcaption>Escalafón<small>Tu camino del usuario al supervisor.</small></figcaption></figure>
+   <figure><a href="capturas/3-usuario.png"><img class="px" src="capturas/3-usuario.png" width="540" height="960" loading="lazy" alt="Captura del oficio Usuario: mapa cenital junto a la estación Ayacucho, el tranvía, el minimapa y las metas del turno"></a><figcaption>Usuario<small>Ciclorrutas, tranvía y postales.</small></figcaption></figure>
+   <figure><a href="capturas/4-anfitrion.png"><img class="px" src="capturas/4-anfitrion.png" width="540" height="960" loading="lazy" alt="Captura del oficio Anfitrión: la ventanilla revisa una tarjeta activa con los botones Prestar y Negar frente a la estación"></a><figcaption>Anfitrión<small>Presta, revisa y organiza.</small></figcaption></figure>
+   <figure><a href="capturas/5-monitoreo.png"><img class="px" src="capturas/5-monitoreo.png" width="540" height="960" loading="lazy" alt="Captura del oficio Monitoreo: mapa general del valle con las estaciones numeradas por cantidad de bicis y la bodega"></a><figcaption>Monitoreo<small>Que ninguna estación quede vacía.</small></figcaption></figure>
+   <figure><a href="capturas/6-carrera.png"><img class="px" src="capturas/6-carrera.png" width="540" height="960" loading="lazy" alt="Captura de la Carrera de postales contra el Bot Veloz, con la flecha hacia la primera postal, Parque Lleras"></a><figcaption>Carrera<small>Contra un bot o un amigo.</small></figcaption></figure>
+  </div>
+ </section>
+
+ <section class="sec halftone" id="instalar" aria-labelledby="t-instalar">
+  <div class="wrap">
+   <p class="pag">Pag 04 · Llévalo contigo</p>
+   <div class="sect"><span class="outline" aria-hidden="true">04</span><h2 class="mega" id="t-instalar">Juega <span class="g">donde sea</span></h2></div>
+   <div class="cards">
+    <div class="card"><h3>En el navegador</h3>
+     <p class="m">Funciona en celulares, tabletas y computadores. Después de abrirlo una vez, sigue funcionando sin internet.</p>
+     <ol><li>Toca «Jugar ahora».</li><li>En Chrome puedes instalarlo desde el menú ⋮ → «Instalar app».</li></ol>
+     <a class="btn pri sm" href="./">▶ Jugar ahora</a></div>
+    <div class="card c-and" id="android"><span class="tu">Tu dispositivo</span><h3>Android</h3>
+     <ol><li>Descarga el archivo <b>JuegaEnCicla.apk</b>.</li><li>Ábrelo. Si Android lo pide, permite «Instalar apps desconocidas» para tu navegador.</li><li>Búscalo en tus apps como <b>Juega EnCicla</b>.</li></ol>
+     <p class="m">Muy pronto también en Google Play.</p>
+     <a class="btn amb sm" href="descargas/JuegaEnCicla.apk" download="JuegaEnCicla.apk">⇩ Descargar APK</a></div>
+    <div class="card c-ios" id="iphone"><span class="tu">Tu dispositivo</span><h3>iPhone y iPad</h3>
+     <ol><li>Abre el juego en <b>Safari</b> con el botón «Jugar ahora».</li><li>Toca <b>Compartir</b> (el cuadrado con la flecha hacia arriba).</li><li>Elige <b>«Añadir a pantalla de inicio»</b> y toca «Añadir».</li><li>Ábrelo desde tu pantalla de inicio: funciona sin internet.</li></ol>
+     <a class="btn sm" href="./">▶ Abrir el juego</a></div>
+   </div>
+  </div>
+ </section>
+
+ <section class="sec" id="apoya" aria-labelledby="t-apoya">
+  <div class="wrap">
+   <p class="pag">Pag 05 · Bici pública</p>
+   <div class="paper">
+    <h2 class="mega" id="t-apoya">Apoya la bici pública</h2>
+    <div class="squig" aria-hidden="true"></div>
+    <p>EnCicla es el sistema de bicicletas públicas gratuito del Área Metropolitana del Valle de Aburrá. Funciona gracias a quienes la usan bien y a quienes la mantienen funcionando cada día. Úsala, cuídala y compártela:</p>
+    <ul><li>Usa casco y respeta los semáforos y a los peatones.</li><li>Prefiere la ciclorruta.</li><li>Devuelve la bici a tiempo en cualquier estación.</li></ul>
+    <a class="btn pri sm" href="https://encicla.metropol.gov.co/" target="_blank" rel="noopener">Sitio oficial de EnCicla ↗</a>
+    <div class="dona"><b>Donaciones</b><span>Próximamente</span><p style="margin:0;flex-basis:100%">Estamos preparando una forma sencilla de apoyar. Muy pronto la encontrarás aquí.</p></div>
+   </div>
+  </div>
+ </section>
+</main>
+
+<footer>
+ <div class="wrap">
+  <p class="mega">Juega <span class="g">EnCicla</span></p>
+  <p><b>La revista arcade más pedaleada.</b> Sin anuncios, sin analítica y sin cuentas: tus partidas se guardan solo en tu dispositivo.</p>
+  <p class="aviso">Demo no oficial creada por Juan Felipe Rico y propuesta a EnCicla. No está afiliada, patrocinada ni avalada por EnCicla ni por el Área Metropolitana del Valle de Aburrá. El mapa es estilizado y los datos son aproximados, con fines didácticos.</p>
+  <p>Idea, diseño y programación: Juan Felipe Rico. Pixel art y sonidos generados por código. Tipografías: TeX Gyre Heros (licencia GUST) e Inter (licencia SIL OFL).</p>
+  <ul class="enlaces">
+   <li><a href="privacidad.html">Política de privacidad</a></li>
+   <li><a href="https://github.com/juanfeliperico369-stack/BicicletasUno" target="_blank" rel="noopener">Código en GitHub ↗</a></li>
+   <li><a href="./">▶ Jugar</a></li>
+  </ul>
+ </div>
+</footer>
+
+<dialog id="visor" aria-label="Captura ampliada">
+ <figure style="margin:0"><img class="px" alt="" width="540" height="960">
+  <div class="bar"><button type="button" class="ant" aria-label="Captura anterior">◀</button><figcaption></figcaption><button type="button" class="sig" aria-label="Captura siguiente">▶</button><button type="button" class="cerrar" aria-label="Cerrar">✕</button></div>
+ </figure>
+</dialog>
+
+<script>
+(function () {
+  var ua = navigator.userAgent || '', root = document.documentElement;
+  if (/iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) root.classList.add('ios');
+  else if (/Android/i.test(ua)) root.classList.add('android');
+  var d = document.getElementById('visor');
+  if (!d || typeof d.showModal !== 'function') return; // sin <dialog>: los enlaces abren la imagen
+  var links = [].slice.call(document.querySelectorAll('.strip a')), img = d.querySelector('img'), cap = d.querySelector('figcaption'), i = 0;
+  function show(k) {
+    i = (k + links.length) % links.length; var a = links[i];
+    img.src = a.getAttribute('href'); img.alt = a.querySelector('img').alt;
+    cap.textContent = a.parentNode.querySelector('figcaption').firstChild.textContent;
+  }
+  links.forEach(function (a, k) { a.addEventListener('click', function (e) { e.preventDefault(); show(k); d.showModal(); }); });
+  d.querySelector('.ant').onclick = function () { show(i - 1); };
+  d.querySelector('.sig').onclick = function () { show(i + 1); };
+  d.querySelector('.cerrar').onclick = function () { d.close(); };
+  d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
+  d.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') show(i - 1); else if (e.key === 'ArrowRight') show(i + 1); });
+  d.addEventListener('close', function () { if (links[i]) links[i].focus(); });
+})();
+</script>
+</body></html>

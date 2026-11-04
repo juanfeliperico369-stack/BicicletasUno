@@ -16,6 +16,19 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   await p.goto('file://' + FILE); await p.waitForFunction(() => window.JE && JE.ready, null, { timeout: 30000 });
   ok(!errs.length, 'carga sin errores ' + errs.join(' | '));
 
+  console.log('1b) Mapa: estaciones, lugares y camión alcanzables');
+  const mp = await p.evaluate(() => { const M = JE.map, dp = M.depot, D = M.flow(Math.floor(dp.x / TS), Math.floor(dp.y / TS), false), Dt = M.flow(Math.floor(dp.x / TS), Math.floor(dp.y / TS), true);
+    const reach = (x, y, DD, rad) => { for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { const tx = Math.floor(x / TS) + dx, ty = Math.floor(y / TS) + dy; if (tx >= 0 && ty >= 0 && tx < MW && ty < MH && DD[ty * MW + tx] < 1e9) return true; } return false; };
+    return { n: M.stations.length, lm: LANDMARKS.length, s: M.stations.filter(s => !reach(s.x, s.y, D, 1)).map(s => s.name), t: M.stations.filter(s => !reach(s.x, s.y, Dt, 5)).map(s => s.name), l: LANDMARKS.filter(l => l.id !== 'depot').filter(l => !reach((l.x + l.w / 2) * TS, (l.y + l.h) * TS + 6, D, Math.ceil((Math.max(l.w, l.h) * TS / 2 + 8) / TS))).map(l => l.id), muni: [...new Set(M.stations.map(s => s.muni))].length }; });
+  ok(mp.n >= 100 && !mp.s.length && !mp.t.length && !mp.l.length, mp.n + ' estaciones en ' + mp.muni + ' municipios y ' + mp.lm + ' lugares alcanzables ' + [mp.s, mp.t, mp.l].flat().join(','));
+  console.log('1c) Minijuegos nuevos y Easter eggs (bot)');
+  const mgs = await p.evaluate(() => { JE.headless = true; const out = []; const par = () => ({ rng: new RNG(7), has: () => false, mods: { demand: 1 }, patMul: 1, paceRate: 1 });
+    for (const [n, mk] of [['Circuito', P => new MGLoop(P, { n: 5 })], ['Láser', P => new MGLaser(P, { n: 5, turns: 3 })], ['Semaforero', P => new MGTraffix(P, { dur: 28, target: 10 })], ['Desvíos', P => new MGRutas(P, { dur: 40 })], ['Maquinista', P => new MGRutas(P, { theme: 'metro', dur: 40 })], ['Laberinto', P => new MGLaberinto(P, { n: 9 })]]) {
+      const m = mk(par()); let t = 0, a = 0; while (!m.done && t < 150) { if ((a += 1 / 30) > .3) { a = 0; m.bot(0); } m.update(1 / 30); t += 1 / 30; } out.push({ n, done: m.done, t: Math.round(t), score: m.score, err: m.errors, extra: m.crashes != null ? 'choques ' + m.crashes : m.acc ? 'precisión ' + Math.round(m.acc() * 100) + '%' : '' }); }
+    JE.headless = false; return out; });
+  for (const g of mgs) console.log('     ' + g.n.padEnd(11) + (g.done ? ' terminado' : ' NO TERMINÓ') + ' en ' + g.t + ' s · pts ' + g.score + ' · errores ' + g.err + (g.extra ? ' · ' + g.extra : ''));
+  ok(mgs.every(g => g.done && isFinite(g.score)), 'los 6 minijuegos nuevos se completan con el bot');
+
   console.log('2) Bot: ' + N + ' partidas simuladas');
   const rep = await p.evaluate(async n => { const r = await JE.bot.run({ n, render: true }); return { okAll: r.okAll, txt: JE.bot.format(r), by: JE.bot.summary(r), ms: r.ms }; }, N);
   console.log(rep.txt.split('\n').map(l => '     ' + l).join('\n'));
@@ -74,25 +87,30 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(!errs.length, 'sin errores de consola al final ' + errs.slice(0, 3).join(' | '));
   await b.close();
 
-  console.log('5) Multijugador: sala WebRTC entre dos dispositivos');
-  const b2 = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] }), c2 = await b2.newContext({ viewport: { width: 390, height: 780 } });
-  const host = await c2.newPage(), guest = await c2.newPage(), nerr = [];
-  for (const pg of [host, guest]) { pg.on('pageerror', e => nerr.push(e.message)); await pg.goto('file://' + FILE); await pg.waitForFunction(() => window.JE && JE.ready); }
-  await host.evaluate(() => { Save.data.profile.name = 'Anfitriona'; UI.multi(); });
-  await guest.evaluate(() => { Save.data.profile.name = 'Invitado'; UI.multi(); });
-  await host.click('#nHost'); await host.waitForSelector('#nCode', { timeout: 15000 }); const offer = await host.inputValue('#nCode');
-  ok(/^JE[01]o/.test(offer), 'código de sala generado (' + offer.length + ' caracteres)');
-  await guest.click('#nJoin'); await guest.fill('#nOff', offer); await guest.click('#nAnsB'); await guest.waitForSelector('#nCode', { timeout: 15000 }); const ans = await guest.inputValue('#nCode');
-  ok(/^JE[01]a/.test(ans), 'código de respuesta generado');
-  await host.fill('#nAns', ans); await host.click('#nGo');
-  const started = await Promise.all([host, guest].map(pg => pg.waitForFunction(() => JE.game.mode && JE.game.mode.id === 'carrera' && JE.game.mode.net, null, { timeout: 20000 }).then(() => true).catch(() => false)));
-  ok(started.every(Boolean), 'carrera en red iniciada en ambos dispositivos');
+  console.log('5) Multijugador: sala WebRTC con 3 dispositivos (anfitrión + 2 invitados, reenvío en estrella)');
+  const b2 = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] }), c2 = await b2.newContext({ viewport: { width: 390, height: 900 } });
+  const host = await c2.newPage(), g1 = await c2.newPage(), g2 = await c2.newPage(), nerr = [];
+  for (const pg of [host, g1, g2]) { pg.on('pageerror', e => nerr.push(e.message)); await pg.goto('file://' + FILE); await pg.waitForFunction(() => window.JE && JE.ready); }
+  for (const [pg, n] of [[host, 'Anfitriona'], [g1, 'Invitado1'], [g2, 'Invitado2']]) await pg.evaluate(n => { Save.data.profile.name = n; UI.multi(); }, n);
+  await host.click('#nHost');
+  for (const [k, g] of [[1, g1], [2, g2]]) {
+    await host.click('#nInvite'); await host.waitForSelector('#nCode', { timeout: 15000 }); const offer = await host.inputValue('#nCode');
+    if (k === 1) ok(/^JE[01]o/.test(offer) && await host.isVisible('#nQR canvas'), 'invitación con código y QR (' + offer.length + ' caracteres)');
+    await g.click('#nJoin'); await g.fill('#nOff', offer); await g.click('#nAnsB'); await g.waitForSelector('#nCode', { timeout: 15000 }); const ans = await g.inputValue('#nCode');
+    await host.fill('#nAns', ans); await host.click('#nGo');
+    await host.waitForFunction(k => Object.keys(UI.netPlayers).length >= k, k, { timeout: 20000 }).catch(() => { });
+  }
+  ok(await host.evaluate(() => Object.keys(UI.netPlayers).length === 2), 'la sala tiene 3 jugadores');
+  await host.click('#nStart');
+  const started = await Promise.all([host, g1, g2].map(pg => pg.waitForFunction(() => JE.game.mode && JE.game.mode.id === 'carrera' && JE.game.mode.net, null, { timeout: 20000 }).then(() => true).catch(() => false)));
+  ok(started.every(Boolean), 'carrera en red iniciada en los 3 dispositivos');
   if (started.every(Boolean)) {
-    await host.waitForTimeout(3600); await host.evaluate(() => { JE.game.mode.ride.p.x += 40; }); await guest.waitForTimeout(800);
-    const seen = await guest.evaluate(() => { const o = JE.game.mode.opp; return { name: o.name, x: Math.round(o.x), hostSeed: JE.game.meta.seed }; });
-    const hseed = await host.evaluate(() => ({ x: Math.round(JE.game.mode.ride.p.x), seed: JE.game.meta.seed }));
-    ok(seen.name === 'Anfitriona' && Math.abs(seen.x - hseed.x) < 25 && seen.hostSeed === hseed.seed, 'el invitado ve al anfitrión en tiempo real (misma semilla)');
-    if (SHOTS) await guest.screenshot({ path: path.join(OUT, 'carrera-red.png') });
+    await host.waitForTimeout(3600); await g1.evaluate(() => { JE.game.mode.ride.p.x += 40; }); await host.evaluate(() => { JE.game.mode.ride.p.y += 30; }); await g2.waitForTimeout(900);
+    const s2 = await g2.evaluate(() => ({ seed: JE.game.meta.seed, opps: JE.game.mode.opps.map(o => ({ name: o.name, x: Math.round(o.x), y: Math.round(o.y) })) }));
+    const h = await host.evaluate(() => ({ seed: JE.game.meta.seed, x: Math.round(JE.game.mode.ride.p.x), y: Math.round(JE.game.mode.ride.p.y) })), a1 = await g1.evaluate(() => ({ x: Math.round(JE.game.mode.ride.p.x), y: Math.round(JE.game.mode.ride.p.y) }));
+    const oh = s2.opps.find(o => o.name === 'Anfitriona'), o1 = s2.opps.find(o => o.name === 'Invitado1');
+    ok(s2.seed === h.seed && oh && o1 && Math.abs(oh.y - h.y) < 25 && Math.abs(o1.x - a1.x) < 25, 'el invitado 2 ve al anfitrión y al invitado 1 en tiempo real (reenvío)');
+    if (SHOTS) await g2.screenshot({ path: path.join(OUT, 'carrera-red.png') });
   }
   ok(!nerr.length, 'multijugador sin errores ' + nerr.slice(0, 2).join(' | '));
   await b2.close();

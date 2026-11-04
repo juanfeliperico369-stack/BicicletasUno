@@ -8,7 +8,8 @@ const LOGROS = [
   { id: 'racha3', name: 'En racha', desc: 'Aprueba 3 turnos seguidos', icon: 'estrella', test: S => S.bestStreak >= 3 },
   { id: 'postal5', name: 'Turista paisa', desc: 'Colecciona 5 postales', icon: 'pin', test: S => S.postales.length >= 5 },
   { id: 'postal15', name: 'Conocedor del valle', desc: 'Colecciona 15 postales', icon: 'pin', test: S => S.postales.length >= 15 },
-  { id: 'postal26', name: 'Álbum completo', desc: 'Colecciona las 26 postales', icon: 'pin', test: S => S.postales.length >= 26 },
+  { id: 'postalTodas', name: 'Álbum completo', desc: 'Colecciona todas las postales del valle', icon: 'pin', test: S => PUBLIC_LM().every(l => S.postales.includes(l.id)) },
+  { id: 'explorador', name: 'Explorador secreto', desc: 'Encuentra la postal secreta', icon: 'pin', test: S => S.postales.includes('trescruces') },
   { id: 'ciclorruta', name: 'Ciclorrutero', desc: 'Logra la racha x4 en ciclorruta', icon: 'hoja', test: S => !!S.flags.cic4 },
   { id: 'hojas100', name: 'Pulmón verde', desc: 'Recoge 100 hojas verdes', icon: 'hoja', test: S => S.stats.leaves >= 100 },
   { id: 'km10', name: '10 km pedaleados', desc: 'Recorre 10 km en el juego', icon: 'usuario', test: S => S.stats.km >= 10 },
@@ -17,12 +18,16 @@ const LOGROS = [
   { id: 'supervisor', name: 'Supervisor de corazón', desc: 'Aprueba un turno de Supervisor', icon: 'supervisor', test: S => S.history.some(h => h.m === 'supervisor' && h.p && !h.free) },
   { id: 'carrera', name: 'Más rápido que el bot', desc: 'Gana una carrera de postales', icon: 'balance', test: S => S.history.some(h => h.m === 'carrera' && h.p) },
   { id: 'amigo', name: 'Pedalear en compañía', desc: 'Juega una carrera con un amigo', icon: 'apoyo', test: S => S.history.some(h => h.m === 'carrera' && h.net) },
-  { id: 'reto', name: 'Retador', desc: 'Juega el reto del día', icon: 'estrella', test: S => S.history.some(h => h.reto) }
+  { id: 'reto', name: 'Retador', desc: 'Juega el reto del día', icon: 'estrella', test: S => S.history.some(h => h.reto) },
+  { id: 'maquinista', name: 'Maquinista secreto', desc: 'Descubre el secreto del Metro', icon: 'monitoreo', secret: true, test: S => !!S.flags.metroEgg },
+  { id: 'laberinto', name: 'Jardinero de Moravia', desc: 'Resuelve el laberinto secreto', icon: 'hoja', secret: true, test: S => !!S.flags.mazeEgg },
+  { id: 'dorada', name: 'Bici dorada', desc: 'Encuentra el secreto de la portada', icon: 'estrella', secret: true, test: S => !!S.flags.goldSeen },
+  { id: 'caldascopa', name: 'De Caldas a Copacabana', desc: 'Visita el Alto de San Miguel y Copacabana', icon: 'pin', test: S => S.postales.includes('nacimiento') && S.postales.includes('copacabana') }
 ];
 const Logros = JE.logros = {
   check() { const S = Save.data, n = LOGROS.filter(l => !S.logros.includes(l.id) && l.test(S)); n.forEach(l => S.logros.push(l.id)); return n; },
   html() {
-    const S = Save.data; return `<div class="pag" style="margin-top:16px">Logros · ${S.logros.length} de ${LOGROS.length}</div><div class="logros">${LOGROS.map(l => { const ok = S.logros.includes(l.id); return `<div class="logro ${ok ? 'ok' : ''}"><img class="px" src="${Art.iconURL(l.icon, 2)}" alt=""><b>${esc(l.name)}</b><small>${esc(l.desc)}</small></div>`; }).join('')}</div>`;
+    const S = Save.data; return `<div class="pag" style="margin-top:16px">Logros · ${S.logros.length} de ${LOGROS.length}</div><div class="logros">${LOGROS.map(l => { const ok = S.logros.includes(l.id), hid = l.secret && !ok; return `<div class="logro ${ok ? 'ok' : ''}"><img class="px" src="${Art.iconURL(hid ? 'pin' : l.icon, 2)}" alt=""><b>${hid ? '??? · Secreto' : esc(l.name)}</b><small>${hid ? 'Busca las pistas en «¿Sabías que?»' : esc(l.desc)}</small></div>`; }).join('')}</div>`;
   }
 };
 

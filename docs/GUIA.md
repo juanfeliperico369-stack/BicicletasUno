@@ -26,14 +26,20 @@ src/style.css         estilos de revista (tokens en :root)
 src/assets/           fuentes woff/woff2 (se incrustan en base64)
 src/js/00-core.js     utilidades, RNG con semilla, Save (localStorage + exportar/importar), Snd (WebAudio 8 bits), Input, View
 src/js/10-art.js      arte pixel: personas, bicis (cenital, lateral, frontal), camión, carros, panorámica, íconos 16x16, portada
-src/js/20-map.js      mapa del Valle de Aburrá (150x260 baldosas de 8 px), estaciones, lugares, carriles, metro, ruta (Dial), dibujo por bloques
+src/js/20-map.js      mapa del Valle de Aburrá de Caldas a Barbosa (150x432 baldosas de 8 px), 106 estaciones, 38 lugares, carriles, metro, ruta (Dial), dibujo por bloques
 src/js/30-ride.js     StationSim (demanda de préstamos) + Ride (bici/camión, tráfico, metro, GPS, minimapa) + drawOverview
 src/js/35-life.js     vida urbana: Tranvía de Ayacucho (calle sin carros), Metrocable K/P/J/H, peatones, luces de noche
 src/js/40-mg.js       minijuegos: MGAnfitrion, MGMecanico, MGBodega, MGApertura(cierre), MGCables, MGSimon, MGInspeccion
+src/js/45-mg2.js      minijuegos v0.4 inspirados en Infinity Games y Railways: MGLoop (Circuito), MGLaser (Señal), MGTraffix (Semaforero),
+                      MGRutas (Desvíos de Bodega T3 y «Maquinista» secreto) y MGLaberinto (Moravia secreto)
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
 src/js/65-extra.js    logros (16), introducción «¿Qué es EnCicla?», «Apoya la bici pública», tarjeta de resultado 1080x1350
-src/js/70-net.js      Net: sala WebRTC sin servidor (código comprimido que se comparte por WhatsApp)
+src/js/70-net.js      Net: salas WebRTC de hasta 4 jugadores en estrella (el anfitrión reenvía), sin servidor
+src/js/72-qr.js       QR: generador propio (v1–40, idéntico a la referencia Nayuki) + escáner con BarcodeDetector y cámara
+landing/              página oficial (pagina.html), privacidad.html, capturas y arte; build.js la copia a dist/web
+tools/store.js        capturas 1080x1920 y gráfico 1024x500 para Play Store (dist/store/) y la página oficial
+docs/PLAY_STORE.md    ficha de Play Store, clasificación, seguridad de datos y pasos de firma (keystore.properties fuera de git)
 src/js/60-ui.js       UI (portada, escalafón, briefing, resultados, álbum, partidas, ajustes), Game (bucle), Progress
 src/js/90-bot.js      bot de pruebas (JE.bot.run): juega partidas y valida invariantes
 src/js/95-promo.js    íconos de la app e imagen OG 1200x630
@@ -77,6 +83,35 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Roguelite:** al aprobar un turno eliges 1 de 3 mejoras (`PERKS`, máximo 3 activas). Si fallas un turno pierdes todas y la racha vuelve a 0.
 - **Novedad del día** (`NOVEDADES`): modifica tráfico, demanda, lluvia, ciclovía, partido en el Atanasio, Feria de las Flores…
   El turno 1 siempre es "Día normal".
+  - Ciclovía: El Poblado, la 80 y Las Vegas quedan cerradas a los carros y con conos.
+  - Flores: aparecen silleteros en las aceras.
+
+**Mapa v0.4 (Caldas → Barbosa):** sigue las capturas de la app oficial que compartió el usuario.
+- `OY = 120` filas al norte. Los datos se escriben en coordenadas "yy" (las del mapa original) y se desplazan +OY.
+- Al norte de Bello el río gira al noreste (`bendN`) y el valle se vuelve un corredor (`mW`/`mE`) con pueblos (`TOWNS_N`: Copacabana, Girardota y Barbosa).
+  Entre pueblos el terreno es rural: potreros, sin calles menores.
+- 106 estaciones con nombres de barrio (`STATIONS_DEF`, 10 municipios). Son aproximados: **pedirle al usuario la lista oficial por zonas**.
+- Por el tamaño, cada oficio trabaja en una **sub-zona** (`subZone`).
+  - Monitoreo ve solo su zona (T1 centro, T2 sur, T3 norte), con la vista recortada y una base local.
+  - Supervisor atiende estaciones a menos de 100 baldosas de la bodega.
+  - Las órdenes de Balance quedan a menos de 900 px.
+- El minimapa es un radar alrededor del jugador; al tocarlo se ve el valle completo.
+
+**Minijuegos v0.4 (inspirados en las referencias del usuario):**
+- Infinity Loop → Circuito (Técnico T2/T3, anclajes).
+- Laser → Señal (Técnico, tótem).
+- Traffix → Semaforero (aviso "semáforo dañado" del Supervisor).
+- Package Inc → Desvíos (Bodega T3, y en los avisos de bodega del Supervisor).
+- Railways y Tiny Rails → Maquinista (Easter egg).
+- Laberinto → Moravia (Easter egg).
+
+**Easter eggs:**
+1. Tres timbrazos seguidos bajo una estación del Metro abren el Maquinista secreto, que anuncia "Próximamente: Juega Metro" (el juego 11).
+2. Tres timbrazos en Moravia abren el laberinto.
+3. 7 toques al título "EnCicla" de la portada, o el código Konami, activan la bici dorada.
+4. Postal secreta en el Cerro de las Tres Cruces (no sale en el álbum hasta encontrarla).
+
+Las pistas están en "¿Sabías que?" y hay 4 logros secretos.
 - **Ritmo** (Ajustes): tranquilo (+40 % de tiempo y +35 % de paciencia), normal o arcade.
 - **Reto del día:** la semilla es la fecha. **Código de reto** `N-T-SEMILLA36`: multijugador asíncrono sin servidor.
 

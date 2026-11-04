@@ -15,3 +15,10 @@ app/android/local.properties
 app/android/capacitor-cordova-android-plugins/build/
 app/android/app/src/main/assets/public/
 dist/*.apk
+# firma de publicación Android (nunca subir llaves ni contraseñas)
+keystore.properties
+*.jks
+*.keystore
+*.aab
+# APK que se publica junto a la página (lo coloca el desarrollador)
+landing/descargas/

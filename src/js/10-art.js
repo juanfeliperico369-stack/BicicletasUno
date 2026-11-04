@@ -42,11 +42,11 @@ const Art = JE.art = {
       'kwwkkwwwwwwwwwwk', 'kwwwkwwwwwwwwwwk', '.kwwwwwwwwwwwwwk', '..kwwwwwwwwwwwk.', '...kwwwwwwwwwwk.', '....kwwwwwwwwk..', '.....kwwwwwwwk..', '.....kkkkkkkkk..'
     ], { k: '#0a2342', w: '#ffffff' })).get('hand');
   },
-  riderTop(shirt, helmet, skin) {
-    const k = 'rt' + shirt + helmet + skin; let c = this.cache.get(k); if (c) return c;
+  riderTop(shirt, helmet, skin, frame) {
+    frame = frame || PAL.vd; const k = 'rt' + shirt + helmet + skin + frame; let c = this.cache.get(k); if (c) return c;
     c = this.map([
       '..bbb..', '..bbb..', '...t...', 'kkkfkkk', '.s.f.s.', '.sCCCs.', '.CHHHC.', '..HHH..', '..CCC..', '...f...', '...t...', '...t...'
-    ], { b: '#dfe5ec', t: '#141821', k: '#2b2f38', f: PAL.vd, s: skin, C: shirt, H: helmet });
+    ], { b: frame === PAL.vd ? '#dfe5ec' : '#fff3a0', t: '#141821', k: '#2b2f38', f: frame, s: skin, C: shirt, H: helmet });
     this.cache.set(k, c); return c;
   },
   bikeTop() { return this.get('bt', 3, 8, x => { prect(x, 1, 0, 1, 2, '#141821'); prect(x, 0, 2, 3, 1, '#2b2f38'); prect(x, 1, 3, 1, 3, PAL.vd); prect(x, 1, 6, 1, 2, '#141821'); }); },

@@ -199,6 +199,9 @@ body.big .chip{font-size:19px}
 body.big .btn{font-size:23px}
 body.big .turnos button{font-size:21px}
 #coach.coachTop{top:calc(var(--sat) + 52px);bottom:auto;left:auto;right:calc(12px + var(--sar));transform:none;max-width:42%}
+.qrbox{display:flex;justify-content:center;background:#fff;padding:8px;border:3px solid var(--az);margin:6px 0}
+.qrbox canvas{max-width:100%;height:auto;image-rendering:pixelated}
+.roster{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -252,7 +255,7 @@ body.big .turnos button{font-size:21px}
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.3.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.4.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -503,11 +506,11 @@ const Art = JE.art = {
       'kwwkkwwwwwwwwwwk', 'kwwwkwwwwwwwwwwk', '.kwwwwwwwwwwwwwk', '..kwwwwwwwwwwwk.', '...kwwwwwwwwwwk.', '....kwwwwwwwwk..', '.....kwwwwwwwk..', '.....kkkkkkkkk..'
     ], { k: '#0a2342', w: '#ffffff' })).get('hand');
   },
-  riderTop(shirt, helmet, skin) {
-    const k = 'rt' + shirt + helmet + skin; let c = this.cache.get(k); if (c) return c;
+  riderTop(shirt, helmet, skin, frame) {
+    frame = frame || PAL.vd; const k = 'rt' + shirt + helmet + skin + frame; let c = this.cache.get(k); if (c) return c;
     c = this.map([
       '..bbb..', '..bbb..', '...t...', 'kkkfkkk', '.s.f.s.', '.sCCCs.', '.CHHHC.', '..HHH..', '..CCC..', '...f...', '...t...', '...t...'
-    ], { b: '#dfe5ec', t: '#141821', k: '#2b2f38', f: PAL.vd, s: skin, C: shirt, H: helmet });
+    ], { b: frame === PAL.vd ? '#dfe5ec' : '#fff3a0', t: '#141821', k: '#2b2f38', f: frame, s: skin, C: shirt, H: helmet });
     this.cache.set(k, c); return c;
   },
   bikeTop() { return this.get('bt', 3, 8, x => { prect(x, 1, 0, 1, 2, '#141821'); prect(x, 0, 2, 3, 1, '#2b2f38'); prect(x, 1, 3, 1, 3, PAL.vd); prect(x, 1, 6, 1, 2, '#141821'); }); },
@@ -722,24 +725,32 @@ const Art = JE.art = {
 /* =====================================================================
    MAPA: Valle de Aburrá en miniatura (norte arriba, río de sur a norte)
    ===================================================================== */
-const MW = 150, MH = 260, TS = 8, CH = 32;
+/* v0.4: mapa ampliado de Caldas (sur) a Barbosa (norte), como el sistema real.
+   OY = filas nuevas al norte (Bello, Copacabana, Girardota, Barbosa); al sur se suman Envigado, Sabaneta, La Estrella y Caldas.
+   Los datos se escriben en coordenadas "yy" (las del mapa original) y se desplazan +OY al cargar. */
+const OY = 120, MW = 150, MH = 432, TS = 8, CH = 32;
 const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15 };
 const SOLID = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0];
 const TRUCK_OK = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1];
 const SURF = [.55, 0, 0, 0, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9];
 const PATHC = [6, 0, 0, 0, 3, 3, 4, 2, 0, 0, 3, 3, 3, 0, 6, 3];
 const MINI_COL = ['#4f8f45', '#24502c', '#8a4a30', '#56657c', '#2b3240', '#384257', '#7d8696', '#9bd341', '#3d8cb0', '#777777', '#cfc4a6', '#384257', '#ffffff', '#c9a24a', '#1e2430', '#56c7ff'];
-const RX = new Float32Array(MH); for (let y = 0; y < MH; y++) RX[y] = 66 + (MH - y) * .07 + 3 * Math.sin(y / 19);
+/* al norte de Bello el valle (y el río) gira hacia el noreste, rumbo a Copacabana */
+const bendN = y => { const yy = y - OY; return yy < -6 ? (-6 - yy) * .5 : 0; };
+const RX = new Float32Array(MH); for (let y = 0; y < MH; y++) RX[y] = 66 + (260 - Math.max(0, y - OY)) * .07 + 3 * Math.sin((y - OY) / 19) + bendN(y);
+/* pueblos del corredor norte: fuera de ellos el valle es rural (fincas y potreros) */
+const TOWNS_N = [{ name: 'Copacabana', yy: -34, dx: -14, r: 15 }, { name: 'Girardota', yy: -68, dx: 11, r: 13 }, { name: 'Barbosa', yy: -104, dx: -15, r: 12 }];
 const rxi = y => Math.round(RX[clamp(Math.floor(y), 0, MH - 1)]);
 const rxf = py => { const ty = clamp(py / TS, 0, MH - 1.001), i = Math.floor(ty); return lerp(RX[i], RX[Math.min(MH - 1, i + 1)], ty - i); };
 
-const CALLES = []; for (let k = 0; k < 22; k++) CALLES.push(4 + 12 * k);
+const shiftKeys = o => { const r = {}; for (const k in o) r[+k + OY] = o[k]; return r; };
+const CALLES = []; for (let k = 0; k < 36; k++) CALLES.push(4 + 12 * k);
 const CARRERAS = []; for (let k = 0; k < 14; k++) CARRERAS.push(3 + 11 * k);
-const AVE_EW = { 16: 'Calle 44 · Bello', 52: 'Calle 67 Barranquilla', 88: 'Avenida Colombia', 100: 'Calle San Juan', 124: 'Calle 33', 136: 'Calle 30', 160: 'Calle 10', 184: 'Calle 4 Sur', 208: 'Calle 37 Sur · Envigado', 232: 'Calle 75 Sur · Sabaneta' };
-const CIC_EW = { 52: [0, MW], 100: [0, MW], 160: [0, MW], 208: [0, MW] };
+const AVE_EW = shiftKeys({ '-104': 'Calle 15 · Barbosa', '-68': 'Calle 7 · Girardota', '-32': 'Calle 50 · Copacabana', '-20': 'Diagonal 55 · Niquía', 16: 'Calle 44 · Bello', 52: 'Calle 67 Barranquilla', 88: 'Avenida Colombia', 100: 'Calle San Juan', 124: 'Calle 33', 136: 'Calle 30', 160: 'Calle 10', 184: 'Calle 4 Sur', 208: 'Calle 37 Sur · Envigado', 232: 'Calle 75 Sur · Sabaneta', 268: 'Calle 77 Sur · La Estrella', 292: 'Calle 129 Sur · Caldas' });
+const CIC_EW = shiftKeys({ '-20': [0, MW], 52: [0, MW], 100: [0, MW], 160: [0, MW], 208: [0, MW], 268: [0, MW] });
 const AVE_NS = { 25: 'Avenida 80', 47: 'Carrera 65', 91: 'Avenida Las Vegas', 102: 'Avenida El Poblado' };
-const CIC_NS = { 25: [56, 204], 47: [0, MH], 102: [118, 236] };
-const nsName = (x, y) => x === 91 && y < 128 ? 'Avenida Oriental' : x === 102 && y < 118 ? 'Carrera 46' : AVE_NS[x];
+const CIC_NS = { 25: [56 + OY, 204 + OY], 47: [OY - 30, MH], 91: [OY - 50, OY + 22], 102: [118 + OY, 282 + OY] };
+const nsName = (x, y) => x === 91 && y < 128 + OY ? 'Avenida Oriental' : x === 102 && y < 118 + OY ? 'Carrera 46' : AVE_NS[x];
 
 /* Lugares (postales). x,y,w,h en baldosas. */
 const LANDMARKS = [
@@ -771,31 +782,80 @@ const LANDMARKS = [
   { id: 'sabaneta', name: 'Parque de Sabaneta', muni: 'Sabaneta', x: 84, y: 236, w: 10, h: 8, k: 'iglesia', fact: 'Sabaneta es el municipio más pequeño de Colombia en extensión.' },
   { id: 'estrella', name: 'Parque de La Estrella', muni: 'La Estrella', x: 40, y: 244, w: 10, h: 8, k: 'iglesia', fact: 'La Estrella mira al valle desde el suroccidente.' }
 ];
+/* nuevos lugares v0.4 (coordenadas yy) */
+LANDMARKS.push(
+  { id: 'barbosa', name: 'Parque de Barbosa', muni: 'Barbosa', x: 116, y: -117, w: 11, h: 9, k: 'iglesia', fact: 'Barbosa es el municipio más al norte del Valle de Aburrá: allí llega EnCicla.' },
+  { id: 'girardota', name: 'Parque de Girardota', muni: 'Girardota', x: 123, y: -81, w: 11, h: 9, k: 'iglesia', fact: 'Girardota es famosa por la catedral del Señor Caído, destino de peregrinos.' },
+  { id: 'copacabana', name: 'Parque de Copacabana', muni: 'Copacabana', x: 74, y: -45, w: 11, h: 9, k: 'iglesia', fact: 'Copacabana, al norte del valle, es uno de los municipios más antiguos de Antioquia.' },
+  { id: 'quitasol', name: 'Cerro Quitasol', muni: 'Bello', x: 34, y: -16, w: 14, h: 14, k: 'volador', fact: 'El cerro tutelar de Bello: su silueta se ve desde casi todo el norte del valle.' },
+  { id: 'fabricato', name: 'Fabricato', muni: 'Bello', x: 101, y: -20, w: 12, h: 8, k: 'mamm', fact: 'Fábrica textil histórica de Bello: el valle fue la cuna de la industria textil del país.' },
+  { id: 'hospbello', name: 'Hospital Marco Fidel Suárez', muni: 'Bello', x: 54, y: -14, w: 10, h: 8, k: 'campus', fact: 'Edificio histórico de Bello, con patios y corredores de estilo republicano.' },
+  { id: 'otraparte', name: 'Casa Museo Otraparte', muni: 'Envigado', x: 110, y: 214, w: 9, h: 7, k: 'lleras', fact: 'Casa del escritor Fernando González, "el filósofo de Otraparte", hoy museo y café.' },
+  { id: 'ditaires', name: 'Parque Ditaires', muni: 'Itagüí', x: 26, y: 222, w: 13, h: 9, k: 'botanico', fact: 'Gran parque de Itagüí con zonas verdes, piscinas y lago.' },
+  { id: 'caldas', name: 'Parque de Caldas', muni: 'Caldas', x: 42, y: 280, w: 12, h: 9, k: 'iglesia', fact: 'Caldas es el municipio más al sur del Valle de Aburrá.' },
+  { id: 'nacimiento', name: 'Alto de San Miguel', muni: 'Caldas', x: 80, y: 290, w: 14, h: 14, k: 'volador', fact: 'Aquí, en Caldas, nace el río Medellín, que recorre todo el valle hacia el norte hasta Barbosa.' },
+  { id: 'trescruces', name: 'Cerro de las Tres Cruces', muni: 'Medellín', x: 9, y: 148, w: 12, h: 12, k: 'cruces', secret: true, fact: '¡Postal secreta! Desde sus tres cruces se ve todo el valle. Muchos suben a pie a hacer ejercicio.' }
+);
+LANDMARKS.forEach(l => l.y += OY);
 const LM = {}; LANDMARKS.forEach(l => LM[l.id] = l);
+const PUBLIC_LM = () => LANDMARKS.filter(l => l.id !== 'depot' && !l.secret);
 
-/* Estaciones EnCicla (inspiradas en el sistema real; ubicaciones estilizadas) */
+/* Estaciones EnCicla: ~107, repartidas por barrios como en el mapa de la app oficial (Caldas → Barbosa).
+   Nombres por barrio/lugar (aproximados); ubicaciones estilizadas. [id, nombre, municipio, x, yy, tipo m/a, demanda] */
 const STATIONS_DEF = [
-  ['niquia', 'Niquía', 'Bello', 97, 10, 'a', 'res'], ['bello', 'Parque de Bello', 'Bello', 57, 24, 'm', 'res'],
-  ['terminalN', 'Terminal del Norte', 'Medellín', 66, 51, 'm', 'mix'], ['moravia', 'Moravia', 'Medellín', 99, 42, 'm', 'res'],
-  ['unal', 'Universidad Nacional', 'Medellín', 44, 67, 'm', 'uni'], ['botanico', 'Jardín Botánico', 'Medellín', 99, 54, 'a', 'mix'],
-  ['udea', 'Universidad de Antioquia', 'Medellín', 114, 74, 'm', 'uni'], ['explora', 'Parque Explora', 'Medellín', 96, 78, 'a', 'mix'],
-  ['carlose', 'Carlos E. Restrepo', 'Medellín', 58, 80, 'm', 'uni'], ['estadio', 'Estadio', 'Medellín', 37, 82, 'm', 'mix'],
-  ['prado', 'Prado', 'Medellín', 110, 86, 'a', 'work'], ['floresta', 'Floresta', 'Medellín', 18, 105, 'a', 'res'],
-  ['suramericana', 'Suramericana', 'Medellín', 57, 106, 'm', 'work'], ['berrio', 'Parque Berrío', 'Medellín', 109, 96, 'm', 'work'],
-  ['sanantonio', 'San Antonio', 'Medellín', 100, 108, 'm', 'work'], ['plazamayor', 'Plaza Mayor', 'Medellín', 92, 111, 'a', 'work'],
-  ['ayacucho', 'Ayacucho', 'Medellín', 119, 110, 'm', 'res'], ['laureles', 'Laureles', 'Medellín', 36, 123, 'm', 'res'],
-  ['parquesrio', 'Parques del Río', 'Medellín', 86, 126, 'a', 'mix'], ['industriales', 'Industriales', 'Medellín', 90, 132, 'a', 'work'],
-  ['ciudadrio', 'Ciudad del Río', 'Medellín', 92, 148, 'a', 'work'], ['poblado', 'Parque del Poblado', 'Medellín', 106, 139, 'm', 'work'],
-  ['lleras', 'Parque Lleras', 'Medellín', 120, 158, 'm', 'mix'], ['terminalS', 'Terminal del Sur', 'Medellín', 57, 160, 'm', 'mix'],
-  ['belen', 'Belén', 'Medellín', 22, 150, 'm', 'res'], ['guayabal', 'Guayabal', 'Medellín', 55, 177, 'a', 'res'],
-  ['eafit', 'EAFIT', 'Medellín', 92, 178, 'm', 'uni'], ['aguacatala', 'Aguacatala', 'Medellín', 86, 187, 'a', 'mix'],
-  ['ayura', 'Ayurá', 'Envigado', 84, 198, 'a', 'res'], ['envigado', 'Parque de Envigado', 'Envigado', 100, 212, 'm', 'res'],
-  ['itagui', 'Parque de Itagüí', 'Itagüí', 46, 222, 'm', 'res'], ['sabaneta', 'Parque de Sabaneta', 'Sabaneta', 88, 247, 'm', 'res'],
-  ['estrella', 'La Estrella', 'La Estrella', 44, 255, 'a', 'res']
+  // Barbosa, Girardota, Copacabana
+  ['barbosa1', 'Parque de Barbosa', 'Barbosa', 122, -100, 'a', 'res'], ['barbosa2', 'Barbosa Norte', 'Barbosa', 116, -114, 'a', 'res'],
+  ['girardota1', 'Parque de Girardota', 'Girardota', 128, -62, 'a', 'res'], ['girardota2', 'Girardota Centro', 'Girardota', 136, -70, 'a', 'res'], ['girardota3', 'Girardota Sur', 'Girardota', 138, -56, 'a', 'res'],
+  ['copa1', 'Parque de Copacabana', 'Copacabana', 80, -28, 'm', 'res'], ['copa2', 'Copacabana Norte', 'Copacabana', 88, -42, 'a', 'res'], ['copa3', 'Copacabana Calle 50', 'Copacabana', 72, -24, 'a', 'res'],
+  // Bello
+  ['niquia', 'Ciudad Niquía', 'Bello', 96, -6, 'a', 'res'], ['hermosa', 'Hermosa Provincia', 'Bello', 110, -4, 'm', 'res'], ['fabricato', 'Fabricato', 'Bello', 96, -16, 'a', 'work'],
+  ['hospbello', 'Marco Fidel Suárez', 'Bello', 60, -2, 'm', 'mix'], ['bello', 'Parque de Bello', 'Bello', 57, 24, 'm', 'res'], ['bellocentro', 'Bello Centro', 'Bello', 64, 14, 'a', 'res'],
+  ['calle44', 'Calle 44 · Bello', 'Bello', 72, 30, 'm', 'mix'], ['madera', 'Madera', 'Bello', 80, 36, 'a', 'mix'],
+  // Medellín noroccidente y nororiente
+  ['juanes', 'Parque Juanes de la Paz', 'Medellín', 42, 32, 'm', 'res'], ['calle80', 'Calle 80', 'Medellín', 52, 42, 'a', 'mix'], ['pilarica', 'Pilarica', 'Medellín', 32, 48, 'm', 'res'],
+  ['robledo', 'Robledo', 'Medellín', 20, 56, 'a', 'res'], ['unal', 'Universidad Nacional', 'Medellín', 44, 67, 'm', 'uni'], ['terminalN', 'Terminal del Norte', 'Medellín', 66, 51, 'm', 'mix'],
+  ['moravia', 'Moravia', 'Medellín', 99, 42, 'm', 'res'], ['aranjuez', 'Aranjuez', 'Medellín', 118, 44, 'm', 'res'], ['botanico', 'Jardín Botánico', 'Medellín', 99, 54, 'a', 'mix'],
+  ['universidad', 'Estación Universidad', 'Medellín', 90, 62, 'a', 'mix'], ['campovaldes', 'Campo Valdés', 'Medellín', 124, 58, 'm', 'res'], ['udea', 'Universidad de Antioquia', 'Medellín', 114, 76, 'm', 'uni'],
+  ['manrique', 'Manrique', 'Medellín', 130, 70, 'a', 'res'], ['explora', 'Parque Explora', 'Medellín', 96, 78, 'a', 'mix'], ['prado', 'Prado', 'Medellín', 110, 86, 'm', 'res'],
+  // Centro · La Candelaria
+  ['caracas', 'Avenida Caracas', 'Medellín', 117, 92, 'a', 'work'], ['botero', 'Museo de Antioquia', 'Medellín', 103, 90, 'a', 'work'], ['berrio', 'Parque Berrío', 'Medellín', 109, 97, 'm', 'work'],
+  ['bombona', 'Bomboná', 'Medellín', 124, 98, 'a', 'mix'], ['junin', 'Junín', 'Medellín', 114, 103, 'a', 'work'], ['sanantonio', 'San Antonio', 'Medellín', 100, 108, 'm', 'work'],
+  ['sanignacio', 'San Ignacio', 'Medellín', 119, 108, 'a', 'work'], ['cisneros', 'Plaza Cisneros', 'Medellín', 104, 114, 'a', 'work'], ['plazamayor', 'Plaza Mayor', 'Medellín', 92, 111, 'a', 'work'],
+  ['ayacucho', 'Ayacucho', 'Medellín', 126, 112, 'm', 'res'], ['alpujarra', 'La Alpujarra', 'Medellín', 96, 120, 'a', 'work'], ['sandiego', 'San Diego', 'Medellín', 112, 124, 'm', 'mix'],
+  ['parquesrio', 'Parques del Río', 'Medellín', 86, 126, 'a', 'mix'], ['exposiciones', 'Exposiciones', 'Medellín', 96, 130, 'a', 'work'], ['industriales', 'Industriales', 'Medellín', 88, 136, 'a', 'work'],
+  // Estadio, Laureles, Calasanz, San Javier
+  ['carlose', 'Carlos E. Restrepo', 'Medellín', 58, 80, 'm', 'uni'], ['estadio', 'Estadio', 'Medellín', 37, 82, 'm', 'mix'], ['calasanz', 'Calasanz', 'Medellín', 22, 86, 'a', 'res'],
+  ['upb', 'UPB', 'Medellín', 30, 94, 'm', 'uni'], ['unidad', 'Unidad Deportiva', 'Medellín', 48, 92, 'a', 'mix'], ['av80', 'Avenida 80', 'Medellín', 26, 100, 'a', 'mix'],
+  ['floresta', 'Floresta', 'Medellín', 18, 108, 'a', 'res'], ['sanjavier', 'San Javier', 'Medellín', 14, 116, 'm', 'res'], ['suramericana', 'Suramericana', 'Medellín', 57, 106, 'm', 'work'],
+  ['laureles2', 'Segundo Parque de Laureles', 'Medellín', 48, 118, 'a', 'res'], ['laureles', 'Primer Parque de Laureles', 'Medellín', 36, 124, 'm', 'res'], ['av33', 'Avenida 33', 'Medellín', 42, 130, 'a', 'mix'],
+  // Belén, Guayabal
+  ['rosales', 'Rosales', 'Medellín', 16, 134, 'm', 'res'], ['belen', 'Parque de Belén', 'Medellín', 26, 142, 'a', 'res'], ['belen2', 'Belén Las Playas', 'Medellín', 22, 156, 'm', 'res'],
+  ['aeropuerto', 'Olaya Herrera', 'Medellín', 50, 146, 'a', 'mix'], ['terminalS', 'Terminal del Sur', 'Medellín', 58, 160, 'm', 'mix'], ['guayabal', 'Guayabal', 'Medellín', 55, 177, 'a', 'res'],
+  ['cristorey', 'Cristo Rey', 'Medellín', 40, 186, 'a', 'res'],
+  // El Poblado, Ciudad del Río
+  ['ciudadrio', 'Ciudad del Río', 'Medellín', 92, 148, 'a', 'work'], ['castropol', 'Castropol', 'Medellín', 104, 152, 'a', 'mix'], ['poblado', 'Parque del Poblado', 'Medellín', 106, 139, 'm', 'work'],
+  ['calle10', 'Calle 10', 'Medellín', 98, 162, 'a', 'work'], ['lleras', 'Parque Lleras', 'Medellín', 120, 158, 'm', 'mix'], ['manila', 'Manila', 'Medellín', 112, 168, 'a', 'mix'],
+  ['lasvegas', 'Avenida Las Vegas', 'Medellín', 86, 168, 'a', 'mix'], ['eafit', 'EAFIT', 'Medellín', 92, 178, 'm', 'uni'], ['aguacatala', 'Aguacatala', 'Medellín', 86, 188, 'a', 'mix'],
+  // Envigado
+  ['ayura', 'Ayurá', 'Envigado', 84, 198, 'a', 'res'], ['jardines', 'Jardines', 'Envigado', 96, 194, 'm', 'res'], ['sanmarcos', 'San Marcos', 'Envigado', 104, 200, 'a', 'res'],
+  ['zona2', 'Zona 2', 'Envigado', 114, 198, 'a', 'res'], ['alcala', 'Alcalá', 'Envigado', 92, 206, 'm', 'res'], ['magnolia', 'La Magnolia', 'Envigado', 120, 206, 'a', 'res'],
+  ['envigadoM', 'Estación Envigado', 'Envigado', 80, 210, 'a', 'mix'], ['envigado', 'Parque de Envigado', 'Envigado', 102, 212, 'm', 'res'], ['milan', 'Milán-Vallejuelos', 'Envigado', 88, 216, 'a', 'res'],
+  ['mesa', 'La Mesa', 'Envigado', 116, 218, 'a', 'res'], ['otraparte', 'Otraparte', 'Envigado', 106, 226, 'm', 'res'],
+  // Itagüí
+  ['artista', 'Parque del Artista', 'Itagüí', 54, 204, 'a', 'res'], ['simonbolivar', 'Parque Simón Bolívar', 'Itagüí', 62, 212, 'a', 'mix'], ['fatima', 'Fátima', 'Itagüí', 40, 210, 'a', 'res'],
+  ['itagui', 'Parque Principal de Itagüí', 'Itagüí', 46, 222, 'm', 'res'], ['santacruz', 'Santa Cruz', 'Itagüí', 62, 226, 'm', 'res'], ['naranjos', 'Los Naranjos', 'Itagüí', 52, 232, 'a', 'res'],
+  ['villapaula', 'Villa Paula', 'Itagüí', 40, 236, 'a', 'res'], ['sanpio', 'San Pío X', 'Itagüí', 30, 226, 'a', 'res'], ['ditaires', 'Ditaires', 'Itagüí', 28, 236, 'a', 'res'],
+  ['pilsen', 'Pilsen', 'Itagüí', 22, 214, 'a', 'res'],
+  // Sabaneta, La Estrella, Caldas
+  ['callelarga', 'Calle Larga', 'Sabaneta', 80, 240, 'a', 'res'], ['sabaneta', 'Parque de Sabaneta', 'Sabaneta', 88, 248, 'm', 'res'], ['sabvegas', 'Sabaneta Las Vegas', 'Sabaneta', 96, 238, 'a', 'mix'],
+  ['ancon', 'Ancón Sur', 'Sabaneta', 56, 248, 'a', 'res'], ['yarumito', 'Yarumito', 'La Estrella', 34, 246, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 44, 256, 'a', 'res'],
+  ['quintas', 'Quintas de la Quinta', 'La Estrella', 34, 262, 'm', 'res'], ['tablaza', 'La Tablaza', 'La Estrella', 58, 270, 'a', 'res'],
+  ['caldas', 'Parque de Caldas', 'Caldas', 48, 292, 'm', 'res'], ['caldas2', 'Caldas Centro', 'Caldas', 56, 286, 'a', 'res'], ['caldas3', 'Caldas Sur', 'Caldas', 50, 300, 'a', 'res']
 ];
+STATIONS_DEF.forEach(s => { s[4] += OY; });
 const METRO_A = ['Niquía', 'Bello', 'Madera', 'Acevedo', 'Tricentenario', 'Caribe', 'Universidad', 'Hospital', 'Prado', 'Parque Berrío', 'San Antonio', 'Alpujarra', 'Exposiciones', 'Industriales', 'Poblado', 'Aguacatala', 'Ayurá', 'Envigado', 'Itagüí', 'Sabaneta', 'La Estrella'];
 const METRO_B = ['San Antonio', 'Cisneros', 'Suramericana', 'Estadio', 'Floresta', 'Santa Lucía', 'San Javier'];
-const LINEB_Y = 106;
+const LINEB_Y = 106 + OY;
 
 const CityMap = JE.map = {
   t: null, mark: null, lid: null, lanes: [], stations: [], depot: null, chunks: new Map(), lmCanvas: {}, mini: null, flows: new Map(), metroA: [], metroB: [],
@@ -803,10 +863,13 @@ const CityMap = JE.map = {
   get(x, y) { return (x < 0 || y < 0 || x >= MW || y >= MH) ? TT.MOUNT : this.t[y * MW + x]; },
   set(x, y, v) { if (x >= 0 && y >= 0 && x < MW && y < MH) this.t[y * MW + x] = v; },
   rect(x0, y0, w, h, v, only) { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) { if (x < 0 || y < 0 || x >= MW || y >= MH) continue; const c = this.get(x, y); if (!only || only.includes(c)) this.set(x, y, v); } },
-  mW(y) { return Math.round(4 + 2.5 * Math.sin(y / 14) + 1.5 * Math.sin(y / 5.1) + (y > 215 ? (y - 215) * .38 : 0) + (y < 14 ? (14 - y) * .4 : 0)); },
-  mE(y) { return MW - 1 - Math.round(5 + 2.5 * Math.sin(y / 11 + 1) + 1.5 * Math.sin(y / 4.3) + (y > 215 ? (y - 215) * .34 : 0) + (y < 14 ? (14 - y) * .4 : 0)); },
+  /* bordes de montaña. Al norte de Bello el valle es un corredor angosto que sigue el río (Copacabana → Barbosa) */
+  mW(y) { const yy = y - OY, b = bendN(y), base = 4 + 2.5 * Math.sin(yy / 14) + 1.5 * Math.sin(yy / 5.1) + (yy > 215 ? (yy - 215) * .34 : 0) + (yy < 14 ? Math.min(30, 14 - yy) * .32 : 0) + b, cor = RX[clamp(y, 0, MH - 1)] - 27 + 3 * Math.sin(y / 9); const k = clamp((-12 - yy) / 26, 0, 1); return Math.round(lerp(base, Math.max(base, cor), k)); },
+  mE(y) { const yy = y - OY, b = bendN(y), base = MW - 1 - (5 + 2.5 * Math.sin(yy / 11 + 1) + 1.5 * Math.sin(yy / 4.3) + (yy > 215 ? (yy - 215) * .3 : 0) + (yy < 14 ? Math.min(30, 14 - yy) * .32 : 0) - b), cor = RX[clamp(y, 0, MH - 1)] + 26 + 3 * Math.sin(y / 7); const k = clamp((-12 - yy) / 26, 0, 1); return Math.min(MW - 3, Math.round(lerp(base, Math.min(base, cor), k))); },
+  /* ¿está dentro de un pueblo del corredor norte? */
+  inTown(x, y) { const yy = y - OY; if (yy >= -16) return true; for (const T of TOWNS_N) { const cy = T.yy, cx = RX[clamp(cy + OY, 0, MH - 1)] + T.dx; if (Math.hypot(x - cx, (yy - cy) * 1.1) < T.r) return true; } return false; },
   district(x, y) {
-    const c = rxi(y);
+    const c = rxi(y); y -= OY;
     if (y < 38) return 'bello'; if (y >= 196) return x < c ? 'sur' : 'envigado';
     if (x > c && y >= 86 && y <= 126 && x < c + 42) return 'centro'; if (x > c && y > 126) return 'poblado';
     if (x < c && y >= 80 && y <= 132) return 'laureles'; return 'barrio';
@@ -849,11 +912,17 @@ const CityMap = JE.map = {
     }
     // montañas y comunas (casas de ladrillo)
     for (let y = 0; y < MH; y++) {
-      const a = this.mW(y), e = this.mE(y), bw = 7 + Math.round(3 * Math.sin(y / 30) + (y < 90 ? 3 : 0)), be = 8 + Math.round(3 * Math.sin(y / 26 + 2) + (y < 110 ? 4 : 0));
+      const a = this.mW(y), e = this.mE(y), bw = 7 + Math.round(3 * Math.sin(y / 30) + (y < 90 + OY ? 3 : 0)), be = 8 + Math.round(3 * Math.sin(y / 26 + 2) + (y < 110 + OY ? 4 : 0));
       for (let x = 0; x < MW; x++) {
         if (x < a || x > e) this.set(x, y, TT.MOUNT);
         else if ((x < a + bw || x > e - be) && this.get(x, y) === TT.BLDG) this.set(x, y, TT.BRICK);
       }
+    }
+    // corredor norte: entre pueblos, campo (potreros y fincas); solo quedan avenidas, ciclorrutas y la autopista del río
+    for (let y = 0; y < OY - 16; y++) for (let x = 0; x < MW; x++) {
+      if (this.inTown(x, y)) continue; const v = this.get(x, y);
+      if (v === TT.BLDG || v === TT.BRICK) this.set(x, y, h2(x, y, 41) < .04 ? TT.BRICK : TT.GRASS);
+      else if (v === TT.ROAD || (v === TT.WALK && Math.abs(x - rxi(y)) > 8)) this.set(x, y, TT.GRASS);
     }
     // parques de barrio
     for (let i = 0; i < CALLES.length - 1; i++) for (let j = 0; j < CARRERAS.length - 1; j++) {
@@ -864,15 +933,15 @@ const CityMap = JE.map = {
     // lugares emblemáticos
     LANDMARKS.forEach((L, i) => this.paintLandmark(L, i));
     // parque lineal del río
-    for (let y = 116; y <= 134; y++) { const c = rxi(y); for (let d = 6; d <= 10; d++) { const v = this.get(c + d, y); if (v !== TT.AVE && v !== TT.ROAD && v !== TT.BRIDGE) this.set(c + d, y, (d === 8 || y % 6 === 0) ? TT.PLAZA : TT.GRASS); } }
+    for (let y = 116 + OY; y <= 134 + OY; y++) { const c = rxi(y); for (let d = 6; d <= 10; d++) { const v = this.get(c + d, y); if (v !== TT.AVE && v !== TT.ROAD && v !== TT.BRIDGE) this.set(c + d, y, (d === 8 || y % 6 === 0) ? TT.PLAZA : TT.GRASS); } }
     // estaciones
-    this.stations = STATIONS_DEF.map((s, i) => this.carveStation(s, i));
+    this.stations = STATIONS_DEF.map((s, i) => this.carveStation(s, i)).filter(Boolean); this.stations.forEach((s, i) => s.i = i);
     this.marks(); this.buildLights(); this.buildTram(); this.buildLanes(); this.buildMetro(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h - 1) * TS, name: dp.name };
   },
   paintLandmark(L, i) {
     const keep = [TT.WATER, TT.CANAL, TT.AUTO];
-    const base = { iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
+    const base = { cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
     for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y))) continue; this.set(x, y, base); this.lid[this.idx(x, y)] = i; }
     const solid = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid[this.idx(L.x + xx, L.y + yy)] === i) this.set(L.x + xx, L.y + yy, TT.LAND); };
     const W = L.w, H = L.h;
@@ -896,18 +965,19 @@ const CityMap = JE.map = {
   carveStation(s, i) {
     const [id, name, muni, tx, ty, type, kind] = s, ok = [TT.BLDG, TT.BRICK, TT.GRASS, TT.PLAZA];
     let best = null, bd = 1e9;
-    for (let y = ty - 7; y <= ty + 7; y++) for (let x = tx - 7; x <= tx + 7; x++) {
+    for (let y = ty - 10; y <= ty + 10; y++) for (let x = tx - 10; x <= tx + 10; x++) {
       let good = true; for (let yy = y; yy < y + 3 && good; yy++) for (let xx = x; xx < x + 4; xx++) if (!ok.includes(this.get(xx, yy)) || this.lid[this.idx(clamp(xx, 0, MW - 1), clamp(yy, 0, MH - 1))] >= 0 && this.get(xx, yy) === TT.LAND) { good = false; break; }
+      for (let yy = y - 1; yy <= y + 3 && good; yy++) for (let xx = x - 1; xx <= x + 4; xx++) if (this.get(xx, yy) === TT.STATION) { good = false; break; }
       if (!good) continue;
       let acc = false; for (let xx = x - 1; xx <= x + 4 && !acc; xx++) for (const yy of [y - 1, y + 3]) { const v = this.get(xx, yy); if (v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD) acc = true; }
       for (let yy = y; yy < y + 3 && !acc; yy++) for (const xx of [x - 1, x + 4]) { const v = this.get(xx, yy); if (v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD) acc = true; }
       if (!acc) continue;
       const d = Math.abs(x + 2 - tx) + Math.abs(y + 1 - ty); if (d < bd) { bd = d; best = { x, y }; }
     }
-    if (!best) best = { x: tx - 2, y: ty - 1 };
+    if (!best) { (this.dropped || (this.dropped = [])).push(name); return null; }
     this.rect(best.x, best.y, 4, 3, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
-    const zone = ty < 84 ? 'norte' : ty < 134 ? 'centro' : 'sur';
+    const zone = ty < 84 + OY ? 'norte' : ty < 134 + OY ? 'centro' : 'sur';
     return { i, id, name, muni, type, kind, cap, zone, tx: best.x, ty: best.y, x: (best.x + 2) * TS, y: (best.y + 1.5) * TS };
   },
   marks() {
@@ -973,20 +1043,20 @@ const CityMap = JE.map = {
   },
   /* Tranvía de Ayacucho (calle exclusiva: sin carros) */
   buildTram() {
-    const y = 112, x0 = (rxi(y) + 9) * TS, x1 = (this.mE(y) - 9) * TS, names = ['San Antonio', 'San José', 'Bicentenario', 'Buenos Aires', 'Miraflores', 'Oriente'];
+    const y = 112 + OY, x0 = (rxi(y) + 9) * TS, x1 = (this.mE(y) - 9) * TS, names = ['San Antonio', 'San José', 'Bicentenario', 'Buenos Aires', 'Miraflores', 'Oriente'];
     this.tram = { y: (y + 1) * TS, x0, x1, st: names.map((n, i) => ({ name: n, px: lerp(x0 + 12, x1 - 12, i / (names.length - 1)) })) };
   },
   buildMetro() {
-    this.metroA = METRO_A.map((n, i) => { const y = Math.round(8 + i * (244 / (METRO_A.length - 1))); return { name: n, py: y * TS + 4, px: (RX[y] + 9) * TS }; });
+    this.metroA = METRO_A.map((n, i) => { const y = i ? Math.round(8 + i * (244 / (METRO_A.length - 1))) + OY : OY - 6; return { name: n, py: y * TS + 4, px: (RX[y] + 9) * TS }; });
     const x0 = (RX[LINEB_Y] + 9) * TS, x1 = 12 * TS;
     this.metroB = METRO_B.map((n, i) => ({ name: n, px: lerp(x0, x1, i / (METRO_B.length - 1)), py: LINEB_Y * TS + 4 }));
     const ac = this.metroA.find(s => s.name === 'Acevedo'), sj = this.metroB[this.metroB.length - 1], T = this.tram;
     const mk = (name, col, ax, ay, bx, by) => ({ name, col, ax, ay, bx, by, len: Math.hypot(bx - ax, by - ay), st: [0, .36, .7, 1] });
     this.cables = [
-      mk('Metrocable K · Santo Domingo', '#f2a900', ac.px + 6, ac.py, (this.mE(30) - 1) * TS, 30 * TS),
-      mk('Metrocable P · El Progreso', '#d14b9a', ac.px - 6, ac.py + 4, (this.mW(34) + 1) * TS, 34 * TS),
-      mk('Metrocable J · La Aurora', '#e8641f', sj.px, sj.py, (this.mW(94) + 1) * TS, 94 * TS),
-      mk('Metrocable H · Villa Sierra', '#7a5cc4', T.x1, T.y, (this.mE(122) - 1) * TS, 122 * TS)
+      mk('Metrocable K · Santo Domingo', '#f2a900', ac.px + 6, ac.py, (this.mE(30 + OY) - 1) * TS, (30 + OY) * TS),
+      mk('Metrocable P · El Progreso', '#d14b9a', ac.px - 6, ac.py + 4, (this.mW(34 + OY) + 1) * TS, (34 + OY) * TS),
+      mk('Metrocable J · La Aurora', '#e8641f', sj.px, sj.py, (this.mW(94 + OY) + 1) * TS, (94 + OY) * TS),
+      mk('Metrocable H · Villa Sierra', '#7a5cc4', T.x1, T.y, (this.mE(122 + OY) - 1) * TS, (122 + OY) * TS)
     ];
   },
   buildMini() {
@@ -994,7 +1064,7 @@ const CityMap = JE.map = {
       const img = c.createImageData(MW, MH), d = img.data;
       for (let i = 0; i < MW * MH; i++) { const col = parseInt(MINI_COL[this.t[i]].slice(1), 16); d[i * 4] = col >> 16; d[i * 4 + 1] = col >> 8 & 255; d[i * 4 + 2] = col & 255; d[i * 4 + 3] = 255; }
       c.putImageData(img, 0, 0);
-      c.fillStyle = '#d6dde6'; for (let y = 0; y < MH; y++) c.fillRect(Math.round(RX[y] + 9), y, 1, 1);
+      c.fillStyle = '#d6dde6'; for (let y = OY - 9; y < MH; y++) c.fillRect(Math.round(RX[y] + 9), y, 1, 1);
       c.fillRect(12, LINEB_Y, Math.round(RX[LINEB_Y] + 9) - 12, 1);
       c.fillStyle = PAL.cie; c.fillRect(Math.round(this.tram.x0 / TS), Math.round(this.tram.y / TS), Math.round((this.tram.x1 - this.tram.x0) / TS), 1);
       c.lineWidth = 1; for (const cb of this.cables) { c.strokeStyle = cb.col; c.beginPath(); c.moveTo(cb.ax / TS, cb.ay / TS); c.lineTo(cb.bx / TS, cb.by / TS); c.stroke(); }
@@ -1068,7 +1138,7 @@ const CityMap = JE.map = {
     // metro (viaducto elevado)
     const py0 = y0 * TS, px0 = x0 * TS;
     for (let py = py0; py < py0 + CH * TS; py++) {
-      const mx = Math.round(rxf(py) * TS + 9 * TS) - px0;
+      if (py < this.metroA[0].py - 24) continue; const mx = Math.round(rxf(py) * TS + 9 * TS) - px0;
       if (mx < -8 || mx > CH * TS + 8) continue;
       prect(c, mx - 2, py - py0, 6, 1, '#00000033'); prect(c, mx - 3, py - py0, 6, 1, '#c9ccd1'); prect(c, mx - 2, py - py0, 1, 1, '#7d838c'); prect(c, mx + 1, py - py0, 1, 1, '#7d838c');
       if (py % 48 === 0) prect(c, mx - 1, py - py0 + 1, 3, 3, '#00000044');
@@ -1160,12 +1230,13 @@ const CityMap = JE.map = {
           break;
         }
         case 'terminal': roofHouse(8, 8, W - 16, 24, '#d9dde3'); for (let x = 12; x < W - 16; x += 12) R(x, 10, 6, 20, '#bfc6cf'); for (let k = 0; k < 4; k++) c.drawImage(Art.carTop(k % 2 ? PAL.vd2 : '#e9eef3', 'bus'), 10 + k * 14, 34); break;
-        case 'volador': case 'cerro': case 'moravia': {
+        case 'volador': case 'cerro': case 'moravia': case 'cruces': {
           const rr = Math.min(W, H) / 2 - 1;
           pdisc(c, cx, cy, rr, L.k === 'moravia' ? '#4e8f3e' : '#2f6b3a'); pdisc(c, cx - 2, cy - 2, rr * .72, L.k === 'moravia' ? '#62a350' : '#3a7d44'); pdisc(c, cx - 3, cy - 3, rr * .42, L.k === 'moravia' ? '#78b862' : '#4a8f4f');
           for (let k = 0; k < 18; k++) { const a = k / 18 * TAU, d = rr * (.5 + .45 * h2(k, i)); pdisc(c, cx + Math.cos(a) * d, cy + Math.sin(a) * d, 2, h2(k, 3) < .2 ? '#f2c230' : '#275a31'); }
           if (L.k === 'cerro') { R(cx - 12, cy - 10, 24, 18, '#d8cfb6'); roofHouse(cx - 10, cy - 8, 8, 6, '#b85a36'); roofHouse(cx + 2, cy - 8, 8, 6, '#c9683f'); roofHouse(cx - 10, cy + 1, 8, 6, '#c9683f'); roofHouse(cx + 1, cy, 10, 7, '#f1ece0'); R(cx + 4, cy - 3, 4, 4, '#f1ece0'); R(cx + 5, cy - 4, 2, 1, '#b85a36'); }
           if (L.k === 'moravia') for (let k = 0; k < 5; k++) R(cx - 16, cy - 12 + k * 6, 32, 2, ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#fff'][k]);
+          if (L.k === 'cruces') for (let k = 0; k < 3; k++) { const x0 = cx - 12 + k * 12, y0 = cy - 6 + (k === 1 ? -4 : 0); R(x0 + 1, y0 + 1, 2, 12, '#0005'); R(x0, y0, 2, 12, '#ffffff'); R(x0 - 3, y0 + 3, 8, 2, '#ffffff'); }
           if (L.k === 'volador') { for (let k = 0; k < 40; k++) { const a = k / 40 * TAU * 2, d = rr * k / 44; R(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 1, 1, '#c8b88a'); } }
           break;
         }
@@ -1215,6 +1286,7 @@ const CityMap = JE.map = {
    SIMULACIÓN DE ESTACIONES + MOTOR DE RECORRIDO (vista cenital)
    ===================================================================== */
 const M_PER_PX = 20 / TS; // 1 baldosa = 20 m
+const CICLOVIA_AV = ['Avenida El Poblado', 'Avenida 80', 'Avenida Las Vegas'];
 const gauss = (x, m, s) => Math.exp(-((x - m) * (x - m)) / (2 * s * s));
 
 class StationSim {
@@ -1271,7 +1343,7 @@ class Ride {
     this.initLife();
     this.bx0 = 12 * TS; this.bx1 = (RX[LINEB_Y] + 9) * TS; this.mmRect = null; this.joyDraw = null; this.ox = 0; this.oy = 0;
   }
-  stats_() { return this.p.veh === 'truck' ? { max: 50, acc: 55, dec: 95, turn: 2.7, r: 4 } : { max: 60, acc: 120, dec: 150, turn: 5.6, r: 2.5 }; }
+  stats_() { return this.p.veh === 'truck' ? { max: 50, acc: 55, dec: 95, turn: 2.7, r: 3.4 } : { max: 60, acc: 120, dec: 150, turn: 5.6, r: 2.5 }; }
   solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }
@@ -1280,7 +1352,16 @@ class Ride {
   }
   marker(m) { m.inside = false; m.r = m.r || 14; this.markers.push(m); return m; }
   removeMarker(m) { const i = this.markers.indexOf(m); if (i >= 0) this.markers.splice(i, 1); if (this.target === m) this.target = null; }
-  bell() { if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); this.bellPeds(); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2; }
+  bell() {
+    if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); this.bellPeds(); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2;
+    // Easter eggs: tres timbrazos seguidos bajo una estación del Metro o en Moravia
+    const now = this.mode.t; this.bellLog = (this.bellLog || []).filter(t => now - t < 3); this.bellLog.push(now);
+    if (this.bellLog.length >= 3 && this.mode.easter) {
+      const P = this.p, nearMetro = this.map.metroA.concat(this.map.metroB).some(s => dist(s.px, s.py, P.x, P.y) < 28), mv = LM.moravia;
+      if (nearMetro) { this.bellLog = []; this.mode.easter('metro'); }
+      else if (mv && dist((mv.x + mv.w / 2) * TS, (mv.y + mv.h / 2) * TS, P.x, P.y) < 70) { this.bellLog = []; this.mode.easter('laberinto'); }
+    }
+  }
   float(txt, col) { this.fx.push({ k: 't', x: this.p.x, y: this.p.y - 10, t: 1.1, txt, col: col || '#fff' }); }
   burst(x, y, col, n = 10) { for (let i = 0; i < n; i++) { const a = this.rng.f() * TAU, s = 20 + this.rng.f() * 40; this.fx.push({ k: 'p', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: .5 + this.rng.f() * .3, col }); } }
 
@@ -1325,7 +1406,7 @@ class Ride {
     this.updCars(dt); this.updTrains(dt); this.updLife(dt);
     // marcadores
     for (const m of this.markers.slice()) {
-      const r = m.r + (P.veh === 'truck' ? 22 : 0), d = dist(P.x, P.y, m.x, m.y);
+      const r = m.r + (P.veh === 'truck' ? 44 : 0), d = dist(P.x, P.y, m.x, m.y);
       if (d < r && !m.inside) { m.inside = true; if (m.enter) m.enter(m); }
       else if (d > r + 6 && m.inside) { m.inside = false; if (m.leave) m.leave(m); }
     }
@@ -1360,7 +1441,7 @@ class Ride {
       if (L.ax === 'x') { cfix = L.c; if (Math.abs(cfix - this.cam.y) < R) { lo = Math.max(L.a, this.cam.x - R); hi = Math.min(L.b, this.cam.x + R); } }
       else if (L.ax === 'y') { cfix = L.c; if (Math.abs(cfix - this.cam.x) < R) { lo = Math.max(L.a, this.cam.y - R); hi = Math.min(L.b, this.cam.y + R); } }
       else { lo = Math.max(0, this.cam.y - R); hi = Math.min(L.b, this.cam.y + R); if (Math.abs((rxf(this.cam.y) + L.d) * TS - this.cam.x) > R) lo = hi = 0; }
-      if (hi - lo > 20) {
+      if (hi - lo > 20 && !(this.mode.mods.ciclovia && CICLOVIA_AV.includes(L.name))) {
         const p = lo + this.rng.f() * (hi - lo), c = { L, p, v: 0, spd: L.spd * this.rng.range(.8, 1.15), yield: 0, stop: 0 };
         const r = this.rng.f(); c.kind = L.spd > 30 && r < .1 ? 'bus' : r < .32 ? 'taxi' : 'car';
         c.col = c.kind === 'taxi' ? '#f5c400' : c.kind === 'bus' ? '#3f8f5a' : this.rng.pick(['#e9eef3', '#c43a26', '#2a5a92', '#1d1f24', '#9aa7b8', '#7a3b3b', '#3d6b3a', '#d98a3a']);
@@ -1406,7 +1487,7 @@ class Ride {
     for (const t of this.trains) {
       if (t.wait > 0) { t.wait -= dt; continue; }
       const prev = t.p; t.p += 70 * t.dir * dt;
-      if (t.l === 'A') { if (t.p < -60) t.p = MH * TS + 40; if (t.p > MH * TS + 60) t.p = -40; for (const s of this.map.metroA) if ((prev - s.py) * (t.p - s.py) < 0) { t.wait = 1.4; t.p = s.py; } }
+      if (t.l === 'A') { const top = this.map.metroA[0].py - 20; if (t.p < top) t.p = MH * TS + 40; if (t.p > MH * TS + 60) t.p = top + 1; for (const s of this.map.metroA) if ((prev - s.py) * (t.p - s.py) < 0) { t.wait = 1.4; t.p = s.py; } }
       else { if (t.p > this.bx1 - this.bx0) { t.dir = -1; t.wait = 2; } if (t.p < 0) { t.dir = 1; t.wait = 2; } }
     }
   }
@@ -1456,6 +1537,8 @@ class Ride {
       if (!inV(c.x, c.y)) continue; const sp = Art.carTop(c.col, c.kind);
       b.save(); b.translate(Math.round(c.x - ox), Math.round(c.y - oy)); b.rotate(c.ang + Math.PI / 2); b.fillStyle = '#0004'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 1, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
     }
+    // ciclovía: conos en las avenidas cerradas a los carros
+    if (this.mode.mods.ciclovia) for (const bn of this.map.bandsNS) { if (!CICLOVIA_AV.includes(AVE_NS[bn.r])) continue; const cx = (bn.r + 1.5) * TS; if (cx < ox - 10 || cx > ox + V.vw + 10) continue; for (let py = Math.floor(oy / 40) * 40; py < oy + V.vh; py += 40) { if (this.map.get(bn.r + 1, Math.floor(py / TS)) !== TT.AVE) continue; prect(b, cx - ox - 1, py - oy, 3, 3, '#ff8a3d'); prect(b, cx - ox, py - oy - 1, 1, 1, '#ffffff'); } }
     // semáforos
     const LC = { g: '#4cff6a', a: '#ffc93c', r: '#ff4b3a' };
     for (const L of this.map.lights) {
@@ -1467,7 +1550,7 @@ class Ride {
     // rivales (carrera)
     for (const o of this.opps) { if (!inV(o.x, o.y)) continue; const so = Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]); b.save(); b.translate(Math.round(o.x - ox), Math.round(o.y - oy)); b.rotate(o.a + Math.PI / 2); b.globalAlpha = .9; b.drawImage(so, -3, -6); b.restore(); }
     // jugador
-    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1]);
+    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1], Save.data.flags.gold ? '#ffd84a' : PAL.vd);
     b.save(); b.translate(Math.round(P.x - ox), Math.round(P.y - oy)); b.rotate(P.a + Math.PI / 2); b.fillStyle = '#0005'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 2, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
     // trenes elevados
     const tc = Art.trainCar();
@@ -1511,17 +1594,21 @@ class Ride {
     }
     // minimapa
     if (!opts.noMini) {
-      const w = Math.round(Math.min(78, V.w * .2)), h = Math.round(w * MH / MW), x = V.w - w - 10, y = 58;
+      // radar: ventana del mapa alrededor del jugador (el valle completo se ve tocándolo)
+      const w = Math.round(Math.min(84, V.w * .21)), h = Math.round(w * 1.55), x = V.w - w - 10, y = 58, WT = 96, HT = Math.round(WT * h / w);
+      const t0x = clamp(P.x / TS - WT / 2, 0, MW - WT), t0y = clamp(P.y / TS - HT / 2, 0, MH - HT), k = w / (WT * TS), ox0 = t0x * TS, oy0 = t0y * TS;
       this.mmRect = { x, y, w, h };
-      c.fillStyle = '#0a2342'; c.fillRect(x - 3, y - 3, w + 6, h + 6); c.imageSmoothingEnabled = false; c.drawImage(this.map.mini, x, y, w, h);
+      c.fillStyle = '#0a2342'; c.fillRect(x - 3, y - 3, w + 6, h + 6); c.imageSmoothingEnabled = false; c.drawImage(this.map.mini, t0x, t0y, WT, HT, x, y, w, h);
       c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(x - 1, y - 1, w + 2, h + 2);
-      const k = w / (MW * TS);
-      if (this.sim) for (const st of this.sim.st) { c.fillStyle = this.sim.ratioCol(st); c.fillRect(x + st.x * k - 1.5, y + st.y * k - 1.5, 3, 3); }
-      else { c.fillStyle = '#fff'; for (const st of this.map.stations) c.fillRect(x + st.x * k - 1, y + st.y * k - 1, 2, 2); }
+      c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
+      const MX = px => x + (px - ox0) * k, MY = py => y + (py - oy0) * k;
+      if (this.sim) for (const st of this.sim.st) { c.fillStyle = this.sim.ratioCol(st); c.fillRect(MX(st.x) - 1.5, MY(st.y) - 1.5, 3, 3); }
+      else { c.fillStyle = '#fff'; for (const st of this.map.stations) c.fillRect(MX(st.x) - 1, MY(st.y) - 1, 2, 2); }
       const blink = (performance.now() / 300 | 0) % 2;
-      for (const o of this.opps) { c.fillStyle = o.shirt || PAL.cor; c.fillRect(x + o.x * k - 2.5, y + o.y * k - 2.5, 5, 5); }
-      for (const m of this.markers) { c.fillStyle = m.col || PAL.amb; const r = m === T ? (blink ? 4 : 3) : 2.5; c.fillRect(x + m.x * k - r, y + m.y * k - r, r * 2, r * 2); }
-      c.fillStyle = '#ff2fb3'; c.beginPath(); c.arc(x + P.x * k, y + P.y * k, 3, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
+      for (const o of this.opps) { c.fillStyle = o.shirt || PAL.cor; c.fillRect(MX(o.x) - 2.5, MY(o.y) - 2.5, 5, 5); }
+      for (const m of this.markers) { c.fillStyle = m.col || PAL.amb; const r = m === T ? (blink ? 4 : 3) : 2.5; c.fillRect(clamp(MX(m.x), x + 2, x + w - 2) - r, clamp(MY(m.y), y + 2, y + h - 2) - r, r * 2, r * 2); }
+      c.fillStyle = '#ff2fb3'; c.beginPath(); c.arc(MX(P.x), MY(P.y), 3, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
+      c.restore();
       V.text('MAPA', x + w / 2, y + h + 14, { size: 11, align: 'center', color: '#c4ec7c', bg: '#0a2342cc', pad: 2 });
     }
     // joystick
@@ -1534,15 +1621,18 @@ class Ride {
 /* vista general de todo el valle (Monitoreo y mapa grande) */
 function drawOverview(V, o) {
   const c = V.ctx, top = o.top != null ? o.top : 54, bot = o.bot != null ? o.bot : 10, avail = V.h - top - bot;
-  const k = Math.min((V.w - 16) / (MW * TS), avail / (MH * TS)), w = MW * TS * k, h = MH * TS * k, x = (V.w - w) / 2, y = top + (avail - h) / 2;
-  o.rect = { x, y, k, w, h };
+  // recorte opcional (Monitoreo por zona): o.crop = {x0, y0, x1, y1} en px del mundo
+  const cr = o.crop || { x0: 0, y0: 0, x1: MW * TS, y1: MH * TS }, cw = cr.x1 - cr.x0, chh = cr.y1 - cr.y0;
+  const k = Math.min((V.w - 16) / cw, avail / chh), w = cw * k, h = chh * k, x = (V.w - w) / 2, y = top + (avail - h) / 2;
+  o.rect = { x: x - cr.x0 * k, y: y - cr.y0 * k, k, w, h };
   if (!o.noBg) { c.fillStyle = '#0a2342f2'; c.fillRect(0, 0, V.w, V.h); }
-  c.imageSmoothingEnabled = false; c.drawImage(JE.map.mini, x, y, w, h); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(x, y, w, h);
-  const X = px => x + px * k, Y = py => y + py * k;
+  c.imageSmoothingEnabled = false; c.drawImage(JE.map.mini, cr.x0 / TS, cr.y0 / TS, cw / TS, chh / TS, x, y, w, h); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(x, y, w, h);
+  const X = px => x + (px - cr.x0) * k, Y = py => y + (py - cr.y0) * k;
+  c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
   if (o.title) V.text(o.title, V.w / 2, top - 8, { size: 15, align: 'center', color: '#c4ec7c' });
   const lbl = k * TS > 2.4;
-  for (const L of LANDMARKS) if (lbl && L.id !== 'depot') V.text(L.name.split(' · ')[0], X((L.x + L.w / 2) * TS), Y((L.y + L.h / 2) * TS), { size: 9, align: 'center', color: '#ffffffcc', stroke: '#0a2342', sw: 3 });
-  const st = o.sim ? o.sim.st : JE.map.stations, rr = Math.max(4, Math.min(9, k * 26));
+  for (const L of LANDMARKS) if (lbl && L.id !== 'depot' && !L.secret) V.text(L.name.split(' · ')[0], X((L.x + L.w / 2) * TS), Y((L.y + L.h / 2) * TS), { size: 9, align: 'center', color: '#ffffffcc', stroke: '#0a2342', sw: 3 });
+  const st = o.stations || (o.sim ? o.sim.st : JE.map.stations), rr = Math.max(4, Math.min(11, k * 26));
   for (const s of st) {
     const sx = X(s.x), sy = Y(s.y);
     if (o.sim) {
@@ -1554,10 +1644,11 @@ function drawOverview(V, o) {
       if (s.broken) V.text('⚠', sx + rr, sy - rr, { size: 12, color: PAL.cor, body: true });
     } else { c.fillStyle = '#fff'; c.fillRect(sx - 2, sy - 2, 4, 4); }
   }
-  const dp = JE.map.depot; c.fillStyle = PAL.cie; c.fillRect(X(dp.x) - 5, Y(dp.y) - 5, 10, 10); V.text('BODEGA', X(dp.x), Y(dp.y) + 16, { size: 10, align: 'center', color: PAL.cie, stroke: '#0a2342', sw: 3 });
+  const dp = o.base || JE.map.depot; c.fillStyle = PAL.cie; c.fillRect(X(dp.x) - 5, Y(dp.y) - 5, 10, 10); V.text(o.base ? 'BASE' : 'BODEGA', X(dp.x), Y(dp.y) + 16, { size: 10, align: 'center', color: PAL.cie, stroke: '#0a2342', sw: 3 });
   if (o.markers) for (const m of o.markers) { c.fillStyle = m.col || PAL.amb; c.beginPath(); c.arc(X(m.x), Y(m.y), m === o.target ? 6 : 4, 0, TAU); c.fill(); if (m.num) V.text(String(m.num), X(m.x), Y(m.y) - 8, { size: 11, align: 'center', color: '#fff', stroke: '#0a2342', sw: 3 }); }
   if (o.trucks) for (const t of o.trucks) { const a = Art.truckTop(t.load, 20); c.save(); c.translate(X(t.x), Y(t.y)); c.rotate(t.a + Math.PI / 2); c.drawImage(a, -6, -12, 12, 24); c.restore(); if (t.sel) { c.strokeStyle = PAL.amb; c.lineWidth = 2; c.strokeRect(X(t.x) - 9, Y(t.y) - 9, 18, 18); } }
   if (o.player) { c.fillStyle = '#ff2fb3'; c.beginPath(); c.arc(X(o.player.x), Y(o.player.y), 5, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); }
+  c.restore();
   return o.rect;
 }
 
@@ -1576,6 +1667,12 @@ Ride.prototype.initLife = function () {
 Ride.prototype.updLife = function (dt) {
   if (!this.peds) this.initLife();
   const T = this.map.tram, tr = this.trm, P = this.p, r = this.stats_().r;
+  // postal secreta (Easter egg): Cerro de las Tres Cruces
+  const sc = LM.trescruces;
+  if (sc && !this.secretGot && Math.abs(P.x - (sc.x + sc.w / 2) * TS) < sc.w * TS / 2 + 16 && Math.abs(P.y - (sc.y + sc.h / 2) * TS) < sc.h * TS / 2 + 16) {
+    this.secretGot = true;
+    if (!JE.headless && !Save.data.postales.includes(sc.id)) { Save.data.postales.push(sc.id); this.stamp = { t: 2.4, title: '¡POSTAL SECRETA!', sub: sc.name, bg: '#ff8fc7' }; Snd.sfx('star'); this.mode.score += 50; }
+  }
   // tranvía: va y viene, para en sus estaciones
   if (tr.stop > 0) tr.stop -= dt; else if (tr.wait > 0) tr.wait -= dt;
   else {
@@ -1593,7 +1690,7 @@ Ride.prototype.updLife = function (dt) {
       const tx = Math.floor(cam.x / TS) + this.rng.i(-18, 18), ty = Math.floor(cam.y / TS) + this.rng.i(-24, 24);
       if (!PED_OK(this.map.get(tx, ty))) continue; const x = tx * TS + 4, y = ty * TS + 4; if (dist(x, y, P.x, P.y) < 50) continue;
       const d = this.rng.pick([[1, 0], [-1, 0], [0, 1], [0, -1]]);
-      this.peds.push({ x, y, dx: d[0], dy: d[1], spd: this.rng.range(6, 11), col: this.rng.pick(['#ff6b5a', '#56c7ff', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#7fd1b9']), skin: this.rng.pick(SKINS), ph: this.rng.f(), hit: 0, side: 0 });
+      this.peds.push({ x, y, dx: d[0], dy: d[1], spd: this.rng.range(6, 11), col: this.rng.pick(['#ff6b5a', '#56c7ff', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#7fd1b9']), skin: this.rng.pick(SKINS), ph: this.rng.f(), hit: 0, side: 0, sil: !!this.mode.mods.flores && this.rng.f() < .45 });
       break;
     }
   }
@@ -1623,7 +1720,7 @@ Ride.prototype.drawGround = function (b, ox, oy, inV) {
   const tr = this.trm; if (!tr) return;
   for (let k = -1; k <= 1; k++) { const x = tr.x + k * 14; if (!inV(x, tr.y)) continue; prect(b, x - ox - 6, tr.y - oy - 2, 13, 6, '#0004'); prect(b, x - ox - 7, tr.y - oy - 3, 13, 6, '#f1f4f7'); prect(b, x - ox - 7, tr.y - oy - 2, 13, 1, '#1d2c44'); prect(b, x - ox - 7, tr.y - oy + 2, 13, 1, PAL.cie); }
   prect(b, tr.x - ox + (tr.dir > 0 ? 19 : -22), tr.y - oy - 1, 1, 2, '#fff3a0');
-  for (const q of this.peds) { if (!inV(q.x, q.y, 6)) continue; const bob = (q.ph * 4 | 0) % 2, x = Math.round(q.x - ox), y = Math.round(q.y - oy); prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
+  for (const q of this.peds) { if (!inV(q.x, q.y, 6)) continue; const bob = (q.ph * 4 | 0) % 2, x = Math.round(q.x - ox), y = Math.round(q.y - oy); prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.sil) { prect(b, x - 3, y + 1, 7, 4, '#7a5230'); prect(b, x - 3, y + 1, 2, 2, '#ff8fc7'); prect(b, x - 1, y + 1, 2, 2, '#ffd84a'); prect(b, x + 1, y + 1, 2, 2, '#ff6b5a'); prect(b, x - 2, y + 3, 2, 1, '#b07cff'); prect(b, x + 1, y + 3, 2, 1, '#fff'); } if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
 };
 Ride.prototype.drawSky = function (b, ox, oy) {
   const t = this.mode.t, vw = View.vw, vh = View.vh;
@@ -1664,7 +1761,7 @@ Ride.prototype.hudLife = function (V, sx, sy) {
 class MG {
   constructor(parent, o = {}) {
     this.p = parent; this.o = o; this.t = 0; this.done = false; this.score = 0; this.errors = 0; this.coach = ''; this.btns = []; this.pops = []; this.flash = 0;
-    this.view = { kind: 'px', dw: 200, dh: 150 }; this.rng = parent.rng; this.L = null;
+    this.view = { kind: 'px', dw: 200, dh: 150 }; this.rng = parent.rng; this.L = null; this.hideGoals = !!parent.ride;
   }
   has(k) { return this.p.has(k); }
   pop(txt, x, y, col) { this.pops.push({ txt, x, y, t: 1, col: col || '#fff' }); }
@@ -1686,7 +1783,8 @@ class MG {
     return false;
   }
   card(V, w, h, title) {
-    const c = V.ctx, x = (V.w - w) / 2, y = 58; c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
+    const hudB = (($('#hud') || {}).getBoundingClientRect ? $('#hud').getBoundingClientRect().bottom : 50) || 50;
+    const c = V.ctx, x = (V.w - w) / 2, y = Math.max(58, Math.round(hudB) + 8); c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
     c.fillStyle = PAL.crema; c.fillRect(x, y, w, h); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(x + 2, y + 2, w - 4, h - 4);
     c.fillStyle = PAL.az; c.fillRect(x, y, w, 24); V.text(title, x + 10, y + 17, { size: 15, color: PAL.vd1 });
     return { x, y };
@@ -2224,6 +2322,270 @@ class MGInspeccion extends MG {
   bot(err) { const i = this.rng.f() < err ? this.rng.i(0, this.bikes.length - 1) : this.bikes.findIndex(b => b.bad && !b.found); if (i >= 0) this.pick(i); }
 }
 
+/* ---- 45-mg2.js ---- */
+/* =====================================================================
+   MINIJUEGOS v0.4 — inspirados en clásicos de puzzle/arcade:
+   Circuito (rotar piezas) · Señal láser (espejos) · Semaforero (dirigir el tránsito)
+   Desvíos (bandas con cambios) · Maquinista (Easter egg: trenes y cambios) · Laberinto (Easter egg)
+   ===================================================================== */
+const rotM = m => ((m << 1) | (m >> 3)) & 15; // N=1 E=2 S=4 W=8, giro horario
+const DIRS4 = [[0, -1, 1, 4], [1, 0, 2, 8], [0, 1, 4, 1], [-1, 0, 8, 2]]; // dx, dy, bit propio, bit vecino
+
+/* ---------- CIRCUITO: gira las piezas hasta que no quede ningún cable suelto ---------- */
+class MGLoop extends MG {
+  constructor(parent, o) {
+    super(parent, o); const n = o.n || 4; this.W = n; this.H = n; this.min = o.clock0 || 600;
+    // árbol que cubre toda la cuadrícula (siempre tiene solución)
+    const sol = new Array(n * n).fill(0), seen = new Array(n * n).fill(false), st = [this.rng.i(0, n * n - 1)]; seen[st[0]] = true;
+    while (st.length) {
+      const c = st[st.length - 1], x = c % n, y = (c / n) | 0, opts = DIRS4.filter(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < n && ny < n && !seen[ny * n + nx]; });
+      if (!opts.length) { st.pop(); continue; }
+      const [dx, dy, b, nb] = this.rng.pick(opts), j = (y + dy) * n + x + dx; sol[c] |= b; sol[j] |= nb; seen[j] = true; st.push(j);
+    }
+    this.sol = sol; this.m = sol.map(v => { let r = v; for (let k = this.rng.i(1, 3); k > 0; k--) r = rotM(r); return r; });
+    this.src = 0; this.spin = new Array(n * n).fill(0); this.moves = 0;
+    if (this.solved()) this.m[1] = rotM(this.m[1]);
+    this.coach = 'Toca las piezas para girarlas: conecta TODOS los cables sin dejar puntas sueltas.';
+  }
+  solved() { const n = this.W; for (let i = 0; i < n * n; i++) { const x = i % n, y = (i / n) | 0; for (const [dx, dy, b, nb] of DIRS4) { const has = this.m[i] & b, nx = x + dx, ny = y + dy; const other = nx >= 0 && ny >= 0 && nx < n && ny < n ? this.m[ny * n + nx] & nb : 0; if (!!has !== !!other) return false; } } return true; }
+  powered() { const n = this.W, on = new Array(n * n).fill(false), q = [this.src]; on[this.src] = true; while (q.length) { const i = q.pop(), x = i % n, y = (i / n) | 0; for (const [dx, dy, b, nb] of DIRS4) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue; const j = ny * n + nx; if (!on[j] && (this.m[i] & b) && (this.m[j] & nb)) { on[j] = true; q.push(j); } } } return on; }
+  turn(i) { if (this.done || this.endT) return; this.m[i] = rotM(this.m[i]); this.spin[i] = 1; this.moves++; if (Save.data.settings.sfx && !JE.headless) Snd.tone(520 + (i % 5) * 60, .05, { v: .05 }); if (this.solved()) { this.endT = .7; this.score += Math.max(6, 30 - this.moves); Snd.sfx('win'); } }
+  update(dt) { this.tick(dt); for (let i = 0; i < this.spin.length; i++) this.spin[i] = Math.max(0, this.spin[i] - dt * 6); if (this.endT) { this.endT -= dt; if (this.endT <= 0) this.done = true; } }
+  geo() { const L = this.L || { vw: 200, vh: 150 }, cs = Math.floor(Math.min((L.vw - 20) / this.W, (L.vh - 50) / this.H)); return { cs, x0: Math.floor((L.vw - cs * this.W) / 2), y0: Math.floor((L.vh - cs * this.H) / 2) + 8 }; }
+  render(V) {
+    const b = V.b; this.L = { vw: V.vw, vh: V.vh }; prect(b, 0, 0, V.vw, V.vh, '#141c2b');
+    const { cs, x0, y0 } = this.geo(), on = this.powered(), solved = this.endT > 0;
+    for (let i = 0; i < this.m.length; i++) {
+      const x = x0 + (i % this.W) * cs, y = y0 + ((i / this.W) | 0) * cs, m = this.m[i], col = solved ? PAL.vd1 : on[i] ? PAL.vd : '#5d6c9a', h = cs >> 1, t = Math.max(2, cs >> 3);
+      prect(b, x + 1, y + 1, cs - 2, cs - 2, '#1d2840'); if (this.spin[i] > 0) prect(b, x + 1, y + 1, cs - 2, cs - 2, '#2a3a5a');
+      if (m & 1) prect(b, x + h - (t >> 1), y, t, h, col); if (m & 4) prect(b, x + h - (t >> 1), y + h, t, h, col);
+      if (m & 8) prect(b, x, y + h - (t >> 1), h, t, col); if (m & 2) prect(b, x + h, y + h - (t >> 1), h, t, col);
+      const deg = [1, 2, 4, 8].filter(k => m & k).length; if (deg === 1) pdisc(b, x + h, y + h, Math.max(2, cs >> 3), i === this.src ? PAL.amb : col); else prect(b, x + h - t, y + h - t, t * 2, t * 2, col);
+    }
+  }
+  hud(V) { this.btns = []; V.text('CIRCUITO DEL TÓTEM', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); V.text('Giros: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#c4ec7c', body: true }); this.drawPops(V); }
+  tap(vx, vy) { const { cs, x0, y0 } = this.geo(), gx = Math.floor((vx - x0) / cs), gy = Math.floor((vy - y0) / cs); if (gx < 0 || gy < 0 || gx >= this.W || gy >= this.H) return false; this.turn(gy * this.W + gx); return true; }
+  hint(V) { const i = this.m.findIndex((m, k) => m !== this.sol[k]); if (i < 0 || this.moves > 3) return null; const { cs, x0, y0 } = this.geo(); return { x: (x0 + (i % this.W) * cs + cs / 2) * V.s, y: (y0 + ((i / this.W) | 0) * cs + cs / 2) * V.s }; }
+  bot() { if (this.endT) return; for (let i = 0; i < this.m.length; i++) if (this.m[i] !== this.sol[i]) { const s = this.sol[i]; if (s === 5 || s === 10) { if (this.m[i] === s) continue; } this.turn(i); return; } }
+}
+
+/* ---------- SEÑAL LÁSER: gira los espejos para llevar la señal al receptor ---------- */
+class MGLaser extends MG {
+  constructor(parent, o) {
+    super(parent, o); const n = o.n || 5; this.n = n; this.min = o.clock0 || 600; this.turns = o.turns || 3;
+    for (let tries = 0; tries < 80 && !this.ok; tries++) this.gen();
+    this.coach = 'Toca los espejos para girarlos: lleva el rayo desde la antena hasta el receptor de la estación.';
+  }
+  gen() {
+    const n = this.n, R = this.rng, cell = new Array(n * n).fill(0); // 0 vacío, 1 '/', 2 '\', 3 bloque
+    let x = 0, y = R.i(0, n - 1), d = 1; this.sy = y; const used = new Set([y * n]), sol = [];
+    for (let t = 0; t < this.turns; t++) {
+      const steps = R.i(1, 2); for (let s = 0; s < steps; s++) { x += DIRS4[d][0]; y += DIRS4[d][1]; if (x < 0 || y < 0 || x >= n || y >= n || used.has(y * n + x)) return; used.add(y * n + x); }
+      const nd = R.f() < .5 ? (d + 1) % 4 : (d + 3) % 4, m = ((d === 1 || d === 3) ? (nd === 0 ? 1 : 2) : (nd === 1 ? 1 : 2)) ;
+      // con '/' : E->N, N->E, W->S, S->W ; con '\' : E->S, S->E, W->N, N->W
+      const slash = (d === 1 && nd === 0) || (d === 0 && nd === 1) || (d === 3 && nd === 2) || (d === 2 && nd === 3);
+      cell[y * n + x] = slash ? 1 : 2; sol.push(y * n + x); d = nd; void m;
+    }
+    for (let s = 0; s < 2; s++) { x += DIRS4[d][0]; y += DIRS4[d][1]; if (x < 0 || y < 0 || x >= n || y >= n || used.has(y * n + x)) return; used.add(y * n + x); }
+    this.tx = x; this.ty = y; this.sol = cell.slice();
+    for (let k = 0; k < 3; k++) { const c = R.i(0, n * n - 1); if (!used.has(c)) cell[c] = R.f() < .7 ? R.i(1, 2) : 3; }
+    for (const c of sol) if (R.f() < .8) cell[c] = cell[c] === 1 ? 2 : 1;
+    this.cell = cell; this.ok = true; if (this.trace().hit) { const c = sol[0]; this.cell[c] = this.cell[c] === 1 ? 2 : 1; }
+  }
+  trace() {
+    const n = this.n, pts = []; let x = 0, y = this.sy, d = 1, hit = false; pts.push([-1, y]);
+    for (let k = 0; k < 60; k++) {
+      if (x < 0 || y < 0 || x >= n || y >= n) break; pts.push([x, y]);
+      if (x === this.tx && y === this.ty) { hit = true; break; }
+      const c = this.cell[y * n + x]; if (c === 3) break;
+      if (c === 1) d = [1, 0, 3, 2][d]; else if (c === 2) d = [3, 2, 1, 0][d];
+      x += DIRS4[d][0]; y += DIRS4[d][1];
+    }
+    if (!hit) pts.push([x, y]); return { pts, hit };
+  }
+  flip(i) { if (this.endT || !this.cell || this.cell[i] === 0 || this.cell[i] === 3) return; this.cell[i] = this.cell[i] === 1 ? 2 : 1; Snd.sfx('tap'); if (this.trace().hit) { this.endT = .8; this.score += 20; Snd.sfx('win'); } }
+  update(dt) { this.tick(dt); if (this.endT) { this.endT -= dt; if (this.endT <= 0) this.done = true; } if (!this.ok) this.done = true; }
+  geo() { const L = this.L || { vw: 200, vh: 150 }, cs = Math.floor(Math.min((L.vw - 40) / this.n, (L.vh - 50) / this.n)); return { cs, x0: Math.floor((L.vw - cs * this.n) / 2), y0: Math.floor((L.vh - cs * this.n) / 2) + 8 }; }
+  render(V) {
+    const b = V.b; this.L = { vw: V.vw, vh: V.vh }; prect(b, 0, 0, V.vw, V.vh, '#10172a'); if (!this.cell) return;
+    const { cs, x0, y0 } = this.geo(), n = this.n, cx = (gx) => x0 + gx * cs + cs / 2, cy = gy => y0 + gy * cs + cs / 2;
+    for (let i = 0; i < n * n; i++) { const x = x0 + (i % n) * cs, y = y0 + ((i / n) | 0) * cs, c = this.cell[i]; prect(b, x + 1, y + 1, cs - 2, cs - 2, '#1a2440'); if (c === 3) prect(b, x + 3, y + 3, cs - 6, cs - 6, '#59606c'); if (c === 1) pline(b, x + 3, y + cs - 4, x + cs - 4, y + 3, '#dfe5ec'); if (c === 2) pline(b, x + 3, y + 3, x + cs - 4, y + cs - 4, '#dfe5ec'); }
+    prect(b, x0 - 10, cy(this.sy) - 5, 8, 10, '#2b2f38'); prect(b, x0 - 8, cy(this.sy) - 3, 4, 6, PAL.cor);
+    prect(b, cx(this.tx) - 5, cy(this.ty) - 5, 10, 10, PAL.vd2); prect(b, cx(this.tx) - 3, cy(this.ty) - 3, 6, 6, PAL.vd1);
+    const tr = this.trace(), col = tr.hit ? PAL.vd1 : '#ff4b6a';
+    for (let k = 0; k < tr.pts.length - 1; k++) { const [ax, ay] = tr.pts[k], [bx, by] = tr.pts[k + 1]; pline(b, cx(ax), cy(ay), cx(bx), cy(by), col); pline(b, cx(ax) + 1, cy(ay), cx(bx) + 1, cy(by), col); }
+  }
+  hud(V) { this.btns = []; V.text('SEÑAL DE LA ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
+  tap(vx, vy) { const { cs, x0, y0 } = this.geo(), gx = Math.floor((vx - x0) / cs), gy = Math.floor((vy - y0) / cs); if (gx < 0 || gy < 0 || gx >= this.n || gy >= this.n) return false; this.flip(gy * this.n + gx); return true; }
+  bot() { if (this.endT || !this.cell) return; for (let i = 0; i < this.cell.length; i++) if ((this.sol[i] === 1 || this.sol[i] === 2) && this.cell[i] !== this.sol[i]) return this.flip(i); }
+}
+
+/* ---------- SEMAFORERO: semáforo dañado, dirige el tránsito a mano ---------- */
+class MGTraffix extends MG {
+  constructor(parent, o) {
+    super(parent, o); this.dur = o.dur || 30; this.target = o.target || 12; this.go = [true, true, false, false]; // N, S, E, O (los que llegan desde allí)
+    this.cars = []; this.spawnT = .6; this.passed = 0; this.crashes = 0; this.min = o.clock0 || 700;
+    this.coach = 'Semáforo dañado: toca cada calle para darle PARE o SIGA. ¡Que no choquen en el cruce!';
+  }
+  path(a, p) { const L = this.L || { vw: 200, vh: 150 }, cx = L.vw / 2, cy = L.vh / 2 + 6; switch (a) { case 0: return [cx - 4, -10 + p]; case 1: return [cx + 4, L.vh + 10 - p]; case 2: return [L.vw + 10 - p, cy - 4]; default: return [-10 + p, cy + 4]; } }
+  len(a) { const L = this.L || { vw: 200, vh: 150 }; return (a < 2 ? L.vh : L.vw) + 20; }
+  stopAt(a) { const L = this.L || { vw: 200, vh: 150 }, cx = L.vw / 2, cy = L.vh / 2 + 6; return [cy - 11, L.vh - cy - 11, L.vw - cx - 11, cx - 11][a]; }
+  inBox(c) { const L = this.L || { vw: 200, vh: 150 }, [x, y] = this.path(c.a, c.p); return Math.abs(x - L.vw / 2) < 13 && Math.abs(y - (L.vh / 2 + 6)) < 13; }
+  update(dt) {
+    this.tick(dt); this.spawnT -= dt * (1 + this.t / this.dur);
+    if (this.spawnT <= 0) { this.spawnT = this.rng.range(.7, 1.3); const a = this.rng.i(0, 3); if (!this.cars.some(c => c.a === a && c.p < 18)) this.cars.push({ a, p: 0, v: 0, col: this.rng.pick(['#e9eef3', '#c43a26', '#2a5a92', '#f5c400', '#3f8f5a']) }); }
+    for (const c of this.cars) {
+      let v = 34; const stop = this.stopAt(c.a);
+      if (!this.go[c.a] && c.p < stop && c.p > stop - 6) v = 0;
+      for (const o of this.cars) if (o !== c && o.a === c.a && o.p > c.p && o.p - c.p < 15) v = Math.min(v, o.v);
+      c.v = v; c.p += v * dt;
+    }
+    // choques en el cruce
+    const box = this.cars.filter(c => this.inBox(c));
+    for (const c of box) for (const o of box) if (c !== o && (c.a < 2) !== (o.a < 2) && !c.dead && !o.dead) {
+      const [ax, ay] = this.path(c.a, c.p), [bx, by] = this.path(o.a, o.p);
+      if (Math.abs(ax - bx) < 7 && Math.abs(ay - by) < 7) { c.dead = o.dead = true; this.crashes++; this.bad('¡Choque!', ax, ay - 8); }
+    }
+    this.cars = this.cars.filter(c => { if (c.dead) return false; if (c.p > this.len(c.a)) { this.passed++; this.score += 3; return false; } return true; });
+    if (this.t >= this.dur || this.passed >= this.target) { if (!this.done) { this.done = true; Snd.sfx(this.crashes ? 'ok' : 'win'); } }
+  }
+  toggle(a) { const pair = a < 2 ? [0, 1] : [2, 3]; const v = !this.go[a]; pair.forEach(k => this.go[k] = v); Snd.sfx('tap'); }
+  render(V) {
+    const b = V.b, vw = V.vw, vh = V.vh; this.L = { vw, vh }; const cx = vw / 2, cy = vh / 2 + 6;
+    prect(b, 0, 0, vw, vh, '#5d9c4b'); prect(b, 0, cy - 12, vw, 24, '#3d4454'); prect(b, cx - 12, 0, 24, vh, '#3d4454');
+    for (let x = 0; x < vw; x += 8) if (Math.abs(x - cx) > 14) prect(b, x, cy, 4, 1, '#e8e8e0'); for (let y = 0; y < vh; y += 8) if (Math.abs(y - cy) > 14) prect(b, cx, y, 1, 4, '#e8e8e0');
+    prect(b, cx - 14, cy - 14, 2, 2, '#11151d'); prect(b, cx + 12, cy + 12, 2, 2, '#11151d');
+    const lamp = (x, y, on) => { prect(b, x - 2, y - 2, 5, 5, '#11151d'); prect(b, x - 1, y - 1, 3, 3, on ? '#4cff6a' : '#ff4b3a'); };
+    lamp(cx - 18, cy - 22, this.go[0]); lamp(cx + 18, cy + 22, this.go[1]); lamp(cx + 22, cy - 18, this.go[2]); lamp(cx - 22, cy + 18, this.go[3]);
+    for (const c of this.cars) { const [x, y] = this.path(c.a, c.p), sp = Art.carTop(c.col, 'car'), ang = [Math.PI / 2, -Math.PI / 2, Math.PI, 0][c.a]; b.save(); b.translate(Math.round(x), Math.round(y)); b.rotate(ang + Math.PI / 2); b.drawImage(sp, -3, -5); b.restore(); }
+  }
+  hud(V) {
+    this.btns = []; const s = V.s, L = this.L; if (!L) return; const cx = L.vw / 2 * s, cy = (L.vh / 2 + 6) * s;
+    V.text('Pasaron ' + this.passed + '/' + this.target + ' · choques ' + this.crashes, V.w / 2, 70, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 4 });
+    const bt = (a, x, y) => this.button(V, x - 34, y - 22, 68, 44, this.go[a] ? 'SIGA' : 'PARE', () => this.toggle(a), { bg: this.go[a] ? PAL.vd2 : '#7a2a24', size: 17, key: 'a' + a });
+    bt(0, cx, cy - 70); bt(2, cx + 80, cy - 40); this.drawPops(V);
+  }
+  tap(vx, vy) { const L = this.L; if (!L) return false; const cx = L.vw / 2, cy = L.vh / 2 + 6; this.toggle(Math.abs(vx - cx) < 14 ? 0 : Math.abs(vy - cy) < 14 ? 2 : (Math.abs(vx - cx) < Math.abs(vy - cy) ? 0 : 2)); return true; }
+  /* bot: un solo eje en verde; para cambiar, primero todo en rojo y espera a que el cruce quede libre */
+  bot() {
+    if (this.bs === 'clear') { if (!this.cars.some(c => this.inBox(c))) { this.toggle(this.bsTo); this.bs = null; } return; }
+    const ns = this.go[0]; if (!ns && !this.go[2]) { this.toggle(0); return; }
+    const wait = this.cars.filter(c => (c.a < 2) !== ns && c.v === 0).length, mine = this.cars.filter(c => (c.a < 2) === ns && !this.inBox(c) && c.p < this.stopAt(c.a) + 2).length;
+    if (wait >= 2 || (wait >= 1 && mine === 0)) { this.toggle(ns ? 0 : 2); this.bs = 'clear'; this.bsTo = ns ? 2 : 0; }
+  }
+}
+
+/* ---------- DESVÍOS: bandas con cambios (Bodega T3) y trenes (Easter egg del Metro) ---------- */
+class MGRutas extends MG {
+  constructor(parent, o) {
+    super(parent, o); this.theme = o.theme || 'bodega'; this.dur = o.dur || 120; this.min = o.clock0 || 480;
+    this.sw = [0, 0]; // 0 = arriba, 1 = abajo
+    this.kinds = this.theme === 'metro' ? [{ col: '#56c7ff', name: 'Azul' }, { col: '#ffc93c', name: 'Amarilla' }, { col: '#ff6b5a', name: 'Roja' }] : [{ col: '#56c7ff', name: 'Llantas', ic: 'llanta' }, { col: '#f08a4b', name: 'Cadenas', ic: 'cadena' }, { col: '#9bd341', name: 'Sillines', ic: 'sillin' }];
+    this.items = []; this.spawnT = .5; this.ok = 0; this.wrong = 0; this.combo = 0; this.best = 0;
+    this.coach = this.theme === 'metro' ? 'Toca los cambios de vía: cada tren debe llegar al andén de SU color.' : 'Toca los desvíos (flechas) para mandar cada pieza a la bahía de SU color.';
+  }
+  geo() { const L = this.L || { vw: 200, vh: 150 }; const x0 = 8, xj1 = L.vw * .38, xj2 = L.vw * .62, xe = L.vw - 22, ym = L.vh * .52, dy = Math.min(34, L.vh * .24); return { x0, xj1, xj2, xe, ym, dy, yA: ym - dy, yB: ym, yC: ym + dy }; }
+  /* recorrido: banda -> cambio 1 (arriba: bahía A, abajo: cambio 2) -> cambio 2 (arriba: B, abajo: C) */
+  posOf(it) {
+    const g = this.geo(), s = it.s;
+    const seg = [[g.x0, g.ym, g.xj1, g.ym]];
+    if (it.r1 === 0) seg.push([g.xj1, g.ym, g.xj1 + 10, g.yA], [g.xj1 + 10, g.yA, g.xe, g.yA]);
+    else if (it.r1 === 1) { seg.push([g.xj1, g.ym, g.xj2, g.ym]); if (it.r2 === 0) seg.push([g.xj2, g.ym, g.xj2 + 10, g.yB - g.dy * .0 - 0], [g.xj2 + 10, g.yB, g.xe, g.yB]); else if (it.r2 === 1) seg.push([g.xj2, g.ym, g.xj2 + 10, g.yC], [g.xj2 + 10, g.yC, g.xe, g.yC]); }
+    let d = s; for (const [ax, ay, bx, by] of seg) { const l = Math.hypot(bx - ax, by - ay); if (d <= l) return { x: ax + (bx - ax) * d / l, y: ay + (by - ay) * d / l, end: false }; d -= l; }
+    const last = seg[seg.length - 1]; return { x: last[2], y: last[3], end: it.r1 !== undefined && (it.r1 === 0 || it.r2 !== undefined) };
+  }
+  update(dt) {
+    this.tick(dt); const g = this.geo(), prog = clamp(this.t / this.dur, 0, 1), v = (this.theme === 'metro' ? 26 : 20) + 16 * prog;
+    this.spawnT -= dt; if (this.spawnT <= 0) { this.spawnT = lerp(this.theme === 'metro' ? 3 : 2.2, 1.2, prog); this.items.push({ k: this.rng.i(0, 2), s: 0 }); }
+    for (const it of this.items) {
+      it.s += v * dt;
+      if (it.r1 === undefined && it.s >= g.xj1 - g.x0) it.r1 = this.sw[0];
+      if (it.r1 === 1 && it.r2 === undefined && it.s >= g.xj2 - g.x0) it.r2 = this.sw[1];
+      const p = this.posOf(it);
+      if (p.end) { it.gone = true; const bay = it.r1 === 0 ? 0 : it.r2 === 0 ? 1 : 2;
+        if (bay === it.k) { this.ok++; this.combo++; this.best = Math.max(this.best, this.combo); const pts = 6 + Math.min(10, this.combo); this.score += pts; Snd.sfx('coin'); this.pop('+' + pts, p.x - 6, p.y - 8, PAL.vd1); }
+        else { this.wrong++; this.combo = 0; this.bad(this.theme === 'metro' ? 'Andén equivocado' : 'Bahía equivocada', p.x - 10, p.y - 8); } }
+    }
+    this.items = this.items.filter(i => !i.gone);
+    if (this.t >= this.dur) this.done = true;
+  }
+  toggle(k) { this.sw[k] ^= 1; Snd.sfx('tap'); }
+  acc() { const n = this.ok + this.wrong; return n ? this.ok / n : 1; }
+  render(V) {
+    const b = V.b; this.L = { vw: V.vw, vh: V.vh }; const g = this.geo(), metro = this.theme === 'metro';
+    if (metro) { b.drawImage(Art.panorama(V.vw, V.vh, 1080, Math.round(V.vh * .3)), 0, 0); prect(b, 0, Math.round(V.vh * .3), V.vw, V.vh, '#2b2f38'); }
+    else { prect(b, 0, 0, V.vw, V.vh, '#22314f'); for (let x = 0; x < V.vw; x += 20) prect(b, x, 0, 10, 16, '#26385c'); }
+    const rail = (ax, ay, bx, by) => { if (metro) { pline(b, ax, ay - 2, bx, by - 2, '#a7adb5'); pline(b, ax, ay + 2, bx, by + 2, '#a7adb5'); } else { pline(b, ax, ay - 2, bx, by - 2, '#59606c'); pline(b, ax, ay, bx, by, '#3b4250'); pline(b, ax, ay + 2, bx, by + 2, '#59606c'); } };
+    rail(g.x0, g.ym, g.xj2, g.ym); rail(g.xj1, g.ym, g.xj1 + 10, g.yA); rail(g.xj1 + 10, g.yA, g.xe, g.yA); rail(g.xj2, g.ym, g.xj2 + 10, g.yB); rail(g.xj2 + 10, g.yB, g.xe, g.yB); rail(g.xj2, g.ym, g.xj2 + 10, g.yC); rail(g.xj2 + 10, g.yC, g.xe, g.yC);
+    [g.yA, g.yB, g.yC].forEach((y, k) => { prect(b, g.xe, y - 9, 18, 18, '#0a2342'); prect(b, g.xe + 1, y - 8, 16, 16, this.kinds[k].col); if (!metro) b.drawImage(Art.icon(this.kinds[k].ic), g.xe + 1, y - 8); else prect(b, g.xe + 3, y - 2, 12, 4, '#ffffff88'); });
+    const sw = (x, y, k) => { const up = this.sw[k] === 0; pdisc(b, x, y, 6, '#0a2342'); pdisc(b, x, y, 5, PAL.amb); pline(b, x - 3, y, x + 3, up ? y - 4 : y + 4, PAL.az); };
+    sw(g.xj1, g.ym, 0); sw(g.xj2, g.ym, 1);
+    for (const it of this.items) { const p = this.posOf(it), col = this.kinds[it.k].col;
+      if (metro) { for (let c = 0; c < 3; c++) { const q = this.posOf({ ...it, s: Math.max(0, it.s - c * 9) }); prect(b, q.x - 4, q.y - 3, 8, 6, c ? '#e6e9ee' : col); prect(b, q.x - 3, q.y - 2, 6, 1, '#1d2c44'); } }
+      else { prect(b, p.x - 5, p.y - 5, 10, 10, col); b.drawImage(Art.icon(this.kinds[it.k].ic), 0, 0, 16, 16, Math.round(p.x - 4), Math.round(p.y - 4), 8, 8); } }
+  }
+  hud(V) {
+    this.btns = []; const s = V.s, g = this.geo();
+    if (this.p.ride) V.text(this.theme === 'metro' ? 'MAQUINISTA SECRETO' : 'BODEGA · DESVÍOS', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 4 });
+    V.text('Bien ' + this.ok + ' · combo ' + this.combo + ' · precisión ' + Math.round(this.acc() * 100) + '%', V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true, stroke: '#0a2342', sw: 3 });
+    this.button(V, g.xj1 * s - 34, (g.ym + g.dy * .5) * s + 8, 68, 46, this.sw[0] ? '↘ 1' : '↗ 1', () => this.toggle(0), { bg: PAL.az1, size: 20, key: 'j0' });
+    this.button(V, g.xj2 * s - 34, (g.ym + g.dy * .5) * s + 8, 68, 46, this.sw[1] ? '↘ 2' : '↗ 2', () => this.toggle(1), { bg: PAL.az1, size: 20, key: 'j1' });
+    this.coachB = 12; this.drawPops(V);
+  }
+  need(it) { return it.k === 0 ? [0, null] : it.k === 1 ? [1, 0] : [1, 1]; }
+  hint() { const R = this.rects || {}; if (this.ok >= 3) return null; const g = this.geo(); const it = this.items.find(i => i.r1 === undefined) || this.items.find(i => i.r1 === 1 && i.r2 === undefined); if (!it) return null; const [a, bb] = this.need(it); if (it.r1 === undefined && this.sw[0] !== a) return R.j0; if (it.r1 === 1 && bb !== null && this.sw[1] !== bb) return R.j1; return null; }
+  bot(err) {
+    const g = this.geo(), next1 = this.items.filter(i => i.r1 === undefined).sort((a, b) => b.s - a.s)[0], next2 = this.items.filter(i => i.r1 === 1 && i.r2 === undefined).sort((a, b) => b.s - a.s)[0];
+    if (next1) { const want = this.rng.f() < err ? 1 - this.need(next1)[0] : this.need(next1)[0]; if (this.sw[0] !== want) this.toggle(0); }
+    if (next2) { const want = this.need(next2)[1]; if (want !== null && this.sw[1] !== want) this.toggle(1); }
+    void g;
+  }
+}
+
+/* ---------- LABERINTO (Easter egg en Moravia): la bola rueda hasta chocar ---------- */
+class MGLaberinto extends MG {
+  constructor(parent, o) {
+    super(parent, o); const n = o.n || 9; this.n = n; this.min = o.clock0 || 600; this.moves = 0; this.dur = 60;
+    const wall = new Array(n * n).fill(15), seen = new Array(n * n).fill(false), st = [0]; seen[0] = true;
+    while (st.length) { const c = st[st.length - 1], x = c % n, y = (c / n) | 0, op = DIRS4.filter(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < n && ny < n && !seen[ny * n + nx]; });
+      if (!op.length) { st.pop(); continue; } const [dx, dy, b, nb] = this.rng.pick(op), j = (y + dy) * n + x + dx; wall[c] &= ~b; wall[j] &= ~nb; seen[j] = true; st.push(j); }
+    for (let k = 0; k < n; k++) { const c = this.rng.i(0, n * n - 1), d = this.rng.pick(DIRS4), x = c % n + d[0], y = ((c / n) | 0) + d[1]; if (x >= 0 && y >= 0 && x < n && y < n) { wall[c] &= ~d[2]; wall[y * n + x] &= ~d[3]; } }
+    this.wall = wall; this.bx = 0; this.by = 0; this.gx = n - 1; this.gy = n - 1; this.anim = 0;
+    this.coach = '¡Laberinto secreto de Moravia! Desliza o toca hacia un lado: la bola rueda hasta chocar. Llega a la flor.';
+  }
+  slide(d) {
+    if (this.done || this.endT) return; const n = this.n, [dx, dy, b] = DIRS4[d]; let moved = false;
+    while (!(this.wall[this.by * n + this.bx] & b)) { this.bx += dx; this.by += dy; moved = true; if (this.bx === this.gx && this.by === this.gy) break; }
+    if (moved) { this.moves++; Snd.sfx('tap'); } if (this.bx === this.gx && this.by === this.gy) { this.endT = .8; this.score += Math.max(10, 50 - this.moves * 2); Snd.sfx('win'); }
+  }
+  update(dt) { this.tick(dt); if (this.endT) { this.endT -= dt; if (this.endT <= 0) this.done = true; } if (this.t > this.dur) this.done = true; }
+  geo() { const L = this.L || { vw: 200, vh: 150 }, cs = Math.floor(Math.min((L.vw - 16) / this.n, (L.vh - 46) / this.n)); return { cs, x0: Math.floor((L.vw - cs * this.n) / 2), y0: Math.floor((L.vh - cs * this.n) / 2) + 8 }; }
+  render(V) {
+    const b = V.b; this.L = { vw: V.vw, vh: V.vh }; prect(b, 0, 0, V.vw, V.vh, '#2f6b3a'); const { cs, x0, y0 } = this.geo(), n = this.n;
+    prect(b, x0 - 2, y0 - 2, cs * n + 4, cs * n + 4, '#78b862');
+    for (let i = 0; i < n * n; i++) { const x = x0 + (i % n) * cs, y = y0 + ((i / n) | 0) * cs, w = this.wall[i], c = '#275a31'; if (w & 1) prect(b, x, y, cs, 1, c); if (w & 8) prect(b, x, y, 1, cs, c); if (w & 4) prect(b, x, y + cs - 1, cs, 1, c); if (w & 2) prect(b, x + cs - 1, y, 1, cs, c); }
+    const fx = x0 + this.gx * cs + cs / 2, fy = y0 + this.gy * cs + cs / 2; for (let k = 0; k < 5; k++) pdisc(b, fx + Math.cos(k * 1.26) * 2, fy + Math.sin(k * 1.26) * 2, 1, ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#fff'][k]); prect(b, fx, fy, 1, 1, PAL.amb);
+    pdisc(b, x0 + this.bx * cs + cs / 2, y0 + this.by * cs + cs / 2, Math.max(2, cs / 3), '#fff'); prect(b, x0 + this.bx * cs + cs / 2 - 1, y0 + this.by * cs + cs / 2 - 1, 1, 1, PAL.vd2);
+  }
+  hud(V) { this.btns = []; V.text('LABERINTO DE MORAVIA', V.w / 2, 70, { size: 20, align: 'center', color: '#ffd84a', stroke: '#0a2342', sw: 4 }); V.text('Movidas: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true }); this.drawPops(V); }
+  pointer(type, vx, vy, cx, cy) {
+    if (type === 'down') { this.d0 = { cx, cy, vx, vy }; return true; }
+    if (type === 'up' && this.d0) { const dx = cx - this.d0.cx, dy = cy - this.d0.cy; let d;
+      if (Math.hypot(dx, dy) > 24) d = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
+      else { const { cs, x0, y0 } = this.geo(), bx = x0 + this.bx * cs + cs / 2, by = y0 + this.by * cs + cs / 2, ex = this.d0.vx - bx, ey = this.d0.vy - by; d = Math.abs(ex) > Math.abs(ey) ? (ex > 0 ? 1 : 3) : (ey > 0 ? 2 : 0); }
+      this.d0 = null; this.slide(d); return true; }
+    return false;
+  }
+  key(e) { const k = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3, KeyW: 0, KeyD: 1, KeyS: 2, KeyA: 3 }[e.code]; if (k !== undefined) this.slide(k); }
+  bot() { // BFS sobre los deslizamientos
+    if (this.endT) return; const n = this.n, start = this.by * n + this.bx, prev = new Map([[start, null]]), q = [start];
+    const sl = (c, d) => { let x = c % n, y = (c / n) | 0; const [dx, dy, b] = DIRS4[d]; while (!(this.wall[y * n + x] & b)) { x += dx; y += dy; if (x === this.gx && y === this.gy) break; } return y * n + x; };
+    while (q.length) { const c = q.shift(); if (c === this.gy * n + this.gx) break; for (let d = 0; d < 4; d++) { const nc = sl(c, d); if (!prev.has(nc)) { prev.set(nc, [c, d]); q.push(nc); } } }
+    let c = this.gy * n + this.gx, first = null; if (!prev.has(c)) return this.slide(this.rng.i(0, 3)); while (prev.get(c)) { const [p, d] = prev.get(c); first = d; c = p; }
+    if (first !== null) this.slide(first);
+  }
+}
+
 /* ---- 50-modes.js ---- */
 /* =====================================================================
    MODOS DE JUEGO (escalafón EnCicla) + novedades + mejoras
@@ -2257,8 +2619,8 @@ const NOVEDADES = [
   { id: 'sincarro', name: 'Día sin carro', desc: 'Casi no hay carros y salen más bicis.', mods: { traffic: .2, demand: 1.2 } },
   { id: 'pico', name: 'Hora pico', desc: 'Más tráfico y más usuarios.', mods: { traffic: 1.5, demand: 1.2, pico: true } },
   { id: 'partido', name: 'Partido en el Atanasio', desc: 'Mucha gente pedalea hacia el Estadio.', mods: { demand: 1.1, extra: { id: 'estadio', mult: 3 } } },
-  { id: 'flores', name: 'Feria de las Flores', desc: 'Turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3 } },
-  { id: 'ciclovia', name: 'Ciclovía', desc: 'Menos carros y la bici rueda más rápido.', mods: { traffic: .5, ciclovia: true } }
+  { id: 'flores', name: 'Feria de las Flores', desc: 'Silleteros por las aceras y turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3 } },
+  { id: 'ciclovia', name: 'Ciclovía', desc: 'Avenida El Poblado, Avenida 80 y Las Vegas cerradas a los carros: ¡conos y bicis por todas partes!', mods: { traffic: .5, ciclovia: true } }
 ];
 
 class Mode {
@@ -2308,6 +2670,17 @@ class MapMode extends Mode {
   onRed() { this.score -= 5; }
   onStreak(lv) { this.score += 5 * lv; }
   onPed() { this.score -= 3; }
+  /* Easter eggs: minijuegos secretos */
+  easter(kind) {
+    if (this.sub || this.done) return;
+    const metro = kind === 'metro', mg = metro ? new MGRutas(this, { theme: 'metro', dur: 45, clock0: this.clock }) : new MGLaberinto(this, { n: 9, clock0: this.clock });
+    JE.ui && JE.ui.toast(metro ? '🚇 ¡Encontraste al Maquinista secreto!' : '🌼 ¡Encontraste el Laberinto secreto de Moravia!');
+    this.runSub(mg, s => {
+      this.score += Math.round(s.score / 2); Save.data.flags[metro ? 'metroEgg' : 'mazeEgg'] = 1;
+      this.ride.stamp = { t: 2.4, title: metro ? 'PRÓXIMAMENTE: JUEGA METRO' : '¡LABERINTO RESUELTO!', sub: metro ? 'El juego 11 de la saga: Metro, Metroplús y buses' : 'Moravia: de basurero a jardín', bg: metro ? PAL.cie : '#ffd84a' };
+      Snd.sfx('star');
+    });
+  }
   onThanks() { this.score += 1; }
   /* mano guía: arrastrar hacia la ruta mientras no se haya movido */
   hint(V) {
@@ -2329,6 +2702,11 @@ class MapMode extends Mode {
   key(e) { if (e.code === 'Space' && this.ride && this.ride.p.veh === 'bike') this.ride.bell(); if (e.code === 'KeyM' && this.ride) this.ride.big = !this.ride.big; }
   actions() { return this.ride && this.ride.p.veh === 'bike' ? [{ id: 'bell', icon: 'timbre', label: 'Timbre', fn: () => { this.ride.bell(); if (this.has('timbre')) this.score += 1; } }] : []; }
   stationZone(z) { return JE.map.stations.filter(s => !z || s.zone === z); }
+  /* sub-zona: estaciones a menos de rad baldosas de un centro al azar (el mapa es grande: Caldas → Barbosa) */
+  subZone(list, rad, cx, cy) {
+    if (cx == null) { const c = this.rng.pick(list); cx = c.x; cy = c.y; }
+    const r = list.filter(s => dist(s.x, s.y, cx, cy) <= rad * TS); return r.length >= 5 ? r : list.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 8);
+  }
   /* bot: sigue el flujo de ruta hacia el objetivo */
   botDrive() {
     const T = this.ride.target; if (!T) { this.botDir = { x: 0, y: 0, m: 0 }; return; }
@@ -2382,8 +2760,8 @@ class ModeUsuario extends MapMode {
   onLeaf() { this.leavesGot++; this.score += 5; Save.data.stats.leaves++; }
   nextLeg(from) {
     const R = this.rng, T = this.turno, minD = [0, 35, 50, 60][T], maxD = [0, 80, 110, 130][T];
-    const cands = LANDMARKS.filter(l => l.id !== 'depot').filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
-    const L = R.pick(cands.length ? cands : LANDMARKS.filter(l => l.id !== 'depot')); this.lm = L;
+    const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
+    const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
     const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
     this.ret = R.pick(near).s; this.phase = 'go';
     this.ride.markers = [];
@@ -2408,7 +2786,7 @@ class ModeUsuario extends MapMode {
     else { const at = this.ret; this.loan0 = this.clock; this.takeBike(at); this.nextLeg(at); this.toast('Nuevo préstamo en ' + at.name + ': ahora ve a ' + this.lm.name); }
   }
   freeSetup() {
-    const todo = LANDMARKS.filter(l => l.id !== 'depot' && !Save.data.postales.includes(l.id));
+    const todo = PUBLIC_LM().filter(l => !Save.data.postales.includes(l.id));
     for (const L of todo) this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6, r: Math.max(L.w, L.h) * TS / 2 + 10, col: PAL.amb, label: L.name, enter: (m) => { this.collect(L); this.score += 20; Snd.sfx('star'); this.ride.float('¡Postal!', PAL.amb); this.ride.removeMarker(m); this.pickFreeTarget(); } });
     this.pickFreeTarget();
   }
@@ -2472,21 +2850,30 @@ class ModeMecanico extends ModeSub {
 /* ======================= 4. BODEGA ======================= */
 class ModeBodega extends ModeSub {
   constructor(role, T, opt) {
-    super(role, T, opt); this.sub = new MGBodega(this, { turno: T, dur: 120 * this.timeMul }); this.view = this.sub.view; const S = this.sub; S.min = 420;
+    super(role, T, opt);
+    if (T === 3) { // turno 3: bandas con desvíos (estilo Package Inc)
+      const S = this.sub = new MGRutas(this, { dur: 120 * this.timeMul }); this.view = S.view; S.min = 420;
+      this.goal('Entrega 28 piezas en su bahía', true, () => S.ok >= 28, () => S.ok + '/28');
+      this.goal('Precisión ≥ 85%', false, () => S.acc() * 100 >= 85, () => Math.round(S.acc() * 100) + '%');
+      this.goal('Combo de 8 seguidas', false, () => S.best >= 8, () => 'combo ' + S.best);
+      return;
+    }
+    this.sub = new MGBodega(this, { turno: T, dur: 120 * this.timeMul }); this.view = this.sub.view; const S = this.sub; S.min = 420;
     const tg = [0, 25, 35, 45][T], acc = [0, 85, 88, 90][T], tr = [0, 1, 2, 1][T];
     this.goal('Clasifica ' + tg + ' piezas', true, () => S.ok >= tg, () => S.ok + '/' + tg);
     this.goal('Precisión ≥ ' + acc + '%', false, () => S.acc() * 100 >= acc, () => Math.round(S.acc() * 100) + '%');
     this.goal('Llena ' + tr + ' camión' + (tr > 1 ? 'es' : ''), false, () => S.trucks >= tr, () => S.trucks + '/' + tr);
   }
   update(dt) { this.sub.min += dt * 3; super.update(dt); }
-  info() { return { clock: fmtClock(this.sub.min), score: this.sub.score, chips: [{ t: 'Combo x' + Math.min(5, 1 + Math.floor(this.sub.combo / 4)) }] }; }
+  info() { return { clock: fmtClock(this.sub.min), score: this.sub.score, chips: [{ t: this.turno === 3 ? 'Combo ' + this.sub.combo : 'Combo x' + Math.min(5, 1 + Math.floor(this.sub.combo / 4)) }] }; }
 }
 
 /* ======================= 5. APOYO ======================= */
 class ModeApoyo extends MapMode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.zone = [null, 'centro', 'sur', 'norte'][T]; this.rate = 2.4; this.clock = 420; this.endClock = 900;
-    const zs = this.stationZone(this.zone), autos = R.shuffle(zs.filter(s => s.type === 'a')), mans = R.shuffle(zs.filter(s => s.type === 'm'));
+    const zs = this.subZone(this.stationZone(this.zone), 60), autos = R.shuffle(zs.filter(s => s.type === 'a')), mans = R.shuffle(zs.filter(s => s.type === 'm'));
+    if (!mans.length) mans.push(R.pick(zs)); if (!autos.length) autos.push(R.pick(zs));
     const plan = [['apertura', autos[0]], ['relevo', mans[0]], ['inspeccion', R.pick(zs)]];
     if (T >= 2) plan.push(['apertura', autos[1] || autos[0]]), plan.push(['cierre', autos[2] || autos[0]]);
     if (T >= 3) plan.push(['relevo', mans[1] || mans[0]]);
@@ -2525,7 +2912,7 @@ class ModeApoyo extends MapMode {
 class ModeTecnico extends MapMode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.zone = [null, 'centro', 'norte', 'sur'][T]; this.rate = 2; this.clock = 420; this.endClock = 780;
-    this.sim = new StationSim(R, { demand: this.mods.demand }); this.zs = this.sim.st.filter(s => s.zone === this.zone);
+    this.sim = new StationSim(R, { demand: this.mods.demand }); this.zs = this.subZone(this.sim.st.filter(s => s.zone === this.zone), 55).slice(0, 12);
     const home = this.zs[0]; this.setupRide({ sim: this.sim, start: { x: home.x, y: home.y } });
     this.breakEvery = [0, 22, 17, 13][T] * this.timeMul; this.breakT = 3; this.fixed = 0; this.opSum = 0; this.opT = 0; this.mgErr = 0; this.brk = new Map();
     this.breakOne();
@@ -2544,8 +2931,12 @@ class ModeTecnico extends MapMode {
   }
   retarget() { const P = this.ride.p; let best = null, bd = 1e9; for (const m of this.brk.values()) { const d = dist(m.x, m.y, P.x, P.y); if (d < bd) { bd = d; best = m; } } this.ride.target = best; }
   repair(s, kind, m) {
-    if (this.sub || !s.broken) return; const T = this.turno;
-    this.runSub(kind === 'totem' ? new MGSimon(this, { len: 2 + T }) : new MGCables(this, { n: 2 + T }), mg => {
+    if (this.sub || !s.broken) return; const T = this.turno, R = this.rng;
+    // variedad de reparaciones según el turno: cables, memoria del tótem, circuito (piezas) y señal láser (espejos)
+    let mgN;
+    if (kind === 'totem') mgN = T === 3 && R.f() < .5 ? new MGLaser(this, { n: 5, turns: 3 }) : T >= 2 && R.f() < .35 ? new MGLaser(this, { n: 4, turns: 2 }) : new MGSimon(this, { len: 2 + T });
+    else mgN = T >= 2 && R.f() < .5 ? new MGLoop(this, { n: T === 3 ? 5 : 4 }) : new MGCables(this, { n: 2 + T });
+    this.runSub(mgN, mg => {
       s.broken = false; this.fixed++; this.mgErr += mg.errors; this.errors += mg.errors; const pts = Math.round((30 + mg.score) * (this.has('radio') ? 1.2 : 1)); this.score += pts;
       this.ride.removeMarker(m); this.brk.delete(s); this.ride.float('+' + pts + ' ¡Reparada!', PAL.vd1); Snd.sfx('win'); this.retarget();
     });
@@ -2579,7 +2970,7 @@ class ModeBalance extends MapMode {
   newOrder() {
     const used = new Set(this.orders.map(o => o.s)); const st = this.sim.st.filter(s => !used.has(s) && s.open);
     st.sort((a, b) => a.bikes / a.cap - b.bikes / b.cap);
-    const P = this.ride.p, far = s => dist(s.x, s.y, P.x, P.y) > 120;
+    const P = this.ride.p, far = s => { const d = dist(s.x, s.y, P.x, P.y); return d > 120 && d < 900; };
     const low = st.filter(far).slice(0, 4), high = st.filter(far).slice(-4);
     const takeLow = this.rng.f() < .55; const s = this.rng.pick(takeLow ? low : high) || st[0]; if (!s) return;
     const type = s.bikes / s.cap < .5 ? 'llevar' : 'recoger', n = Math.max(3, Math.round(Math.abs(s.bikes - s.cap * .55)));
@@ -2624,14 +3015,20 @@ class ModeMonitoreo extends Mode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.clock = 330; this.endClock = 1320; this.rate = (this.endClock - this.clock) / (220 * this.timeMul);
     this.sim = new StationSim(R, { demand: this.mods.demand * (1 + .1 * (T - 1)), depot: 60, extra: this.mods.extra });
-    const dp = JE.map.depot; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
+    // sala de monitoreo por zona (el sistema va de Caldas a Barbosa): T1 centro, T2 sur, T3 norte
+    this.zone = [null, 'centro', 'sur', 'norte'][T]; const zl = this.sim.st.filter(s => s.zone === this.zone), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
+    this.zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16);
+    const bs = this.zs[0]; this.base = { x: bs.x + 14, y: bs.y + 10 };
+    const xs = this.zs.map(s => s.x), ys = this.zs.map(s => s.y), m = 10 * TS; this.crop = { x0: Math.max(0, Math.min(...xs) - m), y0: Math.max(0, Math.min(...ys) - m), x1: Math.min(MW * TS, Math.max(...xs) + m), y1: Math.min(MH * TS, Math.max(...ys) + m) };
+    const dp = this.base; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
     this.sel = null; this.radio = []; this.flags = new Map(); this.view = { kind: 'map' };
-    const sv = [0, 80, 85, 88][T];
-    this.goal('Nivel de servicio ≥ ' + sv + '%', true, () => this.sim.service() * 100 >= sv, () => Math.round(this.sim.service() * 100) + '%');
-    this.goal('Al cierre, ninguna estación vacía', false, () => this.sim.st.every(s => s.bikes > 0), () => this.sim.st.filter(s => s.bikes <= 0).length + ' vacías');
+    const sv = [0, 75, 82, 86][T];
+    this.goal('Nivel de servicio ≥ ' + sv + '%', true, () => this.serv() * 100 >= sv, () => Math.round(this.serv() * 100) + '%');
+    this.goal('Al cierre, ninguna estación vacía', false, () => this.zs.every(s => s.bikes > 0), () => this.zs.filter(s => s.bikes <= 0).length + ' vacías');
     this.goal('Camiones descargados en la bodega', false, () => this.trucks.every(t => t.load === 0 && !t.path && dist(t.x, t.y, dp.x, dp.y) < 30), () => this.trucks.filter(t => t.load === 0 && !t.path).length + '/' + this.trucks.length);
     this.coach = 'Toca una estación: si está vacía (rojo) LLEVA bicis; si está llena (azul) RECÓGELAS.';
   }
+  serv() { const T = Math.max(1, this.sim.elapsed) * this.zs.length; let bad = 0; for (const s of this.zs) bad += s.emptyT + s.fullT; return clamp(1 - bad / T, 0, 1); }
   addJob(t, job) { t.q.push(job); }
   best(s) { let b = null, bc = 1e9; for (const t of this.trucks) { const c = t.q.length * 900 + dist(t.x, t.y, s.x, s.y); if (c < bc) { bc = c; b = t; } } return b; }
   order(s, type) {
@@ -2644,7 +3041,7 @@ class ModeMonitoreo extends Mode {
   go(t, x, y) { t.path = [{ x, y: t.y }, { x, y }]; }
   update(dt) {
     this.t += dt; const dm = this.rate * dt; this.clock += dm; this.sim.step(dm, this.clock);
-    const dp = JE.map.depot, spd = 60 * dm * (this.has('camion') ? 1.15 : 1);
+    const dp = this.base, spd = 60 * dm * (this.has('camion') ? 1.15 : 1);
     for (const t of this.trucks) {
       if (t.path) {
         const p = t.path[0], d = dist(t.x, t.y, p.x, p.y);
@@ -2659,12 +3056,12 @@ class ModeMonitoreo extends Mode {
       }
     }
     // radio: avisos de estaciones críticas
-    for (const s of this.sim.st) { const st = s.bikes <= 0 ? 'vacía' : s.bikes >= s.cap ? 'llena' : ''; if (st && s._r !== st) this.say('📻 ' + s.name + ' está ' + st); s._r = st; }
+    for (const s of this.zs) { const st = s.bikes <= 0 ? 'vacía' : s.bikes >= s.cap ? 'llena' : ''; if (st && s._r !== st) this.say('📻 ' + s.name + ' está ' + st); s._r = st; }
     if (this.clock > 1260 && !this.warn) { this.warn = 1; this.say('⏰ ¡Se acerca el cierre! Regresa los camiones vacíos.'); JE.ui && JE.ui.toast('¡Se acerca el cierre! Usa "Regresar camiones".'); }
     if (this.clock >= this.endClock) this.end();
   }
   arrive(t) {
-    const j = t.q[0]; if (!j) return; const dp = JE.map.depot;
+    const j = t.q[0]; if (!j) return;
     if (j.stage === 'home') { this.sim.depot += t.load; t.load = 0; t.q.shift(); return; }
     if (j.stage === 'depot') { const k = Math.min(t.cap - t.load, Math.max(j.n - t.load, 0) + 2, this.sim.depot); t.load += k; this.sim.depot -= k; j.loaded = true; t.wait = 8; return; }
     const s = j.s; let moved = 0;
@@ -2674,7 +3071,7 @@ class ModeMonitoreo extends Mode {
   }
   render(V) { V.b.fillStyle = PAL.az; V.b.fillRect(0, 0, V.vw, V.vh); }
   hud(V) {
-    this.btns = []; const o = { sim: this.sim, trucks: this.trucks, sel: this.sel, top: 58, bot: this.sel ? 150 : 90, noBg: true };
+    this.btns = []; const o = { sim: this.sim, stations: this.zs, base: this.base, crop: this.crop, trucks: this.trucks, sel: this.sel, top: 58, bot: this.sel ? 150 : 90, noBg: true };
     const r = drawOverview(V, o); this.rect = r; const c = V.ctx;
     for (const [s, ty] of this.flags) { c.fillStyle = ty === 'llevar' ? PAL.vd : PAL.amb; c.fillRect(r.x + s.x * r.k + 7, r.y + s.y * r.k - 12, 6, 6); }
     // radio
@@ -2690,27 +3087,27 @@ class ModeMonitoreo extends Mode {
       this.button(V, x + 24 + half, yy + 62, half, 54, 'RECOGER −' + Math.max(2, Math.round(s.bikes - s.cap * .5)), () => this.order(s, 'recoger'), { bg: '#b0651a', size: 18, key: 'rec' });
     } else {
       this.button(V, 10, V.h - 74, bw, 58, '🏠 Regresar camiones', () => this.home(), { size: 16 });
-      V.text('Bodega: ' + this.sim.depot + ' bicis · ' + this.trucks.map(t => '🚚' + t.id + ':' + t.load).join('  '), V.w - 10, V.h - 40, { size: 13, align: 'right', color: '#c4ec7c', body: true });
+      V.text('Zona ' + this.zone + ' · Base: ' + this.sim.depot + ' bicis · ' + this.trucks.map(t => '🚚' + t.id + ':' + t.load).join('  '), V.w - 10, V.h - 40, { size: 13, align: 'right', color: '#c4ec7c', body: true });
     }
   }
   pointer(type, vx, vy, cx, cy) {
     if (type !== 'down') return false; if (super.pointer(type, vx, vy, cx, cy)) return true;
     const r = this.rect; if (!r) return false; let best = null, bd = 30;
-    for (const s of this.sim.st) { const d = dist(cx, cy, r.x + s.x * r.k, r.y + s.y * r.k); if (d < bd) { bd = d; best = s; } }
+    for (const s of this.zs) { const d = dist(cx, cy, r.x + s.x * r.k, r.y + s.y * r.k); if (d < bd) { bd = d; best = s; } }
     this.sel = best === this.sel ? null : best; if (best) Snd.sfx('tap'); return true;
   }
   hint() {
     if (this.ordered >= 2 || !this.rect) return null; const R = this.rects || {};
     if (this.sel) return R[this.sel.bikes / this.sel.cap < .5 ? 'lle' : 'rec'] || null;
-    const s = this.sim.st.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0], r = this.rect;
+    const s = this.zs.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0], r = this.rect;
     return { x: r.x + s.x * r.k, y: r.y + s.y * r.k, txt: s.name };
   }
-  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: 'Servicio ' + Math.round(this.sim.service() * 100) + '%' }] }; }
+  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: 'Servicio ' + Math.round(this.serv() * 100) + '%' }] }; }
   bot() {
     if (this.t < (this.botNext || 0)) return; this.botNext = this.t + .9;
     if (this.clock > 1240) { if (!this.sentHome) { this.sentHome = 1; this.home(); } return; }
     const busy = new Set(this.flags.keys());
-    const cand = this.sim.st.filter(s => !busy.has(s)).map(s => ({ s, r: s.bikes / s.cap })).sort((a, b) => Math.abs(b.r - .5) - Math.abs(a.r - .5))[0];
+    const cand = this.zs.filter(s => !busy.has(s)).map(s => ({ s, r: s.bikes / s.cap })).sort((a, b) => Math.abs(b.r - .5) - Math.abs(a.r - .5))[0];
     if (cand && Math.abs(cand.r - .5) > .3 && this.trucks.some(t => t.q.length < 2)) this.order(cand.s, cand.r < .5 ? 'llevar' : 'recoger');
   }
 }
@@ -2724,7 +3121,7 @@ class ModeSupervisor extends MapMode {
     this.setupRide({ sim: this.sim, start: { x: dp.x, y: dp.y + 6 } }); this.sim.trucks.push(this.ride.p);
     this.depM = this.ride.marker({ x: dp.x, y: dp.y, r: 20, col: PAL.cie, label: 'Bodega', enter: () => this.atDepot(), leave: () => { this.inDepot = false; } });
     // personal por asignar
-    const mans = R.shuffle(this.sim.st.filter(s => s.type === 'm')).slice(0, 3 + T);
+    this.area = this.sim.st.filter(s => dist(s.x, s.y, dp.x, dp.y) < 100 * TS); const mans = R.shuffle(this.area.filter(s => s.type === 'm')).slice(0, 3 + T);
     this.staffSt = mans; this.staff = mans.map((s, i) => ({ name: STAFF_NAMES[i], zone: R.f() < .75 ? s.zone : R.pick(['norte', 'centro', 'sur']) }));
     R.shuffle(this.staff); this.assign = new Array(mans.length).fill(-1); this.phase = 'staff'; this.selStaff = -1;
     this.inc = []; this.incT = 6; this.solved = 0; this.expiredN = 0; this.incN = 0; this.cierre = false;
@@ -2744,10 +3141,12 @@ class ModeSupervisor extends MapMode {
   tapStaff(k) { this.selStaff = k; Snd.sfx('tap'); }
   tapSlot(i) { if (this.selStaff < 0) return; const prev = this.assign.indexOf(this.selStaff); if (prev >= 0) this.assign[prev] = -1; this.assign[i] = this.selStaff; this.selStaff = -1; Snd.sfx('coin'); }
   newInc() {
-    const R = this.rng, types = ['relevo', 'bici', 'anclaje', 'balance', 'bodega']; let type = R.pick(types);
+    const R = this.rng, types = ['relevo', 'bici', 'anclaje', 'balance', 'bodega', 'transito']; let type = R.pick(types);
     if (this.inc.some(i => i.type === 'bodega') && type === 'bodega') type = 'bici';
-    let s = type === 'bodega' ? null : R.pick(type === 'relevo' ? this.sim.st.filter(x => x.type === 'm') : this.sim.st);
-    if (type === 'balance') { const ex = this.sim.st.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0]; s = ex; }
+    let s = type === 'bodega' ? null : R.pick(type === 'relevo' ? this.area.filter(x => x.type === 'm') : this.area);
+    if (type === 'transito') { const L = R.pick(JE.map.lights), dp0 = JE.map.depot; s = null; const id0 = ++this.incN, it0 = { id: id0, type, s: null, due: this.clock + 150, txt: 'Semáforo dañado', px: (L.x0 + L.x1) / 2, py: (L.y0 + L.y1) / 2 }; void dp0;
+      it0.m = this.ride.marker({ x: it0.px, y: it0.py, r: 20, col: '#ff8a3d', label: 'Semáforo', num: id0, enter: () => this.solve(it0) }); this.inc.push(it0); this.retarget(); JE.ui && JE.ui.toast('📻 Aviso ' + id0 + ': semáforo dañado en un cruce: ¡dirige el tránsito!'); return; }
+    if (type === 'balance') { const ex = this.area.slice().sort((a, b) => Math.abs(b.bikes / b.cap - .5) - Math.abs(a.bikes / a.cap - .5))[0]; s = ex; }
     const dp = JE.map.depot, x = s ? s.x : dp.x, y = s ? s.y : dp.y, id = ++this.incN;
     const it = { id, type, s, due: this.clock + 150, txt: { relevo: 'Relevo de almuerzo', bici: 'Bici dañada', anclaje: 'Anclajes sin señal', balance: s && s.bikes / s.cap < .5 ? 'Estación casi vacía' : 'Estación casi llena', bodega: 'Llegó un lote a bodega' }[type] };
     if (type === 'anclaje' && s) s.broken = true;
@@ -2763,7 +3162,8 @@ class ModeSupervisor extends MapMode {
       case 'relevo': this.runSub(new MGAnfitrion(this, { turno: 2, short: true, dur: 28 * this.timeMul, cap: 6, clock0: c0, rate: 1.6 }), done); break;
       case 'bici': this.runSub(new MGMecanico(this, { turno: 1, short: true, target: 2, maxBikes: 3, dur: 40, faults: [1, 2], timePer: 18 }), done); break;
       case 'anclaje': this.runSub(new MGCables(this, { n: 3 + (this.turno > 2 ? 1 : 0) }), mg => { if (it.s) it.s.broken = false; done(mg); }); break;
-      case 'bodega': this.runSub(new MGBodega(this, { turno: 1, dur: 22 }), done); break;
+      case 'bodega': this.runSub(this.rng.f() < .5 ? new MGBodega(this, { turno: 1, dur: 22 }) : new MGRutas(this, { dur: 25 }), done); break;
+      case 'transito': this.runSub(new MGTraffix(this, { dur: 28, target: 8 + this.turno * 2 }), done); break;
       case 'balance':
         if (this.ride.p.veh === 'truck') { const s = it.s, P = this.ride.p, need = Math.round(s.cap * .5 - s.bikes); if (need > 0) { const k = Math.min(need, P.load); P.load -= k; s.bikes += k; } else { const k = Math.min(-need, P.cap - P.load); P.load += k; s.bikes -= k; } done({ score: 10, errors: 0 }); }
         else JE.ui && JE.ui.toast('Toca 🚚 en la lista de avisos para enviar un camión, o ven en camión.');
@@ -2795,7 +3195,7 @@ class ModeSupervisor extends MapMode {
     for (const it of this.inc) {
       const late = it.due - this.clock < 30, act = () => { this.ride.target = it.m; Snd.sfx('tap'); };
       const c = V.ctx; c.fillStyle = '#0a2342e6'; c.fillRect(x, y, w, 34); c.strokeStyle = this.ride.target === it.m ? PAL.amb : late ? PAL.cor : '#ffffff55'; c.lineWidth = 2; c.strokeRect(x + 1, y + 1, w - 2, 32);
-      V.text(it.id + '. ' + it.txt, x + 8, y + 15, { size: 12, color: '#fff', body: true }); V.text((it.s ? it.s.name : 'Bodega') + ' · antes de ' + fmtClock(it.due), x + 8, y + 29, { size: 11, color: late ? PAL.cor : '#c4ec7c', body: true });
+      V.text(it.id + '. ' + it.txt, x + 8, y + 15, { size: 12, color: '#fff', body: true }); V.text((it.s ? it.s.name : it.type === 'transito' ? 'Cruce de avenidas' : 'Bodega') + ' · antes de ' + fmtClock(it.due), x + 8, y + 29, { size: 11, color: late ? PAL.cor : '#c4ec7c', body: true });
       this.btns.push({ x, y, w: w - (it.type === 'balance' ? 44 : 0), h: 34, fn: act });
       if (it.type === 'balance') this.button(V, x + w - 40, y + 2, 36, 30, it.sent ? '…' : '🚚', () => this.dispatch(it), { size: 15 });
       y += 40;
@@ -2852,7 +3252,7 @@ class ModeCarrera extends MapMode {
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const st0 = R.pick(JE.map.stations.filter(s => s.zone === 'centro'));
     this.setupRide({ sim: this.sim, start: { x: st0.x - 5, y: st0.y } });
-    const pool = LANDMARKS.filter(l => l.id !== 'depot'); let cur = { x: st0.x / TS, y: st0.y / TS }; this.cps = [];
+    const pool = PUBLIC_LM(); let cur = { x: st0.x / TS, y: st0.y / TS }; this.cps = [];
     for (let k = 0; k < 4; k++) {
       const free = pool.filter(l => !this.cps.includes(l)), c = free.filter(l => { const d = Math.hypot(l.x + l.w / 2 - cur.x, l.y + l.h / 2 - cur.y); return d >= 22 && d <= 70; });
       const pick = R.pick(c.length ? c : free); this.cps.push(pick); cur = { x: pick.x + pick.w / 2, y: pick.y + pick.h / 2 };
@@ -2860,8 +3260,9 @@ class ModeCarrera extends MapMode {
     const meta = JE.map.stations.filter(s => s !== st0).sort((a, b) => Math.hypot(a.x / TS - cur.x, a.y / TS - cur.y) - Math.hypot(b.x / TS - cur.x, b.y / TS - cur.y))[0];
     this.pts = this.cps.map(l => ({ x: (l.x + l.w / 2) * TS, y: (l.y + l.h) * TS + 6, r: Math.max(l.w, l.h) * TS / 2 + 10, name: l.name, l })).concat([{ x: meta.x, y: meta.y, r: 18, name: 'Meta: EnCicla ' + meta.name, meta: true }]);
     this.idx = 0; this.place(); this.net = !!opt.net; this.countdown = 3.2; this.netT = 0;
-    this.opp = { name: this.net ? (opt.oppName || 'Amigo') : ['', 'Bot Tranquilo', 'Bot Veloz', 'Bot Turbo'][T], x: st0.x + 5, y: st0.y, a: -Math.PI / 2, idx: 0, shirt: opt.oppShirt || PAL.cor, done: false, ai: !this.net, spd: [0, .72, .84, .95][T], tx: st0.x + 5, ty: st0.y };
-    this.ride.opps = [this.opp]; this.myT = null; this.oppT = null; this.won = false;
+    const mk = (id, name, shirt, k) => ({ id, name, shirt: shirt || PAL.cor, x: st0.x + 5 + k * 3, y: st0.y + k * 2, a: -Math.PI / 2, idx: 0, done: false, ai: !this.net, spd: [0, .72, .84, .95][T], tx: st0.x + 5, ty: st0.y, t: null });
+    this.opps = this.net ? (opt.players || [{ id: 0, name: opt.oppName || 'Amigo', shirt: opt.oppShirt }]).map((p, k) => mk(p.id, String(p.name || 'Amigo').slice(0, 16), p.shirt, k)) : [mk(-1, ['', 'Bot Tranquilo', 'Bot Veloz', 'Bot Turbo'][T], opt.oppShirt, 0)];
+    this.opp = this.opps[0]; this.ride.opps = this.opps; this.myT = null; this.oppT = null; this.won = false; this.place1 = 0;
     if (this.net) Net.onmsg = m => this.msg(m);
     this.goal('Gana la carrera', true, () => this.won, () => this.won ? '¡1º!' : this.oppT != null ? 'te ganaron' : 'en carrera');
     this.goal('Pasa por las 4 postales', false, () => this.idx >= 4, () => Math.min(this.idx, 4) + '/4');
@@ -2875,26 +3276,28 @@ class ModeCarrera extends MapMode {
   reach() {
     const p = this.pts[this.idx]; if (!p || this.myT != null) return; this.idx++;
     if (p.meta) {
-      this.myT = this.t; this.won = this.oppT == null; if (this.won) this.score += 100;
+      this.myT = this.t; this.won = this.oppT == null; this.place1 = 1 + this.opps.filter(o => o.t != null).length; if (this.won) this.score += 100; else this.score += Math.max(0, 60 - 20 * this.place1);
       this.score += Math.max(0, Math.round(200 - this.t)); this.ride.stamp = { t: 2.2, title: this.won ? '¡GANASTE!' : '¡LLEGASTE!', sub: 'Tiempo: ' + this.t.toFixed(1) + ' s', bg: this.won ? PAL.vd : PAL.amb };
       Snd.sfx(this.won ? 'win' : 'ok'); if (this.net) Net.send({ t: 'fin', time: this.t }); this.endT = 2.4;
     } else { this.score += 25; this.ride.stamp = { t: 1.3, title: 'POSTAL ' + this.idx + ' DE 4', sub: p.name }; Snd.sfx('star'); if (p.l && !Save.data.postales.includes(p.l.id)) Save.data.postales.push(p.l.id); }
     this.place();
   }
   msg(m) {
-    const o = this.opp;
-    if (m.t === 'p') { o.tx = m.x; o.ty = m.y; o.a = m.a; o.idx = m.i; }
-    else if (m.t === 'fin' && this.oppT == null) { this.oppT = this.t; o.done = true; if (this.myT == null) JE.ui && JE.ui.toast('🏁 ' + o.name + ' llegó primero a la meta'); }
-    else if (m.t === 'bye') JE.ui && JE.ui.toast(o.name + ' salió de la carrera');
+    const o = this.opps.find(q => q.id === (m.from || 0)); if (!o) return;
+    if (m.t === 'p') { o.tx = +m.x || 0; o.ty = +m.y || 0; o.a = +m.a || 0; o.idx = m.i | 0; }
+    else if (m.t === 'fin' && o.t == null) this.oppFinish(o);
+    else if (m.t === 'bye') { o.gone = true; JE.ui && JE.ui.toast(o.name + ' salió de la carrera'); }
   }
+  oppFinish(o) { o.done = true; o.t = this.t; if (this.oppT == null) { this.oppT = this.t; if (this.myT == null) JE.ui && JE.ui.toast('🏁 ' + o.name + ' llegó primero a la meta'); } }
   update(dt) {
     if (this.countdown > 0) { const c0 = Math.ceil(this.countdown); this.countdown -= dt; if (Math.ceil(this.countdown) !== c0 && !JE.headless) Snd.sfx(this.countdown > 0 ? 'tap' : 'win'); this.ride.cam.x = this.ride.p.x; this.ride.cam.y = this.ride.p.y; return; }
     super.update(dt);
   }
   tick(dt) {
-    const o = this.opp;
-    if (o.ai && !o.done) this.aiStep(o, dt);
-    else if (!o.ai) { const k = Math.min(1, dt * 8); o.x += (o.tx - o.x) * k; o.y += (o.ty - o.y) * k; }
+    for (const o of this.opps) {
+      if (o.ai && !o.done) this.aiStep(o, dt);
+      else if (!o.ai) { const k = Math.min(1, dt * 8); o.x += (o.tx - o.x) * k; o.y += (o.ty - o.y) * k; }
+    }
     if (this.net) { this.netT -= dt; if (this.netT <= 0) { this.netT = .1; const P = this.ride.p; Net.send({ t: 'p', x: Math.round(P.x), y: Math.round(P.y), a: +P.a.toFixed(2), i: this.idx }); } }
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); }
     else if (this.t > this.limit) { JE.ui && JE.ui.toast('Se acabó el tiempo de la carrera'); this.end(); }
@@ -2908,12 +3311,12 @@ class ModeCarrera extends MapMode {
     o.a += clamp(angDiff(o.a, ta), -6 * dt, 6 * dt);
     const v = 60 * o.spd * (SURF[JE.map.get(Math.floor(o.x / TS), Math.floor(o.y / TS))] || .6) * (this.mods.rain ? .93 : 1);
     o.x += Math.cos(o.a) * v * dt; o.y += Math.sin(o.a) * v * dt;
-    if (dist(o.x, o.y, p.x, p.y) < p.r) { o.idx++; if (p.meta) { o.done = true; this.oppT = this.t; if (this.myT == null) JE.ui && JE.ui.toast('🏁 ' + o.name + ' llegó primero a la meta'); } }
+    if (dist(o.x, o.y, p.x, p.y) < p.r) { o.idx++; if (p.meta) this.oppFinish(o); }
   }
   hud2(V) {
-    if (this.countdown > 0) { const n = Math.ceil(this.countdown); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 120, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); V.text('vs ' + this.opp.name, V.w / 2, V.h * .42 + 44, { size: 22, align: 'center', color: '#fff', stroke: PAL.az, sw: 5 }); }
-    const me = this.idx, op = this.opp.idx, lead = me > op ? 'Vas ganando' : me < op ? 'Vas detrás' : 'Empatados';
-    V.text('Tú ' + Math.min(me, 5) + '/5 · ' + this.opp.name + ' ' + Math.min(op, 5) + '/5 · ' + lead, 10, V.h - 20, { size: 13, color: me >= op ? PAL.vd1 : PAL.amb, bg: '#0a2342dd', pad: 4, body: true });
+    if (this.countdown > 0) { const n = Math.ceil(this.countdown); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 120, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); V.text('vs ' + this.opps.map(o => o.name).join(', '), V.w / 2, V.h * .42 + 44, { size: 22, align: 'center', color: '#fff', stroke: PAL.az, sw: 5 }); }
+    const me = this.idx, op = Math.max(...this.opps.map(o => o.idx)), lead = me > op ? 'Vas ganando' : me < op ? 'Vas detrás' : 'Empatados';
+    V.text('Tú ' + Math.min(me, 5) + '/5 · ' + this.opps.map(o => o.name + ' ' + Math.min(o.idx, 5) + '/5').join(' · ') + ' · ' + lead, 10, V.h - 20, { size: 13, color: me >= op ? PAL.vd1 : PAL.amb, bg: '#0a2342dd', pad: 4, body: true });
   }
   info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🏁 ' + Math.min(this.idx, 5) + '/5' }] }; }
   end() { if (this.net && !this.done) Net.onmsg = m => UI.netLobbyMsg(m); super.end(); }
@@ -2935,7 +3338,12 @@ const TIPS = [
   'Entre 2024 y mediados de 2026 se registraron más de 3 millones de préstamos.',
   'Más de 130 estaciones habilitadas en el área metropolitana (2026).',
   'Usa casco, respeta los semáforos y prefiere la ciclorruta.',
-  'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).'
+  'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).',
+  'El sistema va desde Caldas, donde nace el río, hasta Copacabana al norte del valle.',
+  'Dicen que si tocas el timbre tres veces bajo una estación del Metro… pasa algo.',
+  'En Moravia, tres timbrazos abren algo que florece.',
+  'El título de la portada guarda un secreto dorado.',
+  'Hay una postal que no aparece en el álbum hasta que la encuentras pedaleando.'
 ];
 
 const UI = JE.ui = {
@@ -2947,6 +3355,11 @@ const UI = JE.ui = {
     $('#bHow').onclick = () => this.howto();
     $('#bShare').onclick = () => this.share('🚲 Juega EnCicla: el videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. ¡Pruébalo!');
     $('#bHomeCover').onclick = () => this.go('sCover');
+    // Easter egg: bici dorada (7 toques al título o código Konami)
+    let taps = [], seq = []; const KON = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+    const gold = () => { const F = Save.data.flags; F.gold = !F.gold; F.goldSeen = 1; Save.save(); Snd.sfx('star'); this.toast(F.gold ? '✨ ¡Bici dorada activada! (repite para quitarla)' : 'Bici dorada desactivada'); };
+    $('#sCover h1.mega.g').addEventListener('pointerdown', () => { const t = performance.now(); taps = taps.filter(x => t - x < 4000); taps.push(t); if (taps.length >= 7) { taps = []; gold(); } });
+    window.addEventListener('keydown', e => { if (this.cur !== 'sCover') return; seq.push(e.code); seq = seq.slice(-10); if (seq.join() === KON.join()) { seq = []; gold(); } });
     $$('#tabs button').forEach(b => b.onclick = () => { Snd.sfx('tap'); this.setTab(b.dataset.tab); });
     $('#bPause').onclick = () => Game.pause();
     $('#fileIn').onchange = e => this.importFile(e);
@@ -3001,7 +3414,7 @@ const UI = JE.ui = {
     const mu = $('[data-act=multi]', el); if (mu) mu.onclick = () => this.multi();
   },
   renderAlbum() {
-    const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot');
+    const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot' && (!l.secret || Save.data.postales.includes(l.id)));
     let h = `<div class="pag">PAG 2 · Postales del valle</div><div class="sect"><span class="outline">${got.length}</span><h2 class="mega">Álbum<br><span style="color:var(--vd)">de postales</span></h2></div><p class="m">Visita los lugares del Valle de Aburrá en modo Usuario para coleccionarlos. Tienes ${got.length} de ${list.length}.</p><div class="album">`;
     list.forEach((L, i) => { const have = got.includes(L.id); h += `<div class="post ${have ? '' : 'lock'}" style="--r:${(h2(i, 3) - .5) * 3}deg"><canvas width="120" height="90" data-lm="${LANDMARKS.indexOf(L)}"></canvas><b>${have ? esc(L.name) : '???'}</b><small>${have ? esc(L.fact) : esc(L.muni) + ' · aún sin visitar'}</small></div>`; });
     h += `</div>`;
@@ -3103,36 +3516,62 @@ const UI = JE.ui = {
   multi() {
     const net = Net.supported();
     this.modal(`<h2>Jugar con amigos</h2>
-    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera en 2 celulares</div><p style="margin:6px 0 0;font-size:14px">1) Uno toca <b>Crear sala</b> y envía el código. 2) El otro toca <b>Unirme</b>, pega el código y devuelve la respuesta. 3) Quien creó la sala pega la respuesta y ¡arranca la carrera! En la misma red Wi-Fi funciona sin internet.</p></div>
+    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera hasta 4 jugadores</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos: <b>¡Empezar!</b> En la misma red Wi-Fi funciona sin internet.</p></div>
     ${net ? '<div class="row"><button class="btn pri" id="nHost">Crear sala</button><button class="btn" id="nJoin">Unirme</button></div><div id="nBox" style="margin-top:10px"></div>' : '<p class="m">Este navegador no permite salas (WebRTC).</p>'}
     <div class="squig"></div><p class="m"><b>Reto con código</b> (sin internet): todos juegan las mismas condiciones y comparan puntos.</p>
     <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn" id="bCode">Jugar ese código</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
       $('#bCode').onclick = () => { const p = this.parseCode($('#codeIn').value); if (!p) return this.toast('Código no válido'); if (!this.unlocked(ROLE[p.roleId])) return this.toast('Aún no tienes ese oficio'); this.closeModal(); this.brief(p.roleId, p.turno, { reto: true, seed: p.seed, nov: new RNG(p.seed).pick(NOVEDADES) }); };
       if (!net) return;
-      const box = $('#nBox'), codeUI = (title, code, next) => `<p class="pag">${title}</p><textarea class="txtin" rows="3" readonly id="nCode" style="font-size:11px">${esc(code)}</textarea><div class="row" style="margin:8px 0"><button class="btn sm" id="nCopy">Copiar</button><button class="btn sm" id="nShare">Compartir</button></div>${next}`;
-      const bindCopy = code => { $('#nCopy').onclick = () => { const t = $('#nCode'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => this.toast('Código copiado ✓')).catch(() => { document.execCommand('copy'); this.toast('Código copiado ✓'); }); }; $('#nShare').onclick = () => this.shareCode(code); };
-      Net.onstatus = s => { const st = $('#nStat'); if (st) st.textContent = { open: '¡Conectados! Empezando…', failed: 'No se pudo conectar. Intenten en la misma red Wi-Fi.', disconnected: 'Conexión perdida', closed: 'Conexión cerrada', waiting: 'Esperando…' }[s] || s; if (s === 'open') { Net.send({ t: 'hi', name: Save.data.profile.name, shirt: SHIRTS[Save.data.profile.shirt] }); } };
+      const box = $('#nBox'); this.netRoster = null; this.netPlayers = {};
+      Net.onstatus = s => { const st = $('#nStat'); if (st) st.textContent = { open: '¡Conectados!', failed: 'No se pudo conectar. Intenten en la misma red Wi-Fi.', disconnected: 'Conexión perdida', closed: 'Conexión cerrada', waiting: 'Esperando…' }[s] || s; if (Net.role === 'host') this.renderLobby(); };
       Net.onmsg = m => this.netLobbyMsg(m);
-      $('#nHost').onclick = async () => {
-        box.innerHTML = '<p class="m">Preparando la sala…</p>';
-        try { const code = await Net.host(); box.innerHTML = codeUI('1) Envía este código a tu amigo', code, '<p class="pag">2) Pega aquí su respuesta</p><textarea class="txtin" rows="3" id="nAns" style="font-size:11px" placeholder="JE1a…"></textarea><div class="col"><button class="btn pri" id="nGo">Conectar</button></div><p class="m" id="nStat"></p>'); bindCopy(code);
-          $('#nGo').onclick = async () => { try { await Net.accept($('#nAns').value); $('#nStat').textContent = 'Conectando…'; } catch (e) { this.toast(e.message); } };
-        } catch (e) { box.innerHTML = '<p class="m">No se pudo crear la sala: ' + esc(e.message) + '</p>'; }
-      };
+      $('#nHost').onclick = () => { Net.reset(); Net.role = 'host'; this.netPlayers = {}; this.renderLobby(); };
       $('#nJoin').onclick = () => {
-        box.innerHTML = '<p class="pag">Pega el código de la sala</p><textarea class="txtin" rows="3" id="nOff" style="font-size:11px" placeholder="JE1o…"></textarea><div class="col"><button class="btn pri" id="nAnsB">Generar respuesta</button></div>';
-        $('#nAnsB').onclick = async () => { try { box.innerHTML = '<p class="m">Generando respuesta…</p>'; const code = await Net.join(this._off = ($('#nOff') || {}).value || this._off); box.innerHTML = codeUI('Envía esta respuesta a quien creó la sala', code, '<p class="m" id="nStat">Esperando que conecte…</p>'); bindCopy(code); } catch (e) { box.innerHTML = '<p class="m">' + esc(e.message) + '</p>'; } };
-        const ta = $('#nOff'); ta.oninput = () => { this._off = ta.value; };
+        box.innerHTML = '<p class="pag">Escanea el QR de la sala o pega su código</p>' + (QR.canScan() ? '<div class="col"><button class="btn amb" id="nScan">📷 Escanear QR</button></div>' : '') + '<textarea class="txtin" rows="3" id="nOff" style="font-size:11px;margin-top:8px" placeholder="JE1o…"></textarea><div class="col"><button class="btn pri" id="nAnsB">Generar respuesta</button></div>';
+        const gen = async txt => { try { box.innerHTML = '<p class="m">Generando respuesta…</p>'; const code = await Net.join(txt); box.innerHTML = this.codeUI('Muestra este QR (o envía la respuesta) a quien creó la sala', code, '<p class="m" id="nStat">Esperando que conecte…</p><div id="nRoster"></div>'); this.bindCode(code); } catch (e) { box.innerHTML = '<p class="m">' + esc(e.message) + '</p>'; } };
+        $('#nAnsB').onclick = () => gen($('#nOff').value);
+        const sc = $('#nScan'); if (sc) sc.onclick = () => QR.startScan(t => gen(t), e => this.toast(e));
       };
     });
   },
+  codeUI(title, code, next) { return `<p class="pag">${title}</p><div class="qrbox" id="nQR"></div><textarea class="txtin" rows="2" readonly id="nCode" style="font-size:10px">${esc(code)}</textarea><div class="row" style="margin:8px 0"><button class="btn sm" id="nCopy">Copiar</button><button class="btn sm" id="nShare">Compartir</button></div>${next}`; },
+  bindCode(code) {
+    try { const q = $('#nQR'); if (q) q.appendChild(QR.canvas(code, 3, 3)); } catch (e) { }
+    $('#nCopy').onclick = () => { const t = $('#nCode'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => this.toast('Código copiado ✓')).catch(() => { document.execCommand('copy'); this.toast('Código copiado ✓'); }); };
+    $('#nShare').onclick = () => this.shareCode(code);
+  },
+  /* sala del anfitrión: lista de jugadores, invitar (QR/código) y empezar */
+  renderLobby() {
+    const box = $('#nBox'); if (!box || Net.role !== 'host') return;
+    const me = Save.data.profile, ps = [{ id: 0, name: me.name + ' (tú)' }].concat(Object.entries(this.netPlayers).map(([id, p]) => ({ id: +id, name: p.name })));
+    const pend = Net.pending, canInv = Net.peers.length < Net.MAX && !pend, ready = Object.keys(this.netPlayers).length > 0;
+    if (this._lobbyBusy) return;
+    box.innerHTML = `<p class="pag">Sala · ${ps.length} de 4 jugadores</p><div class="roster">${ps.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('')}</div>
+      <div id="nInv"></div><div class="col">${canInv ? '<button class="btn" id="nInvite">+ Invitar jugador</button>' : ''}<button class="btn pri" id="nStart" ${ready ? '' : 'disabled'}>▶ ¡Empezar carrera!</button></div><p class="m" id="nStat"></p>`;
+    const inv = $('#nInvite'); if (inv) inv.onclick = async () => {
+      this._lobbyBusy = true; $('#nInv').innerHTML = '<p class="m">Preparando invitación…</p>';
+      try { const code = await Net.host(); $('#nInv').innerHTML = this.codeUI('Invitación ' + Net.peers.length + ': que tu amigo escanee este QR', code, '<p class="pag">Luego escanea o pega su respuesta</p>' + (QR.canScan() ? '<div class="col"><button class="btn amb" id="nScanA">📷 Escanear respuesta</button></div>' : '') + '<textarea class="txtin" rows="2" id="nAns" style="font-size:10px" placeholder="JE1a…"></textarea><div class="col"><button class="btn pri" id="nGo">Conectar</button></div>'); this.bindCode(code);
+        const acc = async t => { try { await Net.accept(t); this._lobbyBusy = false; this.toast('Conectando…'); setTimeout(() => this.renderLobby(), 300); } catch (e) { this.toast(e.message); } };
+        $('#nGo').onclick = () => acc($('#nAns').value); const sa = $('#nScanA'); if (sa) sa.onclick = () => QR.startScan(t => acc(t), e => this.toast(e));
+      } catch (e) { this._lobbyBusy = false; $('#nInv').innerHTML = '<p class="m">No se pudo crear la invitación: ' + esc(e.message) + '</p>'; }
+    };
+    const st = $('#nStart'); if (st) st.onclick = () => this.netStartRace();
+  },
   shareCode(code) { const t = 'Juega EnCicla · código de sala: ' + code; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else { const wa = 'https://wa.me/?text=' + encodeURIComponent(t); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); } },
   netLobbyMsg(m) {
-    if (m.t === 'hi') { this.netOpp = { name: String(m.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(m.shirt) ? m.shirt : PAL.cor }; if (Net.role === 'host') this.netStartRace(); }
-    else if (m.t === 'start' && Net.role === 'guest') this.netRace(m.seed, m.lvl || 2);
+    const P = Save.data.profile, clean = p => ({ id: p.id | 0, name: String(p.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(p.shirt) ? p.shirt : PAL.cor });
+    if (m.t === 'id' && Net.role === 'guest') { Net.myId = m.id | 0; Net.send({ t: 'hi', name: P.name, shirt: SHIRTS[P.shirt] }); }
+    else if (m.t === 'hi' && Net.role === 'host') { this.netPlayers[m.from] = Object.assign(clean(m), { id: m.from | 0 }); this._lobbyBusy = false; Net.send({ t: 'roster', players: this.roster() }); this.renderLobby(); Snd.sfx('coin'); }
+    else if (m.t === 'roster' && Net.role === 'guest') { this.netRoster = (m.players || []).slice(0, 4).map(clean); const r = $('#nRoster'); if (r) r.innerHTML = '<div class="roster">' + this.netRoster.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('') + '</div>'; const st = $('#nStat'); if (st) st.textContent = '¡En la sala! Esperando que empiece la carrera…'; }
+    else if (m.t === 'start' && Net.role === 'guest') this.netRace(m.seed >>> 0, m.lvl || 2, (m.players || []).map(clean));
+    else if (m.t === 'bye' && Net.role === 'host') { delete this.netPlayers[m.from]; this.renderLobby(); }
   },
-  netStartRace() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0; Net.send({ t: 'start', seed, lvl: 2 }); this.netRace(seed, 2); },
-  netRace(seed, lvl) { this.closeModal(); if (Game.mode) Game.stop(); const o = this.netOpp || { name: 'Amigo', shirt: PAL.cor }; Game.start('carrera', lvl, { seed, nov: NOVEDADES[0], net: true, oppName: o.name, oppShirt: o.shirt }); },
+  roster() { const P = Save.data.profile; return [{ id: 0, name: P.name, shirt: SHIRTS[P.shirt] }].concat(Object.values(this.netPlayers)); },
+  netStartRace() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, players = this.roster(); Net.send({ t: 'start', seed, lvl: 2, players }); this.netRace(seed, 2, players); },
+  netRace(seed, lvl, players) {
+    this.closeModal(); if (Game.mode) Game.stop(); const others = (players || []).filter(p => p.id !== Net.myId);
+    Game.start('carrera', lvl, { seed, nov: NOVEDADES[0], net: true, players: others.length ? others : [{ id: 0, name: 'Amigo', shirt: PAL.cor }] });
+  },
   /* ---------- modales ---------- */
   modal(html, bind) { $('#mBody').innerHTML = html; $('#modal').hidden = false; const c = $('#mClose'); if (c) c.onclick = () => this.closeModal(); if (bind) bind(); },
   closeModal() { $('#modal').hidden = true; },
@@ -3201,7 +3640,7 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || roleId === 'carrera' ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || roleId === 'carrera' ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
@@ -3326,7 +3765,8 @@ const LOGROS = [
   { id: 'racha3', name: 'En racha', desc: 'Aprueba 3 turnos seguidos', icon: 'estrella', test: S => S.bestStreak >= 3 },
   { id: 'postal5', name: 'Turista paisa', desc: 'Colecciona 5 postales', icon: 'pin', test: S => S.postales.length >= 5 },
   { id: 'postal15', name: 'Conocedor del valle', desc: 'Colecciona 15 postales', icon: 'pin', test: S => S.postales.length >= 15 },
-  { id: 'postal26', name: 'Álbum completo', desc: 'Colecciona las 26 postales', icon: 'pin', test: S => S.postales.length >= 26 },
+  { id: 'postalTodas', name: 'Álbum completo', desc: 'Colecciona todas las postales del valle', icon: 'pin', test: S => PUBLIC_LM().every(l => S.postales.includes(l.id)) },
+  { id: 'explorador', name: 'Explorador secreto', desc: 'Encuentra la postal secreta', icon: 'pin', test: S => S.postales.includes('trescruces') },
   { id: 'ciclorruta', name: 'Ciclorrutero', desc: 'Logra la racha x4 en ciclorruta', icon: 'hoja', test: S => !!S.flags.cic4 },
   { id: 'hojas100', name: 'Pulmón verde', desc: 'Recoge 100 hojas verdes', icon: 'hoja', test: S => S.stats.leaves >= 100 },
   { id: 'km10', name: '10 km pedaleados', desc: 'Recorre 10 km en el juego', icon: 'usuario', test: S => S.stats.km >= 10 },
@@ -3335,12 +3775,16 @@ const LOGROS = [
   { id: 'supervisor', name: 'Supervisor de corazón', desc: 'Aprueba un turno de Supervisor', icon: 'supervisor', test: S => S.history.some(h => h.m === 'supervisor' && h.p && !h.free) },
   { id: 'carrera', name: 'Más rápido que el bot', desc: 'Gana una carrera de postales', icon: 'balance', test: S => S.history.some(h => h.m === 'carrera' && h.p) },
   { id: 'amigo', name: 'Pedalear en compañía', desc: 'Juega una carrera con un amigo', icon: 'apoyo', test: S => S.history.some(h => h.m === 'carrera' && h.net) },
-  { id: 'reto', name: 'Retador', desc: 'Juega el reto del día', icon: 'estrella', test: S => S.history.some(h => h.reto) }
+  { id: 'reto', name: 'Retador', desc: 'Juega el reto del día', icon: 'estrella', test: S => S.history.some(h => h.reto) },
+  { id: 'maquinista', name: 'Maquinista secreto', desc: 'Descubre el secreto del Metro', icon: 'monitoreo', secret: true, test: S => !!S.flags.metroEgg },
+  { id: 'laberinto', name: 'Jardinero de Moravia', desc: 'Resuelve el laberinto secreto', icon: 'hoja', secret: true, test: S => !!S.flags.mazeEgg },
+  { id: 'dorada', name: 'Bici dorada', desc: 'Encuentra el secreto de la portada', icon: 'estrella', secret: true, test: S => !!S.flags.goldSeen },
+  { id: 'caldascopa', name: 'De Caldas a Copacabana', desc: 'Visita el Alto de San Miguel y Copacabana', icon: 'pin', test: S => S.postales.includes('nacimiento') && S.postales.includes('copacabana') }
 ];
 const Logros = JE.logros = {
   check() { const S = Save.data, n = LOGROS.filter(l => !S.logros.includes(l.id) && l.test(S)); n.forEach(l => S.logros.push(l.id)); return n; },
   html() {
-    const S = Save.data; return `<div class="pag" style="margin-top:16px">Logros · ${S.logros.length} de ${LOGROS.length}</div><div class="logros">${LOGROS.map(l => { const ok = S.logros.includes(l.id); return `<div class="logro ${ok ? 'ok' : ''}"><img class="px" src="${Art.iconURL(l.icon, 2)}" alt=""><b>${esc(l.name)}</b><small>${esc(l.desc)}</small></div>`; }).join('')}</div>`;
+    const S = Save.data; return `<div class="pag" style="margin-top:16px">Logros · ${S.logros.length} de ${LOGROS.length}</div><div class="logros">${LOGROS.map(l => { const ok = S.logros.includes(l.id), hid = l.secret && !ok; return `<div class="logro ${ok ? 'ok' : ''}"><img class="px" src="${Art.iconURL(hid ? 'pin' : l.icon, 2)}" alt=""><b>${hid ? '??? · Secreto' : esc(l.name)}</b><small>${hid ? 'Busca las pistas en «¿Sabías que?»' : esc(l.desc)}</small></div>`; }).join('')}</div>`;
   }
 };
 
@@ -3403,8 +3847,9 @@ UI.shareCard = function (res, meta) {
 
 /* ---- 70-net.js ---- */
 /* =====================================================================
-   RED: sala entre dos dispositivos con WebRTC, sin servidor propio.
-   El "código" (oferta/respuesta comprimida) se comparte por WhatsApp o copiar/pegar.
+   RED: salas de hasta 4 dispositivos con WebRTC, sin servidor propio.
+   El anfitrión crea un código por cada invitado (oferta) y recibe su respuesta.
+   Topología en estrella: el anfitrión reenvía los mensajes de cada invitado a los demás.
    Misma red Wi-Fi: funciona sin internet. Redes distintas: usa STUN público (necesita internet).
    ===================================================================== */
 const b64u = {
@@ -3412,30 +3857,51 @@ const b64u = {
   dec(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; const s = atob(str), b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; }
 };
 const Net = JE.net = {
-  pc: null, ch: null, role: null, status: 'off', onmsg: null, onstatus: null,
+  peers: [], role: null, myId: 0, status: 'off', pending: null, onmsg: null, onstatus: null, MAX: 3,
   supported() { return !!window.RTCPeerConnection; },
-  mk() {
-    this.reset(); const pc = this.pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-    pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') this.setStatus(pc.connectionState); };
+  newPC(peer) {
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') { peer.open = false; this.setStatus(this.openCount() ? 'open' : pc.connectionState); } };
     return pc;
   },
   setStatus(s) { this.status = s; if (this.onstatus) this.onstatus(s); },
-  wire(ch) {
-    this.ch = ch;
-    ch.onopen = () => this.setStatus('open');
-    ch.onclose = () => this.setStatus('closed');
-    ch.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (er) { return; } if (this.onmsg) this.onmsg(m); };
+  openCount() { return this.peers.filter(p => p.open).length; },
+  wire(peer, ch) {
+    peer.ch = ch;
+    ch.onopen = () => { peer.open = true; if (this.role === 'host') this.rawSend(peer, { t: 'id', id: peer.id }); this.setStatus('open'); };
+    ch.onclose = () => { peer.open = false; this.setStatus(this.openCount() ? 'open' : 'closed'); if (this.onmsg) this.onmsg({ t: 'bye', from: this.role === 'host' ? peer.id : 0 }); };
+    ch.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (er) { return; } if (!m || typeof m !== 'object') return; this.recv(peer, m); };
   },
-  ice() { const pc = this.pc; return new Promise(res => { if (pc.iceGatheringState === 'complete') return res(); const t = setTimeout(res, 3500); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } }); }); },
-  async host() { const pc = this.mk(); this.role = 'host'; this.wire(pc.createDataChannel('je', { ordered: true })); await pc.setLocalDescription(await pc.createOffer()); await this.ice(); this.setStatus('waiting'); return this.pack({ t: 'o', s: pc.localDescription.sdp }); },
+  recv(peer, m) {
+    if (this.role === 'host') { m.from = peer.id; for (const q of this.peers) if (q !== peer && q.open) this.rawSend(q, m); }
+    if (this.onmsg) this.onmsg(m);
+  },
+  ice(pc) { return new Promise(res => { if (pc.iceGatheringState === 'complete') return res(); const t = setTimeout(res, 3500); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } }); }); },
+  /* anfitrión: un código (oferta) por invitado */
+  async host() {
+    if (this.role !== 'host') { this.reset(); this.role = 'host'; this.myId = 0; }
+    if (this.peers.length >= this.MAX) throw new Error('La sala ya tiene 4 jugadores');
+    const peer = { id: this.peers.length + 1, open: false }; peer.pc = this.newPC(peer); this.peers.push(peer);
+    this.wire(peer, peer.pc.createDataChannel('je', { ordered: true }));
+    await peer.pc.setLocalDescription(await peer.pc.createOffer()); await this.ice(peer.pc);
+    this.pending = peer; this.setStatus('waiting');
+    return this.pack({ t: 'o', s: peer.pc.localDescription.sdp });
+  },
+  async accept(code) {
+    const o = await this.unpack(code); if (o.t !== 'a') throw new Error('Ese no es un código de respuesta');
+    const p = this.pending; if (!p) throw new Error('Primero crea un código de invitación');
+    await p.pc.setRemoteDescription({ type: 'answer', sdp: o.s }); this.pending = null;
+  },
+  /* invitado */
   async join(code) {
     const o = await this.unpack(code); if (o.t !== 'o') throw new Error('Ese no es un código de sala');
-    const pc = this.mk(); this.role = 'guest'; pc.ondatachannel = e => this.wire(e.channel);
-    await pc.setRemoteDescription({ type: 'offer', sdp: o.s }); await pc.setLocalDescription(await pc.createAnswer()); await this.ice(); this.setStatus('waiting');
-    return this.pack({ t: 'a', s: pc.localDescription.sdp });
+    this.reset(); this.role = 'guest'; const peer = { id: 0, open: false }; peer.pc = this.newPC(peer); this.peers = [peer];
+    peer.pc.ondatachannel = e => this.wire(peer, e.channel);
+    await peer.pc.setRemoteDescription({ type: 'offer', sdp: o.s }); await peer.pc.setLocalDescription(await peer.pc.createAnswer()); await this.ice(peer.pc); this.setStatus('waiting');
+    return this.pack({ t: 'a', s: peer.pc.localDescription.sdp });
   },
-  async accept(code) { const o = await this.unpack(code); if (o.t !== 'a') throw new Error('Ese no es un código de respuesta'); if (!this.pc) throw new Error('Primero crea la sala'); await this.pc.setRemoteDescription({ type: 'answer', sdp: o.s }); },
-  send(m) { if (this.ch && this.ch.readyState === 'open') { try { this.ch.send(JSON.stringify(m)); } catch (e) { } } },
+  rawSend(peer, m) { if (peer.ch && peer.ch.readyState === 'open') { try { peer.ch.send(JSON.stringify(m)); } catch (e) { } } },
+  send(m) { if (this.role === 'host') m.from = 0; for (const p of this.peers) if (p.open) this.rawSend(p, m); },
   async pack(o) {
     const txt = JSON.stringify(o);
     if (window.CompressionStream) { const cs = new Blob([txt]).stream().pipeThrough(new CompressionStream('deflate-raw')); return 'JE1' + o.t + b64u.enc(new Uint8Array(await new Response(cs).arrayBuffer())); }
@@ -3448,7 +3914,257 @@ const Net = JE.net = {
     if (v === 'JE0') return JSON.parse(new TextDecoder().decode(bytes));
     throw new Error('Código no válido');
   },
-  reset() { try { if (this.ch) this.ch.close(); } catch (e) { } try { if (this.pc) this.pc.close(); } catch (e) { } this.pc = this.ch = null; this.role = null; this.status = 'off'; }
+  reset() { for (const p of this.peers) { try { if (p.ch) p.ch.close(); } catch (e) { } try { if (p.pc) p.pc.close(); } catch (e) { } } this.peers = []; this.pending = null; this.role = null; this.myId = 0; this.status = 'off'; }
+};
+
+/* ---- 72-qr.js ---- */
+/* =====================================================================
+   QR · codificador propio (modo byte UTF-8, versiones 1–40, ECC L–H)
+   y ayudante de escaneo con cámara (BarcodeDetector). Sin dependencias.
+   ===================================================================== */
+// Tablas por versión (índice 0 sin uso). Filas por nivel: L, M, Q, H
+const qrECC = [ // codewords de corrección por bloque
+  [-1, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+  [-1, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28],
+  [-1, 13, 22, 18, 26, 18, 24, 18, 22, 20, 24, 28, 26, 24, 20, 30, 24, 28, 28, 26, 30, 28, 30, 30, 30, 30, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+  [-1, 17, 28, 22, 16, 22, 28, 26, 26, 24, 28, 24, 28, 22, 24, 24, 30, 28, 28, 26, 28, 30, 24, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]];
+const qrBLK = [ // número de bloques de corrección
+  [-1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 4, 6, 6, 6, 6, 7, 8, 8, 9, 9, 10, 12, 12, 12, 13, 14, 15, 16, 17, 18, 19, 19, 20, 21, 22, 24, 25],
+  [-1, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16, 17, 17, 18, 20, 21, 23, 25, 26, 28, 29, 31, 33, 35, 37, 38, 40, 43, 45, 47, 49],
+  [-1, 1, 1, 2, 2, 4, 4, 6, 6, 8, 8, 8, 10, 12, 16, 12, 17, 16, 18, 21, 20, 23, 23, 25, 27, 29, 34, 34, 35, 38, 40, 43, 45, 48, 51, 53, 56, 59, 62, 65, 68],
+  [-1, 1, 1, 2, 4, 4, 4, 5, 6, 8, 8, 11, 11, 16, 16, 18, 16, 19, 21, 25, 25, 25, 34, 30, 32, 35, 37, 40, 42, 45, 48, 51, 54, 57, 60, 63, 66, 70, 74, 77, 81]];
+const qrFMT = [1, 0, 3, 2]; // bits de nivel en la información de formato (L, M, Q, H)
+const qrMASK = [ // x = columna, y = fila; true = invertir módulo
+  (x, y) => (x + y) % 2 === 0, (x, y) => y % 2 === 0, (x, y) => x % 3 === 0, (x, y) => (x + y) % 3 === 0,
+  (x, y) => ((x / 3 | 0) + (y / 2 | 0)) % 2 === 0, (x, y) => x * y % 2 + x * y % 3 === 0,
+  (x, y) => (x * y % 2 + x * y % 3) % 2 === 0, (x, y) => ((x + y) % 2 + x * y % 3) % 2 === 0];
+
+// Aritmética en GF(256) con polinomio 0x11D (tablas exp/log)
+const qrEXP = new Uint8Array(512), qrLOG = new Uint8Array(256);
+for (let i = 0, x = 1; i < 255; i++) { qrEXP[i] = x; qrLOG[x] = i; x = (x << 1) ^ (x & 0x80 ? 0x11D : 0); }
+for (let i = 255; i < 512; i++) qrEXP[i] = qrEXP[i - 255];
+const qrMul = (a, b) => a && b ? qrEXP[qrLOG[a] + qrLOG[b]] : 0;
+
+// Reed–Solomon: polinomio generador de grado `deg` (coeficientes sin el término líder)
+function qrRSDiv(deg) {
+  const r = new Uint8Array(deg); r[deg - 1] = 1;
+  for (let i = 0, root = 1; i < deg; i++, root = qrMul(root, 2))
+    for (let j = 0; j < deg; j++) { r[j] = qrMul(r[j], root); if (j + 1 < deg) r[j] ^= r[j + 1]; }
+  return r;
+}
+function qrRSRem(data, div) { // resto de data·x^deg / generador = codewords ECC
+  const n = div.length, r = new Uint8Array(n);
+  for (let k = 0; k < data.length; k++) {
+    const f = data[k] ^ r[0]; r.copyWithin(0, 1); r[n - 1] = 0;
+    if (f) for (let i = 0; i < n; i++) r[i] ^= qrMul(div[i], f);
+  }
+  return r;
+}
+
+// Módulos disponibles para datos+ECC (sin patrones de función ni formato/versión)
+function qrRaw(v) {
+  let r = (16 * v + 128) * v + 64;
+  if (v >= 2) { const n = (v / 7 | 0) + 2; r -= (25 * n - 10) * n - 55; if (v >= 7) r -= 36; }
+  return r;
+}
+const qrDataCW = (v, e) => (qrRaw(v) >> 3) - qrECC[e][v] * qrBLK[e][v];
+function qrAlign(v) { // centros de los patrones de alineación
+  if (v === 1) return [];
+  const n = (v / 7 | 0) + 2, step = ((v * 8 + n * 3 + 5) / (n * 4 - 4) | 0) * 2, r = [6];
+  for (let p = v * 4 + 10; r.length < n; p -= step) r.splice(1, 0, p);
+  return r;
+}
+// Divide en bloques, añade ECC a cada uno e intercala
+function qrBlocks(data, v, e) {
+  const nb = qrBLK[e][v], el = qrECC[e][v], raw = qrRaw(v) >> 3,
+    nShort = nb - raw % nb, sLen = raw / nb | 0, div = qrRSDiv(el), blk = [];
+  for (let i = 0, k = 0; i < nb; i++) {
+    const len = sLen - el + (i < nShort ? 0 : 1), d = data.subarray(k, k + len); k += len;
+    blk.push([d, qrRSRem(d, div)]);
+  }
+  const out = new Uint8Array(raw); let o = 0;
+  for (let i = 0; i <= sLen - el; i++) for (const [d] of blk) if (i < d.length) out[o++] = d[i];
+  for (let i = 0; i < el; i++) for (const [, c] of blk) out[o++] = c[i];
+  return out;
+}
+// Penalización estándar (reglas N1–N4) para elegir máscara
+function qrPenalty(m, n) {
+  let p = 0, dark = 0;
+  // N3: historial de las últimas 7 rachas para hallar 1:1:3:1:1 con 4 claros a un lado (el borde cuenta como claro)
+  const h = new Int32Array(7), add = len => { if (!h[0]) len += n; h.copyWithin(1, 0, 6); h[0] = len; },
+    fnd = () => { const u = h[1]; return u > 0 && h[2] === u && h[3] === u * 3 && h[4] === u && h[5] === u ? (h[0] >= u * 4 && h[6] >= u) + (h[6] >= u * 4 && h[0] >= u) : 0; };
+  for (let pass = 0; pass < 2; pass++) // 0: filas, 1: columnas
+    for (let a = 0; a < n; a++) {
+      let col = 0, run = 0; h.fill(0);
+      for (let b = 0; b < n; b++) {
+        const c = pass ? m[b * n + a] : m[a * n + b];
+        if (c === col) { if (++run === 5) p += 3; else if (run > 5) p++; } // N1: rachas de 5+
+        else { add(run); if (!col) p += fnd() * 40; col = c; run = 1; }
+      }
+      if (col) { add(run); run = 0; }
+      add(run + n); p += fnd() * 40;
+    }
+  for (let y = 0; y < n - 1; y++) for (let x = 0; x < n - 1; x++) {
+    const i = y * n + x, c = m[i];
+    if (c === m[i + 1] && c === m[i + n] && c === m[i + n + 1]) p += 3;
+  }
+  for (let i = 0; i < n * n; i++) dark += m[i];
+  return p + (Math.ceil(Math.abs(dark * 20 - n * n * 10) / (n * n)) - 1) * 10;
+}
+function qrCamErr(e) {
+  const n = (e && e.name) || '';
+  if (/NotAllowed|Security|PermissionDenied/.test(n)) return 'Permiso de cámara denegado. Actívalo en la configuración del navegador o escribe el código a mano.';
+  if (/NotFound|Overconstrained|DevicesNotFound/.test(n)) return 'No se encontró ninguna cámara en este dispositivo.';
+  if (/NotReadable|TrackStart|Abort/.test(n)) return 'La cámara está ocupada por otra aplicación.';
+  return 'No se pudo abrir la cámara' + (e && e.message ? ': ' + e.message : '.');
+}
+
+const QR = JE.qr = {
+  _scan: null, // estado del escaneo activo
+  // Matriz QR del texto (UTF-8, modo byte). ecl = nivel mínimo ('L' por defecto);
+  // se usa la versión más pequeña que cabe y luego se sube el nivel si sigue cabiendo.
+  matrix(text, ecl = 'L') {
+    const bytes = new TextEncoder().encode(String(text));
+    let e = Math.max(0, 'LMQH'.indexOf(ecl)), ver = 0;
+    for (let v = 1; v <= 40 && !ver; v++)
+      if (4 + (v < 10 ? 8 : 16) + bytes.length * 8 <= qrDataCW(v, e) * 8) ver = v;
+    if (!ver) throw new Error('QR: texto demasiado largo (' + bytes.length + ' bytes)');
+    const cc = ver < 10 ? 8 : 16, used = 4 + cc + bytes.length * 8;
+    while (e < 3 && used <= qrDataCW(ver, e + 1) * 8) e++;
+    // Flujo de bits: modo 0100, longitud, datos, terminador, relleno
+    const nData = qrDataCW(ver, e), data = new Uint8Array(nData); let bl = 0;
+    const put = (val, n) => { for (let i = n - 1; i >= 0; i--, bl++) data[bl >> 3] |= (val >>> i & 1) << (7 - (bl & 7)); };
+    put(4, 4); put(bytes.length, cc); for (const b of bytes) put(b, 8);
+    bl += Math.min(4, nData * 8 - bl); bl = (bl + 7) & ~7; // terminador + alinear a byte
+    for (let i = bl >> 3, p = 0xEC; i < nData; i++, p ^= 0xEC ^ 0x11) data[i] = p;
+    const cw = qrBlocks(data, ver, e);
+    // Patrones de función
+    const size = ver * 4 + 17, mod = new Uint8Array(size * size), fn = new Uint8Array(size * size);
+    const set = (x, y, d) => { mod[y * size + x] = d ? 1 : 0; fn[y * size + x] = 1; };
+    for (let i = 0; i < size; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); } // temporización
+    for (const [cx, cy] of [[3, 3], [size - 4, 3], [3, size - 4]]) // localizadores + separadores
+      for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+        const x = cx + dx, y = cy + dy, d = Math.max(Math.abs(dx), Math.abs(dy));
+        if (x >= 0 && x < size && y >= 0 && y < size) set(x, y, d !== 2 && d !== 4);
+      }
+    const al = qrAlign(ver), na = al.length; // alineación (salvo las 3 esquinas de localizadores)
+    for (let i = 0; i < na; i++) for (let j = 0; j < na; j++) {
+      if ((i === 0 && (j === 0 || j === na - 1)) || (i === na - 1 && j === 0)) continue;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++)
+        set(al[i] + dx, al[j] + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }
+    const drawFmt = mask => { // información de formato (BCH 15,5) en ambas copias
+      const d = qrFMT[e] << 3 | mask; let r = d;
+      for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+      const b = (d << 10 | r) ^ 0x5412, g = i => b >>> i & 1;
+      for (let i = 0; i <= 5; i++) set(8, i, g(i));
+      set(8, 7, g(6)); set(8, 8, g(7)); set(7, 8, g(8));
+      for (let i = 9; i < 15; i++) set(14 - i, 8, g(i));
+      for (let i = 0; i < 8; i++) set(size - 1 - i, 8, g(i));
+      for (let i = 8; i < 15; i++) set(8, size - 15 + i, g(i));
+      set(8, size - 8, 1); // módulo oscuro fijo
+    };
+    drawFmt(0); // reserva
+    if (ver >= 7) { // información de versión (BCH 18,6)
+      let r = ver; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1F25);
+      const b = ver << 12 | r;
+      for (let i = 0; i < 18; i++) { const bit = b >>> i & 1, a = size - 11 + i % 3, c = i / 3 | 0; set(a, c, bit); set(c, a, bit); }
+    }
+    // Colocación en zigzag de columnas dobles, de derecha a izquierda
+    for (let right = size - 1, i = 0, nb = cw.length * 8; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      const up = ((right + 1) & 2) === 0;
+      for (let vert = 0; vert < size; vert++) for (let j = 0; j < 2; j++) {
+        const x = right - j, y = up ? size - 1 - vert : vert, k = y * size + x;
+        if (!fn[k] && i < nb) { mod[k] = cw[i >> 3] >>> (7 - (i & 7)) & 1; i++; }
+      }
+    }
+    // Probar las 8 máscaras y quedarse con la de menor penalización
+    const flip = m => { for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) { const k = y * size + x; if (!fn[k] && qrMASK[m](x, y)) mod[k] ^= 1; } };
+    let best = 0, bestP = Infinity;
+    for (let m = 0; m < 8; m++) {
+      flip(m); drawFmt(m);
+      const p = qrPenalty(mod, size); if (p < bestP) { bestP = p; best = m; }
+      flip(m);
+    }
+    flip(best); drawFmt(best);
+    return { size, mod, ver, ecl: 'LMQH'[e], mask: best };
+  },
+  // Canvas nítido: `scale` px por módulo, `margin` módulos de zona silenciosa
+  canvas(text, scale = 4, margin = 4, dark = '#0a2342', light = '#ffffff') {
+    const q = text && text.mod ? text : QR.matrix(text), { size, mod } = q;
+    scale = Math.max(1, Math.round(scale)); margin = Math.max(0, Math.round(margin));
+    const n = (size + margin * 2) * scale, cv = document.createElement('canvas'), g = cv.getContext('2d');
+    cv.width = cv.height = n; cv.style.imageRendering = 'pixelated';
+    g.fillStyle = light; g.fillRect(0, 0, n, n); g.fillStyle = dark;
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      if (!mod[y * size + x]) continue;
+      let x2 = x; while (x2 + 1 < size && mod[y * size + x2 + 1]) x2++; // agrupar tramos horizontales
+      g.fillRect((margin + x) * scale, (margin + y) * scale, (x2 - x + 1) * scale, scale); x = x2;
+    }
+    return cv;
+  },
+  // ---- Escaneo con cámara ----
+  canScan() { return typeof window !== 'undefined' && 'BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia); },
+  // Detección única sobre un <video>/<img>/<canvas>: Promise<string|null>
+  async scan(src) {
+    if (!('BarcodeDetector' in window)) return null;
+    const det = QR._det || (QR._det = new BarcodeDetector({ formats: ['qr_code'] }));
+    const c = (await det.detect(src) || []).find(c => c.rawValue);
+    return c ? c.rawValue : null;
+  },
+  // Abre la cámara trasera a pantalla completa; llama onText(texto) una sola vez y cierra.
+  // Cancelar (botón o Esc) cierra sin llamar a nada. Errores -> onError(mensaje en español).
+  startScan(onText, onError) {
+    QR.stopScan();
+    const err = msg => { QR.stopScan(); if (onError) onError(msg); };
+    if (!QR.canScan()) { err('Este navegador no puede leer códigos QR con la cámara. Escribe el código a mano.'); return false; }
+    let det;
+    try { det = new BarcodeDetector({ formats: ['qr_code'] }); }
+    catch (e) { err('Este navegador no puede leer códigos QR con la cámara. Escribe el código a mano.'); return false; }
+    const ov = document.createElement('div');
+    ov.className = 'qrScan';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#0a2342;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:16px;box-sizing:border-box;text-align:center;font:600 17px system-ui,sans-serif';
+    ov.innerHTML = '<div>Apunta la cámara al código QR</div>'
+      + '<div style="width:min(82vw,62vh,440px);aspect-ratio:1;border:3px solid #fff;border-radius:14px;overflow:hidden;background:#000">'
+      + '<video playsinline muted autoplay style="width:100%;height:100%;object-fit:cover;display:block"></video></div>'
+      + '<button class="btn gh" type="button">Cancelar</button>';
+    const video = $('video', ov);
+    video.muted = true;
+    $('button', ov).onclick = () => QR.stopScan();
+    const st = QR._scan = { ov, video, stream: null, timer: 0, busy: false };
+    st.onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); QR.stopScan(); } };
+    addEventListener('keydown', st.onKey, true);
+    document.body.appendChild(ov);
+    navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } })
+      .then(stream => {
+        if (QR._scan !== st) { stream.getTracks().forEach(t => t.stop()); return; } // cancelado mientras tanto
+        st.stream = stream; video.srcObject = stream;
+        const pl = video.play(); if (pl && pl.catch) pl.catch(() => {});
+        const tick = () => {
+          if (QR._scan !== st) return;
+          if (!st.busy && video.readyState >= 2) {
+            st.busy = true;
+            det.detect(video).then(codes => {
+              st.busy = false;
+              const c = (codes || []).find(c => c.rawValue);
+              if (c && QR._scan === st) { QR.stopScan(); onText(c.rawValue); }
+            }, () => { st.busy = false; });
+          }
+          st.timer = setTimeout(tick, 250);
+        };
+        tick();
+      }, e => { if (QR._scan === st) err(qrCamErr(e)); });
+    return true;
+  },
+  stopScan() {
+    const st = QR._scan; if (!st) return;
+    QR._scan = null; clearTimeout(st.timer);
+    removeEventListener('keydown', st.onKey, true);
+    if (st.stream) st.stream.getTracks().forEach(t => t.stop());
+    try { st.video.srcObject = null; } catch (e) { /* nada */ }
+    st.ov.remove();
+  },
 };
 
 /* ---- 90-bot.js ---- */

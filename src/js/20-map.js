@@ -1,24 +1,32 @@
 /* =====================================================================
    MAPA: Valle de Aburrá en miniatura (norte arriba, río de sur a norte)
    ===================================================================== */
-const MW = 150, MH = 260, TS = 8, CH = 32;
+/* v0.4: mapa ampliado de Caldas (sur) a Barbosa (norte), como el sistema real.
+   OY = filas nuevas al norte (Bello, Copacabana, Girardota, Barbosa); al sur se suman Envigado, Sabaneta, La Estrella y Caldas.
+   Los datos se escriben en coordenadas "yy" (las del mapa original) y se desplazan +OY al cargar. */
+const OY = 120, MW = 150, MH = 432, TS = 8, CH = 32;
 const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15 };
 const SOLID = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0];
 const TRUCK_OK = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1];
 const SURF = [.55, 0, 0, 0, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9];
 const PATHC = [6, 0, 0, 0, 3, 3, 4, 2, 0, 0, 3, 3, 3, 0, 6, 3];
 const MINI_COL = ['#4f8f45', '#24502c', '#8a4a30', '#56657c', '#2b3240', '#384257', '#7d8696', '#9bd341', '#3d8cb0', '#777777', '#cfc4a6', '#384257', '#ffffff', '#c9a24a', '#1e2430', '#56c7ff'];
-const RX = new Float32Array(MH); for (let y = 0; y < MH; y++) RX[y] = 66 + (MH - y) * .07 + 3 * Math.sin(y / 19);
+/* al norte de Bello el valle (y el río) gira hacia el noreste, rumbo a Copacabana */
+const bendN = y => { const yy = y - OY; return yy < -6 ? (-6 - yy) * .5 : 0; };
+const RX = new Float32Array(MH); for (let y = 0; y < MH; y++) RX[y] = 66 + (260 - Math.max(0, y - OY)) * .07 + 3 * Math.sin((y - OY) / 19) + bendN(y);
+/* pueblos del corredor norte: fuera de ellos el valle es rural (fincas y potreros) */
+const TOWNS_N = [{ name: 'Copacabana', yy: -34, dx: -14, r: 15 }, { name: 'Girardota', yy: -68, dx: 11, r: 13 }, { name: 'Barbosa', yy: -104, dx: -15, r: 12 }];
 const rxi = y => Math.round(RX[clamp(Math.floor(y), 0, MH - 1)]);
 const rxf = py => { const ty = clamp(py / TS, 0, MH - 1.001), i = Math.floor(ty); return lerp(RX[i], RX[Math.min(MH - 1, i + 1)], ty - i); };
 
-const CALLES = []; for (let k = 0; k < 22; k++) CALLES.push(4 + 12 * k);
+const shiftKeys = o => { const r = {}; for (const k in o) r[+k + OY] = o[k]; return r; };
+const CALLES = []; for (let k = 0; k < 36; k++) CALLES.push(4 + 12 * k);
 const CARRERAS = []; for (let k = 0; k < 14; k++) CARRERAS.push(3 + 11 * k);
-const AVE_EW = { 16: 'Calle 44 · Bello', 52: 'Calle 67 Barranquilla', 88: 'Avenida Colombia', 100: 'Calle San Juan', 124: 'Calle 33', 136: 'Calle 30', 160: 'Calle 10', 184: 'Calle 4 Sur', 208: 'Calle 37 Sur · Envigado', 232: 'Calle 75 Sur · Sabaneta' };
-const CIC_EW = { 52: [0, MW], 100: [0, MW], 160: [0, MW], 208: [0, MW] };
+const AVE_EW = shiftKeys({ '-104': 'Calle 15 · Barbosa', '-68': 'Calle 7 · Girardota', '-32': 'Calle 50 · Copacabana', '-20': 'Diagonal 55 · Niquía', 16: 'Calle 44 · Bello', 52: 'Calle 67 Barranquilla', 88: 'Avenida Colombia', 100: 'Calle San Juan', 124: 'Calle 33', 136: 'Calle 30', 160: 'Calle 10', 184: 'Calle 4 Sur', 208: 'Calle 37 Sur · Envigado', 232: 'Calle 75 Sur · Sabaneta', 268: 'Calle 77 Sur · La Estrella', 292: 'Calle 129 Sur · Caldas' });
+const CIC_EW = shiftKeys({ '-20': [0, MW], 52: [0, MW], 100: [0, MW], 160: [0, MW], 208: [0, MW], 268: [0, MW] });
 const AVE_NS = { 25: 'Avenida 80', 47: 'Carrera 65', 91: 'Avenida Las Vegas', 102: 'Avenida El Poblado' };
-const CIC_NS = { 25: [56, 204], 47: [0, MH], 102: [118, 236] };
-const nsName = (x, y) => x === 91 && y < 128 ? 'Avenida Oriental' : x === 102 && y < 118 ? 'Carrera 46' : AVE_NS[x];
+const CIC_NS = { 25: [56 + OY, 204 + OY], 47: [OY - 30, MH], 91: [OY - 50, OY + 22], 102: [118 + OY, 282 + OY] };
+const nsName = (x, y) => x === 91 && y < 128 + OY ? 'Avenida Oriental' : x === 102 && y < 118 + OY ? 'Carrera 46' : AVE_NS[x];
 
 /* Lugares (postales). x,y,w,h en baldosas. */
 const LANDMARKS = [
@@ -50,31 +58,80 @@ const LANDMARKS = [
   { id: 'sabaneta', name: 'Parque de Sabaneta', muni: 'Sabaneta', x: 84, y: 236, w: 10, h: 8, k: 'iglesia', fact: 'Sabaneta es el municipio más pequeño de Colombia en extensión.' },
   { id: 'estrella', name: 'Parque de La Estrella', muni: 'La Estrella', x: 40, y: 244, w: 10, h: 8, k: 'iglesia', fact: 'La Estrella mira al valle desde el suroccidente.' }
 ];
+/* nuevos lugares v0.4 (coordenadas yy) */
+LANDMARKS.push(
+  { id: 'barbosa', name: 'Parque de Barbosa', muni: 'Barbosa', x: 116, y: -117, w: 11, h: 9, k: 'iglesia', fact: 'Barbosa es el municipio más al norte del Valle de Aburrá: allí llega EnCicla.' },
+  { id: 'girardota', name: 'Parque de Girardota', muni: 'Girardota', x: 123, y: -81, w: 11, h: 9, k: 'iglesia', fact: 'Girardota es famosa por la catedral del Señor Caído, destino de peregrinos.' },
+  { id: 'copacabana', name: 'Parque de Copacabana', muni: 'Copacabana', x: 74, y: -45, w: 11, h: 9, k: 'iglesia', fact: 'Copacabana, al norte del valle, es uno de los municipios más antiguos de Antioquia.' },
+  { id: 'quitasol', name: 'Cerro Quitasol', muni: 'Bello', x: 34, y: -16, w: 14, h: 14, k: 'volador', fact: 'El cerro tutelar de Bello: su silueta se ve desde casi todo el norte del valle.' },
+  { id: 'fabricato', name: 'Fabricato', muni: 'Bello', x: 101, y: -20, w: 12, h: 8, k: 'mamm', fact: 'Fábrica textil histórica de Bello: el valle fue la cuna de la industria textil del país.' },
+  { id: 'hospbello', name: 'Hospital Marco Fidel Suárez', muni: 'Bello', x: 54, y: -14, w: 10, h: 8, k: 'campus', fact: 'Edificio histórico de Bello, con patios y corredores de estilo republicano.' },
+  { id: 'otraparte', name: 'Casa Museo Otraparte', muni: 'Envigado', x: 110, y: 214, w: 9, h: 7, k: 'lleras', fact: 'Casa del escritor Fernando González, "el filósofo de Otraparte", hoy museo y café.' },
+  { id: 'ditaires', name: 'Parque Ditaires', muni: 'Itagüí', x: 26, y: 222, w: 13, h: 9, k: 'botanico', fact: 'Gran parque de Itagüí con zonas verdes, piscinas y lago.' },
+  { id: 'caldas', name: 'Parque de Caldas', muni: 'Caldas', x: 42, y: 280, w: 12, h: 9, k: 'iglesia', fact: 'Caldas es el municipio más al sur del Valle de Aburrá.' },
+  { id: 'nacimiento', name: 'Alto de San Miguel', muni: 'Caldas', x: 80, y: 290, w: 14, h: 14, k: 'volador', fact: 'Aquí, en Caldas, nace el río Medellín, que recorre todo el valle hacia el norte hasta Barbosa.' },
+  { id: 'trescruces', name: 'Cerro de las Tres Cruces', muni: 'Medellín', x: 9, y: 148, w: 12, h: 12, k: 'cruces', secret: true, fact: '¡Postal secreta! Desde sus tres cruces se ve todo el valle. Muchos suben a pie a hacer ejercicio.' }
+);
+LANDMARKS.forEach(l => l.y += OY);
 const LM = {}; LANDMARKS.forEach(l => LM[l.id] = l);
+const PUBLIC_LM = () => LANDMARKS.filter(l => l.id !== 'depot' && !l.secret);
 
-/* Estaciones EnCicla (inspiradas en el sistema real; ubicaciones estilizadas) */
+/* Estaciones EnCicla: ~107, repartidas por barrios como en el mapa de la app oficial (Caldas → Barbosa).
+   Nombres por barrio/lugar (aproximados); ubicaciones estilizadas. [id, nombre, municipio, x, yy, tipo m/a, demanda] */
 const STATIONS_DEF = [
-  ['niquia', 'Niquía', 'Bello', 97, 10, 'a', 'res'], ['bello', 'Parque de Bello', 'Bello', 57, 24, 'm', 'res'],
-  ['terminalN', 'Terminal del Norte', 'Medellín', 66, 51, 'm', 'mix'], ['moravia', 'Moravia', 'Medellín', 99, 42, 'm', 'res'],
-  ['unal', 'Universidad Nacional', 'Medellín', 44, 67, 'm', 'uni'], ['botanico', 'Jardín Botánico', 'Medellín', 99, 54, 'a', 'mix'],
-  ['udea', 'Universidad de Antioquia', 'Medellín', 114, 74, 'm', 'uni'], ['explora', 'Parque Explora', 'Medellín', 96, 78, 'a', 'mix'],
-  ['carlose', 'Carlos E. Restrepo', 'Medellín', 58, 80, 'm', 'uni'], ['estadio', 'Estadio', 'Medellín', 37, 82, 'm', 'mix'],
-  ['prado', 'Prado', 'Medellín', 110, 86, 'a', 'work'], ['floresta', 'Floresta', 'Medellín', 18, 105, 'a', 'res'],
-  ['suramericana', 'Suramericana', 'Medellín', 57, 106, 'm', 'work'], ['berrio', 'Parque Berrío', 'Medellín', 109, 96, 'm', 'work'],
-  ['sanantonio', 'San Antonio', 'Medellín', 100, 108, 'm', 'work'], ['plazamayor', 'Plaza Mayor', 'Medellín', 92, 111, 'a', 'work'],
-  ['ayacucho', 'Ayacucho', 'Medellín', 119, 110, 'm', 'res'], ['laureles', 'Laureles', 'Medellín', 36, 123, 'm', 'res'],
-  ['parquesrio', 'Parques del Río', 'Medellín', 86, 126, 'a', 'mix'], ['industriales', 'Industriales', 'Medellín', 90, 132, 'a', 'work'],
-  ['ciudadrio', 'Ciudad del Río', 'Medellín', 92, 148, 'a', 'work'], ['poblado', 'Parque del Poblado', 'Medellín', 106, 139, 'm', 'work'],
-  ['lleras', 'Parque Lleras', 'Medellín', 120, 158, 'm', 'mix'], ['terminalS', 'Terminal del Sur', 'Medellín', 57, 160, 'm', 'mix'],
-  ['belen', 'Belén', 'Medellín', 22, 150, 'm', 'res'], ['guayabal', 'Guayabal', 'Medellín', 55, 177, 'a', 'res'],
-  ['eafit', 'EAFIT', 'Medellín', 92, 178, 'm', 'uni'], ['aguacatala', 'Aguacatala', 'Medellín', 86, 187, 'a', 'mix'],
-  ['ayura', 'Ayurá', 'Envigado', 84, 198, 'a', 'res'], ['envigado', 'Parque de Envigado', 'Envigado', 100, 212, 'm', 'res'],
-  ['itagui', 'Parque de Itagüí', 'Itagüí', 46, 222, 'm', 'res'], ['sabaneta', 'Parque de Sabaneta', 'Sabaneta', 88, 247, 'm', 'res'],
-  ['estrella', 'La Estrella', 'La Estrella', 44, 255, 'a', 'res']
+  // Barbosa, Girardota, Copacabana
+  ['barbosa1', 'Parque de Barbosa', 'Barbosa', 122, -100, 'a', 'res'], ['barbosa2', 'Barbosa Norte', 'Barbosa', 116, -114, 'a', 'res'],
+  ['girardota1', 'Parque de Girardota', 'Girardota', 128, -62, 'a', 'res'], ['girardota2', 'Girardota Centro', 'Girardota', 136, -70, 'a', 'res'], ['girardota3', 'Girardota Sur', 'Girardota', 138, -56, 'a', 'res'],
+  ['copa1', 'Parque de Copacabana', 'Copacabana', 80, -28, 'm', 'res'], ['copa2', 'Copacabana Norte', 'Copacabana', 88, -42, 'a', 'res'], ['copa3', 'Copacabana Calle 50', 'Copacabana', 72, -24, 'a', 'res'],
+  // Bello
+  ['niquia', 'Ciudad Niquía', 'Bello', 96, -6, 'a', 'res'], ['hermosa', 'Hermosa Provincia', 'Bello', 110, -4, 'm', 'res'], ['fabricato', 'Fabricato', 'Bello', 96, -16, 'a', 'work'],
+  ['hospbello', 'Marco Fidel Suárez', 'Bello', 60, -2, 'm', 'mix'], ['bello', 'Parque de Bello', 'Bello', 57, 24, 'm', 'res'], ['bellocentro', 'Bello Centro', 'Bello', 64, 14, 'a', 'res'],
+  ['calle44', 'Calle 44 · Bello', 'Bello', 72, 30, 'm', 'mix'], ['madera', 'Madera', 'Bello', 80, 36, 'a', 'mix'],
+  // Medellín noroccidente y nororiente
+  ['juanes', 'Parque Juanes de la Paz', 'Medellín', 42, 32, 'm', 'res'], ['calle80', 'Calle 80', 'Medellín', 52, 42, 'a', 'mix'], ['pilarica', 'Pilarica', 'Medellín', 32, 48, 'm', 'res'],
+  ['robledo', 'Robledo', 'Medellín', 20, 56, 'a', 'res'], ['unal', 'Universidad Nacional', 'Medellín', 44, 67, 'm', 'uni'], ['terminalN', 'Terminal del Norte', 'Medellín', 66, 51, 'm', 'mix'],
+  ['moravia', 'Moravia', 'Medellín', 99, 42, 'm', 'res'], ['aranjuez', 'Aranjuez', 'Medellín', 118, 44, 'm', 'res'], ['botanico', 'Jardín Botánico', 'Medellín', 99, 54, 'a', 'mix'],
+  ['universidad', 'Estación Universidad', 'Medellín', 90, 62, 'a', 'mix'], ['campovaldes', 'Campo Valdés', 'Medellín', 124, 58, 'm', 'res'], ['udea', 'Universidad de Antioquia', 'Medellín', 114, 76, 'm', 'uni'],
+  ['manrique', 'Manrique', 'Medellín', 130, 70, 'a', 'res'], ['explora', 'Parque Explora', 'Medellín', 96, 78, 'a', 'mix'], ['prado', 'Prado', 'Medellín', 110, 86, 'm', 'res'],
+  // Centro · La Candelaria
+  ['caracas', 'Avenida Caracas', 'Medellín', 117, 92, 'a', 'work'], ['botero', 'Museo de Antioquia', 'Medellín', 103, 90, 'a', 'work'], ['berrio', 'Parque Berrío', 'Medellín', 109, 97, 'm', 'work'],
+  ['bombona', 'Bomboná', 'Medellín', 124, 98, 'a', 'mix'], ['junin', 'Junín', 'Medellín', 114, 103, 'a', 'work'], ['sanantonio', 'San Antonio', 'Medellín', 100, 108, 'm', 'work'],
+  ['sanignacio', 'San Ignacio', 'Medellín', 119, 108, 'a', 'work'], ['cisneros', 'Plaza Cisneros', 'Medellín', 104, 114, 'a', 'work'], ['plazamayor', 'Plaza Mayor', 'Medellín', 92, 111, 'a', 'work'],
+  ['ayacucho', 'Ayacucho', 'Medellín', 126, 112, 'm', 'res'], ['alpujarra', 'La Alpujarra', 'Medellín', 96, 120, 'a', 'work'], ['sandiego', 'San Diego', 'Medellín', 112, 124, 'm', 'mix'],
+  ['parquesrio', 'Parques del Río', 'Medellín', 86, 126, 'a', 'mix'], ['exposiciones', 'Exposiciones', 'Medellín', 96, 130, 'a', 'work'], ['industriales', 'Industriales', 'Medellín', 88, 136, 'a', 'work'],
+  // Estadio, Laureles, Calasanz, San Javier
+  ['carlose', 'Carlos E. Restrepo', 'Medellín', 58, 80, 'm', 'uni'], ['estadio', 'Estadio', 'Medellín', 37, 82, 'm', 'mix'], ['calasanz', 'Calasanz', 'Medellín', 22, 86, 'a', 'res'],
+  ['upb', 'UPB', 'Medellín', 30, 94, 'm', 'uni'], ['unidad', 'Unidad Deportiva', 'Medellín', 48, 92, 'a', 'mix'], ['av80', 'Avenida 80', 'Medellín', 26, 100, 'a', 'mix'],
+  ['floresta', 'Floresta', 'Medellín', 18, 108, 'a', 'res'], ['sanjavier', 'San Javier', 'Medellín', 14, 116, 'm', 'res'], ['suramericana', 'Suramericana', 'Medellín', 57, 106, 'm', 'work'],
+  ['laureles2', 'Segundo Parque de Laureles', 'Medellín', 48, 118, 'a', 'res'], ['laureles', 'Primer Parque de Laureles', 'Medellín', 36, 124, 'm', 'res'], ['av33', 'Avenida 33', 'Medellín', 42, 130, 'a', 'mix'],
+  // Belén, Guayabal
+  ['rosales', 'Rosales', 'Medellín', 16, 134, 'm', 'res'], ['belen', 'Parque de Belén', 'Medellín', 26, 142, 'a', 'res'], ['belen2', 'Belén Las Playas', 'Medellín', 22, 156, 'm', 'res'],
+  ['aeropuerto', 'Olaya Herrera', 'Medellín', 50, 146, 'a', 'mix'], ['terminalS', 'Terminal del Sur', 'Medellín', 58, 160, 'm', 'mix'], ['guayabal', 'Guayabal', 'Medellín', 55, 177, 'a', 'res'],
+  ['cristorey', 'Cristo Rey', 'Medellín', 40, 186, 'a', 'res'],
+  // El Poblado, Ciudad del Río
+  ['ciudadrio', 'Ciudad del Río', 'Medellín', 92, 148, 'a', 'work'], ['castropol', 'Castropol', 'Medellín', 104, 152, 'a', 'mix'], ['poblado', 'Parque del Poblado', 'Medellín', 106, 139, 'm', 'work'],
+  ['calle10', 'Calle 10', 'Medellín', 98, 162, 'a', 'work'], ['lleras', 'Parque Lleras', 'Medellín', 120, 158, 'm', 'mix'], ['manila', 'Manila', 'Medellín', 112, 168, 'a', 'mix'],
+  ['lasvegas', 'Avenida Las Vegas', 'Medellín', 86, 168, 'a', 'mix'], ['eafit', 'EAFIT', 'Medellín', 92, 178, 'm', 'uni'], ['aguacatala', 'Aguacatala', 'Medellín', 86, 188, 'a', 'mix'],
+  // Envigado
+  ['ayura', 'Ayurá', 'Envigado', 84, 198, 'a', 'res'], ['jardines', 'Jardines', 'Envigado', 96, 194, 'm', 'res'], ['sanmarcos', 'San Marcos', 'Envigado', 104, 200, 'a', 'res'],
+  ['zona2', 'Zona 2', 'Envigado', 114, 198, 'a', 'res'], ['alcala', 'Alcalá', 'Envigado', 92, 206, 'm', 'res'], ['magnolia', 'La Magnolia', 'Envigado', 120, 206, 'a', 'res'],
+  ['envigadoM', 'Estación Envigado', 'Envigado', 80, 210, 'a', 'mix'], ['envigado', 'Parque de Envigado', 'Envigado', 102, 212, 'm', 'res'], ['milan', 'Milán-Vallejuelos', 'Envigado', 88, 216, 'a', 'res'],
+  ['mesa', 'La Mesa', 'Envigado', 116, 218, 'a', 'res'], ['otraparte', 'Otraparte', 'Envigado', 106, 226, 'm', 'res'],
+  // Itagüí
+  ['artista', 'Parque del Artista', 'Itagüí', 54, 204, 'a', 'res'], ['simonbolivar', 'Parque Simón Bolívar', 'Itagüí', 62, 212, 'a', 'mix'], ['fatima', 'Fátima', 'Itagüí', 40, 210, 'a', 'res'],
+  ['itagui', 'Parque Principal de Itagüí', 'Itagüí', 46, 222, 'm', 'res'], ['santacruz', 'Santa Cruz', 'Itagüí', 62, 226, 'm', 'res'], ['naranjos', 'Los Naranjos', 'Itagüí', 52, 232, 'a', 'res'],
+  ['villapaula', 'Villa Paula', 'Itagüí', 40, 236, 'a', 'res'], ['sanpio', 'San Pío X', 'Itagüí', 30, 226, 'a', 'res'], ['ditaires', 'Ditaires', 'Itagüí', 28, 236, 'a', 'res'],
+  ['pilsen', 'Pilsen', 'Itagüí', 22, 214, 'a', 'res'],
+  // Sabaneta, La Estrella, Caldas
+  ['callelarga', 'Calle Larga', 'Sabaneta', 80, 240, 'a', 'res'], ['sabaneta', 'Parque de Sabaneta', 'Sabaneta', 88, 248, 'm', 'res'], ['sabvegas', 'Sabaneta Las Vegas', 'Sabaneta', 96, 238, 'a', 'mix'],
+  ['ancon', 'Ancón Sur', 'Sabaneta', 56, 248, 'a', 'res'], ['yarumito', 'Yarumito', 'La Estrella', 34, 246, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 44, 256, 'a', 'res'],
+  ['quintas', 'Quintas de la Quinta', 'La Estrella', 34, 262, 'm', 'res'], ['tablaza', 'La Tablaza', 'La Estrella', 58, 270, 'a', 'res'],
+  ['caldas', 'Parque de Caldas', 'Caldas', 48, 292, 'm', 'res'], ['caldas2', 'Caldas Centro', 'Caldas', 56, 286, 'a', 'res'], ['caldas3', 'Caldas Sur', 'Caldas', 50, 300, 'a', 'res']
 ];
+STATIONS_DEF.forEach(s => { s[4] += OY; });
 const METRO_A = ['Niquía', 'Bello', 'Madera', 'Acevedo', 'Tricentenario', 'Caribe', 'Universidad', 'Hospital', 'Prado', 'Parque Berrío', 'San Antonio', 'Alpujarra', 'Exposiciones', 'Industriales', 'Poblado', 'Aguacatala', 'Ayurá', 'Envigado', 'Itagüí', 'Sabaneta', 'La Estrella'];
 const METRO_B = ['San Antonio', 'Cisneros', 'Suramericana', 'Estadio', 'Floresta', 'Santa Lucía', 'San Javier'];
-const LINEB_Y = 106;
+const LINEB_Y = 106 + OY;
 
 const CityMap = JE.map = {
   t: null, mark: null, lid: null, lanes: [], stations: [], depot: null, chunks: new Map(), lmCanvas: {}, mini: null, flows: new Map(), metroA: [], metroB: [],
@@ -82,10 +139,13 @@ const CityMap = JE.map = {
   get(x, y) { return (x < 0 || y < 0 || x >= MW || y >= MH) ? TT.MOUNT : this.t[y * MW + x]; },
   set(x, y, v) { if (x >= 0 && y >= 0 && x < MW && y < MH) this.t[y * MW + x] = v; },
   rect(x0, y0, w, h, v, only) { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) { if (x < 0 || y < 0 || x >= MW || y >= MH) continue; const c = this.get(x, y); if (!only || only.includes(c)) this.set(x, y, v); } },
-  mW(y) { return Math.round(4 + 2.5 * Math.sin(y / 14) + 1.5 * Math.sin(y / 5.1) + (y > 215 ? (y - 215) * .38 : 0) + (y < 14 ? (14 - y) * .4 : 0)); },
-  mE(y) { return MW - 1 - Math.round(5 + 2.5 * Math.sin(y / 11 + 1) + 1.5 * Math.sin(y / 4.3) + (y > 215 ? (y - 215) * .34 : 0) + (y < 14 ? (14 - y) * .4 : 0)); },
+  /* bordes de montaña. Al norte de Bello el valle es un corredor angosto que sigue el río (Copacabana → Barbosa) */
+  mW(y) { const yy = y - OY, b = bendN(y), base = 4 + 2.5 * Math.sin(yy / 14) + 1.5 * Math.sin(yy / 5.1) + (yy > 215 ? (yy - 215) * .34 : 0) + (yy < 14 ? Math.min(30, 14 - yy) * .32 : 0) + b, cor = RX[clamp(y, 0, MH - 1)] - 27 + 3 * Math.sin(y / 9); const k = clamp((-12 - yy) / 26, 0, 1); return Math.round(lerp(base, Math.max(base, cor), k)); },
+  mE(y) { const yy = y - OY, b = bendN(y), base = MW - 1 - (5 + 2.5 * Math.sin(yy / 11 + 1) + 1.5 * Math.sin(yy / 4.3) + (yy > 215 ? (yy - 215) * .3 : 0) + (yy < 14 ? Math.min(30, 14 - yy) * .32 : 0) - b), cor = RX[clamp(y, 0, MH - 1)] + 26 + 3 * Math.sin(y / 7); const k = clamp((-12 - yy) / 26, 0, 1); return Math.min(MW - 3, Math.round(lerp(base, Math.min(base, cor), k))); },
+  /* ¿está dentro de un pueblo del corredor norte? */
+  inTown(x, y) { const yy = y - OY; if (yy >= -16) return true; for (const T of TOWNS_N) { const cy = T.yy, cx = RX[clamp(cy + OY, 0, MH - 1)] + T.dx; if (Math.hypot(x - cx, (yy - cy) * 1.1) < T.r) return true; } return false; },
   district(x, y) {
-    const c = rxi(y);
+    const c = rxi(y); y -= OY;
     if (y < 38) return 'bello'; if (y >= 196) return x < c ? 'sur' : 'envigado';
     if (x > c && y >= 86 && y <= 126 && x < c + 42) return 'centro'; if (x > c && y > 126) return 'poblado';
     if (x < c && y >= 80 && y <= 132) return 'laureles'; return 'barrio';
@@ -128,11 +188,17 @@ const CityMap = JE.map = {
     }
     // montañas y comunas (casas de ladrillo)
     for (let y = 0; y < MH; y++) {
-      const a = this.mW(y), e = this.mE(y), bw = 7 + Math.round(3 * Math.sin(y / 30) + (y < 90 ? 3 : 0)), be = 8 + Math.round(3 * Math.sin(y / 26 + 2) + (y < 110 ? 4 : 0));
+      const a = this.mW(y), e = this.mE(y), bw = 7 + Math.round(3 * Math.sin(y / 30) + (y < 90 + OY ? 3 : 0)), be = 8 + Math.round(3 * Math.sin(y / 26 + 2) + (y < 110 + OY ? 4 : 0));
       for (let x = 0; x < MW; x++) {
         if (x < a || x > e) this.set(x, y, TT.MOUNT);
         else if ((x < a + bw || x > e - be) && this.get(x, y) === TT.BLDG) this.set(x, y, TT.BRICK);
       }
+    }
+    // corredor norte: entre pueblos, campo (potreros y fincas); solo quedan avenidas, ciclorrutas y la autopista del río
+    for (let y = 0; y < OY - 16; y++) for (let x = 0; x < MW; x++) {
+      if (this.inTown(x, y)) continue; const v = this.get(x, y);
+      if (v === TT.BLDG || v === TT.BRICK) this.set(x, y, h2(x, y, 41) < .04 ? TT.BRICK : TT.GRASS);
+      else if (v === TT.ROAD || (v === TT.WALK && Math.abs(x - rxi(y)) > 8)) this.set(x, y, TT.GRASS);
     }
     // parques de barrio
     for (let i = 0; i < CALLES.length - 1; i++) for (let j = 0; j < CARRERAS.length - 1; j++) {
@@ -143,15 +209,15 @@ const CityMap = JE.map = {
     // lugares emblemáticos
     LANDMARKS.forEach((L, i) => this.paintLandmark(L, i));
     // parque lineal del río
-    for (let y = 116; y <= 134; y++) { const c = rxi(y); for (let d = 6; d <= 10; d++) { const v = this.get(c + d, y); if (v !== TT.AVE && v !== TT.ROAD && v !== TT.BRIDGE) this.set(c + d, y, (d === 8 || y % 6 === 0) ? TT.PLAZA : TT.GRASS); } }
+    for (let y = 116 + OY; y <= 134 + OY; y++) { const c = rxi(y); for (let d = 6; d <= 10; d++) { const v = this.get(c + d, y); if (v !== TT.AVE && v !== TT.ROAD && v !== TT.BRIDGE) this.set(c + d, y, (d === 8 || y % 6 === 0) ? TT.PLAZA : TT.GRASS); } }
     // estaciones
-    this.stations = STATIONS_DEF.map((s, i) => this.carveStation(s, i));
+    this.stations = STATIONS_DEF.map((s, i) => this.carveStation(s, i)).filter(Boolean); this.stations.forEach((s, i) => s.i = i);
     this.marks(); this.buildLights(); this.buildTram(); this.buildLanes(); this.buildMetro(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h - 1) * TS, name: dp.name };
   },
   paintLandmark(L, i) {
     const keep = [TT.WATER, TT.CANAL, TT.AUTO];
-    const base = { iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
+    const base = { cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
     for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y))) continue; this.set(x, y, base); this.lid[this.idx(x, y)] = i; }
     const solid = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid[this.idx(L.x + xx, L.y + yy)] === i) this.set(L.x + xx, L.y + yy, TT.LAND); };
     const W = L.w, H = L.h;
@@ -175,18 +241,19 @@ const CityMap = JE.map = {
   carveStation(s, i) {
     const [id, name, muni, tx, ty, type, kind] = s, ok = [TT.BLDG, TT.BRICK, TT.GRASS, TT.PLAZA];
     let best = null, bd = 1e9;
-    for (let y = ty - 7; y <= ty + 7; y++) for (let x = tx - 7; x <= tx + 7; x++) {
+    for (let y = ty - 10; y <= ty + 10; y++) for (let x = tx - 10; x <= tx + 10; x++) {
       let good = true; for (let yy = y; yy < y + 3 && good; yy++) for (let xx = x; xx < x + 4; xx++) if (!ok.includes(this.get(xx, yy)) || this.lid[this.idx(clamp(xx, 0, MW - 1), clamp(yy, 0, MH - 1))] >= 0 && this.get(xx, yy) === TT.LAND) { good = false; break; }
+      for (let yy = y - 1; yy <= y + 3 && good; yy++) for (let xx = x - 1; xx <= x + 4; xx++) if (this.get(xx, yy) === TT.STATION) { good = false; break; }
       if (!good) continue;
       let acc = false; for (let xx = x - 1; xx <= x + 4 && !acc; xx++) for (const yy of [y - 1, y + 3]) { const v = this.get(xx, yy); if (v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD) acc = true; }
       for (let yy = y; yy < y + 3 && !acc; yy++) for (const xx of [x - 1, x + 4]) { const v = this.get(xx, yy); if (v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD) acc = true; }
       if (!acc) continue;
       const d = Math.abs(x + 2 - tx) + Math.abs(y + 1 - ty); if (d < bd) { bd = d; best = { x, y }; }
     }
-    if (!best) best = { x: tx - 2, y: ty - 1 };
+    if (!best) { (this.dropped || (this.dropped = [])).push(name); return null; }
     this.rect(best.x, best.y, 4, 3, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
-    const zone = ty < 84 ? 'norte' : ty < 134 ? 'centro' : 'sur';
+    const zone = ty < 84 + OY ? 'norte' : ty < 134 + OY ? 'centro' : 'sur';
     return { i, id, name, muni, type, kind, cap, zone, tx: best.x, ty: best.y, x: (best.x + 2) * TS, y: (best.y + 1.5) * TS };
   },
   marks() {
@@ -252,20 +319,20 @@ const CityMap = JE.map = {
   },
   /* Tranvía de Ayacucho (calle exclusiva: sin carros) */
   buildTram() {
-    const y = 112, x0 = (rxi(y) + 9) * TS, x1 = (this.mE(y) - 9) * TS, names = ['San Antonio', 'San José', 'Bicentenario', 'Buenos Aires', 'Miraflores', 'Oriente'];
+    const y = 112 + OY, x0 = (rxi(y) + 9) * TS, x1 = (this.mE(y) - 9) * TS, names = ['San Antonio', 'San José', 'Bicentenario', 'Buenos Aires', 'Miraflores', 'Oriente'];
     this.tram = { y: (y + 1) * TS, x0, x1, st: names.map((n, i) => ({ name: n, px: lerp(x0 + 12, x1 - 12, i / (names.length - 1)) })) };
   },
   buildMetro() {
-    this.metroA = METRO_A.map((n, i) => { const y = Math.round(8 + i * (244 / (METRO_A.length - 1))); return { name: n, py: y * TS + 4, px: (RX[y] + 9) * TS }; });
+    this.metroA = METRO_A.map((n, i) => { const y = i ? Math.round(8 + i * (244 / (METRO_A.length - 1))) + OY : OY - 6; return { name: n, py: y * TS + 4, px: (RX[y] + 9) * TS }; });
     const x0 = (RX[LINEB_Y] + 9) * TS, x1 = 12 * TS;
     this.metroB = METRO_B.map((n, i) => ({ name: n, px: lerp(x0, x1, i / (METRO_B.length - 1)), py: LINEB_Y * TS + 4 }));
     const ac = this.metroA.find(s => s.name === 'Acevedo'), sj = this.metroB[this.metroB.length - 1], T = this.tram;
     const mk = (name, col, ax, ay, bx, by) => ({ name, col, ax, ay, bx, by, len: Math.hypot(bx - ax, by - ay), st: [0, .36, .7, 1] });
     this.cables = [
-      mk('Metrocable K · Santo Domingo', '#f2a900', ac.px + 6, ac.py, (this.mE(30) - 1) * TS, 30 * TS),
-      mk('Metrocable P · El Progreso', '#d14b9a', ac.px - 6, ac.py + 4, (this.mW(34) + 1) * TS, 34 * TS),
-      mk('Metrocable J · La Aurora', '#e8641f', sj.px, sj.py, (this.mW(94) + 1) * TS, 94 * TS),
-      mk('Metrocable H · Villa Sierra', '#7a5cc4', T.x1, T.y, (this.mE(122) - 1) * TS, 122 * TS)
+      mk('Metrocable K · Santo Domingo', '#f2a900', ac.px + 6, ac.py, (this.mE(30 + OY) - 1) * TS, (30 + OY) * TS),
+      mk('Metrocable P · El Progreso', '#d14b9a', ac.px - 6, ac.py + 4, (this.mW(34 + OY) + 1) * TS, (34 + OY) * TS),
+      mk('Metrocable J · La Aurora', '#e8641f', sj.px, sj.py, (this.mW(94 + OY) + 1) * TS, (94 + OY) * TS),
+      mk('Metrocable H · Villa Sierra', '#7a5cc4', T.x1, T.y, (this.mE(122 + OY) - 1) * TS, (122 + OY) * TS)
     ];
   },
   buildMini() {
@@ -273,7 +340,7 @@ const CityMap = JE.map = {
       const img = c.createImageData(MW, MH), d = img.data;
       for (let i = 0; i < MW * MH; i++) { const col = parseInt(MINI_COL[this.t[i]].slice(1), 16); d[i * 4] = col >> 16; d[i * 4 + 1] = col >> 8 & 255; d[i * 4 + 2] = col & 255; d[i * 4 + 3] = 255; }
       c.putImageData(img, 0, 0);
-      c.fillStyle = '#d6dde6'; for (let y = 0; y < MH; y++) c.fillRect(Math.round(RX[y] + 9), y, 1, 1);
+      c.fillStyle = '#d6dde6'; for (let y = OY - 9; y < MH; y++) c.fillRect(Math.round(RX[y] + 9), y, 1, 1);
       c.fillRect(12, LINEB_Y, Math.round(RX[LINEB_Y] + 9) - 12, 1);
       c.fillStyle = PAL.cie; c.fillRect(Math.round(this.tram.x0 / TS), Math.round(this.tram.y / TS), Math.round((this.tram.x1 - this.tram.x0) / TS), 1);
       c.lineWidth = 1; for (const cb of this.cables) { c.strokeStyle = cb.col; c.beginPath(); c.moveTo(cb.ax / TS, cb.ay / TS); c.lineTo(cb.bx / TS, cb.by / TS); c.stroke(); }
@@ -347,7 +414,7 @@ const CityMap = JE.map = {
     // metro (viaducto elevado)
     const py0 = y0 * TS, px0 = x0 * TS;
     for (let py = py0; py < py0 + CH * TS; py++) {
-      const mx = Math.round(rxf(py) * TS + 9 * TS) - px0;
+      if (py < this.metroA[0].py - 24) continue; const mx = Math.round(rxf(py) * TS + 9 * TS) - px0;
       if (mx < -8 || mx > CH * TS + 8) continue;
       prect(c, mx - 2, py - py0, 6, 1, '#00000033'); prect(c, mx - 3, py - py0, 6, 1, '#c9ccd1'); prect(c, mx - 2, py - py0, 1, 1, '#7d838c'); prect(c, mx + 1, py - py0, 1, 1, '#7d838c');
       if (py % 48 === 0) prect(c, mx - 1, py - py0 + 1, 3, 3, '#00000044');
@@ -439,12 +506,13 @@ const CityMap = JE.map = {
           break;
         }
         case 'terminal': roofHouse(8, 8, W - 16, 24, '#d9dde3'); for (let x = 12; x < W - 16; x += 12) R(x, 10, 6, 20, '#bfc6cf'); for (let k = 0; k < 4; k++) c.drawImage(Art.carTop(k % 2 ? PAL.vd2 : '#e9eef3', 'bus'), 10 + k * 14, 34); break;
-        case 'volador': case 'cerro': case 'moravia': {
+        case 'volador': case 'cerro': case 'moravia': case 'cruces': {
           const rr = Math.min(W, H) / 2 - 1;
           pdisc(c, cx, cy, rr, L.k === 'moravia' ? '#4e8f3e' : '#2f6b3a'); pdisc(c, cx - 2, cy - 2, rr * .72, L.k === 'moravia' ? '#62a350' : '#3a7d44'); pdisc(c, cx - 3, cy - 3, rr * .42, L.k === 'moravia' ? '#78b862' : '#4a8f4f');
           for (let k = 0; k < 18; k++) { const a = k / 18 * TAU, d = rr * (.5 + .45 * h2(k, i)); pdisc(c, cx + Math.cos(a) * d, cy + Math.sin(a) * d, 2, h2(k, 3) < .2 ? '#f2c230' : '#275a31'); }
           if (L.k === 'cerro') { R(cx - 12, cy - 10, 24, 18, '#d8cfb6'); roofHouse(cx - 10, cy - 8, 8, 6, '#b85a36'); roofHouse(cx + 2, cy - 8, 8, 6, '#c9683f'); roofHouse(cx - 10, cy + 1, 8, 6, '#c9683f'); roofHouse(cx + 1, cy, 10, 7, '#f1ece0'); R(cx + 4, cy - 3, 4, 4, '#f1ece0'); R(cx + 5, cy - 4, 2, 1, '#b85a36'); }
           if (L.k === 'moravia') for (let k = 0; k < 5; k++) R(cx - 16, cy - 12 + k * 6, 32, 2, ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#fff'][k]);
+          if (L.k === 'cruces') for (let k = 0; k < 3; k++) { const x0 = cx - 12 + k * 12, y0 = cy - 6 + (k === 1 ? -4 : 0); R(x0 + 1, y0 + 1, 2, 12, '#0005'); R(x0, y0, 2, 12, '#ffffff'); R(x0 - 3, y0 + 3, 8, 2, '#ffffff'); }
           if (L.k === 'volador') { for (let k = 0; k < 40; k++) { const a = k / 40 * TAU * 2, d = rr * k / 44; R(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 1, 1, '#c8b88a'); } }
           break;
         }

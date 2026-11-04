@@ -1,5 +1,26 @@
 apply plugin: 'com.android.application'
 
+// Firma de publicación (Google Play). Se lee de app/keystore.properties SOLO si existe;
+// ese archivo y la llave (.jks/.keystore) NO se suben a git (ver .gitignore y docs/PLAY_STORE.md).
+// Claves: storeFile (ruta absoluta o relativa a app/), storePassword, keyAlias, keyPassword.
+// Sin el archivo, las compilaciones debug siguen igual y la release sale sin firmar.
+def keystorePropertiesFile = rootProject.file('../keystore.properties')
+def keystoreProperties = new Properties()
+def hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+    ['storeFile', 'storePassword', 'keyAlias', 'keyPassword'].each { k ->
+        if (!keystoreProperties.getProperty(k)?.trim()) {
+            throw new GradleException("app/keystore.properties: falta la clave '${k}'")
+        }
+    }
+}
+def releaseStoreFile = { ->
+    def f = new File(keystoreProperties.getProperty('storeFile').trim())
+    if (!f.isAbsolute()) f = new File(keystorePropertiesFile.parentFile, f.path)
+    return f
+}
+
 android {
     namespace "com.juanfeliperico.juegaencicla"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,8 +28,8 @@ android {
         applicationId "com.juanfeliperico.juegaencicla"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "0.3.0"
+        versionCode 400
+        versionName "0.4.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +37,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            release {
+                storeFile releaseStoreFile()
+                storePassword keystoreProperties.getProperty('storePassword')
+                keyAlias keystoreProperties.getProperty('keyAlias')
+                keyPassword keystoreProperties.getProperty('keyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

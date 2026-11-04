@@ -51,10 +51,18 @@ self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c =>
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('juega-encicla-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
   const r = e.request; if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return;
-  if (r.mode === 'navigate') { e.respondWith(caches.match('./index.html').then(c => c || fetch(r)).catch(() => caches.match('./index.html'))); return; }
+  const p = new URL(r.url).pathname;
+  // el juego (./ o index.html) sale de la caché; las demás páginas (pagina.html, privacidad.html) van a la red primero
+  if (r.mode === 'navigate' && (p.endsWith('/') || p.endsWith('/index.html'))) { e.respondWith(caches.match('./index.html').then(c => c || fetch(r)).catch(() => caches.match('./index.html'))); return; }
+  if (r.mode === 'navigate' || /\\.apk$/.test(p)) { e.respondWith(fetch(r).catch(() => caches.match(r, { ignoreSearch: true }))); return; }
   e.respondWith(caches.match(r, { ignoreSearch: true }).then(c => c || fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(ca => ca.put(r, cp)); } return res; })));
 });
 `);
 fs.writeFileSync(path.join(WEB, '.nojekyll'), '');
+// página oficial y privacidad (landing/) + APK de descarga si existe
+const LAND = path.join(ROOT, 'landing');
+if (fs.existsSync(LAND)) fs.cpSync(LAND, WEB, { recursive: true, filter: s => !/descargas/.test(s) });
+const apk = fs.readdirSync(DIST).filter(f => f.endsWith('.apk')).sort().pop();
+if (apk) { fs.mkdirSync(path.join(WEB, 'descargas'), { recursive: true }); fs.copyFileSync(path.join(DIST, apk), path.join(WEB, 'descargas', 'JuegaEnCicla.apk')); }
 fs.writeFileSync(path.join(DIST, 'build.json'), JSON.stringify({ version, hash, cache: CACHE, files: jsFiles, bytes: { single: single.length, web: web.length, js: js.length } }, null, 1));
 console.log('OK v' + version, 'cache', CACHE, '| único', (single.length / 1024).toFixed(0) + ' KB | js', (js.length / 1024).toFixed(0) + ' KB');

@@ -2,6 +2,7 @@
    SIMULACIÓN DE ESTACIONES + MOTOR DE RECORRIDO (vista cenital)
    ===================================================================== */
 const M_PER_PX = 20 / TS; // 1 baldosa = 20 m
+const CICLOVIA_AV = ['Avenida El Poblado', 'Avenida 80', 'Avenida Las Vegas'];
 const gauss = (x, m, s) => Math.exp(-((x - m) * (x - m)) / (2 * s * s));
 
 class StationSim {
@@ -58,7 +59,7 @@ class Ride {
     this.initLife();
     this.bx0 = 12 * TS; this.bx1 = (RX[LINEB_Y] + 9) * TS; this.mmRect = null; this.joyDraw = null; this.ox = 0; this.oy = 0;
   }
-  stats_() { return this.p.veh === 'truck' ? { max: 50, acc: 55, dec: 95, turn: 2.7, r: 4 } : { max: 60, acc: 120, dec: 150, turn: 5.6, r: 2.5 }; }
+  stats_() { return this.p.veh === 'truck' ? { max: 50, acc: 55, dec: 95, turn: 2.7, r: 3.4 } : { max: 60, acc: 120, dec: 150, turn: 5.6, r: 2.5 }; }
   solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }
@@ -67,7 +68,16 @@ class Ride {
   }
   marker(m) { m.inside = false; m.r = m.r || 14; this.markers.push(m); return m; }
   removeMarker(m) { const i = this.markers.indexOf(m); if (i >= 0) this.markers.splice(i, 1); if (this.target === m) this.target = null; }
-  bell() { if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); this.bellPeds(); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2; }
+  bell() {
+    if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); this.bellPeds(); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2;
+    // Easter eggs: tres timbrazos seguidos bajo una estación del Metro o en Moravia
+    const now = this.mode.t; this.bellLog = (this.bellLog || []).filter(t => now - t < 3); this.bellLog.push(now);
+    if (this.bellLog.length >= 3 && this.mode.easter) {
+      const P = this.p, nearMetro = this.map.metroA.concat(this.map.metroB).some(s => dist(s.px, s.py, P.x, P.y) < 28), mv = LM.moravia;
+      if (nearMetro) { this.bellLog = []; this.mode.easter('metro'); }
+      else if (mv && dist((mv.x + mv.w / 2) * TS, (mv.y + mv.h / 2) * TS, P.x, P.y) < 70) { this.bellLog = []; this.mode.easter('laberinto'); }
+    }
+  }
   float(txt, col) { this.fx.push({ k: 't', x: this.p.x, y: this.p.y - 10, t: 1.1, txt, col: col || '#fff' }); }
   burst(x, y, col, n = 10) { for (let i = 0; i < n; i++) { const a = this.rng.f() * TAU, s = 20 + this.rng.f() * 40; this.fx.push({ k: 'p', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: .5 + this.rng.f() * .3, col }); } }
 
@@ -112,7 +122,7 @@ class Ride {
     this.updCars(dt); this.updTrains(dt); this.updLife(dt);
     // marcadores
     for (const m of this.markers.slice()) {
-      const r = m.r + (P.veh === 'truck' ? 22 : 0), d = dist(P.x, P.y, m.x, m.y);
+      const r = m.r + (P.veh === 'truck' ? 44 : 0), d = dist(P.x, P.y, m.x, m.y);
       if (d < r && !m.inside) { m.inside = true; if (m.enter) m.enter(m); }
       else if (d > r + 6 && m.inside) { m.inside = false; if (m.leave) m.leave(m); }
     }
@@ -147,7 +157,7 @@ class Ride {
       if (L.ax === 'x') { cfix = L.c; if (Math.abs(cfix - this.cam.y) < R) { lo = Math.max(L.a, this.cam.x - R); hi = Math.min(L.b, this.cam.x + R); } }
       else if (L.ax === 'y') { cfix = L.c; if (Math.abs(cfix - this.cam.x) < R) { lo = Math.max(L.a, this.cam.y - R); hi = Math.min(L.b, this.cam.y + R); } }
       else { lo = Math.max(0, this.cam.y - R); hi = Math.min(L.b, this.cam.y + R); if (Math.abs((rxf(this.cam.y) + L.d) * TS - this.cam.x) > R) lo = hi = 0; }
-      if (hi - lo > 20) {
+      if (hi - lo > 20 && !(this.mode.mods.ciclovia && CICLOVIA_AV.includes(L.name))) {
         const p = lo + this.rng.f() * (hi - lo), c = { L, p, v: 0, spd: L.spd * this.rng.range(.8, 1.15), yield: 0, stop: 0 };
         const r = this.rng.f(); c.kind = L.spd > 30 && r < .1 ? 'bus' : r < .32 ? 'taxi' : 'car';
         c.col = c.kind === 'taxi' ? '#f5c400' : c.kind === 'bus' ? '#3f8f5a' : this.rng.pick(['#e9eef3', '#c43a26', '#2a5a92', '#1d1f24', '#9aa7b8', '#7a3b3b', '#3d6b3a', '#d98a3a']);
@@ -193,7 +203,7 @@ class Ride {
     for (const t of this.trains) {
       if (t.wait > 0) { t.wait -= dt; continue; }
       const prev = t.p; t.p += 70 * t.dir * dt;
-      if (t.l === 'A') { if (t.p < -60) t.p = MH * TS + 40; if (t.p > MH * TS + 60) t.p = -40; for (const s of this.map.metroA) if ((prev - s.py) * (t.p - s.py) < 0) { t.wait = 1.4; t.p = s.py; } }
+      if (t.l === 'A') { const top = this.map.metroA[0].py - 20; if (t.p < top) t.p = MH * TS + 40; if (t.p > MH * TS + 60) t.p = top + 1; for (const s of this.map.metroA) if ((prev - s.py) * (t.p - s.py) < 0) { t.wait = 1.4; t.p = s.py; } }
       else { if (t.p > this.bx1 - this.bx0) { t.dir = -1; t.wait = 2; } if (t.p < 0) { t.dir = 1; t.wait = 2; } }
     }
   }
@@ -243,6 +253,8 @@ class Ride {
       if (!inV(c.x, c.y)) continue; const sp = Art.carTop(c.col, c.kind);
       b.save(); b.translate(Math.round(c.x - ox), Math.round(c.y - oy)); b.rotate(c.ang + Math.PI / 2); b.fillStyle = '#0004'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 1, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
     }
+    // ciclovía: conos en las avenidas cerradas a los carros
+    if (this.mode.mods.ciclovia) for (const bn of this.map.bandsNS) { if (!CICLOVIA_AV.includes(AVE_NS[bn.r])) continue; const cx = (bn.r + 1.5) * TS; if (cx < ox - 10 || cx > ox + V.vw + 10) continue; for (let py = Math.floor(oy / 40) * 40; py < oy + V.vh; py += 40) { if (this.map.get(bn.r + 1, Math.floor(py / TS)) !== TT.AVE) continue; prect(b, cx - ox - 1, py - oy, 3, 3, '#ff8a3d'); prect(b, cx - ox, py - oy - 1, 1, 1, '#ffffff'); } }
     // semáforos
     const LC = { g: '#4cff6a', a: '#ffc93c', r: '#ff4b3a' };
     for (const L of this.map.lights) {
@@ -254,7 +266,7 @@ class Ride {
     // rivales (carrera)
     for (const o of this.opps) { if (!inV(o.x, o.y)) continue; const so = Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]); b.save(); b.translate(Math.round(o.x - ox), Math.round(o.y - oy)); b.rotate(o.a + Math.PI / 2); b.globalAlpha = .9; b.drawImage(so, -3, -6); b.restore(); }
     // jugador
-    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1]);
+    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1], Save.data.flags.gold ? '#ffd84a' : PAL.vd);
     b.save(); b.translate(Math.round(P.x - ox), Math.round(P.y - oy)); b.rotate(P.a + Math.PI / 2); b.fillStyle = '#0005'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 2, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
     // trenes elevados
     const tc = Art.trainCar();
@@ -298,17 +310,21 @@ class Ride {
     }
     // minimapa
     if (!opts.noMini) {
-      const w = Math.round(Math.min(78, V.w * .2)), h = Math.round(w * MH / MW), x = V.w - w - 10, y = 58;
+      // radar: ventana del mapa alrededor del jugador (el valle completo se ve tocándolo)
+      const w = Math.round(Math.min(84, V.w * .21)), h = Math.round(w * 1.55), x = V.w - w - 10, y = 58, WT = 96, HT = Math.round(WT * h / w);
+      const t0x = clamp(P.x / TS - WT / 2, 0, MW - WT), t0y = clamp(P.y / TS - HT / 2, 0, MH - HT), k = w / (WT * TS), ox0 = t0x * TS, oy0 = t0y * TS;
       this.mmRect = { x, y, w, h };
-      c.fillStyle = '#0a2342'; c.fillRect(x - 3, y - 3, w + 6, h + 6); c.imageSmoothingEnabled = false; c.drawImage(this.map.mini, x, y, w, h);
+      c.fillStyle = '#0a2342'; c.fillRect(x - 3, y - 3, w + 6, h + 6); c.imageSmoothingEnabled = false; c.drawImage(this.map.mini, t0x, t0y, WT, HT, x, y, w, h);
       c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(x - 1, y - 1, w + 2, h + 2);
-      const k = w / (MW * TS);
-      if (this.sim) for (const st of this.sim.st) { c.fillStyle = this.sim.ratioCol(st); c.fillRect(x + st.x * k - 1.5, y + st.y * k - 1.5, 3, 3); }
-      else { c.fillStyle = '#fff'; for (const st of this.map.stations) c.fillRect(x + st.x * k - 1, y + st.y * k - 1, 2, 2); }
+      c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
+      const MX = px => x + (px - ox0) * k, MY = py => y + (py - oy0) * k;
+      if (this.sim) for (const st of this.sim.st) { c.fillStyle = this.sim.ratioCol(st); c.fillRect(MX(st.x) - 1.5, MY(st.y) - 1.5, 3, 3); }
+      else { c.fillStyle = '#fff'; for (const st of this.map.stations) c.fillRect(MX(st.x) - 1, MY(st.y) - 1, 2, 2); }
       const blink = (performance.now() / 300 | 0) % 2;
-      for (const o of this.opps) { c.fillStyle = o.shirt || PAL.cor; c.fillRect(x + o.x * k - 2.5, y + o.y * k - 2.5, 5, 5); }
-      for (const m of this.markers) { c.fillStyle = m.col || PAL.amb; const r = m === T ? (blink ? 4 : 3) : 2.5; c.fillRect(x + m.x * k - r, y + m.y * k - r, r * 2, r * 2); }
-      c.fillStyle = '#ff2fb3'; c.beginPath(); c.arc(x + P.x * k, y + P.y * k, 3, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
+      for (const o of this.opps) { c.fillStyle = o.shirt || PAL.cor; c.fillRect(MX(o.x) - 2.5, MY(o.y) - 2.5, 5, 5); }
+      for (const m of this.markers) { c.fillStyle = m.col || PAL.amb; const r = m === T ? (blink ? 4 : 3) : 2.5; c.fillRect(clamp(MX(m.x), x + 2, x + w - 2) - r, clamp(MY(m.y), y + 2, y + h - 2) - r, r * 2, r * 2); }
+      c.fillStyle = '#ff2fb3'; c.beginPath(); c.arc(MX(P.x), MY(P.y), 3, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
+      c.restore();
       V.text('MAPA', x + w / 2, y + h + 14, { size: 11, align: 'center', color: '#c4ec7c', bg: '#0a2342cc', pad: 2 });
     }
     // joystick
@@ -321,15 +337,18 @@ class Ride {
 /* vista general de todo el valle (Monitoreo y mapa grande) */
 function drawOverview(V, o) {
   const c = V.ctx, top = o.top != null ? o.top : 54, bot = o.bot != null ? o.bot : 10, avail = V.h - top - bot;
-  const k = Math.min((V.w - 16) / (MW * TS), avail / (MH * TS)), w = MW * TS * k, h = MH * TS * k, x = (V.w - w) / 2, y = top + (avail - h) / 2;
-  o.rect = { x, y, k, w, h };
+  // recorte opcional (Monitoreo por zona): o.crop = {x0, y0, x1, y1} en px del mundo
+  const cr = o.crop || { x0: 0, y0: 0, x1: MW * TS, y1: MH * TS }, cw = cr.x1 - cr.x0, chh = cr.y1 - cr.y0;
+  const k = Math.min((V.w - 16) / cw, avail / chh), w = cw * k, h = chh * k, x = (V.w - w) / 2, y = top + (avail - h) / 2;
+  o.rect = { x: x - cr.x0 * k, y: y - cr.y0 * k, k, w, h };
   if (!o.noBg) { c.fillStyle = '#0a2342f2'; c.fillRect(0, 0, V.w, V.h); }
-  c.imageSmoothingEnabled = false; c.drawImage(JE.map.mini, x, y, w, h); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(x, y, w, h);
-  const X = px => x + px * k, Y = py => y + py * k;
+  c.imageSmoothingEnabled = false; c.drawImage(JE.map.mini, cr.x0 / TS, cr.y0 / TS, cw / TS, chh / TS, x, y, w, h); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(x, y, w, h);
+  const X = px => x + (px - cr.x0) * k, Y = py => y + (py - cr.y0) * k;
+  c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
   if (o.title) V.text(o.title, V.w / 2, top - 8, { size: 15, align: 'center', color: '#c4ec7c' });
   const lbl = k * TS > 2.4;
-  for (const L of LANDMARKS) if (lbl && L.id !== 'depot') V.text(L.name.split(' · ')[0], X((L.x + L.w / 2) * TS), Y((L.y + L.h / 2) * TS), { size: 9, align: 'center', color: '#ffffffcc', stroke: '#0a2342', sw: 3 });
-  const st = o.sim ? o.sim.st : JE.map.stations, rr = Math.max(4, Math.min(9, k * 26));
+  for (const L of LANDMARKS) if (lbl && L.id !== 'depot' && !L.secret) V.text(L.name.split(' · ')[0], X((L.x + L.w / 2) * TS), Y((L.y + L.h / 2) * TS), { size: 9, align: 'center', color: '#ffffffcc', stroke: '#0a2342', sw: 3 });
+  const st = o.stations || (o.sim ? o.sim.st : JE.map.stations), rr = Math.max(4, Math.min(11, k * 26));
   for (const s of st) {
     const sx = X(s.x), sy = Y(s.y);
     if (o.sim) {
@@ -341,9 +360,10 @@ function drawOverview(V, o) {
       if (s.broken) V.text('⚠', sx + rr, sy - rr, { size: 12, color: PAL.cor, body: true });
     } else { c.fillStyle = '#fff'; c.fillRect(sx - 2, sy - 2, 4, 4); }
   }
-  const dp = JE.map.depot; c.fillStyle = PAL.cie; c.fillRect(X(dp.x) - 5, Y(dp.y) - 5, 10, 10); V.text('BODEGA', X(dp.x), Y(dp.y) + 16, { size: 10, align: 'center', color: PAL.cie, stroke: '#0a2342', sw: 3 });
+  const dp = o.base || JE.map.depot; c.fillStyle = PAL.cie; c.fillRect(X(dp.x) - 5, Y(dp.y) - 5, 10, 10); V.text(o.base ? 'BASE' : 'BODEGA', X(dp.x), Y(dp.y) + 16, { size: 10, align: 'center', color: PAL.cie, stroke: '#0a2342', sw: 3 });
   if (o.markers) for (const m of o.markers) { c.fillStyle = m.col || PAL.amb; c.beginPath(); c.arc(X(m.x), Y(m.y), m === o.target ? 6 : 4, 0, TAU); c.fill(); if (m.num) V.text(String(m.num), X(m.x), Y(m.y) - 8, { size: 11, align: 'center', color: '#fff', stroke: '#0a2342', sw: 3 }); }
   if (o.trucks) for (const t of o.trucks) { const a = Art.truckTop(t.load, 20); c.save(); c.translate(X(t.x), Y(t.y)); c.rotate(t.a + Math.PI / 2); c.drawImage(a, -6, -12, 12, 24); c.restore(); if (t.sel) { c.strokeStyle = PAL.amb; c.lineWidth = 2; c.strokeRect(X(t.x) - 9, Y(t.y) - 9, 18, 18); } }
   if (o.player) { c.fillStyle = '#ff2fb3'; c.beginPath(); c.arc(X(o.player.x), Y(o.player.y), 5, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); }
+  c.restore();
   return o.rect;
 }
