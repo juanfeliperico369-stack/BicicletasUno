@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.4.1', errors: [], headless: false };
+const JE = window.JE = { version: '0.5.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -120,6 +120,16 @@ const Snd = JE.snd = {
       case 'truck': T(110, .25, { type: 'sawtooth', v: .05, to: 90 }); break;
       case 'spark': T(1200, .08, { type: 'sawtooth', v: .04, to: 300 }); break;
     }
+  },
+  /* sonido ambiente suave según la zona */
+  amb(k) {
+    if (!this.ctx || !Save.data.settings.sfx || JE.headless) return; this.resume();
+    const T = (f, d, o) => this.tone(f, d, o), R = Math.random;
+    if (k === 'birds') { const n = 2 + (R() * 3 | 0), f0 = 2600 + R() * 900; for (let i = 0; i < n; i++) T(f0 + R() * 400, .07, { type: 'sine', v: .022, to: f0 + 900, at: i * .11 }); }
+    else if (k === 'crickets') { for (let j = 0; j < 2; j++) for (let i = 0; i < 5; i++) T(4300, .025, { type: 'triangle', v: .01, at: j * .45 + i * .045 }); }
+    else if (k === 'tram') { [0, .3].forEach(a => T(1046, .4, { type: 'triangle', v: .035, at: a })); }
+    else if (k === 'metro') { T(140, .9, { type: 'sawtooth', v: .018, to: 420 }); T(420, .8, { type: 'sine', v: .014, to: 120, at: .85 }); }
+    else if (k === 'river') { for (let i = 0; i < 3; i++) T(300 + R() * 200, .25, { type: 'sine', v: .012, to: 200, at: i * .2 }); }
   },
   music(on) {
     if (!this.ctx) return;

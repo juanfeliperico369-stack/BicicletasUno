@@ -27,6 +27,17 @@ Ride.prototype.updLife = function (dt) {
   }
   tr.x = tr.p; tr.y = T.y;
   if (tr.ghost > 0) tr.ghost -= dt; else if (Math.abs(P.x - tr.x) < 21 + r && Math.abs(P.y - tr.y) < 4 + r && P.stun <= 0 && !(this.inv > 0)) { this.crash(tr); if (!this.tramTold) { this.tramTold = 1; JE.ui && JE.ui.toast('🚋 ¡Cuidado con el tranvía! Cruza por detrás o espera.'); } }
+  // sonido ambiente por zona (no usa la semilla para no cambiar la simulación)
+  if (!JE.headless && (this.ambT = (this.ambT || 2) - dt) <= 0) {
+    this.ambT = 2.5 + Math.random() * 3.5;
+    const tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS), night = Art.night(this.mode.clock || 360) > .5; let g = 0, w = 0;
+    for (let y = -4; y <= 4; y += 2) for (let x = -4; x <= 4; x += 2) { const v = this.map.get(tx + x, ty + y); if (v === TT.GRASS || v === TT.MOUNT) g++; else if (v === TT.WATER || v === TT.CANAL) w++; }
+    const metro = this.map.metroA.concat(this.map.metroB).some(s => dist(s.px, s.py, P.x, P.y) < 70);
+    if (dist(tr.x, tr.y, P.x, P.y) < 90 && Math.random() < .5) Snd.amb('tram');
+    else if (metro && Math.random() < .45) Snd.amb('metro');
+    else if (w >= 3) Snd.amb('river');
+    else if (g >= 8 || night) Snd.amb(night ? 'crickets' : 'birds');
+  }
   // peatones en aceras y plazas
   this.pedT -= dt; const want = JE.headless ? 6 : 14, cam = this.cam;
   if (this.pedT <= 0 && this.peds.length < want) {

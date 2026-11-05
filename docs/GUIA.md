@@ -158,6 +158,19 @@ En la misma Wi-Fi funciona sin internet. Entre redes distintas usa STUN de Googl
 
 **Logros:** `LOGROS` (id, nombre, prueba sobre `Save.data`). Se revisan al final de cada turno con `Logros.check()`. `Save.data.flags` guarda hitos puntuales.
 
+**v0.5 · Más valle y más personalización:**
+- **7 lugares nuevos** (45 en total): Comuna 13 y sus escaleras eléctricas, Biblioteca España, Palacio de la Cultura, Catedral Metropolitana,
+  Parque Norte, Unidad Deportiva de Belén y Museo Casa de la Memoria. Se agregan en `LANDMARKS` (coordenadas de diseño),
+  en `base` (tipo de suelo), en `solid()` y con su dibujo pixel. La prueba 1b exige que todos sean alcanzables.
+- **Ropa que se gana con logros:** `SHIRTS`/`HELMETS` crecieron, y `COSMETIC_REQ` (10-art.js) dice qué logro abre cada índice.
+  En Mi ciclista salen con 🔒 (al tocarlas, un aviso dice qué logro falta; si es secreto, dice «???») y con ★ cuando ya son tuyas.
+  Al ganar el logro, la pantalla de resultados avisa «Nueva ropa».
+- **Sonido ambiente por zona:** `Snd.amb(k)` con k = birds, crickets, tram, metro o river. `Ride.updLife` mira cada 2,5–6 s
+  el entorno (pasto o agua alrededor, cercanía del tranvía o del metro, y si es de noche) y usa `Math.random`, no la semilla,
+  para no cambiar la simulación. Respeta el interruptor de efectos.
+- **Carnet EnCicla** (pestaña Partidas, `UI.carnet()`): avatar, nombre, nivel, cargo más alto con estrellas, km, timbrazos, logros
+  y el récord y estrellas de cada oficio (de `Save.data.best` y `Save.data.stars`).
+
 **Accesibilidad:** «Letra grande» pone la clase `body.big` y multiplica por 1,15 el texto del canvas. «Mano guía» se puede apagar.
 En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derecha.
 
@@ -202,5 +215,6 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 - Pulir cada oficio con el conocimiento real del equipo EnCicla (procesos de anfitrión, relevos, balanceo, taller).
 - Multijugador: ya hay carrera 1 contra 1 por código. Faltan salas de más de 2 jugadores, código QR, TURN y modos cooperativos (por ejemplo, Monitoreo con Balance).
 - Bluetooth: solo en la app nativa (plugin de Capacitor); los navegadores no permiten Bluetooth entre celulares.
-- Más lugares (Biblioteca España, Metrocable, Tranvía de Ayacucho), peatones y semáforos.
+- Lista oficial de estaciones por zona y leyenda de colores de los pines (el usuario la ofreció): reemplazar `STATIONS_DEF`.
+- Ideas siguientes: misiones de historia por oficio, modo cooperativo en red (Monitoreo + Balance), clima por temporada y tienda de ropa con hojas verdes.
 - Página oficial con donaciones. Tiendas: Play Store primero; después iOS/Mac, Steam, Microsoft Store, Epic y Amazon (con Capacitor o Electron).

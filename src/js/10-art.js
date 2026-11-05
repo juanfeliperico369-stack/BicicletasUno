@@ -6,8 +6,10 @@ const PAL = {
   bl: '#ffffff', crema: '#f4efd8', amb: '#ffc93c', cor: '#ff6b5a', cie: '#56c7ff', lad: '#c0623b', k: '#0a1424', gris: '#9aa7b8', plata: '#d6dde6'
 };
 const SKINS = ['#f6d2b4', '#e0ac83', '#c68a5e', '#9a6440', '#6b4128'];
-const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7'];
-const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c'];
+const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#0a2342', '#ffd84a', '#f08a4b'];
+const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c', '#ffd84a', '#56c7ff', '#ff8a3d', '#b07cff'];
+/* ropa que se gana con logros: índice -> [logro, nombre] */
+const COSMETIC_REQ = { shirt: { 7: ['aprobado', 'Uniforme EnCicla'], 8: ['dorada', 'Camiseta dorada'], 9: ['postal15', 'Camiseta silletera'] }, helmet: { 5: ['perfecto', 'Casco dorado'], 6: ['maquinista', 'Casco del Metro'], 7: ['ciclorruta', 'Casco cono de ciclovía'], 8: ['oficios', 'Casco todero'] } };
 const HAIRS = ['#2a1a10', '#4a2c18', '#7a4a22', '#c9a25a', '#d9d9d9', '#151515'];
 const PANTS = ['#2a3b5c', '#3d4a5a', '#5a4632', '#1f2a3a', '#6a7a8a', '#7a3b3b'];
 

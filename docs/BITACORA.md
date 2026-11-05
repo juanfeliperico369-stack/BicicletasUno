@@ -154,3 +154,20 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 **Errores encontrados y corregidos**
 - Madera quedó dentro del río y Barbosa Norte en el borde del mapa: se reubicaron.
+
+## 2026-11-05 · v0.5.0 · Más valle, ropa por logros, sonido ambiente y carnet
+
+**Qué cambió**
+1. Siete lugares nuevos con postal (45 en total): Comuna 13, Biblioteca España, Palacio de la Cultura, Catedral, Parque Norte,
+   Unidad Deportiva de Belén y Casa de la Memoria.
+2. Siete prendas que se ganan con logros (uniforme EnCicla, camiseta dorada y silletera, y cascos dorado, del Metro, cono y todero).
+   Salen con candado en Mi ciclista y los resultados avisan cuando ganas una.
+3. Sonido ambiente según la zona: pájaros en parques de día, grillos de noche, campana del tranvía, paso del metro y el río.
+4. Carnet EnCicla en Partidas: tu cargo más alto, nivel, km, logros y el récord y estrellas de cada oficio.
+
+**Qué se probó**
+- 106 estaciones y 45 lugares alcanzables, y el camión llega a todas las estaciones.
+- 100 partidas del bot, humo de interfaz, CPU 4x lenta (mediana de 16,7 ms) y sala de 3 dispositivos.
+- Las prendas bloqueadas no se pueden elegir y avisan qué logro falta.
+
+**Qué falta:** la lista oficial de estaciones por zona, la leyenda de colores de los pines y las pruebas en celulares reales.

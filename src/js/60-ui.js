@@ -100,15 +100,23 @@ const UI = JE.ui = {
     const k = Math.min((c.width - 8) / src.width, (c.height - 8) / src.height); const w = src.width * k, h = src.height * k;
     x.drawImage(src, (c.width - w) / 2, (c.height - h) / 2, w, h);
   },
+  /* Carnet EnCicla: cargo actual y récord por oficio */
+  carnet() {
+    const S = Save.data, top = ROLES.filter(r => (S.stars[r.id] || [0])[0] > 0).pop() || ROLES[0], km = (S.stats.km || 0).toFixed(1);
+    const rec = ROLES.map(r => { const b = Math.max(0, ...[1, 2, 3].map(t => S.best[r.id + t] || 0)), st = this.stars(r.id).reduce((a, b) => a + b, 0); return `<tr class="${b ? '' : 'off'}"><td><img class="px" width="16" height="16" src="${Art.iconURL(r.icon)}" alt=""> ${esc(r.name)}</td><td>${b ? fmtInt(b) : '—'}</td><td style="color:var(--amb)">${'★'.repeat(st)}<i>${'★'.repeat(9 - st)}</i></td></tr>`; }).join('');
+    return `<div class="carnet"><div class="ch"><canvas id="cnAv" width="80" height="50"></canvas><div><div class="pag">Carnet EnCicla · nivel ${this.level()}</div><div class="cn">${esc(S.profile.name)}</div><div class="cr">${esc(top.name)}</div><div class="pag">${km} km · ${fmtInt(S.stats.bells || 0)} timbrazos · ${S.logros.length}/${LOGROS.length} logros</div></div></div><table class="rec"><tr><th>Oficio</th><th>Récord</th><th>Estrellas</th></tr>${rec}</table></div>`;
+  },
   renderParts() {
     const S = Save.data, st = S.stats;
     let h = `<div class="pag">PAG 3 · Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
     h += `<div class="stat"><div><b>${fmtInt(st.plays)}</b><span>turnos jugados</span></div><div><b>${fmtInt(S.xp)}</b><span>experiencia</span></div><div><b>${fmtInt(st.trips)}</b><span>viajes en bici</span></div><div><b>${fmtInt(st.leaves)}</b><span>hojas verdes</span></div><div><b>${S.bestStreak}</b><span>mejor racha</span></div><div><b>${S.postales.length}</b><span>postales</span></div></div>`;
+    h += this.carnet();
     h += `<div class="row" style="margin:12px 0"><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
     if (!S.history.length) h += `<p class="m">Aún no has jugado. ¡Empieza por el Usuario!</p>`;
     else { h += `<table class="hist">`; for (const e of S.history.slice(0, 60)) { const d = new Date(e.d); h += `<tr><td>${d.toLocaleDateString('es-CO')} ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(ROLE[e.m] ? ROLE[e.m].name : e.m)} ${e.free ? 'libre' : 'T' + e.t}${e.reto ? ' · reto' : ''}</td><td>${fmtInt(e.s)} pts</td><td style="color:var(--amb)">${'★'.repeat(e.st)}</td></tr>`; } h += `</table>`; }
     h += Logros.html();
     const el = $('#tab-parts'); el.innerHTML = h;
+    const cv = $('#cnAv', el); if (cv) { const x = cv.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); }
     $('#bExp').onclick = () => this.exportSave(); $('#bImp').onclick = () => $('#fileIn').click();
     $('#bDel').onclick = () => this.confirm('¿Borrar todas tus partidas y progreso?', () => { Save.reset(); this.renderHome(); this.toast('Progreso borrado'); });
   },
@@ -161,6 +169,7 @@ const UI = JE.ui = {
     h += `<ul class="goals">${res.goals.map(g => `<li class="${g.ok ? 'ok' : 'no'} ${g.main ? 'main' : ''}"><b>${g.ok ? '✓' : '✗'}</b><span>${esc(g.txt)}</span></li>`).join('')}</ul>`;
     if (prog.unlocks.length) h += `<div class="paper" style="margin:10px 0"><div class="t">¡Ascenso!</div><p style="margin:6px 0 0">Desbloqueaste: ${prog.unlocks.map(esc).join(', ')}</p></div>`;
     if (prog.logros && prog.logros.length) h += `<div class="logros" style="margin:10px 0">${prog.logros.map(l => `<div class="logro ok nuevo"><img class="px" src="${Art.iconURL(l.icon, 2)}" alt=""><b>🏅 ${esc(l.name)}</b><small>${esc(l.desc)}</small></div>`).join('')}</div>`;
+    if (prog.logros && prog.logros.length) { const gifts = []; for (const k in COSMETIC_REQ) for (const i in COSMETIC_REQ[k]) if (prog.logros.some(l => l.id === COSMETIC_REQ[k][i][0])) gifts.push(COSMETIC_REQ[k][i][1]); if (gifts.length) h += `<p class="m" style="margin:4px 0 10px">🎁 Nueva ropa para tu ciclista: <b>${gifts.map(esc).join(', ')}</b> (en Mi ciclista).</p>`; }
     if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
     if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
     const nextOk = !meta.free && !meta.reto && meta.roleId !== 'carrera' && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
@@ -265,11 +274,12 @@ const UI = JE.ui = {
   },
   avatar() {
     const P = Save.data.profile;
-    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => `<button data-k="${key}" data-i="${i}" class="${P[key] === i ? 'on' : ''}" style="background:${c}" aria-label="${key} ${i + 1}"></button>`).join('')}</div>`;
+    const req = (key, i) => (COSMETIC_REQ[key] || {})[i], locked = (key, i) => { const r = req(key, i); return r && !Save.data.logros.includes(r[0]); };
+    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), lk = locked(key, i); return `<button data-k="${key}" data-i="${i}" class="${P[key] === i ? 'on' : ''} ${lk ? 'lock' : ''}" style="background:${c}" aria-label="${r ? r[1] : key + ' ' + (i + 1)}" title="${r ? esc(r[1]) : ''}">${lk ? '🔒' : r ? '★' : ''}</button>`; }).join('')}</div>`;
     this.modal(`<h2>Mi ciclista</h2><canvas id="avPrev" width="80" height="50"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
       <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}<div class="col"><button class="btn pri" id="avOk">Guardar</button></div>`, () => {
       const draw = () => { const c = $('#avPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); };
-      draw(); $$('.swatches button').forEach(b => b.onclick = () => { P[b.dataset.k] = +b.dataset.i; $$(`.swatches button[data-k=${b.dataset.k}]`).forEach(x => x.classList.toggle('on', x === b)); draw(); Snd.sfx('tap'); });
+      draw(); $$('.swatches button').forEach(b => b.onclick = () => { if (locked(b.dataset.k, +b.dataset.i)) { const r = req(b.dataset.k, +b.dataset.i), L = LOGROS.find(l => l.id === r[0]); Snd.sfx('bad'); return this.toast('🔒 ' + r[1] + ': se gana con el logro «' + (L && !L.secret ? L.name : '???') + '»'); } P[b.dataset.k] = +b.dataset.i; $$(`.swatches button[data-k=${b.dataset.k}]`).forEach(x => x.classList.toggle('on', x === b)); draw(); Snd.sfx('tap'); });
       $('#avOk').onclick = () => { P.name = ($('#avName').value || 'Ciclista').trim().slice(0, 16) || 'Ciclista'; Save.data.settings.seen.profile = 1; Save.save(); this.closeModal(); this.renderHome(); Snd.sfx('ok'); };
     });
   },

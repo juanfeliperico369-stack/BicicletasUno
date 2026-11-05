@@ -193,3 +193,11 @@ body.big .turnos button{font-size:21px}
 .qrbox{display:flex;justify-content:center;background:#fff;padding:8px;border:3px solid var(--az);margin:6px 0}
 .qrbox canvas{max-width:100%;height:auto;image-rendering:pixelated}
 .roster{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.swatches button{font-size:14px;line-height:1;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000}
+.swatches button.lock{filter:grayscale(.7) brightness(.6);border-style:dashed}
+.carnet{background:var(--bl,#fff);color:#0a2342;border:3px solid #0a2342;border-radius:10px;padding:10px;margin:12px 0;box-shadow:4px 4px 0 #9bd341}
+.carnet .ch{display:flex;gap:10px;align-items:center;border-bottom:2px dashed #0a234244;padding-bottom:8px}
+.carnet canvas{width:96px;height:60px;image-rendering:pixelated;border:2px solid #0a2342;border-radius:6px;flex:none}
+.carnet .cn{font-size:20px;font-weight:900;line-height:1.1}.carnet .cr{display:inline-block;background:#9bd341;color:#0a2342;font-weight:800;padding:1px 8px;border-radius:4px;margin:3px 0}
+.carnet .pag{color:#0a2342aa}.carnet table.rec{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.carnet th{text-align:left;font-size:11px;opacity:.7}
+.carnet td{padding:2px 0;border-bottom:1px solid #0a234218}.carnet tr.off{opacity:.45}.carnet td i{color:#0a234222;font-style:normal}.carnet img{vertical-align:middle}
