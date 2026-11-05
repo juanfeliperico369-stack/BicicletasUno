@@ -216,6 +216,14 @@ body.big .turnos button{font-size:21px}
 .qrbox{display:flex;justify-content:center;background:#fff;padding:8px;border:3px solid var(--az);margin:6px 0}
 .qrbox canvas{max-width:100%;height:auto;image-rendering:pixelated}
 .roster{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.swatches button{font-size:14px;line-height:1;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000}
+.swatches button.lock{filter:grayscale(.7) brightness(.6);border-style:dashed}
+.carnet{background:var(--bl,#fff);color:#0a2342;border:3px solid #0a2342;border-radius:10px;padding:10px;margin:12px 0;box-shadow:4px 4px 0 #9bd341}
+.carnet .ch{display:flex;gap:10px;align-items:center;border-bottom:2px dashed #0a234244;padding-bottom:8px}
+.carnet canvas{width:96px;height:60px;image-rendering:pixelated;border:2px solid #0a2342;border-radius:6px;flex:none}
+.carnet .cn{font-size:20px;font-weight:900;line-height:1.1}.carnet .cr{display:inline-block;background:#9bd341;color:#0a2342;font-weight:800;padding:1px 8px;border-radius:4px;margin:3px 0}
+.carnet .pag{color:#0a2342aa}.carnet table.rec{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.carnet th{text-align:left;font-size:11px;opacity:.7}
+.carnet td{padding:2px 0;border-bottom:1px solid #0a234218}.carnet tr.off{opacity:.45}.carnet td i{color:#0a234222;font-style:normal}.carnet img{vertical-align:middle}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -269,7 +277,7 @@ body.big .turnos button{font-size:21px}
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.4.1', errors: [], headless: false };
+const JE = window.JE = { version: '0.5.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -388,6 +396,16 @@ const Snd = JE.snd = {
       case 'spark': T(1200, .08, { type: 'sawtooth', v: .04, to: 300 }); break;
     }
   },
+  /* sonido ambiente suave según la zona */
+  amb(k) {
+    if (!this.ctx || !Save.data.settings.sfx || JE.headless) return; this.resume();
+    const T = (f, d, o) => this.tone(f, d, o), R = Math.random;
+    if (k === 'birds') { const n = 2 + (R() * 3 | 0), f0 = 2600 + R() * 900; for (let i = 0; i < n; i++) T(f0 + R() * 400, .07, { type: 'sine', v: .022, to: f0 + 900, at: i * .11 }); }
+    else if (k === 'crickets') { for (let j = 0; j < 2; j++) for (let i = 0; i < 5; i++) T(4300, .025, { type: 'triangle', v: .01, at: j * .45 + i * .045 }); }
+    else if (k === 'tram') { [0, .3].forEach(a => T(1046, .4, { type: 'triangle', v: .035, at: a })); }
+    else if (k === 'metro') { T(140, .9, { type: 'sawtooth', v: .018, to: 420 }); T(420, .8, { type: 'sine', v: .014, to: 120, at: .85 }); }
+    else if (k === 'river') { for (let i = 0; i < 3; i++) T(300 + R() * 200, .25, { type: 'sine', v: .012, to: 200, at: i * .2 }); }
+  },
   music(on) {
     if (!this.ctx) return;
     if (on && Save.data.settings.music && !JE.headless) {
@@ -484,8 +502,10 @@ const PAL = {
   bl: '#ffffff', crema: '#f4efd8', amb: '#ffc93c', cor: '#ff6b5a', cie: '#56c7ff', lad: '#c0623b', k: '#0a1424', gris: '#9aa7b8', plata: '#d6dde6'
 };
 const SKINS = ['#f6d2b4', '#e0ac83', '#c68a5e', '#9a6440', '#6b4128'];
-const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7'];
-const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c'];
+const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#0a2342', '#ffd84a', '#f08a4b'];
+const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c', '#ffd84a', '#56c7ff', '#ff8a3d', '#b07cff'];
+/* ropa que se gana con logros: índice -> [logro, nombre] */
+const COSMETIC_REQ = { shirt: { 7: ['aprobado', 'Uniforme EnCicla'], 8: ['dorada', 'Camiseta dorada'], 9: ['postal15', 'Camiseta silletera'] }, helmet: { 5: ['perfecto', 'Casco dorado'], 6: ['maquinista', 'Casco del Metro'], 7: ['ciclorruta', 'Casco cono de ciclovía'], 8: ['oficios', 'Casco todero'] } };
 const HAIRS = ['#2a1a10', '#4a2c18', '#7a4a22', '#c9a25a', '#d9d9d9', '#151515'];
 const PANTS = ['#2a3b5c', '#3d4a5a', '#5a4632', '#1f2a3a', '#6a7a8a', '#7a3b3b'];
 
@@ -810,6 +830,13 @@ LANDMARKS.push(
   { id: 'ditaires', name: 'Parque Ditaires', muni: 'Itagüí', x: 26, y: 222, w: 13, h: 9, k: 'botanico', fact: 'Gran parque de Itagüí con zonas verdes, piscinas y lago.' },
   { id: 'caldas', name: 'Parque de Caldas', muni: 'Caldas', x: 42, y: 280, w: 12, h: 9, k: 'iglesia', fact: 'Caldas es el municipio más al sur del Valle de Aburrá.' },
   { id: 'nacimiento', name: 'Alto de San Miguel', muni: 'Caldas', x: 80, y: 290, w: 14, h: 14, k: 'volador', fact: 'Aquí, en Caldas, nace el río Medellín, que recorre todo el valle hacia el norte hasta Barbosa.' },
+  { id: 'comuna13', name: 'Comuna 13 · Escaleras eléctricas', muni: 'Medellín', x: 9, y: 124, w: 12, h: 10, k: 'comuna13', fact: 'Escaleras eléctricas al aire libre y murales de grafiti convirtieron a la Comuna 13 en símbolo de transformación.' },
+  { id: 'bibespana', name: 'Parque Biblioteca España', muni: 'Medellín', x: 128, y: 24, w: 12, h: 10, k: 'bibespana', fact: 'Tres grandes "rocas" oscuras en Santo Domingo, junto al Metrocable: una biblioteca en lo alto de la montaña.' },
+  { id: 'palacio', name: 'Palacio de la Cultura', muni: 'Medellín', x: 97, y: 82, w: 8, h: 7, k: 'palacio', fact: 'Edificio de estilo gótico con fachada ajedrezada en blanco y negro, junto a la Plaza Botero.' },
+  { id: 'catedral', name: 'Catedral Metropolitana', muni: 'Medellín', x: 114, y: 84, w: 10, h: 9, k: 'catedral', fact: 'Frente al Parque de Bolívar: es una de las iglesias de ladrillo más grandes del mundo.' },
+  { id: 'parquenorte', name: 'Parque Norte', muni: 'Medellín', x: 120, y: 74, w: 11, h: 9, k: 'parquenorte', fact: 'Parque de diversiones tradicional de la ciudad, con rueda de Chicago y montaña rusa.' },
+  { id: 'unidadbelen', name: 'Unidad Deportiva de Belén', muni: 'Medellín', x: 22, y: 162, w: 12, h: 9, k: 'deporte', fact: 'Canchas, coliseo y piscinas para hacer deporte en el suroccidente de Medellín.' },
+  { id: 'memoria', name: 'Museo Casa de la Memoria', muni: 'Medellín', x: 130, y: 100, w: 9, h: 7, k: 'memoria', fact: 'Museo dedicado a la memoria y la reconciliación, en el Parque Bicentenario.' },
   { id: 'trescruces', name: 'Cerro de las Tres Cruces', muni: 'Medellín', x: 9, y: 148, w: 12, h: 12, k: 'cruces', secret: true, fact: '¡Postal secreta! Desde sus tres cruces se ve todo el valle. Muchos suben a pie a hacer ejercicio.' }
 );
 /* acomoda cada lugar (tras escalar) para no tapar avenidas ni el río: busca el corrimiento más cercano con menos cruces */
@@ -974,7 +1001,7 @@ const CityMap = JE.map = {
   },
   paintLandmark(L, i) {
     const keep = [TT.WATER, TT.CANAL, TT.AUTO];
-    const base = { cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
+    const base = { comuna13: TT.LAND, bibespana: TT.LAND, palacio: TT.PLAZA, catedral: TT.PLAZA, parquenorte: TT.GRASS, deporte: TT.GRASS, memoria: TT.GRASS, cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
     for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y))) continue; this.set(x, y, base); this.lid[this.idx(x, y)] = i; }
     const solid = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid[this.idx(L.x + xx, L.y + yy)] === i) this.set(L.x + xx, L.y + yy, TT.LAND); };
     const W = L.w, H = L.h;
@@ -987,6 +1014,10 @@ const CityMap = JE.map = {
       case 'botero': solid(0, 0, W, 2); break;
       case 'teatro': solid(1, 1, 5, 4); break;
       case 'mamm': solid(1, 1, 5, 3); break;
+      case 'palacio': solid(1, 1, W - 2, 4); break;
+      case 'catedral': solid(2, 1, 6, 5); break;
+      case 'parquenorte': solid(1, 1, 4, 4); break;
+      case 'memoria': solid(1, 1, 5, 3); break;
       case 'depot': solid(0, 0, W, 2); for (let x = 3; x < 7; x++) for (let y = L.y + L.h; y < L.y + L.h + 3; y++) { const v = this.get(L.x + x, y); if (v === TT.WALK || v === TT.BLDG || v === TT.CICLO) this.set(L.x + x, y, TT.DEPOT); } break;
     }
     // perímetro transitable
@@ -1300,6 +1331,42 @@ const CityMap = JE.map = {
         case 'luces': for (let y = 4; y < H; y += 7) for (let x = 4; x < W; x += 7) { R(x + 1, y + 1, 2, 2, '#0002'); R(x, y, 2, 2, '#ffffff'); R(x, y, 1, 1, PAL.vd1); } break;
         case 'mamm': roofHouse(8, 8, 40, 24, '#8e4a2a'); for (let x = 10; x < 46; x += 6) R(x, 10, 2, 20, '#a85b3c'); roofHouse(50, 10, 16, 16, '#9fb8cf'); trees(6, 33, [6, 38, W - 12, H - 42]); break;
         case 'depot': roofHouse(0, 0, W, 16, '#f2f5f8'); for (let x = 2; x < W - 2; x += 10) R(x, 3, 6, 10, PAL.vd); R(0, 15, W, 1, PAL.az2); for (let k = 0; k < 2; k++) { c.save(); c.translate(14 + k * 18, 22); c.drawImage(Art.truckTop(10, 20), 0, 0); c.restore(); } for (let x = 52; x < W - 6; x += 5) c.drawImage(Art.bikeTop(), x, 24); break;
+        case 'comuna13': { // ladera de ladrillo, escaleras eléctricas techadas y murales
+          R(0, 0, W, H, '#9c5a3c'); for (let k = 0; k < 40; k++) R((h2(k, 1) * (W - 6)) | 0, (h2(k, 2) * (H - 6)) | 0, 5, 4, ['#b45a36', '#c9683f', '#d8d2c4', '#8e959c'][k % 4]);
+          for (let s = 0; s < 4; s++) { const x0 = 10 + s * 20, y0 = H - 12 - s * 16; R(x0, y0, 22, 6, '#c9ccd1'); for (let i = 0; i < 22; i += 3) R(x0 + i, y0 + 1, 1, 4, '#8d97a5'); R(x0 - 1, y0 - 3, 24, 3, PAL.amb); }
+          ['#ff6b5a', '#56c7ff', '#ffd84a', '#b07cff', '#9bd341', '#ff8fc7'].forEach((col, k) => R(4 + k * 15, 6 + (k % 2) * 4, 12, 5, col));
+          break;
+        }
+        case 'bibespana': { // tres "rocas" oscuras en la montaña
+          R(0, 0, W, H, '#3a7d44'); for (let k = 0; k < 30; k++) R((h2(k, 5) * W) | 0, (h2(k, 6) * H) | 0, 4, 3, '#b45a36');
+          [[10, 20, 26, 22], [40, 12, 26, 26], [70, 24, 22, 20]].forEach(([x, y, w, h]) => { R(x + 3, y + 3, w, h, '#0005'); R(x, y, w, h, '#2b2f38'); R(x + 2, y + 2, w - 6, 3, '#4a505c'); R(x, y + h - 2, w, 2, '#151a22'); });
+          break;
+        }
+        case 'palacio': { // fachada ajedrezada en blanco y negro
+          R(0, 0, W, H, '#ddd3b8'); for (let y = 8; y < 40; y += 4) for (let x = 8; x < W - 8; x += 4) R(x, y, 4, 4, ((x + y) / 4) % 2 ? '#1d1d1d' : '#f1f1f1');
+          R(W / 2 - 3, 2, 6, 8, '#1d1d1d'); R(W / 2 - 1, 0, 2, 3, '#1d1d1d');
+          break;
+        }
+        case 'catedral': { // gran iglesia de ladrillo frente al Parque de Bolívar
+          R(0, 0, W, H, '#ddd3b8'); R(18, 8, 44, 38, '#a34e2c'); R(30, 4, 20, 46, '#b85a36'); R(18, 22, 44, 10, '#b85a36'); R(36, 0, 8, 10, '#8a3f22'); R(39, -1, 2, 3, '#f2c230');
+          trees(10, 91, [4, 52, W - 8, H - 56]);
+          break;
+        }
+        case 'parquenorte': { // rueda de Chicago y montaña rusa
+          R(0, 0, W, H, '#62a350'); pring(c, 20, 20, 14, '#ffffff'); pring(c, 20, 20, 13, '#ff6b5a'); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; pline(c, 20, 20, 20 + Math.cos(a) * 13, 20 + Math.sin(a) * 13, '#d6dde6'); R(20 + Math.cos(a) * 13 - 1, 20 + Math.sin(a) * 13 - 1, 3, 3, ['#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7'][k % 4]); }
+          for (let x = 40; x < W - 4; x++) R(x, 40 + Math.round(Math.sin(x / 6) * 14), 1, 2, '#ffc93c');
+          for (let k = 0; k < 8; k++) pdisc(c, 6 + h2(k, 77) * (W - 12), H - 8 - h2(k, 78) * 10, 3, '#3f8a3f');
+          break;
+        }
+        case 'deporte': { // canchas, coliseo y piscina
+          R(0, 0, W, H, '#62a350'); R(6, 6, 40, 26, '#4f9a3a'); R(6, 6, 40, 1, '#fff'); R(6, 31, 40, 1, '#fff'); R(6, 6, 1, 26, '#fff'); R(45, 6, 1, 26, '#fff'); R(25, 6, 1, 26, '#fff'); pring(c, 26, 19, 5, '#fff');
+          R(54, 8, 36, 22, '#c9cfd8'); R(56, 10, 32, 18, '#8e98a6'); R(10, 42, 34, 22, PAL.cie); for (let x = 12; x < 44; x += 6) R(x, 42, 1, 22, '#ffffff88'); R(54, 40, 36, 26, '#d8432f');
+          break;
+        }
+        case 'memoria': { // museo y Parque Bicentenario
+          R(0, 0, W, H, '#62a350'); roofHouse(8, 8, 40, 24, '#c9c5bd'); R(10, 30, 36, 2, '#59606c'); R(52, 10, 14, 40, '#ddd3b8'); trees(6, 55, [6, 36, W - 12, H - 40]);
+          break;
+        }
         case 'aeropuerto': {
           R(0, 0, W, H, '#6aa356'); R(cx - 12, 4, 24, H - 8, '#4a505c'); for (let y = 16; y < H - 16; y += 14) R(cx - 1, y, 2, 7, '#f4f4f4');
           for (let k = 0; k < 6; k++) { R(cx - 10 + k * 4, 8, 2, 8, '#f4f4f4'); R(cx - 10 + k * 4, H - 16, 2, 8, '#f4f4f4'); }
@@ -1715,6 +1782,17 @@ Ride.prototype.updLife = function (dt) {
   }
   tr.x = tr.p; tr.y = T.y;
   if (tr.ghost > 0) tr.ghost -= dt; else if (Math.abs(P.x - tr.x) < 21 + r && Math.abs(P.y - tr.y) < 4 + r && P.stun <= 0 && !(this.inv > 0)) { this.crash(tr); if (!this.tramTold) { this.tramTold = 1; JE.ui && JE.ui.toast('🚋 ¡Cuidado con el tranvía! Cruza por detrás o espera.'); } }
+  // sonido ambiente por zona (no usa la semilla para no cambiar la simulación)
+  if (!JE.headless && (this.ambT = (this.ambT || 2) - dt) <= 0) {
+    this.ambT = 2.5 + Math.random() * 3.5;
+    const tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS), night = Art.night(this.mode.clock || 360) > .5; let g = 0, w = 0;
+    for (let y = -4; y <= 4; y += 2) for (let x = -4; x <= 4; x += 2) { const v = this.map.get(tx + x, ty + y); if (v === TT.GRASS || v === TT.MOUNT) g++; else if (v === TT.WATER || v === TT.CANAL) w++; }
+    const metro = this.map.metroA.concat(this.map.metroB).some(s => dist(s.px, s.py, P.x, P.y) < 70);
+    if (dist(tr.x, tr.y, P.x, P.y) < 90 && Math.random() < .5) Snd.amb('tram');
+    else if (metro && Math.random() < .45) Snd.amb('metro');
+    else if (w >= 3) Snd.amb('river');
+    else if (g >= 8 || night) Snd.amb(night ? 'crickets' : 'birds');
+  }
   // peatones en aceras y plazas
   this.pedT -= dt; const want = JE.headless ? 6 : 14, cam = this.cam;
   if (this.pedT <= 0 && this.peds.length < want) {
@@ -3460,15 +3538,23 @@ const UI = JE.ui = {
     const k = Math.min((c.width - 8) / src.width, (c.height - 8) / src.height); const w = src.width * k, h = src.height * k;
     x.drawImage(src, (c.width - w) / 2, (c.height - h) / 2, w, h);
   },
+  /* Carnet EnCicla: cargo actual y récord por oficio */
+  carnet() {
+    const S = Save.data, top = ROLES.filter(r => (S.stars[r.id] || [0])[0] > 0).pop() || ROLES[0], km = (S.stats.km || 0).toFixed(1);
+    const rec = ROLES.map(r => { const b = Math.max(0, ...[1, 2, 3].map(t => S.best[r.id + t] || 0)), st = this.stars(r.id).reduce((a, b) => a + b, 0); return `<tr class="${b ? '' : 'off'}"><td><img class="px" width="16" height="16" src="${Art.iconURL(r.icon)}" alt=""> ${esc(r.name)}</td><td>${b ? fmtInt(b) : '—'}</td><td style="color:var(--amb)">${'★'.repeat(st)}<i>${'★'.repeat(9 - st)}</i></td></tr>`; }).join('');
+    return `<div class="carnet"><div class="ch"><canvas id="cnAv" width="80" height="50"></canvas><div><div class="pag">Carnet EnCicla · nivel ${this.level()}</div><div class="cn">${esc(S.profile.name)}</div><div class="cr">${esc(top.name)}</div><div class="pag">${km} km · ${fmtInt(S.stats.bells || 0)} timbrazos · ${S.logros.length}/${LOGROS.length} logros</div></div></div><table class="rec"><tr><th>Oficio</th><th>Récord</th><th>Estrellas</th></tr>${rec}</table></div>`;
+  },
   renderParts() {
     const S = Save.data, st = S.stats;
     let h = `<div class="pag">PAG 3 · Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
     h += `<div class="stat"><div><b>${fmtInt(st.plays)}</b><span>turnos jugados</span></div><div><b>${fmtInt(S.xp)}</b><span>experiencia</span></div><div><b>${fmtInt(st.trips)}</b><span>viajes en bici</span></div><div><b>${fmtInt(st.leaves)}</b><span>hojas verdes</span></div><div><b>${S.bestStreak}</b><span>mejor racha</span></div><div><b>${S.postales.length}</b><span>postales</span></div></div>`;
+    h += this.carnet();
     h += `<div class="row" style="margin:12px 0"><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
     if (!S.history.length) h += `<p class="m">Aún no has jugado. ¡Empieza por el Usuario!</p>`;
     else { h += `<table class="hist">`; for (const e of S.history.slice(0, 60)) { const d = new Date(e.d); h += `<tr><td>${d.toLocaleDateString('es-CO')} ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(ROLE[e.m] ? ROLE[e.m].name : e.m)} ${e.free ? 'libre' : 'T' + e.t}${e.reto ? ' · reto' : ''}</td><td>${fmtInt(e.s)} pts</td><td style="color:var(--amb)">${'★'.repeat(e.st)}</td></tr>`; } h += `</table>`; }
     h += Logros.html();
     const el = $('#tab-parts'); el.innerHTML = h;
+    const cv = $('#cnAv', el); if (cv) { const x = cv.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); }
     $('#bExp').onclick = () => this.exportSave(); $('#bImp').onclick = () => $('#fileIn').click();
     $('#bDel').onclick = () => this.confirm('¿Borrar todas tus partidas y progreso?', () => { Save.reset(); this.renderHome(); this.toast('Progreso borrado'); });
   },
@@ -3521,6 +3607,7 @@ const UI = JE.ui = {
     h += `<ul class="goals">${res.goals.map(g => `<li class="${g.ok ? 'ok' : 'no'} ${g.main ? 'main' : ''}"><b>${g.ok ? '✓' : '✗'}</b><span>${esc(g.txt)}</span></li>`).join('')}</ul>`;
     if (prog.unlocks.length) h += `<div class="paper" style="margin:10px 0"><div class="t">¡Ascenso!</div><p style="margin:6px 0 0">Desbloqueaste: ${prog.unlocks.map(esc).join(', ')}</p></div>`;
     if (prog.logros && prog.logros.length) h += `<div class="logros" style="margin:10px 0">${prog.logros.map(l => `<div class="logro ok nuevo"><img class="px" src="${Art.iconURL(l.icon, 2)}" alt=""><b>🏅 ${esc(l.name)}</b><small>${esc(l.desc)}</small></div>`).join('')}</div>`;
+    if (prog.logros && prog.logros.length) { const gifts = []; for (const k in COSMETIC_REQ) for (const i in COSMETIC_REQ[k]) if (prog.logros.some(l => l.id === COSMETIC_REQ[k][i][0])) gifts.push(COSMETIC_REQ[k][i][1]); if (gifts.length) h += `<p class="m" style="margin:4px 0 10px">🎁 Nueva ropa para tu ciclista: <b>${gifts.map(esc).join(', ')}</b> (en Mi ciclista).</p>`; }
     if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
     if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
     const nextOk = !meta.free && !meta.reto && meta.roleId !== 'carrera' && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
@@ -3625,11 +3712,12 @@ const UI = JE.ui = {
   },
   avatar() {
     const P = Save.data.profile;
-    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => `<button data-k="${key}" data-i="${i}" class="${P[key] === i ? 'on' : ''}" style="background:${c}" aria-label="${key} ${i + 1}"></button>`).join('')}</div>`;
+    const req = (key, i) => (COSMETIC_REQ[key] || {})[i], locked = (key, i) => { const r = req(key, i); return r && !Save.data.logros.includes(r[0]); };
+    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), lk = locked(key, i); return `<button data-k="${key}" data-i="${i}" class="${P[key] === i ? 'on' : ''} ${lk ? 'lock' : ''}" style="background:${c}" aria-label="${r ? r[1] : key + ' ' + (i + 1)}" title="${r ? esc(r[1]) : ''}">${lk ? '🔒' : r ? '★' : ''}</button>`; }).join('')}</div>`;
     this.modal(`<h2>Mi ciclista</h2><canvas id="avPrev" width="80" height="50"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
       <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}<div class="col"><button class="btn pri" id="avOk">Guardar</button></div>`, () => {
       const draw = () => { const c = $('#avPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); };
-      draw(); $$('.swatches button').forEach(b => b.onclick = () => { P[b.dataset.k] = +b.dataset.i; $$(`.swatches button[data-k=${b.dataset.k}]`).forEach(x => x.classList.toggle('on', x === b)); draw(); Snd.sfx('tap'); });
+      draw(); $$('.swatches button').forEach(b => b.onclick = () => { if (locked(b.dataset.k, +b.dataset.i)) { const r = req(b.dataset.k, +b.dataset.i), L = LOGROS.find(l => l.id === r[0]); Snd.sfx('bad'); return this.toast('🔒 ' + r[1] + ': se gana con el logro «' + (L && !L.secret ? L.name : '???') + '»'); } P[b.dataset.k] = +b.dataset.i; $$(`.swatches button[data-k=${b.dataset.k}]`).forEach(x => x.classList.toggle('on', x === b)); draw(); Snd.sfx('tap'); });
       $('#avOk').onclick = () => { P.name = ($('#avName').value || 'Ciclista').trim().slice(0, 16) || 'Ciclista'; Save.data.settings.seen.profile = 1; Save.save(); this.closeModal(); this.renderHome(); Snd.sfx('ok'); };
     });
   },
