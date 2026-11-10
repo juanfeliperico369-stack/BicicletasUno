@@ -34,6 +34,8 @@ src/js/45-mg2.js      minijuegos v0.4 inspirados en Infinity Games y Railways: M
                       MGRutas (Desvíos de Bodega T3 y «Maquinista» secreto) y MGLaberinto (Moravia secreto)
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
+src/js/57-equipo.js   Turno en equipo (cooperativo en red): ModeCoopMon (anfitrión, Monitoreo) y ModeCoopDriver (invitados, camión)
+src/js/66-historia.js historia de 27 capítulos (CAST, HISTORIA), retratos pixel y logros cronista/estreno/equipo
 src/js/65-extra.js    logros (16), introducción «¿Qué es EnCicla?», «Apoya la bici pública», tarjeta de resultado 1080x1350
 src/js/70-net.js      Net: salas WebRTC de hasta 4 jugadores en estrella (el anfitrión reenvía), sin servidor
 src/js/72-qr.js       QR: generador propio (v1–40, idéntico a la referencia Nayuki) + escáner con BarcodeDetector y cámara
@@ -171,6 +173,32 @@ En la misma Wi-Fi funciona sin internet. Entre redes distintas usa STUN de Googl
 - **Carnet EnCicla** (pestaña Partidas, `UI.carnet()`): avatar, nombre, nivel, cargo más alto con estrellas, km, timbrazos, logros
   y el récord y estrellas de cada oficio (de `Save.data.best` y `Save.data.stars`).
 
+**v0.6 · Tienda, temporadas, historia y cooperativo:**
+- **Tienda con hojas verdes** (`SHOP` en 10-art.js: clave → índice → [precio, nombre]). El saldo es `hojas()` = `stats.leaves − spent`.
+  Lo comprado queda en `Save.data.owned` (`'bike2'`, `'bell3'`…). Categorías: camisetas, cascos, color de bici (`BIKES`, `profile.bike`)
+  y timbre (`BELLS`, `profile.bell`, cambia el sonido en `Snd.sfx('bell')`). Se compra con dos toques en «Mi ciclista y tienda».
+  Además de las hojas de Usuario, cada turno da 2 hojas por estrella (`Progress.apply` → `out.hojas`).
+- **Clima por temporada** (`SEASONS`, `Season.now()` según el mes real): dos épocas secas y dos de lluvias.
+  `Season.pick(rng)` elige la novedad con pesos (más aguaceros en lluvias, Feria de las Flores en agosto, Alumbrados en diciembre).
+  En temporada de lluvias el briefing pasa `wet` y el modo puede tener un **chubasco pasajero** (`mode.shower`, semilla aparte).
+  Los retos con código y la carrera no usan temporada, para que todos jueguen lo mismo.
+  `NOV_EXTRA` guarda las novedades de temporada (Alumbrados: luces en el río con `Ride.drawAlum`); el bot las prueba todas.
+- **Historia** (66-historia.js): un mentor por oficio (`CAST`) y 3 capítulos por oficio (`HISTORIA`: título, antes, después).
+  Sale como globo en el briefing y en los resultados de los turnos del escalafón. Un capítulo queda completo cuando el turno tiene estrellas,
+  así que no usa datos de guardado nuevos. «Más > La historia» permite releerlos.
+- **Turno en equipo** (57-equipo.js, rol `equipo`): el anfitrión de la sala juega `ModeCoopMon` (Monitoreo T1 con un camión automático y uno por invitado)
+  y cada invitado juega `ModeCoopDriver` (camión). El anfitrión es la autoridad: simulación, carga de camiones y bodega.
+  - Anfitrión → invitados: `ord` (orden, con `to`), `s` (estado cada 0,5 s: reloj, bicis de la zona, servicio), `mv`/`ld` (respuestas), `say`, `end`.
+  - Invitado → anfitrión: `p` (posición), `at` (llegué a la estación de la orden), `dep` (llegué a la base).
+  - Si un invitado se va, su camión sigue en automático. Si se pierde el anfitrión, el invitado termina el turno a los 10 s.
+  - `isMulti(id)` agrupa `carrera` y `equipo`: sin mejoras, sin estrellas de escalafón y sin botón Reiniciar. En red la pausa no detiene el juego.
+- Corrección: los silleteros de la Feria de las Flores no salían porque faltaba `flores: true` en la novedad.
+- **Cartel de ayuda (`#coach`, `Game.dom`)**: el usuario pidió que no tape el juego. Reglas: en modos de mapa lleva la clase `mini`
+  (franja pequeña abajo a la izquierda, lejos del timbre); en todos los modos se oculta tras el tiempo de lectura (3,5–9 s según el largo,
+  ×1,4 en ritmo tranquilo); reaparece si cambia el texto o si sube `errors`; el texto también sale en el menú de pausa.
+  Los modos con lista abajo (Apoyo, Balance, Carrera, conductor en equipo) definen `get coachB()` para que la ayuda quede encima de la lista.
+  **No volver a poner carteles grandes o permanentes sobre el mapa.**
+
 **Accesibilidad:** «Letra grande» pone la clase `body.big` y multiplica por 1,15 el texto del canvas. «Mano guía» se puede apagar.
 En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derecha.
 
@@ -216,5 +244,5 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 - Multijugador: ya hay carrera 1 contra 1 por código. Faltan salas de más de 2 jugadores, código QR, TURN y modos cooperativos (por ejemplo, Monitoreo con Balance).
 - Bluetooth: solo en la app nativa (plugin de Capacitor); los navegadores no permiten Bluetooth entre celulares.
 - Lista oficial de estaciones por zona y leyenda de colores de los pines (el usuario la ofreció): reemplazar `STATIONS_DEF`.
-- Ideas siguientes: misiones de historia por oficio, modo cooperativo en red (Monitoreo + Balance), clima por temporada y tienda de ropa con hojas verdes.
+- Ideas siguientes: ver a los otros camiones en el turno en equipo, cooperativo con Técnico y Apoyo, eventos de temporada con postales exclusivas, ranking local de récords y más prendas en la tienda.
 - Página oficial con donaciones. Tiendas: Play Store primero; después iOS/Mac, Steam, Microsoft Store, Epic y Amazon (con Capacitor o Electron).

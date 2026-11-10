@@ -6,8 +6,19 @@ const PAL = {
   bl: '#ffffff', crema: '#f4efd8', amb: '#ffc93c', cor: '#ff6b5a', cie: '#56c7ff', lad: '#c0623b', k: '#0a1424', gris: '#9aa7b8', plata: '#d6dde6'
 };
 const SKINS = ['#f6d2b4', '#e0ac83', '#c68a5e', '#9a6440', '#6b4128'];
-const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#0a2342', '#ffd84a', '#f08a4b'];
-const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c', '#ffd84a', '#56c7ff', '#ff8a3d', '#b07cff'];
+const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#0a2342', '#ffd84a', '#f08a4b', '#2ec4b6', '#23272f', '#c0392b'];
+const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c', '#ffd84a', '#56c7ff', '#ff8a3d', '#b07cff', '#ff8fc7', '#2ec4b6', '#23272f'];
+const BIKES = ['#9bd341', '#56c7ff', '#ff6b5a', '#b07cff', '#ff8fc7', '#ffffff'];
+const BELLS = ['🔔', '📯', '🛎️', '🦆'];
+/* tienda: se compra con hojas verdes. clave -> índice -> [precio, nombre] */
+const SHOP = {
+  shirt: { 10: [20, 'Camiseta turquesa'], 11: [20, 'Camiseta negra'], 12: [25, 'Camiseta roja paisa'] },
+  helmet: { 9: [15, 'Casco rosado'], 10: [15, 'Casco turquesa'], 11: [20, 'Casco negro'] },
+  bike: { 1: [30, 'Bici azul cielo'], 2: [30, 'Bici coral'], 3: [35, 'Bici morada'], 4: [35, 'Bici rosada'], 5: [40, 'Bici blanca'] },
+  bell: { 1: [25, 'Corneta'], 2: [25, 'Campanita'], 3: [30, 'Pato de hule'] }
+};
+const hojas = () => Math.max(0, (Save.data.stats.leaves | 0) - (Save.data.spent | 0));
+const bikeCol = () => Save.data.flags.gold ? '#ffd84a' : BIKES[Save.data.profile.bike | 0] || PAL.vd;
 /* ropa que se gana con logros: índice -> [logro, nombre] */
 const COSMETIC_REQ = { shirt: { 7: ['aprobado', 'Uniforme EnCicla'], 8: ['dorada', 'Camiseta dorada'], 9: ['postal15', 'Camiseta silletera'] }, helmet: { 5: ['perfecto', 'Casco dorado'], 6: ['maquinista', 'Casco del Metro'], 7: ['ciclorruta', 'Casco cono de ciclovía'], 8: ['oficios', 'Casco todero'] } };
 const HAIRS = ['#2a1a10', '#4a2c18', '#7a4a22', '#c9a25a', '#d9d9d9', '#151515'];
@@ -108,7 +119,7 @@ const Art = JE.art = {
   bikeSide(c, x, y, o = {}) {
     const r = o.r || 4, s = r / 4; x = Math.round(x); y = Math.round(y);
     c.save(); c.translate(x, y); if (o.face > 0) c.scale(-1, 1);
-    const fx = Math.round(-7 * s), rx = Math.round(7 * s), hy = -r, fr = PAL.vd, d = o.dmg || {};
+    const fx = Math.round(-7 * s), rx = Math.round(7 * s), hy = -r, fr = o.col || PAL.vd, d = o.dmg || {};
     const wheel = (wx, flat) => { pring(c, wx, hy, r, '#151a22'); if (r > 3) pring(c, wx, hy, r - 1, '#3b4250'); prect(c, wx, hy, 1, 1, '#aab'); if (flat) prect(c, wx - r + 1, -1, r * 2 - 1, 1, '#151a22'); };
     wheel(fx, d.llanta === 'f' || d.desinflada === 'f'); wheel(rx, d.llanta === 'r' || d.desinflada === 'r');
     const seatX = Math.round(2 * s), seatY = Math.round(-9 * s - (r > 6 ? 2 : 0)), headX = Math.round(-5 * s), bb = 0;
@@ -250,7 +261,7 @@ const Art = JE.art = {
     // ciclista
     const cxp = Math.round(w * .5), cy = hor + 9, ph = t * 2;
     const P = Save.data ? Save.data.profile : { skin: 1, shirt: 0, helmet: 0 };
-    this.bikeSide(x, cxp, cy, { r: 5, face: 1 });
+    this.bikeSide(x, cxp, cy, { r: 5, face: 1, col: Save.data ? bikeCol() : PAL.vd });
     const sk = SKINS[P.skin] || SKINS[1], sh = SHIRTS[P.shirt] || PAL.vd, he = HELMETS[P.helmet] || '#fff';
     const lx = Math.round(Math.sin(ph * 6) * 2);
     prect(x, cxp - 1 + lx, cy - 9, 2, 5, PAL.az2); prect(x, cxp - 1 - lx, cy - 9, 2, 5, '#1d2c44');

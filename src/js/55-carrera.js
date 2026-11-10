@@ -41,6 +41,7 @@ class ModeCarrera extends MapMode {
     this.place();
   }
   msg(m) {
+    if (m.t === 'start' && !(m.from | 0)) return UI.netLobbyMsg(m);   // el anfitrión empezó otra partida
     const o = this.opps.find(q => q.id === (m.from || 0)); if (!o) return;
     if (m.t === 'p') { o.tx = +m.x || 0; o.ty = +m.y || 0; o.a = +m.a || 0; o.idx = m.i | 0; }
     else if (m.t === 'fin' && o.t == null) this.oppFinish(o);
@@ -71,6 +72,7 @@ class ModeCarrera extends MapMode {
     o.x += Math.cos(o.a) * v * dt; o.y += Math.sin(o.a) * v * dt;
     if (dist(o.x, o.y, p.x, p.y) < p.r) { o.idx++; if (p.meta) this.oppFinish(o); }
   }
+  get coachB() { return 46; }
   hud2(V) {
     if (this.countdown > 0) { const n = Math.ceil(this.countdown); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 120, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); V.text('vs ' + this.opps.map(o => o.name).join(', '), V.w / 2, V.h * .42 + 44, { size: 22, align: 'center', color: '#fff', stroke: PAL.az, sw: 5 }); }
     const me = this.idx, op = Math.max(...this.opps.map(o => o.idx)), lead = me > op ? 'Vas ganando' : me < op ? 'Vas detrás' : 'Empatados';

@@ -67,7 +67,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   if (SHOTS) { await p.click('#tabs button[data-tab=album]'); await p.screenshot({ path: path.join(OUT, 'album.png') }); await p.click('#tabs button[data-tab=mas]'); }
   else await p.click('#tabs button[data-tab=mas]');
   await p.click('#tab-mas [data-sw=big]'); ok(await p.evaluate(() => document.body.classList.contains('big') && Save.data.settings.big), 'letra grande'); await p.click('#tab-mas [data-sw=big]');
-  for (const act of ['avatar', 'multi', 'howto', 'cred', 'intro', 'apoya']) { await p.click(`#tab-mas [data-act=${act}]`); await p.waitForTimeout(120); ok(await p.isVisible('#modal'), 'modal ' + act); await p.evaluate(() => UI.closeModal()); }
+  for (const act of ['avatar', 'historia', 'multi', 'howto', 'cred', 'intro', 'apoya']) { await p.click(`#tab-mas [data-act=${act}]`); await p.waitForTimeout(120); ok(await p.isVisible('#modal'), 'modal ' + act); await p.evaluate(() => UI.closeModal()); }
   await p.click('#tab-mas [data-act=bot]'); await p.click('#dRun'); await p.waitForFunction(() => /SIN ERRORES|PROBLEMAS/.test(document.querySelector('#dOut').textContent), null, { timeout: 120000 });
   ok(await p.evaluate(() => /SIN ERRORES/.test(document.querySelector('#dOut').textContent)), 'bot desde Ajustes > Diagnóstico'); await p.evaluate(() => UI.closeModal());
   await p.evaluate(() => { const c = UI.code({ roleId: 'anfitrion', turno: 2, seed: 123456 }); const q = UI.parseCode(c); if (!q || q.seed !== 123456 || q.roleId !== 'anfitrion') throw new Error('código'); });
@@ -111,6 +111,29 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     const oh = s2.opps.find(o => o.name === 'Anfitriona'), o1 = s2.opps.find(o => o.name === 'Invitado1');
     ok(s2.seed === h.seed && oh && o1 && Math.abs(oh.y - h.y) < 25 && Math.abs(o1.x - a1.x) < 25, 'el invitado 2 ve al anfitrión y al invitado 1 en tiempo real (reenvío)');
     if (SHOTS) await g2.screenshot({ path: path.join(OUT, 'carrera-red.png') });
+  }
+  // turno en equipo: el anfitrión dirige (Monitoreo) y los invitados manejan camiones (Balance)
+  await host.evaluate(() => UI.netStartCoop());
+  const coop = await Promise.all([host, g1, g2].map((pg, i) => pg.waitForFunction(i => { const M = JE.game.mode; return M && M.id === 'equipo' && (i ? !!M.orders && Net.myId === i : !!M.trucks && M.trucks.filter(t => t.human).length === 2); }, i, { timeout: 20000 }).then(() => true).catch(() => false)));
+  ok(coop.every(Boolean), 'turno en equipo iniciado: 1 en Monitoreo y 2 conductores');
+  if (coop.every(Boolean)) {
+    await host.evaluate(() => { const M = JE.game.mode, t = M.trucks.find(t => t.pid === 1), s = M.zs.filter(s => Math.hypot(s.x - M.road.x, s.y - M.road.y) > 160 && s.cap - s.bikes >= 3).sort((a, b) => a.bikes / a.cap - b.bikes / b.cap)[0]; M.addJob(t, { type: 'llevar', s, n: 3 }); M.flags.set(s, 'llevar'); });
+    const got = await g1.waitForFunction(() => JE.game.mode.orders.length === 1, null, { timeout: 8000 }).then(() => true).catch(() => false);
+    ok(got && await g2.evaluate(() => JE.game.mode.orders.length === 0), 'la orden de Monitoreo llega solo al conductor elegido');
+    await g1.evaluate(() => { const M = JE.game.mode, o = M.orders[0]; M.ride.p.x = o.s.x; M.ride.p.y = o.s.y + 12; M.ride.p.v = 0; });
+    const done = await g1.waitForFunction(() => JE.game.mode.doneN === 1 && JE.game.mode.ride.p.load === 9, null, { timeout: 8000 }).then(() => true).catch(() => false);
+    const hs = await host.evaluate(() => { const M = JE.game.mode, t = M.trucks.find(t => t.pid === 1); return { d: M.teamDone, load: t.load, q: t.q.length, bikes: M.sim.count() === M.sim.total }; });
+    ok(done && hs.d === 1 && hs.load === 9 && hs.q === 0 && hs.bikes, 'orden cumplida: el camión entrega 3 bicis y el anfitrión las cuenta ' + JSON.stringify(hs));
+    await g1.evaluate(() => { const M = JE.game.mode; M.ride.p.x = M.depM.x + 30; M.ride.p.y = M.depM.y; }); await g1.waitForTimeout(250);
+    await g1.evaluate(() => { const M = JE.game.mode; M.ride.p.x = M.depM.x; M.ride.p.y = M.depM.y; });
+    const ld = await g1.waitForFunction(() => JE.game.mode.ride.p.load === 12, null, { timeout: 8000 }).then(() => true).catch(() => false);
+    ok(ld && await host.evaluate(() => JE.game.mode.sim.count() === JE.game.mode.sim.total), 'recarga en la base sin perder bicis');
+    const sn = await g2.waitForFunction(() => JE.game.mode.teamDone === 1 && JE.game.mode.clock > 331, null, { timeout: 8000 }).then(() => true).catch(() => false);
+    ok(sn, 'el otro conductor recibe el estado del equipo');
+    if (SHOTS) { await host.screenshot({ path: path.join(OUT, 'equipo-monitoreo.png') }); await g1.screenshot({ path: path.join(OUT, 'equipo-camion.png') }); }
+    await host.evaluate(() => { JE.game.mode.clock = 1319.5; });
+    const fin = await Promise.all([host, g1, g2].map(pg => pg.waitForSelector('#sResult', { state: 'visible', timeout: 15000 }).then(() => true).catch(() => false)));
+    ok(fin.every(Boolean), 'el turno en equipo termina en los 3 dispositivos');
   }
   ok(!nerr.length, 'multijugador sin errores ' + nerr.slice(0, 2).join(' | '));
   await b2.close();

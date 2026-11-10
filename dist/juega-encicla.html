@@ -210,6 +210,20 @@ body.big .turnos button{font-size:21px}
 .carnet .cn{font-size:20px;font-weight:900;line-height:1.1}.carnet .cr{display:inline-block;background:#9bd341;color:#0a2342;font-weight:800;padding:1px 8px;border-radius:4px;margin:3px 0}
 .carnet .pag{color:#0a2342aa}.carnet table.rec{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.carnet th{text-align:left;font-size:11px;opacity:.7}
 .carnet td{padding:2px 0;border-bottom:1px solid #0a234218}.carnet tr.off{opacity:.45}.carnet td i{color:#0a234222;font-style:normal}.carnet img{vertical-align:middle}
+.swatches button.buy{filter:brightness(.72);border-style:dotted;position:relative}
+.swatches button small{position:absolute;left:-2px;right:-2px;bottom:-9px;font-size:9px;line-height:1;background:#0a2342;color:#c4ec7c;border-radius:6px;padding:1px 0;text-shadow:none;font-weight:800}
+.swatches button.em{font-size:18px;text-shadow:none}
+.swatches{row-gap:14px}
+.hist-b{display:flex;gap:10px;align-items:flex-start;background:#fff;color:#0a2342;border:3px solid #0a2342;border-radius:4px 14px 14px 14px;padding:10px;margin:12px 0;box-shadow:4px 4px 0 var(--vd)}
+.hist-b.after{box-shadow:4px 4px 0 var(--amb);border-radius:14px 14px 14px 4px}
+.hist-b img{width:48px;height:48px;image-rendering:pixelated;border:2px solid #0a2342;border-radius:8px;flex:none}
+.hist-b .pag{color:#0a2342aa}.hist-b p{margin:3px 0 4px;font-size:15px;line-height:1.35}.hist-b small{font-weight:800;opacity:.75}
+.hist-l{max-height:52vh;overflow:auto;margin:8px 0}.hist-l summary,.hist-l .next,.hist-l .lock{padding:7px 4px;border-bottom:1px solid #ffffff22;cursor:pointer}
+.hist-l small{opacity:.7;margin-left:6px}.hist-l .lock{opacity:.4;cursor:default}.hist-l .next{color:var(--vd1);cursor:default}
+body.big .hist-b p{font-size:17px}
+#coach{transition:opacity .35s}
+#coach.mini{font-size:12.5px;padding:4px 9px;border-width:2px;box-shadow:none;background:#f6efd9e0;line-height:1.25;left:calc(8px + var(--sal));transform:none;text-align:left;max-width:min(440px,calc(100% - 124px - var(--sal)))}
+body.big #coach.mini{font-size:14.5px}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -263,7 +277,7 @@ body.big .turnos button{font-size:21px}
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.5.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.6.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -302,7 +316,7 @@ const Save = JE.save = {
   data: null, mem: null,
   def() {
     return {
-      v: 1, created: Date.now(), profile: { name: 'Ciclista', skin: 1, shirt: 0, helmet: 0 },
+      v: 1, created: Date.now(), profile: { name: 'Ciclista', skin: 1, shirt: 0, helmet: 0, bike: 0, bell: 0 }, spent: 0, owned: [],
       xp: 0, stars: {}, best: {}, history: [], postales: [], perks: [], streak: 0, bestStreak: 0, logros: [], flags: {},
       settings: { sfx: true, music: true, pace: 'normal', zoom: 0, vib: true, hints: true, big: false, seen: {} },
       stats: { km: 0, trips: 0, served: 0, fixed: 0, sorted: 0, plays: 0, leaves: 0, bells: 0 }
@@ -372,7 +386,12 @@ const Snd = JE.snd = {
       case 'ok': T(784, .07, { v: .08 }); T(1175, .12, { at: .07, v: .08 }); break;
       case 'bad': T(220, .2, { type: 'sawtooth', v: .07, to: 140 }); break;
       case 'coin': T(988, .05, { v: .06 }); T(1319, .12, { at: .05, v: .06 }); break;
-      case 'bell': [0, .16].forEach(a => { T(2093, .32, { type: 'triangle', v: .09, at: a }); T(2637, .22, { type: 'sine', v: .04, at: a }); }); break;
+      case 'bell': { const b = Save.data.profile.bell | 0;
+        if (b === 1) [0, .22].forEach(a => { T(233, .17, { type: 'sawtooth', v: .06, at: a }); T(294, .17, { type: 'square', v: .03, at: a }); });
+        else if (b === 2) [2637, 3136, 3520].forEach((f, i) => T(f, .3, { type: 'sine', v: .07, at: i * .09 }));
+        else if (b === 3) [0, .17].forEach(a => T(620, .13, { type: 'sawtooth', v: .07, to: 330, at: a }));
+        else [0, .16].forEach(a => { T(2093, .32, { type: 'triangle', v: .09, at: a }); T(2637, .22, { type: 'sine', v: .04, at: a }); });
+        break; }
       case 'win': [523, 659, 784, 1047, 1319].forEach((f, i) => T(f, .16, { at: i * .085, v: .08 })); break;
       case 'lose': [392, 330, 262, 196].forEach((f, i) => T(f, .2, { at: i * .12, v: .07, type: 'triangle' })); break;
       case 'honk': T(311, .16, { v: .05 }); T(370, .16, { v: .04 }); break;
@@ -488,8 +507,19 @@ const PAL = {
   bl: '#ffffff', crema: '#f4efd8', amb: '#ffc93c', cor: '#ff6b5a', cie: '#56c7ff', lad: '#c0623b', k: '#0a1424', gris: '#9aa7b8', plata: '#d6dde6'
 };
 const SKINS = ['#f6d2b4', '#e0ac83', '#c68a5e', '#9a6440', '#6b4128'];
-const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#0a2342', '#ffd84a', '#f08a4b'];
-const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c', '#ffd84a', '#56c7ff', '#ff8a3d', '#b07cff'];
+const SHIRTS = ['#9bd341', '#56c7ff', '#ff6b5a', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#0a2342', '#ffd84a', '#f08a4b', '#2ec4b6', '#23272f', '#c0392b'];
+const HELMETS = ['#ffffff', '#9bd341', '#ff6b5a', '#0e2d55', '#ffc93c', '#ffd84a', '#56c7ff', '#ff8a3d', '#b07cff', '#ff8fc7', '#2ec4b6', '#23272f'];
+const BIKES = ['#9bd341', '#56c7ff', '#ff6b5a', '#b07cff', '#ff8fc7', '#ffffff'];
+const BELLS = ['🔔', '📯', '🛎️', '🦆'];
+/* tienda: se compra con hojas verdes. clave -> índice -> [precio, nombre] */
+const SHOP = {
+  shirt: { 10: [20, 'Camiseta turquesa'], 11: [20, 'Camiseta negra'], 12: [25, 'Camiseta roja paisa'] },
+  helmet: { 9: [15, 'Casco rosado'], 10: [15, 'Casco turquesa'], 11: [20, 'Casco negro'] },
+  bike: { 1: [30, 'Bici azul cielo'], 2: [30, 'Bici coral'], 3: [35, 'Bici morada'], 4: [35, 'Bici rosada'], 5: [40, 'Bici blanca'] },
+  bell: { 1: [25, 'Corneta'], 2: [25, 'Campanita'], 3: [30, 'Pato de hule'] }
+};
+const hojas = () => Math.max(0, (Save.data.stats.leaves | 0) - (Save.data.spent | 0));
+const bikeCol = () => Save.data.flags.gold ? '#ffd84a' : BIKES[Save.data.profile.bike | 0] || PAL.vd;
 /* ropa que se gana con logros: índice -> [logro, nombre] */
 const COSMETIC_REQ = { shirt: { 7: ['aprobado', 'Uniforme EnCicla'], 8: ['dorada', 'Camiseta dorada'], 9: ['postal15', 'Camiseta silletera'] }, helmet: { 5: ['perfecto', 'Casco dorado'], 6: ['maquinista', 'Casco del Metro'], 7: ['ciclorruta', 'Casco cono de ciclovía'], 8: ['oficios', 'Casco todero'] } };
 const HAIRS = ['#2a1a10', '#4a2c18', '#7a4a22', '#c9a25a', '#d9d9d9', '#151515'];
@@ -590,7 +620,7 @@ const Art = JE.art = {
   bikeSide(c, x, y, o = {}) {
     const r = o.r || 4, s = r / 4; x = Math.round(x); y = Math.round(y);
     c.save(); c.translate(x, y); if (o.face > 0) c.scale(-1, 1);
-    const fx = Math.round(-7 * s), rx = Math.round(7 * s), hy = -r, fr = PAL.vd, d = o.dmg || {};
+    const fx = Math.round(-7 * s), rx = Math.round(7 * s), hy = -r, fr = o.col || PAL.vd, d = o.dmg || {};
     const wheel = (wx, flat) => { pring(c, wx, hy, r, '#151a22'); if (r > 3) pring(c, wx, hy, r - 1, '#3b4250'); prect(c, wx, hy, 1, 1, '#aab'); if (flat) prect(c, wx - r + 1, -1, r * 2 - 1, 1, '#151a22'); };
     wheel(fx, d.llanta === 'f' || d.desinflada === 'f'); wheel(rx, d.llanta === 'r' || d.desinflada === 'r');
     const seatX = Math.round(2 * s), seatY = Math.round(-9 * s - (r > 6 ? 2 : 0)), headX = Math.round(-5 * s), bb = 0;
@@ -732,7 +762,7 @@ const Art = JE.art = {
     // ciclista
     const cxp = Math.round(w * .5), cy = hor + 9, ph = t * 2;
     const P = Save.data ? Save.data.profile : { skin: 1, shirt: 0, helmet: 0 };
-    this.bikeSide(x, cxp, cy, { r: 5, face: 1 });
+    this.bikeSide(x, cxp, cy, { r: 5, face: 1, col: Save.data ? bikeCol() : PAL.vd });
     const sk = SKINS[P.skin] || SKINS[1], sh = SHIRTS[P.shirt] || PAL.vd, he = HELMETS[P.helmet] || '#fff';
     const lx = Math.round(Math.sin(ph * 6) * 2);
     prect(x, cxp - 1 + lx, cy - 9, 2, 5, PAL.az2); prect(x, cxp - 1 - lx, cy - 9, 2, 5, '#1d2c44');
@@ -1636,7 +1666,7 @@ class Ride {
     // rivales (carrera)
     for (const o of this.opps) { if (!inV(o.x, o.y)) continue; const so = Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]); b.save(); b.translate(Math.round(o.x - ox), Math.round(o.y - oy)); b.rotate(o.a + Math.PI / 2); b.globalAlpha = .9; b.drawImage(so, -3, -6); b.restore(); }
     // jugador
-    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1], Save.data.flags.gold ? '#ffd84a' : PAL.vd);
+    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1], bikeCol());
     b.save(); b.translate(Math.round(P.x - ox), Math.round(P.y - oy)); b.rotate(P.a + Math.PI / 2); b.fillStyle = '#0005'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 2, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
     // trenes elevados
     const tc = Art.trainCar();
@@ -1831,7 +1861,18 @@ Ride.prototype.drawSky = function (b, ox, oy) {
     for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; prect(b, cb.ax + ux * s - ox - 1, cb.ay + uy * s - oy - 1, 3, 3, cb.col); prect(b, cb.ax + ux * s - ox, cb.ay + uy * s - oy, 1, 1, '#1d2c44'); prect(b, cb.ax + ux * s2 - ox + 1, cb.ay + uy * s2 - oy + 1, 3, 3, cb.col); }
   }
 };
+const ALUM = ['#ff5a5a', '#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7', '#ffffff'];
+Ride.prototype.drawAlum = function (b, ox, oy) {
+  const y0 = Math.floor(oy / TS) - 1, y1 = y0 + Math.ceil(View.vh / TS) + 2, k = Math.floor(this.mode.t * 2.5);
+  for (let y = Math.max(0, y0); y <= Math.min(MH - 1, y1); y++) {
+    const cx = (rxi(y) + .5) * TS, py = y * TS - oy;
+    for (const s of [-1, 1]) for (let j = 0; j < 2; j++) { const px = Math.round(cx + s * 16 - 1 - ox), q = y * 2 + j, on = (q + k) % 4 !== 0; b.fillStyle = on ? ALUM[(q * (s + 2) + k) % ALUM.length] : '#3b4250'; b.fillRect(px, Math.round(py + 1 + j * 4), 2, 2); }
+    // arcos de luces sobre el río cada 14 baldosas
+    if (y % 14 === 7) for (let i = -5; i <= 5; i++) { b.fillStyle = ALUM[(i + 6 + k) % ALUM.length]; b.fillRect(Math.round(cx + i * 3 - 1 - ox), Math.round(py - 2 + i * i * .2), 2, 2); }
+  }
+};
 Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
+  if (this.mode.mods.alumbrados && !JE.headless) this.drawAlum(b, ox, oy);
   if (n < .25 || JE.headless) return; const g = Art.glow(), M = this.map;
   b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = Math.min(1, n) * .6;
   for (const s of M.stations) if (inV(s.x, s.y, 40)) b.drawImage(g, s.x - ox - 26, s.y - oy - 26, 52, 52);
@@ -2716,9 +2757,30 @@ const NOVEDADES = [
   { id: 'sincarro', name: 'Día sin carro', desc: 'Casi no hay carros y salen más bicis.', mods: { traffic: .2, demand: 1.2 } },
   { id: 'pico', name: 'Hora pico', desc: 'Más tráfico y más usuarios.', mods: { traffic: 1.5, demand: 1.2, pico: true } },
   { id: 'partido', name: 'Partido en el Atanasio', desc: 'Mucha gente pedalea hacia el Estadio.', mods: { demand: 1.1, extra: { id: 'estadio', mult: 3 } } },
-  { id: 'flores', name: 'Feria de las Flores', desc: 'Silleteros por las aceras y turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3 } },
+  { id: 'flores', name: 'Feria de las Flores', desc: 'Silleteros por las aceras y turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3, flores: true } },
   { id: 'ciclovia', name: 'Ciclovía', desc: 'Avenida El Poblado, Avenida 80 y Las Vegas cerradas a los carros: ¡conos y bicis por todas partes!', mods: { traffic: .5, ciclovia: true } }
 ];
+
+/* novedades de temporada: no entran en los retos con código para no cambiar sus semillas */
+const NOV_EXTRA = [
+  { id: 'alumbrados', name: 'Alumbrados navideños', desc: 'El río Medellín se llena de luces de colores y todo el valle sale a verlas: más usuarios.', mods: { demand: 1.25, alumbrados: true } }
+];
+/* temporada según el mes real: el Valle de Aburrá tiene dos épocas secas y dos de lluvias */
+const SEASONS = [
+  { id: 'seca1', name: 'Temporada seca', icon: '☀️', desc: 'De diciembre a febrero casi no llueve: días despejados para pedalear.', w: { lluvia: .4 } },
+  { id: 'lluvia1', name: 'Primera temporada de lluvias', icon: '🌧️', desc: 'De marzo a mayo los aguaceros llegan sin avisar: puede caer un chubasco en pleno turno.', w: { lluvia: 3 }, wet: true },
+  { id: 'seca2', name: 'Veranillo de mitad de año', icon: '🌤️', desc: 'De junio a agosto hay tardes soleadas, viento de cometas y más ciclovías.', w: { lluvia: .5, ciclovia: 1.6 } },
+  { id: 'lluvia2', name: 'Segunda temporada de lluvias', icon: '⛈️', desc: 'De septiembre a noviembre es la época más lluviosa: puede caer un chubasco en pleno turno.', w: { lluvia: 3.5 }, wet: true }
+];
+const Season = JE.season = {
+  now(d) { const m = (d || new Date()).getMonth(); return SEASONS[m === 11 || m < 2 ? 0 : m < 5 ? 1 : m < 8 ? 2 : 3]; },
+  /* novedad al azar, con pesos según la temporada (agosto: Feria de las Flores; diciembre: Alumbrados) */
+  pick(rng, d) {
+    const m = (d || new Date()).getMonth(), S = this.now(d), all = NOVEDADES.concat(NOV_EXTRA);
+    const w = all.map(n => (S.w[n.id] || 1) * (n.id === 'flores' ? (m === 7 ? 5 : .5) : n.id === 'alumbrados' ? (m === 11 ? 6 : 0) : 1));
+    let r = rng.f() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < all.length; i++) { r -= w[i]; if (r <= 0) return all[i]; } return all[0];
+  }
+};
 
 class Mode {
   constructor(role, turno, opt) {
@@ -2728,6 +2790,8 @@ class Mode {
     const pace = Save.data.settings.pace; this.timeMul = (pace === 'tranquilo' ? 1.4 : pace === 'arcade' ? .85 : 1) * (this.has('tinto') ? 1.1 : 1);
     this.patMul = pace === 'tranquilo' ? 1.35 : 1; this.paceRate = pace === 'tranquilo' ? .8 : pace === 'arcade' ? 1.1 : 1;
     this.view = { kind: 'map' }; this.stats = {}; this.clock = 360; this.rate = 1;
+    // chubasco pasajero en temporada de lluvias (semilla aparte: no altera el resto del turno)
+    if (opt.wet && !this.mods.rain) { const r = new RNG((opt.seed ^ 0x51ed27) >>> 0); if (r.f() < .55) this.shower = { at: 22 + r.f() * 40, dur: 20 + r.f() * 12, on: 0 }; }
   }
   has(p) { return this.perks.includes(p); }
   goal(txt, main, ok, prog) { this.goals.push({ txt, main, ok, prog: prog || (() => '') }); }
@@ -2759,6 +2823,11 @@ class MapMode extends Mode {
   tickClock(dt) { this.clock += this.rate * dt / this.timeMul; }
   update(dt) {
     this.t += dt; this.tickClock(dt);
+    const sh = this.shower;
+    if (sh) {
+      if (!sh.on && this.t >= sh.at) { sh.on = 1; this.mods.rain = true; JE.ui && JE.ui.toast('🌧️ ¡Se vino el agua! Piso mojado: frena con tiempo.'); }
+      else if (sh.on === 1 && this.t >= sh.at + sh.dur) { sh.on = 2; this.mods.rain = false; JE.ui && JE.ui.toast('🌤️ Escampó. ¡A rodar!'); }
+    }
     if (this.updSub(dt)) return;
     this.ride.update(dt, this.botDir || Input.dir());
     this.tick(dt);
@@ -2844,7 +2913,7 @@ class ModeUsuario extends MapMode {
       else if (T === 2) this.goal('Respeta los semáforos (0 en rojo)', false, () => this.ride.stats.reds === 0, () => this.ride.stats.reds + ' en rojo');
       else this.goal('8 hojas y máximo 2 choques', false, () => this.leavesGot >= 8 && this.ride.stats.crashes <= 2, () => this.leavesGot + ' hojas');
     }
-    this.coach = 'Arrastra el dedo en cualquier parte para pedalear. Sigue la línea punteada.';
+    this.coach = 'Arrastra el dedo para pedalear y sigue la línea punteada.';
     this.takeBike(this.st0);
   }
   takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; }
@@ -2997,6 +3066,7 @@ class ModeApoyo extends MapMode {
     });
   }
   tick(dt) { if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); } else if (this.clock >= this.endClock + 30) this.end(); const o = this.tasks.find(t => !t.done); this.coach = o ? 'Siguiente: ' + o.n + '. ' + { apertura: 'Abrir', cierre: 'Cerrar', relevo: 'Relevo en', inspeccion: 'Verificar' }[o.type] + ' ' + o.st.name + ' antes de las ' + fmtClock(o.due) : '¡Todo listo!'; }
+  get coachB() { return 30 + this.tasks.length * 22; }   // la ayuda va encima de la lista de tareas
   hud2(V) {
     const x = 10; let y = V.h - 24 - this.tasks.length * 22;
     for (const t of this.tasks) { V.text((t.done ? '✓ ' : t.n + '. ') + { apertura: 'Abrir', cierre: 'Cerrar', relevo: 'Relevo', inspeccion: 'Verificar' }[t.type] + ' · ' + t.st.name + ' · ' + fmtClock(t.due), x, y, { size: 13, color: t.done ? PAL.vd1 : this.clock > t.due ? PAL.cor : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
@@ -3102,6 +3172,7 @@ class ModeBalance extends MapMode {
     this.ordT -= dt; if ((this.orders.length < this.maxOrd && this.ordT <= 0) || !this.orders.length) { this.ordT = 8; this.newOrder(); }
     if (this.clock >= this.endClock) this.end();
   }
+  get coachB() { return 30 + this.orders.length * 22; }
   hud2(V) { let y = V.h - 24 - this.orders.length * 22; for (const o of this.orders) { V.text(o.id + '. ' + (o.type === 'llevar' ? 'LLEVAR ' : 'RECOGER ') + o.n + ' · ' + o.s.name + ' · ' + fmtClock(o.due), 10, y, { size: 13, color: this.clock > o.due ? PAL.cor : o.type === 'llevar' ? PAL.vd1 : PAL.amb, bg: '#0a2342cc', pad: 3, body: true }); y += 22; } }
   info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🚚 ' + this.ride.p.load + '/20' }] }; }
   bot(err) { this.retarget(); this.botDrive(); }
@@ -3380,6 +3451,7 @@ class ModeCarrera extends MapMode {
     this.place();
   }
   msg(m) {
+    if (m.t === 'start' && !(m.from | 0)) return UI.netLobbyMsg(m);   // el anfitrión empezó otra partida
     const o = this.opps.find(q => q.id === (m.from || 0)); if (!o) return;
     if (m.t === 'p') { o.tx = +m.x || 0; o.ty = +m.y || 0; o.a = +m.a || 0; o.idx = m.i | 0; }
     else if (m.t === 'fin' && o.t == null) this.oppFinish(o);
@@ -3410,6 +3482,7 @@ class ModeCarrera extends MapMode {
     o.x += Math.cos(o.a) * v * dt; o.y += Math.sin(o.a) * v * dt;
     if (dist(o.x, o.y, p.x, p.y) < p.r) { o.idx++; if (p.meta) this.oppFinish(o); }
   }
+  get coachB() { return 46; }
   hud2(V) {
     if (this.countdown > 0) { const n = Math.ceil(this.countdown); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 120, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); V.text('vs ' + this.opps.map(o => o.name).join(', '), V.w / 2, V.h * .42 + 44, { size: 22, align: 'center', color: '#fff', stroke: PAL.az, sw: 5 }); }
     const me = this.idx, op = Math.max(...this.opps.map(o => o.idx)), lead = me > op ? 'Vas ganando' : me < op ? 'Vas detrás' : 'Empatados';
@@ -3421,6 +3494,154 @@ class ModeCarrera extends MapMode {
 }
 MODE_CLASS.carrera = ModeCarrera;
 
+/* ---- 57-equipo.js ---- */
+/* =====================================================================
+   TURNO EN EQUIPO (cooperativo en red, 2 a 4 jugadores)
+   Quien crea la sala dirige desde MONITOREO; cada invitado maneja un camión
+   de BALANCE. El anfitrión manda: lleva la simulación de estaciones, la carga
+   de cada camión y la bodega. Los invitados reciben órdenes y fotos del estado.
+   Mensajes:  anfitrión → ord (orden), s (estado cada 0,5 s), mv/ld (respuestas), say, end
+              invitado  → p (posición), at (llegué a la estación), dep (llegué a la base)
+   ===================================================================== */
+const ROLE_EQUIPO = {
+  id: 'equipo', n: 11, name: 'Turno en equipo', tier: 'Multijugador', icon: 'monitoreo', vista: 'General + cenital · cooperativo', unlock: 0,
+  desc: 'Un jugador dirige desde Monitoreo y los demás manejan los camiones de Balance. Ganan o pierden juntos.',
+  how: ['Monitoreo toca una estación y manda la orden.', 'Balance recibe la orden y maneja hasta la estación.', 'Si el camión está vacío o lleno, pasa por la BASE.']
+};
+ROLE.equipo = ROLE_EQUIPO;
+const isMulti = id => id === 'carrera' || id === 'equipo';
+/* la misma zona y base para todos (la de Monitoreo turno 1: centro) */
+function coopZone(st) {
+  const zl = st.filter(s => s.zone === 'centro'), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
+  const zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16), n = JE.map.nearestOpen(Math.floor((zs[0].x + 14) / TS), Math.floor((zs[0].y + 10) / TS), true);
+  return { zs, road: { x: n.x * TS + 4, y: n.y * TS + 4 } };
+}
+
+/* ---------- anfitrión: Monitoreo con camiones humanos ---------- */
+class ModeCoopMon extends ModeMonitoreo {
+  constructor(role, T, opt) {
+    super(role, 1, opt); const Z = coopZone(this.sim.st); this.road = Z.road;
+    // un camión automático de respaldo + un camión por cada invitado
+    for (const t of this.trucks.splice(1)) this.sim.trucks.splice(this.sim.trucks.indexOf(t), 1);
+    (opt.players || []).forEach((p, k) => {
+      const t = { x: Z.road.x, y: Z.road.y, tx: Z.road.x, ty: Z.road.y, a: -Math.PI / 2, load: 12, cap: 20, q: [], path: null, id: this.trucks.length + 1, human: true, pid: p.id, name: String(p.name || 'Amigo').slice(0, 16), seen: 0 };
+      this.sim.depot -= 12; this.trucks.push(t); this.sim.trucks.push(t);
+    });
+    this.jobN = 0; this.teamDone = 0; this.snapT = 0; const tg = 3 + 2 * Math.max(1, this.trucks.length - 1);
+    this.goals = [];
+    this.goal('Nivel de servicio ≥ 70%', true, () => this.serv() * 100 >= 70, () => Math.round(this.serv() * 100) + '%');
+    this.goal('El equipo cumple ' + tg + ' órdenes', false, () => this.teamDone >= tg, () => this.teamDone + '/' + tg);
+    this.goal('Al cierre, ninguna estación vacía', false, () => this.zs.every(s => s.bikes > 0), () => this.zs.filter(s => s.bikes <= 0).length + ' vacías');
+    this.coach = 'Toca una estación y manda la orden: tus amigos manejan los camiones.';
+    Net.onmsg = m => this.msg(m);
+  }
+  best(s) { let b = null, bc = 1e9; for (const t of this.trucks) { const c = (t.q.length * 900 + dist(t.x, t.y, s.x, s.y)) * (t.human ? .55 : 1); if (c < bc) { bc = c; b = t; } } return b; }
+  go(t, x, y) { if (!t.human) super.go(t, x, y); }
+  addJob(t, job) {
+    if (t.human && job.type === 'home') return;
+    t.q.push(job);
+    if (t.human) { job.id = ++this.jobN; Net.send({ t: 'ord', to: t.pid, id: job.id, si: this.sim.st.indexOf(job.s), ty: job.type, n: job.n }); }
+  }
+  home() { super.home(); Net.send({ t: 'say', m: '📻 Monitoreo: se acerca el cierre, terminen sus órdenes.' }); }
+  say(m) { super.say(m.replace(/Camión (\d+)/, (a, n) => { const t = this.trucks[n - 1]; return t && t.human ? t.name : a; })); }
+  msg(m) {
+    const t = this.trucks.find(q => q.human && q.pid === (m.from | 0)); if (!t) return;
+    if (m.t === 'p') { t.tx = +m.x || 0; t.ty = +m.y || 0; t.a = +m.a || 0; t.seen = this.t; }
+    else if (m.t === 'at') {
+      const j = t.q.find(q => q.id === (m.id | 0)); if (!j) return Net.send({ t: 'mv', to: t.pid, id: m.id | 0, moved: 0, load: t.load, left: 0, gone: 1 });
+      const s = j.s; let moved = 0;
+      if (j.type === 'llevar') { moved = Math.min(j.n, t.load, s.cap - s.bikes); t.load -= moved; s.bikes += moved; }
+      else { moved = Math.min(j.n, s.bikes, t.cap - t.load); t.load += moved; s.bikes -= moved; }
+      j.n -= moved; const full = j.type === 'llevar' ? s.bikes >= s.cap : s.bikes <= 0, fin = j.n <= 0 || full;
+      if (fin) { t.q.splice(t.q.indexOf(j), 1); this.flags.delete(s); this.teamDone++; this.score += 30; this.say('✅ ' + t.name + ' cumplió en ' + s.name); Snd.sfx('ok'); }
+      this.score += moved * 2; Net.send({ t: 'mv', to: t.pid, id: j.id, moved, load: t.load, left: fin ? 0 : j.n });
+    } else if (m.t === 'dep') {
+      const d = 12 - t.load; if (d > 0) { const k = Math.min(d, this.sim.depot); t.load += k; this.sim.depot -= k; } else if (d < 0) { t.load += d; this.sim.depot -= d; }
+      Net.send({ t: 'ld', to: t.pid, load: t.load });
+    } else if (m.t === 'bye') this.drop(t);
+  }
+  /* si un amigo se va, su camión sigue en automático con las órdenes que tenía */
+  drop(t) { if (!t.human) return; t.human = false; t.wait = 0; for (const j of t.q) { j.stage = null; j.loaded = false; } this.say('📻 ' + t.name + ' salió: su camión sigue en automático'); JE.ui && JE.ui.toast(t.name + ' salió del turno'); }
+  update(dt) {
+    super.update(dt);
+    for (const t of this.trucks) if (t.human) { const k = Math.min(1, dt * 8); t.x += (t.tx - t.x) * k; t.y += (t.ty - t.y) * k; if (this.t - t.seen > 12 && !JE.headless) this.drop(t); }
+    this.snapT -= dt; if (this.snapT <= 0 && !this.done) { this.snapT = .5; Net.send(this.snap('s')); }
+  }
+  snap(t) { return { t, c: Math.round(this.clock), b: this.zs.map(s => s.bikes), sc: Math.round(this.score), sv: Math.round(this.serv() * 100), d: this.teamDone, dep: this.sim.depot }; }
+  hud(V) {
+    super.hud(V); const r = this.rect; if (!r) return;
+    for (const t of this.trucks) if (t.human) V.text(t.name, r.x + t.x * r.k, r.y + t.y * r.k - 16, { size: 11, align: 'center', color: '#0a2342', bg: PAL.amb, pad: 2 });
+  }
+  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: 'Servicio ' + Math.round(this.serv() * 100) + '%' }, { t: '🤝 ' + this.teamDone }] }; }
+  end() { if (!this.done) { Net.send(this.snap('end')); Net.onmsg = m => UI.netLobbyMsg(m); } super.end(); }
+}
+
+/* ---------- invitado: conductor de Balance con órdenes por red ---------- */
+class ModeCoopDriver extends MapMode {
+  constructor(role, T, opt) {
+    super(role, 1, opt); this.rate = 0; this.clock = 330;
+    this.sim = new StationSim(this.rng, { demand: this.mods.demand, depot: 60 }); const Z = coopZone(this.sim.st); this.zs = Z.zs;
+    this.setupRide({ sim: this.sim, start: Z.road, veh: 'truck', load: 12, cap: 20 });
+    this.depM = this.ride.marker({ x: Z.road.x, y: Z.road.y, r: 20, col: PAL.cie, label: 'Base', enter: () => Net.send({ t: 'dep' }) });
+    this.orders = []; this.doneN = 0; this.sv = 100; this.teamDone = 0; this.teamScore = 0; this.netT = 0; this.lastSnap = 0; this.boss = ((opt.players || [])[0] || {}).name || 'Monitoreo';
+    this.goal('Servicio del equipo ≥ 70%', true, () => this.sv >= 70, () => this.sv + '%');
+    this.goal('Cumple 3 órdenes', false, () => this.doneN >= 3, () => this.doneN + '/3');
+    this.goal('Máximo 2 choques', false, () => this.ride.stats.crashes <= 2, () => this.ride.stats.crashes + ' choques');
+    this.coach = 'Espera la orden de ' + this.boss + ' por radio y sigue la ruta. El camión solo va por calles.';
+    this.ride.target = null; Net.onmsg = m => this.msg(m);
+  }
+  tickClock() { }
+  msg(m) {
+    if (m.t === 'bye' && !(m.from | 0)) return this.lost();
+    if (m.from | 0) return;   // solo manda el anfitrión (los demás camiones se ignoran)
+    if (m.t === 'start') return UI.netLobbyMsg(m);
+    if (m.t === 's' || m.t === 'end') {
+      this.clock = +m.c || this.clock; this.sv = m.sv | 0; this.teamDone = m.d | 0; this.teamScore = m.sc | 0; this.lastSnap = this.t;
+      (m.b || []).forEach((v, i) => { if (this.zs[i]) this.zs[i].bikes = v | 0; });
+      if (m.t === 'end') this.end();
+    } else if (m.t === 'say') JE.ui && JE.ui.toast(String(m.m || '').slice(0, 90));
+    else if (m.to !== Net.myId) return;
+    else if (m.t === 'ord') {
+      const s = this.sim.st[m.si | 0]; if (!s || this.orders.some(o => o.id === m.id)) return;
+      const o = { id: m.id | 0, s, type: m.ty === 'recoger' ? 'recoger' : 'llevar', n: clamp(m.n | 0, 1, 20) };
+      o.m = this.ride.marker({ x: s.x, y: s.y, r: 20, col: o.type === 'llevar' ? PAL.vd : PAL.amb, label: s.name, num: this.orders.length + 1, enter: () => Net.send({ t: 'at', id: o.id }) });
+      this.orders.push(o); this.retarget(); Snd.sfx('coin'); JE.ui && JE.ui.toast('📻 ' + this.boss + ': ' + (o.type === 'llevar' ? 'LLEVA ' : 'RECOGE ') + o.n + ' bicis · ' + s.name);
+    } else if (m.t === 'mv') {
+      const o = this.orders.find(q => q.id === (m.id | 0)), P = this.ride.p; P.load = clamp(m.load | 0, 0, P.cap); if (!o) return;
+      if (m.gone) return this.finish(o, false);
+      if (!(m.moved > 0) && (m.left | 0) > 0) { JE.ui && JE.ui.toast(o.type === 'llevar' ? 'Camión vacío: ve a la BASE a cargar' : 'Camión lleno: descarga en la BASE'); return this.retarget(); }
+      o.n = m.left | 0; Snd.sfx('truck'); this.ride.burst(o.s.x, o.s.y, PAL.vd1, 12);
+      if (o.n <= 0) this.finish(o, true); else { this.ride.float('Faltan ' + o.n, PAL.amb); this.retarget(); }
+    } else if (m.t === 'ld') { const P = this.ride.p; P.load = clamp(m.load | 0, 0, P.cap); Snd.sfx('truck'); this.ride.float('Carga: ' + P.load + ' bicis', PAL.cie); this.retarget(); }
+  }
+  finish(o, ok) {
+    this.ride.removeMarker(o.m); this.orders.splice(this.orders.indexOf(o), 1);
+    if (ok) { this.doneN++; this.score += 30; this.ride.float('+30 ¡Orden cumplida!', PAL.vd1); Snd.sfx('win'); }
+    this.retarget();
+  }
+  retarget() {
+    const P = this.ride.p; if (!this.orders.length) { this.ride.target = null; return; }
+    const need = o => (o.type === 'llevar' && P.load === 0) || (o.type === 'recoger' && P.load >= P.cap);
+    const o = this.orders.slice().sort((a, b) => (need(a) ? 1 : 0) - (need(b) ? 1 : 0) || dist(a.s.x, a.s.y, P.x, P.y) - dist(b.s.x, b.s.y, P.x, P.y))[0];
+    this.ride.target = need(o) ? this.depM : o.m;
+  }
+  lost() { if (this.done) return; JE.ui && JE.ui.toast('Se perdió la conexión con Monitoreo'); this.end(); }
+  tick(dt) {
+    this.netT -= dt; if (this.netT <= 0) { this.netT = .12; const P = this.ride.p; Net.send({ t: 'p', x: Math.round(P.x), y: Math.round(P.y), a: +P.a.toFixed(2) }); }
+    if (!JE.headless && this.t - this.lastSnap > 10) this.lost();
+    this.coach = this.orders.length ? '' : 'Sin órdenes: espera el radio de ' + this.boss + '.';
+  }
+  get coachB() { return 30 + this.orders.length * 22; }
+  hud2(V) {
+    let y = V.h - 24 - this.orders.length * 22;
+    for (const o of this.orders) { V.text((o.type === 'llevar' ? 'LLEVAR ' : 'RECOGER ') + o.n + ' · ' + o.s.name, 10, y, { size: 13, color: o.type === 'llevar' ? PAL.vd1 : PAL.amb, bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
+  }
+  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🚚 ' + this.ride.p.load + '/20' }, { t: 'Servicio ' + this.sv + '%' }] }; }
+  end() { if (!this.done) Net.onmsg = m => UI.netLobbyMsg(m); super.end(); }
+  bot() { this.retarget(); this.botDrive(); }
+}
+MODE_CLASS.equipo = function (role, T, opt) { return opt.driver ? new ModeCoopDriver(role, T, opt) : new ModeCoopMon(role, T, opt); };
+
 /* ---- 60-ui.js ---- */
 /* =====================================================================
    INTERFAZ (revista) + BUCLE DEL JUEGO
@@ -3428,6 +3649,11 @@ MODE_CLASS.carrera = ModeCarrera;
 JE.URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
 const STARS_UNLOCK_INFO = 'Gana estrellas en los turnos para ascender en el escalafón.';
 const TIPS = [
+  'Las hojas verdes sirven para comprar colores de bici y timbres en «Mi ciclista y tienda».',
+  'Cada turno aprobado abre un capítulo de la historia: léelos todos en Más > La historia.',
+  'En «Jugar con amigos» pueden hacer un turno en equipo: uno dirige desde Monitoreo y los demás manejan los camiones.',
+  'El Valle de Aburrá tiene dos temporadas de lluvias: de marzo a mayo y de septiembre a noviembre.',
+  'En diciembre el río Medellín se viste de Alumbrados. ¡Búscalos en el juego!',
   'EnCicla nació en 2011 y lo gestiona el Área Metropolitana del Valle de Aburrá.',
   'El préstamo es gratis: te registras y prestas la bici en cualquier estación.',
   'Máximo 1 hora por préstamo: devuelve a tiempo y evita sanciones.',
@@ -3554,41 +3780,43 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
-    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="avatar">Mi ciclista</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
+    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
     const el = $('#tab-mas'); el.innerHTML = h;
     $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !(S[k] !== false); Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); if (k === 'big') document.body.classList.toggle('big', !!S.big); Snd.sfx('tap'); });
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
-    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
   },
   /* ---------- briefing ---------- */
   brief(roleId, turno, o = {}) {
     const r = ROLE[roleId], seed = o.seed != null ? o.seed : ((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
-    const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : rng.pick(NOVEDADES));
-    const tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free });
+    const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : Season.pick(rng)), sea = Season.now(), wet = !!sea.wet && !o.reto && roleId !== 'carrera' && !(turno === 1 && !o.free);
+    this.mute = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free }); } finally { this.mute = false; }   // solo para leer las metas: sin avisos
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
     let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : 'TURNO ' + turno}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
     h += `<div class="boxh">Sesión ${r.n}: ${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
+    h += Historia.brief(roleId, turno, o);
     h += `<div class="howto">${r.how.map((t, i) => `<div><b>${i + 1}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
     if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas ${roleId === 'carrera' ? 'de la carrera' : 'del turno'}</div><ul class="goals">${goals}</ul>`;
-    h += `<div class="paper" style="margin:14px 0"><div class="t">Novedad del día: ${esc(nov.name)}</div><p style="margin:6px 0 0">${esc(nov.desc)}</p></div>`;
+    h += `<div class="paper" style="margin:14px 0"><div class="t">Novedad del día: ${esc(nov.name)}</div><p style="margin:6px 0 0">${esc(nov.desc)}</p>${o.reto || roleId === 'carrera' ? '' : `<p style="margin:8px 0 0;font-size:13px;opacity:.8">${sea.icon} <b>${esc(sea.name)}.</b> ${esc(sea.desc)}</p>`}</div>`;
     if (!o.free && Save.data.perks.length) h += `<div class="perks">${Save.data.perks.map(p => `<span class="chip">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     h += `<div class="row" style="margin-top:16px"><button class="btn pri" id="bGo" style="flex:1">▶ Empezar ${o.free ? 'práctica' : 'turno'}</button></div>`;
     h += `<p class="m" style="margin-top:14px">💡 ${esc(TIPS[(seed >>> 3) % TIPS.length])}</p>`;
     $('#briefBody').innerHTML = h; this.go('sBrief');
     $('#bBack').onclick = () => this.go(o.reto ? 'sCover' : 'sHome');
-    $('#bGo').onclick = () => { Snd.init(); Snd.resume(); Game.start(roleId, turno, Object.assign({}, o, { seed, nov })); };
+    $('#bGo').onclick = () => { Snd.init(); Snd.resume(); Game.start(roleId, turno, Object.assign({}, o, { seed, nov, wet })); };
   },
   /* ---------- resultados ---------- */
   result(res, meta, prog) {
     const r = ROLE[meta.roleId], S = Save.data;
     const msg = res.pass ? (res.stars === 3 ? '¡Turno perfecto! Eres un orgullo paisa.' : '¡Turno aprobado! Puedes mejorar las estrellas.') : '¡Casi! La meta obligatoria no se cumplió. Inténtalo otra vez.';
-    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : 'TURNO ' + meta.turno} · ${esc(meta.nov.name)}</div>`;
+    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : 'TURNO ' + meta.turno} · ${esc(meta.nov.name)}</div>`;
     h += `<div class="sect"><span class="outline">${r.n}</span><h2 class="mega">${esc(r.name)}</h2></div>`;
     if (!meta.free) h += `<div class="stars">${this.starStr(res.stars)}</div>`;
     h += `<div class="kick" style="margin:6px 0">${msg}</div>`;
-    h += `<div class="stat"><div><b>${fmtInt(res.score)}</b><span>puntos</span></div><div><b>+${prog.xp}</b><span>experiencia</span></div><div><b>${S.streak}</b><span>racha</span></div><div><b>${Math.round(meta.dur)} s</b><span>duración</span></div></div>`;
+    h += Historia.result(res, meta);
+    h += `<div class="stat"><div><b>${fmtInt(res.score)}</b><span>puntos</span></div><div><b>+${prog.xp}</b><span>experiencia</span></div>${prog.hojas ? `<div><b>+${prog.hojas} 🍃</b><span>hojas de premio</span></div>` : ''}<div><b>${S.streak}</b><span>racha</span></div><div><b>${Math.round(meta.dur)} s</b><span>duración</span></div></div>`;
     if (prog.best) h += `<div class="chip" style="margin:4px 0 8px">¡Nuevo récord en este turno!</div>`;
     h += `<ul class="goals">${res.goals.map(g => `<li class="${g.ok ? 'ok' : 'no'} ${g.main ? 'main' : ''}"><b>${g.ok ? '✓' : '✗'}</b><span>${esc(g.txt)}</span></li>`).join('')}</ul>`;
     if (prog.unlocks.length) h += `<div class="paper" style="margin:10px 0"><div class="t">¡Ascenso!</div><p style="margin:6px 0 0">Desbloqueaste: ${prog.unlocks.map(esc).join(', ')}</p></div>`;
@@ -3596,7 +3824,7 @@ const UI = JE.ui = {
     if (prog.logros && prog.logros.length) { const gifts = []; for (const k in COSMETIC_REQ) for (const i in COSMETIC_REQ[k]) if (prog.logros.some(l => l.id === COSMETIC_REQ[k][i][0])) gifts.push(COSMETIC_REQ[k][i][1]); if (gifts.length) h += `<p class="m" style="margin:4px 0 10px">🎁 Nueva ropa para tu ciclista: <b>${gifts.map(esc).join(', ')}</b> (en Mi ciclista).</p>`; }
     if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
     if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
-    const nextOk = !meta.free && !meta.reto && meta.roleId !== 'carrera' && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
+    const nextOk = !meta.free && !meta.reto && !isMulti(meta.roleId) && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:14px">`;
     if (nextOk) h += `<button class="btn pri" id="bNext">▶ Siguiente turno</button>`;
     h += `<button class="btn ${nextOk ? '' : 'pri'}" id="bAgain">↻ Repetir</button>`;
@@ -3606,7 +3834,7 @@ const UI = JE.ui = {
     $('#resBody').innerHTML = h; this.go('sResult'); $('#sResult .scroll').scrollTop = 0;
     $$('[data-perk]').forEach(b => b.onclick = () => { $$('[data-perk]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); const P = S.perks; if (!P.includes(b.dataset.perk)) { P.push(b.dataset.perk); if (P.length > 3) P.shift(); } Save.save(); Snd.sfx('star'); this.toast('Mejora: ' + PERKS[b.dataset.perk].name); });
     if (nextOk) $('#bNext').onclick = () => this.brief(meta.roleId, meta.turno + 1);
-    $('#bAgain').onclick = () => { if (meta.net) { if (Net.status !== 'open') return this.toast('Se perdió la conexión: crea otra sala'); if (Net.role === 'host') this.netStartRace(); else this.toast('Pídele a quien creó la sala que inicie otra carrera'); return; } this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined }); };
+    $('#bAgain').onclick = () => { if (meta.net) { if (Net.status !== 'open') return this.toast('Se perdió la conexión: crea otra sala'); if (Net.role === 'host') { if (meta.roleId === 'equipo') this.netStartCoop(); else this.netStartRace(); } else this.toast('Pídele a quien creó la sala que inicie otra partida'); return; } this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined }); };
     $('#bEsc').onclick = () => this.go('sHome');
     $('#bShareImg').onclick = () => this.shareCard(res, meta);
     if (meta.reto) $('#bShareR').onclick = () => this.share(`🚲 Juega EnCicla · Reto del día: hice ${fmtInt(res.score)} puntos como ${r.name} (${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}). Código: ${this.code(meta)} ¿Me superas?`);
@@ -3622,7 +3850,7 @@ const UI = JE.ui = {
   multi() {
     const net = Net.supported();
     this.modal(`<h2>Jugar con amigos</h2>
-    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera hasta 4 jugadores</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos: <b>¡Empezar!</b> En la misma red Wi-Fi funciona sin internet.</p></div>
+    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera o turno en equipo · hasta 4</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos, elige <b>Carrera</b> (compiten) o <b>Turno en equipo</b> (uno dirige desde Monitoreo y los demás manejan los camiones). En la misma red Wi-Fi funciona sin internet.</p></div>
     ${net ? '<div class="row"><button class="btn pri" id="nHost">Crear sala</button><button class="btn" id="nJoin">Unirme</button></div><div id="nBox" style="margin-top:10px"></div>' : '<p class="m">Este navegador no permite salas (WebRTC).</p>'}
     <div class="squig"></div><p class="m"><b>Reto con código</b> (sin internet): todos juegan las mismas condiciones y comparan puntos.</p>
     <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn" id="bCode">Jugar ese código</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
@@ -3653,7 +3881,7 @@ const UI = JE.ui = {
     const pend = Net.pending, canInv = Net.peers.length < Net.MAX && !pend, ready = Object.keys(this.netPlayers).length > 0;
     if (this._lobbyBusy) return;
     box.innerHTML = `<p class="pag">Sala · ${ps.length} de 4 jugadores</p><div class="roster">${ps.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('')}</div>
-      <div id="nInv"></div><div class="col">${canInv ? '<button class="btn" id="nInvite">+ Invitar jugador</button>' : ''}<button class="btn pri" id="nStart" ${ready ? '' : 'disabled'}>▶ ¡Empezar carrera!</button></div><p class="m" id="nStat"></p>`;
+      <div id="nInv"></div><div class="col">${canInv ? '<button class="btn" id="nInvite">+ Invitar jugador</button>' : ''}<button class="btn pri" id="nStart" ${ready ? '' : 'disabled'}>🏁 Carrera de postales</button><button class="btn amb" id="nCoop" ${ready ? '' : 'disabled'}>🤝 Turno en equipo</button></div><p class="m" style="font-size:13px">En equipo: tú diriges desde Monitoreo y tus amigos manejan los camiones.</p><p class="m" id="nStat"></p>`;
     const inv = $('#nInvite'); if (inv) inv.onclick = async () => {
       this._lobbyBusy = true; $('#nInv').innerHTML = '<p class="m">Preparando invitación…</p>';
       try { const code = await Net.host(); $('#nInv').innerHTML = this.codeUI('Invitación ' + Net.peers.length + ': que tu amigo escanee este QR', code, '<p class="pag">Luego escanea o pega su respuesta</p>' + (QR.canScan() ? '<div class="col"><button class="btn amb" id="nScanA">📷 Escanear respuesta</button></div>' : '') + '<textarea class="txtin" rows="2" id="nAns" style="font-size:10px" placeholder="JE1a…"></textarea><div class="col"><button class="btn pri" id="nGo">Conectar</button></div>'); this.bindCode(code);
@@ -3661,19 +3889,25 @@ const UI = JE.ui = {
         $('#nGo').onclick = () => acc($('#nAns').value); const sa = $('#nScanA'); if (sa) sa.onclick = () => QR.startScan(t => acc(t), e => this.toast(e));
       } catch (e) { this._lobbyBusy = false; $('#nInv').innerHTML = '<p class="m">No se pudo crear la invitación: ' + esc(e.message) + '</p>'; }
     };
-    const st = $('#nStart'); if (st) st.onclick = () => this.netStartRace();
+    const st = $('#nStart'); if (st) st.onclick = () => this.netStartRace(); const co = $('#nCoop'); if (co) co.onclick = () => this.netStartCoop();
   },
   shareCode(code) { const t = 'Juega EnCicla · código de sala: ' + code; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else { const wa = 'https://wa.me/?text=' + encodeURIComponent(t); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); } },
   netLobbyMsg(m) {
     const P = Save.data.profile, clean = p => ({ id: p.id | 0, name: String(p.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(p.shirt) ? p.shirt : PAL.cor });
     if (m.t === 'id' && Net.role === 'guest') { Net.myId = m.id | 0; Net.send({ t: 'hi', name: P.name, shirt: SHIRTS[P.shirt] }); }
     else if (m.t === 'hi' && Net.role === 'host') { this.netPlayers[m.from] = Object.assign(clean(m), { id: m.from | 0 }); this._lobbyBusy = false; Net.send({ t: 'roster', players: this.roster() }); this.renderLobby(); Snd.sfx('coin'); }
-    else if (m.t === 'roster' && Net.role === 'guest') { this.netRoster = (m.players || []).slice(0, 4).map(clean); const r = $('#nRoster'); if (r) r.innerHTML = '<div class="roster">' + this.netRoster.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('') + '</div>'; const st = $('#nStat'); if (st) st.textContent = '¡En la sala! Esperando que empiece la carrera…'; }
-    else if (m.t === 'start' && Net.role === 'guest') this.netRace(m.seed >>> 0, m.lvl || 2, (m.players || []).map(clean));
+    else if (m.t === 'roster' && Net.role === 'guest') { this.netRoster = (m.players || []).slice(0, 4).map(clean); const r = $('#nRoster'); if (r) r.innerHTML = '<div class="roster">' + this.netRoster.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('') + '</div>'; const st = $('#nStat'); if (st) st.textContent = '¡En la sala! Esperando que empiece la partida…'; }
+    else if (m.t === 'start' && Net.role === 'guest') { if (m.kind === 'coop') this.netCoop(m.seed >>> 0, (m.players || []).map(clean)); else this.netRace(m.seed >>> 0, m.lvl || 2, (m.players || []).map(clean)); }
     else if (m.t === 'bye' && Net.role === 'host') { delete this.netPlayers[m.from]; this.renderLobby(); }
   },
   roster() { const P = Save.data.profile; return [{ id: 0, name: P.name, shirt: SHIRTS[P.shirt] }].concat(Object.values(this.netPlayers)); },
   netStartRace() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, players = this.roster(); Net.send({ t: 'start', seed, lvl: 2, players }); this.netRace(seed, 2, players); },
+  /* turno cooperativo: el anfitrión es Monitoreo y cada invitado maneja un camión */
+  netStartCoop() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, players = this.roster(); Net.send({ t: 'start', kind: 'coop', seed, players }); this.netCoop(seed, players); },
+  netCoop(seed, players) {
+    this.closeModal(); if (Game.mode) Game.stop(); const host = Net.role === 'host';
+    Game.start('equipo', 1, { seed, nov: NOVEDADES[0], net: true, driver: !host, players: host ? (players || []).filter(p => p.id !== 0) : players });
+  },
   netRace(seed, lvl, players) {
     this.closeModal(); if (Game.mode) Game.stop(); const others = (players || []).filter(p => p.id !== Net.myId);
     Game.start('carrera', lvl, { seed, nov: NOVEDADES[0], net: true, players: others.length ? others : [{ id: 0, name: 'Amigo', shirt: PAL.cor }] });
@@ -3698,12 +3932,25 @@ const UI = JE.ui = {
   },
   avatar() {
     const P = Save.data.profile;
-    const req = (key, i) => (COSMETIC_REQ[key] || {})[i], locked = (key, i) => { const r = req(key, i); return r && !Save.data.logros.includes(r[0]); };
-    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), lk = locked(key, i); return `<button data-k="${key}" data-i="${i}" class="${P[key] === i ? 'on' : ''} ${lk ? 'lock' : ''}" style="background:${c}" aria-label="${r ? r[1] : key + ' ' + (i + 1)}" title="${r ? esc(r[1]) : ''}">${lk ? '🔒' : r ? '★' : ''}</button>`; }).join('')}</div>`;
+    const S = Save.data, req = (key, i) => (COSMETIC_REQ[key] || {})[i], price = (key, i) => (SHOP[key] || {})[i];
+    const locked = (key, i) => { const r = req(key, i), p = price(key, i); return (r && !S.logros.includes(r[0])) || (p && !S.owned.includes(key + i)); };
+    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), p = price(key, i), lk = locked(key, i), em = key === 'bell'; return `<button data-k="${key}" data-i="${i}" class="${(P[key] | 0) === i ? 'on' : ''} ${lk ? (p ? 'buy' : 'lock') : ''} ${em ? 'em' : ''}" style="background:${em ? '#143a6b' : c}" aria-label="${esc((r || p || [0, key + ' ' + (i + 1)])[1])}">${em ? c : ''}${lk ? (p ? '<small>🍃' + p[0] + '</small>' : '🔒') : r ? '★' : ''}</button>`; }).join('')}</div>`;
     this.modal(`<h2>Mi ciclista</h2><canvas id="avPrev" width="80" height="50"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
-      <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}<div class="col"><button class="btn pri" id="avOk">Guardar</button></div>`, () => {
-      const draw = () => { const c = $('#avPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); };
-      draw(); $$('.swatches button').forEach(b => b.onclick = () => { if (locked(b.dataset.k, +b.dataset.i)) { const r = req(b.dataset.k, +b.dataset.i), L = LOGROS.find(l => l.id === r[0]); Snd.sfx('bad'); return this.toast('🔒 ' + r[1] + ': se gana con el logro «' + (L && !L.secret ? L.name : '???') + '»'); } P[b.dataset.k] = +b.dataset.i; $$(`.swatches button[data-k=${b.dataset.k}]`).forEach(x => x.classList.toggle('on', x === b)); draw(); Snd.sfx('tap'); });
+      <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}
+      <div class="paper" style="margin:14px 0 4px"><div class="t">Tienda · <span id="avHojas"></span></div><p style="margin:4px 0 0;font-size:13px">Las hojas verdes se ganan pedaleando como Usuario y con las estrellas de cada turno. Lo que tiene precio se compra con dos toques.</p></div>
+      <p class="pag">Color de la bici</p>${sw(BIKES, 'bike')}<p class="pag">Timbre</p>${sw(BELLS, 'bell')}<div class="col"><button class="btn pri" id="avOk">Guardar</button></div>`, () => {
+      const draw = () => { const c = $('#avPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); $('#avHojas').textContent = '🍃 ' + hojas() + ' hojas'; };
+      let arm = null;
+      draw(); $$('.swatches button').forEach(b => b.onclick = () => {
+        const k = b.dataset.k, i = +b.dataset.i, r = req(k, i), p = price(k, i);
+        if (r && !S.logros.includes(r[0])) { const L = LOGROS.find(l => l.id === r[0]); Snd.sfx('bad'); return this.toast('🔒 ' + r[1] + ': se gana con el logro «' + (L && !L.secret ? L.name : '???') + '»'); }
+        if (p && !S.owned.includes(k + i)) {
+          if (hojas() < p[0]) { Snd.sfx('bad'); return this.toast('🍃 ' + p[1] + ' cuesta ' + p[0] + ' hojas: te faltan ' + (p[0] - hojas())); }
+          if (arm !== b) { arm = b; Snd.sfx('tap'); return this.toast('🍃 ' + p[1] + ' · ' + p[0] + ' hojas. Toca otra vez para comprar.'); }
+          S.spent = (S.spent | 0) + p[0]; S.owned.push(k + i); S.stats.bought = (S.stats.bought | 0) + 1; b.classList.remove('buy'); const sm = b.querySelector('small'); if (sm) sm.remove(); Snd.sfx('star'); this.toast('¡Compraste ' + p[1] + '!');
+        }
+        arm = null; P[k] = i; $$(`.swatches button[data-k=${k}]`).forEach(x => x.classList.toggle('on', x === b)); Save.save(); draw(); if (k === 'bell') Snd.sfx('bell'); else Snd.sfx('tap');
+      });
       $('#avOk').onclick = () => { P.name = ($('#avName').value || 'Ciclista').trim().slice(0, 16) || 'Ciclista'; Save.data.settings.seen.profile = 1; Save.save(); this.closeModal(); this.renderHome(); Snd.sfx('ok'); };
     });
   },
@@ -3738,7 +3985,7 @@ const UI = JE.ui = {
     if (navigator.share) navigator.share({ title: 'Juega EnCicla', text, url }).catch(() => { });
     else { const wa = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); }
   },
-  toast(t) { const el = $('#toast'); if (!el) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
+  toast(t) { const el = $('#toast'); if (!el || this.mute) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
   postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }
 };
 
@@ -3747,11 +3994,12 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || roleId === 'carrera' ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
     $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : ' · T' + turno); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
+    this.coachT = 0; this._coachEr = 0; $('#coach').textContent = '';
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
@@ -3777,9 +4025,16 @@ const Game = JE.game = {
     const key = inf.clock + '|' + inf.score + '|' + inf.chips.map(c => c.t + c.c).join(',');
     if (key !== this.hudKey) { this.hudKey = key; $('#hudClock').textContent = '⏱ ' + inf.clock; $('#hudScore').textContent = '★ ' + fmtInt(inf.score); $('#hudChips').innerHTML = inf.chips.map(c => `<span class="chip ${c.c || ''}">${esc(c.t)}</span>`).join(''); }
     const co = $('#coach'), ct = a.coach || '';
-    if (co.textContent !== ct) { co.textContent = ct; this.coachT = 0; co.style.opacity = 1; }
-    this.coachT = (this.coachT || 0) + dt; if (M.ride && !M.sub && this.coachT > 8) co.style.opacity = 0;
-    const top = !!a.coachB && View.h < 520; co.classList.toggle('coachTop', top);
+    // el cartel de ayuda no debe tapar el juego: es pequeño en el mapa y se quita solo tras el tiempo de lectura.
+    // Vuelve si cambia el texto o si el jugador se equivoca; también se lee en el menú de pausa.
+    const ride = !!M.ride && !M.sub, er = (a.errors | 0) + (M.errors | 0);
+    if (co.textContent !== ct) { co.textContent = ct; this.coachT = 0; }
+    if (er !== this._coachEr) { if (er > (this._coachEr | 0)) this.coachT = 0; this._coachEr = er; }
+    this.coachT = (this.coachT || 0) + dt;
+    const life = (ride ? clamp(2 + ct.length * .05, 3.5, 6) : clamp(2.5 + ct.length * .06, 4, 9)) * (Save.data.settings.pace === 'tranquilo' ? 1.4 : 1) * (this.hintsOn ? 1 : .65);
+    const op = ct && this.coachT < life ? '1' : '0'; if (co.style.opacity !== op) co.style.opacity = op;
+    co.classList.toggle('mini', ride);
+    const top = !!a.coachB && View.h < 520 && !ride; co.classList.toggle('coachTop', top);
     const cb = top ? '' : 'calc(var(--sab) + ' + (a.coachB || 12) + 'px)'; if (co.style.bottom !== cb) co.style.bottom = cb;
     const gm = $('#goalsMini'), hide = a.hideGoals ? 'none' : ''; if (gm.style.display !== hide) gm.style.display = hide;
     this.goalT -= dt; if (this.goalT <= 0) { this.goalT = .4; $('#goalsMini').innerHTML = M.free && M.id === 'usuario' ? '' : M.goals.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join(''); }
@@ -3787,13 +4042,13 @@ const Game = JE.game = {
     if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn" data-i="${i}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
   },
   pause() {
-    if (!this.mode) return; this.paused = true; Snd.music(false); const map = !!this.mode.ride;
-    UI.modal(`<h2>Pausa</h2><p class="m">${esc(ROLE[this.mode.id].name)} · ${this.meta.free ? 'práctica' : 'turno ' + this.meta.turno} · ${esc(this.mode.nov.name)}</p><div class="col"><button class="btn pri" id="pGo">▶ Continuar</button>${map ? '<button class="btn" id="pMap">Vista general</button>' : ''}<button class="btn" id="pRe">↻ Reiniciar</button><button class="btn" id="pSnd">Sonido: ${Save.data.settings.sfx ? 'sí' : 'no'}</button><button class="btn gh" id="pEnd">${this.meta.free ? 'Terminar práctica' : 'Salir del turno'}</button></div>`, () => {
+    if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene
+    UI.modal(`<h2>${net ? 'Menú' : 'Pausa'}</h2><p class="m">${esc(ROLE[this.mode.id].name)} · ${net ? 'en red: el juego sigue corriendo' : (this.meta.free ? 'práctica' : 'turno ' + this.meta.turno) + ' · ' + esc(this.mode.nov.name)}</p>${(this.mode.sub || this.mode).coach ? `<p class="m" style="font-size:14px">💡 ${esc((this.mode.sub || this.mode).coach)}</p>` : ''}<div class="col"><button class="btn pri" id="pGo">▶ Continuar</button>${map ? '<button class="btn" id="pMap">Vista general</button>' : ''}${net ? '' : '<button class="btn" id="pRe">↻ Reiniciar</button>'}<button class="btn" id="pSnd">Sonido: ${Save.data.settings.sfx ? 'sí' : 'no'}</button><button class="btn gh" id="pEnd">${this.meta.free ? 'Terminar práctica' : 'Salir del turno'}</button></div>`, () => {
       $('#pGo').onclick = () => this.resume();
       if (map) $('#pMap').onclick = () => { this.mode.ride.big = true; this.resume(); };
-      $('#pRe').onclick = () => { UI.closeModal(); const m = this.meta; this.stop(); Game.start(m.roleId, m.turno, { free: m.free, reto: m.reto, seed: m.reto ? m.seed : ((Date.now() ^ 0x9e3779b9) >>> 0), nov: m.nov }); };
+      if (!net) $('#pRe').onclick = () => { UI.closeModal(); const m = this.meta; this.stop(); Game.start(m.roleId, m.turno, { free: m.free, reto: m.reto, seed: m.reto ? m.seed : ((Date.now() ^ 0x9e3779b9) >>> 0), nov: m.nov }); };
       $('#pSnd').onclick = () => { const S = Save.data.settings; S.sfx = S.music = !S.sfx; Save.save(); $('#pSnd').textContent = 'Sonido: ' + (S.sfx ? 'sí' : 'no'); };
-      $('#pEnd').onclick = () => { UI.closeModal(); if (this.meta.free) { this.paused = false; this.mode.end(); this.finish(); } else { this.stop(); UI.go('sHome'); } };
+      $('#pEnd').onclick = () => { UI.closeModal(); if (net) { const M = this.mode; if (M.id === 'equipo' && Net.role === 'host') M.end(); else { Net.send({ t: 'bye' }); Net.onmsg = m => UI.netLobbyMsg(m); } this.stop(); UI.go('sHome'); } else if (this.meta.free) { this.paused = false; this.mode.end(); this.finish(); } else { this.stop(); UI.go('sHome'); } };
     });
   },
   resume() { UI.closeModal(); this.paused = false; this.last = performance.now(); Snd.music(true); },
@@ -3811,8 +4066,8 @@ const Progress = JE.progress = {
     const S = Save.data, out = { xp: 0, unlocks: [], perkOpts: null, lost: false, best: false };
     const before = ROLES.filter(r => UI.unlocked(r)).map(r => r.id);
     out.xp = Math.round(res.score / 10) + res.stars * 20 + (meta.reto ? 15 : 0); if (meta.free) out.xp = Math.round(out.xp / 3);
-    S.xp += out.xp; S.stats.plays++;
-    if (!meta.free && meta.roleId !== 'carrera') {
+    S.xp += out.xp; S.stats.plays++; out.hojas = meta.free ? 0 : res.stars * 2; S.stats.leaves += out.hojas;
+    if (!meta.free && !isMulti(meta.roleId)) {
       const st = S.stars[meta.roleId] || [0, 0, 0]; if (res.stars > st[meta.turno - 1]) st[meta.turno - 1] = res.stars; S.stars[meta.roleId] = st;
       const k = meta.roleId + meta.turno; if (res.score > (S.best[k] || 0)) { out.best = !!S.best[k]; S.best[k] = res.score; }
       if (res.pass) {
@@ -3867,8 +4122,8 @@ function confetti(n) {
    ===================================================================== */
 const LOGROS = [
   { id: 'primer', name: 'Primer pedalazo', desc: 'Termina tu primer turno', icon: 'usuario', test: S => S.stats.plays >= 1 },
-  { id: 'aprobado', name: '¡Aprobado!', desc: 'Aprueba un turno del escalafón', icon: 'estrella', test: S => S.history.some(h => h.p && !h.free && h.m !== 'carrera') },
-  { id: 'perfecto', name: 'Turno perfecto', desc: 'Gana 3 estrellas en un turno', icon: 'estrella', test: S => S.history.some(h => h.st === 3 && h.m !== 'carrera') },
+  { id: 'aprobado', name: '¡Aprobado!', desc: 'Aprueba un turno del escalafón', icon: 'estrella', test: S => S.history.some(h => h.p && !h.free && !isMulti(h.m)) },
+  { id: 'perfecto', name: 'Turno perfecto', desc: 'Gana 3 estrellas en un turno', icon: 'estrella', test: S => S.history.some(h => h.st === 3 && !isMulti(h.m)) },
   { id: 'racha3', name: 'En racha', desc: 'Aprueba 3 turnos seguidos', icon: 'estrella', test: S => S.bestStreak >= 3 },
   { id: 'postal5', name: 'Turista paisa', desc: 'Colecciona 5 postales', icon: 'pin', test: S => S.postales.length >= 5 },
   { id: 'postal15', name: 'Conocedor del valle', desc: 'Colecciona 15 postales', icon: 'pin', test: S => S.postales.length >= 15 },
@@ -3951,6 +4206,114 @@ UI.shareCard = function (res, meta) {
     this.download(blob, name);
   }, 'image/png');
 };
+
+/* ---- 66-historia.js ---- */
+/* =====================================================================
+   HISTORIA: 27 capítulos (9 oficios × 3 turnos). Cada turno aprobado
+   desbloquea el siguiente. Un mentor por oficio te habla antes y después.
+   ===================================================================== */
+/* elenco: [nombre, cargo, piel, pelo, gorra/casco (o '' si no usa), camisa] */
+const CAST = {
+  usuario: ['Doña Luz', 'usuaria desde 2011', '#e0ac7e', '#d9d9d9', '', '#b07cff'],
+  anfitrion: ['Santi', 'anfitrión de estación', '#c68a5c', '#2b1d14', '#9bd341', '#9bd341'],
+  mecanico: ['Don Jairo', 'mecánico del taller', '#a86a3d', '#8a8a8a', '#0e2d55', '#143a6b'],
+  bodega: ['Yuli', 'jefa de bodega', '#e0ac7e', '#5a2d0c', '', '#ffc93c'],
+  apoyo: ['Kevin', 'apoyo en ruta', '#8d5524', '#141414', '#ffffff', '#9bd341'],
+  tecnico: ['Ing. Paola', 'técnica de estaciones', '#f1c9a5', '#141414', '#ffc93c', '#0a2342'],
+  balance: ['Wilson', 'conductor de balance', '#c68a5c', '#2b1d14', '#ff6b5a', '#ffffff'],
+  monitoreo: ['Cata', 'sala de control', '#a86a3d', '#2b1d14', '', '#56c7ff'],
+  supervisor: ['Don Rubén', 'supervisor', '#e0ac7e', '#bbbbbb', '', '#0a2342']
+};
+/* t: título · a: antes del turno · d: después de aprobarlo */
+const HISTORIA = {
+  usuario: [
+    { t: 'El primer pedalazo', a: '¡Bienvenido, mijo! Yo monto en EnCicla desde 2011. Presta tu primera bici y llévala a la otra estación antes de una hora. Suave, que nadie nace aprendido.', d: '¿Viste? Gratis, sin humo y sin trancón. Mañana te enseño a respetar los semáforos.' },
+    { t: 'Semáforo en rojo', a: 'Hoy son dos viajes. Ojo con los semáforos: en bici también se frena en rojo, que del afán no queda sino el cansancio.', d: 'Así da gusto: pedaleas como todo un ciudadano. Dicen que EnCicla anda buscando anfitriones…' },
+    { t: 'Tres viajes y una decisión', a: 'Tres viajes seguidos, como cualquier día de trabajo. Si los logras, pasa por la estación: Santi, el anfitrión, quiere conocerte.', d: '¡Te lo dije! Santi dice que tienes madera. Ponte el chaleco: mañana empiezas como anfitrión.' }
+  ],
+  anfitrion: [
+    { t: 'El chaleco verde', a: 'Bienvenido a la estación. El anfitrión es la cara de EnCicla: saluda, revisa la tarjeta y entrega una bici buena. Hoy la fila es corta.', d: '¡Buen primer turno! La gente se va contenta cuando la atienden con una sonrisa.' },
+    { t: 'Fila de hora pico', a: 'Hoy sale más gente de la universidad. Mira bien cada tarjeta y no entregues bicis con luz roja.', d: 'Ni un error. Don Jairo, el mecánico, preguntó quién estaba dejando las bicis tan ordenadas.' },
+    { t: 'La estación es tuya', a: 'Hoy cierro yo… ¡mentiras! Cierras tú. Fila larga y bicis dañadas: sepáralas para el taller.', d: 'Estación impecable. Don Jairo te espera: dice que quien cuida las bicis debe aprender a curarlas.' }
+  ],
+  mecanico: [
+    { t: 'El oído del mecánico', a: 'Toda bici avisa lo que le duele: una llanta baja, una cadena seca. Empieza por lo fácil y usa la herramienta correcta.', d: 'Eso. Bici que sale de aquí, sale como nueva.' },
+    { t: 'Frenos y cadenas', a: 'Hoy llegan más enfermas. Primero mira la falla y después repara: el que adivina, daña.', d: 'Buen pulso. En bodega están cortos de manos y Yuli necesita a alguien juicioso.' },
+    { t: 'Taller a reventar', a: 'Mañana hay evento y el valle necesita todas las bicis. Hoy nadie se va hasta dejarlas listas… bueno, tú no.', d: '¡Qué berraquera! Todas rodando. Yuli te recibe en la bodega.' }
+  ],
+  bodega: [
+    { t: 'Cada cosa en su sitio', a: 'La bodega es el corazón: aquí llega todo y de aquí sale todo. Clasifica cada repuesto en su caja y carga las bicis nuevas.', d: 'Ordenadito. Así los camiones no pierden tiempo.' },
+    { t: 'Llegó el pedido', a: 'Hoy llegan repuestos más rápido. Que no se te cruce nada: una caja mal puesta es una bici parada.', d: 'Ni una pieza perdida. Kevin, el de apoyo, anda pidiendo ayuda con los relevos.' },
+    { t: 'Desvíos', a: 'Hoy toca enrutar lo que sale para todo el valle. Cada paquete por su carril.', d: 'Bodega al día. Kevin te presta la bici de apoyo: ¡a la calle!' }
+  ],
+  apoyo: [
+    { t: 'Relevos', a: 'El de apoyo va donde lo necesiten: abre estaciones y releva al anfitrión que sale a almorzar. Rueda rápido, pero seguro.', d: 'Llegaste a tiempo y el compañero almorzó tranquilo. Eso también es servicio.' },
+    { t: 'De estación en estación', a: 'Hoy hay más tareas y quedan más lejos. Tú eliges el orden: usa las ciclorrutas, que son más rápidas.', d: 'Ya te conocen en media ciudad. La ingeniera Paola pregunta si sabes de cables.' },
+    { t: 'El comodín', a: 'Hoy cubres la zona entera. El que sirve para todo, sirve para mucho.', d: 'Ni una tarea tarde. Paola te espera con la caja de herramientas.' }
+  ],
+  tecnico: [
+    { t: 'Luz verde', a: 'Las estaciones automáticas no tienen anfitrión: tienen tótem y anclajes. Si una se apaga, la gente se queda sin bici. Llega y arréglala.', d: 'Volvió la luz verde. Cada estación que revive son cien viajes que sí se hacen.' },
+    { t: 'Circuitos', a: 'Hoy toca abrir el tótem: cierra el circuito y la estación despierta. Con calma, que la electricidad no perdona el afán.', d: 'Operatividad bien arriba. Wilson, el del camión, dice que le haces falta en la ruta.' },
+    { t: 'Tormenta eléctrica', a: 'Anoche tronó duro y medio valle amaneció apagado. Hoy no paramos.', d: 'Todo encendido de nuevo. Wilson te guarda el puesto… y las llaves del camión.' }
+  ],
+  balance: [
+    { t: 'El camión', a: 'Este camión no cabe por las ciclorrutas, así que piensa como conductor. Lleva bicis a donde faltan y recoge donde sobran.', d: 'Suave en las curvas y puntual. Así se balancea un sistema.' },
+    { t: 'Mañana de universidades', a: 'A las siete se vacían los barrios y se llenan las universidades. Las órdenes de Cata no dan espera.', d: 'Casi ninguna vencida. Cata quiere conocer a quien le cumple las órdenes.' },
+    { t: 'Todo el valle en un camión', a: 'Hoy hay más órdenes que semáforos. Planea la ruta antes de arrancar.', d: 'Camión guardado y sin un rayón. Sube a la sala de control: Cata te espera.' }
+  ],
+  monitoreo: [
+    { t: 'La sala de control', a: 'Desde aquí se ve todo. Rojo es estación vacía; azul, llena. Manda los camiones antes de que alguien se quede sin bici.', d: 'Buen ojo. El mapa te habla y tú ya lo entiendes.' },
+    { t: 'El sur despierta', a: 'Hoy vigilas el sur: Envigado, Itagüí, Sabaneta. Más estaciones y los mismos camiones.', d: 'Servicio arriba del 80 %. Don Rubén anda preguntando por ti.' },
+    { t: 'De Bello a Barbosa', a: 'El norte es largo y las estaciones quedan lejos: cada orden cuenta doble.', d: 'Lo lograste. Don Rubén se jubila pronto y busca quién coordine la Gran Rodada.' }
+  ],
+  supervisor: [
+    { t: 'Abrir el sistema', a: 'El supervisor abre, reparte al personal y resuelve lo que salga. Empieza con calma y escucha a tu gente.', d: 'Sistema abierto y cerrado sin novedad. Mandas como quien ha pasado por todos los puestos.' },
+    { t: 'Un día cualquiera', a: 'No hay días cualquiera: semáforos dañados, bodega llena, estaciones sin relevo. Respira y prioriza.', d: 'Todo resuelto. Falta una sola cosa: la Gran Rodada del Valle.' },
+    { t: 'La Gran Rodada', a: 'Hoy miles de personas pedalean de Caldas a Barbosa, y Doña Luz va de primera. Que no falte una sola bici.', d: '¡Lo lograste! Empezaste prestando una bici y hoy cuidas las de todo el valle. Gracias por rodar con EnCicla.' }
+  ]
+};
+const Historia = JE.historia = {
+  total: 27,
+  n(roleId, turno) { return ROLE[roleId].n * 3 - 3 + turno; },
+  done(roleId, turno) { return ((Save.data.stars[roleId] || [])[turno - 1] | 0) > 0; },
+  count() { let n = 0; for (const r of ROLES) for (let t = 1; t <= 3; t++) if (this.done(r.id, t)) n++; return n; },
+  /* retrato pixel 12×12 del mentor */
+  face(roleId) {
+    const k = 'face' + roleId; let u = Art.cache.get(k); if (u) return u;
+    const [, , skin, hair, cap, shirt] = CAST[roleId], c = document.createElement('canvas'); c.width = c.height = 12; const x = c.getContext('2d');
+    const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+    R(0, 0, 12, 12, '#c4ec7c'); R(1, 9, 10, 3, shirt); R(5, 8, 2, 1, skin); R(2, 2, 8, 6, skin); R(2, 1, 8, 2, hair); R(1, 2, 1, 4, hair); R(10, 2, 1, 4, hair);
+    if (cap) { R(2, 0, 8, 2, cap); R(1, 2, 10, 1, cap); }
+    R(4, 4, 1, 1, '#141414'); R(7, 4, 1, 1, '#141414'); R(5, 6, 2, 1, '#8a3b2a');
+    if (roleId === 'mecanico') R(4, 6, 4, 1, '#5a5a5a'); if (roleId === 'usuario') { R(3, 4, 3, 1, '#0a2342'); R(7, 4, 2, 1, '#0a2342'); } if (roleId === 'monitoreo') { R(1, 3, 1, 3, '#141414'); R(1, 6, 3, 1, '#141414'); } if (roleId === 'supervisor') R(5, 9, 2, 3, '#ff6b5a');
+    u = c.toDataURL(); Art.cache.set(k, u); return u;
+  },
+  bubble(roleId, turno, after, extra) {
+    const C = CAST[roleId], H = (HISTORIA[roleId] || [])[turno - 1]; if (!C || !H) return '';
+    return `<div class="hist-b ${after ? 'after' : ''}"><img class="px" src="${this.face(roleId)}" alt=""><div><div class="pag">Capítulo ${this.n(roleId, turno)} de ${this.total} · ${esc(H.t)}</div><p>«${esc(extra || (after ? H.d : H.a))}»</p><small>${esc(C[0])}, ${esc(C[1])}</small></div></div>`;
+  },
+  /* se muestra en el briefing y en los resultados de los turnos del escalafón */
+  brief(roleId, turno, o) { return o.free || o.reto || !HISTORIA[roleId] ? '' : this.bubble(roleId, turno, false); },
+  result(res, meta) {
+    if (meta.free || meta.reto || !HISTORIA[meta.roleId]) return '';
+    return res.pass ? this.bubble(meta.roleId, meta.turno, true) : this.bubble(meta.roleId, meta.turno, true, 'No pasa nada: hasta el mejor se cae de la bici. Respira y vuelve a intentarlo.');
+  }
+};
+UI.historia = function () {
+  const got = Historia.count(); let h = `<h2>La historia</h2><p class="pag">${got} de ${Historia.total} capítulos · del primer pedalazo a la Gran Rodada</p><div class="hist-l">`, open = true;
+  for (const r of ROLES) for (let t = 1; t <= 3; t++) {
+    const H = HISTORIA[r.id][t - 1], ok = Historia.done(r.id, t), n = Historia.n(r.id, t);
+    if (ok) h += `<details><summary><b>${n}.</b> ${esc(H.t)} <small>${esc(r.name)} · turno ${t}</small></summary>${Historia.bubble(r.id, t, false)}${Historia.bubble(r.id, t, true)}</details>`;
+    else if (open && this.unlocked(r) && this.turnoOk(r, t)) { h += `<div class="next"><b>${n}.</b> ${esc(H.t)} <small>▶ ${esc(r.name)} · turno ${t}</small></div>`; open = false; }
+    else h += `<div class="lock"><b>${n}.</b> 🔒 <small>${esc(r.name)} · turno ${t}</small></div>`;
+  }
+  this.modal(h + `</div><div class="col"><button class="btn pri" id="mClose">Cerrar</button></div>`);
+};
+LOGROS.push(
+  { id: 'cronista', name: 'La Gran Rodada', desc: 'Completa los 27 capítulos de la historia', icon: 'supervisor', test: () => Historia.count() >= Historia.total },
+  { id: 'estreno', name: 'De estreno', desc: 'Compra algo en la tienda con hojas verdes', icon: 'hoja', test: S => (S.owned || []).length > 0 },
+  { id: 'equipo', name: 'Trabajo en equipo', desc: 'Aprueba un turno cooperativo con amigos', icon: 'monitoreo', test: S => S.history.some(h => h.m === 'equipo' && h.p) }
+);
 
 /* ---- 70-net.js ---- */
 /* =====================================================================
@@ -4285,11 +4648,11 @@ const Bot = JE.bot = {
     const rep = { games: [], errs0: JE.errors.length, t0: performance.now() }, backup = JSON.stringify(Save.data), wasHeadless = JE.headless;
     JE.headless = true; const roles = o.roles || ROLES.map(r => r.id).concat(['carrera']);
     for (let i = 0; i < n; i++) {
-      const roleId = roles[i % roles.length], turno = o.turno || (1 + Math.floor(i / roles.length) % 3), seed = ((o.seed || 20261104) + i * 7919) >>> 0, nov = NOVEDADES[i % NOVEDADES.length];
+      const roleId = roles[i % roles.length], turno = o.turno || (1 + Math.floor(i / roles.length) % 3), seed = ((o.seed || 20261104) + i * 7919) >>> 0, NOVS = NOVEDADES.concat(NOV_EXTRA), nov = NOVS[i % NOVS.length];
       const g = { roleId, turno, seed, nov: nov.id, issues: [] };
       try {
         const perks = i % 4 === 1 ? ['llantas', 'sonrisa', 'llave'] : i % 4 === 3 ? ['tinto', 'camion', 'chaleco'] : [];
-        const M = new MODE_CLASS[roleId](ROLE[roleId], turno, { seed, nov, perks });
+        const M = new MODE_CLASS[roleId](ROLE[roleId], turno, { seed, nov, perks, wet: i % 3 === 0 });
         const tot0 = M.sim ? M.sim.count() : null; let acc = 0, steps = 0, lastStation = null;
         while (!M.done && M.t < maxT) {
           if (M.ride && !M.sub) M.bot(err); else if ((acc += dt) >= .3) { acc = 0; M.bot(err); }

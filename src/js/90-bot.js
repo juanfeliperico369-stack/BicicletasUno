@@ -8,11 +8,11 @@ const Bot = JE.bot = {
     const rep = { games: [], errs0: JE.errors.length, t0: performance.now() }, backup = JSON.stringify(Save.data), wasHeadless = JE.headless;
     JE.headless = true; const roles = o.roles || ROLES.map(r => r.id).concat(['carrera']);
     for (let i = 0; i < n; i++) {
-      const roleId = roles[i % roles.length], turno = o.turno || (1 + Math.floor(i / roles.length) % 3), seed = ((o.seed || 20261104) + i * 7919) >>> 0, nov = NOVEDADES[i % NOVEDADES.length];
+      const roleId = roles[i % roles.length], turno = o.turno || (1 + Math.floor(i / roles.length) % 3), seed = ((o.seed || 20261104) + i * 7919) >>> 0, NOVS = NOVEDADES.concat(NOV_EXTRA), nov = NOVS[i % NOVS.length];
       const g = { roleId, turno, seed, nov: nov.id, issues: [] };
       try {
         const perks = i % 4 === 1 ? ['llantas', 'sonrisa', 'llave'] : i % 4 === 3 ? ['tinto', 'camion', 'chaleco'] : [];
-        const M = new MODE_CLASS[roleId](ROLE[roleId], turno, { seed, nov, perks });
+        const M = new MODE_CLASS[roleId](ROLE[roleId], turno, { seed, nov, perks, wet: i % 3 === 0 });
         const tot0 = M.sim ? M.sim.count() : null; let acc = 0, steps = 0, lastStation = null;
         while (!M.done && M.t < maxT) {
           if (M.ride && !M.sub) M.bot(err); else if ((acc += dt) >= .3) { acc = 0; M.bot(err); }

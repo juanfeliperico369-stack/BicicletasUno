@@ -90,7 +90,18 @@ Ride.prototype.drawSky = function (b, ox, oy) {
     for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; prect(b, cb.ax + ux * s - ox - 1, cb.ay + uy * s - oy - 1, 3, 3, cb.col); prect(b, cb.ax + ux * s - ox, cb.ay + uy * s - oy, 1, 1, '#1d2c44'); prect(b, cb.ax + ux * s2 - ox + 1, cb.ay + uy * s2 - oy + 1, 3, 3, cb.col); }
   }
 };
+const ALUM = ['#ff5a5a', '#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7', '#ffffff'];
+Ride.prototype.drawAlum = function (b, ox, oy) {
+  const y0 = Math.floor(oy / TS) - 1, y1 = y0 + Math.ceil(View.vh / TS) + 2, k = Math.floor(this.mode.t * 2.5);
+  for (let y = Math.max(0, y0); y <= Math.min(MH - 1, y1); y++) {
+    const cx = (rxi(y) + .5) * TS, py = y * TS - oy;
+    for (const s of [-1, 1]) for (let j = 0; j < 2; j++) { const px = Math.round(cx + s * 16 - 1 - ox), q = y * 2 + j, on = (q + k) % 4 !== 0; b.fillStyle = on ? ALUM[(q * (s + 2) + k) % ALUM.length] : '#3b4250'; b.fillRect(px, Math.round(py + 1 + j * 4), 2, 2); }
+    // arcos de luces sobre el río cada 14 baldosas
+    if (y % 14 === 7) for (let i = -5; i <= 5; i++) { b.fillStyle = ALUM[(i + 6 + k) % ALUM.length]; b.fillRect(Math.round(cx + i * 3 - 1 - ox), Math.round(py - 2 + i * i * .2), 2, 2); }
+  }
+};
 Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
+  if (this.mode.mods.alumbrados && !JE.headless) this.drawAlum(b, ox, oy);
   if (n < .25 || JE.headless) return; const g = Art.glow(), M = this.map;
   b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = Math.min(1, n) * .6;
   for (const s of M.stations) if (inV(s.x, s.y, 40)) b.drawImage(g, s.x - ox - 26, s.y - oy - 26, 52, 52);

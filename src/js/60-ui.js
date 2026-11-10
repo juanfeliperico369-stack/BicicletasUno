@@ -4,6 +4,11 @@
 JE.URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
 const STARS_UNLOCK_INFO = 'Gana estrellas en los turnos para ascender en el escalafón.';
 const TIPS = [
+  'Las hojas verdes sirven para comprar colores de bici y timbres en «Mi ciclista y tienda».',
+  'Cada turno aprobado abre un capítulo de la historia: léelos todos en Más > La historia.',
+  'En «Jugar con amigos» pueden hacer un turno en equipo: uno dirige desde Monitoreo y los demás manejan los camiones.',
+  'El Valle de Aburrá tiene dos temporadas de lluvias: de marzo a mayo y de septiembre a noviembre.',
+  'En diciembre el río Medellín se viste de Alumbrados. ¡Búscalos en el juego!',
   'EnCicla nació en 2011 y lo gestiona el Área Metropolitana del Valle de Aburrá.',
   'El préstamo es gratis: te registras y prestas la bici en cualquier estación.',
   'Máximo 1 hora por préstamo: devuelve a tiempo y evita sanciones.',
@@ -130,41 +135,43 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
-    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="avatar">Mi ciclista</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
+    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
     const el = $('#tab-mas'); el.innerHTML = h;
     $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !(S[k] !== false); Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); if (k === 'big') document.body.classList.toggle('big', !!S.big); Snd.sfx('tap'); });
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
-    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
   },
   /* ---------- briefing ---------- */
   brief(roleId, turno, o = {}) {
     const r = ROLE[roleId], seed = o.seed != null ? o.seed : ((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
-    const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : rng.pick(NOVEDADES));
-    const tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free });
+    const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : Season.pick(rng)), sea = Season.now(), wet = !!sea.wet && !o.reto && roleId !== 'carrera' && !(turno === 1 && !o.free);
+    this.mute = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free }); } finally { this.mute = false; }   // solo para leer las metas: sin avisos
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
     let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : 'TURNO ' + turno}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
     h += `<div class="boxh">Sesión ${r.n}: ${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
+    h += Historia.brief(roleId, turno, o);
     h += `<div class="howto">${r.how.map((t, i) => `<div><b>${i + 1}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
     if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas ${roleId === 'carrera' ? 'de la carrera' : 'del turno'}</div><ul class="goals">${goals}</ul>`;
-    h += `<div class="paper" style="margin:14px 0"><div class="t">Novedad del día: ${esc(nov.name)}</div><p style="margin:6px 0 0">${esc(nov.desc)}</p></div>`;
+    h += `<div class="paper" style="margin:14px 0"><div class="t">Novedad del día: ${esc(nov.name)}</div><p style="margin:6px 0 0">${esc(nov.desc)}</p>${o.reto || roleId === 'carrera' ? '' : `<p style="margin:8px 0 0;font-size:13px;opacity:.8">${sea.icon} <b>${esc(sea.name)}.</b> ${esc(sea.desc)}</p>`}</div>`;
     if (!o.free && Save.data.perks.length) h += `<div class="perks">${Save.data.perks.map(p => `<span class="chip">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     h += `<div class="row" style="margin-top:16px"><button class="btn pri" id="bGo" style="flex:1">▶ Empezar ${o.free ? 'práctica' : 'turno'}</button></div>`;
     h += `<p class="m" style="margin-top:14px">💡 ${esc(TIPS[(seed >>> 3) % TIPS.length])}</p>`;
     $('#briefBody').innerHTML = h; this.go('sBrief');
     $('#bBack').onclick = () => this.go(o.reto ? 'sCover' : 'sHome');
-    $('#bGo').onclick = () => { Snd.init(); Snd.resume(); Game.start(roleId, turno, Object.assign({}, o, { seed, nov })); };
+    $('#bGo').onclick = () => { Snd.init(); Snd.resume(); Game.start(roleId, turno, Object.assign({}, o, { seed, nov, wet })); };
   },
   /* ---------- resultados ---------- */
   result(res, meta, prog) {
     const r = ROLE[meta.roleId], S = Save.data;
     const msg = res.pass ? (res.stars === 3 ? '¡Turno perfecto! Eres un orgullo paisa.' : '¡Turno aprobado! Puedes mejorar las estrellas.') : '¡Casi! La meta obligatoria no se cumplió. Inténtalo otra vez.';
-    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : 'TURNO ' + meta.turno} · ${esc(meta.nov.name)}</div>`;
+    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : 'TURNO ' + meta.turno} · ${esc(meta.nov.name)}</div>`;
     h += `<div class="sect"><span class="outline">${r.n}</span><h2 class="mega">${esc(r.name)}</h2></div>`;
     if (!meta.free) h += `<div class="stars">${this.starStr(res.stars)}</div>`;
     h += `<div class="kick" style="margin:6px 0">${msg}</div>`;
-    h += `<div class="stat"><div><b>${fmtInt(res.score)}</b><span>puntos</span></div><div><b>+${prog.xp}</b><span>experiencia</span></div><div><b>${S.streak}</b><span>racha</span></div><div><b>${Math.round(meta.dur)} s</b><span>duración</span></div></div>`;
+    h += Historia.result(res, meta);
+    h += `<div class="stat"><div><b>${fmtInt(res.score)}</b><span>puntos</span></div><div><b>+${prog.xp}</b><span>experiencia</span></div>${prog.hojas ? `<div><b>+${prog.hojas} 🍃</b><span>hojas de premio</span></div>` : ''}<div><b>${S.streak}</b><span>racha</span></div><div><b>${Math.round(meta.dur)} s</b><span>duración</span></div></div>`;
     if (prog.best) h += `<div class="chip" style="margin:4px 0 8px">¡Nuevo récord en este turno!</div>`;
     h += `<ul class="goals">${res.goals.map(g => `<li class="${g.ok ? 'ok' : 'no'} ${g.main ? 'main' : ''}"><b>${g.ok ? '✓' : '✗'}</b><span>${esc(g.txt)}</span></li>`).join('')}</ul>`;
     if (prog.unlocks.length) h += `<div class="paper" style="margin:10px 0"><div class="t">¡Ascenso!</div><p style="margin:6px 0 0">Desbloqueaste: ${prog.unlocks.map(esc).join(', ')}</p></div>`;
@@ -172,7 +179,7 @@ const UI = JE.ui = {
     if (prog.logros && prog.logros.length) { const gifts = []; for (const k in COSMETIC_REQ) for (const i in COSMETIC_REQ[k]) if (prog.logros.some(l => l.id === COSMETIC_REQ[k][i][0])) gifts.push(COSMETIC_REQ[k][i][1]); if (gifts.length) h += `<p class="m" style="margin:4px 0 10px">🎁 Nueva ropa para tu ciclista: <b>${gifts.map(esc).join(', ')}</b> (en Mi ciclista).</p>`; }
     if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
     if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
-    const nextOk = !meta.free && !meta.reto && meta.roleId !== 'carrera' && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
+    const nextOk = !meta.free && !meta.reto && !isMulti(meta.roleId) && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:14px">`;
     if (nextOk) h += `<button class="btn pri" id="bNext">▶ Siguiente turno</button>`;
     h += `<button class="btn ${nextOk ? '' : 'pri'}" id="bAgain">↻ Repetir</button>`;
@@ -182,7 +189,7 @@ const UI = JE.ui = {
     $('#resBody').innerHTML = h; this.go('sResult'); $('#sResult .scroll').scrollTop = 0;
     $$('[data-perk]').forEach(b => b.onclick = () => { $$('[data-perk]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); const P = S.perks; if (!P.includes(b.dataset.perk)) { P.push(b.dataset.perk); if (P.length > 3) P.shift(); } Save.save(); Snd.sfx('star'); this.toast('Mejora: ' + PERKS[b.dataset.perk].name); });
     if (nextOk) $('#bNext').onclick = () => this.brief(meta.roleId, meta.turno + 1);
-    $('#bAgain').onclick = () => { if (meta.net) { if (Net.status !== 'open') return this.toast('Se perdió la conexión: crea otra sala'); if (Net.role === 'host') this.netStartRace(); else this.toast('Pídele a quien creó la sala que inicie otra carrera'); return; } this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined }); };
+    $('#bAgain').onclick = () => { if (meta.net) { if (Net.status !== 'open') return this.toast('Se perdió la conexión: crea otra sala'); if (Net.role === 'host') { if (meta.roleId === 'equipo') this.netStartCoop(); else this.netStartRace(); } else this.toast('Pídele a quien creó la sala que inicie otra partida'); return; } this.brief(meta.roleId, meta.turno, { free: meta.free, reto: meta.reto, seed: meta.reto ? meta.seed : undefined, nov: meta.reto ? meta.nov : undefined }); };
     $('#bEsc').onclick = () => this.go('sHome');
     $('#bShareImg').onclick = () => this.shareCard(res, meta);
     if (meta.reto) $('#bShareR').onclick = () => this.share(`🚲 Juega EnCicla · Reto del día: hice ${fmtInt(res.score)} puntos como ${r.name} (${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}). Código: ${this.code(meta)} ¿Me superas?`);
@@ -198,7 +205,7 @@ const UI = JE.ui = {
   multi() {
     const net = Net.supported();
     this.modal(`<h2>Jugar con amigos</h2>
-    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera hasta 4 jugadores</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos: <b>¡Empezar!</b> En la misma red Wi-Fi funciona sin internet.</p></div>
+    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera o turno en equipo · hasta 4</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos, elige <b>Carrera</b> (compiten) o <b>Turno en equipo</b> (uno dirige desde Monitoreo y los demás manejan los camiones). En la misma red Wi-Fi funciona sin internet.</p></div>
     ${net ? '<div class="row"><button class="btn pri" id="nHost">Crear sala</button><button class="btn" id="nJoin">Unirme</button></div><div id="nBox" style="margin-top:10px"></div>' : '<p class="m">Este navegador no permite salas (WebRTC).</p>'}
     <div class="squig"></div><p class="m"><b>Reto con código</b> (sin internet): todos juegan las mismas condiciones y comparan puntos.</p>
     <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn" id="bCode">Jugar ese código</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
@@ -229,7 +236,7 @@ const UI = JE.ui = {
     const pend = Net.pending, canInv = Net.peers.length < Net.MAX && !pend, ready = Object.keys(this.netPlayers).length > 0;
     if (this._lobbyBusy) return;
     box.innerHTML = `<p class="pag">Sala · ${ps.length} de 4 jugadores</p><div class="roster">${ps.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('')}</div>
-      <div id="nInv"></div><div class="col">${canInv ? '<button class="btn" id="nInvite">+ Invitar jugador</button>' : ''}<button class="btn pri" id="nStart" ${ready ? '' : 'disabled'}>▶ ¡Empezar carrera!</button></div><p class="m" id="nStat"></p>`;
+      <div id="nInv"></div><div class="col">${canInv ? '<button class="btn" id="nInvite">+ Invitar jugador</button>' : ''}<button class="btn pri" id="nStart" ${ready ? '' : 'disabled'}>🏁 Carrera de postales</button><button class="btn amb" id="nCoop" ${ready ? '' : 'disabled'}>🤝 Turno en equipo</button></div><p class="m" style="font-size:13px">En equipo: tú diriges desde Monitoreo y tus amigos manejan los camiones.</p><p class="m" id="nStat"></p>`;
     const inv = $('#nInvite'); if (inv) inv.onclick = async () => {
       this._lobbyBusy = true; $('#nInv').innerHTML = '<p class="m">Preparando invitación…</p>';
       try { const code = await Net.host(); $('#nInv').innerHTML = this.codeUI('Invitación ' + Net.peers.length + ': que tu amigo escanee este QR', code, '<p class="pag">Luego escanea o pega su respuesta</p>' + (QR.canScan() ? '<div class="col"><button class="btn amb" id="nScanA">📷 Escanear respuesta</button></div>' : '') + '<textarea class="txtin" rows="2" id="nAns" style="font-size:10px" placeholder="JE1a…"></textarea><div class="col"><button class="btn pri" id="nGo">Conectar</button></div>'); this.bindCode(code);
@@ -237,19 +244,25 @@ const UI = JE.ui = {
         $('#nGo').onclick = () => acc($('#nAns').value); const sa = $('#nScanA'); if (sa) sa.onclick = () => QR.startScan(t => acc(t), e => this.toast(e));
       } catch (e) { this._lobbyBusy = false; $('#nInv').innerHTML = '<p class="m">No se pudo crear la invitación: ' + esc(e.message) + '</p>'; }
     };
-    const st = $('#nStart'); if (st) st.onclick = () => this.netStartRace();
+    const st = $('#nStart'); if (st) st.onclick = () => this.netStartRace(); const co = $('#nCoop'); if (co) co.onclick = () => this.netStartCoop();
   },
   shareCode(code) { const t = 'Juega EnCicla · código de sala: ' + code; if (navigator.share) navigator.share({ text: t }).catch(() => { }); else { const wa = 'https://wa.me/?text=' + encodeURIComponent(t); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); } },
   netLobbyMsg(m) {
     const P = Save.data.profile, clean = p => ({ id: p.id | 0, name: String(p.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(p.shirt) ? p.shirt : PAL.cor });
     if (m.t === 'id' && Net.role === 'guest') { Net.myId = m.id | 0; Net.send({ t: 'hi', name: P.name, shirt: SHIRTS[P.shirt] }); }
     else if (m.t === 'hi' && Net.role === 'host') { this.netPlayers[m.from] = Object.assign(clean(m), { id: m.from | 0 }); this._lobbyBusy = false; Net.send({ t: 'roster', players: this.roster() }); this.renderLobby(); Snd.sfx('coin'); }
-    else if (m.t === 'roster' && Net.role === 'guest') { this.netRoster = (m.players || []).slice(0, 4).map(clean); const r = $('#nRoster'); if (r) r.innerHTML = '<div class="roster">' + this.netRoster.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('') + '</div>'; const st = $('#nStat'); if (st) st.textContent = '¡En la sala! Esperando que empiece la carrera…'; }
-    else if (m.t === 'start' && Net.role === 'guest') this.netRace(m.seed >>> 0, m.lvl || 2, (m.players || []).map(clean));
+    else if (m.t === 'roster' && Net.role === 'guest') { this.netRoster = (m.players || []).slice(0, 4).map(clean); const r = $('#nRoster'); if (r) r.innerHTML = '<div class="roster">' + this.netRoster.map(p => `<span class="chip">🚲 ${esc(p.name)}</span>`).join('') + '</div>'; const st = $('#nStat'); if (st) st.textContent = '¡En la sala! Esperando que empiece la partida…'; }
+    else if (m.t === 'start' && Net.role === 'guest') { if (m.kind === 'coop') this.netCoop(m.seed >>> 0, (m.players || []).map(clean)); else this.netRace(m.seed >>> 0, m.lvl || 2, (m.players || []).map(clean)); }
     else if (m.t === 'bye' && Net.role === 'host') { delete this.netPlayers[m.from]; this.renderLobby(); }
   },
   roster() { const P = Save.data.profile; return [{ id: 0, name: P.name, shirt: SHIRTS[P.shirt] }].concat(Object.values(this.netPlayers)); },
   netStartRace() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, players = this.roster(); Net.send({ t: 'start', seed, lvl: 2, players }); this.netRace(seed, 2, players); },
+  /* turno cooperativo: el anfitrión es Monitoreo y cada invitado maneja un camión */
+  netStartCoop() { const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, players = this.roster(); Net.send({ t: 'start', kind: 'coop', seed, players }); this.netCoop(seed, players); },
+  netCoop(seed, players) {
+    this.closeModal(); if (Game.mode) Game.stop(); const host = Net.role === 'host';
+    Game.start('equipo', 1, { seed, nov: NOVEDADES[0], net: true, driver: !host, players: host ? (players || []).filter(p => p.id !== 0) : players });
+  },
   netRace(seed, lvl, players) {
     this.closeModal(); if (Game.mode) Game.stop(); const others = (players || []).filter(p => p.id !== Net.myId);
     Game.start('carrera', lvl, { seed, nov: NOVEDADES[0], net: true, players: others.length ? others : [{ id: 0, name: 'Amigo', shirt: PAL.cor }] });
@@ -274,12 +287,25 @@ const UI = JE.ui = {
   },
   avatar() {
     const P = Save.data.profile;
-    const req = (key, i) => (COSMETIC_REQ[key] || {})[i], locked = (key, i) => { const r = req(key, i); return r && !Save.data.logros.includes(r[0]); };
-    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), lk = locked(key, i); return `<button data-k="${key}" data-i="${i}" class="${P[key] === i ? 'on' : ''} ${lk ? 'lock' : ''}" style="background:${c}" aria-label="${r ? r[1] : key + ' ' + (i + 1)}" title="${r ? esc(r[1]) : ''}">${lk ? '🔒' : r ? '★' : ''}</button>`; }).join('')}</div>`;
+    const S = Save.data, req = (key, i) => (COSMETIC_REQ[key] || {})[i], price = (key, i) => (SHOP[key] || {})[i];
+    const locked = (key, i) => { const r = req(key, i), p = price(key, i); return (r && !S.logros.includes(r[0])) || (p && !S.owned.includes(key + i)); };
+    const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), p = price(key, i), lk = locked(key, i), em = key === 'bell'; return `<button data-k="${key}" data-i="${i}" class="${(P[key] | 0) === i ? 'on' : ''} ${lk ? (p ? 'buy' : 'lock') : ''} ${em ? 'em' : ''}" style="background:${em ? '#143a6b' : c}" aria-label="${esc((r || p || [0, key + ' ' + (i + 1)])[1])}">${em ? c : ''}${lk ? (p ? '<small>🍃' + p[0] + '</small>' : '🔒') : r ? '★' : ''}</button>`; }).join('')}</div>`;
     this.modal(`<h2>Mi ciclista</h2><canvas id="avPrev" width="80" height="50"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
-      <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}<div class="col"><button class="btn pri" id="avOk">Guardar</button></div>`, () => {
-      const draw = () => { const c = $('#avPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); };
-      draw(); $$('.swatches button').forEach(b => b.onclick = () => { if (locked(b.dataset.k, +b.dataset.i)) { const r = req(b.dataset.k, +b.dataset.i), L = LOGROS.find(l => l.id === r[0]); Snd.sfx('bad'); return this.toast('🔒 ' + r[1] + ': se gana con el logro «' + (L && !L.secret ? L.name : '???') + '»'); } P[b.dataset.k] = +b.dataset.i; $$(`.swatches button[data-k=${b.dataset.k}]`).forEach(x => x.classList.toggle('on', x === b)); draw(); Snd.sfx('tap'); });
+      <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}
+      <div class="paper" style="margin:14px 0 4px"><div class="t">Tienda · <span id="avHojas"></span></div><p style="margin:4px 0 0;font-size:13px">Las hojas verdes se ganan pedaleando como Usuario y con las estrellas de cada turno. Lo que tiene precio se compra con dos toques.</p></div>
+      <p class="pag">Color de la bici</p>${sw(BIKES, 'bike')}<p class="pag">Timbre</p>${sw(BELLS, 'bell')}<div class="col"><button class="btn pri" id="avOk">Guardar</button></div>`, () => {
+      const draw = () => { const c = $('#avPrev'), x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); $('#avHojas').textContent = '🍃 ' + hojas() + ' hojas'; };
+      let arm = null;
+      draw(); $$('.swatches button').forEach(b => b.onclick = () => {
+        const k = b.dataset.k, i = +b.dataset.i, r = req(k, i), p = price(k, i);
+        if (r && !S.logros.includes(r[0])) { const L = LOGROS.find(l => l.id === r[0]); Snd.sfx('bad'); return this.toast('🔒 ' + r[1] + ': se gana con el logro «' + (L && !L.secret ? L.name : '???') + '»'); }
+        if (p && !S.owned.includes(k + i)) {
+          if (hojas() < p[0]) { Snd.sfx('bad'); return this.toast('🍃 ' + p[1] + ' cuesta ' + p[0] + ' hojas: te faltan ' + (p[0] - hojas())); }
+          if (arm !== b) { arm = b; Snd.sfx('tap'); return this.toast('🍃 ' + p[1] + ' · ' + p[0] + ' hojas. Toca otra vez para comprar.'); }
+          S.spent = (S.spent | 0) + p[0]; S.owned.push(k + i); S.stats.bought = (S.stats.bought | 0) + 1; b.classList.remove('buy'); const sm = b.querySelector('small'); if (sm) sm.remove(); Snd.sfx('star'); this.toast('¡Compraste ' + p[1] + '!');
+        }
+        arm = null; P[k] = i; $$(`.swatches button[data-k=${k}]`).forEach(x => x.classList.toggle('on', x === b)); Save.save(); draw(); if (k === 'bell') Snd.sfx('bell'); else Snd.sfx('tap');
+      });
       $('#avOk').onclick = () => { P.name = ($('#avName').value || 'Ciclista').trim().slice(0, 16) || 'Ciclista'; Save.data.settings.seen.profile = 1; Save.save(); this.closeModal(); this.renderHome(); Snd.sfx('ok'); };
     });
   },
@@ -314,7 +340,7 @@ const UI = JE.ui = {
     if (navigator.share) navigator.share({ title: 'Juega EnCicla', text, url }).catch(() => { });
     else { const wa = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); }
   },
-  toast(t) { const el = $('#toast'); if (!el) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
+  toast(t) { const el = $('#toast'); if (!el || this.mute) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
   postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }
 };
 
@@ -323,11 +349,12 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || roleId === 'carrera' ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
     $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : ' · T' + turno); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
+    this.coachT = 0; this._coachEr = 0; $('#coach').textContent = '';
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
@@ -353,9 +380,16 @@ const Game = JE.game = {
     const key = inf.clock + '|' + inf.score + '|' + inf.chips.map(c => c.t + c.c).join(',');
     if (key !== this.hudKey) { this.hudKey = key; $('#hudClock').textContent = '⏱ ' + inf.clock; $('#hudScore').textContent = '★ ' + fmtInt(inf.score); $('#hudChips').innerHTML = inf.chips.map(c => `<span class="chip ${c.c || ''}">${esc(c.t)}</span>`).join(''); }
     const co = $('#coach'), ct = a.coach || '';
-    if (co.textContent !== ct) { co.textContent = ct; this.coachT = 0; co.style.opacity = 1; }
-    this.coachT = (this.coachT || 0) + dt; if (M.ride && !M.sub && this.coachT > 8) co.style.opacity = 0;
-    const top = !!a.coachB && View.h < 520; co.classList.toggle('coachTop', top);
+    // el cartel de ayuda no debe tapar el juego: es pequeño en el mapa y se quita solo tras el tiempo de lectura.
+    // Vuelve si cambia el texto o si el jugador se equivoca; también se lee en el menú de pausa.
+    const ride = !!M.ride && !M.sub, er = (a.errors | 0) + (M.errors | 0);
+    if (co.textContent !== ct) { co.textContent = ct; this.coachT = 0; }
+    if (er !== this._coachEr) { if (er > (this._coachEr | 0)) this.coachT = 0; this._coachEr = er; }
+    this.coachT = (this.coachT || 0) + dt;
+    const life = (ride ? clamp(2 + ct.length * .05, 3.5, 6) : clamp(2.5 + ct.length * .06, 4, 9)) * (Save.data.settings.pace === 'tranquilo' ? 1.4 : 1) * (this.hintsOn ? 1 : .65);
+    const op = ct && this.coachT < life ? '1' : '0'; if (co.style.opacity !== op) co.style.opacity = op;
+    co.classList.toggle('mini', ride);
+    const top = !!a.coachB && View.h < 520 && !ride; co.classList.toggle('coachTop', top);
     const cb = top ? '' : 'calc(var(--sab) + ' + (a.coachB || 12) + 'px)'; if (co.style.bottom !== cb) co.style.bottom = cb;
     const gm = $('#goalsMini'), hide = a.hideGoals ? 'none' : ''; if (gm.style.display !== hide) gm.style.display = hide;
     this.goalT -= dt; if (this.goalT <= 0) { this.goalT = .4; $('#goalsMini').innerHTML = M.free && M.id === 'usuario' ? '' : M.goals.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join(''); }
@@ -363,13 +397,13 @@ const Game = JE.game = {
     if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn" data-i="${i}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
   },
   pause() {
-    if (!this.mode) return; this.paused = true; Snd.music(false); const map = !!this.mode.ride;
-    UI.modal(`<h2>Pausa</h2><p class="m">${esc(ROLE[this.mode.id].name)} · ${this.meta.free ? 'práctica' : 'turno ' + this.meta.turno} · ${esc(this.mode.nov.name)}</p><div class="col"><button class="btn pri" id="pGo">▶ Continuar</button>${map ? '<button class="btn" id="pMap">Vista general</button>' : ''}<button class="btn" id="pRe">↻ Reiniciar</button><button class="btn" id="pSnd">Sonido: ${Save.data.settings.sfx ? 'sí' : 'no'}</button><button class="btn gh" id="pEnd">${this.meta.free ? 'Terminar práctica' : 'Salir del turno'}</button></div>`, () => {
+    if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene
+    UI.modal(`<h2>${net ? 'Menú' : 'Pausa'}</h2><p class="m">${esc(ROLE[this.mode.id].name)} · ${net ? 'en red: el juego sigue corriendo' : (this.meta.free ? 'práctica' : 'turno ' + this.meta.turno) + ' · ' + esc(this.mode.nov.name)}</p>${(this.mode.sub || this.mode).coach ? `<p class="m" style="font-size:14px">💡 ${esc((this.mode.sub || this.mode).coach)}</p>` : ''}<div class="col"><button class="btn pri" id="pGo">▶ Continuar</button>${map ? '<button class="btn" id="pMap">Vista general</button>' : ''}${net ? '' : '<button class="btn" id="pRe">↻ Reiniciar</button>'}<button class="btn" id="pSnd">Sonido: ${Save.data.settings.sfx ? 'sí' : 'no'}</button><button class="btn gh" id="pEnd">${this.meta.free ? 'Terminar práctica' : 'Salir del turno'}</button></div>`, () => {
       $('#pGo').onclick = () => this.resume();
       if (map) $('#pMap').onclick = () => { this.mode.ride.big = true; this.resume(); };
-      $('#pRe').onclick = () => { UI.closeModal(); const m = this.meta; this.stop(); Game.start(m.roleId, m.turno, { free: m.free, reto: m.reto, seed: m.reto ? m.seed : ((Date.now() ^ 0x9e3779b9) >>> 0), nov: m.nov }); };
+      if (!net) $('#pRe').onclick = () => { UI.closeModal(); const m = this.meta; this.stop(); Game.start(m.roleId, m.turno, { free: m.free, reto: m.reto, seed: m.reto ? m.seed : ((Date.now() ^ 0x9e3779b9) >>> 0), nov: m.nov }); };
       $('#pSnd').onclick = () => { const S = Save.data.settings; S.sfx = S.music = !S.sfx; Save.save(); $('#pSnd').textContent = 'Sonido: ' + (S.sfx ? 'sí' : 'no'); };
-      $('#pEnd').onclick = () => { UI.closeModal(); if (this.meta.free) { this.paused = false; this.mode.end(); this.finish(); } else { this.stop(); UI.go('sHome'); } };
+      $('#pEnd').onclick = () => { UI.closeModal(); if (net) { const M = this.mode; if (M.id === 'equipo' && Net.role === 'host') M.end(); else { Net.send({ t: 'bye' }); Net.onmsg = m => UI.netLobbyMsg(m); } this.stop(); UI.go('sHome'); } else if (this.meta.free) { this.paused = false; this.mode.end(); this.finish(); } else { this.stop(); UI.go('sHome'); } };
     });
   },
   resume() { UI.closeModal(); this.paused = false; this.last = performance.now(); Snd.music(true); },
@@ -387,8 +421,8 @@ const Progress = JE.progress = {
     const S = Save.data, out = { xp: 0, unlocks: [], perkOpts: null, lost: false, best: false };
     const before = ROLES.filter(r => UI.unlocked(r)).map(r => r.id);
     out.xp = Math.round(res.score / 10) + res.stars * 20 + (meta.reto ? 15 : 0); if (meta.free) out.xp = Math.round(out.xp / 3);
-    S.xp += out.xp; S.stats.plays++;
-    if (!meta.free && meta.roleId !== 'carrera') {
+    S.xp += out.xp; S.stats.plays++; out.hojas = meta.free ? 0 : res.stars * 2; S.stats.leaves += out.hojas;
+    if (!meta.free && !isMulti(meta.roleId)) {
       const st = S.stars[meta.roleId] || [0, 0, 0]; if (res.stars > st[meta.turno - 1]) st[meta.turno - 1] = res.stars; S.stars[meta.roleId] = st;
       const k = meta.roleId + meta.turno; if (res.score > (S.best[k] || 0)) { out.best = !!S.best[k]; S.best[k] = res.score; }
       if (res.pass) {

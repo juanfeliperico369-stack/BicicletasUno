@@ -201,3 +201,17 @@ body.big .turnos button{font-size:21px}
 .carnet .cn{font-size:20px;font-weight:900;line-height:1.1}.carnet .cr{display:inline-block;background:#9bd341;color:#0a2342;font-weight:800;padding:1px 8px;border-radius:4px;margin:3px 0}
 .carnet .pag{color:#0a2342aa}.carnet table.rec{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.carnet th{text-align:left;font-size:11px;opacity:.7}
 .carnet td{padding:2px 0;border-bottom:1px solid #0a234218}.carnet tr.off{opacity:.45}.carnet td i{color:#0a234222;font-style:normal}.carnet img{vertical-align:middle}
+.swatches button.buy{filter:brightness(.72);border-style:dotted;position:relative}
+.swatches button small{position:absolute;left:-2px;right:-2px;bottom:-9px;font-size:9px;line-height:1;background:#0a2342;color:#c4ec7c;border-radius:6px;padding:1px 0;text-shadow:none;font-weight:800}
+.swatches button.em{font-size:18px;text-shadow:none}
+.swatches{row-gap:14px}
+.hist-b{display:flex;gap:10px;align-items:flex-start;background:#fff;color:#0a2342;border:3px solid #0a2342;border-radius:4px 14px 14px 14px;padding:10px;margin:12px 0;box-shadow:4px 4px 0 var(--vd)}
+.hist-b.after{box-shadow:4px 4px 0 var(--amb);border-radius:14px 14px 14px 4px}
+.hist-b img{width:48px;height:48px;image-rendering:pixelated;border:2px solid #0a2342;border-radius:8px;flex:none}
+.hist-b .pag{color:#0a2342aa}.hist-b p{margin:3px 0 4px;font-size:15px;line-height:1.35}.hist-b small{font-weight:800;opacity:.75}
+.hist-l{max-height:52vh;overflow:auto;margin:8px 0}.hist-l summary,.hist-l .next,.hist-l .lock{padding:7px 4px;border-bottom:1px solid #ffffff22;cursor:pointer}
+.hist-l small{opacity:.7;margin-left:6px}.hist-l .lock{opacity:.4;cursor:default}.hist-l .next{color:var(--vd1);cursor:default}
+body.big .hist-b p{font-size:17px}
+#coach{transition:opacity .35s}
+#coach.mini{font-size:12.5px;padding:4px 9px;border-width:2px;box-shadow:none;background:#f6efd9e0;line-height:1.25;left:calc(8px + var(--sal));transform:none;text-align:left;max-width:min(440px,calc(100% - 124px - var(--sal)))}
+body.big #coach.mini{font-size:14.5px}

@@ -3,8 +3,8 @@
    ===================================================================== */
 const LOGROS = [
   { id: 'primer', name: 'Primer pedalazo', desc: 'Termina tu primer turno', icon: 'usuario', test: S => S.stats.plays >= 1 },
-  { id: 'aprobado', name: '¡Aprobado!', desc: 'Aprueba un turno del escalafón', icon: 'estrella', test: S => S.history.some(h => h.p && !h.free && h.m !== 'carrera') },
-  { id: 'perfecto', name: 'Turno perfecto', desc: 'Gana 3 estrellas en un turno', icon: 'estrella', test: S => S.history.some(h => h.st === 3 && h.m !== 'carrera') },
+  { id: 'aprobado', name: '¡Aprobado!', desc: 'Aprueba un turno del escalafón', icon: 'estrella', test: S => S.history.some(h => h.p && !h.free && !isMulti(h.m)) },
+  { id: 'perfecto', name: 'Turno perfecto', desc: 'Gana 3 estrellas en un turno', icon: 'estrella', test: S => S.history.some(h => h.st === 3 && !isMulti(h.m)) },
   { id: 'racha3', name: 'En racha', desc: 'Aprueba 3 turnos seguidos', icon: 'estrella', test: S => S.bestStreak >= 3 },
   { id: 'postal5', name: 'Turista paisa', desc: 'Colecciona 5 postales', icon: 'pin', test: S => S.postales.length >= 5 },
   { id: 'postal15', name: 'Conocedor del valle', desc: 'Colecciona 15 postales', icon: 'pin', test: S => S.postales.length >= 15 },

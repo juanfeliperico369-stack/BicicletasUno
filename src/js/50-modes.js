@@ -30,9 +30,30 @@ const NOVEDADES = [
   { id: 'sincarro', name: 'Día sin carro', desc: 'Casi no hay carros y salen más bicis.', mods: { traffic: .2, demand: 1.2 } },
   { id: 'pico', name: 'Hora pico', desc: 'Más tráfico y más usuarios.', mods: { traffic: 1.5, demand: 1.2, pico: true } },
   { id: 'partido', name: 'Partido en el Atanasio', desc: 'Mucha gente pedalea hacia el Estadio.', mods: { demand: 1.1, extra: { id: 'estadio', mult: 3 } } },
-  { id: 'flores', name: 'Feria de las Flores', desc: 'Silleteros por las aceras y turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3 } },
+  { id: 'flores', name: 'Feria de las Flores', desc: 'Silleteros por las aceras y turistas por toda la ciudad: filas más largas.', mods: { demand: 1.3, flores: true } },
   { id: 'ciclovia', name: 'Ciclovía', desc: 'Avenida El Poblado, Avenida 80 y Las Vegas cerradas a los carros: ¡conos y bicis por todas partes!', mods: { traffic: .5, ciclovia: true } }
 ];
+
+/* novedades de temporada: no entran en los retos con código para no cambiar sus semillas */
+const NOV_EXTRA = [
+  { id: 'alumbrados', name: 'Alumbrados navideños', desc: 'El río Medellín se llena de luces de colores y todo el valle sale a verlas: más usuarios.', mods: { demand: 1.25, alumbrados: true } }
+];
+/* temporada según el mes real: el Valle de Aburrá tiene dos épocas secas y dos de lluvias */
+const SEASONS = [
+  { id: 'seca1', name: 'Temporada seca', icon: '☀️', desc: 'De diciembre a febrero casi no llueve: días despejados para pedalear.', w: { lluvia: .4 } },
+  { id: 'lluvia1', name: 'Primera temporada de lluvias', icon: '🌧️', desc: 'De marzo a mayo los aguaceros llegan sin avisar: puede caer un chubasco en pleno turno.', w: { lluvia: 3 }, wet: true },
+  { id: 'seca2', name: 'Veranillo de mitad de año', icon: '🌤️', desc: 'De junio a agosto hay tardes soleadas, viento de cometas y más ciclovías.', w: { lluvia: .5, ciclovia: 1.6 } },
+  { id: 'lluvia2', name: 'Segunda temporada de lluvias', icon: '⛈️', desc: 'De septiembre a noviembre es la época más lluviosa: puede caer un chubasco en pleno turno.', w: { lluvia: 3.5 }, wet: true }
+];
+const Season = JE.season = {
+  now(d) { const m = (d || new Date()).getMonth(); return SEASONS[m === 11 || m < 2 ? 0 : m < 5 ? 1 : m < 8 ? 2 : 3]; },
+  /* novedad al azar, con pesos según la temporada (agosto: Feria de las Flores; diciembre: Alumbrados) */
+  pick(rng, d) {
+    const m = (d || new Date()).getMonth(), S = this.now(d), all = NOVEDADES.concat(NOV_EXTRA);
+    const w = all.map(n => (S.w[n.id] || 1) * (n.id === 'flores' ? (m === 7 ? 5 : .5) : n.id === 'alumbrados' ? (m === 11 ? 6 : 0) : 1));
+    let r = rng.f() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < all.length; i++) { r -= w[i]; if (r <= 0) return all[i]; } return all[0];
+  }
+};
 
 class Mode {
   constructor(role, turno, opt) {
@@ -42,6 +63,8 @@ class Mode {
     const pace = Save.data.settings.pace; this.timeMul = (pace === 'tranquilo' ? 1.4 : pace === 'arcade' ? .85 : 1) * (this.has('tinto') ? 1.1 : 1);
     this.patMul = pace === 'tranquilo' ? 1.35 : 1; this.paceRate = pace === 'tranquilo' ? .8 : pace === 'arcade' ? 1.1 : 1;
     this.view = { kind: 'map' }; this.stats = {}; this.clock = 360; this.rate = 1;
+    // chubasco pasajero en temporada de lluvias (semilla aparte: no altera el resto del turno)
+    if (opt.wet && !this.mods.rain) { const r = new RNG((opt.seed ^ 0x51ed27) >>> 0); if (r.f() < .55) this.shower = { at: 22 + r.f() * 40, dur: 20 + r.f() * 12, on: 0 }; }
   }
   has(p) { return this.perks.includes(p); }
   goal(txt, main, ok, prog) { this.goals.push({ txt, main, ok, prog: prog || (() => '') }); }
@@ -73,6 +96,11 @@ class MapMode extends Mode {
   tickClock(dt) { this.clock += this.rate * dt / this.timeMul; }
   update(dt) {
     this.t += dt; this.tickClock(dt);
+    const sh = this.shower;
+    if (sh) {
+      if (!sh.on && this.t >= sh.at) { sh.on = 1; this.mods.rain = true; JE.ui && JE.ui.toast('🌧️ ¡Se vino el agua! Piso mojado: frena con tiempo.'); }
+      else if (sh.on === 1 && this.t >= sh.at + sh.dur) { sh.on = 2; this.mods.rain = false; JE.ui && JE.ui.toast('🌤️ Escampó. ¡A rodar!'); }
+    }
     if (this.updSub(dt)) return;
     this.ride.update(dt, this.botDir || Input.dir());
     this.tick(dt);
@@ -158,7 +186,7 @@ class ModeUsuario extends MapMode {
       else if (T === 2) this.goal('Respeta los semáforos (0 en rojo)', false, () => this.ride.stats.reds === 0, () => this.ride.stats.reds + ' en rojo');
       else this.goal('8 hojas y máximo 2 choques', false, () => this.leavesGot >= 8 && this.ride.stats.crashes <= 2, () => this.leavesGot + ' hojas');
     }
-    this.coach = 'Arrastra el dedo en cualquier parte para pedalear. Sigue la línea punteada.';
+    this.coach = 'Arrastra el dedo para pedalear y sigue la línea punteada.';
     this.takeBike(this.st0);
   }
   takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; }
@@ -311,6 +339,7 @@ class ModeApoyo extends MapMode {
     });
   }
   tick(dt) { if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); } else if (this.clock >= this.endClock + 30) this.end(); const o = this.tasks.find(t => !t.done); this.coach = o ? 'Siguiente: ' + o.n + '. ' + { apertura: 'Abrir', cierre: 'Cerrar', relevo: 'Relevo en', inspeccion: 'Verificar' }[o.type] + ' ' + o.st.name + ' antes de las ' + fmtClock(o.due) : '¡Todo listo!'; }
+  get coachB() { return 30 + this.tasks.length * 22; }   // la ayuda va encima de la lista de tareas
   hud2(V) {
     const x = 10; let y = V.h - 24 - this.tasks.length * 22;
     for (const t of this.tasks) { V.text((t.done ? '✓ ' : t.n + '. ') + { apertura: 'Abrir', cierre: 'Cerrar', relevo: 'Relevo', inspeccion: 'Verificar' }[t.type] + ' · ' + t.st.name + ' · ' + fmtClock(t.due), x, y, { size: 13, color: t.done ? PAL.vd1 : this.clock > t.due ? PAL.cor : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
@@ -416,6 +445,7 @@ class ModeBalance extends MapMode {
     this.ordT -= dt; if ((this.orders.length < this.maxOrd && this.ordT <= 0) || !this.orders.length) { this.ordT = 8; this.newOrder(); }
     if (this.clock >= this.endClock) this.end();
   }
+  get coachB() { return 30 + this.orders.length * 22; }
   hud2(V) { let y = V.h - 24 - this.orders.length * 22; for (const o of this.orders) { V.text(o.id + '. ' + (o.type === 'llevar' ? 'LLEVAR ' : 'RECOGER ') + o.n + ' · ' + o.s.name + ' · ' + fmtClock(o.due), 10, y, { size: 13, color: this.clock > o.due ? PAL.cor : o.type === 'llevar' ? PAL.vd1 : PAL.amb, bg: '#0a2342cc', pad: 3, body: true }); y += 22; } }
   info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🚚 ' + this.ride.p.load + '/20' }] }; }
   bot(err) { this.retarget(); this.botDrive(); }

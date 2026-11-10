@@ -171,3 +171,27 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - Las prendas bloqueadas no se pueden elegir y avisan qué logro falta.
 
 **Qué falta:** la lista oficial de estaciones por zona, la leyenda de colores de los pines y las pruebas en celulares reales.
+
+## 2026-11-10 · v0.6.0 · Tienda, temporadas, historia y turno en equipo
+
+**Qué cambió**
+1. **Tienda con hojas verdes:** colores de bici, timbres (corneta, campanita, pato), camisetas y cascos. Cada estrella da 2 hojas.
+2. **Clima por temporada** según el mes real: más aguaceros en las dos épocas de lluvias, chubascos que llegan en pleno turno,
+   Feria de las Flores en agosto y Alumbrados con luces en el río en diciembre.
+3. **Historia de 27 capítulos:** un mentor por oficio te habla antes y después de cada turno, de Doña Luz a la Gran Rodada. Se relee en Más.
+4. **Turno en equipo (cooperativo en red):** quien crea la sala dirige desde Monitoreo y hasta 3 amigos manejan los camiones.
+5. Tres logros nuevos (24 en total) y cinco datos nuevos en «¿Sabías que?».
+6. **El cartel de ayuda ya no tapa el juego** (pedido del usuario): en el mapa es una franja pequeña abajo a la izquierda,
+   se quita solo tras el tiempo de lectura, vuelve si te equivocas y también se lee en el menú de pausa.
+
+**Qué se probó**
+- 100 partidas del bot (con Alumbrados y chubascos), humo de interfaz y CPU 4x lenta.
+- Sala de 3 dispositivos: carrera y turno en equipo. La orden llega solo al conductor elegido, el camión entrega y recarga
+  sin perder bicis, el otro conductor ve el estado y el turno termina en los 3.
+
+**Errores encontrados y corregidos**
+- Los silleteros de la Feria de las Flores no aparecían.
+- El briefing mostraba un aviso del turno antes de empezar.
+- Un invitado que seguía en carrera no recibía el inicio de la partida siguiente.
+
+**Qué falta:** la lista oficial de estaciones por zona, la leyenda de colores de los pines y las pruebas en celulares reales.

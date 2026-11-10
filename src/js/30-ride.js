@@ -266,7 +266,7 @@ class Ride {
     // rivales (carrera)
     for (const o of this.opps) { if (!inV(o.x, o.y)) continue; const so = Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]); b.save(); b.translate(Math.round(o.x - ox), Math.round(o.y - oy)); b.rotate(o.a + Math.PI / 2); b.globalAlpha = .9; b.drawImage(so, -3, -6); b.restore(); }
     // jugador
-    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1], Save.data.flags.gold ? '#ffd84a' : PAL.vd);
+    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.riderTop(this.mode.shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1], bikeCol());
     b.save(); b.translate(Math.round(P.x - ox), Math.round(P.y - oy)); b.rotate(P.a + Math.PI / 2); b.fillStyle = '#0005'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 2, sp.width, sp.height); b.drawImage(sp, -sp.width / 2 | 0, -sp.height / 2 | 0); b.restore();
     // trenes elevados
     const tc = Art.trainCar();

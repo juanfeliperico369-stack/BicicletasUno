@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.5.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.6.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -41,7 +41,7 @@ const Save = JE.save = {
   data: null, mem: null,
   def() {
     return {
-      v: 1, created: Date.now(), profile: { name: 'Ciclista', skin: 1, shirt: 0, helmet: 0 },
+      v: 1, created: Date.now(), profile: { name: 'Ciclista', skin: 1, shirt: 0, helmet: 0, bike: 0, bell: 0 }, spent: 0, owned: [],
       xp: 0, stars: {}, best: {}, history: [], postales: [], perks: [], streak: 0, bestStreak: 0, logros: [], flags: {},
       settings: { sfx: true, music: true, pace: 'normal', zoom: 0, vib: true, hints: true, big: false, seen: {} },
       stats: { km: 0, trips: 0, served: 0, fixed: 0, sorted: 0, plays: 0, leaves: 0, bells: 0 }
@@ -111,7 +111,12 @@ const Snd = JE.snd = {
       case 'ok': T(784, .07, { v: .08 }); T(1175, .12, { at: .07, v: .08 }); break;
       case 'bad': T(220, .2, { type: 'sawtooth', v: .07, to: 140 }); break;
       case 'coin': T(988, .05, { v: .06 }); T(1319, .12, { at: .05, v: .06 }); break;
-      case 'bell': [0, .16].forEach(a => { T(2093, .32, { type: 'triangle', v: .09, at: a }); T(2637, .22, { type: 'sine', v: .04, at: a }); }); break;
+      case 'bell': { const b = Save.data.profile.bell | 0;
+        if (b === 1) [0, .22].forEach(a => { T(233, .17, { type: 'sawtooth', v: .06, at: a }); T(294, .17, { type: 'square', v: .03, at: a }); });
+        else if (b === 2) [2637, 3136, 3520].forEach((f, i) => T(f, .3, { type: 'sine', v: .07, at: i * .09 }));
+        else if (b === 3) [0, .17].forEach(a => T(620, .13, { type: 'sawtooth', v: .07, to: 330, at: a }));
+        else [0, .16].forEach(a => { T(2093, .32, { type: 'triangle', v: .09, at: a }); T(2637, .22, { type: 'sine', v: .04, at: a }); });
+        break; }
       case 'win': [523, 659, 784, 1047, 1319].forEach((f, i) => T(f, .16, { at: i * .085, v: .08 })); break;
       case 'lose': [392, 330, 262, 196].forEach((f, i) => T(f, .2, { at: i * .12, v: .07, type: 'triangle' })); break;
       case 'honk': T(311, .16, { v: .05 }); T(370, .16, { v: .04 }); break;
