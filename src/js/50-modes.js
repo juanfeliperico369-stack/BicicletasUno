@@ -129,6 +129,7 @@ class MapMode extends Mode {
     return { x: V.w / 2 - dx / l * 30, y: V.h * .62 - dy / l * 30, dx: dx / l * 80, dy: dy / l * 80, drag: true, txt: 'Arrastra' };
   }
   render(V) { this.ride.render(V, this.clock); }
+  renderTop(V) { this.ride.renderTop(V); }
   hud(V) { this.btns = []; this.ride.hud(V); this.hud2(V); }
   hud2() { }
   pointer(type, vx, vy, cx, cy) {
@@ -149,17 +150,18 @@ class MapMode extends Mode {
   /* bot: sigue el flujo de ruta hacia el objetivo */
   botDrive() {
     const T = this.ride.target; if (!T) { this.botDir = { x: 0, y: 0, m: 0 }; return; }
-    const P = this.ride.p, D = JE.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), P.veh === 'truck');
-    let tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS);
-    if (D[ty * MW + tx] >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + 4, n.y * TS + 4); return; }
-    let c = { x: tx, y: ty }; const h0 = this.botHist; const cur = JE.map.lightAt[ty * MW + tx];
+    const P = this.ride.p; let tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS);
+    const D = JE.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), P.veh === 'truck', tx, ty);
+    if (JE.map.fv(D, tx, ty) >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + 4, n.y * TS + 4); return; }
+    let c = { x: tx, y: ty }; const h0 = this.botHist; const cur = JE.map.lightIdx(ty * MW + tx);
     for (let i = 0; i < 2; i++) {
       const n = JE.map.nextStep(D, c.x, c.y); if (!n) break;
-      const li = JE.map.lightAt[n.y * MW + n.x];
-      if (li >= 0 && li !== cur && JE.map.lightAt[c.y * MW + c.x] !== li) { const ew = Math.abs(n.x - c.x) >= Math.abs(n.y - c.y), st = JE.map.lightState(JE.map.lights[li], this.t)[ew ? 0 : 1]; if (st !== 'g') { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
+      const li = JE.map.lightIdx(n.y * MW + n.x);
+      if (li >= 0 && li !== cur && JE.map.lightIdx(c.y * MW + c.x) !== li) { const ew = Math.abs(n.x - c.x) >= Math.abs(n.y - c.y), st = JE.map.lightState(JE.map.lights[li], this.t)[ew ? 0 : 1]; if (st !== 'g') { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
       c = n;
     }
     if (c.x === tx && c.y === ty) this.botDir = this.dirTo(T.x, T.y); else this.botDir = this.dirTo(c.x * TS + 4, c.y * TS + 4);
+    if (P.veh === 'bike' && this.ride.sl < -.07) this.botDir.m = .78;   // en bajada fuerte, frena un poco
     for (const car of this.ride.cars) { const dx = car.x - P.x, dy = car.y - P.y, al = dx * this.botDir.x + dy * this.botDir.y, lat = Math.abs(-dx * this.botDir.y + dy * this.botDir.x); if (al > 0 && al < (P.veh === 'truck' ? 24 : 16) && lat < 8 && Math.cos(car.ang) * this.botDir.x + Math.sin(car.ang) * this.botDir.y > .5) { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
     // si no avanza en 1 s, retrocede/gira al azar un momento
     const h = this.botHist || (this.botHist = { x: P.x, y: P.y, t: this.t, esc: 0 });
@@ -189,12 +191,14 @@ class ModeUsuario extends MapMode {
     this.coach = 'Arrastra el dedo para pedalear y sigue la línea punteada.';
     this.takeBike(this.st0);
   }
-  takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; }
+  takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; this.ride.ebike = !!s.e; if (s.e && JE.ui && !this.eTold) { this.eTold = 1; JE.ui.toast('⚡ Estación del corredor eléctrico: tu bici tiene asistencia en las subidas.'); } }
   cicPct() { return Math.round(100 * this.ride.stats.ciclo / Math.max(1, this.ride.stats.dist)); }
   loanMin() { return Math.floor(this.clock - this.loan0); }
   makeLeaves() {
-    const L = this.ride.leaves; let n = 0;
-    for (let k = 0; k < 4000 && n < 70; k++) { const x = this.rng.i(0, MW - 1), y = this.rng.i(0, MH - 1); if (JE.map.get(x, y) === TT.CICLO) { L.push({ x: x * TS + 4, y: y * TS + 4 }); n++; } }
+    // hojas verdes sobre las ciclorrutas reales cercanas (hasta ~4 km)
+    const L = this.ride.leaves, C = JE.map.cicloIdx, P = this.ride.p, near = [];
+    for (let k = 0; k < C.length; k++) { const x = C[k] % MW, y = (C[k] / MW) | 0; if (Math.abs(x * TS - P.x) < 200 * TS && Math.abs(y * TS - P.y) < 200 * TS) near.push(C[k]); }
+    for (let n = 0; n < 70 && near.length; n++) { const i = near.splice(this.rng.i(0, near.length - 1), 1)[0]; L.push({ x: (i % MW) * TS + 4, y: ((i / MW) | 0) * TS + 4 }); }
   }
   onLeaf() { this.leavesGot++; this.score += 5; Save.data.stats.leaves++; }
   nextLeg(from) {
@@ -238,7 +242,7 @@ class ModeUsuario extends MapMode {
     if (this.loanMin() > 45 && !this.warned && !this.free) { this.warned = true; this.toast('¡Ojo! Llevas 45 minutos: busca la estación.'); }
     if (this.phase === 'go') this.warned = this.loanMin() > 45 ? this.warned : false;
   }
-  info() { const lm = this.loanMin(); return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: 'Préstamo ' + lm + ' min', c: lm > 60 ? 'bad' : lm > 45 ? 'warn' : '' }] }; }
+  info() { const lm = this.loanMin(), ch = [{ t: 'Préstamo ' + lm + ' min', c: lm > 60 ? 'bad' : lm > 45 ? 'warn' : '' }]; if (this.ride.ebike) ch.push({ t: '⚡ Eléctrica' }); return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: ch }; }
   actions() {
     const a = super.actions();
     if (this.free && this.nearStation()) a.push({ id: 'dock', icon: 'estacion', label: 'Devolver', fn: () => { Save.data.stats.trips++; this.toast('Bici devuelta en ' + this.nearStation().name); this.end(); } });

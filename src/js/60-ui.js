@@ -370,8 +370,8 @@ const Game = JE.game = {
     this.raf = requestAnimationFrame(t2 => this.loop(t2));
   },
   draw() {
-    this.applyView(); const a = this.mode.sub || this.mode, V = View;
-    a.render(V); V.present(); V.ctx.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
+    this.applyView(); const a = this.mode.sub || this.mode, V = View; V.subX = V.subY = 0;
+    a.render(V); V.present(); if (a.renderTop) a.renderTop(V); V.ctx.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
     if (this.mode.sub && this.mode.ride) { a.hud(V); } else this.mode.hud(V);
     if (this.hintsOn && !this.paused && a.hint) { const h = a.hint(V); if (h) drawHand(V, h); }
   },

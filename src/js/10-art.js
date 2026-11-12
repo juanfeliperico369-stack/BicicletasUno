@@ -55,6 +55,8 @@ const Art = JE.art = {
       'kwwkkwwwwwwwwwwk', 'kwwwkwwwwwwwwwwk', '.kwwwwwwwwwwwwwk', '..kwwwwwwwwwwwk.', '...kwwwwwwwwwwk.', '....kwwwwwwwwk..', '.....kwwwwwwwk..', '.....kkkkkkkkk..'
     ], { k: '#0a2342', w: '#ffffff' })).get('hand');
   },
+  /* el ciclista del jugador según su perfil */
+  rider(shirt) { const pr = Save.data.profile; return this.riderTop(shirt || SHIRTS[pr.shirt] || PAL.vd, HELMETS[pr.helmet] || '#fff', SKINS[pr.skin] || SKINS[1], bikeCol()); },
   riderTop(shirt, helmet, skin, frame) {
     frame = frame || PAL.vd; const k = 'rt' + shirt + helmet + skin + frame; let c = this.cache.get(k); if (c) return c;
     c = this.map([

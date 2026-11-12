@@ -7,7 +7,7 @@ Art.glow = function () { return this.get('glow', 24, 24, x => { const g = x.crea
 
 Ride.prototype.initLife = function () {
   const T = this.map.tram; this.peds = []; this.pedT = 0; this.thanks = 0;
-  this.trm = { p: lerp(T.x0, T.x1, this.rng.f()), dir: this.rng.f() < .5 ? 1 : -1, wait: 0, stop: 0, ghost: 0, x: 0, y: T.y };
+  this.trm = { s: T.len * (.1 + .8 * this.rng.f()), dir: this.rng.f() < .5 ? 1 : -1, wait: 0, stop: 0, ghost: 0, x: 0, y: 0, a: 0 };
 };
 Ride.prototype.updLife = function (dt) {
   if (!this.peds) this.initLife();
@@ -21,12 +21,13 @@ Ride.prototype.updLife = function (dt) {
   // tranvía: va y viene, para en sus estaciones
   if (tr.stop > 0) tr.stop -= dt; else if (tr.wait > 0) tr.wait -= dt;
   else {
-    const prev = tr.p; tr.p += 26 * tr.dir * dt;
-    for (const s of T.st) if ((prev - s.px) * (tr.p - s.px) < 0) { tr.wait = 1.6; tr.p = s.px; }
-    if (tr.p > T.x1 - 22) { tr.p = T.x1 - 22; tr.dir = -1; tr.wait = 2.5; } if (tr.p < T.x0 + 22) { tr.p = T.x0 + 22; tr.dir = 1; tr.wait = 2.5; }
+    const prev = tr.s; tr.s += 26 * tr.dir * dt;
+    for (const s of T.st) if ((prev - s.s) * (tr.s - s.s) < 0) { tr.wait = 1.6; tr.s = s.s; }
+    if (tr.s > T.len - 22) { tr.s = T.len - 22; tr.dir = -1; tr.wait = 2.5; } if (tr.s < 22) { tr.s = 22; tr.dir = 1; tr.wait = 2.5; }
   }
-  tr.x = tr.p; tr.y = T.y;
-  if (tr.ghost > 0) tr.ghost -= dt; else if (Math.abs(P.x - tr.x) < 21 + r && Math.abs(P.y - tr.y) < 4 + r && P.stun <= 0 && !(this.inv > 0)) { this.crash(tr); if (!this.tramTold) { this.tramTold = 1; JE.ui && JE.ui.toast('🚋 ¡Cuidado con el tranvía! Cruza por detrás o espera.'); } }
+  const tq = this.map.at(T, tr.s); tr.x = tq.x; tr.y = tq.y; tr.a = tq.a;
+  const tdx = P.x - tr.x, tdy = P.y - tr.y, tal = Math.abs(tdx * Math.cos(tr.a) + tdy * Math.sin(tr.a)), tla = Math.abs(-tdx * Math.sin(tr.a) + tdy * Math.cos(tr.a));
+  if (tr.ghost > 0) tr.ghost -= dt; else if (tal < 21 + r && tla < 4 + r && P.stun <= 0 && !(this.inv > 0)) { this.crash(tr); if (!this.tramTold) { this.tramTold = 1; JE.ui && JE.ui.toast('🚋 ¡Cuidado con el tranvía! Cruza por detrás o espera.'); } }
   // sonido ambiente por zona (no usa la semilla para no cambiar la simulación)
   if (!JE.headless && (this.ambT = (this.ambT || 2) - dt) <= 0) {
     this.ambT = 2.5 + Math.random() * 3.5;
@@ -73,31 +74,36 @@ Ride.prototype.bellPeds = function () {
   if (n && this.thanks < 30) { this.thanks++; this.float('¡Gracias!', PAL.vd1); if (this.mode.onThanks) this.mode.onThanks(n); }
 };
 Ride.prototype.drawGround = function (b, ox, oy, inV) {
-  const tr = this.trm; if (!tr) return;
-  for (let k = -1; k <= 1; k++) { const x = tr.x + k * 14; if (!inV(x, tr.y)) continue; prect(b, x - ox - 6, tr.y - oy - 2, 13, 6, '#0004'); prect(b, x - ox - 7, tr.y - oy - 3, 13, 6, '#f1f4f7'); prect(b, x - ox - 7, tr.y - oy - 2, 13, 1, '#1d2c44'); prect(b, x - ox - 7, tr.y - oy + 2, 13, 1, PAL.cie); }
-  prect(b, tr.x - ox + (tr.dir > 0 ? 19 : -22), tr.y - oy - 1, 1, 2, '#fff3a0');
+  const tr = this.trm; if (!tr) return; const T = this.map.tram;
+  for (let k = -1; k <= 1; k++) {
+    const q = this.map.at(T, clamp(tr.s + k * 14, 0, T.len)); if (!inV(q.x, q.y)) continue;
+    b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a);
+    b.fillStyle = '#0004'; b.fillRect(-6, -2, 13, 6); b.fillStyle = '#f1f4f7'; b.fillRect(-7, -3, 13, 6); b.fillStyle = '#1d2c44'; b.fillRect(-7, -2, 13, 1); b.fillRect(-7, 1, 13, 1); b.fillStyle = PAL.cie; b.fillRect(-7, -3, 13, 1);
+    if (k === tr.dir) { b.fillStyle = '#fff3a0'; b.fillRect(tr.dir > 0 ? 6 : -8, -1, 1, 2); }
+    b.restore();
+  }
   for (const q of this.peds) { if (!inV(q.x, q.y, 6)) continue; const bob = (q.ph * 4 | 0) % 2, x = Math.round(q.x - ox), y = Math.round(q.y - oy); prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.sil) { prect(b, x - 3, y + 1, 7, 4, '#7a5230'); prect(b, x - 3, y + 1, 2, 2, '#ff8fc7'); prect(b, x - 1, y + 1, 2, 2, '#ffd84a'); prect(b, x + 1, y + 1, 2, 2, '#ff6b5a'); prect(b, x - 2, y + 3, 2, 1, '#b07cff'); prect(b, x + 1, y + 3, 2, 1, '#fff'); } if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
 };
 Ride.prototype.drawSky = function (b, ox, oy) {
-  const t = this.mode.t, vw = View.vw, vh = View.vh;
+  const t = this.mode.t, vw = View.vw + 2, vh = View.vh + 2;
   for (const cb of this.map.cables) {
     if (Math.max(cb.ax, cb.bx) < ox - 10 || Math.min(cb.ax, cb.bx) > ox + vw + 10 || Math.max(cb.ay, cb.by) < oy - 10 || Math.min(cb.ay, cb.by) > oy + vh + 10) continue;
-    const ux = (cb.bx - cb.ax) / cb.len, uy = (cb.by - cb.ay) / cb.len;
-    b.strokeStyle = '#2b2f38'; b.lineWidth = 1; b.beginPath(); b.moveTo(cb.ax - ox + .5, cb.ay - oy + .5); b.lineTo(cb.bx - ox + .5, cb.by - oy + .5); b.moveTo(cb.ax - ox + 2.5, cb.ay - oy + 2.5); b.lineTo(cb.bx - ox + 2.5, cb.by - oy + 2.5); b.stroke();
-    for (let s = 40; s < cb.len - 20; s += 56) { const x = cb.ax + ux * s - ox, y = cb.ay + uy * s - oy; prect(b, x + 1, y + 2, 3, 3, '#0004'); prect(b, x - 1, y - 1, 3, 4, '#8d97a5'); }
-    for (const f of cb.st) { const x = cb.ax + ux * cb.len * f - ox, y = cb.ay + uy * cb.len * f - oy; prect(b, x - 4, y - 3, 10, 8, '#0004'); prect(b, x - 5, y - 4, 10, 8, '#dfe5ec'); prect(b, x - 5, y - 4, 10, 2, cb.col); }
-    const n = Math.floor(cb.len / 30);
-    for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; prect(b, cb.ax + ux * s - ox - 1, cb.ay + uy * s - oy - 1, 3, 3, cb.col); prect(b, cb.ax + ux * s - ox, cb.ay + uy * s - oy, 1, 1, '#1d2c44'); prect(b, cb.ax + ux * s2 - ox + 1, cb.ay + uy * s2 - oy + 1, 3, 3, cb.col); }
+    const ux = (cb.bx - cb.ax) / cb.len, uy = (cb.by - cb.ay) / cb.len, nx = -uy * 1.6, ny = ux * 1.6;
+    b.strokeStyle = '#2b2f38cc'; b.lineWidth = .35; b.beginPath(); b.moveTo(cb.ax - ox + nx, cb.ay - oy + ny); b.lineTo(cb.bx - ox + nx, cb.by - oy + ny); b.moveTo(cb.ax - ox - nx, cb.ay - oy - ny); b.lineTo(cb.bx - ox - nx, cb.by - oy - ny); b.stroke();
+    for (let s = 40; s < cb.len - 20; s += 56) { const x = cb.ax + ux * s - ox, y = cb.ay + uy * s - oy; b.fillStyle = '#0004'; b.fillRect(x + 1, y + 2, 3, 3); b.fillStyle = '#8d97a5'; b.fillRect(x - 1, y - 1, 3, 4); }
+    for (const f of cb.st) { const x = cb.ax + ux * cb.len * f - ox, y = cb.ay + uy * cb.len * f - oy; b.fillStyle = '#0004'; b.fillRect(x - 4, y - 3, 10, 8); b.fillStyle = '#dfe5ec'; b.fillRect(x - 5, y - 4, 10, 8); b.fillStyle = cb.col; b.fillRect(x - 5, y - 4, 10, 2); }
+    const n = Math.max(1, Math.floor(cb.len / 30));
+    for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; for (const [q, d] of [[s, 1], [s2, -1]]) { const x = cb.ax + ux * q - ox + nx * d, y = cb.ay + uy * q - oy + ny * d; b.fillStyle = '#0003'; b.fillRect(x - .5, y + 1, 3, 3); b.fillStyle = cb.col; b.fillRect(x - 1.5, y - 1.5, 3, 3); b.fillStyle = '#1d2c44'; b.fillRect(x - .5, y - .5, 1, 1); } }
   }
 };
 const ALUM = ['#ff5a5a', '#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7', '#ffffff'];
 Ride.prototype.drawAlum = function (b, ox, oy) {
-  const y0 = Math.floor(oy / TS) - 1, y1 = y0 + Math.ceil(View.vh / TS) + 2, k = Math.floor(this.mode.t * 2.5);
-  for (let y = Math.max(0, y0); y <= Math.min(MH - 1, y1); y++) {
-    const cx = (rxi(y) + .5) * TS, py = y * TS - oy;
-    for (const s of [-1, 1]) for (let j = 0; j < 2; j++) { const px = Math.round(cx + s * 16 - 1 - ox), q = y * 2 + j, on = (q + k) % 4 !== 0; b.fillStyle = on ? ALUM[(q * (s + 2) + k) % ALUM.length] : '#3b4250'; b.fillRect(px, Math.round(py + 1 + j * 4), 2, 2); }
-    // arcos de luces sobre el río cada 14 baldosas
-    if (y % 14 === 7) for (let i = -5; i <= 5; i++) { b.fillStyle = ALUM[(i + 6 + k) % ALUM.length]; b.fillRect(Math.round(cx + i * 3 - 1 - ox), Math.round(py - 2 + i * i * .2), 2, 2); }
+  const R = this.map.river, k = Math.floor(this.mode.t * 2.5), vw = View.vw + 2, vh = View.vh + 2;
+  const pr = this.map.project(R, ox + vw / 2, oy + vh / 2); if (pr.d > vw + vh) return;
+  for (let s = Math.max(0, pr.s - vw - vh); s < Math.min(R.len, pr.s + vw + vh); s += 5) {
+    const q = this.map.at(R, s), i = s / 5 | 0, nx = -Math.sin(q.a), ny = Math.cos(q.a);
+    for (const d of [-14, 14]) { const x = q.x + nx * d - ox, y = q.y + ny * d - oy; if (x < -4 || y < -4 || x > vw + 4 || y > vh + 4) continue; b.fillStyle = (i + k) % 4 ? ALUM[(i * (d > 0 ? 3 : 1) + k) % ALUM.length] : '#3b4250'; b.fillRect(x - 1, y - 1, 2, 2); }
+    if (i % 28 === 14) for (let j = -5; j <= 5; j++) { const x = q.x + nx * j * 2.6 - ox, y = q.y + ny * j * 2.6 - oy - 3 + j * j * .15; b.fillStyle = ALUM[(j + 6 + k) % ALUM.length]; b.fillRect(x - 1, y - 1, 2, 2); }
   }
 };
 Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
@@ -116,6 +122,6 @@ Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
 };
 Ride.prototype.hudLife = function (V, sx, sy) {
   if (V.s < 3 && V.w < 700) return;
-  for (const cb of this.map.cables) { const x = sx(cb.bx), y = sy(cb.by) - 12; if (x > 20 && x < V.w - 20 && y > 50 && y < V.h - 20) V.text(cb.name, x, y, { size: 11, align: 'center', color: '#fff', bg: cb.col, pad: 3 }); }
-  const T = this.map.tram; for (const s of T.st) { const x = sx(s.px), y = sy(T.y) - 24; if (x > 0 && x < V.w && y > 50 && y < V.h) V.text('Tranvía · ' + s.name, x, y, { size: 10, align: 'center', color: PAL.az, bg: PAL.cie, pad: 2 }); }
+  for (const cb of this.map.cables) { if (!cb.name) continue; const x = sx(cb.bx), y = sy(cb.by) - 12; if (x > 20 && x < V.w - 20 && y > 50 && y < V.h - 20) V.text(cb.name, x, y, { size: 11, align: 'center', color: '#fff', bg: cb.col, pad: 3 }); }
+  const T = this.map.tram; for (const s of T.st) { const x = sx(s.px), y = sy(s.py) - 24; if (x > 0 && x < V.w && y > 50 && y < V.h) V.text('Tranvía · ' + s.name, x, y, { size: 10, align: 'center', color: PAL.az, bg: PAL.cie, pad: 2 }); }
 };

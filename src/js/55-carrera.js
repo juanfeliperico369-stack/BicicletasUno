@@ -64,7 +64,7 @@ class ModeCarrera extends MapMode {
   }
   aiStep(o, dt) {
     const p = this.pts[o.idx]; if (!p) return;
-    const D = JE.map.flow(Math.floor(p.x / TS), Math.floor(p.y / TS), false); let c = { x: Math.floor(o.x / TS), y: Math.floor(o.y / TS) };
+    let c = { x: Math.floor(o.x / TS), y: Math.floor(o.y / TS) }; const D = JE.map.flow(Math.floor(p.x / TS), Math.floor(p.y / TS), false, c.x, c.y);
     for (let i = 0; i < 2; i++) { const n = JE.map.nextStep(D, c.x, c.y); if (!n) break; c = n; }
     const tx = c.x * TS + 4, ty = c.y * TS + 4, d0 = Math.hypot(tx - o.x, ty - o.y), ta = d0 > 1 ? Math.atan2(ty - o.y, tx - o.x) : Math.atan2(p.y - o.y, p.x - o.x);
     o.a += clamp(angDiff(o.a, ta), -6 * dt, 6 * dt);

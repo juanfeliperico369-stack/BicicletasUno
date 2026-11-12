@@ -17,9 +17,10 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(!errs.length, 'carga sin errores ' + errs.join(' | '));
 
   console.log('1b) Mapa: estaciones, lugares y camión alcanzables');
-  const mp = await p.evaluate(() => { const M = JE.map, dp = M.depot, D = M.flow(Math.floor(dp.x / TS), Math.floor(dp.y / TS), false), Dt = M.flow(Math.floor(dp.x / TS), Math.floor(dp.y / TS), true);
-    const reach = (x, y, DD, rad) => { for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { const tx = Math.floor(x / TS) + dx, ty = Math.floor(y / TS) + dy; if (tx >= 0 && ty >= 0 && tx < MW && ty < MH && DD[ty * MW + tx] < 1e9) return true; } return false; };
-    return { n: M.stations.length, lm: LANDMARKS.length, s: M.stations.filter(s => !reach(s.x, s.y, D, 1)).map(s => s.name), t: M.stations.filter(s => !reach(s.x, s.y, Dt, 5)).map(s => s.name), l: LANDMARKS.filter(l => l.id !== 'depot').filter(l => !reach((l.x + l.w / 2) * TS, (l.y + l.h) * TS + 6, D, Math.ceil((Math.max(l.w, l.h) * TS / 2 + 8) / TS))).map(l => l.id), muni: [...new Set(M.stations.map(s => s.muni))].length }; });
+  const mp = await p.evaluate(() => { const M = JE.map, dp = M.depot, D = M.flow(Math.floor(dp.x / TS), Math.floor(dp.y / TS), false, -1), Dt = M.flow(Math.floor(dp.x / TS), Math.floor(dp.y / TS), true, -1);
+    const reach = (x, y, DD, rad) => { for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { const tx = Math.floor(x / TS) + dx, ty = Math.floor(y / TS) + dy; if (M.fv(DD, tx, ty) < 1e9) return true; } return false; };
+    return { n: M.stations.length, lm: LANDMARKS.length, s: M.stations.filter(s => !reach(s.x, s.y, D, 1)).map(s => s.name), t: M.stations.filter(s => !reach(s.x, s.y, Dt, 5)).map(s => s.name), l: LANDMARKS.filter(l => l.id !== 'depot').filter(l => !reach((l.x + l.w / 2) * TS, (l.y + l.h) * TS + 6, D, Math.ceil((Math.max(l.w, l.h) * TS / 2 + 8) / TS))).map(l => l.id), muni: [...new Set(M.stations.map(s => s.muni))].length, dropped: M.dropped || [], az: APOYO_ZONAS.map(z => z[2] - M.stations.filter(s => s.az === z[0]).length).join(''), ms: JE.mapMs }; });
+  ok(!mp.dropped.length && /^0+$/.test(mp.az), 'estaciones ubicadas y zonas del Apoyo completas ' + mp.dropped.join(',') + ' ' + mp.az + ' · mapa cargado en ' + mp.ms + ' ms');
   ok(mp.n >= 100 && !mp.s.length && !mp.t.length && !mp.l.length, mp.n + ' estaciones en ' + mp.muni + ' municipios y ' + mp.lm + ' lugares alcanzables ' + [mp.s, mp.t, mp.l].flat().join(','));
   console.log('1c) Minijuegos nuevos y Easter eggs (bot)');
   const mgs = await p.evaluate(() => { JE.headless = true; const out = []; const par = () => ({ rng: new RNG(7), has: () => false, mods: { demand: 1 }, patMul: 1, paceRate: 1 });

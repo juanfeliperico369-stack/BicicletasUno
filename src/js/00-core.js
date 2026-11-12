@@ -181,7 +181,7 @@ window.addEventListener('blur', () => { Input.keys = {}; Input.joy.on = false; }
 
 /* ---------- vista: búfer pixelado + capa nítida para textos ---------- */
 const View = JE.view = {
-  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150,
+  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150, subX: 0, subY: 0,
   init() {
     this.cv = $('#cv'); this.ctx = this.cv.getContext('2d');
     this.buf = document.createElement('canvas'); this.b = this.buf.getContext('2d');
@@ -202,12 +202,12 @@ const View = JE.view = {
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
-    if (this.buf.width !== this.vw || this.buf.height !== this.vh) { this.buf.width = this.vw; this.buf.height = this.vh; }
+    if (this.buf.width !== this.vw + 1 || this.buf.height !== this.vh + 1) { this.buf.width = this.vw + 1; this.buf.height = this.vh + 1; }   // +1: corrimiento por fracción de pixel
     this.b.imageSmoothingEnabled = false;
   },
   present() {
     const c = this.ctx; c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false;
-    c.drawImage(this.buf, 0, 0, this.vw * this.s * this.dpr, this.vh * this.s * this.dpr);
+    const k = this.s * this.dpr; c.drawImage(this.buf, -this.subX * k, -this.subY * k, (this.vw + 1) * k, (this.vh + 1) * k);
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   },
   /* texto nítido en coordenadas CSS */

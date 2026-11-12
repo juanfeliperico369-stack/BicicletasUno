@@ -1,8 +1,10 @@
 /* =====================================================================
    ARRANQUE
    ===================================================================== */
-(function boot() {
-  Save.load(); document.body.classList.toggle('big', !!Save.data.settings.big); View.init(); JE.map.generate(); UI.init(); bindCanvas();
+(async function boot() {
+  Save.load(); document.body.classList.toggle('big', !!Save.data.settings.big); View.init();
+  const t0 = performance.now(); try { await JE.map.load(); } catch (e) { JE.errors.push('mapa: ' + e.message); console.error(e); } JE.mapMs = Math.round(performance.now() - t0);
+  UI.init(); bindCanvas();
   const q = new URLSearchParams(location.search);
   if (q.get('unlock')) JE.debugUnlock = true;
   const standalone = /*STANDALONE*/false;

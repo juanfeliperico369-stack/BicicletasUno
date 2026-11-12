@@ -22,3 +22,4 @@ keystore.properties
 *.aab
 # APK que se publica junto a la página (lo coloca el desarrollador)
 landing/descargas/
+tools/geo/cache/
