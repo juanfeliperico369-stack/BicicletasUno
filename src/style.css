@@ -215,3 +215,4 @@ body.big .hist-b p{font-size:17px}
 #coach{transition:opacity .35s}
 #coach.mini{font-size:12.5px;padding:4px 9px;border-width:2px;box-shadow:none;background:#f6efd9e0;line-height:1.25;left:calc(8px + var(--sal));transform:none;text-align:left;max-width:min(440px,calc(100% - 124px - var(--sal)))}
 body.big #coach.mini{font-size:14.5px}
+.zonas{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.zonas .chip{cursor:pointer;border:2px solid var(--az3)}.zonas .chip.on{background:var(--vd);color:var(--az);border-color:var(--bl)}

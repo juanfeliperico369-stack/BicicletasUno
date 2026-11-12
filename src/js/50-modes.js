@@ -175,7 +175,7 @@ class MapMode extends Mode {
 class ModeUsuario extends MapMode {
   constructor(role, turno, opt) {
     super(role, turno, opt); const T = turno, R = this.rng;
-    this.sim = new StationSim(R, { demand: this.mods.demand }); this.rate = 1.2; this.clock = 390 + R.i(0, 60);
+    this.sim = new StationSim(R, { demand: this.mods.demand }); this.rate = .95; this.clock = 390 + R.i(0, 60);   // 60 min ≈ 63 s reales (el valle real tiene lomas)
     const starts = this.free ? JE.map.stations : JE.map.stations.filter(s => s.zone === (T === 1 ? 'centro' : R.pick(['norte', 'centro', 'sur'])));
     this.st0 = R.pick(starts); this.setupRide({ sim: this.sim, start: { x: this.st0.x, y: this.st0.y } });
     this.legs = this.free ? 0 : T; this.leg = 0; this.lateLegs = 0; this.okLegs = 0; this.leavesGot = 0; this.newPost = 0; this.loan0 = this.clock; this.phase = 'go';
@@ -202,7 +202,7 @@ class ModeUsuario extends MapMode {
   }
   onLeaf() { this.leavesGot++; this.score += 5; Save.data.stats.leaves++; }
   nextLeg(from) {
-    const R = this.rng, T = this.turno, minD = [0, 35, 50, 60][T] * SC, maxD = [0, 80, 110, 130][T] * SC;
+    const R = this.rng, T = this.turno, minD = [0, 35, 45, 50][T] * SC, maxD = [0, 80, 95, 100][T] * SC;
     const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
     const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
     const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
@@ -486,7 +486,7 @@ class ModeMonitoreo extends Mode {
   go(t, x, y) { t.path = [{ x, y: t.y }, { x, y }]; }
   update(dt) {
     this.t += dt; const dm = this.rate * dt; this.clock += dm; this.sim.step(dm, this.clock);
-    const dp = this.base, spd = 60 * dm * (this.has('camion') ? 1.15 : 1);
+    const dp = this.base, spd = 60 * dm * (this.tSpd || 1) * (this.has('camion') ? 1.15 : 1);
     for (const t of this.trucks) {
       if (t.path) {
         const p = t.path[0], d = dist(t.x, t.y, p.x, p.y);

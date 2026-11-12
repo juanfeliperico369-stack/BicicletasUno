@@ -67,7 +67,7 @@ const UI = JE.ui = {
   starStr(n, of = 3) { return '★'.repeat(n) + '<i>' + '★'.repeat(of - n) + '</i>'; },
   renderRuta() {
     const S = Save.data, tot = this.totalStars();
-    let h = `<div class="pag">PAG 1 · ${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de 81</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
+    let h = `<div class="pag">PAG 1 · ${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de ${MAX_STARS()}</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
     h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: 9 oficios · 3 turnos cada uno</div>`;
     if (S.perks.length) h += `<div class="pag">Mejoras activas (se pierden si fallas un turno)</div><div class="perks">${S.perks.map(p => `<span class="chip"><img class="px" width="20" height="20" src="${Art.iconURL(PERKS[p].icon, 2)}" alt="">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     if (!S.settings.seen.profile) h += `<div class="paper" style="margin:0 0 16px"><div class="t">Crea tu ciclista</div><p style="margin:6px 0 10px">Elige tu nombre y colores antes de empezar.</p><button class="btn sm" data-act="avatar">Personalizar</button></div>`;
@@ -79,7 +79,7 @@ const UI = JE.ui = {
       if (!ok) h += `<div class="lockmsg">🔒 Se desbloquea con ${r.unlock} ★ (tienes ${tot})</div>`;
       else {
         h += `<div class="turnos">`;
-        for (let t = 1; t <= 3; t++) h += `<button data-role="${r.id}" data-t="${t}" ${this.turnoOk(r, t) ? '' : 'disabled'}>Turno ${t}<small>${'★'.repeat(st[t - 1])}${'☆'.repeat(3 - st[t - 1])}</small></button>`;
+        for (let t = 1; t <= nShifts(r.id); t++) h += `<button data-role="${r.id}" data-t="${t}" ${this.turnoOk(r, t) ? '' : 'disabled'}>${esc(shiftName(r.id, t))}<small>${r.shifts && r.id !== 'usuario' ? esc(r.shifts[t - 1].h) + ' · ' : ''}${'★'.repeat(st[t - 1])}${'☆'.repeat(3 - st[t - 1])}</small></button>`;
         h += `<button class="free" data-role="${r.id}" data-free="1">Libre<small>práctica</small></button></div>`;
       }
       h += `</div>`;
@@ -108,7 +108,7 @@ const UI = JE.ui = {
   /* Carnet EnCicla: cargo actual y récord por oficio */
   carnet() {
     const S = Save.data, top = ROLES.filter(r => (S.stars[r.id] || [0])[0] > 0).pop() || ROLES[0], km = (S.stats.km || 0).toFixed(1);
-    const rec = ROLES.map(r => { const b = Math.max(0, ...[1, 2, 3].map(t => S.best[r.id + t] || 0)), st = this.stars(r.id).reduce((a, b) => a + b, 0); return `<tr class="${b ? '' : 'off'}"><td><img class="px" width="16" height="16" src="${Art.iconURL(r.icon)}" alt=""> ${esc(r.name)}</td><td>${b ? fmtInt(b) : '—'}</td><td style="color:var(--amb)">${'★'.repeat(st)}<i>${'★'.repeat(9 - st)}</i></td></tr>`; }).join('');
+    const rec = ROLES.map(r => { const b = Math.max(0, ...[1, 2, 3].map(t => S.best[r.id + t] || 0)), st = this.stars(r.id).reduce((a, b) => a + b, 0); return `<tr class="${b ? '' : 'off'}"><td><img class="px" width="16" height="16" src="${Art.iconURL(r.icon)}" alt=""> ${esc(r.name)}</td><td>${b ? fmtInt(b) : '—'}</td><td style="color:var(--amb)">${'★'.repeat(st)}<i>${'★'.repeat(3 * nShifts(r.id) - st)}</i></td></tr>`; }).join('');
     return `<div class="carnet"><div class="ch"><canvas id="cnAv" width="80" height="50"></canvas><div><div class="pag">Carnet EnCicla · nivel ${this.level()}</div><div class="cn">${esc(S.profile.name)}</div><div class="cr">${esc(top.name)}</div><div class="pag">${km} km · ${fmtInt(S.stats.bells || 0)} timbrazos · ${S.logros.length}/${LOGROS.length} logros</div></div></div><table class="rec"><tr><th>Oficio</th><th>Récord</th><th>Estrellas</th></tr>${rec}</table></div>`;
   },
   renderParts() {
@@ -147,10 +147,12 @@ const UI = JE.ui = {
   brief(roleId, turno, o = {}) {
     const r = ROLE[roleId], seed = o.seed != null ? o.seed : ((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
     const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : Season.pick(rng)), sea = Season.now(), wet = !!sea.wet && !o.reto && roleId !== 'carrera' && !(turno === 1 && !o.free);
-    this.mute = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free }); } finally { this.mute = false; }   // solo para leer las metas: sin avisos
+    this.mute = true; JE.briefing = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free, zona: o.zona }); } finally { this.mute = false; JE.briefing = false; }   // solo para leer las metas: sin avisos
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
-    let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : 'TURNO ' + turno}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
+    let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
     h += `<div class="boxh">Sesión ${r.n}: ${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
+    if (r.shifts && !isMulti(roleId) && roleId !== 'usuario') h += `<div class="paper" style="margin:8px 0"><div class="t">${esc(shiftName(roleId, turno))}</div><p style="margin:4px 0 0">🕐 ${esc(r.shifts[turno - 1].h)}</p></div>`;
+    if (roleId === 'apoyo') { const zz = o.zona || APOYO_ZONAS[(seed >>> 5) % APOYO_ZONAS.length][0]; o.zona = zz; h += `<div class="pag">Tu zona (toca para cambiarla)</div><div class="zonas">${APOYO_ZONAS.map(z => `<button class="chip ${z[0] === zz ? 'on' : ''}" data-zona="${z[0]}">${esc(z[1])} · ${z[2]}</button>`).join('')}</div>`; }
     h += Historia.brief(roleId, turno, o);
     h += `<div class="howto">${r.how.map((t, i) => `<div><b>${i + 1}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
     if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas ${roleId === 'carrera' ? 'de la carrera' : 'del turno'}</div><ul class="goals">${goals}</ul>`;
@@ -160,13 +162,14 @@ const UI = JE.ui = {
     h += `<p class="m" style="margin-top:14px">💡 ${esc(TIPS[(seed >>> 3) % TIPS.length])}</p>`;
     $('#briefBody').innerHTML = h; this.go('sBrief');
     $('#bBack').onclick = () => this.go(o.reto ? 'sCover' : 'sHome');
+    $$('[data-zona]').forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(roleId, turno, Object.assign({}, o, { seed, zona: b.dataset.zona })); });
     $('#bGo').onclick = () => { Snd.init(); Snd.resume(); Game.start(roleId, turno, Object.assign({}, o, { seed, nov, wet })); };
   },
   /* ---------- resultados ---------- */
   result(res, meta, prog) {
     const r = ROLE[meta.roleId], S = Save.data;
     const msg = res.pass ? (res.stars === 3 ? '¡Turno perfecto! Eres un orgullo paisa.' : '¡Turno aprobado! Puedes mejorar las estrellas.') : '¡Casi! La meta obligatoria no se cumplió. Inténtalo otra vez.';
-    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : 'TURNO ' + meta.turno} · ${esc(meta.nov.name)}</div>`;
+    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : esc(shiftName(meta.roleId, meta.turno)).toUpperCase()} · ${esc(meta.nov.name)}</div>`;
     h += `<div class="sect"><span class="outline">${r.n}</span><h2 class="mega">${esc(r.name)}</h2></div>`;
     if (!meta.free) h += `<div class="stars">${this.starStr(res.stars)}</div>`;
     h += `<div class="kick" style="margin:6px 0">${msg}</div>`;
@@ -179,7 +182,7 @@ const UI = JE.ui = {
     if (prog.logros && prog.logros.length) { const gifts = []; for (const k in COSMETIC_REQ) for (const i in COSMETIC_REQ[k]) if (prog.logros.some(l => l.id === COSMETIC_REQ[k][i][0])) gifts.push(COSMETIC_REQ[k][i][1]); if (gifts.length) h += `<p class="m" style="margin:4px 0 10px">🎁 Nueva ropa para tu ciclista: <b>${gifts.map(esc).join(', ')}</b> (en Mi ciclista).</p>`; }
     if (prog.lost) h += `<p class="m">Perdiste tus mejoras activas (roguelite). ¡A empezar de nuevo!</p>`;
     if (prog.perkOpts) h += `<div class="pag" style="margin-top:12px">Elige una mejora para tus próximos turnos</div><div class="perkcards">${prog.perkOpts.map(p => `<button class="perkcard" data-perk="${p}"><img class="px" src="${Art.iconURL(PERKS[p].icon, 2)}" alt=""><b>${esc(PERKS[p].name)}</b><span class="m">${esc(PERKS[p].desc)}</span></button>`).join('')}</div>`;
-    const nextOk = !meta.free && !meta.reto && !isMulti(meta.roleId) && meta.turno < 3 && this.turnoOk(r, meta.turno + 1);
+    const nextOk = !meta.free && !meta.reto && !isMulti(meta.roleId) && meta.turno < nShifts(meta.roleId) && this.turnoOk(r, meta.turno + 1);
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:14px">`;
     if (nextOk) h += `<button class="btn pri" id="bNext">▶ Siguiente turno</button>`;
     h += `<button class="btn ${nextOk ? '' : 'pri'}" id="bAgain">↻ Repetir</button>`;
@@ -197,9 +200,9 @@ const UI = JE.ui = {
   },
   /* ---------- reto / código ---------- */
   code(meta) { return ROLE[meta.roleId].n + '-' + meta.turno + '-' + (meta.seed >>> 0).toString(36).toUpperCase(); },
-  parseCode(c) { const m = String(c).trim().toUpperCase().match(/^(\d)-(\d)-([0-9A-Z]+)$/); if (!m) return null; const r = ROLES[+m[1] - 1], t = +m[2]; if (!r || t < 1 || t > 3) return null; return { roleId: r.id, turno: t, seed: parseInt(m[3], 36) >>> 0 }; },
+  parseCode(c) { const m = String(c).trim().toUpperCase().match(/^(\d)-(\d)-([0-9A-Z]+)$/); if (!m) return null; const r = ROLES[+m[1] - 1], t = +m[2]; if (!r || t < 1 || t > nShifts(r.id)) return null; return { roleId: r.id, turno: t, seed: parseInt(m[3], 36) >>> 0 }; },
   reto() {
-    const seed = todaySeed(), av = ROLES.filter(r => this.unlocked(r)), r = av[seed % av.length], t = Math.min(2, this.turnoOk(r, 2) ? 2 : 1);
+    const seed = todaySeed(), av = ROLES.filter(r => this.unlocked(r)), r = av[seed % av.length], t = Math.min(nShifts(r.id), this.turnoOk(r, 2) ? 2 : 1);
     const rng = new RNG(seed); this.brief(r.id, t, { reto: true, seed, nov: rng.pick(NOVEDADES) });
   },
   multi() {
@@ -349,11 +352,11 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
-    $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : ' · T' + turno); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
+    $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : isMulti(roleId) ? '' : ' · ' + (role.shifts && role.shifts[turno - 1] ? role.shifts[turno - 1].n.replace('Turno ', 'T').replace(' · ', ' ') : 'T' + turno)); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
     this.coachT = 0; this._coachEr = 0; $('#coach').textContent = '';
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));

@@ -1,5 +1,5 @@
 /* =====================================================================
-   HISTORIA: 27 capítulos (9 oficios × 3 turnos). Cada turno aprobado
+   HISTORIA: un capítulo por turno real (19). Cada turno aprobado
    desbloquea el siguiente. Un mentor por oficio te habla antes y después.
    ===================================================================== */
 /* elenco: [nombre, cargo, piel, pelo, gorra/casco (o '' si no usa), camisa] */
@@ -18,55 +18,47 @@ const CAST = {
 const HISTORIA = {
   usuario: [
     { t: 'El primer pedalazo', a: '¡Bienvenido, mijo! Yo monto en EnCicla desde 2011. Presta tu primera bici y llévala a la otra estación antes de una hora. Suave, que nadie nace aprendido.', d: '¿Viste? Gratis, sin humo y sin trancón. Mañana te enseño a respetar los semáforos.' },
-    { t: 'Semáforo en rojo', a: 'Hoy son dos viajes. Ojo con los semáforos: en bici también se frena en rojo, que del afán no queda sino el cansancio.', d: 'Así da gusto: pedaleas como todo un ciudadano. Dicen que EnCicla anda buscando anfitriones…' },
-    { t: 'Tres viajes y una decisión', a: 'Tres viajes seguidos, como cualquier día de trabajo. Si los logras, pasa por la estación: Santi, el anfitrión, quiere conocerte.', d: '¡Te lo dije! Santi dice que tienes madera. Ponte el chaleco: mañana empiezas como anfitrión.' }
+    { t: 'Semáforo en rojo', a: 'Hoy son dos viajes. Ojo con los semáforos: en bici también se frena en rojo, y en las bajadas suelta un poquito, que del afán no queda sino el cansancio.', d: 'Así da gusto: pedaleas como todo un ciudadano. Dicen que EnCicla anda buscando anfitriones…' },
+    { t: 'Tres viajes y una decisión', a: 'Tres viajes seguidos, como cualquier día de trabajo. Si los logras, pasa por la estación: Santi, el anfitrión, quiere conocerte.', d: '¡Te lo dije! Santi dice que tienes madera. Ponte el chaleco: mañana madrugas a las 5.' }
   ],
   anfitrion: [
-    { t: 'El chaleco verde', a: 'Bienvenido a la estación. El anfitrión es la cara de EnCicla: saluda, revisa la tarjeta y entrega una bici buena. Hoy la fila es corta.', d: '¡Buen primer turno! La gente se va contenta cuando la atienden con una sonrisa.' },
-    { t: 'Fila de hora pico', a: 'Hoy sale más gente de la universidad. Mira bien cada tarjeta y no entregues bicis con luz roja.', d: 'Ni un error. Don Jairo, el mecánico, preguntó quién estaba dejando las bicis tan ordenadas.' },
-    { t: 'La estación es tuya', a: 'Hoy cierro yo… ¡mentiras! Cierras tú. Fila larga y bicis dañadas: sepáralas para el taller.', d: 'Estación impecable. Don Jairo te espera: dice que quien cuida las bicis debe aprender a curarlas.' }
+    { t: 'Las 5 de la mañana', a: 'A las 5 en punto el supervisor te entrega la tula: llaves y celular. Tienes media hora para abrir las automáticas del sector y la tuya, con su inventario. A las 5:30 arranca el sistema.', d: '¡Abriste a tiempo! Y en la ventanilla: sacar la bici, entregarla y ajustar el sillín a la medida. Así se atiende.' },
+    { t: 'La estación es tuya', a: 'Hoy te toca el cierre. A las 9 p. m. el sistema cierra, pero sigues recibiendo bicis hasta las 10. Después el inventario y a cerrar las automáticas antes de las 10:30.', d: 'Estación impecable. Don Jairo, el mecánico, preguntó quién dejaba las bicis tan ordenadas.' }
   ],
   mecanico: [
-    { t: 'El oído del mecánico', a: 'Toda bici avisa lo que le duele: una llanta baja, una cadena seca. Empieza por lo fácil y usa la herramienta correcta.', d: 'Eso. Bici que sale de aquí, sale como nueva.' },
-    { t: 'Frenos y cadenas', a: 'Hoy llegan más enfermas. Primero mira la falla y después repara: el que adivina, daña.', d: 'Buen pulso. En bodega están cortos de manos y Yuli necesita a alguien juicioso.' },
-    { t: 'Taller a reventar', a: 'Mañana hay evento y el valle necesita todas las bicis. Hoy nadie se va hasta dejarlas listas… bueno, tú no.', d: '¡Qué berraquera! Todas rodando. Yuli te recibe en la bodega.' }
+    { t: 'El oído del mecánico', a: 'Toda bici avisa lo que le duele. Las que llegan malas del camión de balance se diagnostican primero: el que adivina, daña.', d: 'Eso. Bici que sale de aquí, sale como nueva. Mañana te paso al equipo de ensamble.' },
+    { t: 'Bicis nuevas', a: 'Llegaron las piezas de bodega. Marco, ruedas, manubrio, cadena, sillín, frenos y luces: en ese orden y con las tuercas en su punto.', d: '¡Qué berraquera! Bicis nuevas para el valle. Yuli, la de bodega, necesita a alguien juicioso.' }
   ],
   bodega: [
-    { t: 'Cada cosa en su sitio', a: 'La bodega es el corazón: aquí llega todo y de aquí sale todo. Clasifica cada repuesto en su caja y carga las bicis nuevas.', d: 'Ordenadito. Así los camiones no pierden tiempo.' },
-    { t: 'Llegó el pedido', a: 'Hoy llegan repuestos más rápido. Que no se te cruce nada: una caja mal puesta es una bici parada.', d: 'Ni una pieza perdida. Kevin, el de apoyo, anda pidiendo ayuda con los relevos.' },
-    { t: 'Desvíos', a: 'Hoy toca enrutar lo que sale para todo el valle. Cada paquete por su carril.', d: 'Bodega al día. Kevin te presta la bici de apoyo: ¡a la calle!' }
+    { t: 'Cada cosa en su sitio', a: 'La bodega es el corazón: aquí llega todo. Descarga, verifica que nada venga golpeado ni con cantidades raras, organiza y carga el pedido del taller. Después lo llevas tú mismo.', d: 'Pedido exacto y a tiempo. Kevin, el de apoyo, anda pidiendo ayuda con los relevos.' }
   ],
   apoyo: [
-    { t: 'Relevos', a: 'El de apoyo va donde lo necesiten: abre estaciones y releva al anfitrión que sale a almorzar. Rueda rápido, pero seguro.', d: 'Llegaste a tiempo y el compañero almorzó tranquilo. Eso también es servicio.' },
-    { t: 'De estación en estación', a: 'Hoy hay más tareas y quedan más lejos. Tú eliges el orden: usa las ciclorrutas, que son más rápidas.', d: 'Ya te conocen en media ciudad. La ingeniera Paola pregunta si sabes de cables.' },
-    { t: 'El comodín', a: 'Hoy cubres la zona entera. El que sirve para todo, sirve para mucho.', d: 'Ni una tarea tarde. Paola te espera con la caja de herramientas.' }
+    { t: 'La zona entera', a: 'El de apoyo abre todas las automáticas de su zona: Envigado tiene trece, Aeropuerto dos. Después, entre las 8 y las 12, los relevos. Y nunca pares de hacer inventarios de control.', d: 'Llegaste a tiempo a cada relevo. Eso también es servicio.' },
+    { t: 'De relevo en relevo', a: 'Turno 3: relevos de 4 a 8:30 de la noche, inventarios en cada rato libre y, a las 10, el cierre de toda la zona.', d: 'Ni un relevo tarde. La ingeniera Paola pregunta si sabes de cables.' }
   ],
   tecnico: [
-    { t: 'Luz verde', a: 'Las estaciones automáticas no tienen anfitrión: tienen tótem y anclajes. Si una se apaga, la gente se queda sin bici. Llega y arréglala.', d: 'Volvió la luz verde. Cada estación que revive son cien viajes que sí se hacen.' },
-    { t: 'Circuitos', a: 'Hoy toca abrir el tótem: cierra el circuito y la estación despierta. Con calma, que la electricidad no perdona el afán.', d: 'Operatividad bien arriba. Wilson, el del camión, dice que le haces falta en la ruta.' },
-    { t: 'Tormenta eléctrica', a: 'Anoche tronó duro y medio valle amaneció apagado. Hoy no paramos.', d: 'Todo encendido de nuevo. Wilson te guarda el puesto… y las llaves del camión.' }
+    { t: 'Luz verde', a: 'Tótems, luces LED de los anclajes, celulares de las estaciones… y los power banks. Los celulares que están medio malos se descargan rápido: arma tu plan para que ninguno se apague.', d: 'Todo encendido y ningún celular apagado. Wilson, el del carro de balance, te guarda puesto.' }
   ],
   balance: [
-    { t: 'El camión', a: 'Este camión no cabe por las ciclorrutas, así que piensa como conductor. Lleva bicis a donde faltan y recoge donde sobran.', d: 'Suave en las curvas y puntual. Así se balancea un sistema.' },
-    { t: 'Mañana de universidades', a: 'A las siete se vacían los barrios y se llenan las universidades. Las órdenes de Cata no dan espera.', d: 'Casi ninguna vencida. Cata quiere conocer a quien le cumple las órdenes.' },
-    { t: 'Todo el valle en un camión', a: 'Hoy hay más órdenes que semáforos. Planea la ruta antes de arrancar.', d: 'Camión guardado y sin un rayón. Sube a la sala de control: Cata te espera.' }
+    { t: 'Las tulas de las 4 a. m.', a: 'El camión duerme en la Terminal del Norte. A las 4 sales: unos llevan al supervisor jefe a Suramericana, otros las tulas de la universidad, de Envigado e Itagüí (en el Puente Pandequeso) o de Sabaneta y La Estrella.', d: 'Ruta cumplida. Y de paso, las bicis malas al taller.' },
+    { t: 'El camión de 40', a: 'Hoy manejas el camión especial: 40 bicis entre el Campus de la Nacional, Suramericana y el Estadio, y tanteas las estaciones del sur.', d: 'Corredor balanceado. Cata, la de la sala de control, quiere conocerte.' },
+    { t: 'Turno de noche', a: 'Balanceo hasta las 10, también en los corredores eléctricos. Luego recoges las tulas, las entregas en Casa EnCicla y guardas el camión en la Terminal del Norte.', d: 'Camión guardado y sin un rayón. Sube a la sala de control: Cata te espera.' }
   ],
   monitoreo: [
-    { t: 'La sala de control', a: 'Desde aquí se ve todo. Rojo es estación vacía; azul, llena. Manda los camiones antes de que alguien se quede sin bici.', d: 'Buen ojo. El mapa te habla y tú ya lo entiendes.' },
-    { t: 'El sur despierta', a: 'Hoy vigilas el sur: Envigado, Itagüí, Sabaneta. Más estaciones y los mismos camiones.', d: 'Servicio arriba del 80 %. Don Rubén anda preguntando por ti.' },
-    { t: 'De Bello a Barbosa', a: 'El norte es largo y las estaciones quedan lejos: cada orden cuenta doble.', d: 'Lo lograste. Don Rubén se jubila pronto y busca quién coordine la Gran Rodada.' }
+    { t: 'La sala de control', a: 'Desde aquí se ve todo. Rojo es estación vacía; azul, llena. Manda las misiones a los carros y, cada hora, revisa que los inventarios cuadren.', d: 'Buen ojo. El mapa te habla y tú ya lo entiendes.' },
+    { t: 'Atención al cliente', a: 'Suena el teléfono: sanciones, bicis que no se sueltan, gente que se quiere inscribir. Lee el sistema antes de contestar.', d: 'Nadie colgó bravo. Don Rubén anda preguntando por ti.' }
   ],
   supervisor: [
-    { t: 'Abrir el sistema', a: 'El supervisor abre, reparte al personal y resuelve lo que salga. Empieza con calma y escucha a tu gente.', d: 'Sistema abierto y cerrado sin novedad. Mandas como quien ha pasado por todos los puestos.' },
-    { t: 'Un día cualquiera', a: 'No hay días cualquiera: semáforos dañados, bodega llena, estaciones sin relevo. Respira y prioriza.', d: 'Todo resuelto. Falta una sola cosa: la Gran Rodada del Valle.' },
-    { t: 'La Gran Rodada', a: 'Hoy miles de personas pedalean de Caldas a Barbosa, y Doña Luz va de primera. Que no falte una sola bici.', d: '¡Lo lograste! Empezaste prestando una bici y hoy cuidas las de todo el valle. Gracias por rodar con EnCicla.' }
+    { t: 'Las tulas', a: 'A las 4 llegas a Casa EnCicla, por el Parque de Malibú. Arma cada tula con su llave y un celular cargado, súbete al carro de balance y, a las 5, entrega cada una a su anfitrión.', d: 'Sistema abierto sin novedad. Mandas como quien ha pasado por todos los puestos.' },
+    { t: 'Un día cualquiera', a: 'No hay días cualquiera: relevos, bicis con falla, semáforos dañados y usuarios inconformes. Cuida las estaciones y cuida a tu gente.', d: 'Todo resuelto. Falta una sola cosa: el cierre.' },
+    { t: 'La Gran Rodada', a: 'Hoy el cierre es especial: miles pedalean de Caldas a Barbosa. A las 10:30 recoges todas las tulas y pones a cargar los celulares en Casa EnCicla.', d: '¡Lo lograste! Empezaste prestando una bici y hoy cuidas las de todo el valle. Gracias por rodar con EnCicla.' }
   ]
 };
 const Historia = JE.historia = {
-  total: 27,
-  n(roleId, turno) { return ROLE[roleId].n * 3 - 3 + turno; },
+  get total() { return ROLES.reduce((a, r) => a + nShifts(r.id), 0); },
+  n(roleId, turno) { let k = 0; for (const r of ROLES) { if (r.id === roleId) return k + turno; k += nShifts(r.id); } return turno; },
   done(roleId, turno) { return ((Save.data.stars[roleId] || [])[turno - 1] | 0) > 0; },
-  count() { let n = 0; for (const r of ROLES) for (let t = 1; t <= 3; t++) if (this.done(r.id, t)) n++; return n; },
+  count() { let n = 0; for (const r of ROLES) for (let t = 1; t <= nShifts(r.id); t++) if (this.done(r.id, t)) n++; return n; },
   /* retrato pixel 12×12 del mentor */
   face(roleId) {
     const k = 'face' + roleId; let u = Art.cache.get(k); if (u) return u;
@@ -91,16 +83,16 @@ const Historia = JE.historia = {
 };
 UI.historia = function () {
   const got = Historia.count(); let h = `<h2>La historia</h2><p class="pag">${got} de ${Historia.total} capítulos · del primer pedalazo a la Gran Rodada</p><div class="hist-l">`, open = true;
-  for (const r of ROLES) for (let t = 1; t <= 3; t++) {
+  for (const r of ROLES) for (let t = 1; t <= nShifts(r.id); t++) {
     const H = HISTORIA[r.id][t - 1], ok = Historia.done(r.id, t), n = Historia.n(r.id, t);
-    if (ok) h += `<details><summary><b>${n}.</b> ${esc(H.t)} <small>${esc(r.name)} · turno ${t}</small></summary>${Historia.bubble(r.id, t, false)}${Historia.bubble(r.id, t, true)}</details>`;
-    else if (open && this.unlocked(r) && this.turnoOk(r, t)) { h += `<div class="next"><b>${n}.</b> ${esc(H.t)} <small>▶ ${esc(r.name)} · turno ${t}</small></div>`; open = false; }
-    else h += `<div class="lock"><b>${n}.</b> 🔒 <small>${esc(r.name)} · turno ${t}</small></div>`;
+    if (ok) h += `<details><summary><b>${n}.</b> ${esc(H.t)} <small>${esc(r.name)} · ${esc(shiftName(r.id, t))}</small></summary>${Historia.bubble(r.id, t, false)}${Historia.bubble(r.id, t, true)}</details>`;
+    else if (open && this.unlocked(r) && this.turnoOk(r, t)) { h += `<div class="next"><b>${n}.</b> ${esc(H.t)} <small>▶ ${esc(r.name)} · ${esc(shiftName(r.id, t))}</small></div>`; open = false; }
+    else h += `<div class="lock"><b>${n}.</b> 🔒 <small>${esc(r.name)} · ${esc(shiftName(r.id, t))}</small></div>`;
   }
   this.modal(h + `</div><div class="col"><button class="btn pri" id="mClose">Cerrar</button></div>`);
 };
 LOGROS.push(
-  { id: 'cronista', name: 'La Gran Rodada', desc: 'Completa los 27 capítulos de la historia', icon: 'supervisor', test: () => Historia.count() >= Historia.total },
+  { id: 'cronista', name: 'La Gran Rodada', desc: 'Completa todos los capítulos de la historia', icon: 'supervisor', test: () => Historia.count() >= Historia.total },
   { id: 'estreno', name: 'De estreno', desc: 'Compra algo en la tienda con hojas verdes', icon: 'hoja', test: S => (S.owned || []).length > 0 },
   { id: 'equipo', name: 'Trabajo en equipo', desc: 'Aprueba un turno cooperativo con amigos', icon: 'monitoreo', test: S => S.history.some(h => h.m === 'equipo' && h.p) }
 );

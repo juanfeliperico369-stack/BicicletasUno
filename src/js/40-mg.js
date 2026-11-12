@@ -56,6 +56,7 @@ class MGAnfitrion extends MG {
     this.served = 0; this.abandons = 0; this.happy = 0; this.taller = 0; this.aux = 0; this.spawnT = .25; this.tiltT = 14; this.tiltTime = 0; this.truckT = o.short ? 1e9 : 55; this.truck = null; this.bikeId = 100 + this.rng.i(0, 800);
     this.patMax = (o.short ? 26 : [0, 32, 26, 23][T]) * (parent.has('sonrisa') ? 1.25 : 1) * (parent.patMul || 1);
     this.coach = 'Toca al usuario de la fila para atenderlo.';
+    this.L = { vw: 220, vh: 150, bx1: 40, gy: 93, qy: 132, r0: 54, r1: 190, rows: 1, per: this.cap, sp: 12 };   // hasta el primer dibujo
   }
   newBike(pd) { return { id: this.bikeId++, dmg: this.rng.f() < pd ? this.rng.pick(['llanta', 'cadena', 'freno']) : null, tilt: 0 }; }
   goodSlots() { return this.slots.map((s, i) => s && !s.dmg ? i : -1).filter(i => i >= 0); }
@@ -63,10 +64,10 @@ class MGAnfitrion extends MG {
   spawnUser() {
     if (this.queue.length >= 7) return;
     const T = this.T, morning = this.min < 720, bikes = this.slots.filter(Boolean).length;
-    let loan = this.rng.f() < (morning ? .6 : .42); if (bikes <= 1) loan = this.rng.f() < .3; if (bikes >= this.cap - 1) loan = this.rng.f() < .75;
+    let loan = this.rng.f() < (morning ? .6 : .42); if (bikes <= 1) loan = this.rng.f() < .3; if (bikes >= this.cap - 1) loan = this.rng.f() < .75; if (this.o.returnsOnly) loan = false;
     const u = { p: Art.randPerson(this.rng), type: loan ? 'loan' : 'ret', x: (this.L ? this.L.vw : 220) + 10, st: 'walk', pat: this.patMax, ph: this.rng.f() };
     u.name = this.rng.pick(CARD_NAMES); u.card = this.rng.i(1000, 9999);
-    if (loan) { u.valid = T === 1 && !this.o.short ? true : this.rng.f() > (T === 3 ? .24 : .16); if (!u.valid) u.reason = this.rng.pick(SANCIONES); }
+    if (loan) { u.valid = T === 1 && !this.o.short ? true : this.rng.f() > (T === 3 ? .24 : .16); if (!u.valid) u.reason = this.rng.pick(SANCIONES); if (this.o.seats !== false && this.rng.f() < .4) { u.seat = u.p.kid ? 0 : this.rng.i(1, 4); } }
     else { u.bike = this.newBike(T === 1 ? .16 : T === 2 ? .22 : .28); u.mins = this.rng.f() < (T === 3 ? .28 : T === 2 ? .15 : 0) ? this.rng.i(62, 95) : this.rng.i(8, 58); u.late = u.mins > 60; }
     this.queue.push(u);
   }
@@ -97,7 +98,8 @@ class MGAnfitrion extends MG {
     if (this.t >= this.dur) this.done = true;
     // ayuda contextual
     if (this.step === 'card') this.coach = this.cur.type === 'loan' ? 'Revisa la tarjeta: ¿está ACTIVA? Si no hay bicis buenas, NIEGA con amabilidad.' : '';
-    else if (this.step === 'pick') this.coach = 'Toca una bici con luz VERDE para prestarla.';
+    else if (this.step === 'pick') this.coach = 'Toca una bici con luz VERDE: el anfitrión la saca y se la entrega.';
+    else if (this.step === 'seat') this.coach = 'Ajusta el sillín a la estatura del usuario con ▲ ▼ y toca LISTO.';
     else if (this.step === 'close') this.coach = '¿Llegó tarde (más de 60 min) o con daño? Ciérralo CON NOVEDAD.';
     else if (this.step === 'place') this.coach = this.cur.bike.dmg ? 'Bici dañada: tócala en el TALLER (caja roja).' : (this.freeSlots().length ? 'Toca un anclaje libre para guardar la bici.' : 'Estación llena: guárdala en AUXILIAR (caja azul).');
     else this.coach = this.queue.length ? 'Toca al usuario de la fila para atenderlo.' + (this.slots.some(s => s && s.tilt) ? ' Endereza las bicis torcidas (!).' : '') : 'Esperando usuarios… endereza bicis y retira las dañadas (luz roja).';
@@ -130,7 +132,9 @@ class MGAnfitrion extends MG {
     const u = this.cur, s = this.slots[i], x = this.slotX(i), y = this.L.gy - 18;
     if (this.step === 'pick') {
       if (!s) return; if (s.dmg) { this.bad('¡Está dañada!', x, y); return; }
-      this.slots[i] = null; u.got = s; this.served++; this.good(10 + Math.round(5 * u.pat / this.patMax), x, y); this.finish(true, false, true);
+      this.slots[i] = null; u.got = s; this.served++; this.good(10 + Math.round(5 * u.pat / this.patMax), x, y);
+      if (u.seat != null) { this.step = 'seat'; this.seatLv = 2; return; }   // el anfitrión saca la bici y la entrega a la medida
+      this.finish(true, false, true);
     } else if (this.step === 'place') {
       if (s) return; if (u.bike.dmg) { this.bad('¡Va al taller!', x, y); return; }
       this.slots[i] = u.bike; u.bike = null; this.served++; this.good(10 + Math.round(5 * u.pat / this.patMax), x, y); this.finish(true, true);
@@ -138,6 +142,13 @@ class MGAnfitrion extends MG {
       if (s.tilt) { s.tilt = 0; this.good(2, x, y, '+2 Orden'); }
       else if (s.dmg) { this.slots[i] = null; this.taller++; this.good(3, x, y, '+3 Al taller'); }
     }
+  }
+  /* sillín a la medida: ▲▼ hasta la marca de la estatura del usuario */
+  seatMove(d) { if (this.step === 'seat') { this.seatLv = clamp(this.seatLv + d, 0, 4); Snd.sfx('tap'); } }
+  seatOk() {
+    const u = this.cur; if (!u || this.step !== 'seat') return;
+    if (this.seatLv === u.seat) { this.seats = (this.seats || 0) + 1; this.good(5, u.x, this.L.qy - 26, '+5 ¡A su medida!'); this.finish(true, false, true); }
+    else this.bad(this.seatLv > u.seat ? 'Muy alto' : 'Muy bajo', u.x, this.L.qy - 26);
   }
   closeLoan(nov) {
     const u = this.cur; if (!u || this.step !== 'close') return;
@@ -160,8 +171,8 @@ class MGAnfitrion extends MG {
     const u = this.cur; if (!u) return; this.queue.shift(); if (ok) this.happy++;
     this.leaving.push({ u, dir: ride ? -1 : 1, ride: !!ride }); this.cur = null; this.step = null; this.msg = '';
   }
-  slotX(i) { const L = this.L; return L.r0 + (L.rows === 2 ? i % L.per : i) * L.sp + L.sp / 2; }
-  slotY(i) { const L = this.L; return L.rows === 2 && i >= L.per ? L.gy - 12 : L.gy; }
+  slotX(i) { const L = this.L && this.L.sp ? this.L : { r0: 50, rows: 1, per: this.cap, sp: 12 }; return L.r0 + (L.rows === 2 ? i % L.per : i) * L.sp + L.sp / 2; }
+  slotY(i) { const L = this.L && this.L.sp ? this.L : { rows: 1, gy: 93 }; return L.rows === 2 && i >= L.per ? L.gy - 12 : L.gy; }
   /* dibujo */
   render(V) {
     const b = V.b, { gy, qy } = this.bgStation(V, this.min), vw = V.vw;
@@ -207,7 +218,15 @@ class MGAnfitrion extends MG {
     V.text('TALLER', (L.vw - 3) * s, (L.gy + 7) * s + 6, { size: 11, align: 'right', color: '#fff', bg: '#3a1f22', pad: 2 });
     V.text('AUXILIAR', (L.vw - 3) * s, (L.gy - 52) * s - 2, { size: 11, align: 'right', color: '#fff', bg: '#10243f', pad: 2 });
     V.text('Bicis ' + this.slots.filter(Boolean).length + '/' + this.cap, (L.r0 + 2) * s, (L.gy + 10) * s, { size: 12, color: PAL.az, bg: '#ffffffcc', pad: 2 });
-    const u = this.cur; this.hideGoals = !!(u && (this.step === 'card' || this.step === 'close'));
+    const u = this.cur; this.hideGoals = !!(u && (this.step === 'card' || this.step === 'close' || this.step === 'seat'));
+    if (u && this.step === 'seat') {
+      const w = Math.min(380, V.w - 20), h = 150, { x, y } = this.card(V, w, h, 'SILLÍN A LA MEDIDA · ' + u.name);
+      const H = ['niño', 'baja', 'media', 'alta', 'muy alta'];
+      V.text('Estatura: ' + H[u.seat], x + 12, y + 46, { size: 16, color: PAL.az }); V.text('Sillín: ' + '▮'.repeat(this.seatLv + 1) + '▯'.repeat(4 - this.seatLv), x + 12, y + 72, { size: 18, color: this.seatLv === u.seat ? PAL.vd2 : PAL.az2 });
+      const bw = (w - 48) / 3;
+      this.button(V, x + 12, y + h - 52, bw, 42, '▼', () => this.seatMove(-1), { bg: PAL.az1, size: 22, key: 'sd' }); this.button(V, x + 24 + bw, y + h - 52, bw, 42, '▲', () => this.seatMove(1), { bg: PAL.az1, size: 22, key: 'su' });
+      this.button(V, x + 36 + bw * 2, y + h - 52, bw, 42, 'LISTO', () => this.seatOk(), { bg: PAL.vd2, size: 16, key: 'sok' });
+    }
     if (u && (this.step === 'card' || this.step === 'close')) {
       const w = Math.min(380, V.w - 20), h = 148, { x, y } = this.card(V, w, h, this.step === 'card' ? 'VENTANILLA · PRÉSTAMO' : 'VENTANILLA · DEVOLUCIÓN');
       if (this.step === 'card') {
@@ -234,6 +253,7 @@ class MGAnfitrion extends MG {
     if (this.step === 'card') return R[u.valid && this.goodSlots().length ? 'si' : 'no'] || null;
     if (this.step === 'close') return R[u.late || u.bike.dmg ? 'nov' : 'ok'] || null;
     if (this.step === 'pick') { const i = this.goodSlots()[0]; return i >= 0 ? { x: this.slotX(i) * s, y: (this.slotY(i) - 8) * s } : null; }
+    if (this.step === 'seat') return R[this.seatLv === u.seat ? 'sok' : this.seatLv > u.seat ? 'sd' : 'su'] || null;
     if (this.step === 'place') { if (u.bike.dmg) return { x: (L.vw - 15) * s, y: (L.gy - 13) * s }; const f = this.freeSlots()[0]; return f >= 0 ? { x: this.slotX(f) * s, y: (this.slotY(f) - 8) * s } : { x: (L.vw - 15) * s, y: (L.gy - 39) * s }; }
     return null;
   }
@@ -254,6 +274,7 @@ class MGAnfitrion extends MG {
     const u = this.cur;
     if (this.step === 'card') this.decide(r ? !u.valid : (u.valid && this.goodSlots().length > 0));
     else if (this.step === 'pick') { const g = this.goodSlots(); this.pickSlot(r ? this.rng.i(0, this.cap - 1) : g[0]); if (!g.length) this.finish(false); }
+    else if (this.step === 'seat') { if (r) this.seatOk(); else if (this.seatLv !== u.seat) this.seatMove(u.seat > this.seatLv ? 1 : -1); else this.seatOk(); }
     else if (this.step === 'close') this.closeLoan(r ? !(u.late || !!u.bike.dmg) : (u.late || !!u.bike.dmg));
     else if (this.step === 'place') { if (u.bike.dmg) this.toTaller(); else { const f = this.freeSlots(); if (f.length) this.pickSlot(f[0]); else this.toAux(); } }
   }
@@ -445,11 +466,12 @@ class MGApertura extends MG {
   press(on) { if (this.step === 'power' || this.step === 'off') { this.holding = on; if (!on) this.hold = 0; } }
   dock(i) {
     const d = this.docks[i]; if (!d) return; const x = this.L ? this.dockX(i) : 100, y = this.L ? this.L.gy - 20 : 80;
-    if (this.step === 'docks' && !d.on) { d.on = true; Snd.sfx('tap'); this.score += 1; if (this.docks.every(d => d.on)) this.finishMG(); }
+    if (this.step === 'docks' && !d.on) { d.on = true; Snd.sfx('tap'); this.score += 1; if (this.docks.every(d => d.on)) { if (this.o.inv) { this.step = 'count'; this.countOpts(); } else this.finishMG(); } }
     else if (this.step === 'lock' && d.on) { d.on = false; Snd.sfx('tap'); this.score += 1; if (this.docks.every(d => !d.on)) { this.step = 'count'; const n = this.docks.filter(d => d.bike).length, a = this.rng.shuffle([n, n + 1, Math.max(0, n - 1) === n ? n + 2 : Math.max(0, n - 1)]); this.opts = [...new Set(a)]; while (this.opts.length < 3) this.opts.push(n + this.opts.length + 1); } }
     else if (this.step === 'docks' || this.step === 'lock') this.pop('Ya está', x, y, PAL.amb);
   }
-  answer(v) { const n = this.docks.filter(d => d.bike).length; if (v === n) { this.good(5, 100, 40, '+5 ¡Conteo exacto!'); this.step = 'off'; } else this.bad('Cuenta otra vez', 100, 40); }
+  countOpts() { const n = this.docks.filter(d => d.bike).length, a = new Set([n]); while (a.size < 3) a.add(Math.max(0, n + this.rng.i(-2, 2))); this.opts = this.rng.shuffle([...a]); }
+  answer(v) { const n = this.docks.filter(d => d.bike).length; if (v === n) { this.good(5, 100, 40, '+5 ¡Inventario exacto!'); if (this.mode === 'apertura') this.finishMG(); else this.step = 'off'; } else { this.invErr = (this.invErr || 0) + 1; this.bad('Cuenta otra vez', 100, 40); } }
   finishMG() { this.score += 8; Snd.sfx('win'); this.done = true; }
   dockX(i) { const L = this.L; return L.r0 + i * L.sp + L.sp / 2; }
   render(V) {

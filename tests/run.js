@@ -51,7 +51,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   for (const [role, t] of [['anfitrion', 1], ['mecanico', 1], ['bodega', 1], ['monitoreo', 1], ['supervisor', 1], ['balance', 1]]) {
     await p.evaluate(([r, t]) => { JE.game.stop(); JE.game.start(r, t, { seed: 77, nov: NOVEDADES[0] }); }, [role, t]);
     await p.waitForTimeout(role === 'anfitrion' ? 4000 : 1200);
-    if (role === 'anfitrion') await p.evaluate(() => { const S = JE.game.mode.sub; S.serve(); });
+    if (role === 'anfitrion') await p.evaluate(() => { const S = JE.game.mode.sub; if (S && S.serve) S.serve(); });
     await p.waitForTimeout(300);
     if (SHOTS) await p.screenshot({ path: path.join(OUT, role + '.png') });
   }
