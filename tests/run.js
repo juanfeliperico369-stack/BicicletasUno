@@ -159,7 +159,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   console.log('3d) Gráficos, vistas, música por estilos, corredores eléctricos, tutorial y oficios nuevos');
   const g3 = await p.evaluate(async () => {
     const wait = ms => new Promise(r => setTimeout(r, ms)), out = {}, e0 = JE.errors.length, S = Save.data.settings, keep = { gfx: S.gfx, vista: S.vista };
-    for (const [gfx, vista] of [['hibrido', 'cenital'], ['2d', 'cenital'], ['pixel', 'pano']]) { Object.assign(S, { gfx, vista }); Art.cache.clear(); CityMap.chunks2.clear(); JE.game.start('apoyo', 1, { seed: 4, nov: NOVEDADES[0] }); await wait(500); out[gfx + vista] = { q: View.q, pano: panoOn(JE.game.mode.ride) }; JE.game.stop(); }
+    for (const [gfx, vista] of [['hibrido', 'cenital'], ['2d', 'cenital'], ['pixel', 'pano']]) { Object.assign(S, { gfx, vista }); Art.cache.clear(); CityMap.chunks2.clear(); JE.game.start('usuario', 1, { seed: 4, nov: NOVEDADES[0] }); out[gfx + vista] = { q: View.q, pano: panoOn(JE.game.mode.ride) }; await wait(500); JE.game.stop(); }
     Object.assign(S, keep); Art.cache.clear();
     out.music = [Snd.styleNow()]; JE.game.start('balance', 1, { seed: 3, nov: NOVEDADES[0] }); Snd.mood.n = 0; out.music.push(Snd.styleNow()); Snd.mood.n = 1; out.music.push(Snd.styleNow()); Snd.mood.n = 0; JE.game.stop();
     const st = id => JE.map.stations.find(s => s.id === id); out.e = ['floresta', 'c4ta', 'udea', 'hinfantil', 'sancayetano', 'estrella'].map(id => (st(id) || {}).e || 'x').join();
