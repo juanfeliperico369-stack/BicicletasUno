@@ -365,7 +365,7 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona, bici: o.bici });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();

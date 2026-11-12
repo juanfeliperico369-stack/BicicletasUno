@@ -89,6 +89,7 @@ class Ride {
     mult *= (M.has('llantas') && P.veh === 'bike' ? 1.12 : 1) * (M.has('camion') && P.veh === 'truck' ? 1.15 : 1) * (rain ? .93 : 1) * (M.mods.ciclovia && P.veh === 'bike' ? 1.06 : 1);
     // relieve real: en subida se pedalea más lento y en bajada se va más rápido (el camión lo siente menos; la bici eléctrica no sufre en subida)
     const sl = this.sl = this.map.slope(P.x, P.y, P.a), eb = P.veh === 'bike' && !!(M.ebike || this.ebike);
+    if (M.speedMul) mult *= M.speedMul(this);
     mult *= P.veh === 'truck' ? clamp(1 - .9 * sl, .7, 1.12) : P.veh === 'walk' ? clamp(1 - 1.1 * sl, .6, 1.15) : eb && sl > 0 ? 1 : clamp(1 - 2.2 * sl, .5, 1.32);
     if (dir.m > 0) {
       const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), turn = S.turn * (rain ? .8 : 1) * (P.v < 10 * WK ? 1.7 : 1);

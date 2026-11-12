@@ -245,7 +245,7 @@ class ModeUsuario extends MapMode {
   info() { const lm = this.loanMin(), ch = [{ t: 'Préstamo ' + lm + ' min', c: lm > 60 ? 'bad' : lm > 45 ? 'warn' : '' }]; if (this.ride.ebike) ch.push({ t: '⚡ Eléctrica' }); return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: ch }; }
   actions() {
     const a = super.actions();
-    if (this.free && this.nearStation()) a.push({ id: 'dock', icon: 'estacion', label: 'Devolver', fn: () => { Save.data.stats.trips++; this.toast('Bici devuelta en ' + this.nearStation().name); this.end(); } });
+    if (this.free && !this.ownBike && this.nearStation()) a.push({ id: 'dock', icon: 'estacion', label: 'Devolver', fn: () => { Save.data.stats.trips++; this.toast('Bici devuelta en ' + this.nearStation().name); this.end(); } });
     return a;
   }
   bot() { this.botDrive(); }

@@ -110,6 +110,52 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(ov.walked && ov.on, 'modo libre: bajarse, caminar y volver a subirse a la bici');
   ok(ov.descarga, 'bajar y organizar bicis con equilibrio (el bot lleva las 5, ' + ov.drops + ' caídas)');
   ok(ov.music, 'la música se acelera con la velocidad y la racha');
+  console.log('3c) Calendario real, fiestas, modo libre con misiones y perfil');
+  const cal = await p.evaluate(async () => {
+    const k = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const fest = Object.keys(Cal.festivos(2026)).sort(), want = ['2026-01-01', '2026-01-12', '2026-03-23', '2026-04-02', '2026-04-03', '2026-05-01', '2026-05-18', '2026-06-08', '2026-06-15', '2026-06-29', '2026-07-20', '2026-08-07', '2026-08-17', '2026-10-12', '2026-11-02', '2026-11-16', '2026-12-08', '2026-12-25'];
+    const fi = s => (Cal.fiesta(new Date(s)) || {}).id || '';
+    const fiestas = [fi('2026-12-06T10:00'), fi('2027-01-03T10:00'), fi('2026-12-07T20:00'), fi('2026-10-31T10:00'), fi('2026-08-10T10:00'), fi('2026-09-19T10:00'), fi('2026-07-20T10:00'), fi('2026-11-12T10:00')];
+    const sv = [Cal.service(new Date('2026-11-12T10:00')).open, Cal.service(new Date('2026-11-15T10:00')).open, Cal.service(new Date('2026-12-08T10:00')).close];
+    // misiones: estudiante un martes, trabajador un viernes, ciclovía un domingo
+    const P = Save.data.profile, bak = JSON.stringify(P); Save.data.dia = null;
+    Object.assign(P, { uni: 1, trabajo: 0, colegio: 0 }); const m1 = genMisiones(new Date('2026-11-10T07:00')).map(m => m.id);
+    Object.assign(P, { uni: 0, trabajo: 2 }); const m2 = genMisiones(new Date('2026-11-13T07:00')).map(m => m.id);
+    const m3 = genMisiones(new Date('2026-11-15T08:00')).map(m => m.id);
+    // jugar el modo libre un martes a las 7 a. m.: la rutina de la universidad con animación del tiempo
+    Object.assign(P, { uni: 1, trabajo: 0 }); JE.fecha = '2026-11-10T07:00'; JE.headless = true;
+    JE.game.start('usuario', 1, { seed: 9, nov: NOVEDADES[0], free: true }); const M = JE.game.mode, R = M.ride, ms = M.misiones.find(x => x.id === 'uni');
+    const mk = ms.marks[0]; R.p.x = mk.x; R.p.y = mk.y; let n = 0; while (!M.sub && n < 60) { M.update(1 / 30); n++; }
+    const sub = M.sub && M.sub.constructor.name; n = 0; while (M.sub && n < 30 * 20) { if (n % 10 === 0) M.sub.bot(); M.update(1 / 30); n++; }
+    const rutina = !!ms.done && M.clock > 7 * 60 + 100;
+    // energía: pedalear la baja, sentarse la sube
+    M.energy = 50; R.p.v = 60; const e0 = M.energy; M.tick(1); const drained = M.energy < e0; M.sitting = true; M.sitT = 0; for (let i = 0; i < 60; i++) M.update(1 / 30); const rest = M.energy > 50; M.sitting = false;
+    // foto en un lugar emblemático
+    const L = PUBLIC_LM()[0]; R.p.x = (L.x + L.w / 2) * TS; R.p.y = (L.y + L.h / 2) * TS; R.p.v = 0; const f0 = (Save.data.fotos || []).length, fa = M.actions().find(a => a.id === 'foto'); if (fa) fa.fn(); const foto = (Save.data.fotos || []).length === f0 + 1;
+    // carrera de la ciclovía un domingo
+    JE.game.stop(); JE.fecha = '2026-11-15T08:00'; JE.game.start('usuario', 1, { seed: 4, nov: NOVEDADES[0], free: true }); const M2 = JE.game.mode, R2 = M2.ride, rc = M2.misiones.find(x => x.id === 'carrera');
+    let race = 'sin carril';
+    if (rc && rc.marks.length) { const s = rc.marks[0]; R2.p.x = s.x; R2.p.y = s.y; for (let i = 0; i < 10; i++) M2.update(1 / 30); const r = M2.race; if (r) { for (let i = 0; i < 3; i++) { const q = r.m; R2.p.x = q.x; R2.p.y = q.y; for (let j = 0; j < 4; j++) M2.update(1 / 30); } race = !M2.race && rc.done ? 'ok' : 'no terminó'; } else race = 'no arrancó'; }
+    for (let i = 0; i < 90; i++) M2.update(1 / 30); const cvBikes = R2.cars.filter(c => c.kind === 'bici').length;
+    JE.game.stop(); JE.fecha = null; JE.headless = false; Object.assign(Save.data.profile, JSON.parse(bak));
+    // colores: trabajadores con uniforme y bici verde; en el modo libre con bici propia, tu color
+    JE.game.start('balance', 1, { seed: 3, nov: NOVEDADES[0] }); const uni = JE.game.mode.uniform && bikeCol() === PAL.vd; JE.game.stop();
+    Save.data.profile.bike = 3; JE.ownBike = true; JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true, bici: 'propia' }); const own = !JE.game.mode.uniform && bikeCol() === BIKES[3]; JE.game.stop(); Save.data.profile.bike = 0; JE.ownBike = false;
+    // creador: pestaña Tú con preguntas
+    UI.avatar(true); const tu = !!document.querySelector('#mBody [data-k=uni]') && !!document.querySelector('#mBody [data-k=trabajo]') && !!document.querySelector('#mBody [data-k=colegio]'); UI.closeModal();
+    UI._avTab = 'cuerpo'; UI.avatar(false); const cuerpo = !!document.querySelector('#mBody [data-k=build]') && !!document.querySelector('#mBody [data-k=tall]'); UI.closeModal(); UI._avTab = null;
+    UI.go('sHome');
+    return { fest, want, easter: k(Cal.easter(2026)), fiestas, sv, m1, m2, m3, sub, rutina, drained, rest, foto, race, cvBikes, uni, own, tu, cuerpo };
+  });
+  ok(JSON.stringify(cal.fest) === JSON.stringify(cal.want) && cal.easter === '2026-04-05', 'festivos de Colombia 2026 (Ley Emiliani y Semana Santa) ' + (JSON.stringify(cal.fest) === JSON.stringify(cal.want) ? '' : cal.fest.filter(x => !cal.want.includes(x)) + ' / ' + cal.want.filter(x => !cal.fest.includes(x))));
+  ok(cal.fiestas.join() === 'navidad,navidad,velitas,halloween,flores,amor,patria,', 'fiestas automáticas por fecha: ' + cal.fiestas.join());
+  ok(cal.sv.join() === '330,480,960', 'horario de EnCicla según el día');
+  ok(cal.m1.includes('uni') && cal.m2.includes('trabajo') && cal.m2.includes('viernes') && cal.m3.includes('carrera'), 'misiones según tu vida y el día: ' + [cal.m1, cal.m2, cal.m3].map(x => x.join('+')).join(' | '));
+  ok(cal.sub === 'MGRutina' && cal.rutina, 'llegar a la universidad: animación de clase y el reloj avanza');
+  ok(cal.drained && cal.rest && cal.foto, 'energía, banca y foto para el álbum');
+  ok(cal.race === 'ok' && cal.cvBikes > 0, 'carrera de la ciclovía contra 3 ciclistas (' + cal.race + ', ' + cal.cvBikes + ' ciclistas en la vía)');
+  ok(cal.uni && cal.own, 'uniforme y bici verde de EnCicla para los trabajadores; ropa y bici libres en el modo libre');
+  ok(cal.tu && cal.cuerpo, 'creador: preguntas de tu vida, contextura y estatura');
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

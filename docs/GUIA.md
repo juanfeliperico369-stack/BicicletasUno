@@ -51,6 +51,8 @@ src/js/90-bot.js      bot de pruebas (JE.bot.run): juega partidas y valida invar
 src/js/95-promo.js    íconos de la app e imagen OG 1200x630
 src/js/67-personaje.js creador de personaje, rankings, personajes y tipos de control
 src/js/68-ciudad.js   motos, camiones, ciclistas de las ciclorrutas, caminar en el modo libre y MGDescarga (bajar bicis con equilibrio)
+src/js/69-calendario.js fecha real: festivos, horarios por día, ciclovía y festividades (decoración, colores, música, regalos)
+src/js/69-libre.js    modo libre con vida propia: perfil, misiones del día, MGRutina, carrera de ciclovía, energía, fotos, mentores y regla de colores
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
@@ -143,6 +145,33 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v0.9 · El juego sabe qué día es; modo libre con vida propia* (`69-calendario.js`, `69-libre.js`):
+- **Fecha real** (`Cal`, `JE.cal`): `Cal.now()` usa el reloj del dispositivo; para probar otra fecha: `?fecha=2026-12-24T19:00` en la URL o `JE.fecha = '...'`.
+  Festivos de Colombia calculados (fijos, Ley Emiliani al lunes y Semana Santa con la Pascua), tipo de día (`semana`, `sabado`, `domingo`, `festivo`).
+  **Horario de préstamo según el día** (`Cal.service`, APROXIMADO, confirmar con EnCicla): lunes a viernes 5:30 a. m.–10 p. m.; sábado 6:30 a. m.–9 p. m.; domingos y festivos 8 a. m.–4 p. m.
+  **Ciclovía:** domingos y festivos de 7 a. m. a 1 p. m. (`Cal.cicloviaNow`): ese día la novedad del turno pasa a ser Ciclovía sola.
+- **Festividades automáticas** (`FIESTAS`): Navidad y Alumbrados (1 dic–7 ene), Velitas (7–8 dic), Semana Santa, Día del Niño, de la Madre y del Padre, Independencia (19–20 jul),
+  Feria de las Flores (desde el primer viernes de agosto, 10 días), Independencia de Antioquia (11 ago), Fiesta del Libro (desde el segundo viernes de septiembre),
+  Amor y Amistad (tercer sábado de septiembre), Halloween (24–31 oct) y Año Nuevo. Gana la más corta si se cruzan. Cada una trae: franja y colores en portada e inicio (`body.fest-<id>`, `--fest1/2`),
+  decoración del mapa (`Ride.drawFest`: pinos y luces, velitas, calabazas, flores, casetas de libros, banderas, corazones, globos), capa musical (`Snd.fest`: jingle o spooky),
+  novedad del turno (Alumbrados o Flores), una misión del modo libre y un **regalo de temporada** en Mi ciclista (`FEST_REQ`, solo se reclama durante la fiesta).
+- **Tu vida** (creador, pestaña **Tú**, primera al crear el personaje): edad (`edad`; niño o adulto mayor activan ritmo tranquilo, adulto mayor también letra grande),
+  municipio donde vives (`casaM` → estación de tu casa), colegio (`colegio`), universidad (`uni`, lista `UNIS` con coordenadas) y trabajo (`trabajo`, lista `TRABAJOS`).
+  **Contextura** (`build`) y **estatura** (`tall`) cambian el dibujo de la persona (`Art.person`) y la **talla de la bici** (S/M/L, marco 48/52/56 cm).
+- **Regla de colores** (pedido del usuario): el verde claro, el azul oscuro y el blanco son de los **trabajadores de EnCicla** (uniforme: camisa azul oscuro, chaleco verde, casco blanco,
+  `Art.me({ uniforme: true })` y `mode.uniform`) y de **las bicis EnCicla** (siempre verdes, `bikeCol()`). En el modo libre (y como usuario) te vistes como quieras,
+  y el color elegido de bici es para **tu bici propia** (`JE.ownBike`).
+- **Modo libre de Usuario** (`ModeUsuarioR`): empiezas en la estación de tu casa a la hora real; si EnCicla está cerrada sales en tu bici. **Misiones del día** (`genMisiones`, guardadas en `Save.data.dia`):
+  según el día de la semana y tu vida: llegar a clase (horario por día), al trabajo, al colegio (con **animación del tiempo pasando**, `MGRutina`), plan de viernes, grupo de estudio o medio turno del sábado,
+  **carrera de la ciclovía** contra 3 ciclistas por la avenida cerrada (cuenta regresiva y 3 puntos), km por la ciclovía, saludar con el timbre, misión de la fiesta, foto, banca, mentor y volver a casa.
+  Premio: hojas verdes y XP (la mitad si llegas tarde). Logros nuevos: Vida sobre ruedas, Rey de la ciclovía, De fiesta en el valle, Aprendiz de maestros, Fotógrafo del valle.
+- **Energía** (⚡ en el HUD): las subidas cansan; con menos de 15 % pedaleas más lento. **Sentarse** en un parque o plaza recupera energía y adelanta el reloj. Gancho general: `mode.speedMul(ride)` en `Ride.update`.
+- **Fotos** (botón Foto cerca de un lugar con postal): se guardan en `Save.data.fotos` (fecha y fiesta) y se ven en el Álbum como polaroids.
+- **El timbre saluda:** los ciclistas cercanos responden («¡Buenas!») y bajan la velocidad. En la ciclovía la avenida se llena de ciclistas (`kind: 'bici'`); si los rozas, solo frenas.
+- **Mentores** (`MENTORES`): Doña Luz (pulmones: −30 % de cansancio), Santi (sonrisa: +15 % de paciencia en la ventanilla), Don Jairo (manos: +20 % de tiempo por bici),
+  Wilson (equilibrio) y Kevin (atajos: +15 % por andenes y plazas). Se visitan como misión y quedan en `Save.data.skills`.
+- Prueba nueva **3c**: festivos 2026, fiestas por fecha, horarios, misiones por perfil y día, rutina con animación, energía, banca, foto, carrera de la ciclovía, colores y creador.
 
 *v0.8 · Ciudad con espacio, gente y música* (`68-ciudad.js` y cambios en 20/30/35/00/60):
 - **Escala del mundo ×2:** `TS = 16` px por casilla (antes 8) y `WK = TS / 8` = 2. Toda distancia o velocidad en px que venía del diseño de 8 px se multiplica por `WK`

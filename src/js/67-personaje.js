@@ -45,7 +45,7 @@ Art.person = function (c, x, y, p, ph = 0, face = -1) {
 Art.rider = function (shirt) {
   const P = Save.data.profile, base = this.riderTop(shirt || SHIRTS[P.shirt] || PAL.vd, HELMETS[P.helmet] || '#fff', SKINS[P.skin] || SKINS[1], bikeCol());
   if (![1, 5, 7].includes(P.hair | 0)) return base;
-  const k = 'rl' + (shirt || P.shirt) + P.helmet + P.skin + P.hairCol + P.bike + (Save.data.flags.gold ? 1 : 0); let c = this.cache.get(k); if (c) return c;
+  const k = 'rl' + (shirt || P.shirt) + P.helmet + P.skin + P.hairCol + bikeCol(); let c = this.cache.get(k); if (c) return c;
   c = this.mk(base.width, base.height, x => { x.drawImage(base, 0, 0); x.fillStyle = PELO[P.hairCol | 0]; x.fillRect(3, 8, 1, 2); });
   this.cache.set(k, c); return c;
 };
@@ -53,25 +53,27 @@ Art.rider = function (shirt) {
 function drawAvatar(cv) {
   const x = cv.getContext('2d'), w = cv.width, h = cv.height, P = Save.data.profile; x.imageSmoothingEnabled = false;
   x.fillStyle = "#143a6b"; x.fillRect(0, 0, w, h); x.fillStyle = "#5e9a1e"; x.fillRect(0, h - 10, w, 10); x.fillStyle = "#bdb9ab"; x.fillRect(0, h - 12, w, 2);
-  Art.bikeSide(x, w * .66, h - 12, { r: 5, face: 1, col: bikeCol() });
+  Art.bikeSide(x, w * .66, h - 12, { r: 4 + (P.tall == null ? 1 : P.tall), face: 1, col: bikeCol() });
   Art.person(x, w * .32, h - 12, Art.me(), 0, 1);
   x.save(); x.translate(w * .32, h - 12); x.scale(1, 1); x.restore();
 }
 
 /* ---------- creador de personaje (al empezar y en Mi ciclista) ---------- */
+const CONTEXTURAS = ['Delgada', 'Media', 'Gruesa'], ESTATURAS = ['Baja', 'Media', 'Alta'], TALLAS = [['S', '48 cm'], ['M', '52 cm'], ['L', '56 cm']];
 UI.avatar = function (first) {
   const P = Save.data.profile, S = Save.data, req = (key, i) => (COSMETIC_REQ[key] || {})[i], price = (key, i) => (SHOP[key] || {})[i];
   const locked = (key, i) => { const r = req(key, i), p = price(key, i); return (r && !S.logros.includes(r[0])) || (p && !S.owned.includes(key + i)); };
   const sw = (arr, key, em) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), p = price(key, i), lk = locked(key, i); return `<button data-k="${key}" data-i="${i}" class="${(P[key] | 0) === i ? 'on' : ''} ${lk ? (p ? 'buy' : 'lock') : ''} ${em ? 'em' : ''}" style="background:${em ? '#143a6b' : c}" aria-label="${esc((r || p || [0, key + ' ' + (i + 1)])[1])}">${em ? c : ''}${lk ? (p ? '<small>🍃' + p[0] + '</small>' : '🔒') : r ? '★' : ''}</button>`; }).join('')}</div>`;
   const txt = (arr, key) => `<div class="seg wrap">${arr.map((t, i) => `<button data-k="${key}" data-i="${i}" class="${(P[key] | 0) === i ? 'on' : ''}">${esc(t)}</button>`).join('')}</div>`;
-  const tab = this._avTab || 'cuerpo';
+  const tab = this._avTab || (first ? 'tu' : 'cuerpo'), tall = P.tall == null ? 1 : P.tall;
   const body = {
-    cuerpo: `<p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Peinado</p>${txt(PEINADOS, 'hair')}<p class="pag">Color de pelo</p>${sw(PELO, 'hairCol')}<p class="pag">Cara</p>${txt(CARAS, 'beard')}<p class="pag">Gafas</p>${txt(GAFAS, 'glasses')}`,
-    ropa: `<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Estilo</p>${txt(MANGAS, 'sleeve')}<p class="pag">Pantalón</p>${sw(PANTALON, 'pants')}<p class="pag">Zapatos</p>${sw(ZAPATOS, 'shoes')}<p class="pag">Casco (siempre se pedalea con casco)</p>${sw(HELMETS, 'helmet')}`,
-    bici: `<div class="paper" style="margin:6px 0 4px"><div class="t">Tienda · <span id="avHojas"></span></div><p style="margin:4px 0 0;font-size:13px">Las hojas verdes se ganan pedaleando y con las estrellas de cada turno. Lo que tiene precio se compra con dos toques.</p></div><p class="pag">Color de la bici</p>${sw(BIKES, 'bike')}<p class="pag">Timbre</p>${sw(BELLS, 'bell', true)}`
+    tu: `<div class="paper" style="margin:6px 0 4px"><div class="t">Cuéntanos de ti</div><p style="margin:4px 0 0;font-size:13px">Con esto el modo libre te arma misiones distintas cada día: clases, trabajo o colegio, y la ciclovía del domingo.</p></div><p class="pag">¿Qué edad tienes?</p>${txt(EDADES, 'edad')}<p class="pag">¿Dónde vives?</p>${txt(VM.munis, 'casaM')}<p class="pag">¿Vas al colegio?</p>${txt(['No', 'Sí, voy al colegio'], 'colegio')}<p class="pag">¿Vas a la universidad? ¿A cuál?</p>${txt(['No'].concat(UNIS.map(u => u[1])), 'uni')}<p class="pag">¿Trabajas? ¿Dónde?</p>${txt(['No trabajo'].concat(TRABAJOS.map(t => t[1])), 'trabajo')}`,
+    cuerpo: `<p class="pag">Contextura</p>${txt(CONTEXTURAS, 'build')}<p class="pag">Estatura</p>${txt(ESTATURAS, 'tall')}<p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Peinado</p>${txt(PEINADOS, 'hair')}<p class="pag">Color de pelo</p>${sw(PELO, 'hairCol')}<p class="pag">Cara</p>${txt(CARAS, 'beard')}<p class="pag">Gafas</p>${txt(GAFAS, 'glasses')}`,
+    ropa: `<p class="m" style="font-size:13px;margin:6px 0">👕 Esta es tu ropa para el modo libre: vístete como quieras. En los turnos de EnCicla usas el uniforme (azul oscuro, chaleco verde y casco blanco).</p><p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Estilo</p>${txt(MANGAS, 'sleeve')}<p class="pag">Pantalón</p>${sw(PANTALON, 'pants')}<p class="pag">Zapatos</p>${sw(ZAPATOS, 'shoes')}<p class="pag">Casco (siempre se pedalea con casco)</p>${sw(HELMETS, 'helmet')}`,
+    bici: `<div class="paper" style="margin:6px 0 4px"><div class="t">Tienda · <span id="avHojas"></span></div><p style="margin:4px 0 0;font-size:13px">Las hojas verdes se ganan pedaleando y con las estrellas de cada turno. Lo que tiene precio se compra con dos toques.</p></div><div class="paper" style="margin:8px 0 4px"><div class="t">Tu bici a la medida: talla ${TALLAS[tall][0]}</div><p style="margin:4px 0 0;font-size:13px">Marco de ${TALLAS[tall][1]} para tu estatura (${ESTATURAS[tall].toLowerCase()}). Las bicis de EnCicla son verdes y blancas; el color de abajo es para tu bici propia en el modo libre.</p></div><p class="pag">Color de tu bici propia</p>${sw(BIKES, 'bike')}<p class="pag">Timbre</p>${sw(BELLS, 'bell', true)}`
   }[tab];
   this.modal(`<h2>${first ? 'Crea tu personaje' : 'Mi ciclista'}</h2><canvas id="avPrev" class="avprev" width="64" height="40"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
-    <div class="seg avtabs">${[['cuerpo', '🙂 Cuerpo'], ['ropa', '👕 Ropa'], ['bici', '🚲 Bici']].map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>${body}
+    <div class="seg avtabs">${[['tu', '🎒 Tú'], ['cuerpo', '🙂 Cuerpo'], ['ropa', '👕 Ropa'], ['bici', '🚲 Bici']].map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>${body}
     <div class="col"><button class="btn pri" id="avOk">${first ? '¡Listo, a pedalear!' : 'Guardar'}</button>${first ? '' : '<button class="btn gh" id="avRnd">🎲 Al azar</button>'}</div>`, () => {
     const draw = () => { drawAvatar($('#avPrev')); const hj = $('#avHojas'); if (hj) hj.textContent = '🍃 ' + hojas() + ' hojas'; };
     const keepName = () => { P.name = ($('#avName').value || 'Ciclista').trim().slice(0, 16) || 'Ciclista'; };
@@ -85,7 +87,7 @@ UI.avatar = function (first) {
         if (arm !== b) { arm = b; Snd.sfx('tap'); return this.toast('🍃 ' + p[1] + ' · ' + p[0] + ' hojas. Toca otra vez para comprar.'); }
         S.spent = (S.spent | 0) + p[0]; S.owned.push(k + i); S.stats.bought = (S.stats.bought | 0) + 1; b.classList.remove('buy'); const sm = b.querySelector('small'); if (sm) sm.remove(); Snd.sfx('star'); this.toast('¡Compraste ' + p[1] + '!');
       }
-      arm = null; P[k] = i; $$(`#mBody [data-k=${k}]`).forEach(x => x.classList.toggle('on', x === b)); Save.save(); draw(); if (k === 'bell') Snd.sfx('bell'); else Snd.sfx('tap');
+      arm = null; P[k] = i; $$(`#mBody [data-k=${k}]`).forEach(x => x.classList.toggle('on', x === b)); Save.save(); if (JE.onProfile) JE.onProfile(k, i); draw(); if (k === 'bell') Snd.sfx('bell'); else Snd.sfx('tap'); if (k === 'tall') { keepName(); this.avatar(first); }
     });
     const rnd = $('#avRnd'); if (rnd) rnd.onclick = () => { keepName(); const R = Math.random, pk = n => Math.floor(R() * n); Object.assign(P, { skin: pk(SKINS.length), hair: pk(PEINADOS.length), hairCol: pk(8), beard: pk(3), glasses: pk(3), shirt: pk(7), sleeve: pk(3), pants: pk(PANTALON.length), shoes: pk(ZAPATOS.length), helmet: pk(5) }); Save.save(); this.avatar(first); };
     $('#avOk').onclick = () => { keepName(); S.settings.seen.profile = 1; Save.save(); this.closeModal(); this.renderHome(); Snd.sfx('ok'); if (first) this.toast('¡Bienvenido, ' + P.name + '! Empieza por el Usuario.'); };

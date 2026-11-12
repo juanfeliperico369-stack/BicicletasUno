@@ -18,7 +18,7 @@ const SHOP = {
   bell: { 1: [25, 'Corneta'], 2: [25, 'Campanita'], 3: [30, 'Pato de hule'] }
 };
 const hojas = () => Math.max(0, (Save.data.stats.leaves | 0) - (Save.data.spent | 0));
-const bikeCol = () => Save.data.flags.gold ? '#ffd84a' : BIKES[Save.data.profile.bike | 0] || PAL.vd;
+const bikeCol = () => (JE.ownBike || !(JE.game && JE.game.mode)) ? (Save.data.flags.gold ? '#ffd84a' : BIKES[Save.data.profile.bike | 0] || PAL.vd) : PAL.vd;   // las bicis de EnCicla son verdes; tu bici propia, del color que quieras
 /* ropa que se gana con logros: índice -> [logro, nombre] */
 const COSMETIC_REQ = { shirt: { 7: ['aprobado', 'Uniforme EnCicla'], 8: ['dorada', 'Camiseta dorada'], 9: ['postal15', 'Camiseta silletera'] }, helmet: { 5: ['perfecto', 'Casco dorado'], 6: ['maquinista', 'Casco del Metro'], 7: ['ciclorruta', 'Casco cono de ciclovía'], 8: ['oficios', 'Casco todero'] } };
 const HAIRS = ['#2a1a10', '#4a2c18', '#7a4a22', '#c9a25a', '#d9d9d9', '#151515'];
