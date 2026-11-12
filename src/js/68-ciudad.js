@@ -60,8 +60,8 @@ Ride.prototype.updLife = function (dt) {
 const _drawGround = Ride.prototype.drawGround;
 Ride.prototype.drawGround = function (b, ox, oy, inV) {
   _drawGround.call(this, b, ox, oy, inV);
-  for (const q of this.npcB || []) { if (!inV(q.x, q.y)) continue; const sp = Art.riderTop(q.shirt, q.helmet, q.skin); b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a + Math.PI / 2); b.fillStyle = '#0004'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 1.5, sp.width, sp.height); b.drawImage(sp, -sp.width / 2, -sp.height / 2); b.restore(); }
-  if (this.parked) { const pk = this.parked; if (inV(pk.x, pk.y)) { b.save(); b.translate(pk.x - ox, pk.y - oy); b.rotate(pk.a + Math.PI / 2); b.drawImage(Art.bikeTop(), -1.5, -4); b.restore(); } }
+  for (const q of this.npcB || []) { if (!inV(q.x, q.y)) continue; const sp = Art.riderTop(q.shirt, q.helmet, q.skin); b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a + Math.PI / 2); blit(b, sp, '#0004'); b.restore(); }
+  if (this.parked) { const pk = this.parked; if (inV(pk.x, pk.y)) { b.save(); b.translate(pk.x - ox, pk.y - oy); b.rotate(pk.a + Math.PI / 2); blit(b, Art.bikeTop()); b.restore(); } }
 };
 /* ---------- caminar (modo libre): bajarse de la bici y recorrer la ciudad a pie ---------- */
 const _rideUpdate = Ride.prototype.update;

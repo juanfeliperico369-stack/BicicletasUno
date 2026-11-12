@@ -111,10 +111,4 @@ MapMode.prototype.setupRide = function (o) {
   _setup69.call(this, o); const f = Cal.fiesta(); this.ride.fest = f;
   if (f && f.id === 'flores') this.mods.flores = true; if (f && (f.deco === 'navidad' || f.deco === 'velitas')) this.mods.alumbrados = true;
 };
-/* música de temporada */
-const _ps69 = Snd.playStep;
-Snd.playStep = function (s, t) {
-  _ps69.call(this, s, t); const f = this.fest, st = s % 16; if (!f) return; const mf = m => 440 * Math.pow(2, (m - 69) / 12);
-  if (f === 'jingle' && (st === 2 || st === 6 || st === 10 || st === 14)) this.tone(mf(this.root + 48 + (st === 14 ? 7 : 0)), .12, { t, type: 'sine', v: .025, dest: this.musG });
-  if (f === 'spooky' && st % 8 === 4) this.tone(mf(this.root + 30), .4, { t, type: 'sawtooth', v: .012, to: mf(this.root + 29), dest: this.musG });
-};
+/* música de temporada: las capas se tocan en 73-musica.js (Snd.fest) */

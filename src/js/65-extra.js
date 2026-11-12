@@ -14,7 +14,7 @@ const LOGROS = [
   { id: 'hojas100', name: 'Pulmón verde', desc: 'Recoge 100 hojas verdes', icon: 'hoja', test: S => S.stats.leaves >= 100 },
   { id: 'km10', name: '10 km pedaleados', desc: 'Recorre 10 km en el juego', icon: 'usuario', test: S => S.stats.km >= 10 },
   { id: 'timbre', name: 'Buena convivencia', desc: 'Usa el timbre 50 veces', icon: 'timbre', test: S => S.stats.bells >= 50 },
-  { id: 'oficios', name: 'Todero EnCicla', desc: 'Juega los 9 oficios', icon: 'supervisor', test: S => ROLES.every(r => S.history.some(h => h.m === r.id)) },
+  { id: 'oficios', name: 'Todero EnCicla', desc: 'Juega todos los oficios', icon: 'supervisor', test: S => ROLES.every(r => S.history.some(h => h.m === r.id)) },
   { id: 'supervisor', name: 'Supervisor de corazón', desc: 'Aprueba un turno de Supervisor', icon: 'supervisor', test: S => S.history.some(h => h.m === 'supervisor' && h.p && !h.free) },
   { id: 'carrera', name: 'Más rápido que el bot', desc: 'Gana una carrera de postales', icon: 'balance', test: S => S.history.some(h => h.m === 'carrera' && h.p) },
   { id: 'amigo', name: 'Pedalear en compañía', desc: 'Juega una carrera con un amigo', icon: 'apoyo', test: S => S.history.some(h => h.m === 'carrera' && h.net) },
@@ -31,7 +31,7 @@ const Logros = JE.logros = {
   }
 };
 
-/* introducción en páginas de revista */
+/* introducción en páginas */
 const INTRO = [
   { t: '¿Qué es EnCicla?', icon: 'estacion', p: 'Es el sistema de <b>bicicletas públicas gratuito</b> del Área Metropolitana del Valle de Aburrá. Nació en 2011 y hoy tiene más de 130 estaciones en varios municipios.' },
   { t: '¿Cómo se presta?', icon: 'anfitrion', p: 'Te registras, llegas a una estación (manual con <b>anfitrión</b> o automática con <b>tótem</b>), prestas la bici y la devuelves en cualquier estación antes de <b>1 hora</b>.' },
@@ -41,7 +41,7 @@ const INTRO = [
 UI.intro = function (done) {
   let i = 0; const show = () => {
     const pg = INTRO[i];
-    this.modal(`<div class="pag">PAG ${i + 1} DE ${INTRO.length} · BIENVENIDA</div><div class="introimg"><img class="px" src="${Art.iconURL(pg.icon, 6)}" alt=""></div><h2>${esc(pg.t)}</h2><p class="m" style="font-size:16px">${pg.p}</p>
+    this.modal(`<div class="pag">BIENVENIDA · ${i + 1} DE ${INTRO.length}</div><div class="introimg"><img class="px" src="${Art.iconURL(pg.icon, 6)}" alt=""></div><h2>${esc(pg.t)}</h2><p class="m" style="font-size:16px">${pg.p}</p>
       <div class="dots">${INTRO.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
       <div class="col"><button class="btn pri" id="inNext">${i < INTRO.length - 1 ? 'Siguiente ▶' : '¡A rodar!'}</button>${i < INTRO.length - 1 ? '<button class="btn gh" id="inSkip">Saltar</button>' : ''}</div>`, () => {
       $('#inNext').onclick = () => { Snd.sfx('tap'); if (++i < INTRO.length) show(); else fin(); };
@@ -64,7 +64,7 @@ UI.apoya = function () {
 Art.resultCard = function (res, meta) {
   const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'), r = ROLE[meta.roleId];
   x.fillStyle = PAL.az; x.fillRect(0, 0, W, H); x.fillStyle = '#ffffff10'; for (let i = 0; i < W; i += 10) for (let j = 0; j < H; j += 10) x.fillRect(i, j, 2, 2);
-  x.fillStyle = PAL.vd; x.fillRect(0, 0, W, 90); x.fillStyle = PAL.az; x.font = '800 30px Cuerpo, sans-serif'; x.textBaseline = 'middle'; x.fillText('JUEGA ENCICLA · EDICIÓN DEL TURNO', 48, 47);
+  x.fillStyle = PAL.vd; x.fillRect(0, 0, W, 90); x.fillStyle = PAL.az; x.font = '800 30px Cuerpo, sans-serif'; x.textBaseline = 'middle'; x.fillText('JUEGA ENCICLA · RESULTADO DEL TURNO', 48, 47);
   x.textBaseline = 'alphabetic'; x.lineWidth = 6; x.strokeStyle = PAL.vd; x.font = '700 330px Titulos, Impact, sans-serif'; x.strokeText(String(r.n), 40, 430);
   x.fillStyle = '#fff'; x.font = '700 150px Titulos, Impact, sans-serif'; x.fillText(r.name.toUpperCase(), 250, 300);
   x.fillStyle = PAL.amb; x.font = 'italic 40px Georgia, serif'; x.fillText(meta.roleId === 'carrera' ? 'Carrera de postales' : meta.reto ? 'Reto del día' : 'Turno ' + meta.turno + ' · ' + meta.nov.name, 256, 370);

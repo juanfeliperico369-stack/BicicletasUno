@@ -12,7 +12,7 @@ const ROLE_EQUIPO = {
   how: ['Monitoreo toca una estación y manda la orden.', 'Balance recibe la orden y maneja hasta la estación.', 'Si el camión está vacío o lleno, pasa por la BASE.']
 };
 ROLE.equipo = ROLE_EQUIPO;
-const isMulti = id => id === 'carrera' || id === 'equipo';
+const isMulti = id => id === 'carrera' || id === 'equipo' || id === 'libre';
 /* la misma zona y base para todos (la de Monitoreo turno 1: centro) */
 function coopZone(st) {
   const zl = st.filter(s => s.zone === 'centro'), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;

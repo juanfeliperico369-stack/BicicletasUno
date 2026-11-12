@@ -111,12 +111,15 @@ const ESTACIONES = [
   ['prados', 'Prados de Sabaneta', 'Sabaneta', 6.1535, -75.6100, 'a', 'res', 'sabaneta'], ['lomitas', 'Las Lomitas', 'Sabaneta', 6.1440, -75.6080, 'a', 'res', 'sabaneta'], ['restrepo', 'Restrepo Naranjo', 'Sabaneta', 6.1490, -75.6230, 'a', 'res', 'sabaneta'],
   ['entreamigos', 'Entreamigos', 'Sabaneta', 6.1545, -75.6225, 'a', 'res', 'sabaneta'], ['doctora', 'La Doctora', 'Sabaneta', 6.1390, -75.6110, 'a', 'res', 'sabaneta'],
   // La Estrella, Caldas
-  ['yarumito', 'Yarumito', 'La Estrella', 6.1600, -75.6400, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 6.1570, -75.6425, 'a', 'res'],
+  ['yarumito', 'Yarumito', 'La Estrella', 6.1600, -75.6400, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 6.1570, -75.6425, 'a', 'res'], ['c4ta', 'C4TA', 'Medellín', 6.2478, -75.6108, 'a', 'uni'], ['hinfantil', 'Hospital Infantil', 'Medellín', 6.2702, -75.5552, 'a', 'res'], ['sancayetano', 'San Cayetano', 'Sabaneta', 6.1542, -75.6198, 'm', 'mix'],
   ['quintas', 'Quintas de la Quinta', 'La Estrella', 6.1520, -75.6420, 'm', 'res'], ['tablaza', 'La Tablaza', 'La Estrella', 6.1300, -75.6350, 'a', 'res'],
   ['caldas', 'Parque de Caldas', 'Caldas', 6.0905, -75.6365, 'm', 'res'], ['caldas2', 'Caldas Centro', 'Caldas', 6.0950, -75.6340, 'a', 'res'], ['caldas3', 'Caldas Sur', 'Caldas', 6.0860, -75.6370, 'a', 'res']
 ];
 /* corredores de bicicletas eléctricas (estaciones con bici asistida: la subida no frena) */
-const CORREDOR_E = ['provenza', 'lleras', 'manila', 'castropol', 'poblado', 'zuniga', 'sanmarcos', 'magnolia', 'mesa', 'antillas', 'zona2'];
+/* corredores de bicis eléctricas: 'mix' presta normales y eléctricas, 'solo' solo eléctricas. Servicio eléctrico hasta las 7 p. m.; las estaciones solo eléctricas cierran a las 8 p. m. */
+const CORREDOR_E = { floresta: 'mix', c4ta: 'solo', udea: 'mix', hinfantil: 'solo', sancayetano: 'mix', estrella: 'solo' };
+const CORREDORES = [['floresta', 'c4ta', 'Floresta – C4TA'], ['udea', 'hinfantil', 'Universidad de Antioquia – Hospital Infantil'], ['sancayetano', 'estrella', 'San Cayetano – La Estrella']];
+const E_HASTA = 19 * 60, E_CIERRE = 20 * 60;
 /* puntos de la operación (no son postales) */
 const PUNTOS = {
   casa: [6.2314, -75.5995, 'Casa EnCicla · Parque de Malibú (Belén)'], parqueadero: [6.2780, -75.5722, 'Parqueadero de la Terminal del Norte'],

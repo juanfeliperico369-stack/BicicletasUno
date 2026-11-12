@@ -2,7 +2,7 @@
    MODO LIBRE CON VIDA PROPIA (v0.9)
    Tu perfil (edad, dónde vives, colegio, universidad, trabajo) arma misiones distintas cada día de la semana,
    con animaciones de clase, trabajo y colegio; domingos y festivos hay ciclovía con carreras y retos;
-   energía, bancas, fotos para el álbum y mentores que enseñan habilidades.
+   energía, bancas y fotos para el álbum.
    Colores: el verde, azul oscuro y blanco de EnCicla son para sus trabajadores y sus bicis; en el modo libre te vistes como quieras.
    ===================================================================== */
 const UNIS = [['udea', 'Universidad de Antioquia', 6.2675, -75.5689], ['unal', 'Universidad Nacional', 6.2618, -75.5770], ['eafit', 'EAFIT', 6.2003, -75.5786], ['upb', 'UPB', 6.2420, -75.5895],
@@ -10,15 +10,6 @@ const UNIS = [['udea', 'Universidad de Antioquia', 6.2675, -75.5689], ['unal', '
 const TRABAJOS = [['centro', 'el Centro', 6.2490, -75.5680], ['poblado', 'El Poblado', 6.2100, -75.5700], ['ciudadrio', 'Ciudad del Río', 6.2220, -75.5750], ['laureles', 'Laureles', 6.2450, -75.5930], ['guayabal', 'Guayabal', 6.2100, -75.5880],
   ['itagui', 'Itagüí', 6.1720, -75.6110], ['envigado', 'Envigado', 6.1720, -75.5870], ['bello', 'Bello', 6.3370, -75.5580], ['sabaneta', 'Sabaneta', 6.1515, -75.6164], ['encicla', 'Casa EnCicla', 6.2314, -75.5995]];
 const EDADES = ['Niño o niña', 'Joven', 'Adulto', 'Adulto mayor'];
-const MENTORES = [
-  { id: 'luz', cast: 'usuario', skill: 'pulmones', name: 'Pulmones de acero', desc: 'Gastas 30 % menos energía en las subidas del modo libre.', st: 'belen' },
-  { id: 'santi', cast: 'anfitrion', skill: 'sonrisa', name: 'Sonrisa de anfitrión', desc: 'En la ventanilla los usuarios esperan 15 % más.', st: 'floresta' },
-  { id: 'jairo', cast: 'mecanico', skill: 'manos', name: 'Manos rápidas', desc: '20 % más de tiempo para reparar cada bici.', st: 'aranjuez' },
-  { id: 'wilson', cast: 'balance', skill: 'equilibrio', name: 'Equilibrio firme', desc: 'Las bicis que cargas a pie se tambalean 35 % menos.', st: 'bello' },
-  { id: 'kevin', cast: 'apoyo', skill: 'atajos', name: 'Atajos de apoyo', desc: 'Pedaleas 15 % más rápido por andenes y plazas.', st: 'manrique' }
-];
-const hasSkill = id => (Save.data.skills || []).includes(id);
-const DESDE = { lat: 0, lon: 0 };   // (las posiciones se calculan con geoP)
 const placeP = (lat, lon) => { const p = geoP(lat, lon), o = JE.map.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), false); return { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2 }; };
 function homeStation() {
   const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni);
@@ -67,12 +58,6 @@ const _setupL = MapMode.prototype.setupRide;
 MapMode.prototype.setupRide = function (o) { _setupL.call(this, o); this.uniform = !['usuario', 'carrera'].includes(this.id); };
 const _rider69 = Art.rider;
 Art.rider = function (shirt) { const M = JE.game && JE.game.mode; return M && M.uniform ? this.riderTop('#0e2d55', '#ffffff', SKINS[Save.data.profile.skin] || SKINS[1], PAL.vd) : _rider69.call(this, shirt); };
-MapMode.prototype.speedMul = function (R) { const v = R.tileAt(); return R.p.veh === 'bike' && (v === TT.WALK || v === TT.PLAZA) && hasSkill('atajos') ? 1.15 : 1; };
-/* habilidades de los mentores */
-const _sp69 = MGAnfitrion.prototype.spawnUser;
-MGAnfitrion.prototype.spawnUser = function () { const n = this.queue.length; _sp69.call(this); if (this.queue.length > n && hasSkill('sonrisa')) this.queue[this.queue.length - 1].pat *= 1.15; };
-const _mn69 = MGMecanico.prototype.next;
-MGMecanico.prototype.next = function () { _mn69.call(this); if (this.bike && hasSkill('manos')) this.bike.t *= 1.2; };
 
 /* ---------- misiones del día ---------- */
 function genMisiones(now) {
@@ -95,8 +80,6 @@ function genMisiones(now) {
   if (f) L.push(festMision(f, now));
   L.push({ id: 'foto', kind: 'foto', txt: 'Toma una foto en un lugar emblemático', h: 6, xp: 15 });
   if (L.length < 4) L.push({ id: 'banca', kind: 'banca', txt: 'Descansa en una banca de un parque', h: 4, xp: 10 });
-  const mt = MENTORES.find(x => !hasSkill(x.skill));
-  if (mt && L.length < 5) L.push({ id: 'mentor_' + mt.id, kind: 'mentor', mentor: mt, txt: 'Visita a ' + CAST[mt.cast][0] + ': te enseña «' + mt.name + '»', h: 10, xp: 30 });
   if (m >= 18 * 60) L.push({ id: 'casa', kind: 'casa', txt: 'Vuelve a tu casa', h: 5, xp: 10 });
   return L.slice(0, 5);
 }
@@ -108,9 +91,9 @@ function festMision(f, now) {
 }
 
 /* ---------- animación de la rutina: entrar, que pase el tiempo y salir ---------- */
-const RUT_TXT = { uni: ['Clase de Cálculo', 'Laboratorio', 'Almuerzo en la cafetería', 'Biblioteca', 'Clase de Inglés'], trabajo: ['Reunión del equipo', 'Correo y llamadas', 'Almuerzo', 'Informe del día'], colegio: ['Matemáticas', 'Recreo', 'Ciencias', 'Educación física'], mentor: [] };
+const RUT_TXT = { uni: ['Clase de Cálculo', 'Laboratorio', 'Almuerzo en la cafetería', 'Biblioteca', 'Clase de Inglés'], trabajo: ['Reunión del equipo', 'Correo y llamadas', 'Almuerzo', 'Informe del día'], colegio: ['Matemáticas', 'Recreo', 'Ciencias', 'Educación física'] };
 class MGRutina extends MG {
-  constructor(parent, o) { super(parent, o); this.kind = o.kind; this.name = o.name || ''; this.min = o.clock0 || 480; this.c0 = this.min; this.dur = o.dur || 120; this.ph = 0; this.k = 0; this.fast = 1; this.coach = o.kind === 'mentor' ? '' : 'El tiempo pasa mientras ' + (o.kind === 'uni' ? 'estudias' : o.kind === 'trabajo' ? 'trabajas' : 'estás en clase') + '. Toca para adelantar.'; }
+  constructor(parent, o) { super(parent, o); this.kind = o.kind; this.name = o.name || ''; this.min = o.clock0 || 480; this.c0 = this.min; this.dur = o.dur || 120; this.ph = 0; this.k = 0; this.fast = 1; this.coach = 'El tiempo pasa mientras ' + (o.kind === 'uni' ? 'estudias' : o.kind === 'trabajo' ? 'trabajas' : 'estás en clase') + '. Toca para adelantar.'; }
   update(dt) {
     this.tick(dt); this.k += dt * this.fast;
     if (this.ph === 0 && this.k > 1.6) { this.ph = 1; this.k = 0; }
@@ -124,29 +107,25 @@ class MGRutina extends MG {
     else if (this.kind === 'trabajo') { prect(b, cx - 26, gy - 80, 52, 80, '#8fa6bf'); for (let y = gy - 74; y < gy - 10; y += 8) for (let x = cx - 22; x < cx + 22; x += 8) prect(b, x, y, 5, 5, '#d6e4f2'); prect(b, cx - 7, gy - 18, 14, 18, '#1d2c44'); }
     else if (this.kind === 'colegio') { prect(b, cx - 44, gy - 36, 88, 36, '#f1c40f'); prect(b, cx - 44, gy - 40, 88, 5, '#c0392b'); for (let i = 0; i < 5; i++) prect(b, cx - 36 + i * 17, gy - 28, 9, 9, '#d6e4f2'); prect(b, cx - 6, gy - 18, 12, 18, '#6e2c00'); prect(b, cx + 36, gy - 70, 1, 34, '#59606c'); prect(b, cx + 37, gy - 70, 10, 3, '#f4d03f'); prect(b, cx + 37, gy - 67, 10, 2, '#2471a3'); prect(b, cx + 37, gy - 65, 10, 2, '#c0392b'); }
     const px = this.ph === 0 ? lerp(10, cx - 10, this.k / 1.6) : this.ph === 2 ? lerp(cx - 10, 10, this.k / 1.2) : -99;
-    if (this.kind !== 'mentor' && px > -50) Art.person(b, px, gy, Art.me(), this.t * 2, this.ph === 2 ? -1 : 1);
-    if (this.kind === 'mentor') { Art.person(b, vw * .35, gy, Art.me(), 0, 1); }
+    if (px > -50) Art.person(b, px, gy, Art.me(), this.t * 2, this.ph === 2 ? -1 : 1);
   }
   hud(V) {
-    this.btns = []; const s = V.s, m = this.o.mentor;
-    V.text(this.kind === 'mentor' ? CAST[m.cast][0] + ' · ' + CAST[m.cast][1] : this.name, V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
-    if (this.kind === 'mentor') {
-      const w = Math.min(380, V.w - 20), { x, y } = this.card(V, w, 150, 'NUEVA HABILIDAD'); V.ctx.imageSmoothingEnabled = false; const img = this._f || (this._f = Object.assign(new Image(), { src: Historia.face(m.cast) })); if (img.complete) V.ctx.drawImage(img, x + 12, y + 36, 48, 48);
-      V.text('«' + m.name + '»', x + 72, y + 52, { size: 17, color: PAL.az }); V.text(m.desc, x + 72, y + 74, { size: 12, color: PAL.az2, body: true }); V.text('«' + BIOS[m.cast][1] + '»', x + 12, y + 110, { size: 13, color: PAL.az, body: true });
-    } else if (this.ph === 1) {
+    this.btns = [];
+    V.text(this.name, V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    if (this.ph === 1) {
       const acts = RUT_TXT[this.kind] || [''], a = acts[Math.floor(this.k / 3.6 * acts.length) % acts.length];
       V.text('🕐 ' + fmtClock(this.min), V.w / 2, V.h * .3, { size: 34, align: 'center', color: '#fff', stroke: '#0a2342', sw: 6 });
       V.text(a + '…', V.w / 2, V.h * .3 + 34, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 5, body: true });
       const w = Math.min(260, V.w - 40), c = V.ctx; c.fillStyle = '#0a2342dd'; c.fillRect((V.w - w) / 2, V.h * .3 + 52, w, 10); c.fillStyle = PAL.vd; c.fillRect((V.w - w) / 2, V.h * .3 + 52, w * Math.min(1, this.k / 3.6), 10);
     }
-    if (!this.done && this.ph < 2) this.button(V, V.w / 2 - 80, V.h - 90, 160, 56, this.kind === 'mentor' ? '¡Gracias!' : '⏩ Adelantar', () => this.skip(), { bg: PAL.vd2, size: 18, key: 'go' });
-    this.drawPops(V); void s;
+    if (!this.done && this.ph < 2) this.button(V, V.w / 2 - 80, V.h - 90, 160, 56, '⏩ Adelantar', () => this.skip(), { bg: PAL.vd2, size: 18, key: 'go' });
+    this.drawPops(V);
   }
   tap() { this.skip(); return true; }
   bot() { this.skip(); }
 }
 
-/* ---------- modo libre: misiones, ciclovía, energía, bancas, fotos y mentores ---------- */
+/* ---------- modo libre: misiones, ciclovía, energía, bancas y fotos ---------- */
 class ModeUsuarioR extends ModeUsuario {
   constructor(role, T, opt) {
     super(role, T, opt);
@@ -172,7 +151,6 @@ class ModeUsuarioR extends ModeUsuario {
     switch (ms.kind) {
       case 'rutina': { let p = ms.place ? at(ms.place) : null; if (!p) { const h = this.home; p = placeP(h.lat + .0025, h.lon + .002); } mk(p.x, p.y, ms.place ? ms.place[1] : 'Tu colegio', () => this.rutina(ms)); break; }
       case 'visita': { const p = lm(ms.place[0]) || at(ms.place); mk(p.x, p.y, ms.place[1], () => this.cumplir(ms)); break; }
-      case 'mentor': { const s = M.stations.find(q => q.id === ms.mentor.st) || this.home; mk(s.x, s.y + 12 * WK, CAST[ms.mentor.cast][0], () => this.runSub(new MGRutina(this, { kind: 'mentor', mentor: ms.mentor, clock0: this.clock, dur: 20 }), () => { Save.data.skills = (Save.data.skills || []).concat([ms.mentor.skill]); this.cumplir(ms); })); break; }
       case 'casa': mk(this.home.x, this.home.y + 10 * WK, 'Tu casa', () => this.cumplir(ms), PAL.vd); break;
       case 'carrera': { const ln = this.cvLane(); if (!ln) { ms.done = true; break; } const s0 = clamp(M.project(ln, this.ride.p.x, this.ride.p.y).s + 40 * WK, 0, ln.len * .5), q = M.at(ln, s0); ms.lane = ln; ms.s0 = s0; mk(q.x, q.y, 'Salida de la carrera', () => this.salida(ms)); break; }
       case 'km': ms.prog = () => (this.cvDist * M_PER_PX / 1000).toFixed(1) + '/' + (ms.need / 1000) + ' km'; break;
@@ -219,8 +197,12 @@ class ModeUsuarioR extends ModeUsuario {
   finRace() { const r = this.race, pos = 1 + r.opps.filter(o => o.fin).length; r.ms.won = pos === 1; this.ride.stamp = { t: 2.2, title: pos === 1 ? '¡GANASTE LA CARRERA!' : 'LLEGASTE DE ' + pos + '°', sub: 'Ciclovía de ' + (r.ln.name || 'la avenida'), bg: pos === 1 ? PAL.vd : PAL.amb }; this.cumplir(r.ms, pos > 2); this.race = null; this.ride.opps = []; }
   tick(dt) {
     super.tick(dt); if (!this.free) return; const R = this.ride, P = R.p, M = JE.map;
+    // día y noche de 24 horas: tráfico según la hora, aviso de cierre de EnCicla y cambio de día a medianoche
+    if (this.clock >= 1440) { this.clock -= 1440; this.fecha = addD(this.fecha, 1); JE.ui && JE.ui.toast('🌅 Nuevo día: ' + Cal.label(this.fecha)); }
+    const hr = this.clock / 60, base = this.mods.ciclovia ? .5 : 1; R.traffic = base * (hr < 5 ? .25 : hr < 6 ? .5 : (hr < 9 || (hr >= 17 && hr < 19.5)) ? 1.3 : hr >= 21 ? .55 : 1);
+    if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
     // energía: las subidas cansan, parar descansa; con poca energía se pedalea más lento
-    const sl = Math.max(0, R.sl || 0), drain = P.v > 5 ? (P.veh === 'walk' ? .12 : .35 + sl * 30) * (hasSkill('pulmones') ? .7 : 1) : -3;
+    const sl = Math.max(0, R.sl || 0), drain = P.v > 5 ? (P.veh === 'walk' ? .12 : .35 + sl * 30) : -3;
     this.energy = clamp(this.energy - drain * dt, 0, 100); if (this.energy < 15 && !this.tiredTold) { this.tiredTold = 1; JE.ui && JE.ui.toast('😮‍💨 Poca energía: siéntate en una banca de un parque o para un momento'); } if (this.energy > 40) this.tiredTold = 0;
     // ciclovía y ciclorrutas: distancia
     const v = R.tileAt(); if ((this.mods.ciclovia && (v === TT.AVE || v === TT.AUTO)) || v === TT.CICLO) this.cvDist += P.v * dt;
@@ -232,7 +214,7 @@ class ModeUsuarioR extends ModeUsuario {
       if (r.cd > 0) for (const o of r.opps) { const q = M.at(r.ln, Math.max(0, o.s), (o.id - 1) * 4); o.x = q.x; o.y = q.y; o.a = q.a; }
     }
   }
-  speedMul(R) { return MapMode.prototype.speedMul.call(this, R) * (this.free && this.energy < 15 ? .72 : 1) * (this.race && this.race.cd > 0 ? 0 : 1); }
+  speedMul() { return (this.free && this.energy < 15 ? .72 : 1) * (this.race && this.race.cd > 0 ? 0 : 1); }
   update(dt) {
     if (this.sitting) { this.t += dt; this.clock += 3 * dt; this.energy = Math.min(100, this.energy + 18 * dt); this.sitT += dt; this.ride.update(dt, { x: 0, y: 0, m: 0 }); const b = this.misiones && this.misiones.find(m => m.kind === 'banca' && !m.done); if (b && this.sitT > 3) this.cumplir(b); return; }
     super.update(dt);
@@ -250,7 +232,7 @@ class ModeUsuarioR extends ModeUsuario {
     const L = this.nearLM(); if (L) a.push({ id: 'foto', icon: 'estrella', label: 'Foto', fn: () => this.foto(L) });
     return a;
   }
-  info() { const i = super.info(); if (this.free) { i.chips = [{ t: '⚡ ' + Math.round(this.energy) + '%', c: this.energy < 15 ? 'bad' : this.energy < 35 ? 'warn' : '' }].concat(this.ownBike ? [{ t: '🚲 Mi bici' }] : [{ t: 'EnCicla' }]); if (this.mods.ciclovia) i.chips.push({ t: '🚴 Ciclovía' }); } return i; }
+  info() { const i = super.info(); if (this.free) { const n = Art.night(this.clock); i.chips = [{ t: n > .5 ? '🌙 Noche' : n > 0 ? (this.clock < 720 ? '🌅 Amanece' : '🌇 Atardece') : '☀️ Día' }, { t: '⚡ ' + Math.round(this.energy) + '%', c: this.energy < 15 ? 'bad' : this.energy < 35 ? 'warn' : '' }].concat(this.ownBike ? [{ t: '🚲 Mi bici' }] : [{ t: 'EnCicla' }]); if (this.mods.ciclovia) i.chips.push({ t: '🚴 Ciclovía' }); } return i; }
   hud2(V) { if (this.race && this.race.cd > 0) { const n = Math.ceil(this.race.cd); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 100, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); } if (this.ride.flash > 0) { const c = V.ctx; c.fillStyle = 'rgba(255,255,255,' + (this.ride.flash * 1.5).toFixed(2) + ')'; c.fillRect(0, 0, V.w, V.h); this.ride.flash -= 1 / 60; } }
 }
 MODE_CLASS.usuario = ModeUsuarioR;
@@ -318,9 +300,6 @@ UI.renderAlbum = function () {
   const d = document.createElement('div'); d.innerHTML = `<div class="pag" style="margin-top:16px">📷 Tus fotos · ${F.length}</div><div class="fotos">${F.slice().reverse().slice(0, 24).map((f, i) => { const L = LM[f.id]; if (!L) return ''; const fi = FIESTAS.find(x => x[0] === f.f); return `<figure class="foto"><canvas width="96" height="72" data-foto="${LANDMARKS.indexOf(L)}"></canvas><figcaption>${esc(L.name.split(' · ')[0])}<br><small>${esc(f.k)}${fi ? ' ' + fi[2] : ''}</small></figcaption></figure>`; }).join('')}</div>`;
   el.appendChild(d); $$('canvas[data-foto]', d).forEach(c => this.drawPost(c, +c.dataset.foto));
 };
-/* mentores en la ficha de personajes */
-const _pers69 = UI.personajes;
-UI.personajes = function () { _pers69.call(this); const list = $('#mBody .chars'); if (!list) return; MENTORES.forEach(m => { const el = [...list.children].find(c => c.textContent.includes(CAST[m.cast][0])); if (el) el.querySelector('div').insertAdjacentHTML('beforeend', `<div class="chip" style="margin-top:4px">${hasSkill(m.skill) ? '✓' : '🎓'} Enseña: ${esc(m.name)}</div>`); }); };
 /* preguntas del perfil: efectos al elegir */
 JE.onProfile = (k, i) => {
   const S = Save.data;
@@ -331,6 +310,5 @@ LOGROS.push(
   { id: 'misiones10', name: 'Vida sobre ruedas', desc: 'Cumple 10 misiones del modo libre', icon: 'usuario', test: S => (S.stats.misiones | 0) >= 10 },
   { id: 'cvwin', name: 'Rey de la ciclovía', desc: 'Gana una carrera de la ciclovía', icon: 'balance', test: S => !!S.flags.cvWin },
   { id: 'fiesta', name: 'De fiesta en el valle', desc: 'Cumple una misión de una festividad', icon: 'estrella', test: S => !!S.flags.fiesta },
-  { id: 'mentor', name: 'Aprendiz de maestros', desc: 'Aprende una habilidad de un mentor', icon: 'mecanico', test: S => (S.skills || []).length > 0 },
   { id: 'foto10', name: 'Fotógrafo del valle', desc: 'Toma 10 fotos', icon: 'estrella', test: S => (S.stats.fotos | 0) >= 10 }
 );

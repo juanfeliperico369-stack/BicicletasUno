@@ -67,7 +67,7 @@ const Historia = JE.historia = {
     R(0, 0, 12, 12, '#c4ec7c'); R(1, 9, 10, 3, shirt); R(5, 8, 2, 1, skin); R(2, 2, 8, 6, skin); R(2, 1, 8, 2, hair); R(1, 2, 1, 4, hair); R(10, 2, 1, 4, hair);
     if (cap) { R(2, 0, 8, 2, cap); R(1, 2, 10, 1, cap); }
     R(4, 4, 1, 1, '#141414'); R(7, 4, 1, 1, '#141414'); R(5, 6, 2, 1, '#8a3b2a');
-    if (roleId === 'mecanico') R(4, 6, 4, 1, '#5a5a5a'); if (roleId === 'usuario') { R(3, 4, 3, 1, '#0a2342'); R(7, 4, 2, 1, '#0a2342'); } if (roleId === 'monitoreo') { R(1, 3, 1, 3, '#141414'); R(1, 6, 3, 1, '#141414'); } if (roleId === 'supervisor') R(5, 9, 2, 3, '#ff6b5a');
+    if (roleId === 'mecanico') R(4, 5, 4, 1, hair); if (roleId === 'usuario') { R(3, 4, 3, 1, '#0a2342'); R(7, 4, 2, 1, '#0a2342'); } if (roleId === 'monitoreo') { R(1, 3, 1, 3, '#141414'); R(1, 6, 3, 1, '#141414'); } if (roleId === 'supervisor') R(5, 9, 2, 3, '#ff6b5a');
     u = c.toDataURL(); Art.cache.set(k, u); return u;
   },
   bubble(roleId, turno, after, extra) {

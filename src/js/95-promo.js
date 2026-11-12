@@ -19,7 +19,7 @@ Art.shareImage = function (w = 1200, h = 630) {
   x.fillStyle = PAL.az; x.fillRect(0, 0, w, h); x.fillStyle = '#ffffff12'; for (let i = 0; i < w; i += 9) for (let j = 0; j < h; j += 9) x.fillRect(i, j, 2, 2);
   x.fillStyle = PAL.vd; x.fillRect(0, 0, w, 64); x.fillStyle = PAL.az; x.font = '800 22px Cuerpo, sans-serif'; x.textBaseline = 'middle';
   const sp = (t, X, Y, ls) => { let cx = X; for (const ch of t) { x.fillText(ch, cx, Y); cx += x.measureText(ch).width + ls; } };
-  sp('ÁREA METROPOLITANA · Nº 15', 40, 33, 6); x.fillStyle = PAL.az; x.fillRect(w - 470, 8, 450, 48); x.strokeStyle = PAL.vd; x.lineWidth = 4; x.strokeRect(w - 470, 8, 450, 48); x.fillStyle = PAL.vd1; sp('GRATIS TODOS LOS DÍAS', w - 445, 33, 5);
+  sp('VALLE DE ABURRÁ', 40, 33, 6); x.fillStyle = PAL.az; x.fillRect(w - 470, 8, 450, 48); x.strokeStyle = PAL.vd; x.lineWidth = 4; x.strokeRect(w - 470, 8, 450, 48); x.fillStyle = PAL.vd1; sp('BICICLETA PÚBLICA', w - 445, 33, 5);
   const art = this.mk(200, 125, p => this.cover(p, 200, 125, 2.2)), aw = 560, ah = 350, ax = w - aw - 50, ay = 120;
   x.fillStyle = PAL.vd2; x.fillRect(ax + 14, ay + 14, aw, ah); x.drawImage(art, ax, ay, aw, ah); x.strokeStyle = '#fff'; x.lineWidth = 8; x.strokeRect(ax, ay, aw, ah);
   x.textBaseline = 'alphabetic'; x.fillStyle = '#fff'; x.font = '700 190px Titulos, Impact, sans-serif'; x.fillText('JUEGA', 36, 250); x.fillStyle = PAL.vd; x.font = '700 150px Titulos, Impact, sans-serif'; x.fillText('ENCICLA', 40, 390);

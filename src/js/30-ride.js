@@ -212,7 +212,7 @@ class Ride {
 
   /* ---- dibujo en el búfer pixelado: suelo y cosas quietas. La cámara es continua: el búfer se corre por fracciones de pixel ---- */
   render(V, min) {
-    const b = V.b, P = this.p, sk = this.shake > 0;
+    const b = V.b, P = this.p, sk = this.shake > 0; b.setTransform(V.q || 1, 0, 0, V.q || 1, 0, 0);
     const cxf = clamp(this.cam.x - V.vw / 2, -40, MW * TS - V.vw + 40) + (sk ? (this.rng.f() - .5) * 4 : 0), cyf = clamp(this.cam.y - V.vh / 2, -40, MH * TS - V.vh + 40) + (sk ? (this.rng.f() - .5) * 4 : 0);
     const ox = Math.floor(cxf), oy = Math.floor(cyf); this.ox = ox; this.oy = oy; this.cxf = cxf; this.cyf = cyf; V.subX = cxf - ox; V.subY = cyf - oy; this.min = min;
     const S = CH * TS, BW = V.vw + 1, BH = V.vh + 1;
@@ -220,12 +220,12 @@ class Ride {
     let made = 0;
     for (let cy = Math.floor(oy / S); cy <= Math.floor((oy + BH) / S); cy++) for (let cx = Math.floor(ox / S); cx <= Math.floor((ox + BW) / S); cx++) {
       if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue;
-      if (!this.map.chunks.has(cx + ',' + cy)) made++;
-      b.drawImage(this.map.chunk(cx, cy), cx * S - ox, cy * S - oy);
+      if (!this.map.hasG(cx, cy)) made++;
+      b.drawImage(this.map.chunkG(cx, cy), cx * S - ox, cy * S - oy, S, S);
     }
     if (!made) { // precalienta un bloque vecino en la dirección de avance
       const cx = Math.floor(P.x / S) + Math.round(Math.cos(P.a) * 1.4), cy = Math.floor(P.y / S) + Math.round(Math.sin(P.a) * 1.4);
-      if (cx >= 0 && cy >= 0 && cx * CH < MW && cy * CH < MH && !this.map.chunks.has(cx + ',' + cy)) this.map.chunk(cx, cy);
+      if (cx >= 0 && cy >= 0 && cx * CH < MW && cy * CH < MH && !this.map.hasG(cx, cy)) this.map.chunkG(cx, cy);
     }
     const inV = (x, y, m = 20) => x > ox - m && x < ox + BW + m && y > oy - m && y < oy + BH + m;
     // estaciones con sus bicis
@@ -239,7 +239,7 @@ class Ride {
       for (let k = 0; k < s.cap; k++) { const row = k < per ? 0 : 1, bx = x0 + 4 + (k % per) * sp, by = y0 + (row ? 19 : 4); prect(b, Math.round(bx) + 1, row ? y0 + 17 : y0 + 12, 1, 2, '#59606c'); if (k < bikes) b.drawImage(Art.bikeTop(), Math.round(bx), by); else prect(b, Math.round(bx) + 1, by + 4, 1, 2, '#9aa7b8'); }
       if (s.type === 'm') { prect(b, x0 + W - 12, y0 + 5, 9, 14, '#1d2c44'); prect(b, x0 + W - 12, y0 + 4, 9, 2, '#e9eef3'); prect(b, x0 + W - 10, y0 + 9, 5, 3, '#9fb8cf'); prect(b, x0 + W - 12, y0 + 19, 9, 2, PAL.vd); }
       else { prect(b, x0 + W - 10, y0 + 6, 5, 13, '#2b2f38'); prect(b, x0 + W - 9, y0 + 8, 3, 3, (t * 2 | 0) % 2 ? PAL.vd : PAL.vd1); prect(b, x0 + W - 9, y0 + 13, 3, 1, '#9aa7b8'); }
-      if (s.e) { prect(b, x0 + W - 14, y0 + 1, 3, 4, '#ffd84a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, '#ffd84a'); }
+      if (s.e) { const on = (this.mode.clock | 0) < E_HASTA; prect(b, x0 + W - 14, y0 + 1, 3, 4, on ? '#ffd84a' : '#8a8a8a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, on ? '#ffd84a' : '#8a8a8a'); if (s.e === 'solo' && (this.mode.clock | 0) >= E_CIERRE) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, 8); } }
       if (ss && ss.broken) { if ((t * 3 | 0) % 2) { pline(b, x0 + 12, y0 + 4, x0 + 30, y0 + 28, PAL.cor); pline(b, x0 + 30, y0 + 4, x0 + 12, y0 + 28, PAL.cor); } }
       if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
     }
@@ -267,7 +267,7 @@ class Ride {
   renderTop(V) {
     const c = V.ctx, k = V.s * V.dpr, ox = this.cxf, oy = this.cyf, P = this.p, vw = V.vw + 2, vh = V.vh + 2;
     const inV = (x, y, m = 20) => x > ox - m && x < ox + vw + m && y > oy - m && y < oy + vh + m;
-    const spr = (img, x, y, a, sh) => { c.save(); c.translate(x - ox, y - oy); c.rotate(a + Math.PI / 2); if (sh) { c.fillStyle = sh; c.fillRect(-img.width / 2 + 1, -img.height / 2 + 1.5, img.width, img.height); } c.drawImage(img, -img.width / 2, -img.height / 2); c.restore(); };
+    const spr = (img, x, y, a, sh) => { c.save(); c.translate(x - ox, y - oy); c.rotate(a + Math.PI / 2); blit(c, img, sh); c.restore(); };
     c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.imageSmoothingEnabled = false;
     this.drawGround(c, ox, oy, inV);
     for (const cr of this.cars) if (inV(cr.x, cr.y)) spr(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, '#0004');
@@ -303,7 +303,7 @@ class Ride {
     for (const o of this.opps) { const x = sx(o.x), y = sy(o.y) - 14; if (x > 0 && x < V.w && y > 0 && y < V.h && room(x, y, o.name.length * 6 + 6, 16)) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
     if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .38); c.rotate(-.08); const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
     this.hudLife(V, sx, sy);
-    // subida / bajada (como en Run Scooter): aviso sobre el ciclista
+    // subida / bajada: aviso sobre el ciclista
     const pct = Math.round(this.sl * 100); if (Math.abs(pct) >= 3 && !this.big) { const up = pct > 0, eb = up && this.ebike && P.veh === 'bike'; V.text((up ? '▲ SUBIDA ' : '▼ BAJADA ') + Math.abs(pct) + ' %' + (eb ? ' ⚡' : ''), sx(P.x), sy(P.y) - 34, { size: 12, align: 'center', color: up ? '#0a2342' : '#fff', bg: up ? '#f4efe1' : (this.over > 1 ? '#c0392b' : '#e0533f'), pad: 3, border: '#0a2342' }); }
     for (const f of this.fx) if (f.k === 't') V.text(f.txt, sx(f.x), sy(f.y), { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col });
     for (const m of this.markers) if (m.label && m.num) { const x = sx(m.x), y = sy(m.y); if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(String(m.num), x, y + 5, { size: 14, align: 'center', stroke: '#0a2342', sw: 4, color: m.col || PAL.amb }); }

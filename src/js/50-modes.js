@@ -116,7 +116,7 @@ class MapMode extends Mode {
     JE.ui && JE.ui.toast(metro ? '🚇 ¡Encontraste al Maquinista secreto!' : '🌼 ¡Encontraste el Laberinto secreto de Moravia!');
     this.runSub(mg, s => {
       this.score += Math.round(s.score / 2); Save.data.flags[metro ? 'metroEgg' : 'mazeEgg'] = 1;
-      this.ride.stamp = { t: 2.4, title: metro ? 'PRÓXIMAMENTE: JUEGA METRO' : '¡LABERINTO RESUELTO!', sub: metro ? 'El juego 11 de la saga: Metro, Metroplús y buses' : 'Moravia: de basurero a jardín', bg: metro ? PAL.cie : '#ffd84a' };
+      this.ride.stamp = { t: 2.4, title: metro ? '¡MAQUINISTA DEL METRO!' : '¡LABERINTO RESUELTO!', sub: metro ? 'Llevaste los trenes a tiempo por la línea A' : 'Moravia: de basurero a jardín', bg: metro ? PAL.cie : '#ffd84a' };
       Snd.sfx('star');
     });
   }
@@ -191,7 +191,7 @@ class ModeUsuario extends MapMode {
     this.coach = 'Arrastra el dedo para pedalear y sigue la línea punteada.';
     this.takeBike(this.st0);
   }
-  takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; this.ride.ebike = !!s.e; if (s.e && JE.ui && !this.eTold) { this.eTold = 1; JE.ui.toast('⚡ Estación del corredor eléctrico: tu bici tiene asistencia en las subidas.'); } }
+  takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; const eOk = !!s.e && this.clock < E_HASTA; this.ride.ebike = eOk; if (s.e && JE.ui && !this.eTold) { this.eTold = 1; JE.ui.toast(eOk ? '⚡ Corredor eléctrico: tu bici tiene asistencia en las subidas (servicio hasta las 7 p. m.).' : '⚡ El servicio eléctrico terminó a las 7 p. m.: sales en bici normal.'); } }
   cicPct() { return Math.round(100 * this.ride.stats.ciclo / Math.max(1, this.ride.stats.dist)); }
   loanMin() { return Math.floor(this.clock - this.loan0); }
   makeLeaves() {

@@ -12,7 +12,7 @@ const Net = JE.net = {
   peers: [], role: null, myId: 0, status: 'off', pending: null, onmsg: null, onstatus: null, MAX: 3,
   supported() { return !!window.RTCPeerConnection; },
   newPC(peer) {
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    const pc = new RTCPeerConnection({ iceServers: this.lan ? [] : [{ urls: 'stun:stun.l.google.com:19302' }] });   // misma red: sin STUN (funciona sin internet)
     pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') { peer.open = false; this.setStatus(this.openCount() ? 'open' : pc.connectionState); } };
     return pc;
   },

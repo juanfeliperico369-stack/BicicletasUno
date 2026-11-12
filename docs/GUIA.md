@@ -52,7 +52,12 @@ src/js/95-promo.js    íconos de la app e imagen OG 1200x630
 src/js/67-personaje.js creador de personaje, rankings, personajes y tipos de control
 src/js/68-ciudad.js   motos, camiones, ciclistas de las ciclorrutas, caminar en el modo libre y MGDescarga (bajar bicis con equilibrio)
 src/js/69-calendario.js fecha real: festivos, horarios por día, ciclovía y festividades (decoración, colores, música, regalos)
-src/js/69-libre.js    modo libre con vida propia: perfil, misiones del día, MGRutina, carrera de ciclovía, energía, fotos, mentores y regla de colores
+src/js/69-libre.js    modo libre con vida propia: perfil, misiones del día, MGRutina, carrera de ciclovía, energía, fotos y regla de colores
+src/js/71-tutor.js    tutorial opcional con un compañero del oficio
+src/js/72-oficios2.js Pausas Activas, Rescate y los minijuegos nuevos del técnico
+src/js/73-musica.js   música por estilos (jazz, lo-fi, soft rock, electrónica)
+src/js/75-graficos.js gráficos pixel, híbrido y 2D; vista panorámica de plataformas
+src/js/76-red-libre.js mundo libre en red y competencias personalizadas
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
@@ -146,6 +151,34 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v0.10 · Oficios nuevos, gráficos, vistas, música por estilos y mundo libre en red* (archivos 71 a 76):
+- **Tutorial opcional con compañero** (`71-tutor.js`, `Tutor`): en la ficha de cada turno, botón «Con <compañero> (tutorial)». El juego se detiene mientras el compañero habla
+  (burbuja con su retrato, «Entendido» o «Saltar tutorial») y en el mapa pedalea a tu lado. Pasos: saludo y oficio, moverse, la ruta, un consejo del oficio (`TUT_EXTRA`),
+  la primera tarea (minijuego) y el cierre. Los mentores de la v0.9 se retiraron.
+- **Pausas Activas** (`72-oficios2.js`, `ModePausas`, oficio 6, turno intermedio 9 a. m.–6 p. m.): como el Apoyo, recorre 4 estaciones con anfitrión; en cada una,
+  `MGPausa` (inspirado en los juegos de baile): tarjetas de ejercicios llegan al círculo al ritmo; se responde deslizando o con las flechas ◀ ▲ ● ▼ ▶ y se mantiene oprimido en «Respira».
+  Perfecto/Bien/Fallo, combo, ánimo del grupo y tres compañeros que imitan los movimientos. La música se sincroniza con la coreografía (`Snd.lock`).
+- **Rescate** (`ModeRescate`, oficio 8, turno 8 a. m.–5 p. m., SUPUESTO): bicis reportadas fuera de las estaciones; se revisan (`MGHallazgo`) y se llevan
+  **pedaleando con una mano y la otra bici en la otra mano**: equilibrio con inercia (curvas bruscas, terreno, bajadas) y ◀ ▶ a los lados para corregir; si pasa la raya, se cae y se daña.
+  Las buenas van a la estación más cercana; las dañadas, a una estación con anfitrión para que Balance las lleve al taller.
+- **Minijuegos nuevos del técnico:** tótem (`MGTotem`: medir con multímetro, cambiar la pieza y reiniciar en la zona verde), luces de los anclajes (`MGLeds`: prueba, marcar y soldar)
+  y celular de la estación (`MGCelular`: power bank, reinicio, PIN de la tula y sincronizar).
+- **Corredores eléctricos** (`CORREDOR_E`, `CORREDORES`): Floresta (mixta) – C4TA (solo eléctricas); Universidad de Antioquia (mixta) – Hospital Infantil (solo eléctricas);
+  San Cayetano (mixta) – La Estrella (solo eléctricas). Servicio eléctrico hasta las 7 p. m. (`E_HASTA`); las estaciones solo eléctricas cierran a las 8 p. m. (`E_CIERRE`).
+  C4TA está en San Javier (antigua cárcel El Buen Pastor); Hospital Infantil y San Cayetano tienen posición APROXIMADA.
+- **Día y noche de 24 horas** en el modo libre: el reloj sigue la hora real, cambia de día a medianoche, el tráfico depende de la hora y avisa antes del cierre de EnCicla.
+- **Música por estilos** (`73-musica.js`): jazz (walking bass, ride con swing, acordes de 7.ª), lo-fi (crujido de vinilo, teclado suave, filtro), soft rock (rasgueo, bajo en corcheas)
+  y electrónica (bombo a negras, bajo filtrado, pad con compresión lateral, arpegios). Automático: lo-fi en menús y paseos de día, jazz de noche, soft rock en los turnos,
+  electrónica en carreras, ciclovía, competencias y pausas activas. Se elige en Más > Estilo musical. Siguen el mood y las notas interactivas; las capas de temporada van encima.
+- **Gráficos** (`75-graficos.js`, Más > Gráficos): Pixel; Híbrido (mapa dibujado vectorial a mayor resolución con personajes en pixel); Dibujado 2D (también personajes y vehículos dibujados).
+  El búfer del mapa usa `View.q` > 1 y los bloques dibujados se guardan en `CityMap.chunks2`. Los sprites se dibujan con `blit()` (respeta `img.sc`). Los lugares emblemáticos siguen en pixel art.
+- **Vista panorámica de plataformas** (Más > Vista del mapa, botón en la pausa o tecla V): de lado, con el perfil real de elevación de la vía, ciudad alrededor con paralaje,
+  carros y estaciones al pasar. La bici sigue la ruta sola; tú pedaleas (→), frenas (←) y saltas (↑, espacio o botón Saltar) huecos, conos y charcos. El minimapa sigue arriba.
+- **Mundo libre en red** (`76-red-libre.js`, `ModeLibreRed`, rol `libre`): en «Jugar con amigos» se elige la conexión (misma red o zona Wi-Fi sin internet, `Net.lan`, o por internet con STUN)
+  y el modo: paseo libre, carrera de postales (1, 3 o 5 postales y zona), cazadores de hojas o la lleva (2, 3 o 5 minutos). El que crea la sala es el servidor. Bluetooth no está disponible en web.
+- Limpieza: portada sin secciones de revista (misma paleta y estilo), créditos «Creado por OneZero», datos sin fuente retirados de los consejos.
+- Prueba nueva **3d** (gráficos, vistas, música, corredores, tutorial y pausa activa) y «La lleva» con 3 dispositivos en la prueba 5.
+
 *v0.9 · El juego sabe qué día es; modo libre con vida propia* (`69-calendario.js`, `69-libre.js`):
 - **Fecha real** (`Cal`, `JE.cal`): `Cal.now()` usa el reloj del dispositivo; para probar otra fecha: `?fecha=2026-12-24T19:00` en la URL o `JE.fecha = '...'`.
   Festivos de Colombia calculados (fijos, Ley Emiliani al lunes y Semana Santa con la Pascua), tipo de día (`semana`, `sabado`, `domingo`, `festivo`).
@@ -169,8 +202,6 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Energía** (⚡ en el HUD): las subidas cansan; con menos de 15 % pedaleas más lento. **Sentarse** en un parque o plaza recupera energía y adelanta el reloj. Gancho general: `mode.speedMul(ride)` en `Ride.update`.
 - **Fotos** (botón Foto cerca de un lugar con postal): se guardan en `Save.data.fotos` (fecha y fiesta) y se ven en el Álbum como polaroids.
 - **El timbre saluda:** los ciclistas cercanos responden («¡Buenas!») y bajan la velocidad. En la ciclovía la avenida se llena de ciclistas (`kind: 'bici'`); si los rozas, solo frenas.
-- **Mentores** (`MENTORES`): Doña Luz (pulmones: −30 % de cansancio), Santi (sonrisa: +15 % de paciencia en la ventanilla), Don Jairo (manos: +20 % de tiempo por bici),
-  Wilson (equilibrio) y Kevin (atajos: +15 % por andenes y plazas). Se visitan como misión y quedan en `Save.data.skills`.
 - Prueba nueva **3c**: festivos 2026, fiestas por fecha, horarios, misiones por perfil y día, rutina con animación, energía, banca, foto, carrera de la ciclovía, colores y creador.
 
 *v0.8 · Ciudad con espacio, gente y música* (`68-ciudad.js` y cambios en 20/30/35/00/60):

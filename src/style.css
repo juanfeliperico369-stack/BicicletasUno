@@ -242,3 +242,11 @@ body[class*="fest-"] .cband{background:linear-gradient(90deg,var(--fest1),var(--
 .foto{margin:0;background:var(--crema);color:var(--az);padding:4px 4px 6px;border:2px solid var(--az);box-shadow:3px 3px 0 #0008;transform:rotate(-1deg);font-size:12px;text-align:center}
 .foto:nth-child(even){transform:rotate(1.2deg)}
 .foto canvas{width:100%;image-rendering:pixelated;display:block}
+/* tutorial con compañero */
+#tutor{position:absolute;left:50%;bottom:calc(var(--sab) + 18px);transform:translateX(-50%);width:min(460px,calc(100% - 24px));display:none;gap:12px;align-items:flex-start;background:var(--crema);color:var(--az);border:3px solid var(--az);padding:12px;box-shadow:6px 6px 0 var(--vd2),0 0 0 100vmax #0a234259;z-index:30}
+#tutor.on{display:flex}
+#tutor img{width:56px;height:56px;image-rendering:pixelated;border:3px solid var(--az);flex:none}
+#tutor b{font-family:var(--fd);text-transform:uppercase;font-size:18px}
+#tutor p{margin:4px 0 8px;font-size:15px;line-height:1.35}
+#tutor .tb{display:flex;gap:8px;flex-wrap:wrap}
+body.big #tutor p{font-size:17px}

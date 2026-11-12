@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.9.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.10.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -229,11 +229,13 @@ const View = JE.view = {
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
-    if (this.buf.width !== this.vw + 1 || this.buf.height !== this.vh + 1) { this.buf.width = this.vw + 1; this.buf.height = this.vh + 1; }   // +1: corrimiento por fracción de pixel
+    const G = JE.game && JE.game.mode, q = this.q = this.kind === 'map' && G && G.ride && Save.data && (Save.data.settings.gfx || 'pixel') !== 'pixel' ? clamp(Math.round(s * this.dpr / 1.5), 2, 4) : 1;   // mapa dibujado: búfer a mayor resolución
+    if (this.buf.width !== (this.vw + 1) * q || this.buf.height !== (this.vh + 1) * q) { this.buf.width = (this.vw + 1) * q; this.buf.height = (this.vh + 1) * q; }
+    this.b.setTransform(1, 0, 0, 1, 0, 0);   // +1: corrimiento por fracción de pixel
     this.b.imageSmoothingEnabled = false;
   },
   present() {
-    const c = this.ctx; c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false;
+    const c = this.ctx; c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = (this.q || 1) > 1;
     const k = this.s * this.dpr; c.drawImage(this.buf, -this.subX * k, -this.subY * k, (this.vw + 1) * k, (this.vh + 1) * k);
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   },

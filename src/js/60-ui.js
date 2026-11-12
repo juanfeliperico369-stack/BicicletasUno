@@ -1,5 +1,5 @@
 /* =====================================================================
-   INTERFAZ (revista) + BUCLE DEL JUEGO
+   INTERFAZ + BUCLE DEL JUEGO
    ===================================================================== */
 JE.URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
 const STARS_UNLOCK_INFO = 'Gana estrellas en los turnos para ascender en el escalafón.';
@@ -12,15 +12,10 @@ const TIPS = [
   'EnCicla nació en 2011 y lo gestiona el Área Metropolitana del Valle de Aburrá.',
   'El préstamo es gratis: te registras y prestas la bici en cualquier estación.',
   'Máximo 1 hora por préstamo: devuelve a tiempo y evita sanciones.',
-  'Horario de referencia: L-V 5:30 a.m.–10 p.m., sáb. 6:30 a.m.–9 p.m., dom. 8 a.m.–4 p.m.',
-  'Entre 2024 y mediados de 2026 se registraron más de 3 millones de préstamos.',
-  'Más de 130 estaciones habilitadas en el área metropolitana (2026).',
+  'Horario de referencia: lunes a viernes de 5:30 a. m. a 10 p. m., sábados de 6:30 a. m. a 9 p. m. y domingos y festivos de 8 a. m. a 4 p. m.',
   'Usa casco, respeta los semáforos y prefiere la ciclorruta.',
   'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).',
-  'El sistema va desde Caldas, donde nace el río, hasta Copacabana al norte del valle.',
-  'Dicen que si tocas el timbre tres veces bajo una estación del Metro… pasa algo.',
-  'En Moravia, tres timbrazos abren algo que florece.',
-  'El título de la portada guarda un secreto dorado.',
+  'El sistema va desde Caldas, donde nace el río, hasta Barbosa, al norte del valle.',
   'Hay una postal que no aparece en el álbum hasta que la encuentras pedaleando.'
 ];
 
@@ -67,8 +62,8 @@ const UI = JE.ui = {
   starStr(n, of = 3) { return '★'.repeat(n) + '<i>' + '★'.repeat(of - n) + '</i>'; },
   renderRuta() {
     const S = Save.data, tot = this.totalStars();
-    let h = `<div class="pag">PAG 1 · ${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de ${MAX_STARS()}</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
-    h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: 9 oficios · 3 turnos cada uno</div>`;
+    let h = `<div class="pag">${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de ${MAX_STARS()}</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
+    h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: ${ROLES.length} oficios con sus turnos reales</div>`;
     if (S.perks.length) h += `<div class="pag">Mejoras activas (se pierden si fallas un turno)</div><div class="perks">${S.perks.map(p => `<span class="chip"><img class="px" width="20" height="20" src="${Art.iconURL(PERKS[p].icon, 2)}" alt="">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     if (!S.settings.seen.profile) h += `<div class="paper" style="margin:0 0 16px"><div class="t">Crea tu ciclista</div><p style="margin:6px 0 10px">Elige tu nombre y colores antes de empezar.</p><button class="btn sm" data-act="avatar">Personalizar</button></div>`;
     h += `<div class="paper race"><div class="pag" style="color:var(--az2)">Multijugador · nuevo</div><div class="t">Carrera de postales</div><p style="margin:6px 0 10px">Pasa por 4 lugares del valle y llega primero a la meta. Contra un bot o contra un amigo en otro celular.</p><div class="row"><button class="btn sm" data-race="1">Bot tranquilo</button><button class="btn sm" data-race="2">Bot veloz</button><button class="btn sm" data-race="3">Bot turbo</button><button class="btn sm pri" data-act="multi">Con un amigo</button></div></div>`;
@@ -93,7 +88,7 @@ const UI = JE.ui = {
   },
   renderAlbum() {
     const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot' && (!l.secret || Save.data.postales.includes(l.id)));
-    let h = `<div class="pag">PAG 2 · Postales del valle</div><div class="sect"><span class="outline">${got.length}</span><h2 class="mega">Álbum<br><span style="color:var(--vd)">de postales</span></h2></div><p class="m">Visita los lugares del Valle de Aburrá en modo Usuario para coleccionarlos. Tienes ${got.length} de ${list.length}.</p><div class="album">`;
+    let h = `<div class="pag">Postales del valle</div><div class="sect"><span class="outline">${got.length}</span><h2 class="mega">Álbum<br><span style="color:var(--vd)">de postales</span></h2></div><p class="m">Visita los lugares del Valle de Aburrá en modo Usuario para coleccionarlos. Tienes ${got.length} de ${list.length}.</p><div class="album">`;
     list.forEach((L, i) => { const have = got.includes(L.id); h += `<div class="post ${have ? '' : 'lock'}" style="--r:${(h2(i, 3) - .5) * 3}deg"><canvas width="120" height="90" data-lm="${LANDMARKS.indexOf(L)}"></canvas><b>${have ? esc(L.name) : '???'}</b><small>${have ? esc(L.fact) : esc(L.muni) + ' · aún sin visitar'}</small></div>`; });
     h += `</div>`;
     const el = $('#tab-album'); el.innerHTML = h;
@@ -113,7 +108,7 @@ const UI = JE.ui = {
   },
   renderParts() {
     const S = Save.data, st = S.stats;
-    let h = `<div class="pag">PAG 3 · Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
+    let h = `<div class="pag">Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
     h += `<div class="stat"><div><b>${fmtInt(st.plays)}</b><span>turnos jugados</span></div><div><b>${fmtInt(S.xp)}</b><span>experiencia</span></div><div><b>${fmtInt(st.trips)}</b><span>viajes en bici</span></div><div><b>${fmtInt(st.leaves)}</b><span>hojas verdes</span></div><div><b>${S.bestStreak}</b><span>mejor racha</span></div><div><b>${S.postales.length}</b><span>postales</span></div></div>`;
     h += this.carnet();
     h += `<div class="row" style="margin:12px 0"><button class="btn sm amb" data-act="ranking">🏆 Ranking</button><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
@@ -128,7 +123,7 @@ const UI = JE.ui = {
   },
   renderMas() {
     const S = Save.data.settings;
-    let h = `<div class="pag">PAG 4 · Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
+    let h = `<div class="pag">Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
     h += `<div class="opt"><span>Efectos de sonido</span><button class="sw ${S.sfx ? 'on' : ''}" data-sw="sfx" aria-label="Sonido"></button></div>`;
     h += `<div class="opt"><span>Música</span><button class="sw ${S.music ? 'on' : ''}" data-sw="music" aria-label="Música"></button></div>`;
     h += `<div class="opt"><span>Letra grande</span><button class="sw ${S.big ? 'on' : ''}" data-sw="big" aria-label="Letra grande"></button></div>`;
@@ -152,8 +147,8 @@ const UI = JE.ui = {
     const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : Season.pick(rng)), sea = Season.now(), wet = !!sea.wet && !o.reto && roleId !== 'carrera' && !(turno === 1 && !o.free);
     this.mute = true; JE.briefing = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free, zona: o.zona }); } finally { this.mute = false; JE.briefing = false; }   // solo para leer las metas: sin avisos
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
-    let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
-    h += `<div class="boxh">Sesión ${r.n}: ${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
+    let h = `<div class="row" style="justify-content:space-between"><span class="pag">${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
+    h += `<div class="boxh">${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
     if (r.shifts && !isMulti(roleId) && roleId !== 'usuario') h += `<div class="paper" style="margin:8px 0"><div class="t">${esc(shiftName(roleId, turno))}</div><p style="margin:4px 0 0">🕐 ${esc(r.shifts[turno - 1].h)}</p></div>`;
     if (roleId === 'apoyo') { const zz = o.zona || APOYO_ZONAS[(seed >>> 5) % APOYO_ZONAS.length][0]; o.zona = zz; h += `<div class="pag">Tu zona (toca para cambiarla)</div><div class="zonas">${APOYO_ZONAS.map(z => `<button class="chip ${z[0] === zz ? 'on' : ''}" data-zona="${z[0]}">${esc(z[1])} · ${z[2]}</button>`).join('')}</div>`; }
     h += Historia.brief(roleId, turno, o);
@@ -172,7 +167,7 @@ const UI = JE.ui = {
   result(res, meta, prog) {
     const r = ROLE[meta.roleId], S = Save.data;
     const msg = res.pass ? (res.stars === 3 ? '¡Turno perfecto! Eres un orgullo paisa.' : '¡Turno aprobado! Puedes mejorar las estrellas.') : '¡Casi! La meta obligatoria no se cumplió. Inténtalo otra vez.';
-    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : esc(shiftName(meta.roleId, meta.turno)).toUpperCase()} · ${esc(meta.nov.name)}</div>`;
+    let h = `<div class="pag">RESULTADO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : esc(shiftName(meta.roleId, meta.turno)).toUpperCase()} · ${esc(meta.nov.name)}</div>`;
     h += `<div class="sect"><span class="outline">${r.n}</span><h2 class="mega">${esc(r.name)}</h2></div>`;
     if (!meta.free) h += `<div class="stars">${this.starStr(res.stars)}</div>`;
     h += `<div class="kick" style="margin:6px 0">${msg}</div>`;
@@ -287,10 +282,8 @@ const UI = JE.ui = {
     <div><b>6</b><span><b>Ritmo tranquilo</b> en Más: más tiempo para niños y abuelos.</span></div></div><div class="col"><button class="btn pri" id="mClose">¡Listo!</button></div>`);
   },
   credits() {
-    this.modal(`<h2>Créditos</h2><p class="m">Juega EnCicla v${JE.version} · demo presentada a EnCicla por Juan Felipe Rico. Diseño evolucionado de la revista EMSAY y Doc Element.</p>
-    <p class="m">Juego de demostración NO oficial. EnCicla es el sistema de bicicletas públicas del Área Metropolitana del Valle de Aburrá. Las ubicaciones de las estaciones son aproximadas y con fines didácticos; consulta la información oficial de EnCicla.</p>
-    <p class="m">${esc(VALLE_META.src)}</p>
-    <p class="m">Tipografías: TeX Gyre Heros Condensed (GUST) e Inter (OFL). Gráficos, música y sonidos generados por código.</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`);
+    this.modal(`<h2>Créditos</h2><p class="m" style="font-size:20px"><b>Creado por OneZero</b></p><p class="m">Juega EnCicla v${JE.version}</p>
+    <p class="m" style="font-size:12px;opacity:.75">Mapa: ${esc(VALLE_META.src)}</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`);
   },
   avatar() {
     const P = Save.data.profile;
@@ -317,7 +310,7 @@ const UI = JE.ui = {
     });
   },
   diag() {
-    this.modal(`<h2>Bot de pruebas</h2><p class="m">Juega partidas automáticas de los 9 oficios a alta velocidad y revisa errores, números imposibles y bicis perdidas. No cambia tu progreso.</p><div class="col"><button class="btn pri" id="dRun">Probar 27 partidas</button></div><pre class="rep" id="dOut">Listo para probar.</pre><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
+    this.modal(`<h2>Bot de pruebas</h2><p class="m">Juega partidas automáticas de los todos los oficios a alta velocidad y revisa errores, números imposibles y bicis perdidas. No cambia tu progreso.</p><div class="col"><button class="btn pri" id="dRun">Probar 27 partidas</button></div><pre class="rep" id="dOut">Listo para probar.</pre><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
       $('#dRun').onclick = async () => { $('#dRun').disabled = true; const out = $('#dOut'); out.textContent = 'Probando…'; const rep = await JE.bot.run({ n: 27, onProgress: (i, n) => out.textContent = 'Partida ' + i + ' de ' + n + '…' }); out.textContent = JE.bot.format(rep); $('#dRun').disabled = false; };
     });
   },
@@ -365,7 +358,7 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona, bici: o.bici });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona, bici: o.bici, comp: o.comp, n: o.n });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
@@ -506,7 +499,7 @@ function drawHand(V, h) {
   if (h.txt) V.text(h.txt, x + 6, y + 44, { size: 13, align: 'center', bg: PAL.az, color: '#fff', pad: 3 });
   c.globalAlpha = 1;
 }
-/* confeti de revista al aprobar */
+/* confeti al aprobar */
 function confetti(n) {
   if (JE.headless || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const d = document.createElement('div'); d.className = 'confetti'; const cols = ['#9bd341', '#ffffff', '#ffc93c', '#56c7ff', '#c4ec7c'];

@@ -44,7 +44,7 @@ Art.person = function (c, x, y, p, ph = 0, face = -1) {
 /* ciclista visto desde arriba: si tiene pelo largo se le ve la cola bajo el casco */
 Art.rider = function (shirt) {
   const P = Save.data.profile, base = this.riderTop(shirt || SHIRTS[P.shirt] || PAL.vd, HELMETS[P.helmet] || '#fff', SKINS[P.skin] || SKINS[1], bikeCol());
-  if (![1, 5, 7].includes(P.hair | 0)) return base;
+  if (base.sc || ![1, 5, 7].includes(P.hair | 0)) return base;
   const k = 'rl' + (shirt || P.shirt) + P.helmet + P.skin + P.hairCol + bikeCol(); let c = this.cache.get(k); if (c) return c;
   c = this.mk(base.width, base.height, x => { x.drawImage(base, 0, 0); x.fillStyle = PELO[P.hairCol | 0]; x.fillRect(3, 8, 1, 2); });
   this.cache.set(k, c); return c;

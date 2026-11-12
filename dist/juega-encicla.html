@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0a2342"><meta name="color-scheme" content="dark">
 <title>Juega EnCicla</title>
-<meta name="description" content="Juega EnCicla: videojuego arcade offline sobre el sistema de bicicletas públicas del Valle de Aburrá. Del usuario al supervisor: 9 oficios, 27 turnos.">
+<meta name="description" content="Juega EnCicla: videojuego arcade offline sobre el sistema de bicicletas públicas del Valle de Aburrá. Del usuario al supervisor: 11 oficios del sistema, mundo libre y multijugador.">
 <meta name="application-name" content="Juega EnCicla"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EnCicla"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%20shape-rendering%3D%22crispEdges%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%230a2342%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%2213%22%20fill%3D%22%239bd341%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%2219%22%20r%3D%224%22%2F%3E%3Ccircle%20cx%3D%2222%22%20cy%3D%2219%22%20r%3D%224%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M10%2019%2015%2013%2022%2019M15%2013h5M15%2019%2020%2013M13%2012h4%22%20stroke%3D%22%230a2342%22%20stroke-width%3D%221.6%22%20fill%3D%22none%22%2F%3E%3C%2Fsvg%3E">
@@ -251,26 +251,34 @@ body[class*="fest-"] .cband{background:linear-gradient(90deg,var(--fest1),var(--
 .foto{margin:0;background:var(--crema);color:var(--az);padding:4px 4px 6px;border:2px solid var(--az);box-shadow:3px 3px 0 #0008;transform:rotate(-1deg);font-size:12px;text-align:center}
 .foto:nth-child(even){transform:rotate(1.2deg)}
 .foto canvas{width:100%;image-rendering:pixelated;display:block}
+/* tutorial con compañero */
+#tutor{position:absolute;left:50%;bottom:calc(var(--sab) + 18px);transform:translateX(-50%);width:min(460px,calc(100% - 24px));display:none;gap:12px;align-items:flex-start;background:var(--crema);color:var(--az);border:3px solid var(--az);padding:12px;box-shadow:6px 6px 0 var(--vd2),0 0 0 100vmax #0a234259;z-index:30}
+#tutor.on{display:flex}
+#tutor img{width:56px;height:56px;image-rendering:pixelated;border:3px solid var(--az);flex:none}
+#tutor b{font-family:var(--fd);text-transform:uppercase;font-size:18px}
+#tutor p{margin:4px 0 8px;font-size:15px;line-height:1.35}
+#tutor .tb{display:flex;gap:8px;flex-wrap:wrap}
+body.big #tutor p{font-size:17px}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
  <section id="sCover" class="scr on halftone">
-  <div class="cband"><div>Área Metropolitana · Nº 15</div><div>Gratis todos los días</div></div>
+  <div class="cband"><div>Valle de Aburrá</div><div>Bicicleta pública</div></div>
   <div class="cbody">
    <div class="srf">Préstamos, estaciones, ciclorrutas, balanceo, taller y más</div>
    <h1 class="mega">Juega</h1>
    <h1 class="mega g b2">EnCicla</h1>
    <canvas id="coverArt" width="200" height="125" aria-label="Ciclista pedaleando por la ciclorruta al atardecer en el Valle de Aburrá"></canvas>
-   <span class="sticker" style="right:4%;top:46%">¡9 oficios!</span>
+   <span class="sticker" style="right:4%;top:46%">¡11 oficios!</span>
    <div class="kick">¿Sabes cuántas bicis mueve tu ciudad?</div>
-   <div class="ctag">Entérate de todo lo que pasa detrás de cada préstamo!!!</div>
+   <div class="ctag">¡Entérate de todo lo que pasa detrás de cada préstamo!</div>
    <div class="cbtns">
     <button class="btn pri" id="bPlay">▶ Jugar</button>
     <button class="btn amb" id="bReto">★ Reto del día</button>
     <div class="row" style="justify-content:center"><button class="btn sm" id="bHow">Cómo jugar</button><button class="btn sm" id="bShare">Compartir</button></div>
    </div>
   </div>
-  <div class="cfoot"><span class="mega">La revista arcade más pedaleada</span><span class="pag" id="ver">v</span></div>
+  <div class="cfoot"><span class="mega">Creado por OneZero</span><span class="pag" id="ver">v</span></div>
  </section>
 
  <section id="sHome" class="scr">
@@ -306,7 +314,7 @@ const VALLE_BIN = '7J2LcuO4rq4pks0KZqq69vs/7TaJCwFedHGSWZMe4Jw9q5PYsizL4qcfwI/j8
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.9.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.10.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -533,11 +541,13 @@ const View = JE.view = {
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
-    if (this.buf.width !== this.vw + 1 || this.buf.height !== this.vh + 1) { this.buf.width = this.vw + 1; this.buf.height = this.vh + 1; }   // +1: corrimiento por fracción de pixel
+    const G = JE.game && JE.game.mode, q = this.q = this.kind === 'map' && G && G.ride && Save.data && (Save.data.settings.gfx || 'pixel') !== 'pixel' ? clamp(Math.round(s * this.dpr / 1.5), 2, 4) : 1;   // mapa dibujado: búfer a mayor resolución
+    if (this.buf.width !== (this.vw + 1) * q || this.buf.height !== (this.vh + 1) * q) { this.buf.width = (this.vw + 1) * q; this.buf.height = (this.vh + 1) * q; }
+    this.b.setTransform(1, 0, 0, 1, 0, 0);   // +1: corrimiento por fracción de pixel
     this.b.imageSmoothingEnabled = false;
   },
   present() {
-    const c = this.ctx; c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false;
+    const c = this.ctx; c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = (this.q || 1) > 1;
     const k = this.s * this.dpr; c.drawImage(this.buf, -this.subX * k, -this.subY * k, (this.vw + 1) * k, (this.vh + 1) * k);
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   },
@@ -943,12 +953,15 @@ const ESTACIONES = [
   ['prados', 'Prados de Sabaneta', 'Sabaneta', 6.1535, -75.6100, 'a', 'res', 'sabaneta'], ['lomitas', 'Las Lomitas', 'Sabaneta', 6.1440, -75.6080, 'a', 'res', 'sabaneta'], ['restrepo', 'Restrepo Naranjo', 'Sabaneta', 6.1490, -75.6230, 'a', 'res', 'sabaneta'],
   ['entreamigos', 'Entreamigos', 'Sabaneta', 6.1545, -75.6225, 'a', 'res', 'sabaneta'], ['doctora', 'La Doctora', 'Sabaneta', 6.1390, -75.6110, 'a', 'res', 'sabaneta'],
   // La Estrella, Caldas
-  ['yarumito', 'Yarumito', 'La Estrella', 6.1600, -75.6400, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 6.1570, -75.6425, 'a', 'res'],
+  ['yarumito', 'Yarumito', 'La Estrella', 6.1600, -75.6400, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 6.1570, -75.6425, 'a', 'res'], ['c4ta', 'C4TA', 'Medellín', 6.2478, -75.6108, 'a', 'uni'], ['hinfantil', 'Hospital Infantil', 'Medellín', 6.2702, -75.5552, 'a', 'res'], ['sancayetano', 'San Cayetano', 'Sabaneta', 6.1542, -75.6198, 'm', 'mix'],
   ['quintas', 'Quintas de la Quinta', 'La Estrella', 6.1520, -75.6420, 'm', 'res'], ['tablaza', 'La Tablaza', 'La Estrella', 6.1300, -75.6350, 'a', 'res'],
   ['caldas', 'Parque de Caldas', 'Caldas', 6.0905, -75.6365, 'm', 'res'], ['caldas2', 'Caldas Centro', 'Caldas', 6.0950, -75.6340, 'a', 'res'], ['caldas3', 'Caldas Sur', 'Caldas', 6.0860, -75.6370, 'a', 'res']
 ];
 /* corredores de bicicletas eléctricas (estaciones con bici asistida: la subida no frena) */
-const CORREDOR_E = ['provenza', 'lleras', 'manila', 'castropol', 'poblado', 'zuniga', 'sanmarcos', 'magnolia', 'mesa', 'antillas', 'zona2'];
+/* corredores de bicis eléctricas: 'mix' presta normales y eléctricas, 'solo' solo eléctricas. Servicio eléctrico hasta las 7 p. m.; las estaciones solo eléctricas cierran a las 8 p. m. */
+const CORREDOR_E = { floresta: 'mix', c4ta: 'solo', udea: 'mix', hinfantil: 'solo', sancayetano: 'mix', estrella: 'solo' };
+const CORREDORES = [['floresta', 'c4ta', 'Floresta – C4TA'], ['udea', 'hinfantil', 'Universidad de Antioquia – Hospital Infantil'], ['sancayetano', 'estrella', 'San Cayetano – La Estrella']];
+const E_HASTA = 19 * 60, E_CIERRE = 20 * 60;
 /* puntos de la operación (no son postales) */
 const PUNTOS = {
   casa: [6.2314, -75.5995, 'Casa EnCicla · Parque de Malibú (Belén)'], parqueadero: [6.2780, -75.5722, 'Parqueadero de la Terminal del Norte'],
@@ -1113,7 +1126,7 @@ const CityMap = JE.map = {
     for (let yy = best.y; yy < best.y + 2; yy++) for (let xx = best.x; xx < best.x + 4; xx++) this.set(xx, yy, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
     const zone = lat > 6.272 ? 'norte' : lat > 6.205 ? 'centro' : 'sur';
-    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E.includes(id), lat, lon, tx: best.x, ty: best.y, x: (best.x + 2) * TS, y: (best.y + 1) * TS };
+    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E[id] || '', lat, lon, tx: best.x, ty: best.y, x: (best.x + 2) * TS, y: (best.y + 1) * TS };
   },
   /* ---------- semáforos, carriles de carros, metro, tranvía, cables ---------- */
   buildLights() {
@@ -1286,7 +1299,7 @@ const CityMap = JE.map = {
     for (let j = 0; j < S; j += 2) for (let i = 0; i < S; i += 2) {
       const tx = x0 + i / TS, ty = y0 + j / TS, e = this.elevT(tx, ty), gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile;
       let f = 1 + clamp((gx + gy) * 1.1, -.32, .26) - Math.min(.12, Math.hypot(gx, gy) * .15);
-      const v = this.get(x0 + (i >> 3), y0 + (j >> 3));
+      const v = this.get(x0 + ((i / TS) | 0), y0 + ((j / TS) | 0));
       if (v === TT.GRASS || v === TT.MOUNT) { const b = Math.floor(e / 25), bx = Math.floor(this.elevT(tx + .25, ty) / 25), by = Math.floor(this.elevT(tx, ty + .25) / 25); if (b !== bx || b !== by) f *= (b % 4 === 0 ? .8 : .9); }
       if (f === 1) continue;
       for (let k = 0; k < 4; k++) { const o = ((j + (k >> 1)) * S + i + (k & 1)) * 4; d[o] = Math.min(255, d[o] * f); d[o + 1] = Math.min(255, d[o + 1] * f); d[o + 2] = Math.min(255, d[o + 2] * f); }
@@ -1716,7 +1729,7 @@ class Ride {
 
   /* ---- dibujo en el búfer pixelado: suelo y cosas quietas. La cámara es continua: el búfer se corre por fracciones de pixel ---- */
   render(V, min) {
-    const b = V.b, P = this.p, sk = this.shake > 0;
+    const b = V.b, P = this.p, sk = this.shake > 0; b.setTransform(V.q || 1, 0, 0, V.q || 1, 0, 0);
     const cxf = clamp(this.cam.x - V.vw / 2, -40, MW * TS - V.vw + 40) + (sk ? (this.rng.f() - .5) * 4 : 0), cyf = clamp(this.cam.y - V.vh / 2, -40, MH * TS - V.vh + 40) + (sk ? (this.rng.f() - .5) * 4 : 0);
     const ox = Math.floor(cxf), oy = Math.floor(cyf); this.ox = ox; this.oy = oy; this.cxf = cxf; this.cyf = cyf; V.subX = cxf - ox; V.subY = cyf - oy; this.min = min;
     const S = CH * TS, BW = V.vw + 1, BH = V.vh + 1;
@@ -1724,12 +1737,12 @@ class Ride {
     let made = 0;
     for (let cy = Math.floor(oy / S); cy <= Math.floor((oy + BH) / S); cy++) for (let cx = Math.floor(ox / S); cx <= Math.floor((ox + BW) / S); cx++) {
       if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue;
-      if (!this.map.chunks.has(cx + ',' + cy)) made++;
-      b.drawImage(this.map.chunk(cx, cy), cx * S - ox, cy * S - oy);
+      if (!this.map.hasG(cx, cy)) made++;
+      b.drawImage(this.map.chunkG(cx, cy), cx * S - ox, cy * S - oy, S, S);
     }
     if (!made) { // precalienta un bloque vecino en la dirección de avance
       const cx = Math.floor(P.x / S) + Math.round(Math.cos(P.a) * 1.4), cy = Math.floor(P.y / S) + Math.round(Math.sin(P.a) * 1.4);
-      if (cx >= 0 && cy >= 0 && cx * CH < MW && cy * CH < MH && !this.map.chunks.has(cx + ',' + cy)) this.map.chunk(cx, cy);
+      if (cx >= 0 && cy >= 0 && cx * CH < MW && cy * CH < MH && !this.map.hasG(cx, cy)) this.map.chunkG(cx, cy);
     }
     const inV = (x, y, m = 20) => x > ox - m && x < ox + BW + m && y > oy - m && y < oy + BH + m;
     // estaciones con sus bicis
@@ -1743,7 +1756,7 @@ class Ride {
       for (let k = 0; k < s.cap; k++) { const row = k < per ? 0 : 1, bx = x0 + 4 + (k % per) * sp, by = y0 + (row ? 19 : 4); prect(b, Math.round(bx) + 1, row ? y0 + 17 : y0 + 12, 1, 2, '#59606c'); if (k < bikes) b.drawImage(Art.bikeTop(), Math.round(bx), by); else prect(b, Math.round(bx) + 1, by + 4, 1, 2, '#9aa7b8'); }
       if (s.type === 'm') { prect(b, x0 + W - 12, y0 + 5, 9, 14, '#1d2c44'); prect(b, x0 + W - 12, y0 + 4, 9, 2, '#e9eef3'); prect(b, x0 + W - 10, y0 + 9, 5, 3, '#9fb8cf'); prect(b, x0 + W - 12, y0 + 19, 9, 2, PAL.vd); }
       else { prect(b, x0 + W - 10, y0 + 6, 5, 13, '#2b2f38'); prect(b, x0 + W - 9, y0 + 8, 3, 3, (t * 2 | 0) % 2 ? PAL.vd : PAL.vd1); prect(b, x0 + W - 9, y0 + 13, 3, 1, '#9aa7b8'); }
-      if (s.e) { prect(b, x0 + W - 14, y0 + 1, 3, 4, '#ffd84a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, '#ffd84a'); }
+      if (s.e) { const on = (this.mode.clock | 0) < E_HASTA; prect(b, x0 + W - 14, y0 + 1, 3, 4, on ? '#ffd84a' : '#8a8a8a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, on ? '#ffd84a' : '#8a8a8a'); if (s.e === 'solo' && (this.mode.clock | 0) >= E_CIERRE) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, 8); } }
       if (ss && ss.broken) { if ((t * 3 | 0) % 2) { pline(b, x0 + 12, y0 + 4, x0 + 30, y0 + 28, PAL.cor); pline(b, x0 + 30, y0 + 4, x0 + 12, y0 + 28, PAL.cor); } }
       if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
     }
@@ -1771,7 +1784,7 @@ class Ride {
   renderTop(V) {
     const c = V.ctx, k = V.s * V.dpr, ox = this.cxf, oy = this.cyf, P = this.p, vw = V.vw + 2, vh = V.vh + 2;
     const inV = (x, y, m = 20) => x > ox - m && x < ox + vw + m && y > oy - m && y < oy + vh + m;
-    const spr = (img, x, y, a, sh) => { c.save(); c.translate(x - ox, y - oy); c.rotate(a + Math.PI / 2); if (sh) { c.fillStyle = sh; c.fillRect(-img.width / 2 + 1, -img.height / 2 + 1.5, img.width, img.height); } c.drawImage(img, -img.width / 2, -img.height / 2); c.restore(); };
+    const spr = (img, x, y, a, sh) => { c.save(); c.translate(x - ox, y - oy); c.rotate(a + Math.PI / 2); blit(c, img, sh); c.restore(); };
     c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.imageSmoothingEnabled = false;
     this.drawGround(c, ox, oy, inV);
     for (const cr of this.cars) if (inV(cr.x, cr.y)) spr(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, '#0004');
@@ -1807,7 +1820,7 @@ class Ride {
     for (const o of this.opps) { const x = sx(o.x), y = sy(o.y) - 14; if (x > 0 && x < V.w && y > 0 && y < V.h && room(x, y, o.name.length * 6 + 6, 16)) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
     if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .38); c.rotate(-.08); const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
     this.hudLife(V, sx, sy);
-    // subida / bajada (como en Run Scooter): aviso sobre el ciclista
+    // subida / bajada: aviso sobre el ciclista
     const pct = Math.round(this.sl * 100); if (Math.abs(pct) >= 3 && !this.big) { const up = pct > 0, eb = up && this.ebike && P.veh === 'bike'; V.text((up ? '▲ SUBIDA ' : '▼ BAJADA ') + Math.abs(pct) + ' %' + (eb ? ' ⚡' : ''), sx(P.x), sy(P.y) - 34, { size: 12, align: 'center', color: up ? '#0a2342' : '#fff', bg: up ? '#f4efe1' : (this.over > 1 ? '#c0392b' : '#e0533f'), pad: 3, border: '#0a2342' }); }
     for (const f of this.fx) if (f.k === 't') V.text(f.txt, sx(f.x), sy(f.y), { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col });
     for (const m of this.markers) if (m.label && m.num) { const x = sx(m.x), y = sy(m.y); if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(String(m.num), x, y + 5, { size: 14, align: 'center', stroke: '#0a2342', sw: 4, color: m.col || PAL.amb }); }
@@ -3270,7 +3283,7 @@ class MapMode extends Mode {
     JE.ui && JE.ui.toast(metro ? '🚇 ¡Encontraste al Maquinista secreto!' : '🌼 ¡Encontraste el Laberinto secreto de Moravia!');
     this.runSub(mg, s => {
       this.score += Math.round(s.score / 2); Save.data.flags[metro ? 'metroEgg' : 'mazeEgg'] = 1;
-      this.ride.stamp = { t: 2.4, title: metro ? 'PRÓXIMAMENTE: JUEGA METRO' : '¡LABERINTO RESUELTO!', sub: metro ? 'El juego 11 de la saga: Metro, Metroplús y buses' : 'Moravia: de basurero a jardín', bg: metro ? PAL.cie : '#ffd84a' };
+      this.ride.stamp = { t: 2.4, title: metro ? '¡MAQUINISTA DEL METRO!' : '¡LABERINTO RESUELTO!', sub: metro ? 'Llevaste los trenes a tiempo por la línea A' : 'Moravia: de basurero a jardín', bg: metro ? PAL.cie : '#ffd84a' };
       Snd.sfx('star');
     });
   }
@@ -3345,7 +3358,7 @@ class ModeUsuario extends MapMode {
     this.coach = 'Arrastra el dedo para pedalear y sigue la línea punteada.';
     this.takeBike(this.st0);
   }
-  takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; this.ride.ebike = !!s.e; if (s.e && JE.ui && !this.eTold) { this.eTold = 1; JE.ui.toast('⚡ Estación del corredor eléctrico: tu bici tiene asistencia en las subidas.'); } }
+  takeBike(s) { const st = this.sim.st[s.i]; if (st.bikes > 0) st.bikes--; else this.sim.depot--; this.sim.held++; const eOk = !!s.e && this.clock < E_HASTA; this.ride.ebike = eOk; if (s.e && JE.ui && !this.eTold) { this.eTold = 1; JE.ui.toast(eOk ? '⚡ Corredor eléctrico: tu bici tiene asistencia en las subidas (servicio hasta las 7 p. m.).' : '⚡ El servicio eléctrico terminó a las 7 p. m.: sales en bici normal.'); } }
   cicPct() { return Math.round(100 * this.ride.stats.ciclo / Math.max(1, this.ride.stats.dist)); }
   loanMin() { return Math.floor(this.clock - this.loan0); }
   makeLeaves() {
@@ -4272,10 +4285,10 @@ class ModeCarrera extends MapMode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.rate = 1.2; this.clock = 480; this.limit = 300;
     this.sim = new StationSim(R, { demand: this.mods.demand });
-    const st0 = R.pick(JE.map.stations.filter(s => s.zone === 'centro'));
+    const st0 = R.pick(JE.map.stations.filter(s => s.zone === (opt.zona || 'centro')));
     this.setupRide({ sim: this.sim, start: { x: st0.x - 5 * WK, y: st0.y } });
     const pool = PUBLIC_LM(); let cur = { x: st0.x / TS, y: st0.y / TS }; this.cps = [];
-    for (let k = 0; k < 4; k++) {
+    const NP = this.np = clamp(opt.n || 4, 1, 6); for (let k = 0; k < NP; k++) {
       const free = pool.filter(l => !this.cps.includes(l)), c = free.filter(l => { const d = Math.hypot(l.x + l.w / 2 - cur.x, l.y + l.h / 2 - cur.y); return d >= 22 * SC && d <= 70 * SC; });
       const pick = R.pick(c.length ? c : free); this.cps.push(pick); cur = { x: pick.x + pick.w / 2, y: pick.y + pick.h / 2 };
     }
@@ -4287,7 +4300,7 @@ class ModeCarrera extends MapMode {
     this.opp = this.opps[0]; this.ride.opps = this.opps; this.myT = null; this.oppT = null; this.won = false; this.place1 = 0;
     if (this.net) Net.onmsg = m => this.msg(m);
     this.goal('Gana la carrera', true, () => this.won, () => this.won ? '¡1º!' : this.oppT != null ? 'te ganaron' : 'en carrera');
-    this.goal('Pasa por las 4 postales', false, () => this.idx >= 4, () => Math.min(this.idx, 4) + '/4');
+    this.goal('Pasa por las ' + this.np + ' postales', false, () => this.idx >= 4, () => Math.min(this.idx, this.np) + '/' + this.np);
     this.goal('Máx. 1 choque y 0 en rojo', false, () => this.ride.stats.crashes <= 1 && this.ride.stats.reds === 0, () => this.ride.stats.crashes + ' choques · ' + this.ride.stats.reds + ' rojos');
     this.coach = '¡Prepárate! Sigue la línea hasta la postal 1.';
   }
@@ -4301,7 +4314,7 @@ class ModeCarrera extends MapMode {
       this.myT = this.t; this.won = this.oppT == null; this.place1 = 1 + this.opps.filter(o => o.t != null).length; if (this.won) this.score += 100; else this.score += Math.max(0, 60 - 20 * this.place1);
       this.score += Math.max(0, Math.round(200 - this.t)); this.ride.stamp = { t: 2.2, title: this.won ? '¡GANASTE!' : '¡LLEGASTE!', sub: 'Tiempo: ' + this.t.toFixed(1) + ' s', bg: this.won ? PAL.vd : PAL.amb };
       Snd.sfx(this.won ? 'win' : 'ok'); if (this.net) Net.send({ t: 'fin', time: this.t }); this.endT = 2.4;
-    } else { this.score += 25; this.ride.stamp = { t: 1.3, title: 'POSTAL ' + this.idx + ' DE 4', sub: p.name }; Snd.sfx('star'); if (p.l && !Save.data.postales.includes(p.l.id)) Save.data.postales.push(p.l.id); }
+    } else { this.score += 25; this.ride.stamp = { t: 1.3, title: 'POSTAL ' + this.idx + ' DE ' + this.np, sub: p.name }; Snd.sfx('star'); if (p.l && !Save.data.postales.includes(p.l.id)) Save.data.postales.push(p.l.id); }
     this.place();
   }
   msg(m) {
@@ -4324,7 +4337,7 @@ class ModeCarrera extends MapMode {
     if (this.net) { this.netT -= dt; if (this.netT <= 0) { this.netT = .1; const P = this.ride.p; Net.send({ t: 'p', x: Math.round(P.x), y: Math.round(P.y), a: +P.a.toFixed(2), i: this.idx }); } }
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); }
     else if (this.t > this.limit) { JE.ui && JE.ui.toast('Se acabó el tiempo de la carrera'); this.end(); }
-    const p = this.pts[this.idx]; this.coach = p ? (p.meta ? '¡Última! Llega a la ' + p.name : 'Postal ' + (this.idx + 1) + ' de 4: ' + p.name) : '';
+    const p = this.pts[this.idx]; this.coach = p ? (p.meta ? '¡Última! Llega a la ' + p.name : 'Postal ' + (this.idx + 1) + ' de ' + this.np + ': ' + p.name) : '';
   }
   aiStep(o, dt) {
     const p = this.pts[o.idx]; if (!p) return;
@@ -4340,9 +4353,9 @@ class ModeCarrera extends MapMode {
   hud2(V) {
     if (this.countdown > 0) { const n = Math.ceil(this.countdown); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 120, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); V.text('vs ' + this.opps.map(o => o.name).join(', '), V.w / 2, V.h * .42 + 44, { size: 22, align: 'center', color: '#fff', stroke: PAL.az, sw: 5 }); }
     const me = this.idx, op = Math.max(...this.opps.map(o => o.idx)), lead = me > op ? 'Vas ganando' : me < op ? 'Vas detrás' : 'Empatados';
-    V.text('Tú ' + Math.min(me, 5) + '/5 · ' + this.opps.map(o => o.name + ' ' + Math.min(o.idx, 5) + '/5').join(' · ') + ' · ' + lead, 10, V.h - 20, { size: 13, color: me >= op ? PAL.vd1 : PAL.amb, bg: '#0a2342dd', pad: 4, body: true });
+    V.text('Tú ' + Math.min(me, this.np + 1) + '/' + (this.np + 1) + ' · ' + this.opps.map(o => o.name + ' ' + Math.min(o.idx, this.np + 1) + '/' + (this.np + 1)).join(' · ') + ' · ' + lead, 10, V.h - 20, { size: 13, color: me >= op ? PAL.vd1 : PAL.amb, bg: '#0a2342dd', pad: 4, body: true });
   }
-  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🏁 ' + Math.min(this.idx, 5) + '/5' }] }; }
+  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🏁 ' + Math.min(this.idx, this.np + 1) + '/' + (this.np + 1) }] }; }
   end() { if (this.net && !this.done) Net.onmsg = m => UI.netLobbyMsg(m); super.end(); }
   bot() { if (this.countdown > 0) return; this.botDrive(); }
 }
@@ -4363,7 +4376,7 @@ const ROLE_EQUIPO = {
   how: ['Monitoreo toca una estación y manda la orden.', 'Balance recibe la orden y maneja hasta la estación.', 'Si el camión está vacío o lleno, pasa por la BASE.']
 };
 ROLE.equipo = ROLE_EQUIPO;
-const isMulti = id => id === 'carrera' || id === 'equipo';
+const isMulti = id => id === 'carrera' || id === 'equipo' || id === 'libre';
 /* la misma zona y base para todos (la de Monitoreo turno 1: centro) */
 function coopZone(st) {
   const zl = st.filter(s => s.zone === 'centro'), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
@@ -4498,7 +4511,7 @@ MODE_CLASS.equipo = function (role, T, opt) { return opt.driver ? new ModeCoopDr
 
 /* ---- 60-ui.js ---- */
 /* =====================================================================
-   INTERFAZ (revista) + BUCLE DEL JUEGO
+   INTERFAZ + BUCLE DEL JUEGO
    ===================================================================== */
 JE.URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
 const STARS_UNLOCK_INFO = 'Gana estrellas en los turnos para ascender en el escalafón.';
@@ -4511,15 +4524,10 @@ const TIPS = [
   'EnCicla nació en 2011 y lo gestiona el Área Metropolitana del Valle de Aburrá.',
   'El préstamo es gratis: te registras y prestas la bici en cualquier estación.',
   'Máximo 1 hora por préstamo: devuelve a tiempo y evita sanciones.',
-  'Horario de referencia: L-V 5:30 a.m.–10 p.m., sáb. 6:30 a.m.–9 p.m., dom. 8 a.m.–4 p.m.',
-  'Entre 2024 y mediados de 2026 se registraron más de 3 millones de préstamos.',
-  'Más de 130 estaciones habilitadas en el área metropolitana (2026).',
+  'Horario de referencia: lunes a viernes de 5:30 a. m. a 10 p. m., sábados de 6:30 a. m. a 9 p. m. y domingos y festivos de 8 a. m. a 4 p. m.',
   'Usa casco, respeta los semáforos y prefiere la ciclorruta.',
   'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).',
-  'El sistema va desde Caldas, donde nace el río, hasta Copacabana al norte del valle.',
-  'Dicen que si tocas el timbre tres veces bajo una estación del Metro… pasa algo.',
-  'En Moravia, tres timbrazos abren algo que florece.',
-  'El título de la portada guarda un secreto dorado.',
+  'El sistema va desde Caldas, donde nace el río, hasta Barbosa, al norte del valle.',
   'Hay una postal que no aparece en el álbum hasta que la encuentras pedaleando.'
 ];
 
@@ -4566,8 +4574,8 @@ const UI = JE.ui = {
   starStr(n, of = 3) { return '★'.repeat(n) + '<i>' + '★'.repeat(of - n) + '</i>'; },
   renderRuta() {
     const S = Save.data, tot = this.totalStars();
-    let h = `<div class="pag">PAG 1 · ${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de ${MAX_STARS()}</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
-    h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: 9 oficios · 3 turnos cada uno</div>`;
+    let h = `<div class="pag">${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de ${MAX_STARS()}</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
+    h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: ${ROLES.length} oficios con sus turnos reales</div>`;
     if (S.perks.length) h += `<div class="pag">Mejoras activas (se pierden si fallas un turno)</div><div class="perks">${S.perks.map(p => `<span class="chip"><img class="px" width="20" height="20" src="${Art.iconURL(PERKS[p].icon, 2)}" alt="">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     if (!S.settings.seen.profile) h += `<div class="paper" style="margin:0 0 16px"><div class="t">Crea tu ciclista</div><p style="margin:6px 0 10px">Elige tu nombre y colores antes de empezar.</p><button class="btn sm" data-act="avatar">Personalizar</button></div>`;
     h += `<div class="paper race"><div class="pag" style="color:var(--az2)">Multijugador · nuevo</div><div class="t">Carrera de postales</div><p style="margin:6px 0 10px">Pasa por 4 lugares del valle y llega primero a la meta. Contra un bot o contra un amigo en otro celular.</p><div class="row"><button class="btn sm" data-race="1">Bot tranquilo</button><button class="btn sm" data-race="2">Bot veloz</button><button class="btn sm" data-race="3">Bot turbo</button><button class="btn sm pri" data-act="multi">Con un amigo</button></div></div>`;
@@ -4592,7 +4600,7 @@ const UI = JE.ui = {
   },
   renderAlbum() {
     const got = Save.data.postales, list = LANDMARKS.filter(l => l.id !== 'depot' && (!l.secret || Save.data.postales.includes(l.id)));
-    let h = `<div class="pag">PAG 2 · Postales del valle</div><div class="sect"><span class="outline">${got.length}</span><h2 class="mega">Álbum<br><span style="color:var(--vd)">de postales</span></h2></div><p class="m">Visita los lugares del Valle de Aburrá en modo Usuario para coleccionarlos. Tienes ${got.length} de ${list.length}.</p><div class="album">`;
+    let h = `<div class="pag">Postales del valle</div><div class="sect"><span class="outline">${got.length}</span><h2 class="mega">Álbum<br><span style="color:var(--vd)">de postales</span></h2></div><p class="m">Visita los lugares del Valle de Aburrá en modo Usuario para coleccionarlos. Tienes ${got.length} de ${list.length}.</p><div class="album">`;
     list.forEach((L, i) => { const have = got.includes(L.id); h += `<div class="post ${have ? '' : 'lock'}" style="--r:${(h2(i, 3) - .5) * 3}deg"><canvas width="120" height="90" data-lm="${LANDMARKS.indexOf(L)}"></canvas><b>${have ? esc(L.name) : '???'}</b><small>${have ? esc(L.fact) : esc(L.muni) + ' · aún sin visitar'}</small></div>`; });
     h += `</div>`;
     const el = $('#tab-album'); el.innerHTML = h;
@@ -4612,7 +4620,7 @@ const UI = JE.ui = {
   },
   renderParts() {
     const S = Save.data, st = S.stats;
-    let h = `<div class="pag">PAG 3 · Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
+    let h = `<div class="pag">Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
     h += `<div class="stat"><div><b>${fmtInt(st.plays)}</b><span>turnos jugados</span></div><div><b>${fmtInt(S.xp)}</b><span>experiencia</span></div><div><b>${fmtInt(st.trips)}</b><span>viajes en bici</span></div><div><b>${fmtInt(st.leaves)}</b><span>hojas verdes</span></div><div><b>${S.bestStreak}</b><span>mejor racha</span></div><div><b>${S.postales.length}</b><span>postales</span></div></div>`;
     h += this.carnet();
     h += `<div class="row" style="margin:12px 0"><button class="btn sm amb" data-act="ranking">🏆 Ranking</button><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
@@ -4627,7 +4635,7 @@ const UI = JE.ui = {
   },
   renderMas() {
     const S = Save.data.settings;
-    let h = `<div class="pag">PAG 4 · Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
+    let h = `<div class="pag">Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
     h += `<div class="opt"><span>Efectos de sonido</span><button class="sw ${S.sfx ? 'on' : ''}" data-sw="sfx" aria-label="Sonido"></button></div>`;
     h += `<div class="opt"><span>Música</span><button class="sw ${S.music ? 'on' : ''}" data-sw="music" aria-label="Música"></button></div>`;
     h += `<div class="opt"><span>Letra grande</span><button class="sw ${S.big ? 'on' : ''}" data-sw="big" aria-label="Letra grande"></button></div>`;
@@ -4651,8 +4659,8 @@ const UI = JE.ui = {
     const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : Season.pick(rng)), sea = Season.now(), wet = !!sea.wet && !o.reto && roleId !== 'carrera' && !(turno === 1 && !o.free);
     this.mute = true; JE.briefing = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free, zona: o.zona }); } finally { this.mute = false; JE.briefing = false; }   // solo para leer las metas: sin avisos
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
-    let h = `<div class="row" style="justify-content:space-between"><span class="pag">PAG ${r.n + 4} · ${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
-    h += `<div class="boxh">Sesión ${r.n}: ${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
+    let h = `<div class="row" style="justify-content:space-between"><span class="pag">${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
+    h += `<div class="boxh">${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
     if (r.shifts && !isMulti(roleId) && roleId !== 'usuario') h += `<div class="paper" style="margin:8px 0"><div class="t">${esc(shiftName(roleId, turno))}</div><p style="margin:4px 0 0">🕐 ${esc(r.shifts[turno - 1].h)}</p></div>`;
     if (roleId === 'apoyo') { const zz = o.zona || APOYO_ZONAS[(seed >>> 5) % APOYO_ZONAS.length][0]; o.zona = zz; h += `<div class="pag">Tu zona (toca para cambiarla)</div><div class="zonas">${APOYO_ZONAS.map(z => `<button class="chip ${z[0] === zz ? 'on' : ''}" data-zona="${z[0]}">${esc(z[1])} · ${z[2]}</button>`).join('')}</div>`; }
     h += Historia.brief(roleId, turno, o);
@@ -4671,7 +4679,7 @@ const UI = JE.ui = {
   result(res, meta, prog) {
     const r = ROLE[meta.roleId], S = Save.data;
     const msg = res.pass ? (res.stars === 3 ? '¡Turno perfecto! Eres un orgullo paisa.' : '¡Turno aprobado! Puedes mejorar las estrellas.') : '¡Casi! La meta obligatoria no se cumplió. Inténtalo otra vez.';
-    let h = `<div class="pag">EDICIÓN DEL TURNO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : esc(shiftName(meta.roleId, meta.turno)).toUpperCase()} · ${esc(meta.nov.name)}</div>`;
+    let h = `<div class="pag">RESULTADO · ${meta.free ? 'PRÁCTICA' : meta.reto ? 'RETO DEL DÍA' : isMulti(meta.roleId) ? 'MULTIJUGADOR' : esc(shiftName(meta.roleId, meta.turno)).toUpperCase()} · ${esc(meta.nov.name)}</div>`;
     h += `<div class="sect"><span class="outline">${r.n}</span><h2 class="mega">${esc(r.name)}</h2></div>`;
     if (!meta.free) h += `<div class="stars">${this.starStr(res.stars)}</div>`;
     h += `<div class="kick" style="margin:6px 0">${msg}</div>`;
@@ -4786,10 +4794,8 @@ const UI = JE.ui = {
     <div><b>6</b><span><b>Ritmo tranquilo</b> en Más: más tiempo para niños y abuelos.</span></div></div><div class="col"><button class="btn pri" id="mClose">¡Listo!</button></div>`);
   },
   credits() {
-    this.modal(`<h2>Créditos</h2><p class="m">Juega EnCicla v${JE.version} · demo presentada a EnCicla por Juan Felipe Rico. Diseño evolucionado de la revista EMSAY y Doc Element.</p>
-    <p class="m">Juego de demostración NO oficial. EnCicla es el sistema de bicicletas públicas del Área Metropolitana del Valle de Aburrá. Las ubicaciones de las estaciones son aproximadas y con fines didácticos; consulta la información oficial de EnCicla.</p>
-    <p class="m">${esc(VALLE_META.src)}</p>
-    <p class="m">Tipografías: TeX Gyre Heros Condensed (GUST) e Inter (OFL). Gráficos, música y sonidos generados por código.</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`);
+    this.modal(`<h2>Créditos</h2><p class="m" style="font-size:20px"><b>Creado por OneZero</b></p><p class="m">Juega EnCicla v${JE.version}</p>
+    <p class="m" style="font-size:12px;opacity:.75">Mapa: ${esc(VALLE_META.src)}</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`);
   },
   avatar() {
     const P = Save.data.profile;
@@ -4816,7 +4822,7 @@ const UI = JE.ui = {
     });
   },
   diag() {
-    this.modal(`<h2>Bot de pruebas</h2><p class="m">Juega partidas automáticas de los 9 oficios a alta velocidad y revisa errores, números imposibles y bicis perdidas. No cambia tu progreso.</p><div class="col"><button class="btn pri" id="dRun">Probar 27 partidas</button></div><pre class="rep" id="dOut">Listo para probar.</pre><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
+    this.modal(`<h2>Bot de pruebas</h2><p class="m">Juega partidas automáticas de los todos los oficios a alta velocidad y revisa errores, números imposibles y bicis perdidas. No cambia tu progreso.</p><div class="col"><button class="btn pri" id="dRun">Probar 27 partidas</button></div><pre class="rep" id="dOut">Listo para probar.</pre><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
       $('#dRun').onclick = async () => { $('#dRun').disabled = true; const out = $('#dOut'); out.textContent = 'Probando…'; const rep = await JE.bot.run({ n: 27, onProgress: (i, n) => out.textContent = 'Partida ' + i + ' de ' + n + '…' }); out.textContent = JE.bot.format(rep); $('#dRun').disabled = false; };
     });
   },
@@ -4864,7 +4870,7 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona, bici: o.bici });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona, bici: o.bici, comp: o.comp, n: o.n });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
@@ -5005,7 +5011,7 @@ function drawHand(V, h) {
   if (h.txt) V.text(h.txt, x + 6, y + 44, { size: 13, align: 'center', bg: PAL.az, color: '#fff', pad: 3 });
   c.globalAlpha = 1;
 }
-/* confeti de revista al aprobar */
+/* confeti al aprobar */
 function confetti(n) {
   if (JE.headless || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const d = document.createElement('div'); d.className = 'confetti'; const cols = ['#9bd341', '#ffffff', '#ffc93c', '#56c7ff', '#c4ec7c'];
@@ -5030,7 +5036,7 @@ const LOGROS = [
   { id: 'hojas100', name: 'Pulmón verde', desc: 'Recoge 100 hojas verdes', icon: 'hoja', test: S => S.stats.leaves >= 100 },
   { id: 'km10', name: '10 km pedaleados', desc: 'Recorre 10 km en el juego', icon: 'usuario', test: S => S.stats.km >= 10 },
   { id: 'timbre', name: 'Buena convivencia', desc: 'Usa el timbre 50 veces', icon: 'timbre', test: S => S.stats.bells >= 50 },
-  { id: 'oficios', name: 'Todero EnCicla', desc: 'Juega los 9 oficios', icon: 'supervisor', test: S => ROLES.every(r => S.history.some(h => h.m === r.id)) },
+  { id: 'oficios', name: 'Todero EnCicla', desc: 'Juega todos los oficios', icon: 'supervisor', test: S => ROLES.every(r => S.history.some(h => h.m === r.id)) },
   { id: 'supervisor', name: 'Supervisor de corazón', desc: 'Aprueba un turno de Supervisor', icon: 'supervisor', test: S => S.history.some(h => h.m === 'supervisor' && h.p && !h.free) },
   { id: 'carrera', name: 'Más rápido que el bot', desc: 'Gana una carrera de postales', icon: 'balance', test: S => S.history.some(h => h.m === 'carrera' && h.p) },
   { id: 'amigo', name: 'Pedalear en compañía', desc: 'Juega una carrera con un amigo', icon: 'apoyo', test: S => S.history.some(h => h.m === 'carrera' && h.net) },
@@ -5047,7 +5053,7 @@ const Logros = JE.logros = {
   }
 };
 
-/* introducción en páginas de revista */
+/* introducción en páginas */
 const INTRO = [
   { t: '¿Qué es EnCicla?', icon: 'estacion', p: 'Es el sistema de <b>bicicletas públicas gratuito</b> del Área Metropolitana del Valle de Aburrá. Nació en 2011 y hoy tiene más de 130 estaciones en varios municipios.' },
   { t: '¿Cómo se presta?', icon: 'anfitrion', p: 'Te registras, llegas a una estación (manual con <b>anfitrión</b> o automática con <b>tótem</b>), prestas la bici y la devuelves en cualquier estación antes de <b>1 hora</b>.' },
@@ -5057,7 +5063,7 @@ const INTRO = [
 UI.intro = function (done) {
   let i = 0; const show = () => {
     const pg = INTRO[i];
-    this.modal(`<div class="pag">PAG ${i + 1} DE ${INTRO.length} · BIENVENIDA</div><div class="introimg"><img class="px" src="${Art.iconURL(pg.icon, 6)}" alt=""></div><h2>${esc(pg.t)}</h2><p class="m" style="font-size:16px">${pg.p}</p>
+    this.modal(`<div class="pag">BIENVENIDA · ${i + 1} DE ${INTRO.length}</div><div class="introimg"><img class="px" src="${Art.iconURL(pg.icon, 6)}" alt=""></div><h2>${esc(pg.t)}</h2><p class="m" style="font-size:16px">${pg.p}</p>
       <div class="dots">${INTRO.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
       <div class="col"><button class="btn pri" id="inNext">${i < INTRO.length - 1 ? 'Siguiente ▶' : '¡A rodar!'}</button>${i < INTRO.length - 1 ? '<button class="btn gh" id="inSkip">Saltar</button>' : ''}</div>`, () => {
       $('#inNext').onclick = () => { Snd.sfx('tap'); if (++i < INTRO.length) show(); else fin(); };
@@ -5080,7 +5086,7 @@ UI.apoya = function () {
 Art.resultCard = function (res, meta) {
   const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'), r = ROLE[meta.roleId];
   x.fillStyle = PAL.az; x.fillRect(0, 0, W, H); x.fillStyle = '#ffffff10'; for (let i = 0; i < W; i += 10) for (let j = 0; j < H; j += 10) x.fillRect(i, j, 2, 2);
-  x.fillStyle = PAL.vd; x.fillRect(0, 0, W, 90); x.fillStyle = PAL.az; x.font = '800 30px Cuerpo, sans-serif'; x.textBaseline = 'middle'; x.fillText('JUEGA ENCICLA · EDICIÓN DEL TURNO', 48, 47);
+  x.fillStyle = PAL.vd; x.fillRect(0, 0, W, 90); x.fillStyle = PAL.az; x.font = '800 30px Cuerpo, sans-serif'; x.textBaseline = 'middle'; x.fillText('JUEGA ENCICLA · RESULTADO DEL TURNO', 48, 47);
   x.textBaseline = 'alphabetic'; x.lineWidth = 6; x.strokeStyle = PAL.vd; x.font = '700 330px Titulos, Impact, sans-serif'; x.strokeText(String(r.n), 40, 430);
   x.fillStyle = '#fff'; x.font = '700 150px Titulos, Impact, sans-serif'; x.fillText(r.name.toUpperCase(), 250, 300);
   x.fillStyle = PAL.amb; x.font = 'italic 40px Georgia, serif'; x.fillText(meta.roleId === 'carrera' ? 'Carrera de postales' : meta.reto ? 'Reto del día' : 'Turno ' + meta.turno + ' · ' + meta.nov.name, 256, 370);
@@ -5174,7 +5180,7 @@ const Historia = JE.historia = {
     R(0, 0, 12, 12, '#c4ec7c'); R(1, 9, 10, 3, shirt); R(5, 8, 2, 1, skin); R(2, 2, 8, 6, skin); R(2, 1, 8, 2, hair); R(1, 2, 1, 4, hair); R(10, 2, 1, 4, hair);
     if (cap) { R(2, 0, 8, 2, cap); R(1, 2, 10, 1, cap); }
     R(4, 4, 1, 1, '#141414'); R(7, 4, 1, 1, '#141414'); R(5, 6, 2, 1, '#8a3b2a');
-    if (roleId === 'mecanico') R(4, 6, 4, 1, '#5a5a5a'); if (roleId === 'usuario') { R(3, 4, 3, 1, '#0a2342'); R(7, 4, 2, 1, '#0a2342'); } if (roleId === 'monitoreo') { R(1, 3, 1, 3, '#141414'); R(1, 6, 3, 1, '#141414'); } if (roleId === 'supervisor') R(5, 9, 2, 3, '#ff6b5a');
+    if (roleId === 'mecanico') R(4, 5, 4, 1, hair); if (roleId === 'usuario') { R(3, 4, 3, 1, '#0a2342'); R(7, 4, 2, 1, '#0a2342'); } if (roleId === 'monitoreo') { R(1, 3, 1, 3, '#141414'); R(1, 6, 3, 1, '#141414'); } if (roleId === 'supervisor') R(5, 9, 2, 3, '#ff6b5a');
     u = c.toDataURL(); Art.cache.set(k, u); return u;
   },
   bubble(roleId, turno, after, extra) {
@@ -5251,7 +5257,7 @@ Art.person = function (c, x, y, p, ph = 0, face = -1) {
 /* ciclista visto desde arriba: si tiene pelo largo se le ve la cola bajo el casco */
 Art.rider = function (shirt) {
   const P = Save.data.profile, base = this.riderTop(shirt || SHIRTS[P.shirt] || PAL.vd, HELMETS[P.helmet] || '#fff', SKINS[P.skin] || SKINS[1], bikeCol());
-  if (![1, 5, 7].includes(P.hair | 0)) return base;
+  if (base.sc || ![1, 5, 7].includes(P.hair | 0)) return base;
   const k = 'rl' + (shirt || P.shirt) + P.helmet + P.skin + P.hairCol + bikeCol(); let c = this.cache.get(k); if (c) return c;
   c = this.mk(base.width, base.height, x => { x.drawImage(base, 0, 0); x.fillStyle = PELO[P.hairCol | 0]; x.fillRect(3, 8, 1, 2); });
   this.cache.set(k, c); return c;
@@ -5421,8 +5427,8 @@ Ride.prototype.updLife = function (dt) {
 const _drawGround = Ride.prototype.drawGround;
 Ride.prototype.drawGround = function (b, ox, oy, inV) {
   _drawGround.call(this, b, ox, oy, inV);
-  for (const q of this.npcB || []) { if (!inV(q.x, q.y)) continue; const sp = Art.riderTop(q.shirt, q.helmet, q.skin); b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a + Math.PI / 2); b.fillStyle = '#0004'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 1.5, sp.width, sp.height); b.drawImage(sp, -sp.width / 2, -sp.height / 2); b.restore(); }
-  if (this.parked) { const pk = this.parked; if (inV(pk.x, pk.y)) { b.save(); b.translate(pk.x - ox, pk.y - oy); b.rotate(pk.a + Math.PI / 2); b.drawImage(Art.bikeTop(), -1.5, -4); b.restore(); } }
+  for (const q of this.npcB || []) { if (!inV(q.x, q.y)) continue; const sp = Art.riderTop(q.shirt, q.helmet, q.skin); b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a + Math.PI / 2); blit(b, sp, '#0004'); b.restore(); }
+  if (this.parked) { const pk = this.parked; if (inV(pk.x, pk.y)) { b.save(); b.translate(pk.x - ox, pk.y - oy); b.rotate(pk.a + Math.PI / 2); blit(b, Art.bikeTop()); b.restore(); } }
 };
 /* ---------- caminar (modo libre): bajarse de la bici y recorrer la ciudad a pie ---------- */
 const _rideUpdate = Ride.prototype.update;
@@ -5622,20 +5628,14 @@ MapMode.prototype.setupRide = function (o) {
   _setup69.call(this, o); const f = Cal.fiesta(); this.ride.fest = f;
   if (f && f.id === 'flores') this.mods.flores = true; if (f && (f.deco === 'navidad' || f.deco === 'velitas')) this.mods.alumbrados = true;
 };
-/* música de temporada */
-const _ps69 = Snd.playStep;
-Snd.playStep = function (s, t) {
-  _ps69.call(this, s, t); const f = this.fest, st = s % 16; if (!f) return; const mf = m => 440 * Math.pow(2, (m - 69) / 12);
-  if (f === 'jingle' && (st === 2 || st === 6 || st === 10 || st === 14)) this.tone(mf(this.root + 48 + (st === 14 ? 7 : 0)), .12, { t, type: 'sine', v: .025, dest: this.musG });
-  if (f === 'spooky' && st % 8 === 4) this.tone(mf(this.root + 30), .4, { t, type: 'sawtooth', v: .012, to: mf(this.root + 29), dest: this.musG });
-};
+/* música de temporada: las capas se tocan en 73-musica.js (Snd.fest) */
 
 /* ---- 69-libre.js ---- */
 /* =====================================================================
    MODO LIBRE CON VIDA PROPIA (v0.9)
    Tu perfil (edad, dónde vives, colegio, universidad, trabajo) arma misiones distintas cada día de la semana,
    con animaciones de clase, trabajo y colegio; domingos y festivos hay ciclovía con carreras y retos;
-   energía, bancas, fotos para el álbum y mentores que enseñan habilidades.
+   energía, bancas y fotos para el álbum.
    Colores: el verde, azul oscuro y blanco de EnCicla son para sus trabajadores y sus bicis; en el modo libre te vistes como quieras.
    ===================================================================== */
 const UNIS = [['udea', 'Universidad de Antioquia', 6.2675, -75.5689], ['unal', 'Universidad Nacional', 6.2618, -75.5770], ['eafit', 'EAFIT', 6.2003, -75.5786], ['upb', 'UPB', 6.2420, -75.5895],
@@ -5643,15 +5643,6 @@ const UNIS = [['udea', 'Universidad de Antioquia', 6.2675, -75.5689], ['unal', '
 const TRABAJOS = [['centro', 'el Centro', 6.2490, -75.5680], ['poblado', 'El Poblado', 6.2100, -75.5700], ['ciudadrio', 'Ciudad del Río', 6.2220, -75.5750], ['laureles', 'Laureles', 6.2450, -75.5930], ['guayabal', 'Guayabal', 6.2100, -75.5880],
   ['itagui', 'Itagüí', 6.1720, -75.6110], ['envigado', 'Envigado', 6.1720, -75.5870], ['bello', 'Bello', 6.3370, -75.5580], ['sabaneta', 'Sabaneta', 6.1515, -75.6164], ['encicla', 'Casa EnCicla', 6.2314, -75.5995]];
 const EDADES = ['Niño o niña', 'Joven', 'Adulto', 'Adulto mayor'];
-const MENTORES = [
-  { id: 'luz', cast: 'usuario', skill: 'pulmones', name: 'Pulmones de acero', desc: 'Gastas 30 % menos energía en las subidas del modo libre.', st: 'belen' },
-  { id: 'santi', cast: 'anfitrion', skill: 'sonrisa', name: 'Sonrisa de anfitrión', desc: 'En la ventanilla los usuarios esperan 15 % más.', st: 'floresta' },
-  { id: 'jairo', cast: 'mecanico', skill: 'manos', name: 'Manos rápidas', desc: '20 % más de tiempo para reparar cada bici.', st: 'aranjuez' },
-  { id: 'wilson', cast: 'balance', skill: 'equilibrio', name: 'Equilibrio firme', desc: 'Las bicis que cargas a pie se tambalean 35 % menos.', st: 'bello' },
-  { id: 'kevin', cast: 'apoyo', skill: 'atajos', name: 'Atajos de apoyo', desc: 'Pedaleas 15 % más rápido por andenes y plazas.', st: 'manrique' }
-];
-const hasSkill = id => (Save.data.skills || []).includes(id);
-const DESDE = { lat: 0, lon: 0 };   // (las posiciones se calculan con geoP)
 const placeP = (lat, lon) => { const p = geoP(lat, lon), o = JE.map.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), false); return { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2 }; };
 function homeStation() {
   const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni);
@@ -5700,12 +5691,6 @@ const _setupL = MapMode.prototype.setupRide;
 MapMode.prototype.setupRide = function (o) { _setupL.call(this, o); this.uniform = !['usuario', 'carrera'].includes(this.id); };
 const _rider69 = Art.rider;
 Art.rider = function (shirt) { const M = JE.game && JE.game.mode; return M && M.uniform ? this.riderTop('#0e2d55', '#ffffff', SKINS[Save.data.profile.skin] || SKINS[1], PAL.vd) : _rider69.call(this, shirt); };
-MapMode.prototype.speedMul = function (R) { const v = R.tileAt(); return R.p.veh === 'bike' && (v === TT.WALK || v === TT.PLAZA) && hasSkill('atajos') ? 1.15 : 1; };
-/* habilidades de los mentores */
-const _sp69 = MGAnfitrion.prototype.spawnUser;
-MGAnfitrion.prototype.spawnUser = function () { const n = this.queue.length; _sp69.call(this); if (this.queue.length > n && hasSkill('sonrisa')) this.queue[this.queue.length - 1].pat *= 1.15; };
-const _mn69 = MGMecanico.prototype.next;
-MGMecanico.prototype.next = function () { _mn69.call(this); if (this.bike && hasSkill('manos')) this.bike.t *= 1.2; };
 
 /* ---------- misiones del día ---------- */
 function genMisiones(now) {
@@ -5728,8 +5713,6 @@ function genMisiones(now) {
   if (f) L.push(festMision(f, now));
   L.push({ id: 'foto', kind: 'foto', txt: 'Toma una foto en un lugar emblemático', h: 6, xp: 15 });
   if (L.length < 4) L.push({ id: 'banca', kind: 'banca', txt: 'Descansa en una banca de un parque', h: 4, xp: 10 });
-  const mt = MENTORES.find(x => !hasSkill(x.skill));
-  if (mt && L.length < 5) L.push({ id: 'mentor_' + mt.id, kind: 'mentor', mentor: mt, txt: 'Visita a ' + CAST[mt.cast][0] + ': te enseña «' + mt.name + '»', h: 10, xp: 30 });
   if (m >= 18 * 60) L.push({ id: 'casa', kind: 'casa', txt: 'Vuelve a tu casa', h: 5, xp: 10 });
   return L.slice(0, 5);
 }
@@ -5741,9 +5724,9 @@ function festMision(f, now) {
 }
 
 /* ---------- animación de la rutina: entrar, que pase el tiempo y salir ---------- */
-const RUT_TXT = { uni: ['Clase de Cálculo', 'Laboratorio', 'Almuerzo en la cafetería', 'Biblioteca', 'Clase de Inglés'], trabajo: ['Reunión del equipo', 'Correo y llamadas', 'Almuerzo', 'Informe del día'], colegio: ['Matemáticas', 'Recreo', 'Ciencias', 'Educación física'], mentor: [] };
+const RUT_TXT = { uni: ['Clase de Cálculo', 'Laboratorio', 'Almuerzo en la cafetería', 'Biblioteca', 'Clase de Inglés'], trabajo: ['Reunión del equipo', 'Correo y llamadas', 'Almuerzo', 'Informe del día'], colegio: ['Matemáticas', 'Recreo', 'Ciencias', 'Educación física'] };
 class MGRutina extends MG {
-  constructor(parent, o) { super(parent, o); this.kind = o.kind; this.name = o.name || ''; this.min = o.clock0 || 480; this.c0 = this.min; this.dur = o.dur || 120; this.ph = 0; this.k = 0; this.fast = 1; this.coach = o.kind === 'mentor' ? '' : 'El tiempo pasa mientras ' + (o.kind === 'uni' ? 'estudias' : o.kind === 'trabajo' ? 'trabajas' : 'estás en clase') + '. Toca para adelantar.'; }
+  constructor(parent, o) { super(parent, o); this.kind = o.kind; this.name = o.name || ''; this.min = o.clock0 || 480; this.c0 = this.min; this.dur = o.dur || 120; this.ph = 0; this.k = 0; this.fast = 1; this.coach = 'El tiempo pasa mientras ' + (o.kind === 'uni' ? 'estudias' : o.kind === 'trabajo' ? 'trabajas' : 'estás en clase') + '. Toca para adelantar.'; }
   update(dt) {
     this.tick(dt); this.k += dt * this.fast;
     if (this.ph === 0 && this.k > 1.6) { this.ph = 1; this.k = 0; }
@@ -5757,29 +5740,25 @@ class MGRutina extends MG {
     else if (this.kind === 'trabajo') { prect(b, cx - 26, gy - 80, 52, 80, '#8fa6bf'); for (let y = gy - 74; y < gy - 10; y += 8) for (let x = cx - 22; x < cx + 22; x += 8) prect(b, x, y, 5, 5, '#d6e4f2'); prect(b, cx - 7, gy - 18, 14, 18, '#1d2c44'); }
     else if (this.kind === 'colegio') { prect(b, cx - 44, gy - 36, 88, 36, '#f1c40f'); prect(b, cx - 44, gy - 40, 88, 5, '#c0392b'); for (let i = 0; i < 5; i++) prect(b, cx - 36 + i * 17, gy - 28, 9, 9, '#d6e4f2'); prect(b, cx - 6, gy - 18, 12, 18, '#6e2c00'); prect(b, cx + 36, gy - 70, 1, 34, '#59606c'); prect(b, cx + 37, gy - 70, 10, 3, '#f4d03f'); prect(b, cx + 37, gy - 67, 10, 2, '#2471a3'); prect(b, cx + 37, gy - 65, 10, 2, '#c0392b'); }
     const px = this.ph === 0 ? lerp(10, cx - 10, this.k / 1.6) : this.ph === 2 ? lerp(cx - 10, 10, this.k / 1.2) : -99;
-    if (this.kind !== 'mentor' && px > -50) Art.person(b, px, gy, Art.me(), this.t * 2, this.ph === 2 ? -1 : 1);
-    if (this.kind === 'mentor') { Art.person(b, vw * .35, gy, Art.me(), 0, 1); }
+    if (px > -50) Art.person(b, px, gy, Art.me(), this.t * 2, this.ph === 2 ? -1 : 1);
   }
   hud(V) {
-    this.btns = []; const s = V.s, m = this.o.mentor;
-    V.text(this.kind === 'mentor' ? CAST[m.cast][0] + ' · ' + CAST[m.cast][1] : this.name, V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
-    if (this.kind === 'mentor') {
-      const w = Math.min(380, V.w - 20), { x, y } = this.card(V, w, 150, 'NUEVA HABILIDAD'); V.ctx.imageSmoothingEnabled = false; const img = this._f || (this._f = Object.assign(new Image(), { src: Historia.face(m.cast) })); if (img.complete) V.ctx.drawImage(img, x + 12, y + 36, 48, 48);
-      V.text('«' + m.name + '»', x + 72, y + 52, { size: 17, color: PAL.az }); V.text(m.desc, x + 72, y + 74, { size: 12, color: PAL.az2, body: true }); V.text('«' + BIOS[m.cast][1] + '»', x + 12, y + 110, { size: 13, color: PAL.az, body: true });
-    } else if (this.ph === 1) {
+    this.btns = [];
+    V.text(this.name, V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    if (this.ph === 1) {
       const acts = RUT_TXT[this.kind] || [''], a = acts[Math.floor(this.k / 3.6 * acts.length) % acts.length];
       V.text('🕐 ' + fmtClock(this.min), V.w / 2, V.h * .3, { size: 34, align: 'center', color: '#fff', stroke: '#0a2342', sw: 6 });
       V.text(a + '…', V.w / 2, V.h * .3 + 34, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 5, body: true });
       const w = Math.min(260, V.w - 40), c = V.ctx; c.fillStyle = '#0a2342dd'; c.fillRect((V.w - w) / 2, V.h * .3 + 52, w, 10); c.fillStyle = PAL.vd; c.fillRect((V.w - w) / 2, V.h * .3 + 52, w * Math.min(1, this.k / 3.6), 10);
     }
-    if (!this.done && this.ph < 2) this.button(V, V.w / 2 - 80, V.h - 90, 160, 56, this.kind === 'mentor' ? '¡Gracias!' : '⏩ Adelantar', () => this.skip(), { bg: PAL.vd2, size: 18, key: 'go' });
-    this.drawPops(V); void s;
+    if (!this.done && this.ph < 2) this.button(V, V.w / 2 - 80, V.h - 90, 160, 56, '⏩ Adelantar', () => this.skip(), { bg: PAL.vd2, size: 18, key: 'go' });
+    this.drawPops(V);
   }
   tap() { this.skip(); return true; }
   bot() { this.skip(); }
 }
 
-/* ---------- modo libre: misiones, ciclovía, energía, bancas, fotos y mentores ---------- */
+/* ---------- modo libre: misiones, ciclovía, energía, bancas y fotos ---------- */
 class ModeUsuarioR extends ModeUsuario {
   constructor(role, T, opt) {
     super(role, T, opt);
@@ -5805,7 +5784,6 @@ class ModeUsuarioR extends ModeUsuario {
     switch (ms.kind) {
       case 'rutina': { let p = ms.place ? at(ms.place) : null; if (!p) { const h = this.home; p = placeP(h.lat + .0025, h.lon + .002); } mk(p.x, p.y, ms.place ? ms.place[1] : 'Tu colegio', () => this.rutina(ms)); break; }
       case 'visita': { const p = lm(ms.place[0]) || at(ms.place); mk(p.x, p.y, ms.place[1], () => this.cumplir(ms)); break; }
-      case 'mentor': { const s = M.stations.find(q => q.id === ms.mentor.st) || this.home; mk(s.x, s.y + 12 * WK, CAST[ms.mentor.cast][0], () => this.runSub(new MGRutina(this, { kind: 'mentor', mentor: ms.mentor, clock0: this.clock, dur: 20 }), () => { Save.data.skills = (Save.data.skills || []).concat([ms.mentor.skill]); this.cumplir(ms); })); break; }
       case 'casa': mk(this.home.x, this.home.y + 10 * WK, 'Tu casa', () => this.cumplir(ms), PAL.vd); break;
       case 'carrera': { const ln = this.cvLane(); if (!ln) { ms.done = true; break; } const s0 = clamp(M.project(ln, this.ride.p.x, this.ride.p.y).s + 40 * WK, 0, ln.len * .5), q = M.at(ln, s0); ms.lane = ln; ms.s0 = s0; mk(q.x, q.y, 'Salida de la carrera', () => this.salida(ms)); break; }
       case 'km': ms.prog = () => (this.cvDist * M_PER_PX / 1000).toFixed(1) + '/' + (ms.need / 1000) + ' km'; break;
@@ -5852,8 +5830,12 @@ class ModeUsuarioR extends ModeUsuario {
   finRace() { const r = this.race, pos = 1 + r.opps.filter(o => o.fin).length; r.ms.won = pos === 1; this.ride.stamp = { t: 2.2, title: pos === 1 ? '¡GANASTE LA CARRERA!' : 'LLEGASTE DE ' + pos + '°', sub: 'Ciclovía de ' + (r.ln.name || 'la avenida'), bg: pos === 1 ? PAL.vd : PAL.amb }; this.cumplir(r.ms, pos > 2); this.race = null; this.ride.opps = []; }
   tick(dt) {
     super.tick(dt); if (!this.free) return; const R = this.ride, P = R.p, M = JE.map;
+    // día y noche de 24 horas: tráfico según la hora, aviso de cierre de EnCicla y cambio de día a medianoche
+    if (this.clock >= 1440) { this.clock -= 1440; this.fecha = addD(this.fecha, 1); JE.ui && JE.ui.toast('🌅 Nuevo día: ' + Cal.label(this.fecha)); }
+    const hr = this.clock / 60, base = this.mods.ciclovia ? .5 : 1; R.traffic = base * (hr < 5 ? .25 : hr < 6 ? .5 : (hr < 9 || (hr >= 17 && hr < 19.5)) ? 1.3 : hr >= 21 ? .55 : 1);
+    if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
     // energía: las subidas cansan, parar descansa; con poca energía se pedalea más lento
-    const sl = Math.max(0, R.sl || 0), drain = P.v > 5 ? (P.veh === 'walk' ? .12 : .35 + sl * 30) * (hasSkill('pulmones') ? .7 : 1) : -3;
+    const sl = Math.max(0, R.sl || 0), drain = P.v > 5 ? (P.veh === 'walk' ? .12 : .35 + sl * 30) : -3;
     this.energy = clamp(this.energy - drain * dt, 0, 100); if (this.energy < 15 && !this.tiredTold) { this.tiredTold = 1; JE.ui && JE.ui.toast('😮‍💨 Poca energía: siéntate en una banca de un parque o para un momento'); } if (this.energy > 40) this.tiredTold = 0;
     // ciclovía y ciclorrutas: distancia
     const v = R.tileAt(); if ((this.mods.ciclovia && (v === TT.AVE || v === TT.AUTO)) || v === TT.CICLO) this.cvDist += P.v * dt;
@@ -5865,7 +5847,7 @@ class ModeUsuarioR extends ModeUsuario {
       if (r.cd > 0) for (const o of r.opps) { const q = M.at(r.ln, Math.max(0, o.s), (o.id - 1) * 4); o.x = q.x; o.y = q.y; o.a = q.a; }
     }
   }
-  speedMul(R) { return MapMode.prototype.speedMul.call(this, R) * (this.free && this.energy < 15 ? .72 : 1) * (this.race && this.race.cd > 0 ? 0 : 1); }
+  speedMul() { return (this.free && this.energy < 15 ? .72 : 1) * (this.race && this.race.cd > 0 ? 0 : 1); }
   update(dt) {
     if (this.sitting) { this.t += dt; this.clock += 3 * dt; this.energy = Math.min(100, this.energy + 18 * dt); this.sitT += dt; this.ride.update(dt, { x: 0, y: 0, m: 0 }); const b = this.misiones && this.misiones.find(m => m.kind === 'banca' && !m.done); if (b && this.sitT > 3) this.cumplir(b); return; }
     super.update(dt);
@@ -5883,7 +5865,7 @@ class ModeUsuarioR extends ModeUsuario {
     const L = this.nearLM(); if (L) a.push({ id: 'foto', icon: 'estrella', label: 'Foto', fn: () => this.foto(L) });
     return a;
   }
-  info() { const i = super.info(); if (this.free) { i.chips = [{ t: '⚡ ' + Math.round(this.energy) + '%', c: this.energy < 15 ? 'bad' : this.energy < 35 ? 'warn' : '' }].concat(this.ownBike ? [{ t: '🚲 Mi bici' }] : [{ t: 'EnCicla' }]); if (this.mods.ciclovia) i.chips.push({ t: '🚴 Ciclovía' }); } return i; }
+  info() { const i = super.info(); if (this.free) { const n = Art.night(this.clock); i.chips = [{ t: n > .5 ? '🌙 Noche' : n > 0 ? (this.clock < 720 ? '🌅 Amanece' : '🌇 Atardece') : '☀️ Día' }, { t: '⚡ ' + Math.round(this.energy) + '%', c: this.energy < 15 ? 'bad' : this.energy < 35 ? 'warn' : '' }].concat(this.ownBike ? [{ t: '🚲 Mi bici' }] : [{ t: 'EnCicla' }]); if (this.mods.ciclovia) i.chips.push({ t: '🚴 Ciclovía' }); } return i; }
   hud2(V) { if (this.race && this.race.cd > 0) { const n = Math.ceil(this.race.cd); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 100, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); } if (this.ride.flash > 0) { const c = V.ctx; c.fillStyle = 'rgba(255,255,255,' + (this.ride.flash * 1.5).toFixed(2) + ')'; c.fillRect(0, 0, V.w, V.h); this.ride.flash -= 1 / 60; } }
 }
 MODE_CLASS.usuario = ModeUsuarioR;
@@ -5951,9 +5933,6 @@ UI.renderAlbum = function () {
   const d = document.createElement('div'); d.innerHTML = `<div class="pag" style="margin-top:16px">📷 Tus fotos · ${F.length}</div><div class="fotos">${F.slice().reverse().slice(0, 24).map((f, i) => { const L = LM[f.id]; if (!L) return ''; const fi = FIESTAS.find(x => x[0] === f.f); return `<figure class="foto"><canvas width="96" height="72" data-foto="${LANDMARKS.indexOf(L)}"></canvas><figcaption>${esc(L.name.split(' · ')[0])}<br><small>${esc(f.k)}${fi ? ' ' + fi[2] : ''}</small></figcaption></figure>`; }).join('')}</div>`;
   el.appendChild(d); $$('canvas[data-foto]', d).forEach(c => this.drawPost(c, +c.dataset.foto));
 };
-/* mentores en la ficha de personajes */
-const _pers69 = UI.personajes;
-UI.personajes = function () { _pers69.call(this); const list = $('#mBody .chars'); if (!list) return; MENTORES.forEach(m => { const el = [...list.children].find(c => c.textContent.includes(CAST[m.cast][0])); if (el) el.querySelector('div').insertAdjacentHTML('beforeend', `<div class="chip" style="margin-top:4px">${hasSkill(m.skill) ? '✓' : '🎓'} Enseña: ${esc(m.name)}</div>`); }); };
 /* preguntas del perfil: efectos al elegir */
 JE.onProfile = (k, i) => {
   const S = Save.data;
@@ -5964,7 +5943,6 @@ LOGROS.push(
   { id: 'misiones10', name: 'Vida sobre ruedas', desc: 'Cumple 10 misiones del modo libre', icon: 'usuario', test: S => (S.stats.misiones | 0) >= 10 },
   { id: 'cvwin', name: 'Rey de la ciclovía', desc: 'Gana una carrera de la ciclovía', icon: 'balance', test: S => !!S.flags.cvWin },
   { id: 'fiesta', name: 'De fiesta en el valle', desc: 'Cumple una misión de una festividad', icon: 'estrella', test: S => !!S.flags.fiesta },
-  { id: 'mentor', name: 'Aprendiz de maestros', desc: 'Aprende una habilidad de un mentor', icon: 'mecanico', test: S => (S.skills || []).length > 0 },
   { id: 'foto10', name: 'Fotógrafo del valle', desc: 'Toma 10 fotos', icon: 'estrella', test: S => (S.stats.fotos | 0) >= 10 }
 );
 
@@ -5983,7 +5961,7 @@ const Net = JE.net = {
   peers: [], role: null, myId: 0, status: 'off', pending: null, onmsg: null, onstatus: null, MAX: 3,
   supported() { return !!window.RTCPeerConnection; },
   newPC(peer) {
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    const pc = new RTCPeerConnection({ iceServers: this.lan ? [] : [{ urls: 'stun:stun.l.google.com:19302' }] });   // misma red: sin STUN (funciona sin internet)
     pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') { peer.open = false; this.setStatus(this.openCount() ? 'open' : pc.connectionState); } };
     return pc;
   },
@@ -6039,6 +6017,455 @@ const Net = JE.net = {
   },
   reset() { for (const p of this.peers) { try { if (p.ch) p.ch.close(); } catch (e) { } try { if (p.pc) p.pc.close(); } catch (e) { } } this.peers = []; this.pending = null; this.role = null; this.myId = 0; this.status = 'off'; }
 };
+
+/* ---- 71-tutor.js ---- */
+/* =====================================================================
+   TUTORIAL OPCIONAL: un compañero del oficio te acompaña en el turno.
+   Habla en pausas cortas (el juego se detiene mientras lo lees) y en el mapa pedalea a tu lado.
+   ===================================================================== */
+const TUT_EXTRA = {
+  usuario: 'En bici también se para en rojo. Si un peatón se atraviesa, toca el timbre. El préstamo dura máximo 60 minutos.',
+  anfitrion: 'En la ventanilla: toca al usuario, revisa su tarjeta y entrégale una bici con luz verde. Las dañadas van a la caja roja del taller.',
+  mecanico: 'Mira la falla que parpadea y usa la herramienta de su mismo color. Con la bomba, toca en la zona verde.',
+  bodega: 'Revisa cada caja contra el pedido. El taller necesita el pedido exacto: ni una pieza de más ni de menos.',
+  apoyo: 'Los relevos tienen hora límite: míralas en la lista de abajo. Los inventarios de control suman, pero son opcionales.',
+  pausas: 'Cuando la tarjeta llegue al círculo, haz el movimiento: desliza el dedo o toca la flecha. En «Respira», mantén oprimido.',
+  tecnico: 'Las estaciones con aro rojo están dañadas. Si un celular se queda sin batería, llévale un power bank.',
+  rescate: 'Con una bici en la mano no hagas curvas bruscas. Si se inclina, corrige con ◀ ▶ antes de que pase la raya.',
+  balance: 'El carro solo va por las vías. Parquea donde te dejen y baja las bicis con cuidado de no tumbarlas.',
+  monitoreo: 'Toca una estación para ver cuántas bicis tiene y manda el carro: llevar a las vacías, recoger de las llenas.',
+  supervisor: 'Atiende primero los avisos que están por vencer: mira la hora límite de cada uno en la lista.'
+};
+const Tutor = JE.tutor = {
+  on: false,
+  start(roleId) {
+    const C = CAST[roleId], r = ROLE[roleId]; if (!C || !r) return; const M = Game.mode, map = !!(M && M.ride);
+    this.on = true; this.role = roleId; this.C = C; this.trail = []; this.seen = {}; this.q = []; this.t = 0; this.subSeen = false; this.subDone = false;
+    const add = (id, txt, when) => this.q.push({ id, txt, when });
+    add('hola', '¡Hola, ' + Save.data.profile.name + '! Soy ' + C[0] + ', ' + C[1] + '. ' + r.desc, () => this.t > .6);
+    if (map) {
+      add('mover', 'Arrastra el dedo en cualquier parte para moverte (o usa las flechas). Yo voy a tu lado.', () => this.t > 1);
+      add('ruta', 'La línea punteada te lleva a la siguiente tarea. Cada número del mapa es una tarea.', () => M.ride.stats.dist > 30 * WK || this.t > 14);
+    }
+    add('extra', TUT_EXTRA[roleId] || r.how[1], () => this.t > (map ? 8 : 3));
+    add('mg', 'Esta es la tarea. El título de arriba y el aviso de abajo te dicen qué hacer. ' + (r.how[1] || ''), () => this.subSeen);
+    add('bien', '¡Muy bien! ' + (r.how[2] || 'Sigue así.'), () => this.subDone);
+    add('chao', 'Ya sabes lo básico: te dejo seguir solo. Si tienes dudas, en la pausa está la ayuda. ¡Éxitos!', () => this.seen.bien && this.t - this.seen.bien > 8);
+  },
+  stop() { this.on = false; const el = $('#tutor'); if (el) el.classList.remove('on'); },
+  update(dt) {
+    const M = Game.mode; if (!this.on || !M) return;
+    if (!Game.paused) this.t += dt;
+    if (M.sub) this.subSeen = true; else if (this.subSeen && !this.subDone && this.seen.mg) this.subDone = true;
+    if (M.ride) { const P = M.ride.p; this.trail.push({ x: P.x, y: P.y, a: P.a }); if (this.trail.length > 40) this.trail.shift(); }
+    if (this.showing || Game.paused) return;
+    const nx = this.q[0]; if (!nx) return this.stop();
+    if (nx.id === 'mg' && !M.sub && this.subSeen && !this.seen.mg) { this.q.shift(); return; }
+    if (nx.when()) this.say(nx);
+  },
+  say(item) {
+    this.q.shift(); this.seen[item.id] = this.t; this.showing = true; Game.paused = true; Snd.sfx('tap');
+    let el = $('#tutor'); if (!el) { el = document.createElement('div'); el.id = 'tutor'; $('#sGame').appendChild(el); }
+    el.innerHTML = `<img class="px" src="${Historia.face(this.role)}" alt=""><div><b>${esc(this.C[0])}</b><p>${esc(item.txt)}</p><div class="tb"><button class="btn sm pri" id="tutOk">${this.q.length ? 'Entendido' : '¡Gracias!'}</button>${this.q.length ? '<button class="btn sm gh" id="tutSkip">Saltar tutorial</button>' : ''}</div></div>`;
+    el.classList.add('on');
+    const go = () => { el.classList.remove('on'); this.showing = false; Game.paused = false; Game.last = performance.now(); if (!this.q.length) this.stop(); };
+    $('#tutOk').onclick = go; const sk = $('#tutSkip'); if (sk) sk.onclick = () => { this.q = []; go(); this.stop(); };
+  }
+};
+/* el compañero pedalea a tu lado en el mapa */
+const _rt71 = Ride.prototype.renderTop;
+Ride.prototype.renderTop = function (V) {
+  _rt71.call(this, V); const T = Tutor; if (!T.on || !T.trail || T.trail.length < 14 || this.p.veh === 'truck' || this.mode !== Game.mode || this.mode.sub) return;
+  const q = T.trail[T.trail.length - 14], side = q.a + Math.PI / 2, off = 7 * WK, c = V.ctx, k = V.s * V.dpr, C = T.C, uni = T.role !== 'usuario';
+  c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.imageSmoothingEnabled = false; c.translate(q.x - Math.cos(side) * off - this.cxf, q.y - Math.sin(side) * off - this.cyf); c.rotate(q.a + Math.PI / 2);
+  const sp = Art.riderTop(uni ? '#0e2d55' : C[5], '#ffffff', C[2], PAL.vd); blit(c, sp); c.restore();
+};
+const _start71 = Game.start;
+Game.start = function (roleId, turno, o = {}) { Tutor.stop(); const r = _start71.call(this, roleId, turno, o); if (o.tuto) Tutor.start(roleId); return r; };
+const _dom71 = Game.dom;
+Game.dom = function (dt) { _dom71.call(this, dt); if (Tutor.on) { Tutor.update(dt); const co = $('#coach'); if (co && Tutor.showing) co.style.opacity = '0'; } };
+const _fin71 = Game.finish; Game.finish = function () { Tutor.stop(); return _fin71.apply(this, arguments); };
+const _stop71 = Game.stop; Game.stop = function () { Tutor.stop(); return _stop71.apply(this, arguments); };
+/* botón del tutorial en la ficha del turno */
+const _brief71 = UI.brief;
+UI.brief = function (roleId, turno, o = {}) {
+  _brief71.call(this, roleId, turno, o); const C = CAST[roleId], go = $('#bGo'); if (!C || !go || o.free || o.reto || isMulti(roleId)) return;
+  const first = !Save.data.history.some(e => e.m === roleId), b = document.createElement('button');
+  b.className = 'btn ' + (first ? 'amb' : 'gh'); b.id = 'bTuto'; b.style.flex = '1'; b.innerHTML = '🎓 Con ' + esc(C[0]) + ' (tutorial)';
+  go.parentNode.appendChild(b); go.parentNode.style.flexWrap = 'wrap';
+  const g0 = go.onclick; b.onclick = () => { this._tuto = true; g0(); this._tuto = false; };
+};
+const _start71b = Game.start;
+Game.start = function (roleId, turno, o = {}) { if (UI._tuto) o = Object.assign({}, o, { tuto: true }); return _start71b.call(this, roleId, turno, o); };
+
+/* ---- 72-oficios2.js ---- */
+/* =====================================================================
+   OFICIOS NUEVOS: PAUSAS ACTIVAS Y RESCATE DE BICIS
+   y minijuegos del técnico: tótem, luces de los anclajes y celular de la estación.
+   ===================================================================== */
+Object.assign(CAST, {
+  pausas: ['Maryi', 'pausas activas', '#c68a5c', '#2b1d14', '', '#0e2d55'],
+  rescate: ['Jhon', 'rescate de bicis', '#a86a3d', '#141414', '#ffffff', '#0e2d55']
+});
+Object.assign(BIOS, {
+  pausas: ['Laureles', 'Un cuerpo que se mueve trabaja mejor.', 'Recorre las estaciones a mitad de turno con su parlante y pone a estirar a todo el que encuentre, del anfitrión al supervisor.'],
+  rescate: ['Manrique', 'Ninguna bici se queda atrás.', 'Encuentra bicis abandonadas en parques y esquinas y las devuelve pedaleando con una mano y llevando la otra bici con la otra.']
+});
+Object.assign(HISTORIA, {
+  pausas: [{ t: 'A mover el cuerpo', a: 'Hoy recorres las estaciones haciendo pausas activas. Llega, pon la música y que todos estiren: nadie aguanta un turno entero quieto.', d: '¡Así se cuida al equipo! Los anfitriones quedaron como nuevos.' }],
+  rescate: [{ t: 'Ninguna bici atrás', a: 'Nos reportaron bicis fuera de las estaciones. Ve por ellas y llévalas con una mano: despacio y derecho, que el equilibrio es todo.', d: 'Todas de vuelta en su anclaje. Buen pulso, compañero.' }]
+});
+const ROLE_PAUSAS = { id: 'pausas', name: 'Pausas Activas', tier: 'Bienestar', icon: 'pausas', vista: 'Cenital · ritmo', unlock: 8,
+  desc: 'En el turno intermedio recorre las estaciones con anfitrión y dirige pausas activas: estiramientos y ejercicios al ritmo de la música.',
+  how: ['Ve a cada estación marcada en el mapa.', 'Haz cada movimiento cuando la tarjeta llegue al círculo.', 'Desliza el dedo o toca las flechas; mantén oprimido en «Respira».'],
+  shifts: [{ n: 'Turno intermedio', h: '9:00 a. m. – 6:00 p. m.' }] };
+const ROLE_RESCATE = { id: 'rescate', name: 'Rescate', tier: 'Operación de campo', icon: 'rescate', vista: 'Cenital · equilibrio', unlock: 11,
+  desc: 'Recupera las bicis que quedaron fuera de las estaciones y devuélvelas pedaleando con una mano y llevando la otra bici con la otra.',
+  how: ['Ve al punto donde reportaron la bici.', 'Revísala: si está buena, a la estación más cercana; si está dañada, a una estación con anfitrión para que Balance la lleve al taller.', 'Llévala sin caerte: ◀ ▶ para equilibrar, sin curvas bruscas.'],
+  shifts: [{ n: 'Turno de rescate', h: '8:00 a. m. – 5:00 p. m.' }] };
+ROLES.splice(ROLES.findIndex(r => r.id === 'tecnico'), 0, ROLE_PAUSAS);
+ROLES.splice(ROLES.findIndex(r => r.id === 'balance'), 0, ROLE_RESCATE);
+ROLES.forEach((r, i) => { r.n = i + 1; ROLE[r.id] = r; });
+const _icon72 = Art.icon;
+Art.icon = function (name) {
+  if (name === 'pausas') return this.get('ic_pausas', 16, 16, x => { pdisc(x, 8, 3, 2, '#f1c9a5'); prect(x, 7, 5, 3, 5, PAL.vd); pline(x, 7, 6, 3, 1, PAL.vd); pline(x, 9, 6, 13, 1, PAL.vd); pline(x, 7, 10, 4, 15, '#d6dde6'); pline(x, 9, 10, 12, 15, '#d6dde6'); });
+  if (name === 'rescate') return this.get('ic_rescate', 16, 16, x => { pring(x, 4, 11, 3, '#fff'); pring(x, 12, 11, 3, '#fff'); pline(x, 4, 11, 8, 7, PAL.vd); pline(x, 8, 7, 12, 11, PAL.vd); prect(x, 6, 1, 5, 4, PAL.cor); prect(x, 8, 0, 1, 6, '#fff'); prect(x, 6, 2, 5, 1, '#fff'); });
+  return _icon72.call(this, name);
+};
+
+/* ---------- figura con poses (pausas activas) ---------- */
+const POSE0 = { hip: [0, -10], sh: [0, -18], hd: [0, -21.5], eL: [-3, -14], hL: [-3.5, -10], eR: [3, -14], hR: [3.5, -10], kL: [-1.5, -5], fL: [-2, 0], kR: [1.5, -5], fR: [2, 0] };
+const POSES = {
+  idle: {},
+  up: { eL: [-3, -22], hL: [-3, -26.5], eR: [3, -22], hR: [3, -26.5] },
+  down: { hip: [0, -6], sh: [0, -13.5], hd: [0, -17], eL: [-3, -13], hL: [-6.5, -13], eR: [3, -13], hR: [6.5, -13], kL: [-4.5, -4], fL: [-2.5, 0], kR: [4.5, -4], fR: [2.5, 0] },
+  left: { sh: [-3.5, -17.5], hd: [-5, -20.5], eL: [-6, -14], hL: [-7, -10.5], eR: [0, -22], hR: [-4, -25] },
+  right: { sh: [3.5, -17.5], hd: [5, -20.5], eR: [6, -14], hR: [7, -10.5], eL: [0, -22], hL: [4, -25] },
+  tap: { eL: [-3, -15], hL: [-.5, -18], eR: [3, -15], hR: [.5, -18] },
+  hold: { sh: [0, -18.5], hd: [0, -22], eL: [-5, -18.5], hL: [-9, -20], eR: [5, -18.5], hR: [9, -20] }
+};
+const poseOf = (a, b, f) => { const A = Object.assign({}, POSE0, POSES[a] || {}), B = Object.assign({}, POSE0, POSES[b] || {}), o = {}; for (const k in A) o[k] = [lerp(A[k][0], B[k][0], f), lerp(A[k][1], B[k][1], f)]; return o; };
+function drawPose(b, x, y, J, p, k) {
+  const P = (q) => [Math.round(x + q[0] * k), Math.round(y + q[1] * k)];
+  const thick = (a, c, w, col) => { const A = P(a), C = P(c), hz = Math.abs(C[0] - A[0]) > Math.abs(C[1] - A[1]); for (let i = -Math.floor(w / 2); i < Math.ceil(w / 2); i++) pline(b, A[0] + (hz ? 0 : i), A[1] + (hz ? i : 0), C[0] + (hz ? 0 : i), C[1] + (hz ? i : 0), col); };
+  const lw = Math.max(1, Math.round(k * 1.4)), tw = Math.max(2, Math.round(k * 3.6));
+  thick(J.hip, J.kL, lw + 1, p.pants); thick(J.kL, J.fL, lw + 1, p.pants); thick(J.hip, J.kR, lw + 1, shade(p.pants, -.15)); thick(J.kR, J.fR, lw + 1, shade(p.pants, -.15));
+  const fL = P(J.fL), fR = P(J.fR); prect(b, fL[0] - k, fL[1] - k + 1, 2 * k, k, p.shoes || '#111'); prect(b, fR[0] - k, fR[1] - k + 1, 2 * k, k, p.shoes || '#111');
+  thick(J.hip, J.sh, tw, p.vest ? PAL.vd : p.shirt);
+  thick(J.sh, J.eL, lw, p.shirt); thick(J.eL, J.hL, lw, p.skin); thick(J.sh, J.eR, lw, p.shirt); thick(J.eR, J.hR, lw, p.skin);
+  const H = P(J.hd), r = Math.max(2, Math.round(2.6 * k)); pdisc(b, H[0], H[1], r, p.skin); prect(b, H[0] - r, H[1] - r - 1, r * 2 + 1, Math.max(1, r - 1), p.cap || p.hair || '#2a1a10');
+  prect(b, H[0] - Math.round(k), H[1], Math.max(1, Math.round(k * .6)), Math.max(1, Math.round(k * .6)), '#141414'); prect(b, H[0] + Math.round(k * .6), H[1], Math.max(1, Math.round(k * .6)), Math.max(1, Math.round(k * .6)), '#141414');
+}
+
+/* ---------- PAUSA ACTIVA: coreografía al ritmo (tarjetas que llegan al círculo) ---------- */
+const EJERCICIOS = [
+  { name: 'Brazos arriba', k: 'up', pose: 'up', ic: '▲' }, { name: 'Sentadilla', k: 'down', pose: 'down', ic: '▼' },
+  { name: 'Inclínate a la izquierda', k: 'left', pose: 'left', ic: '◀' }, { name: 'Inclínate a la derecha', k: 'right', pose: 'right', ic: '▶' },
+  { name: 'Aplauso', k: 'tap', pose: 'tap', ic: '●' }, { name: 'Respira profundo', k: 'hold', pose: 'hold', ic: '◉', len: 2 }
+];
+class MGPausa extends MG {
+  constructor(parent, o) {
+    super(parent, o); const R = this.rng, lvl = o.lvl | 0; this.min = o.clock0 || 600; this.bpm = 92 + lvl * 6; this.beat = 60 / this.bpm; this.t0 = 2.6;
+    // coreografía por frases de 4 que se repiten con variación, como en los juegos de baile
+    const pick = () => R.pick(EJERCICIOS.slice(0, 5)), seq = []; let tb = 0;
+    for (let f = 0; f < 3 + Math.min(1, lvl); f++) { const ph = [pick(), pick(), pick(), R.f() < .5 ? EJERCICIOS[5] : pick()]; for (let rep = 0; rep < 2; rep++) for (const e of ph) { const v = rep && e.k !== 'hold' && R.f() < .3 ? pick() : e; seq.push({ e: v, at: this.t0 + tb * this.beat, res: null }); tb += v.len ? 4 : 2; } }
+    this.seq = seq; this.tEnd = this.t0 + tb * this.beat + 1.2; this.perf = 0; this.goodN = 0; this.miss = 0; this.combo = 0; this.fb = null; this.hold = null; this.sw = null; this.ani = 50; this.lastBeat = -1;
+    this.crew = [0, 1, 2].map(i => ({ p: Object.assign({}, Art.me({ uniforme: true }), { shirt: ['#0e2d55', '#1d4a80', '#0e2d55'][i], skin: SKINS[(i * 2 + 1) % SKINS.length], hair: ['#2a1a10', '#141414', '#5a2d0c'][i], cap: null }), lag: .12 + i * .06 }));
+    this.coach = 'Cuando cada tarjeta llegue al círculo, haz el movimiento: desliza o toca la flecha. En «Respira», mantén oprimido.';
+  }
+  cur(t) { return this.seq.find(s => s.res == null && t <= s.at + (s.e.len ? s.e.len * 2 : 1) * this.beat * .5 + .32); }
+  judge(s, ok, q) {
+    s.res = ok ? q : 'fallo'; if (ok && q === 'perfecto') { this.perf++; this.score += 10; } else if (ok) { this.goodN++; this.score += 6; } else { this.miss++; this.errors++; }
+    this.combo = ok ? this.combo + 1 : 0; this.ani = clamp(this.ani + (ok ? (q === 'perfecto' ? 7 : 4) : -9), 0, 100);
+    this.fb = { txt: ok ? (q === 'perfecto' ? '¡PERFECTO!' : '¡BIEN!') : 'FALLO', col: ok ? (q === 'perfecto' ? PAL.vd1 : PAL.cie) : PAL.cor, t: .7 };
+    if (ok) Snd.note(this.combo % 8); else Snd.sfx('bad');
+  }
+  input(k) {
+    const t = this.t, s = this.cur(t); if (!s || this.done) return; const d = Math.abs(t - s.at);
+    if (d > .32) { if (t < s.at) return; }
+    if (s.e.k === 'hold') { if (k === 'tap' || k === 'hold') { this.hold = { s, t0: t }; } else this.judge(s, false); return; }
+    if (k !== s.e.k) return this.judge(s, false);
+    this.judge(s, true, d < .13 ? 'perfecto' : 'bien');
+  }
+  release() {
+    if (this.hold) { const h = this.hold, need = h.s.e.len * 2 * this.beat * .8, held = this.t - h.t0, d = Math.abs(h.t0 - h.s.at); this.hold = null; if (h.s.res != null) return; this.judge(h.s, held >= need * .55 && d < .4, held >= need * .85 && d < .18 ? 'perfecto' : 'bien'); }
+    if (this.sw) { const s = this.sw; this.sw = null; const dx = s.ux - s.x, dy = s.uy - s.y; if (Math.hypot(dx, dy) < 6) this.input('tap'); else this.input(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up')); }
+  }
+  pointer(type, vx, vy, cx, cy) {
+    if (type === 'down') { for (const b of this.btns) if (cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h) { b.fn(); return true; } const s = this.cur(this.t); if (s && s.e.k === 'hold' && Math.abs(this.t - s.at) < .4) { this.input('hold'); return true; } this.sw = { x: cx, y: cy, ux: cx, uy: cy }; return true; }
+    if (type === 'up') { if (this.sw) { this.sw.ux = cx; this.sw.uy = cy; } this.release(); }
+    return false;
+  }
+  key(e) { const k = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Space: 'tap', Enter: 'tap' }[e.code]; if (k) { const s = this.cur(this.t); if (s && s.e.k === 'hold' && k === 'tap') { this.input('hold'); if (this.hold) this.hold.auto = true; } else this.input(k); } }
+  update(dt) {
+    this.tick(dt); const t = this.t;
+    const b = Math.floor((t - this.t0) / this.beat); if (b !== this.lastBeat && t >= this.t0 - 3 * this.beat && t < this.tEnd - 1) { this.lastBeat = b; if (!JE.headless && Save.data.settings.sfx) Snd.tone(b % 2 ? 220 : 330, .05, { v: .05 }); }
+    if (this.hold) { const need = this.hold.s.e.len * 2 * this.beat * .8; if (this.hold.auto || this.auto != null) { if (t - this.hold.t0 >= need * .95) this.release(); } else if (t - this.hold.t0 > need * 1.6) this.release(); }
+    for (const s of this.seq) if (s.res == null && !(this.hold && this.hold.s === s) && t > s.at + (s.e.k === 'hold' ? .45 : .34)) this.judge(s, false);
+    if (this.auto != null) for (const s of this.seq) if (s.res == null && !this.hold && t >= s.at - .02 && t < s.at + .1) { if (this.rng.f() < this.auto * .5) { this.input(s.e.k === 'up' ? 'down' : 'up'); } else if (s.e.k === 'hold') { this.input('hold'); } else this.input(s.e.k); break; }
+    if (this.fb) { this.fb.t -= dt; if (this.fb.t <= 0) this.fb = null; }
+    if (t >= this.tEnd && !this.done) { this.done = true; this.acc = Math.round(100 * (this.perf + this.goodN * .6) / this.seq.length); this.score += Math.round(this.ani / 10); Snd.sfx(this.acc >= 60 ? 'win' : 'ok'); }
+    this.min = (this.o.clock0 || 600) + t / 6;
+  }
+  poseAt(t) {
+    let best = null, bd = 1e9; for (const s of this.seq) { const d = t - s.at, w = s.e.len ? s.e.len * 2 * this.beat : this.beat * 1.2; if (d > -this.beat * .9 && d < w && Math.abs(d) < bd) { bd = Math.abs(d); best = s; } }
+    if (!best) return poseOf('idle', 'idle', 0); const d = t - best.at, w = best.e.len ? best.e.len * 2 * this.beat : this.beat * .7;
+    const f = d < 0 ? clamp(1 + d / (this.beat * .9), 0, 1) : d < w ? 1 : clamp(1 - (d - w) / (this.beat * .5), 0, 1);
+    const ps = best.e.pose === 'tap' && Math.floor(t / (this.beat / 2)) % 2 ? 'idle' : best.e.pose; return poseOf('idle', ps, f);
+  }
+  render(V) {
+    const b = V.b, vw = V.vw, { gy } = this.bgStation(V, this.min), k = Math.max(1, Math.min(3, Math.floor(V.vh / 60)));
+    prect(b, Math.round(vw * .5) - 22 * k, gy - 2, 44 * k, 3, '#7a8a4a');
+    this.crew.forEach((c, i) => drawPose(b, Math.round(vw * (.2 + i * .3)), gy - 16, this.poseAt(this.t - c.lag), c.p, Math.max(1, k - 1)));
+    drawPose(b, Math.round(vw * .5), gy + 2, this.poseAt(this.t), Art.me({ uniforme: true }), k);
+    const sp = Math.round(vw * .5) + 26 * k; prect(b, sp, gy - 14, 8, 12, '#1d1f24'); pdisc(b, sp + 4, gy - 10, 2, '#59606c'); pdisc(b, sp + 4, gy - 5, 2, '#59606c'); if (Math.floor(this.t / this.beat) % 2) prect(b, sp + 9, gy - 12, 1, 6, PAL.amb);
+  }
+  hud(V) {
+    this.btns = []; const c = V.ctx, y0 = V.top + 34, hx = Math.round(V.w * .2), cw = Math.min(54, V.w / 8), pxs = cw * 2.2 / this.beat;
+    V.text('PAUSA ACTIVA · ' + (this.o.st || ''), V.w / 2, V.top + 18, { size: 17, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    c.fillStyle = '#0a2342b0'; c.fillRect(0, y0, V.w, cw + 16);
+    c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(hx, y0 + 8 + cw / 2, cw / 2 + 3, 0, TAU); c.stroke();
+    for (const s of this.seq) {
+      const x = hx + (s.at - this.t) * pxs; if (x < -cw || x > V.w + cw) continue; const w = s.e.len ? cw + (s.e.len * 2 - 1) * this.beat * pxs * .5 : cw;
+      c.globalAlpha = s.res ? .35 : 1; c.fillStyle = s.res === 'fallo' ? PAL.cor : s.res ? PAL.vd2 : s.e.k === 'hold' ? PAL.cie : PAL.vd; c.fillRect(x - cw / 2, y0 + 8, w, cw);
+      c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(x - cw / 2 + 1, y0 + 9, w - 2, cw - 2); V.text(s.e.ic, x, y0 + 8 + cw * .7, { size: cw * .55, align: 'center', color: '#0a2342' }); c.globalAlpha = 1;
+    }
+    const nx = this.cur(this.t); if (nx && this.t < this.tEnd - 1) V.text((this.t < nx.at - this.beat * 2.5 ? 'Luego: ' : 'Ahora: ') + nx.e.name, V.w / 2, y0 + cw + 34, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 5, body: true });
+    if (this.t < this.t0) V.text(String(Math.max(1, Math.ceil((this.t0 - this.t) / this.beat / 2))), V.w / 2, V.h * .45, { size: 64, align: 'center', color: PAL.amb, stroke: '#0a2342', sw: 8 });
+    if (this.fb) V.text(this.fb.txt, hx, y0 + cw + 64, { size: 22, align: 'center', color: this.fb.col, stroke: '#0a2342', sw: 5 });
+    const n = 5, bw = Math.min(70, (V.w - 24) / n - 6), bx = (V.w - n * (bw + 6) + 6) / 2, by = V.h - bw - 18, mw = n * (bw + 6) - 6;
+    c.fillStyle = '#0a2342cc'; c.fillRect(bx, by - 30, mw, 10); c.fillStyle = this.ani > 60 ? PAL.vd : PAL.amb; c.fillRect(bx, by - 30, mw * this.ani / 100, 10);
+    V.text('Ánimo del grupo' + (this.combo > 2 ? ' · combo ' + this.combo : ''), bx, by - 36, { size: 12, color: '#fff', stroke: '#0a2342', sw: 3, body: true });
+    [['◀', 'left'], ['▲', 'up'], ['●', 'tap'], ['▼', 'down'], ['▶', 'right']].forEach(([l, k], i) => this.button(V, bx + i * (bw + 6), by, bw, bw, l, () => { const s = this.cur(this.t); if (k === 'tap' && s && s.e.k === 'hold') this.input('hold'); else this.input(k); }, { bg: k === 'tap' ? PAL.cie : PAL.az1, size: 26, key: k }));
+    this.drawPops(V);
+  }
+  bot(err) { this.auto = err || 0; }
+}
+
+class ModePausas extends ShiftMode {
+  constructor(role, T, opt) {
+    super(role, T, opt); const R = this.rng, M = JE.map, casa = M.poi.casa;
+    this.sim = new StationSim(R, { demand: this.mods.demand });
+    this.setupRide({ sim: this.sim, start: { x: casa.x, y: casa.y + 6 * WK } });
+    const mans = M.stations.filter(s => s.type === 'm'), c0 = nearestOf(mans, casa.x, casa.y, 6), c = R.pick(c0);
+    let L = nearestOf(mans, c.x, c.y, 4), at = casa; const route = []; while (L.length) { L.sort((a, b) => dist(a.x, a.y, at.x, at.y) - dist(b.x, b.y, at.x, at.y)); at = L.shift(); route.push(at); }
+    this.accs = []; const hours = [630, 720, 870, 960];
+    const tasks = route.map((s, i) => T_ST(s, { label: 'Pausa activa · ' + s.name, due: hours[i] + 25, mg: () => new MGPausa(this, { lvl: i, clock0: this.clock, st: s.name }), after: sc => { this.accs.push(sc.acc | 0); } }));
+    this.begin([{ name: 'Turno intermedio: pausas activas', short: 'Pausas activas', from: 540, to: 1080, mgSecs: 34, toast: '🤸 Hoy te esperan ' + route.length + ' estaciones para la pausa activa.', tasks }]);
+    const req = () => this.phases[0].tasks;
+    this.goal('Haz las ' + route.length + ' pausas activas', true, () => req().every(t => t.done && !t.lost), () => req().filter(t => t.done).length + '/' + route.length);
+    this.goal('Todas a tiempo', false, () => req().every(t => t.done && !t.late), () => req().filter(t => t.late).length + ' tarde');
+    this.goal('Precisión del grupo ≥ 75 %', false, () => this.accs.length > 0 && this.acc() >= 75, () => this.acc() + '%');
+  }
+  acc() { return this.accs.length ? Math.round(this.accs.reduce((a, b) => a + b, 0) / this.accs.length) : 0; }
+  chips() { return [{ t: '🎵 ' + this.acc() + '%' }]; }
+}
+
+/* ---------- RESCATE: llevar una bici con una mano mientras se pedalea ---------- */
+class MGHallazgo extends MG {
+  constructor(parent, o) { super(parent, o); this.dmg = !!o.dmg; this.min = o.clock0 || 600; this.state = 'ver'; this.fail = this.rng.pick(['Llanta pinchada', 'Cadena rota', 'Freno suelto', 'Sillín partido']); this.coach = 'Revisa la bici y decide a dónde va.'; }
+  update(dt) { this.tick(dt); if (this.state === 'ok') { this.k = (this.k || 0) + dt; if (this.k > .5) this.done = true; } }
+  pick(to) {
+    if (this.state !== 'decide') return; const ok = (to === 'taller') === this.dmg;
+    if (ok) { this.good(8, 100, 40, to === 'taller' ? 'Al taller' : 'A la estación'); this.state = 'ok'; this.to = to; } else this.bad(this.dmg ? '¡Está dañada!' : 'Está buena', 100, 40);
+  }
+  render(V) { const b = V.b, { gy } = this.bgStation(V, this.min), x = Math.round(V.vw * .5); Art.bikeSide(b, x, gy + 6, { r: 5, face: 1, col: PAL.vd }); if (this.state !== 'ver' && this.dmg) { prect(b, x - 14, gy - 2, 3, 3, PAL.cor); } }
+  hud(V) {
+    this.btns = []; V.text('BICI ENCONTRADA', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    const w = Math.min(320, V.w - 30), x = (V.w - w) / 2, y = V.h - 150;
+    if (this.state === 'ver') this.button(V, x, y, w, 56, '🔍 Revisar la bici', () => { this.state = 'decide'; }, { bg: PAL.az1, key: 'ver' });
+    else if (this.state === 'decide') {
+      V.text(this.dmg ? '⚠ ' + this.fail : '✓ Llantas, cadena y frenos bien', V.w / 2, y - 18, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 6, body: true });
+      this.button(V, x, y, w / 2 - 4, 56, 'A la estación', () => this.pick('estacion'), { bg: PAL.vd2, size: 15, key: 'est' }); this.button(V, x + w / 2 + 4, y, w / 2 - 4, 56, 'Al taller', () => this.pick('taller'), { bg: PAL.cor, size: 15, key: 'tal' });
+    }
+    this.drawPops(V);
+  }
+  bot(err) { if (this.state === 'ver') this.state = 'decide'; else if (this.state === 'decide') this.pick((this.rng.f() < err) !== this.dmg ? 'taller' : 'estacion'); }
+}
+class ModeRescate extends ShiftMode {
+  constructor(role, T, opt) {
+    super(role, T, opt); const R = this.rng, M = JE.map;
+    this.sim = new StationSim(R, { demand: this.mods.demand });
+    const c = R.pick(M.stations.filter(s => s.zone === R.pick(['centro', 'centro', 'sur', 'norte'])));
+    this.zs = nearestOf(M.stations, c.x, c.y, 12); this.setupRide({ sim: this.sim, start: { x: c.x, y: c.y + 10 * WK } });
+    this.carry = null; this.th = 0; this.tv = 0; this.push = 0; this.falls = 0; this.saved = 0; this.lastA = this.ride.p.a; this.pushT = 0;
+    const first = [0, 1, 2].map(() => this.lost()).filter(Boolean);
+    this.begin([{ name: 'Turno de rescate', short: 'Rescate', from: 480, to: 1020, timed: true, secs: 200, tasks: first, spawn: () => this.lost(), every: 26, maxDyn: 2 }]);
+    this.goal('Rescata 5 bicis', true, () => this.saved >= 5, () => this.saved + '/5');
+    this.goal('Máximo 1 caída', false, () => this.falls <= 1, () => this.falls + ' caídas');
+    this.goal('Cada bici a su lugar', false, () => this.saved > 0 && this.mgErr === 0, () => this.mgErr + ' errores');
+    this.coach = 'Ve por la bici reportada. Con una mano en el manubrio: ◀ ▶ para no perder el equilibrio.';
+  }
+  lost() {
+    const R = this.rng, M = JE.map, s = R.pick(this.zs), a = R.f() * TAU, o = M.nearestOpen(Math.floor(s.x / TS + Math.cos(a) * R.range(6, 14)), Math.floor(s.y / TS + Math.sin(a) * R.range(6, 14)), false);
+    const dmg = R.f() < .4, where = R.pick(['en un parque', 'en una esquina', 'frente a una tienda', 'en un andén', 'reportada por la Policía']);
+    return { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, label: 'Bici ' + where, col: PAL.cor, pts: 10, due: Math.round(this.clock + 140), grace: 60,
+      can: (t, quiet) => { if (!this.carry) return true; if (!quiet) JE.ui && JE.ui.toast('Ya llevas una bici: entrégala primero'); return false; },
+      mg: () => new MGHallazgo(this, { dmg, clock0: this.clock }), after: s2 => this.pickUp(s2.to || 'estacion') };
+  }
+  pickUp(to) {
+    const M = JE.map, P = this.ride.p; this.th = 0; this.tv = 0;
+    const near = L => L.slice().sort((a, b) => dist(a.x, a.y, P.x, P.y) - dist(b.x, b.y, P.x, P.y))[0], mz = this.zs.filter(s => s.type === 'm'), dest = to === 'taller' ? near(mz.length ? mz : M.stations.filter(s => s.type === 'm')) : near(this.zs);
+    this.carry = { to, dest };
+    this.dropT = this.addTask({ x: dest.x, y: dest.y, r: 22, label: to === 'taller' ? 'Dejar dañada en ' + dest.name + ' (va al taller)' : 'Entregar en EnCicla ' + dest.name, col: to === 'taller' ? PAL.cor : PAL.vd, pts: 15, after: () => this.delivered() });
+    this.retarget();
+  }
+  delivered() { const dmg = this.carry && this.carry.to === 'taller'; this.carry = null; this.saved++; Snd.fanfare && Snd.fanfare(); this.ride.stamp = { t: 1.6, title: '¡BICI RESCATADA!', sub: dmg ? 'Queda marcada para que Balance la lleve al taller' : 'De vuelta en su estación', bg: PAL.vd }; }
+  fall() {
+    const R = this.ride; this.falls++; this.score -= 10; R.p.v = 0; this.th = 0; this.tv = 0; Snd.sfx('lose'); vib(80); R.float('¡Se cayó!', PAL.cor);
+    if (this.carry.to !== 'taller') { const t = this.dropT; t.done = true; this.ride.removeMarker(t.m); this.pickUp('taller'); JE.ui && JE.ui.toast('La bici se dañó al caer: déjala en una estación con anfitrión para que vaya al taller'); }
+  }
+  tick(dt) {
+    super.tick(dt); const R = this.ride, P = R.p;
+    if (this.carry && P.veh === 'bike') {
+      let da = P.a - this.lastA; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; const turn = da / Math.max(dt, 1e-3), vr = clamp(P.v / (60 * WK), 0, 1.4), v = R.tileAt();
+      const rough = v === TT.BRICK || v === TT.STEPS || v === TT.GRASS ? 2.2 : 1, sl = Math.min(0, R.sl || 0);
+      const noise = (this.rng.f() - .5) * 2 * (.6 + vr) * rough;
+      this.pushT -= dt; if (this.pushT <= 0 && this.keyPush) this.keyPush = 0; const push = this.push || this.keyPush || 0;
+      this.tv += (noise * 2.4 + turn * .9 * vr - sl * 9 * Math.sign(this.th || 1) + push * 4.2) * dt; this.tv -= this.th * (.6 + 1.2 * clamp(vr, .2, 1)) * dt; this.tv *= .985; this.th += this.tv * dt;
+      if (Math.abs(this.th) > 1) this.fall();
+    } else { this.th *= .9; this.tv = 0; }
+    this.lastA = P.a;
+    if (this.auto != null && this.carry) this.push = Math.abs(this.th) > .12 ? -Math.sign(this.th) : (Math.abs(this.tv) > .5 ? -Math.sign(this.tv) : 0);
+  }
+  speedMul() { return this.carry ? .72 : 1; }
+  key(e) { super.key(e); if (!this.carry) return; if (e.code === 'KeyA' || e.code === 'KeyQ') { this.keyPush = -1; this.pushT = .25; } if (e.code === 'KeyD' || e.code === 'KeyE') { this.keyPush = 1; this.pushT = .25; } }
+  leanRects(V) { const s = 58, y = Math.round(V.h * .5 - s / 2); return [{ x: 8, y, w: s, h: s, d: -1 }, { x: V.w - s - 8, y, w: s, h: s, d: 1 }]; }
+  pointer(type, vx, vy, cx, cy) {
+    if (this.carry && !this.sub && this._V) { if (type === 'down') for (const r of this.leanRects(this._V)) if (cx >= r.x && cx <= r.x + r.w && cy >= r.y && cy <= r.y + r.h) { this.push = r.d; return true; } if (type === 'up') this.push = 0; }
+    return super.pointer(type, vx, vy, cx, cy);
+  }
+  hud2(V) {
+    super.hud2(V); this._V = V; if (!this.carry || this.sub) return; const c = V.ctx, w = Math.min(150, V.w * .4), x = (V.w - w) / 2, y = Math.round(V.h * .5) - 78;
+    c.fillStyle = '#0a2342cc'; c.fillRect(x - 6, y - 6, w + 12, 24); c.fillStyle = '#ff6b5a55'; c.fillRect(x, y, w * .12, 12); c.fillRect(x + w * .88, y, w * .12, 12); c.fillStyle = PAL.vd2; c.fillRect(x + w * .4, y, w * .2, 12);
+    c.fillStyle = Math.abs(this.th) > .7 ? PAL.cor : '#fff'; c.fillRect(x + w / 2 + this.th * w / 2 - 3, y - 3, 6, 18); V.text('Equilibrio', V.w / 2, y - 10, { size: 12, align: 'center', color: '#fff', stroke: '#0a2342', sw: 3, body: true });
+    for (const r of this.leanRects(V)) this.button(V, r.x, r.y, r.w, r.h, r.d < 0 ? '◀' : '▶', () => { }, { bg: this.push === r.d ? PAL.vd2 : '#0a2342aa', size: 24 });
+  }
+  chips() { return [{ t: '🚲 ' + this.saved + ' rescatadas' }].concat(this.carry ? [{ t: 'Llevas una bici', c: Math.abs(this.th) > .7 ? 'bad' : 'warn' }] : []); }
+  bot(err) { this.auto = err || 0; super.bot(err); }
+}
+/* la bici que llevas con la otra mano */
+const _rt72 = Ride.prototype.renderTop;
+Ride.prototype.renderTop = function (V) {
+  _rt72.call(this, V); const M = this.mode; if (!M.carry || M.sub || this.p.veh !== 'bike') return;
+  const c = V.ctx, k = V.s * V.dpr, P = this.p, a = P.a, ox = this.cxf, oy = this.cyf, off = 5 * WK, side = a + Math.PI / 2;
+  c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.imageSmoothingEnabled = false; c.translate(P.x + Math.cos(side) * off - ox, P.y + Math.sin(side) * off - oy); c.rotate(a + Math.PI / 2 + M.th * .5);
+  blit(c, Art.bikeTop()); c.restore();
+};
+
+/* ---------- TÉCNICO: tótem (medir, cambiar la pieza y reiniciar) ---------- */
+const TOTEM_P = [['Fuente 12 V', '12.1 V', '0.0 V', 'Fuente nueva'], ['Fusible', 'Continuidad ✓', 'Sin continuidad', 'Fusible de 5 A'], ['Tarjeta 5 V', '5.0 V', '0.3 V', 'Tarjeta de control'], ['Pantalla', 'Señal ✓', 'Sin señal', 'Cable de pantalla']];
+class MGTotem extends MG {
+  constructor(parent, o) { super(parent, o); this.f = this.rng.i(0, 3); this.meas = []; this.state = 'medir'; this.pp = 0; this.holding = false; this.min = o.clock0 || 600; this.parts = this.rng.shuffle([this.f, (this.f + 1 + this.rng.i(0, 2)) % 4].concat([(this.f + 2) % 4]).filter((v, i, a) => a.indexOf(v) === i)); this.coach = 'Mide cada punto con el multímetro hasta encontrar la falla.'; }
+  measure(i) { if (this.state !== 'medir' || this.meas.includes(i)) return; this.meas.push(i); Snd.sfx('tap'); if (i === this.f) { this.state = 'pieza'; this.coach = 'Encontraste la falla: elige el repuesto correcto.'; Snd.sfx('spark'); } else this.score += 1; }
+  part(j) { if (this.state !== 'pieza') return; if (j === this.f) { this.good(6, 100, 40, 'Pieza cambiada'); this.state = 'reinicio'; this.coach = 'Mantén oprimido el botón de encendido y suéltalo en la zona verde.'; } else this.bad('No es esa pieza', 100, 40); }
+  release() { if (this.state !== 'reinicio' || !this.holding) return; this.holding = false; if (this.pp >= .62 && this.pp <= .86) { this.state = 'ok'; this.k = 0; this.good(8, 100, 40, '¡Encendió!'); } else { this.bad(this.pp < .62 ? 'Muy pronto' : 'Muy tarde', 100, 40); this.pp = 0; } }
+  update(dt) {
+    this.tick(dt); if (this.state === 'reinicio') { if (this.holding) { this.pp = Math.min(1.05, this.pp + dt / 2.2); if (this.auto != null && this.pp >= this.autoAt) this.release(); else if (this.pp >= 1.05) this.release(); } else this.pp = Math.max(0, this.pp - dt); }
+    if (this.state === 'ok') { this.k += dt; if (this.k > .9) { this.done = true; Snd.sfx('win'); } }
+  }
+  render(V) {
+    const b = V.b, { gy } = this.bgStation(V, this.min), x = Math.round(V.vw * .5) - 14, h = 52;
+    prect(b, x, gy - h, 28, h, '#2b2f38'); prect(b, x + 2, gy - h + 2, 24, 14, this.state === 'ok' ? PAL.vd : '#0e1726'); if (this.state === 'ok') { prect(b, x + 6, gy - h + 7, 16, 3, '#fff'); }
+    prect(b, x + 3, gy - h + 20, 22, 26, '#11161f'); const cols = ['#e8b93f', '#d6dde6', PAL.vd, PAL.cie]; for (let i = 0; i < 4; i++) { prect(b, x + 5 + (i % 2) * 10, gy - h + 22 + (i >> 1) * 12, 8, 9, this.meas.includes(i) && i === this.f ? PAL.cor : cols[i]); }
+    prect(b, x + 30, gy - 24, 12, 16, '#e8b93f'); prect(b, x + 32, gy - 22, 8, 5, '#9ec2a0'); pline(b, x + 36, gy - 8, x + 20, gy - h + 30, PAL.cor);
+  }
+  hud(V) {
+    this.btns = []; V.text('REPARA EL TÓTEM', V.w / 2, V.top + 18, { size: 19, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    const w = Math.min(360, V.w - 24), x = (V.w - w) / 2, y = V.h - 190;
+    if (this.state === 'medir') {
+      TOTEM_P.forEach((q, i) => { const m = this.meas.includes(i); this.button(V, x + (i % 2) * (w / 2 + 4), y + (i >> 1) * 62, w / 2 - 4, 56, q[0] + (m ? ' · ' + (i === this.f ? q[2] : q[1]) : ''), () => this.measure(i), { bg: m ? (i === this.f ? PAL.cor : PAL.vd2) : PAL.az1, size: 13, key: 'm' + i }); });
+    } else if (this.state === 'pieza') {
+      V.text('Falla: ' + TOTEM_P[this.f][0] + ' (' + TOTEM_P[this.f][2] + ')', V.w / 2, V.top + 46, { size: 15, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 5, body: true });
+      this.parts.forEach((j, i) => this.button(V, x, y + i * 60, w, 54, TOTEM_P[j][3], () => this.part(j), { bg: PAL.az1, size: 15, key: 'p' + j }));
+    } else if (this.state === 'reinicio') {
+      const bw = w, c = V.ctx; c.fillStyle = '#0a2342cc'; c.fillRect(x, y, bw, 18); c.fillStyle = PAL.vd2; c.fillRect(x + bw * .62, y, bw * .24, 18); c.fillStyle = '#fff'; c.fillRect(x + bw * Math.min(1, this.pp) - 2, y - 4, 4, 26);
+      this.button(V, x + w / 2 - 70, y + 40, 140, 70, '⏻ Mantener', () => { this.holding = true; }, { bg: this.holding ? PAL.vd2 : PAL.az1, size: 18, key: 'pw' });
+    }
+    this.drawPops(V);
+  }
+  bot(err) { this.auto = err || 0; if (this.state === 'medir') this.measure(this.rng.f() < err ? this.rng.i(0, 3) : this.f); else if (this.state === 'pieza') this.part(this.rng.f() < err ? this.rng.pick(this.parts) : this.f); else if (this.state === 'reinicio' && !this.holding) { this.holding = true; this.autoAt = this.rng.f() < err ? .5 : .74; } }
+}
+/* ---------- TÉCNICO: luces de los anclajes (prueba, marca, suelda) ---------- */
+class MGLeds extends MG {
+  constructor(parent, o) { super(parent, o); this.n = 8; const R = this.rng; this.badSet = R.shuffle([...Array(this.n).keys()]).slice(0, 2 + R.i(0, 1)); this.marked = []; this.state = 'prueba'; this.k = 0; this.cur = 0; this.min = o.clock0 || 600; this.coach = 'Mira la prueba de luces: ¿qué anclajes no encienden?'; }
+  update(dt) {
+    this.tick(dt); this.k += dt;
+    if (this.state === 'prueba' && this.k > this.n * .28 + .4) { this.state = 'marcar'; this.coach = 'Toca los anclajes que no encendieron.'; }
+    if (this.state === 'soldar') { this.ph = (this.ph || 0) + dt * (2.2 + this.cur * .3); if (this.auto != null && Math.abs(Math.sin(this.ph)) < .1) this.solder(this.rng.f() < this.auto * .5); }
+    if (this.state === 'final' && this.k > this.n * .2 + .5) { this.done = true; Snd.sfx('win'); }
+  }
+  mark(i) { if (this.state !== 'marcar' || this.marked.includes(i)) return; if (this.badSet.includes(i)) { this.marked.push(i); this.score += 3; Snd.sfx('coin'); if (this.marked.length === this.badSet.length) { this.state = 'soldar'; this.cur = 0; this.ph = 0; this.coach = 'Suelda cada módulo nuevo: toca «Soldar» cuando la aguja esté en el centro.'; } } else this.bad('Ese sí enciende', 100, 40); }
+  solder(force) { if (this.state !== 'soldar') return; const d = Math.abs(Math.sin(this.ph)); if (!force && d < .22) { this.good(5, 100, 40, 'Soldado'); this.cur++; this.ph = Math.PI / 2; if (this.cur >= this.badSet.length) { this.state = 'final'; this.k = 0; this.coach = 'Prueba final: ¡todas en verde!'; } } else { this.bad('Soldadura fría', 100, 40); this.ph = Math.PI / 2; } }
+  lit(i) { if (this.state === 'prueba') return i <= Math.floor(this.k / .28) && !this.badSet.includes(i); if (this.state === 'final') return i <= Math.floor(this.k / .2); return !this.badSet.includes(i) || (this.state === 'soldar' && this.badSet.indexOf(i) < this.cur); }
+  dock(V, i) { const vw = V.vw, gap = Math.floor((vw - 20) / this.n); return { x: 10 + i * gap + Math.floor(gap / 2), gap }; }
+  render(V) {
+    const b = V.b, { gy } = this.bgStation(V, this.min);
+    for (let i = 0; i < this.n; i++) { const { x } = this.dock(V, i); prect(b, x - 2, gy - 22, 5, 22, '#9aa7b8'); prect(b, x - 3, gy - 24, 7, 3, '#59606c'); const on = this.lit(i); prect(b, x - 1, gy - 19, 3, 3, on ? PAL.vd1 : this.badSet.includes(i) && this.state === 'prueba' && Math.floor(this.t * 8) % 3 === 0 ? PAL.cor : '#1d1f24'); if (this.marked.includes(i)) prect(b, x - 3, gy + 2, 7, 2, PAL.amb); }
+  }
+  hud(V) {
+    this.btns = []; V.text('LUCES DE LOS ANCLAJES', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    if (this.state === 'marcar') for (let i = 0; i < this.n; i++) { const { x, gap } = this.dock(V, i), bw = Math.max(26, gap * V.s - 6); this.button(V, x * V.s - bw / 2, V.h * .7, bw, 46, String(i + 1), () => this.mark(i), { bg: this.marked.includes(i) ? PAL.amb : PAL.az1, size: 15, key: 'd' + i }); }
+    if (this.state === 'soldar') {
+      const w = Math.min(300, V.w - 40), x = (V.w - w) / 2, y = V.h * .62, c = V.ctx; c.fillStyle = '#0a2342cc'; c.fillRect(x, y, w, 18); c.fillStyle = PAL.vd2; c.fillRect(x + w * .39, y, w * .22, 18); c.fillStyle = '#fff'; c.fillRect(x + w / 2 + Math.sin(this.ph) * w / 2 - 2, y - 4, 4, 26);
+      V.text('Módulo ' + (this.cur + 1) + ' de ' + this.badSet.length, V.w / 2, y - 12, { size: 14, align: 'center', color: '#fff', body: true });
+      this.button(V, V.w / 2 - 80, y + 36, 160, 60, '🔥 Soldar', () => this.solder(), { bg: PAL.cor, size: 18, key: 'sol' });
+    }
+    this.drawPops(V);
+  }
+  bot(err) { this.auto = err || 0; if (this.state === 'marcar') { const L = this.badSet.filter(i => !this.marked.includes(i)); this.mark(this.rng.f() < err * .5 ? this.rng.i(0, this.n - 1) : L[0]); } }
+}
+/* ---------- TÉCNICO: celular de la estación (cargar, reiniciar, PIN y sincronizar) ---------- */
+class MGCelular extends MG {
+  constructor(parent, o) { super(parent, o); this.state = 'cargar'; this.bat = 3; this.k = 0; this.hp = 0; this.holding = false; this.pin = String(this.rng.i(1000, 9999)); this.inp = ''; this.min = o.clock0 || 600; this.coach = 'El celular de la estación se apagó: conéctale el power bank.'; }
+  update(dt) {
+    this.tick(dt); this.k += dt;
+    if (this.state === 'carga') { this.bat = Math.min(40, this.bat + dt * 40); if (this.bat >= 40) { this.state = 'reiniciar'; this.coach = 'Mantén oprimido el botón de encendido hasta que vibre.'; } }
+    if (this.state === 'reiniciar') { if (this.holding) { this.hp += dt / 1.4; if (this.hp >= 1) { this.holding = false; this.state = 'pin'; this.k = 0; vib(60); this.coach = 'Memoriza el PIN de la tula y escríbelo.'; } } else this.hp = Math.max(0, this.hp - dt * 2); }
+    if (this.state === 'sync' && this.k > 1) { this.done = true; Snd.sfx('win'); }
+  }
+  showPin() { return this.state === 'pin' && this.k < 2.2; }
+  digit(d) { if (this.state !== 'pin' || this.showPin()) return; this.inp += d; Snd.sfx('tap'); if (this.pin.startsWith(this.inp)) { if (this.inp === this.pin) { this.good(8, 100, 40, 'Sesión iniciada'); this.state = 'sync0'; this.coach = 'Sincroniza el inventario de la estación.'; } } else { this.bad('PIN incorrecto', 100, 40); this.inp = ''; this.k = 0; } }
+  release() { this.holding = false; }
+  render(V) {
+    const b = V.b; prect(b, 0, 0, V.vw, V.vh, '#1b2433'); const w = 40, h = 70, x = Math.round(V.vw / 2 - w / 2), y = Math.round(V.vh * .5 - h / 2) - 4;
+    prect(b, x, y, w, h, '#11161f'); prect(b, x + 3, y + 6, w - 6, h - 14, this.state === 'cargar' || this.state === 'carga' || this.state === 'reiniciar' ? '#05080d' : '#e8f4d0');
+    prect(b, x + w - 12, y + 9, 7, 4, '#fff'); prect(b, x + w - 11, y + 10, Math.max(1, Math.round(5 * this.bat / 100)), 2, this.bat < 20 ? PAL.cor : PAL.vd);
+    if (this.state === 'sync0' || this.state === 'sync') { prect(b, x + 6, y + 18, w - 12, 4, PAL.vd); for (let i = 0; i < 4; i++) prect(b, x + 6, y + 26 + i * 6, (w - 12) * (this.state === 'sync' ? Math.min(1, this.k) : .3), 3, PAL.az3); }
+    if (this.state === 'carga' || this.bat > 3) { prect(b, x + w / 2 - 2, y + h, 4, 10, '#d6dde6'); prect(b, x + w / 2 - 9, y + h + 10, 18, 9, '#2b2f38'); }
+  }
+  hud(V) {
+    this.btns = []; V.text('CELULAR DE LA ESTACIÓN', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    const w = Math.min(300, V.w - 30), x = (V.w - w) / 2, y = V.h - 140;
+    if (this.state === 'cargar') this.button(V, x, y, w, 60, '🔌 Conectar power bank', () => { this.state = 'carga'; Snd.sfx('coin'); }, { bg: PAL.az1, size: 16, key: 'pb' });
+    else if (this.state === 'reiniciar') { const c = V.ctx; c.fillStyle = '#0a2342cc'; c.fillRect(x, y - 26, w, 12); c.fillStyle = PAL.vd; c.fillRect(x, y - 26, w * this.hp, 12); this.button(V, x + w / 2 - 70, y, 140, 64, '⏻ Mantener', () => { this.holding = true; }, { bg: this.holding ? PAL.vd2 : PAL.az1, size: 18, key: 'pw' }); }
+    else if (this.state === 'pin') {
+      const py = Math.max(V.h * .26, V.top + 56); if (this.showPin()) V.text('PIN de la tula: ' + this.pin.split('').join(' '), V.w / 2, py, { size: 22, align: 'center', color: PAL.amb, bg: '#0a2342ee', pad: 8 });
+      else { V.text('PIN: ' + (this.inp.padEnd(4, '·')), V.w / 2, py, { size: 22, align: 'center', color: '#fff', bg: '#0a2342ee', pad: 8 }); const kw = Math.min(64, (V.w - 40) / 5), ky = V.h - kw * 2 - 30; '1234567890'.split('').forEach((d, i) => this.button(V, V.w / 2 - kw * 2.5 + (i % 5) * kw, ky + Math.floor(i / 5) * (kw + 4), kw - 4, kw, d, () => this.digit(d), { bg: PAL.az1, size: 20, key: 'k' + d })); }
+    } else if (this.state === 'sync0') this.button(V, x, y, w, 60, '🔄 Sincronizar inventario', () => { this.state = 'sync'; this.k = 0; this.score += 4; }, { bg: PAL.vd2, size: 16, key: 'sy' });
+    this.drawPops(V);
+  }
+  bot(err) {
+    if (this.state === 'cargar') { this.state = 'carga'; } else if (this.state === 'reiniciar') this.holding = true;
+    else if (this.state === 'pin' && !this.showPin()) this.digit(this.rng.f() < err * .4 ? String((+this.pin[this.inp.length] + 1) % 10) : this.pin[this.inp.length]);
+    else if (this.state === 'sync0') { this.state = 'sync'; this.k = 0; }
+  }
+}
+/* el aviso de ayuda va encima de los botones de cada minijuego */
+const coachAt = (C, f) => Object.defineProperty(C.prototype, 'coachB', { get: f, configurable: true });
+coachAt(MGPausa, () => Math.min(70, (View.w - 24) / 5 - 6) + 62);
+coachAt(MGTotem, function () { return this.state === 'pieza' ? 200 : this.state === 'medir' ? 200 : 130; });
+coachAt(MGCelular, function () { return this.state === 'pin' ? Math.min(64, (View.w - 40) / 5) * 2 + 44 : 150; });
+coachAt(MGHallazgo, () => 160);
+coachAt(MGRutina, () => 104);
+/* fallas del técnico con los minijuegos nuevos */
+ModeTecnicoR.prototype.falla = function () {
+  const R = this.rng, ok = this.zs.filter(s => !s.broken), s = R.pick(ok); if (!s) return null; s.broken = true;
+  const k = s.type === 'm' && R.f() < .35 ? 'cel' : R.f() < .5 ? 'totem' : 'led', fin = () => { s.broken = false; this.fixed++; };
+  const mg = k === 'totem' ? () => new MGTotem(this, { clock0: this.clock }) : k === 'led' ? () => new MGLeds(this, { clock0: this.clock }) : () => new MGCelular(this, { clock0: this.clock });
+  return T_ST(s, { label: { totem: 'Tótem apagado', led: 'Luces de los anclajes', cel: 'Celular de la estación' }[k] + ' · ' + s.name, due: Math.round(this.clock + this.rate * 50), grace: this.rate * 20, col: PAL.cor, mg, after: fin, onLost: () => { s.broken = false; } });
+};
+Object.assign(MODE_CLASS, { pausas: ModePausas, rescate: ModeRescate });
 
 /* ---- 72-qr.js ---- */
 /* =====================================================================
@@ -6290,6 +6717,446 @@ const QR = JE.qr = {
   },
 };
 
+/* ---- 73-musica.js ---- */
+/* =====================================================================
+   MÚSICA INTERACTIVA POR ESTILOS: jazz, lo-fi, soft rock y electrónica.
+   Automático: lo-fi en los menús y paseos de día, jazz de noche, soft rock en los turnos
+   y electrónica en carreras, ciclovía y pausas activas. Todos siguen el mood del juego
+   (velocidad, racha, tensión, noche y pendiente) y las notas interactivas (Snd.note).
+   ===================================================================== */
+const mfq = m => 440 * Math.pow(2, (m - 69) / 12);
+const CHORD = { maj7: [0, 4, 7, 11], m7: [0, 3, 7, 10], d7: [0, 4, 7, 10], maj: [0, 4, 7], min: [0, 3, 7], m9: [0, 3, 7, 10, 14], maj9: [0, 4, 7, 11, 14] };
+const ESTILOS = {
+  jazz: { name: 'Jazz', bpm: [104, 26], swing: 1, cut: 9000, rev: .3, prog: [[55, 'm7'], [48, 'd7'], [53, 'maj7'], [50, 'm7'], [55, 'm7'], [48, 'd7'], [57, 'm7'], [50, 'd7']] },
+  lofi: { name: 'Lo-fi', bpm: [74, 12], swing: .75, cut: 2600, rev: .35, prog: [[53, 'maj9'], [52, 'm7'], [50, 'm9'], [48, 'maj7'], [53, 'maj9'], [52, 'm7'], [50, 'm9'], [55, 'd7']] },
+  rock: { name: 'Soft rock', bpm: [98, 24], swing: 0, cut: 9000, rev: .18, prog: [[43, 'maj'], [50, 'maj'], [52, 'min'], [48, 'maj'], [43, 'maj'], [50, 'maj'], [48, 'maj'], [50, 'maj']] },
+  electro: { name: 'Electrónica', bpm: [120, 8], swing: 0, cut: 12000, rev: .2, prog: [[45, 'min'], [41, 'maj'], [48, 'maj'], [43, 'maj'], [45, 'min'], [41, 'maj'], [48, 'maj'], [43, 'maj']] }
+};
+Object.assign(Snd, {
+  cur: 'lofi', lock: null,
+  bus() {
+    if (this.sb || !this.ctx) return; const c = this.ctx;
+    this.sb = c.createBiquadFilter(); this.sb.type = 'lowpass'; this.sb.frequency.value = 9000; this.sb.connect(this.musG);
+    const len = Math.floor(c.sampleRate * 1.6), ir = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.8); }
+    this.rev = c.createConvolver(); this.rev.buffer = ir; this.revG = c.createGain(); this.revG.gain.value = .3; this.rev.connect(this.revG); this.revG.connect(this.musG);
+    this.duck = c.createGain(); this.duck.connect(this.sb);
+    const nl = Math.floor(c.sampleRate * .5); this.nz = c.createBuffer(1, nl, c.sampleRate); const nd = this.nz.getChannelData(0); for (let i = 0; i < nl; i++) nd[i] = Math.random() * 2 - 1;
+  },
+  /* voz con filtro y envolvente; type puede ser una lista (osciladores desafinados = coro) */
+  v(f, t, d, o = {}) {
+    const c = this.ctx, g = c.createGain(), fl = c.createBiquadFilter(), types = Array.isArray(o.type) ? o.type : [o.type || 'triangle'];
+    fl.type = 'lowpass'; fl.frequency.setValueAtTime(o.cut || 4000, t); if (o.cutTo) fl.frequency.exponentialRampToValueAtTime(o.cutTo, t + d); fl.Q.value = o.q || .8;
+    const a = o.a || .006, v = (o.v || .05) / Math.sqrt(types.length), end = t + d + (o.r || .08);
+    types.forEach((ty, i) => { const os = c.createOscillator(); os.type = ty; os.frequency.setValueAtTime(f, t); if (o.det) os.detune.value = i % 2 ? o.det : -o.det; if (o.vib) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 5.2; lg.gain.value = f * .012; l.connect(lg); lg.connect(os.frequency); l.start(t + .08); l.stop(end); } os.connect(fl); os.start(t); os.stop(end + .02); });
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + a); g.gain.setTargetAtTime(v * (o.sus != null ? o.sus : .55), t + a, Math.max(.02, d * .35)); g.gain.setTargetAtTime(.0001, t + d, (o.r || .08) / 3);
+    fl.connect(g); g.connect(o.dest || this.sb); if (o.rev && this.rev) { const s = c.createGain(); s.gain.value = o.rev; g.connect(s); s.connect(this.rev); }
+  },
+  nzHit(t, d, v, type, f, q, dest) { const c = this.ctx, s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain(); s.buffer = this.nz; fl.type = type; fl.frequency.value = f; fl.Q.value = q || .7; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d); s.connect(fl); fl.connect(g); g.connect(dest || this.sb); s.start(t, Math.random() * .3, d + .05); },
+  kick2(t, v) { const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + .14); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + .22); o.connect(g); g.connect(this.sb); o.start(t); o.stop(t + .25); },
+  snare(t, v, cut) { this.nzHit(t, .16, v, 'bandpass', cut || 1900, .6); this.v(190, t, .05, { type: 'triangle', v: v * .5, cut: 1200 }); },
+  hh(t, v, open) { this.nzHit(t, open ? .22 : .045, v, 'highpass', 7200); },
+  ride(t, v) { this.nzHit(t, .32, v * .6, 'highpass', 5200); this.v(3150, t, .25, { type: 'sine', v: v * .25, cut: 6000, sus: .2 }); },
+  brush(t, v) { this.nzHit(t, .18, v, 'lowpass', 2600); },
+  clap(t, v) { for (let i = 0; i < 3; i++) this.nzHit(t + i * .011, .09, v, 'bandpass', 1500, 1.2); },
+  crackle(t) { if (Math.random() < .35) this.nzHit(t + Math.random() * .1, .004, .02 + Math.random() * .03, 'highpass', 3000); },
+  /* estilo según el contexto (o el elegido en Más) */
+  styleNow() {
+    if (this.lock) return this.lock.style; const pref = Save.data.settings.mstyle || 'auto'; if (pref !== 'auto') return pref;
+    const G = JE.game, M = G && G.mode, n = this.mood.n > .5;
+    if (!M) return 'lofi';
+    if (M.id === 'carrera' || M.race || (M.mods && M.mods.ciclovia) || M.comp || (M.sub && M.sub instanceof MGPausa)) return 'electro';
+    if (n) return 'jazz';
+    if (M.id === 'usuario') return 'lofi';
+    return 'rock';
+  },
+  sched() {
+    const c = this.ctx; if (!c) return; this.bus(); const M = this.mood;
+    for (const k in this.mt) M[k] += (this.mt[k] - M[k]) * .12;
+    const S = ESTILOS[this.cur] || ESTILOS.lofi, bpm = this.lock ? this.lock.bpm : S.bpm[0] + S.bpm[1] * M.e + 8 * M.t - 6 * M.n + (M.sl < -.04 ? 4 : M.sl > .04 ? -4 : 0), spb = this.spb = 60 / bpm / 4;
+    while (this.nextT < c.currentTime + .3) {
+      if (this.step % 16 === 0) { const nw = this.styleNow(); if (nw !== this.cur) { this.cur = nw; this.step = 0; } const E = ESTILOS[this.cur]; this.sb.frequency.setTargetAtTime(E.cut * (M.n > .5 ? .7 : 1), this.nextT, .3); this.revG.gain.setTargetAtTime(E.rev + .15 * M.n, this.nextT, .3); }
+      this.playStep(this.step, this.nextT); this.nextT += spb; this.step = (this.step + 1) % 128;
+    }
+  },
+  baseStep(s, t) {
+    const M = this.mood, S = ESTILOS[this.cur] || ESTILOS.lofi, st = s % 16, bar = Math.floor(s / 16) % 8, [R, ck] = S.prog[bar], ch = CHORD[ck], nx = S.prog[(bar + 1) % 8][0], spb = this.spb;
+    this.root = R - 12; this.third = ch[1];
+    const sw = S.swing && st % 4 === 2 ? spb * .66 * S.swing : 0, T = t + sw, on8 = st % 2 === 0, k = h2(s, bar, 11);
+    if (S.swing && st % 2 === 1) return;   // estilos con swing: corcheas
+    const mel = (reg, type, o) => { const sc = [0, 2, ch[1], 5, 7, 9, ch[3] || 12, 12], n = sc[Math.floor(h2(s, 5, bar) * sc.length)]; this.v(mfq(R + reg + n), T, spb * (o.len || 1.8), Object.assign({ type, rev: .25 }, o)); };
+    switch (this.cur) {
+      case 'jazz': {
+        if (st % 4 === 0) { const q = st / 4, n = q === 0 ? 0 : q === 1 ? ch[1] : q === 2 ? 7 : (nx - R) + (k < .5 ? -1 : 1); this.v(mfq(R - 12 + n), t, spb * 3.4, { type: 'triangle', v: .2, cut: 900, sus: .7 }); }
+        if (st % 4 === 0 || st === 6 || st === 14) this.ride(T, .05 + .03 * M.e);
+        if (st === 4 || st === 12) this.hh(t, .02);
+        if ((st === 0 && (bar % 2 === 0 || M.e > .4)) || (st === 6 && M.e > .35) || (M.t > .5 && st === 10)) [ch[1], ch[3] || 11, 14].forEach(i => this.v(mfq(R + 12 + i), T, spb * (st === 0 ? 2.2 : 1.4), { type: ['triangle', 'sine'], v: .028, cut: 2400, rev: .3 }));
+        if (st % 4 === 2 && M.e > .3) this.brush(T, .02);
+        if ((M.e > .55 || M.k >= 1) && on8 && k < .3 + .15 * M.k) mel(24, 'sawtooth', { v: .03, cut: 1700, a: .03, vib: true, len: 1.6 });
+        break;
+      }
+      case 'lofi': {
+        if (st === 0 || st === 10 || (st === 7 && k < .3)) this.kick2(t, .13);
+        if (st === 4 || st === 12) this.snare(T, .05, 1400);
+        if (st % 4 === 2 || (M.e > .45 && st % 4 === 0)) this.hh(T, .012);
+        if (st === 0) ch.forEach((i, j) => this.v(mfq(R + 12 + i), t + j * .012, spb * 15, { type: ['sine', 'triangle'], det: 9, v: .024, a: .03, cut: 1500, rev: .4, sus: .7 }));
+        if (st === 8 && M.e > .3) ch.slice(1, 4).forEach(i => this.v(mfq(R + 24 + i), T, spb * 3, { type: 'sine', v: .016, a: .02, cut: 1800, rev: .5 }));
+        if (st === 0 || st === 6 || (st === 10 && M.e > .5)) this.v(mfq(R - 12 + (st === 6 ? 7 : 0)), T, spb * 3, { type: 'sine', v: .2, cut: 500, sus: .8 });
+        if ((st % 4 === 0 && k < .22 + .15 * M.k) || (M.k >= 1 && on8 && k < .3)) mel(24, 'triangle', { v: .03, a: .04, cut: 2000, rev: .45 });
+        this.crackle(t);
+        break;
+      }
+      case 'rock': {
+        if (st === 0 || st === 8 || (M.e > .5 && (st === 6 || st === 10))) this.kick2(t, .18);
+        if (st === 4 || st === 12) this.snare(t, .07);
+        if (on8 || M.e > .75) this.hh(t, on8 ? .02 : .012);
+        if (st === 0 && bar === 0 && M.e > .55) this.nzHit(t, 1.2, .04, 'highpass', 4500);
+        if (on8) this.v(mfq(R - 12), t, spb * 1.6, { type: 'sawtooth', v: .07, cut: 650, sus: .6 });
+        const pat = M.e < .35 ? [0, 8] : [0, 6, 8, 10, 14];
+        if (pat.includes(st)) (ck === 'min' ? [0, 7, 12, 15] : [0, 7, 12, 16]).forEach((i, j) => this.v(mfq(R + 12 + i), t + j * .013, spb * 1.8, { type: 'sawtooth', v: .02, cut: 2400, cutTo: 900, rev: .15 }));
+        if ((M.k >= 1 || M.e > .7) && on8 && st >= 8 && k < .45) mel(24, 'square', { v: .022, cut: 2600, vib: true, len: 1.4 });
+        break;
+      }
+      case 'electro': {
+        if (st % 4 === 0) { this.kick2(t, .22); const g = this.duck.gain; g.cancelScheduledValues(t); g.setValueAtTime(.35, t); g.linearRampToValueAtTime(1, t + spb * 3); }
+        if (st === 4 || st === 12) this.clap(t, .05);
+        if (st % 4 === 2) this.hh(t, .03, true); else if (M.e > .5) this.hh(t, .012);
+        if (st % 4 === 2 || (M.e > .7 && st % 4 === 0)) this.v(mfq(R - 12), t, spb * 1.4, { type: 'sawtooth', v: .07, cut: 380, cutTo: 1400, q: 5 });
+        if (st === 0) ch.forEach(i => this.v(mfq(R + 12 + i), t, spb * 15.5, { type: ['sawtooth', 'sawtooth'], det: 12, v: .02, a: .05, cut: 2200, sus: .8, dest: this.duck, rev: .3 }));
+        if (M.e > .4 || M.k >= 1) this.v(mfq(R + 24 + [0, ch[1], 7, 12][st % 4]), t, spb * .9, { type: 'square', v: .013 + .006 * M.k, cut: 3200 });
+        if (M.t > .5 && st % 2 === 0) this.v(mfq(R + 36 + st / 2), t, spb, { type: 'sine', v: .01, cut: 5000 });
+        break;
+      }
+    }
+    if (M.t > .55 && st % 8 === 0 && this.cur !== 'electro') this.v(mfq(R + 25), t, spb * 1.5, { type: 'square', v: .01, cut: 2000 });
+  }
+});
+/* el estilo reemplaza la base; las capas de temporada (Navidad, Halloween) siguen encima */
+Snd.playStep = function (s, t) {
+  this.baseStep(s, t); const f = this.fest, st = s % 16; if (!f) return;
+  if (f === 'jingle' && (st === 2 || st === 6 || st === 10 || st === 14)) this.v(mfq(this.root + 48 + (st === 14 ? 7 : 0)), t, .12, { type: 'sine', v: .025, rev: .3 });
+  if (f === 'spooky' && st % 8 === 4) this.v(mfq(this.root + 30), t, .4, { type: 'sawtooth', v: .012, cut: 900 });
+};
+/* la pausa activa marca el ritmo: la música se sincroniza con la coreografía */
+const _mgp73 = MGPausa.prototype.update;
+MGPausa.prototype.update = function (dt) {
+  if (!this._sync && Snd.ctx && !JE.headless && Snd.timer) { this._sync = 1; Snd.lock = { bpm: this.bpm, style: 'electro' }; Snd.cur = 'electro'; Snd.step = 0; Snd.nextT = Snd.ctx.currentTime + ((this.t0 - this.t) % this.beat + this.beat) % this.beat; }
+  _mgp73.call(this, dt); if (this.done && this._sync === 1) { this._sync = 2; Snd.lock = null; }
+};
+/* opciones en Más: estilo musical */
+const _mas73 = UI.renderMas;
+UI.renderMas = function () {
+  _mas73.call(this); const z = $('#tab-mas [data-zoom]'); if (!z) return; const row = z.closest('.opt'), S = Save.data.settings, cur = S.mstyle || 'auto';
+  const d = document.createElement('div'); d.className = 'opt'; d.innerHTML = `<span>Estilo musical<br><small class="m">Automático cambia según el momento del juego</small></span><div class="seg wrap">${[['auto', 'Automático']].concat(Object.entries(ESTILOS).map(([k, e]) => [k, e.name])).map(([k, n]) => `<button data-mstyle="${k}" class="${cur === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  row.parentNode.insertBefore(d, row.nextSibling);
+  $$('[data-mstyle]', d).forEach(b => b.onclick = () => { S.mstyle = b.dataset.mstyle; Save.save(); Snd.init(); Snd.resume(); Snd.music(true); this.renderMas(); Snd.sfx('tap'); });
+};
+
+/* ---- 75-graficos.js ---- */
+/* =====================================================================
+   GRÁFICOS: pixel, híbrido (mapa dibujado + personajes pixel) y 2D (todo dibujado),
+   y dos vistas del mapa: cenital y panorámica de plataformas.
+   ===================================================================== */
+const GFX = () => (Save.data && Save.data.settings.gfx) || 'pixel';
+const panoOn = R => !!(R && Save.data.settings.vista === 'pano' && R.mode && R.mode.ride === R);
+/* dibuja un sprite centrado; los sprites dibujados (sc > 1) se escalan con suavizado */
+function blit(c, img, sh) {
+  const s = img.sc || 1, w = img.width / s, h = img.height / s;
+  if (sh) { c.fillStyle = sh; if (s > 1) { c.beginPath(); c.ellipse(1, 1.5, w / 2, h / 2, 0, 0, TAU); c.fill(); } else c.fillRect(-w / 2 + 1, -h / 2 + 1.5, w, h); }
+  if (s > 1) { c.imageSmoothingEnabled = true; c.drawImage(img, -w / 2, -h / 2, w, h); c.imageSmoothingEnabled = false; } else c.drawImage(img, -w / 2, -h / 2);
+}
+
+/* ---------- mapa dibujado (vectorial) ---------- */
+const BASEC = ['#62a04a', '#3f7b3a', '#bba98f', '#aaa49a', '#d3cdc1', '#d3cdc1', '#dbd5c8', '#d3cdc1', '#3f86c8', '#3f86c8', '#e4ddcc', '#d3cdc1', '#dbd5c8', '#c9b78c', '#d3cdc1', '#bab5ab', '#ccc0a9'];
+const ROADW = { [TT.ROAD]: .78, [TT.AVE]: .96, [TT.AUTO]: 1.06, [TT.BRIDGE]: .96 }, ASF = { [TT.ROAD]: '#5c616a', [TT.AVE]: '#52575f', [TT.AUTO]: '#484d56', [TT.BRIDGE]: '#5c616a' };
+const ROOF = ['#b8644a', '#c4724f', '#a95a43', '#e6e0d4', '#b8644a', '#d2cbbd', '#c97d58', '#cfd5dc'], TEJA = ['#c2623b', '#b55430', '#cf7448', '#a94b2b', '#c8693f'];
+Object.assign(CityMap, {
+  chunks2: new Map(),
+  hasG(cx, cy) { return GFX() === 'pixel' ? this.chunks.has(cx + ',' + cy) : this.chunks2.has(cx + ',' + cy + ':' + this.cq()); },
+  cq() { return Math.min(3, View.q || 2); },
+  chunkG(cx, cy) {
+    if (GFX() === 'pixel') return this.chunk(cx, cy);
+    const q = this.cq(), k = cx + ',' + cy + ':' + q; let c = this.chunks2.get(k);
+    if (c) { this.chunks2.delete(k); this.chunks2.set(k, c); return c; }
+    c = Art.mk(CH * TS * q, CH * TS * q, x => this.drawChunk2(x, cx, cy, q));
+    this.chunks2.set(k, c); if (this.chunks2.size > 22) this.chunks2.delete(this.chunks2.keys().next().value);
+    return c;
+  },
+  drawChunk2(c, cx, cy, q) {
+    const x0 = cx * CH, y0 = cy * CH, px0 = x0 * TS, py0 = y0 * TS, S = CH * TS, g = (x, y) => this.get(x, y), road = v => ROADW[v] != null, wat = v => v === TT.WATER || v === TT.CANAL;
+    c.setTransform(q, 0, 0, q, -px0 * q, -py0 * q); c.lineCap = 'round'; c.lineJoin = 'round';
+    for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) { const v = g(x, y); c.fillStyle = v === TT.GRASS && h2(x, y, 2) < .5 ? '#5d9a46' : BASEC[v] || '#62a04a'; c.fillRect(x * TS, y * TS, TS + .5, TS + .5); }
+    // relieve suave (luz del noroeste)
+    const RS = CH * 2 + 2, rc = Art.mk(RS, RS, r => { for (let j = 0; j < RS; j++) for (let i = 0; i < RS; i++) { const tx = x0 - .5 + i / 2, ty = y0 - .5 + j / 2, gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile, f = clamp((gx + gy) * 1.1, -.3, .25); r.fillStyle = f > 0 ? 'rgba(255,250,230,' + (f * .55).toFixed(3) + ')' : 'rgba(10,20,40,' + (-f * .7).toFixed(3) + ')'; r.fillRect(i, j, 1, 1); } });
+    c.imageSmoothingEnabled = true; c.drawImage(rc, 0, 0, RS, RS, px0 - TS * .75, py0 - TS * .75, RS * TS / 2, RS * TS / 2);
+    const seg = (test, w, col, dash) => {
+      c.strokeStyle = col; c.lineWidth = w * TS; if (dash) c.setLineDash(dash); c.beginPath();
+      for (let y = y0 - 1; y <= y0 + CH; y++) for (let x = x0 - 1; x <= x0 + CH; x++) {
+        if (!test(g(x, y))) continue; const ax = x * TS + TS / 2, ay = y * TS + TS / 2; c.moveTo(ax, ay); c.lineTo(ax + .01, ay);
+        for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [-1, 1]]) { if (!test(g(x + dx, y + dy))) continue; if (dx && dy && (test(g(x + dx, y)) || test(g(x, y + dy)))) continue; c.moveTo(ax, ay); c.lineTo(ax + dx * TS, ay + dy * TS); }
+      }
+      c.stroke(); c.setLineDash([]);
+    };
+    // agua, vías (andén + asfalto) y ciclorrutas
+    seg(wat, 1.25, '#3f86c8'); seg(wat, .5, '#5aa0dc');
+    seg(road, 1.22, '#e3ded3'); for (const v of [TT.ROAD, TT.AVE, TT.BRIDGE, TT.AUTO]) seg(u => u === v || (v === TT.ROAD && road(u) && ROADW[u] > ROADW[v]), ROADW[v], ASF[v]);
+    seg(u => u === TT.CICLO, .56, '#2f9e57'); seg(u => u === TT.CICLO, .05, '#e8f5d0', [3, 3]);
+    // rayas de los carriles (siguen la geometría real)
+    const seen = new Set(); c.lineWidth = 1; c.setLineDash([7, 7]);
+    for (const ln of this.lanesNear(px0 + S / 2, py0 + S / 2)) { if (seen.has(ln.pts) || ln.dir < 0) continue; seen.add(ln.pts); c.strokeStyle = ln.cls === 't' ? '#ffd166' : '#e4e4dc'; c.beginPath(); ln.pts.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)); c.stroke(); }
+    c.setLineDash([]);
+    // edificios y casas
+    const bl = v => v === TT.BLDG, R = (x, y, w, h, r, col) => { c.fillStyle = col; c.beginPath(); c.roundRect(x, y, w, h, r); c.fill(); };
+    const m = TS * .07, rr = TS * .22;
+    for (const pass of [0, 1]) for (let y = y0 - 1; y <= y0 + CH; y++) for (let x = x0 - 1; x <= x0 + CH; x++) {
+      if (!bl(g(x, y))) continue; const X = x * TS + (pass ? 0 : TS * .16), Y = y * TS + (pass ? 0 : TS * .2), col = pass ? ROOF[(h2(x >> 2, y >> 2, 9) * ROOF.length) | 0] : '#00000030';
+      R(X + m, Y + m, TS - 2 * m, TS - 2 * m, rr, col); c.fillStyle = col;
+      if (bl(g(x + 1, y))) c.fillRect(X + TS - m - 1, Y + m, 2 * m + 2, TS - 2 * m); if (bl(g(x, y + 1))) c.fillRect(X + m, Y + TS - m - 1, TS - 2 * m, 2 * m + 2);
+      if (bl(g(x + 1, y)) && bl(g(x, y + 1)) && bl(g(x + 1, y + 1))) c.fillRect(X + TS - m - 1, Y + TS - m - 1, 2 * m + 2, 2 * m + 2);
+    }
+    for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) {
+      const v = g(x, y), r = h2(x, y, 3), X = x * TS, Y = y * TS;
+      if (v === TT.BLDG) { if (r < .1) R(X + TS * .3, Y + TS * .3, TS * .3, TS * .22, 1, '#b4bcc6'); else if (r < .16) { c.fillStyle = '#25282e'; c.beginPath(); c.arc(X + TS * .5, Y + TS * .5, TS * .16, 0, TAU); c.fill(); } else if (r < .22) R(X + TS * .2, Y + TS * .2, TS * .6, TS * .6, 3, '#7dbb5a'); }
+      else if (v === TT.BRICK) { const col = TEJA[(h2(x, y, 4) * TEJA.length) | 0]; R(X + TS * .12 + 2, Y + TS * .14 + 2, TS * .76, TS * .72, 2, '#00000028'); R(X + TS * .12, Y + TS * .14, TS * .76, TS * .72, 2, col); c.fillStyle = shade(col, -.2); c.fillRect(X + TS * .12, Y + TS * .48, TS * .76, 1.2); }
+    }
+    // lugares emblemáticos (pixel art, como postales sobre el mapa)
+    c.imageSmoothingEnabled = false; LANDMARKS.forEach((L, i) => { if (L.x + L.w < x0 || L.x > x0 + CH || L.y + L.h < y0 || L.y > y0 + CH) return; c.drawImage(this.landmarkCanvas(i), L.x * TS, L.y * TS, L.w * TS, L.h * TS); });
+    // árboles (copas redondas con sombra)
+    for (let y = y0 - 1; y <= y0 + CH; y++) for (let x = x0 - 1; x <= x0 + CH; x++) {
+      const v = g(x, y), r = h2(x, y, 5); let rad = 0;
+      if (v === TT.GRASS && r < .3 && !this.lid.has(this.idx(x, y))) rad = .34 + (r < .1 ? .12 : 0); else if (v === TT.WALK && r < .12) rad = .28; else if (v === TT.MOUNT && r < .55) rad = .4 + r * .3;
+      if (!rad) continue; const X = x * TS + TS * (.3 + h2(x, y, 7) * .4), Y = y * TS + TS * (.3 + h2(x, y, 8) * .4), k = h2(x, y, 6), col = k < .05 ? '#f2c230' : k < .09 ? '#e88ab8' : v === TT.MOUNT ? '#2f6a33' : '#3f8a3f';
+      c.fillStyle = '#00000033'; c.beginPath(); c.arc(X + TS * .1, Y + TS * .14, rad * TS, 0, TAU); c.fill(); c.fillStyle = col; c.beginPath(); c.arc(X, Y, rad * TS, 0, TAU); c.fill();
+      c.fillStyle = k < .09 ? '#fff3a066' : '#ffffff26'; c.beginPath(); c.arc(X - rad * TS * .3, Y - rad * TS * .3, rad * TS * .45, 0, TAU); c.fill();
+    }
+    // tranvía y viaductos del metro
+    const path = (L, w, col, dx = 0, dy = 0) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); L.pts.forEach((p, i) => i ? c.lineTo(p.x + dx, p.y + dy) : c.moveTo(p.x + dx, p.y + dy)); c.stroke(); };
+    path(this.tram, 7, '#00000018'); path(this.tram, 5, '#9aa0a8'); path(this.tram, 3, '#cfd3d8');
+    for (const L of [this.lineA, this.lineB]) { path(L, 13, '#00000026', 3, 4); path(L, 13, '#8d939c'); path(L, 10, '#d3d6db'); path(L, 1, '#7d838c'); for (const st of L.st) { const p = this.at(L, st.s); c.save(); c.translate(p.x, p.y); c.rotate(p.a); R(-21, -11, 42, 22, 4, '#eef0f3'); c.fillStyle = PAL.vd; c.fillRect(-21, -11, 42, 3); c.restore(); } }
+    c.setTransform(1, 0, 0, 1, 0, 0);
+  }
+});
+
+/* ---------- personajes y vehículos dibujados (modo 2D) ---------- */
+const SPR4 = 4;
+function vsprite(key, base, draw) { const k = 'v' + key; let c = Art.cache.get(k); if (c) return c; c = Art.mk(base.width * SPR4, base.height * SPR4, x => { x.scale(SPR4, SPR4); x.lineCap = 'round'; x.lineJoin = 'round'; draw(x, base.width, base.height); }); c.sc = SPR4; Art.cache.set(k, c); return c; }
+const ell = (x, cx, cy, rx, ry, col) => { x.fillStyle = col; x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, TAU); x.fill(); };
+const rrect = (x, a, b, w, h, r, col) => { x.fillStyle = col; x.beginPath(); x.roundRect(a, b, w, h, r); x.fill(); };
+const line = (x, a, b, c2, d, w, col) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(a, b); x.lineTo(c2, d); x.stroke(); };
+for (const [name, fn] of Object.entries({
+  riderTop: (base, a) => vsprite('rt' + a.join(), base, (x, w, h) => { const [shirt, helmet, skin, frame = PAL.vd] = a; ell(x, w / 2, 1.3, .7, 1.3, '#1b1f27'); ell(x, w / 2, h - 1.4, .7, 1.4, '#1b1f27'); line(x, w / 2, 2.6, w / 2, h - 2.6, .9, frame); line(x, .6, 3.4, w - .6, 3.4, .7, '#30343c'); line(x, 1.9, 5.6, .9, 3.5, .9, skin); line(x, w - 1.9, 5.6, w - .9, 3.5, .9, skin); ell(x, w / 2, 6.4, 2.4, 1.9, shirt); ell(x, w / 2, 6.3, 1.5, 1.7, helmet); x.fillStyle = '#ffffff55'; x.fillRect(w / 2 - .25, 4.8, .5, 3); }),
+  bikeTop: (base) => vsprite('bt', base, (x, w, h) => { ell(x, w / 2, 1.2, .55, 1.2, '#1b1f27'); ell(x, w / 2, h - 1.2, .55, 1.2, '#1b1f27'); line(x, w / 2, 2, w / 2, h - 2, .8, PAL.vd); line(x, 0, 2.4, w, 2.4, .6, '#30343c'); }),
+  carTop: (base, a) => vsprite('ct' + a.join(), base, (x, w, h) => {
+    const [col, kind] = a; if (kind === 'moto') { ell(x, w / 2, h / 2, w * .3, h * .45, '#1b1f27'); ell(x, w / 2, h * .45, w * .32, h * .22, col); ell(x, w / 2, h * .55, w * .26, w * .26, '#e8e8e8'); return; }
+    rrect(x, .3, .3, w - .6, h - .6, Math.min(w, h) * .28, col); const glass = '#1f2f45';
+    if (kind === 'bus') { rrect(x, .9, .9, w - 1.8, h * .1, 1, glass); for (let i = 0; i < 5; i++) { x.fillStyle = glass; x.fillRect(.5, h * (.2 + i * .14), .7, h * .1); x.fillRect(w - 1.2, h * (.2 + i * .14), .7, h * .1); } rrect(x, w * .25, h * .3, w * .5, h * .5, 1, shade(col, .12)); return; }
+    if (kind === 'camion') { rrect(x, .4, .4, w - .8, h * .3, 1.2, col); rrect(x, .9, .9, w - 1.8, h * .1, .6, glass); rrect(x, .2, h * .33, w - .4, h * .66, .6, '#c9ccd1'); return; }
+    rrect(x, .9, h * .2, w - 1.8, h * .17, 1, glass); rrect(x, .9, h * .68, w - 1.8, h * .12, 1, glass); rrect(x, 1, h * .39, w - 2, h * .27, 1, shade(col, .1)); x.fillStyle = '#fff6b0'; x.fillRect(.6, .4, 1, .5); x.fillRect(w - 1.6, .4, 1, .5);
+    if (kind === 'taxi') rrect(x, w / 2 - 1, h * .46, 2, 1, .4, '#1d1f24');
+  }),
+  truckTop: (base, a) => vsprite('tt' + a.join(), base, (x, w, h) => { const [load = 0, cap = 14] = a; rrect(x, .4, .4, w - .8, h * .26, 1.4, '#e9eef3'); rrect(x, 1, .9, w - 2, h * .09, .6, '#1f2f45'); rrect(x, .2, h * .3, w - .4, h * .68, .8, PAL.vd); const n = Math.min(8, Math.round(8 * load / Math.max(1, cap))); for (let i = 0; i < n; i++) line(x, 1.2, h * .34 + i * h * .075, w - 1.2, h * .34 + i * h * .075, .7, '#1b1f27'); }),
+  walker: (base, a) => vsprite('wk' + a.join() + Save.data.profile.shirt + Save.data.profile.skin, base, (x, w, h) => { const P = Save.data.profile, f = a[0] | 0; ell(x, w / 2 - .9, h / 2 + (f ? 1.4 : -1.4), .6, 1, '#2a3550'); ell(x, w / 2 + .9, h / 2 + (f ? -1.4 : 1.4), .6, 1, '#2a3550'); ell(x, w / 2, h / 2, w * .42, h * .2, SHIRTS[P.shirt] || PAL.vd); ell(x, w / 2, h / 2, w * .22, w * .22, PELO[P.hairCol | 0] || '#2a1a10'); })
+})) { const orig = Art[name]; Art[name] = function (...a) { const base = orig.apply(this, a); return GFX() === '2d' && !base.sc ? fn(base, a) : base; }; }
+
+/* ---------- vista panorámica de plataformas ---------- */
+Object.assign(Ride.prototype, {
+  jump() { if (!panoOn(this) || (this.z | 0) > 0 || this.p.veh !== 'bike') return; this.vz = 150; this.z = .01; Snd.sfx('tap'); },
+  panoTick(dt) {
+    const P = this.p; this.trav = (this.trav || 0) + P.v * dt;
+    if (this.z > 0) { this.z += this.vz * dt; this.vz -= 420 * dt; if (this.z <= 0) { this.z = 0; this.vz = 0; } }
+    const O = this.obs || (this.obs = []); while (O.length < 4) { const last = O.length ? O[O.length - 1].d : this.trav + 220; O.push({ d: last + 260 + this.rng.f() * 380, k: this.rng.pick(['hueco', 'cono', 'charco', 'hueco']) }); }
+    for (const o of O) if (!o.done && this.trav >= o.d) { o.done = true; if (this.z > 5) { this.mode.score += 2; Snd.note(4); this.float('¡Salto!', PAL.vd1); } else if (P.veh === 'bike') { P.v *= .35; this.shake = .25; Snd.sfx('bad'); this.float({ hueco: '¡Hueco!', cono: '¡Cono!', charco: '¡Charco!' }[o.k], PAL.amb); } }
+    while (O.length && O[0].done && O[0].d < this.trav - 200) O.shift();
+  },
+  renderPano(V, min) {
+    const b = V.b, q = V.q || 1, vw = V.vw, vh = V.vh, P = this.p, M = this.map; b.setTransform(q, 0, 0, q, 0, 0); V.subX = V.subY = 0; this.min = min;
+    if (this.pa == null) this.pa = P.a; if (P.v > 3) { let d = P.a - this.pa; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; this.pa += d * .06; }
+    const ax = Math.cos(this.pa), ay = Math.sin(this.pa), xr = Math.round(vw * .38), sc = .6, ex = .9, e0 = M.elev(P.x, P.y), base = Math.round(vh * .7), tr = this.trav || 0;
+    const prof = x => { const d = (x - xr) / sc; return base - (M.elev(P.x + ax * d, P.y + ay * d) - e0) * ex; };
+    const hor = Math.round(vh * .52); b.drawImage(Art.panorama(vw, vh, min, hor), 0, 0);
+    // capa media: ciudad real alrededor (edificios altos, casas en ladera, árboles), con paralaje
+    const par = .45, step = 22;
+    for (let i = -1; i <= Math.ceil(vw / step) + 1; i++) {
+      const sx = i * step - ((tr * sc * par) % step), k0 = Math.floor((tr * sc * par) / step) + i, d = (sx - xr) / sc / par, wx = P.x + ax * d - ay * 90, wy = P.y + ay * d + ax * 90, v = M.get(Math.floor(wx / TS), Math.floor(wy / TS)), hh = h2(k0, 3, 7), gy = prof(sx) - 6;
+      if (v === TT.BLDG) { const H = 22 + Math.round(hh * 46), W = 14 + Math.round(hh * 8), col = ROOF[(hh * ROOF.length) | 0]; prect(b, sx, gy - H, W, H, shade(col, -.12)); for (let yy = gy - H + 3; yy < gy - 4; yy += 5) for (let xx = sx + 2; xx < sx + W - 2; xx += 4) prect(b, xx, yy, 2, 2, Art.night(min) > .4 && h2(xx, yy, k0) < .5 ? '#ffe9a0' : '#9fb4c8'); }
+      else if (v === TT.BRICK || v === TT.MOUNT && hh < .4) { const col = TEJA[(hh * TEJA.length) | 0]; prect(b, sx, gy - 12, 14, 12, '#d8c8b0'); prect(b, sx - 1, gy - 15, 16, 4, col); prect(b, sx + 5, gy - 7, 4, 7, '#6e4a2a'); }
+      else if (v === TT.GRASS || v === TT.MOUNT) { pdisc(b, sx + 6, gy - 12, 7, '#3f8a3f'); prect(b, sx + 5, gy - 6, 2, 6, '#6e4a2a'); }
+    }
+    // suelo con el perfil real de la vía (subidas y bajadas exageradas para verlas)
+    const tile = M.get(Math.floor(P.x / TS), Math.floor(P.y / TS)), cic = tile === TT.CICLO;
+    for (let x = 0; x <= vw; x += 2) { const y = Math.round(prof(x)); prect(b, x, y, 2, 3, '#e3ded3'); prect(b, x, y + 3, 2, 10, cic ? '#2f9e57' : '#52575f'); prect(b, x, y + 13, 2, vh - y, '#6b5a43'); if (((x + Math.floor(tr * sc)) & 15) < 7) prect(b, x, y + 8, 2, 1, cic ? '#e8f5d0' : '#e4e4dc'); }
+    // vehículos cercanos en la misma vía, vistos de lado
+    for (const cr of this.cars) { const dx = cr.x - P.x, dy = cr.y - P.y, al = dx * ax + dy * ay, lat = -dx * ay + dy * ax; if (Math.abs(lat) > 40 * WK || Math.abs(al) > vw / sc) continue; const x = xr + al * sc, y = prof(x) + 5, L = cr.kind === 'bus' ? 30 : cr.kind === 'moto' ? 9 : cr.kind === 'camion' ? 26 : 16, H = cr.kind === 'bus' || cr.kind === 'camion' ? 14 : cr.kind === 'moto' ? 6 : 8;
+      prect(b, x - L / 2, y - H, L, H, cr.col); prect(b, x - L / 2 + 2, y - H + 2, L - 4, 3, '#1f2f45'); pdisc(b, x - L / 2 + 3, y, 2, '#1b1f27'); pdisc(b, x + L / 2 - 3, y, 2, '#1b1f27'); }
+    // estaciones EnCicla al pasar
+    for (const s of M.stations) { const dx = s.x - P.x, dy = s.y - P.y, al = dx * ax + dy * ay, lat = Math.abs(-dx * ay + dy * ax); if (lat > 50 * WK || Math.abs(al) > vw / sc) continue; const x = Math.round(xr + al * sc), y = Math.round(prof(x)); prect(b, x - 16, y - 18, 32, 4, PAL.vd); prect(b, x - 14, y - 14, 2, 14, '#9aa7b8'); for (let i = 0; i < 5; i++) { prect(b, x - 9 + i * 5, y - 7, 1, 7, '#59606c'); prect(b, x - 10 + i * 5, y - 6, 3, 3, PAL.vd); } (this.pLab || (this.pLab = [])).push({ t: s.name, x, y: y - 22 }); }
+    // obstáculos para saltar
+    for (const o of this.obs || []) { if (o.done) continue; const x = Math.round(xr + (o.d - tr) * sc); if (x < -10 || x > vw + 10) continue; const y = Math.round(prof(x)) + 3; if (o.k === 'hueco') { prect(b, x - 5, y, 10, 3, '#1d1f24'); } else if (o.k === 'cono') { prect(b, x - 1, y - 7, 3, 7, '#f07a1a'); prect(b, x - 1, y - 5, 3, 1, '#fff'); prect(b, x - 3, y, 7, 1, '#f07a1a'); } else { prect(b, x - 7, y, 14, 2, '#7fb6e6'); prect(b, x - 4, y, 6, 1, '#cfe6fa'); } }
+    // el jugador, de lado
+    const y = Math.round(prof(xr)) + 3 - Math.round(this.z || 0), ph = this.trav ? this.trav / 18 : 0, me = this.mode.uniform ? Art.me({ uniforme: true }) : Art.me();
+    if (P.veh === 'truck') { prect(b, xr - 18, y - 16, 36, 13, PAL.vd); prect(b, xr + 10, y - 22, 9, 10, '#e9eef3'); prect(b, xr + 12, y - 20, 5, 4, '#1f2f45'); pdisc(b, xr - 11, y - 2, 3, '#1b1f27'); pdisc(b, xr + 12, y - 2, 3, '#1b1f27'); }
+    else if (P.veh === 'walk') Art.person(b, xr, y, me, ph, 1);
+    else { Art.bikeSide(b, xr, y - 6, { r: 5, face: 1, col: bikeCol() }); const lx = Math.round(Math.sin(ph * 3) * 2); prect(b, xr - 1 + lx, y - 15, 2, 5, me.pants); prect(b, xr - 1 - lx, y - 15, 2, 5, shade(me.pants, -.2)); prect(b, xr - 2, y - 23, 5, 8, me.vest ? PAL.vd : me.shirt); pline(b, xr + 2, y - 21, xr + 5, y - 18, me.skin); prect(b, xr - 1, y - 28, 5, 5, me.skin); prect(b, xr - 2, y - 30, 7, 3, me.cap || HELMETS[Save.data.profile.helmet] || '#fff'); prect(b, xr + 3, y - 26, 1, 1, '#141414'); }
+    if (this.z > 0) { b.fillStyle = '#0004'; b.fillRect(xr - 6, Math.round(prof(xr)) + 4, 12, 2); }
+    this.panoXY = { x: xr, y: y - 30 };
+  }
+});
+const _render75 = Ride.prototype.render;
+Ride.prototype.render = function (V, min) { this.pLab = []; if (panoOn(this)) return this.renderPano(V, min); this.z = 0; return _render75.call(this, V, min); };
+const _rtop75 = Ride.prototype.renderTop;
+Ride.prototype.renderTop = function (V) {
+  if (!panoOn(this)) return _rtop75.call(this, V);
+  const c = V.ctx, n = Art.night(this.min); if (n > 0) { c.fillStyle = 'rgba(8,18,52,' + (n * .45).toFixed(3) + ')'; c.fillRect(0, 0, V.w, V.h); }
+  if (this.mode.mods.rain) { c.strokeStyle = '#cfe0ff55'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i < 60; i++) { const x = (i * 97 + performance.now() * .3) % V.w, y = (i * 53 + performance.now() * .6) % V.h; c.moveTo(x, y); c.lineTo(x - 3, y + 9); } c.stroke(); }
+};
+const _hud75 = Ride.prototype.hud;
+Ride.prototype.hud = function (V, opts) {
+  if (!panoOn(this)) return _hud75.call(this, V, opts);
+  const cx = this.cxf, cy = this.cyf, T = this.target, fx = this.fx; this.cxf = -1e7; this.cyf = -1e7; this.target = null; this.fx = [];
+  try { _hud75.call(this, V, opts); } finally { this.cxf = cx; this.cyf = cy; this.target = T; this.fx = fx; }
+  const s = V.s, pp = this.panoXY || { x: 0, y: 0 };
+  for (const l of (this.pLab || []).slice(0, 2)) V.text(l.t, l.x * s, l.y * s, { size: 11, align: 'center', bg: '#0a2342dd', color: '#c4ec7c', pad: 3 });
+  for (const f of fx) if (f.k === 't') V.text(f.txt, pp.x * s, pp.y * s - 10, { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col });
+  const pct = Math.round((this.sl || 0) * 100); if (Math.abs(pct) >= 3) V.text((pct > 0 ? '▲ SUBIDA ' : '▼ BAJADA ') + Math.abs(pct) + ' %', pp.x * s, pp.y * s - 30, { size: 13, align: 'center', color: pct > 0 ? PAL.amb : PAL.cie, stroke: '#0a2342', sw: 4 });
+  if (T) { const d = Math.round(dist(T.x, T.y, this.p.x, this.p.y) * M_PER_PX), lb = (T.label || 'Destino').slice(0, 30); V.text('➜ ' + lb + ' · ' + (d >= 1000 ? (d / 1000).toFixed(1) + ' km' : d + ' m'), V.w / 2, (View.top || 60) + 46, { size: 14, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 5, body: true }); }
+};
+const _upd75 = Ride.prototype.update;
+Ride.prototype.update = function (dt, dir) { _upd75.call(this, dt, dir); if (panoOn(this)) this.panoTick(dt); };
+/* control en panorámica: la bici sigue la ruta sola; tú pedaleas (→), frenas (←) y saltas (↑ o botón) */
+const _mupd75 = MapMode.prototype.update;
+MapMode.prototype.update = function (dt) {
+  const R = this.ride; if (!R || this.sub || this.botDir || !panoOn(R) || R.big) return _mupd75.call(this, dt);
+  const inp = Input.dir(); let d;
+  if (R.target) { this.botDrive(); d = this.botDir; } else d = { x: Math.cos(R.p.a), y: Math.sin(R.p.a), m: 1 };
+  const thr = inp.m > .2 ? (inp.x < -.4 ? 0 : clamp(.6 + .5 * Math.max(inp.x, 0), .6, 1)) : .6;
+  if (inp.m > .5 && inp.y < -.65) R.jump();
+  this.botDir = { x: d.x, y: d.y, m: d.m === 0 ? 0 : thr };
+  try { _mupd75.call(this, dt); } finally { this.botDir = null; }
+};
+const _act75 = MapMode.prototype.actions;
+MapMode.prototype.actions = function () { const a = _act75.call(this); if (this.ride && !this.sub) { if (panoOn(this.ride) && this.ride.p.veh === 'bike') a.unshift({ id: 'jump', icon: 'llanta', label: 'Saltar', fn: () => this.ride.jump() }); } return a; };
+const _key75 = MapMode.prototype.key;
+MapMode.prototype.key = function (e) { if (e.code === 'KeyV') return toggleVista(); if (panoOn(this.ride) && (e.code === 'Space' || e.code === 'ArrowUp')) return this.ride.jump(); return _key75.call(this, e); };
+function toggleVista() { const S = Save.data.settings; S.vista = S.vista === 'pano' ? 'cenital' : 'pano'; Save.save(); Snd.sfx('tap'); JE.ui && JE.ui.toast(S.vista === 'pano' ? '🎬 Vista panorámica: la bici sigue la ruta; tú pedaleas, frenas y saltas' : '🗺️ Vista cenital'); }
+/* pausa: cambiar de vista */
+const _pause75 = Game.pause;
+Game.pause = function () { _pause75.call(this); const m = $('#pMap'); if (!m || !this.mode || !this.mode.ride) return; const b = document.createElement('button'); b.className = 'btn'; b.id = 'pVista'; b.textContent = Save.data.settings.vista === 'pano' ? '🗺️ Vista cenital' : '🎬 Vista panorámica'; m.parentNode.insertBefore(b, m.nextSibling); b.onclick = () => { toggleVista(); this.resume(); }; };
+/* Más: gráficos y vista */
+const _mas75 = UI.renderMas;
+UI.renderMas = function () {
+  _mas75.call(this); const z = $('#tab-mas [data-zoom]'); if (!z) return; const row = z.closest('.opt'), S = Save.data.settings;
+  const d = document.createElement('div'); d.innerHTML = `<div class="opt"><span>Gráficos<br><small class="m">Híbrido: mapa dibujado con personajes en pixel</small></span><div class="seg">${[['pixel', 'Pixel'], ['hibrido', 'Híbrido'], ['2d', 'Dibujado 2D']].map(([k, n]) => `<button data-gfx="${k}" class="${GFX() === k ? 'on' : ''}">${n}</button>`).join('')}</div></div>
+    <div class="opt"><span>Vista del mapa<br><small class="m">Panorámica: de lado, estilo plataformas (tecla V)</small></span><div class="seg">${[['cenital', 'Cenital'], ['pano', 'Panorámica']].map(([k, n]) => `<button data-vista="${k}" class="${(S.vista || 'cenital') === k ? 'on' : ''}">${n}</button>`).join('')}</div></div>`;
+  while (d.firstChild) row.parentNode.insertBefore(d.lastChild, row.nextSibling);
+  $$('[data-gfx]').forEach(b => b.onclick = () => { S.gfx = b.dataset.gfx; Save.save(); Art.cache.clear(); CityMap.chunks2.clear(); Snd.sfx('tap'); this.renderMas(); });
+  $$('[data-vista]').forEach(b => b.onclick = () => { S.vista = b.dataset.vista; Save.save(); Snd.sfx('tap'); this.renderMas(); });
+};
+
+/* ---- 76-red-libre.js ---- */
+/* =====================================================================
+   MUNDO LIBRE EN RED Y COMPETENCIAS PERSONALIZADAS
+   Sin servidores: el celular que crea la sala es el servidor (WebRTC en estrella).
+   Misma red Wi-Fi o zona Wi-Fi de un celular: funciona sin internet. Por internet: STUN público.
+   ===================================================================== */
+ROLE.libre = { id: 'libre', n: 11, name: 'Mundo libre', tier: 'Multijugador', icon: 'usuario', vista: 'Cenital · mundo abierto', unlock: 0, desc: 'Pedalea con tus amigos por todo el valle, de día o de noche, o compitan con reglas propias.', how: ['Pedalea donde quieras: tus amigos aparecen con su nombre.', 'Toca el timbre para saludar.', 'En competencia, mira el marcador de abajo.'] };
+const COMP = {
+  paseo: { name: 'Paseo libre', desc: 'Sin reglas: recorran el valle juntos.' },
+  carrera: { name: 'Carrera de postales', desc: 'Pasen por las postales en orden y lleguen a la estación de meta.' },
+  hojas: { name: 'Cazadores de hojas', desc: 'Recoge más hojas verdes que los demás antes de que se acabe el tiempo.' },
+  lleva: { name: 'La lleva', desc: 'Quien la lleva persigue a los demás; al tocar a alguien, se la pasa. Gana quien la lleve menos tiempo.' }
+};
+class ModeLibreRed extends ModeUsuario {
+  constructor(role, T, opt) {
+    super(role, T, Object.assign({}, opt, { free: true }));
+    const c = this.comp = Object.assign({ k: 'paseo', min: 3 }, opt.comp || {}); this.net = !!opt.net; this.netT = 0; this.left = c.k === 'paseo' ? 0 : c.min * 60; this.countdown = c.k === 'paseo' ? 0 : 3.2;
+    const P = this.ride.p; this.peers = (opt.players || []).map((p, k) => ({ id: p.id | 0, name: String(p.name || 'Amigo').slice(0, 16), shirt: p.shirt || PAL.cor, x: P.x + (k + 1) * 6 * WK, y: P.y, tx: P.x + (k + 1) * 6 * WK, ty: P.y, a: P.a, sc: 0, itT: 0, idx: 0 }));
+    this.ride.opps = this.peers; this.sc = 0; this.itId = c.k === 'lleva' ? 0 : null; this.itT = 0; this.immune = 0; this.res = null;
+    if (this.net) Net.onmsg = m => this.msg(m);
+    this.goals = [];
+    if (c.k === 'paseo') this.goal('Pedalea con tus amigos', true, () => true);
+    else this.goal('Gana: ' + COMP[c.k].name, true, () => !!this.res && this.res.win, () => this.res ? (this.res.win ? '¡1º!' : this.res.pos + 'º') : 'en juego');
+    if (c.k === 'hojas') { this.ride.markers = []; this.ride.target = null; }
+    this.coach = c.k === 'lleva' ? (this.itId === Net.myId ? '¡Tú la llevas! Persigue a alguien y tócalo.' : 'Huye de quien la lleva (marcado en rojo).') : COMP[c.k].desc;
+  }
+  myId() { return this.net ? Net.myId | 0 : 0; }
+  msg(m) {
+    if (m.t === 'start' && !(m.from | 0)) return UI.netLobbyMsg(m);
+    const o = this.peers.find(q => q.id === (m.from | 0)); if (!o) return;
+    if (m.t === 'p') { o.tx = +m.x || 0; o.ty = +m.y || 0; o.a = +m.a || 0; o.sc = m.sc | 0; }
+    else if (m.t === 'bell') { if (dist(o.x, o.y, this.ride.p.x, this.ride.p.y) < 220 * WK) { Snd.sfx('bell'); this.ride.fx.push({ k: 't', x: o.x, y: o.y - 12, t: 1.2, txt: '🔔 ' + o.name, col: '#fff' }); } }
+    else if (m.t === 'tag') { this.itId = m.to | 0; this.immune = 2; if (this.itId === this.myId()) { Snd.sfx('bad'); JE.ui && JE.ui.toast('😱 ¡' + o.name + ' te tocó! Ahora la llevas tú'); } }
+    else if (m.t === 'bye') { o.gone = true; JE.ui && JE.ui.toast(o.name + ' salió de la sala'); }
+  }
+  onLeaf() { super.onLeaf(); if (this.comp.k === 'hojas' && this.countdown <= 0 && this.left > 0) this.sc++; }
+  update(dt) { if (this.countdown > 0) { const c0 = Math.ceil(this.countdown); this.countdown -= dt; if (Math.ceil(this.countdown) !== c0 && !JE.headless) Snd.sfx(this.countdown > 0 ? 'tap' : 'win'); this.ride.cam.x = this.ride.p.x; this.ride.cam.y = this.ride.p.y; return; } super.update(dt); }
+  tick(dt) {
+    super.tick(dt); const P = this.ride.p, c = this.comp, me = this.myId();
+    for (const o of this.peers) { const k = Math.min(1, dt * 8); o.x += (o.tx - o.x) * k; o.y += (o.ty - o.y) * k; o.it = this.itId === o.id; }
+    if (this.net) { this.netT -= dt; if (this.netT <= 0) { this.netT = .1; Net.send({ t: 'p', x: Math.round(P.x), y: Math.round(P.y), a: +P.a.toFixed(2), sc: c.k === 'lleva' ? Math.round(this.itT) : this.sc }); } }
+    if (c.k === 'lleva' && this.left > 0) {
+      this.immune = Math.max(0, this.immune - dt);
+      if (this.itId === me) { this.itT += dt; if (!this.immune) { const v = this.peers.find(o => !o.gone && dist(o.x, o.y, P.x, P.y) < 12 * WK); if (v) { this.itId = v.id; this.immune = 2; Snd.sfx('win'); this.ride.float('¡Te toca, ' + v.name + '!', PAL.vd1); if (this.net) Net.send({ t: 'tag', to: v.id }); } } }
+    }
+    if (this.left > 0 && !this.res) { this.left -= dt; if (this.left <= 0) this.finish(); }
+    this.coach = c.k === 'lleva' ? (this.itId === me ? '🔴 ¡Tú la llevas! Toca a alguien.' : '🏃 Huye de ' + ((this.peers.find(o => o.id === this.itId) || {}).name || 'quien la lleva')) : this.coach;
+  }
+  finish() {
+    const c = this.comp, me = { id: this.myId(), name: Save.data.profile.name, v: c.k === 'lleva' ? -this.itT : this.sc }, L = [me].concat(this.peers.filter(o => !o.gone).map(o => ({ id: o.id, name: o.name, v: c.k === 'lleva' ? -o.sc : o.sc }))).sort((a, b) => b.v - a.v);
+    const pos = L.findIndex(x => x === me) + 1; this.res = { pos, win: pos === 1, L }; this.score += pos === 1 ? 120 : Math.max(10, 70 - pos * 15);
+    this.ride.stamp = { t: 3, title: pos === 1 ? '¡GANASTE!' : 'QUEDASTE ' + pos + 'º', sub: L.map((x, i) => (i + 1) + '. ' + x.name).join('  '), bg: pos === 1 ? PAL.vd : PAL.amb }; Snd.sfx(pos === 1 ? 'win' : 'ok');
+    this.endT = 3.2;
+  }
+  actions() { const a = super.actions(); const b = a.find(x => x.id === 'bell'); if (b) { const f = b.fn; b.fn = () => { f(); if (this.net) Net.send({ t: 'bell' }); }; } return this.comp.k === 'paseo' ? a : a.filter(x => x.id !== 'dock'); }
+  hud2(V) {
+    if (this.countdown > 0) { const n = Math.ceil(this.countdown); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 110, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); V.text(COMP[this.comp.k].name, V.w / 2, V.h * .42 + 40, { size: 18, align: 'center', color: '#fff', stroke: PAL.az, sw: 5 }); return; }
+    if (this.comp.k === 'paseo') return; const me = this.myId(), m = Math.max(0, Math.ceil(this.left)), tm = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+    const sc = this.comp.k === 'lleva' ? [Save.data.profile.name + ' ' + Math.round(this.itT) + ' s'].concat(this.peers.map(o => o.name + ' ' + o.sc + ' s')) : ['Tú ' + this.sc].concat(this.peers.map(o => o.name + ' ' + o.sc));
+    V.text('⏱ ' + tm + ' · ' + sc.join(' · '), 10, V.h - 20, { size: 13, color: this.itId === me ? PAL.cor : PAL.vd1, bg: '#0a2342dd', pad: 4, body: true });
+    if (this.comp.k === 'lleva') for (const o of this.peers) if (o.it) { const s = V.s, x = (o.x - this.ride.cxf) * s, y = (o.y - this.ride.cyf) * s - 26; if (x > 0 && x < V.w && y > 0 && y < V.h) V.text('🔴 LA LLEVA', x, y, { size: 11, align: 'center', color: '#fff', bg: PAL.cor, pad: 3 }); }
+  }
+  info() { const i = super.info(); if (this.comp.k !== 'paseo') i.chips = [{ t: COMP[this.comp.k].name }]; return i; }
+  end() { if (this.net && !this.done) Net.onmsg = m => UI.netLobbyMsg(m); super.end(); }
+}
+MODE_CLASS.libre = ModeLibreRed;
+
+/* ---------- sala: conexión, mundo libre y competencias ---------- */
+const _multi76 = UI.multi;
+UI.multi = function () {
+  _multi76.call(this); const h = $('#nHost'); if (!h) return; Net.lan = Net.lan !== false;
+  const d = document.createElement('div'); d.innerHTML = `<p class="pag" style="margin-top:4px">Conexión</p><div class="seg wrap" id="nLan"><button data-lan="1" class="${Net.lan ? 'on' : ''}">📶 Misma red o zona Wi-Fi (sin internet)</button><button data-lan="0" class="${Net.lan ? '' : 'on'}">🌐 Por internet</button></div>
+    <p class="m" style="font-size:12px;margin:6px 0 10px">El celular que crea la sala es el servidor: no se usan servidores externos. Sin internet, un celular comparte su zona Wi-Fi y los demás se conectan a ella. Bluetooth no está disponible en la versión web.</p>`;
+  h.parentNode.parentNode.insertBefore(d, h.parentNode);
+  $$('[data-lan]', d).forEach(b => b.onclick = () => { Net.lan = b.dataset.lan === '1'; $$('[data-lan]', d).forEach(x => x.classList.toggle('on', x === b)); Snd.sfx('tap'); });
+};
+const _lobby76 = UI.renderLobby;
+UI.renderLobby = function () {
+  _lobby76.call(this); const st = $('#nStart'); if (!st || this._lobbyBusy) return; const ready = Object.keys(this.netPlayers).length > 0, C = this.compCfg || (this.compCfg = { k: 'paseo', n: 3, min: 3, zona: 'centro' });
+  const d = document.createElement('div'); d.className = 'paper'; d.style.margin = '10px 0';
+  d.innerHTML = `<div class="t">Mundo libre</div><p class="pag" style="margin-top:6px">Modo</p><div class="seg wrap">${Object.entries(COMP).map(([k, c]) => `<button data-ck="${k}" class="${C.k === k ? 'on' : ''}">${c.name}</button>`).join('')}</div><p style="margin:6px 0;font-size:13px">${esc(COMP[C.k].desc)}</p>
+    ${C.k === 'carrera' ? `<p class="pag">Postales</p><div class="seg">${[1, 3, 5].map(n => `<button data-cn="${n}" class="${C.n === n ? 'on' : ''}">${n}</button>`).join('')}</div><p class="pag">Zona</p><div class="seg">${['norte', 'centro', 'sur'].map(z => `<button data-cz="${z}" class="${C.zona === z ? 'on' : ''}">${z}</button>`).join('')}</div>` : ''}
+    ${C.k === 'hojas' || C.k === 'lleva' ? `<p class="pag">Duración</p><div class="seg">${[2, 3, 5].map(n => `<button data-cm="${n}" class="${C.min === n ? 'on' : ''}">${n} min</button>`).join('')}</div>` : ''}
+    <div class="col" style="margin-top:10px"><button class="btn pri" id="nLibre" ${ready ? '' : 'disabled'}>🌎 Empezar</button></div>`;
+  st.parentNode.parentNode.insertBefore(d, st.parentNode);
+  const re = () => { Snd.sfx('tap'); this.renderLobby(); };
+  $$('[data-ck]', d).forEach(b => b.onclick = () => { C.k = b.dataset.ck; re(); }); $$('[data-cn]', d).forEach(b => b.onclick = () => { C.n = +b.dataset.cn; re(); });
+  $$('[data-cz]', d).forEach(b => b.onclick = () => { C.zona = b.dataset.cz; re(); }); $$('[data-cm]', d).forEach(b => b.onclick = () => { C.min = +b.dataset.cm; re(); });
+  $('#nLibre').onclick = () => this.netStartLibre();
+};
+UI.netStartLibre = function () {
+  const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, players = this.roster(), C = Object.assign({}, this.compCfg);
+  Net.send({ t: 'start', kind: 'libre', seed, players, comp: C }); this.netLibre(seed, players, C);
+};
+UI.netLibre = function (seed, players, C) {
+  this.closeModal(); if (Game.mode) Game.stop(); const others = (players || []).filter(p => p.id !== Net.myId), comp = { k: COMP[C.k] ? C.k : 'paseo', n: clamp(C.n | 0 || 3, 1, 5), min: clamp(C.min | 0 || 3, 1, 10), zona: ['norte', 'centro', 'sur'].includes(C.zona) ? C.zona : 'centro' };
+  if (comp.k === 'carrera') return Game.start('carrera', 2, { seed, nov: NOVEDADES[0], net: true, n: comp.n, zona: comp.zona, players: others.length ? others : [{ id: 0, name: 'Amigo', shirt: PAL.cor }] });
+  Game.start('libre', 1, { seed, nov: NOVEDADES[0], net: true, players: others, comp });
+};
+const _lmsg76 = UI.netLobbyMsg;
+UI.netLobbyMsg = function (m) {
+  if (m.t === 'start' && m.kind === 'libre' && Net.role === 'guest') { const clean = p => ({ id: p.id | 0, name: String(p.name || 'Amigo').slice(0, 16), shirt: /^#[0-9a-f]{6}$/i.test(p.shirt) ? p.shirt : PAL.cor }); return this.netLibre(m.seed >>> 0, (m.players || []).map(clean), m.comp || {}); }
+  return _lmsg76.call(this, m);
+};
+
 /* ---- 90-bot.js ---- */
 /* =====================================================================
    BOT DE PRUEBAS: juega partidas automáticas y busca errores
@@ -6372,7 +7239,7 @@ Art.shareImage = function (w = 1200, h = 630) {
   x.fillStyle = PAL.az; x.fillRect(0, 0, w, h); x.fillStyle = '#ffffff12'; for (let i = 0; i < w; i += 9) for (let j = 0; j < h; j += 9) x.fillRect(i, j, 2, 2);
   x.fillStyle = PAL.vd; x.fillRect(0, 0, w, 64); x.fillStyle = PAL.az; x.font = '800 22px Cuerpo, sans-serif'; x.textBaseline = 'middle';
   const sp = (t, X, Y, ls) => { let cx = X; for (const ch of t) { x.fillText(ch, cx, Y); cx += x.measureText(ch).width + ls; } };
-  sp('ÁREA METROPOLITANA · Nº 15', 40, 33, 6); x.fillStyle = PAL.az; x.fillRect(w - 470, 8, 450, 48); x.strokeStyle = PAL.vd; x.lineWidth = 4; x.strokeRect(w - 470, 8, 450, 48); x.fillStyle = PAL.vd1; sp('GRATIS TODOS LOS DÍAS', w - 445, 33, 5);
+  sp('VALLE DE ABURRÁ', 40, 33, 6); x.fillStyle = PAL.az; x.fillRect(w - 470, 8, 450, 48); x.strokeStyle = PAL.vd; x.lineWidth = 4; x.strokeRect(w - 470, 8, 450, 48); x.fillStyle = PAL.vd1; sp('BICICLETA PÚBLICA', w - 445, 33, 5);
   const art = this.mk(200, 125, p => this.cover(p, 200, 125, 2.2)), aw = 560, ah = 350, ax = w - aw - 50, ay = 120;
   x.fillStyle = PAL.vd2; x.fillRect(ax + 14, ay + 14, aw, ah); x.drawImage(art, ax, ay, aw, ah); x.strokeStyle = '#fff'; x.lineWidth = 8; x.strokeRect(ax, ay, aw, ah);
   x.textBaseline = 'alphabetic'; x.fillStyle = '#fff'; x.font = '700 190px Titulos, Impact, sans-serif'; x.fillText('JUEGA', 36, 250); x.fillStyle = PAL.vd; x.font = '700 150px Titulos, Impact, sans-serif'; x.fillText('ENCICLA', 40, 390);

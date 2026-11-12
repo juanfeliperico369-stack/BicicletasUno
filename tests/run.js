@@ -142,7 +142,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     JE.game.start('balance', 1, { seed: 3, nov: NOVEDADES[0] }); const uni = JE.game.mode.uniform && bikeCol() === PAL.vd; JE.game.stop();
     Save.data.profile.bike = 3; JE.ownBike = true; JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true, bici: 'propia' }); const own = !JE.game.mode.uniform && bikeCol() === BIKES[3]; JE.game.stop(); Save.data.profile.bike = 0; JE.ownBike = false;
     // creador: pestaña Tú con preguntas
-    UI.avatar(true); const tu = !!document.querySelector('#mBody [data-k=uni]') && !!document.querySelector('#mBody [data-k=trabajo]') && !!document.querySelector('#mBody [data-k=colegio]'); UI.closeModal();
+    UI._avTab = null; UI.avatar(true); const tu = !!document.querySelector('#mBody [data-k=uni]') && !!document.querySelector('#mBody [data-k=trabajo]') && !!document.querySelector('#mBody [data-k=colegio]'); UI.closeModal();
     UI._avTab = 'cuerpo'; UI.avatar(false); const cuerpo = !!document.querySelector('#mBody [data-k=build]') && !!document.querySelector('#mBody [data-k=tall]'); UI.closeModal(); UI._avTab = null;
     UI.go('sHome');
     return { fest, want, easter: k(Cal.easter(2026)), fiestas, sv, m1, m2, m3, sub, rutina, drained, rest, foto, race, cvBikes, uni, own, tu, cuerpo };
@@ -156,6 +156,23 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(cal.race === 'ok' && cal.cvBikes > 0, 'carrera de la ciclovía contra 3 ciclistas (' + cal.race + ', ' + cal.cvBikes + ' ciclistas en la vía)');
   ok(cal.uni && cal.own, 'uniforme y bici verde de EnCicla para los trabajadores; ropa y bici libres en el modo libre');
   ok(cal.tu && cal.cuerpo, 'creador: preguntas de tu vida, contextura y estatura');
+  console.log('3d) Gráficos, vistas, música por estilos, corredores eléctricos, tutorial y oficios nuevos');
+  const g3 = await p.evaluate(async () => {
+    const wait = ms => new Promise(r => setTimeout(r, ms)), out = {}, e0 = JE.errors.length, S = Save.data.settings, keep = { gfx: S.gfx, vista: S.vista };
+    for (const [gfx, vista] of [['hibrido', 'cenital'], ['2d', 'cenital'], ['pixel', 'pano']]) { Object.assign(S, { gfx, vista }); Art.cache.clear(); CityMap.chunks2.clear(); JE.game.start('apoyo', 1, { seed: 4, nov: NOVEDADES[0] }); await wait(500); out[gfx + vista] = { q: View.q, pano: panoOn(JE.game.mode.ride) }; JE.game.stop(); }
+    Object.assign(S, keep); Art.cache.clear();
+    out.music = [Snd.styleNow()]; JE.game.start('balance', 1, { seed: 3, nov: NOVEDADES[0] }); Snd.mood.n = 0; out.music.push(Snd.styleNow()); Snd.mood.n = 1; out.music.push(Snd.styleNow()); Snd.mood.n = 0; JE.game.stop();
+    const st = id => JE.map.stations.find(s => s.id === id); out.e = ['floresta', 'c4ta', 'udea', 'hinfantil', 'sancayetano', 'estrella'].map(id => (st(id) || {}).e || 'x').join();
+    JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0] }); const M = JE.game.mode; M.clock = 19 * 60 + 30; M.takeBike(st('c4ta')); out.eLate = M.ride.ebike; M.clock = 10 * 60; M.takeBike(st('c4ta')); out.eDay = M.ride.ebike; JE.game.stop();
+    UI._tuto = true; JE.game.start('pausas', 1, { seed: 5, nov: NOVEDADES[0] }); UI._tuto = false; for (let i = 0; i < 40; i++) Game.dom(1 / 30); out.tut = Tutor.on && Tutor.showing && /Maryi/.test(document.querySelector('#tutor').textContent); document.querySelector('#tutOk').click(); JE.game.stop();
+    JE.headless = true; const P = new MGPausa({ rng: new RNG(2), has: () => false }, { lvl: 1 }); P.bot(0); let k = 0; while (!P.done && k < 30 * 90) { P.update(1 / 30); k++; } out.pausa = P.acc; JE.headless = false;
+    out.err = JE.errors.slice(e0); UI.go('sHome'); return out;
+  });
+  ok(g3.hibridocenital.q > 1 && g3['2dcenital'].q > 1 && g3.pixelpano.pano && !g3.err.length, 'gráficos híbrido y 2D con mapa dibujado, y vista panorámica sin errores ' + g3.err.join(' | '));
+  ok(g3.music.join() === 'lofi,rock,jazz', 'música automática: lo-fi en menús, soft rock en turnos y jazz de noche (' + g3.music.join() + ')');
+  ok(g3.e === 'mix,solo,mix,solo,mix,solo' && !g3.eLate && g3.eDay, 'corredores eléctricos: 3 pares mixta y solo eléctricas; servicio eléctrico hasta las 7 p. m.');
+  ok(g3.tut, 'tutorial opcional con compañero (Maryi en Pausas Activas)');
+  ok(g3.pausa >= 80, 'pausa activa: el bot sigue la coreografía (' + g3.pausa + ' %)');
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};
@@ -215,6 +232,16 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     await host.evaluate(() => { JE.game.mode.clock = 1319.5; });
     const fin = await Promise.all([host, g1, g2].map(pg => pg.waitForSelector('#sResult', { state: 'visible', timeout: 15000 }).then(() => true).catch(() => false)));
     ok(fin.every(Boolean), 'el turno en equipo termina en los 3 dispositivos');
+  }
+  // mundo libre en red: «La lleva» (el anfitrión la lleva y toca al invitado 1)
+  await host.evaluate(() => { UI.compCfg = { k: 'lleva', n: 3, min: 2, zona: 'centro' }; UI.netStartLibre(); });
+  const lib = await Promise.all([host, g1, g2].map(pg => pg.waitForFunction(() => JE.game.mode && JE.game.mode.id === 'libre' && JE.game.mode.comp.k === 'lleva', null, { timeout: 15000 }).then(() => true).catch(() => false)));
+  ok(lib.every(Boolean), 'mundo libre en red: «La lleva» iniciada en los 3 dispositivos');
+  if (lib.every(Boolean)) {
+    await host.waitForTimeout(3800); const p1 = await g1.evaluate(() => ({ x: JE.game.mode.ride.p.x, y: JE.game.mode.ride.p.y }));
+    await host.evaluate(p => { const R = JE.game.mode.ride; R.p.x = p.x; R.p.y = p.y; }, p1);
+    const tagged = await g2.waitForFunction(() => JE.game.mode.itId === 1, null, { timeout: 8000 }).then(() => true).catch(() => false);
+    ok(tagged, 'la lleva: el toque pasa al invitado 1 y los 3 lo ven');
   }
   ok(!nerr.length, 'multijugador sin errores ' + nerr.slice(0, 2).join(' | '));
   await b2.close();

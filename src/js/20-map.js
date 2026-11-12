@@ -145,7 +145,7 @@ const CityMap = JE.map = {
     for (let yy = best.y; yy < best.y + 2; yy++) for (let xx = best.x; xx < best.x + 4; xx++) this.set(xx, yy, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
     const zone = lat > 6.272 ? 'norte' : lat > 6.205 ? 'centro' : 'sur';
-    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E.includes(id), lat, lon, tx: best.x, ty: best.y, x: (best.x + 2) * TS, y: (best.y + 1) * TS };
+    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E[id] || '', lat, lon, tx: best.x, ty: best.y, x: (best.x + 2) * TS, y: (best.y + 1) * TS };
   },
   /* ---------- semáforos, carriles de carros, metro, tranvía, cables ---------- */
   buildLights() {
@@ -318,7 +318,7 @@ const CityMap = JE.map = {
     for (let j = 0; j < S; j += 2) for (let i = 0; i < S; i += 2) {
       const tx = x0 + i / TS, ty = y0 + j / TS, e = this.elevT(tx, ty), gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile;
       let f = 1 + clamp((gx + gy) * 1.1, -.32, .26) - Math.min(.12, Math.hypot(gx, gy) * .15);
-      const v = this.get(x0 + (i >> 3), y0 + (j >> 3));
+      const v = this.get(x0 + ((i / TS) | 0), y0 + ((j / TS) | 0));
       if (v === TT.GRASS || v === TT.MOUNT) { const b = Math.floor(e / 25), bx = Math.floor(this.elevT(tx + .25, ty) / 25), by = Math.floor(this.elevT(tx, ty + .25) / 25); if (b !== bx || b !== by) f *= (b % 4 === 0 ? .8 : .9); }
       if (f === 1) continue;
       for (let k = 0; k < 4; k++) { const o = ((j + (k >> 1)) * S + i + (k & 1)) * 4; d[o] = Math.min(255, d[o] * f); d[o + 1] = Math.min(255, d[o + 1] * f); d[o + 2] = Math.min(255, d[o + 2] * f); }

@@ -8,10 +8,10 @@ class ModeCarrera extends MapMode {
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng; this.rate = 1.2; this.clock = 480; this.limit = 300;
     this.sim = new StationSim(R, { demand: this.mods.demand });
-    const st0 = R.pick(JE.map.stations.filter(s => s.zone === 'centro'));
+    const st0 = R.pick(JE.map.stations.filter(s => s.zone === (opt.zona || 'centro')));
     this.setupRide({ sim: this.sim, start: { x: st0.x - 5 * WK, y: st0.y } });
     const pool = PUBLIC_LM(); let cur = { x: st0.x / TS, y: st0.y / TS }; this.cps = [];
-    for (let k = 0; k < 4; k++) {
+    const NP = this.np = clamp(opt.n || 4, 1, 6); for (let k = 0; k < NP; k++) {
       const free = pool.filter(l => !this.cps.includes(l)), c = free.filter(l => { const d = Math.hypot(l.x + l.w / 2 - cur.x, l.y + l.h / 2 - cur.y); return d >= 22 * SC && d <= 70 * SC; });
       const pick = R.pick(c.length ? c : free); this.cps.push(pick); cur = { x: pick.x + pick.w / 2, y: pick.y + pick.h / 2 };
     }
@@ -23,7 +23,7 @@ class ModeCarrera extends MapMode {
     this.opp = this.opps[0]; this.ride.opps = this.opps; this.myT = null; this.oppT = null; this.won = false; this.place1 = 0;
     if (this.net) Net.onmsg = m => this.msg(m);
     this.goal('Gana la carrera', true, () => this.won, () => this.won ? '¡1º!' : this.oppT != null ? 'te ganaron' : 'en carrera');
-    this.goal('Pasa por las 4 postales', false, () => this.idx >= 4, () => Math.min(this.idx, 4) + '/4');
+    this.goal('Pasa por las ' + this.np + ' postales', false, () => this.idx >= 4, () => Math.min(this.idx, this.np) + '/' + this.np);
     this.goal('Máx. 1 choque y 0 en rojo', false, () => this.ride.stats.crashes <= 1 && this.ride.stats.reds === 0, () => this.ride.stats.crashes + ' choques · ' + this.ride.stats.reds + ' rojos');
     this.coach = '¡Prepárate! Sigue la línea hasta la postal 1.';
   }
@@ -37,7 +37,7 @@ class ModeCarrera extends MapMode {
       this.myT = this.t; this.won = this.oppT == null; this.place1 = 1 + this.opps.filter(o => o.t != null).length; if (this.won) this.score += 100; else this.score += Math.max(0, 60 - 20 * this.place1);
       this.score += Math.max(0, Math.round(200 - this.t)); this.ride.stamp = { t: 2.2, title: this.won ? '¡GANASTE!' : '¡LLEGASTE!', sub: 'Tiempo: ' + this.t.toFixed(1) + ' s', bg: this.won ? PAL.vd : PAL.amb };
       Snd.sfx(this.won ? 'win' : 'ok'); if (this.net) Net.send({ t: 'fin', time: this.t }); this.endT = 2.4;
-    } else { this.score += 25; this.ride.stamp = { t: 1.3, title: 'POSTAL ' + this.idx + ' DE 4', sub: p.name }; Snd.sfx('star'); if (p.l && !Save.data.postales.includes(p.l.id)) Save.data.postales.push(p.l.id); }
+    } else { this.score += 25; this.ride.stamp = { t: 1.3, title: 'POSTAL ' + this.idx + ' DE ' + this.np, sub: p.name }; Snd.sfx('star'); if (p.l && !Save.data.postales.includes(p.l.id)) Save.data.postales.push(p.l.id); }
     this.place();
   }
   msg(m) {
@@ -60,7 +60,7 @@ class ModeCarrera extends MapMode {
     if (this.net) { this.netT -= dt; if (this.netT <= 0) { this.netT = .1; const P = this.ride.p; Net.send({ t: 'p', x: Math.round(P.x), y: Math.round(P.y), a: +P.a.toFixed(2), i: this.idx }); } }
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); }
     else if (this.t > this.limit) { JE.ui && JE.ui.toast('Se acabó el tiempo de la carrera'); this.end(); }
-    const p = this.pts[this.idx]; this.coach = p ? (p.meta ? '¡Última! Llega a la ' + p.name : 'Postal ' + (this.idx + 1) + ' de 4: ' + p.name) : '';
+    const p = this.pts[this.idx]; this.coach = p ? (p.meta ? '¡Última! Llega a la ' + p.name : 'Postal ' + (this.idx + 1) + ' de ' + this.np + ': ' + p.name) : '';
   }
   aiStep(o, dt) {
     const p = this.pts[o.idx]; if (!p) return;
@@ -76,9 +76,9 @@ class ModeCarrera extends MapMode {
   hud2(V) {
     if (this.countdown > 0) { const n = Math.ceil(this.countdown); V.text(n > 0 ? String(n) : '¡YA!', V.w / 2, V.h * .42, { size: 120, align: 'center', color: PAL.amb, stroke: PAL.az, sw: 10 }); V.text('vs ' + this.opps.map(o => o.name).join(', '), V.w / 2, V.h * .42 + 44, { size: 22, align: 'center', color: '#fff', stroke: PAL.az, sw: 5 }); }
     const me = this.idx, op = Math.max(...this.opps.map(o => o.idx)), lead = me > op ? 'Vas ganando' : me < op ? 'Vas detrás' : 'Empatados';
-    V.text('Tú ' + Math.min(me, 5) + '/5 · ' + this.opps.map(o => o.name + ' ' + Math.min(o.idx, 5) + '/5').join(' · ') + ' · ' + lead, 10, V.h - 20, { size: 13, color: me >= op ? PAL.vd1 : PAL.amb, bg: '#0a2342dd', pad: 4, body: true });
+    V.text('Tú ' + Math.min(me, this.np + 1) + '/' + (this.np + 1) + ' · ' + this.opps.map(o => o.name + ' ' + Math.min(o.idx, this.np + 1) + '/' + (this.np + 1)).join(' · ') + ' · ' + lead, 10, V.h - 20, { size: 13, color: me >= op ? PAL.vd1 : PAL.amb, bg: '#0a2342dd', pad: 4, body: true });
   }
-  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🏁 ' + Math.min(this.idx, 5) + '/5' }] }; }
+  info() { return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: '🏁 ' + Math.min(this.idx, this.np + 1) + '/' + (this.np + 1) }] }; }
   end() { if (this.net && !this.done) Net.onmsg = m => UI.netLobbyMsg(m); super.end(); }
   bot() { if (this.countdown > 0) return; this.botDrive(); }
 }
