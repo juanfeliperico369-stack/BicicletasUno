@@ -64,7 +64,7 @@ class MGTulas extends MG {
   hud(V) {
     this.btns = []; const L = this.L; if (!L) return; const s = V.s;
     V.text(this.mode === 'armar' ? 'ARMAR TULAS · Casa EnCicla' : 'RECOGER TULAS · cargar celulares', V.w / 2, 66, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
-    this.tulas.forEach((t, i) => V.text(t.name.split(' ').slice(-2).join(' '), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30, { size: 10, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 2 }));
+    this.tulas.forEach((t, i) => V.text(t.name.replace(/^(Parque (de |del |Principal de )?|Estación |Universidad )/, '').slice(0, 12), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30 + (i % 2) * 16, { size: 10, align: 'center', color: '#fff', bg: t.col + 'cc', pad: 2 }));
     if (this.mode === 'armar') {
       const n = this.keys.length, bw = Math.min(64, (V.w - 20) / Math.max(n, 4) - 6); let y = V.h - 170;
       this.keys.forEach((k, i) => { if (!k.used) this.button(V, 10 + i * (bw + 6), y, bw, 52, '🔑', () => this.key(i), { bg: k.col, size: 22, key: 'k' + i }); });
@@ -216,8 +216,9 @@ class MGEnsamble extends MG {
     if (this.gauge) { const gx = vw / 2, gyy = 44; prect(b, gx - 40, gyy - 4, 80, 8, '#0a2342'); prect(b, gx - 40 + 80 * .6, gyy - 4, 80 * .22, 8, PAL.vd2); prect(b, Math.round(gx - 40 + 80 * this.gauge.v), gyy - 7, 2, 14, '#fff'); }
   }
   hud(V) {
-    this.btns = []; V.text('ENSAMBLE · bicis armadas: ' + this.built, 12, 66, { size: 16, color: PAL.vd1 });
-    V.text('Manual · paso ' + (this.k + 1) + ' de ' + PASOS.length + ': ' + PASOS[this.k][1], 12, 88, { size: 14, color: '#fff', bg: '#0a2342cc', pad: 3, body: true });
+    this.btns = []; const ty = Math.round(V.h * .2);
+    V.text('Manual · paso ' + (this.k + 1) + ' de ' + PASOS.length + ': ' + PASOS[this.k][1], V.w / 2, ty, { size: 16, align: 'center', color: '#fff', bg: '#0a2342dd', pad: 5, body: true });
+    V.text('Bicis armadas: ' + this.built, V.w / 2, ty + 28, { size: 14, align: 'center', color: PAL.vd1 });
     const n = PASOS.length, pad = 5, bw = Math.min(96, (V.w - pad * (n + 1)) / n), bh = Math.min(72, Math.max(56, V.h * .1)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + (this.gauge ? 96 : 26);
     this.order.forEach((id, i) => { const p = PASOS.find(q => q[0] === id); this.button(V, x0 + i * (bw + pad), y, bw, bh, p[1], () => this.part(id), { icon: p[2], key: 'p_' + id }); });
     if (this.gauge) this.button(V, V.w / 2 - 80, y - 74, 160, 58, 'APRETAR', () => this.tighten(), { bg: PAL.vd2, size: 22, key: 'ya' });
@@ -262,7 +263,7 @@ class MGLlamadas extends MG {
   render(V) {
     const b = V.b, vw = V.vw, vh = V.vh; prect(b, 0, 0, vw, vh, '#1d2c44'); prect(b, 0, vh * .6, vw, vh, '#2b3a55');
     for (let i = 0; i < 4; i++) { const x = 16 + i * 46, y = Math.round(vh * .6) - 26; prect(b, x, y, 36, 24, '#0e2d55'); prect(b, x + 2, y + 2, 32, 16, '#56c7ff55'); prect(b, x + 14, y + 24, 8, 6, '#59606c'); }
-    const pr = Save.data.profile; Art.person(b, vw / 2, Math.round(vh * .6) + 30, { skin: SKINS[pr.skin], hair: '#2a1a10', hairStyle: 1, shirt: '#56c7ff', pants: '#1d2c44' }, 0, 1);
+    Art.person(b, vw / 2, Math.round(vh * .6) + 30, Art.me({ shirt: '#56c7ff' }), 0, 1);
     this.queue.forEach((q, i) => { const x = 14 + i * 28, y = 14, f = clamp(q.wait / this.pat, 0, 1); prect(b, x, y, 20, 26, q === this.cur ? PAL.vd : '#e9eef3'); prect(b, x + 4, y + 4, 12, 10, '#1d2c44'); prect(b, x, y + 28, Math.round(20 * f), 2, f > .5 ? PAL.vd : f > .25 ? PAL.amb : PAL.cor); if (q !== this.cur && (this.t * 4 | 0) % 2) pring(b, x + 10, y + 12, 14, '#fff'); });
   }
   hud(V) {

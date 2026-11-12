@@ -17,6 +17,6 @@ const URL = process.argv[2] || 'https://juanfeliperico369-stack.github.io/Bicicl
   console.log('OG:', JSON.stringify(og));
   await ctx.setOffline(true); await p.reload({ waitUntil: 'load' }); const off = await p.waitForFunction(() => window.JE && JE.ready, null, { timeout: 15000 }).then(() => true).catch(() => false);
   console.log('abre sin conexión:', off);
-  if (off) { await p.click('#bPlay'); if (await p.isVisible('#inSkip')) await p.click('#inSkip'); await p.click('button[data-role=usuario][data-t="1"]'); await p.click('#bGo'); await p.waitForTimeout(800); console.log('juega sin conexión:', await p.isVisible('#sGame')); }
+  if (off) { await p.click('#bPlay'); if (await p.isVisible('#inSkip')) await p.click('#inSkip'); if (await p.isVisible('#avOk')) await p.click('#avOk'); await p.click('button[data-role=usuario][data-t="1"]'); await p.click('#bGo'); await p.waitForTimeout(800); console.log('juega sin conexión:', await p.isVisible('#sGame')); }
   await b.close();
 })().catch(e => { console.error('FALLO', e.message); process.exit(1); });

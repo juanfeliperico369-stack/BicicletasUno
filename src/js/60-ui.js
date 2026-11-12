@@ -28,7 +28,7 @@ const UI = JE.ui = {
   cur: 'sCover', tab: 'ruta',
   init() {
     $('#ver').textContent = 'v' + JE.version;
-    $('#bPlay').onclick = () => { if (!Save.data.settings.seen.intro) this.intro(() => this.go('sHome')); else this.go('sHome'); };
+    $('#bPlay').onclick = () => { const first = () => { if (!Save.data.settings.seen.profile) this.avatar(true); }; if (!Save.data.settings.seen.intro) this.intro(() => { this.go('sHome'); first(); }); else { this.go('sHome'); first(); } };
     $('#bReto').onclick = () => this.reto();
     $('#bHow').onclick = () => this.howto();
     $('#bShare').onclick = () => this.share('🚲 Juega EnCicla: el videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. ¡Pruébalo!');
@@ -109,18 +109,19 @@ const UI = JE.ui = {
   carnet() {
     const S = Save.data, top = ROLES.filter(r => (S.stars[r.id] || [0])[0] > 0).pop() || ROLES[0], km = (S.stats.km || 0).toFixed(1);
     const rec = ROLES.map(r => { const b = Math.max(0, ...[1, 2, 3].map(t => S.best[r.id + t] || 0)), st = this.stars(r.id).reduce((a, b) => a + b, 0); return `<tr class="${b ? '' : 'off'}"><td><img class="px" width="16" height="16" src="${Art.iconURL(r.icon)}" alt=""> ${esc(r.name)}</td><td>${b ? fmtInt(b) : '—'}</td><td style="color:var(--amb)">${'★'.repeat(st)}<i>${'★'.repeat(3 * nShifts(r.id) - st)}</i></td></tr>`; }).join('');
-    return `<div class="carnet"><div class="ch"><canvas id="cnAv" width="80" height="50"></canvas><div><div class="pag">Carnet EnCicla · nivel ${this.level()}</div><div class="cn">${esc(S.profile.name)}</div><div class="cr">${esc(top.name)}</div><div class="pag">${km} km · ${fmtInt(S.stats.bells || 0)} timbrazos · ${S.logros.length}/${LOGROS.length} logros</div></div></div><table class="rec"><tr><th>Oficio</th><th>Récord</th><th>Estrellas</th></tr>${rec}</table></div>`;
+    return `<div class="carnet"><div class="ch"><canvas id="cnAv" width="80" height="50"></canvas><div><div class="pag">Carnet EnCicla · nivel ${this.level()}</div><div class="cn">${esc(S.profile.name)}</div><div class="cr">${esc(top.name)}</div> <span class="chip">🏆 ${esc(RANGOS[rangoDe(S.xp)][0])}</span><div class="pag">${km} km · ${fmtInt(S.stats.bells || 0)} timbrazos · ${S.logros.length}/${LOGROS.length} logros</div></div></div><table class="rec"><tr><th>Oficio</th><th>Récord</th><th>Estrellas</th></tr>${rec}</table></div>`;
   },
   renderParts() {
     const S = Save.data, st = S.stats;
     let h = `<div class="pag">PAG 3 · Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
     h += `<div class="stat"><div><b>${fmtInt(st.plays)}</b><span>turnos jugados</span></div><div><b>${fmtInt(S.xp)}</b><span>experiencia</span></div><div><b>${fmtInt(st.trips)}</b><span>viajes en bici</span></div><div><b>${fmtInt(st.leaves)}</b><span>hojas verdes</span></div><div><b>${S.bestStreak}</b><span>mejor racha</span></div><div><b>${S.postales.length}</b><span>postales</span></div></div>`;
     h += this.carnet();
-    h += `<div class="row" style="margin:12px 0"><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
+    h += `<div class="row" style="margin:12px 0"><button class="btn sm amb" data-act="ranking">🏆 Ranking</button><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
     if (!S.history.length) h += `<p class="m">Aún no has jugado. ¡Empieza por el Usuario!</p>`;
     else { h += `<table class="hist">`; for (const e of S.history.slice(0, 60)) { const d = new Date(e.d); h += `<tr><td>${d.toLocaleDateString('es-CO')} ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(ROLE[e.m] ? ROLE[e.m].name : e.m)} ${e.free ? 'libre' : 'T' + e.t}${e.reto ? ' · reto' : ''}</td><td>${fmtInt(e.s)} pts</td><td style="color:var(--amb)">${'★'.repeat(e.st)}</td></tr>`; } h += `</table>`; }
     h += Logros.html();
     const el = $('#tab-parts'); el.innerHTML = h;
+    const rb = $('[data-act=ranking]', el); if (rb) rb.onclick = () => this.ranking();
     const cv = $('#cnAv', el); if (cv) { const x = cv.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); }
     $('#bExp').onclick = () => this.exportSave(); $('#bImp').onclick = () => $('#fileIn').click();
     $('#bDel').onclick = () => this.confirm('¿Borrar todas tus partidas y progreso?', () => { Save.reset(); this.renderHome(); this.toast('Progreso borrado'); });
@@ -134,14 +135,16 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Mano guía (ayudas)</span><button class="sw ${S.hints !== false ? 'on' : ''}" data-sw="hints" aria-label="Ayudas"></button></div>`;
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
+    h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'flotante') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
-    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
+    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="personajes">👥 Personajes</button><button class="btn" data-act="ranking">🏆 Ranking</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
     const el = $('#tab-mas'); el.innerHTML = h;
     $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !(S[k] !== false); Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); if (k === 'big') document.body.classList.toggle('big', !!S.big); Snd.sfx('tap'); });
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
-    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+    $$('[data-ctrl]', el).forEach(b => b.onclick = () => { S.ctrl = b.dataset.ctrl; Save.save(); this.renderMas(); Snd.sfx('tap'); });
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), personajes: () => this.personajes(), ranking: () => this.ranking(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
   },
   /* ---------- briefing ---------- */
   brief(roleId, turno, o = {}) {
@@ -285,7 +288,8 @@ const UI = JE.ui = {
   },
   credits() {
     this.modal(`<h2>Créditos</h2><p class="m">Juega EnCicla v${JE.version} · demo presentada a EnCicla por Juan Felipe Rico. Diseño evolucionado de la revista EMSAY y Doc Element.</p>
-    <p class="m">Juego de demostración NO oficial. EnCicla es el sistema de bicicletas públicas del Área Metropolitana del Valle de Aburrá. Mapa estilizado y datos aproximados con fines didácticos; consulta la información oficial de EnCicla.</p>
+    <p class="m">Juego de demostración NO oficial. EnCicla es el sistema de bicicletas públicas del Área Metropolitana del Valle de Aburrá. Las ubicaciones de las estaciones son aproximadas y con fines didácticos; consulta la información oficial de EnCicla.</p>
+    <p class="m">${esc(VALLE_META.src)}</p>
     <p class="m">Tipografías: TeX Gyre Heros Condensed (GUST) e Inter (OFL). Gráficos, música y sonidos generados por código.</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`);
   },
   avatar() {
@@ -356,7 +360,7 @@ const Game = JE.game = {
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
-    $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : isMulti(roleId) ? '' : ' · ' + (role.shifts && role.shifts[turno - 1] ? role.shifts[turno - 1].n.replace('Turno ', 'T').replace(' · ', ' ') : 'T' + turno)); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
+    $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : isMulti(roleId) ? '' : ' · ' + (role.shifts && role.shifts[turno - 1] ? role.shifts[turno - 1].n.replace(/^Turno (\d) · /, 'T$1 ') : 'T' + turno)); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
     this.coachT = 0; this._coachEr = 0; $('#coach').textContent = '';
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));
@@ -449,10 +453,10 @@ function bindCanvas() {
     e.preventDefault(); Snd.init(); Snd.resume(); const M = Game.mode; if (!M || Game.paused) return;
     const { cx, cy } = pos(e), v = View.toV(cx, cy), a = M.sub || M;
     const used = a.pointer('down', v.x, v.y, cx, cy);
-    if (!used && !M.sub && M.ride && M.view.kind === 'map' && !Input.joy.on) { Input.joy = { on: true, id: e.pointerId, ox: cx, oy: cy, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { } }
+    if (!used && !M.sub && M.ride && M.view.kind === 'map' && !Input.joy.on) Ctrl.down(e, cx, cy, cv);
   });
   cv.addEventListener('pointermove', e => { const j = Input.joy; if (j.on && e.pointerId === j.id) { const { cx, cy } = pos(e); j.x = cx; j.y = cy; } });
-  const up = e => { const j = Input.joy; if (j.on && e.pointerId === j.id) j.on = false; const M = Game.mode; if (M) { const a = M.sub || M, { cx, cy } = pos(e), v = View.toV(cx, cy); a.pointer('up', v.x, v.y, cx, cy); } };
+  const up = e => { const j = Input.joy; if (j.on && e.pointerId === j.id) j.on = false; Ctrl.up(e); const M = Game.mode; if (M) { const a = M.sub || M, { cx, cy } = pos(e), v = View.toV(cx, cy); a.pointer('up', v.x, v.y, cx, cy); } };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('contextmenu', e => e.preventDefault());
 }

@@ -26,7 +26,8 @@ src/style.css         estilos de revista (tokens en :root)
 src/assets/           fuentes woff/woff2 (se incrustan en base64)
 src/js/00-core.js     utilidades, RNG con semilla, Save (localStorage + exportar/importar), Snd (WebAudio 8 bits), Input, View
 src/js/10-art.js      arte pixel: personas, bicis (cenital, lateral, frontal), camión, carros, panorámica, íconos 16x16, portada
-src/js/20-map.js      mapa del Valle de Aburrá de Caldas a Barbosa (203x583 baldosas de 8 px, escala SC=1.35), 106 estaciones, 38 lugares, carriles, metro, ruta (Dial), dibujo por bloques
+src/js/19-lugares.js  estaciones (lat/lon), lugares con postal, zonas del Apoyo, puntos de la operación y Metrocable
+src/js/20-map.js      mapa REAL del valle (carga valle.bin, relieve, carriles, semáforos, metro, rutas en ventana, dibujo con relieve), metro, ruta (Dial), dibujo por bloques
 src/js/30-ride.js     StationSim (demanda de préstamos) + Ride (bici/camión, tráfico, metro, GPS, minimapa) + drawOverview
 src/js/35-life.js     vida urbana: Tranvía de Ayacucho (calle sin carros), Metrocable K/P/J/H, peatones, luces de noche
 src/js/40-mg.js       minijuegos: MGAnfitrion, MGMecanico, MGBodega, MGApertura(cierre), MGCables, MGSimon, MGInspeccion
@@ -34,8 +35,11 @@ src/js/45-mg2.js      minijuegos v0.4 inspirados en Infinity Games y Railways: M
                       MGRutas (Desvíos de Bodega T3 y «Maquinista» secreto) y MGLaberinto (Moravia secreto)
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
+src/js/21-map-art.js  dibujos pixel de los lugares con postal
+src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
+src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
 src/js/57-equipo.js   Turno en equipo (cooperativo en red): ModeCoopMon (anfitrión, Monitoreo) y ModeCoopDriver (invitados, camión)
-src/js/66-historia.js historia de 27 capítulos (CAST, HISTORIA), retratos pixel y logros cronista/estreno/equipo
+src/js/66-historia.js historia (un capítulo por turno real, 19) (CAST, HISTORIA), retratos pixel y logros cronista/estreno/equipo
 src/js/65-extra.js    logros (16), introducción «¿Qué es EnCicla?», «Apoya la bici pública», tarjeta de resultado 1080x1350
 src/js/70-net.js      Net: salas WebRTC de hasta 4 jugadores en estrella (el anfitrión reenvía), sin servidor
 src/js/72-qr.js       QR: generador propio (v1–40, idéntico a la referencia Nayuki) + escáner con BarcodeDetector y cámara
@@ -45,7 +49,10 @@ docs/PLAY_STORE.md    ficha de Play Store, clasificación, seguridad de datos y 
 src/js/60-ui.js       UI (portada, escalafón, briefing, resultados, álbum, partidas, ajustes), Game (bucle), Progress
 src/js/90-bot.js      bot de pruebas (JE.bot.run): juega partidas y valida invariantes
 src/js/95-promo.js    íconos de la app e imagen OG 1200x630
-src/js/99-boot.js     arranque y registro del service worker
+src/js/67-personaje.js creador de personaje, rankings, personajes y tipos de control
+src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
+src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
+tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
 tests/run.js          pruebas: sintaxis, N partidas con el bot, humo de interfaz, rendimiento con CPU 4x lenta
@@ -68,40 +75,81 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 
 **Escalafón (orden pedagógico, de una sola habilidad a combinadas):**
 
-| # | Oficio | Vista | Habilidad | Se desbloquea con |
-|---|--------|-------|-----------|-------------------|
-| 1 | Usuario | cenital, mundo libre | moverse y orientarse | 0 ★ |
-| 2 | Anfitrión | panorámica | atender, decidir | 1 ★ |
-| 3 | Mecánico | lateral | emparejar herramienta y falla (colores) | 3 ★ |
-| 4 | Bodega | lateral | clasificar rápido | 5 ★ |
-| 5 | Apoyo | cenital | planear rutas y tareas con hora límite | 8 ★ |
-| 6 | Técnico | cenital | llegar rápido y reparar (cables, memoria) | 11 ★ |
-| 7 | Balance | cenital, camión | conducir y gestionar carga | 14 ★ |
-| 8 | Monitoreo | general (911 Operator) | estrategia de flota | 17 ★ |
-| 9 | Supervisor | todas | coordinar: personal, avisos, cierre | 21 ★ |
+| # | Oficio | Turnos reales (SHIFTS en 52-oficios.js) | Se desbloquea con |
+|---|--------|------------------------------------------|-------------------|
+| 1 | Usuario | 3 niveles: primer préstamo, dos viajes, día de ciclista | 0 ★ |
+| 2 | Anfitrión | T1 Apertura 5:00–13:30 · T3 Cierre 13:30–22:30 | 1 ★ |
+| 3 | Mecánico | Equipo de reparación · Equipo de ensamble (8:00–17:00) | 3 ★ |
+| 4 | Bodega | Turno intermedio 8:00–17:00 (recibir, verificar, organizar, cargar y llevar al taller) | 5 ★ |
+| 5 | Apoyo | T1 apertura de zona + relevos 8–12 · T3 relevos 16–20:30 + cierre de zona | 7 ★ |
+| 6 | Técnico | Turno intermedio 8:00–17:00 (tótems, LED, celulares, power banks) | 10 ★ |
+| 7 | Balance | Apertura 4:00–13:00 (tulas) · Camión especial de 40 · Cierre (tulas, parqueadero) | 12 ★ |
+| 8 | Monitoreo | Sala de control (inventario cada hora) · Atención al cliente | 16 ★ |
+| 9 | Supervisor | Apertura 4:00–12:00 · Intermedio 9:00–18:00 · Cierre 14:00–23:00 | 20 ★ |
 
-- Cada oficio tiene **3 turnos** con **3 metas**. La primera es obligatoria. Estrellas = metas cumplidas si se cumple la obligatoria.
-  El turno N+1 se abre con ≥1 ★ en el turno N. Hay además un modo "Libre" (práctica; en Usuario es el Paseo libre).
-- **Roguelite:** al aprobar un turno eliges 1 de 3 mejoras (`PERKS`, máximo 3 activas). Si fallas un turno pierdes todas y la racha vuelve a 0.
-- **Novedad del día** (`NOVEDADES`): modifica tráfico, demanda, lluvia, ciclovía, partido en el Atanasio, Feria de las Flores…
-  El turno 1 siempre es "Día normal".
-  - Ciclovía: El Poblado, la 80 y Las Vegas quedan cerradas a los carros y con conos.
-  - Flores: aparecen silleteros en las aceras.
+- Cada turno tiene **3 metas** (la primera obligatoria). Máximo de estrellas = 3 × turnos (`MAX_STARS()`, hoy 57).
+  El turno N+1 se abre con ≥1 ★ en el turno N. Hay modo "Libre" (práctica).
+- **Roguelite:** al aprobar un turno eliges 1 de 3 mejoras (`PERKS`, máximo 3). Si fallas pierdes todas y la racha vuelve a 0.
+- **Novedad del día** (`NOVEDADES` + `NOV_EXTRA`): tráfico, demanda, lluvia, ciclovía, partido, Flores, Alumbrados. El primer turno siempre es "Día normal".
 
-**Mapa v0.4 (Caldas → Barbosa):** sigue las capturas de la app oficial que compartió el usuario.
-- **Escala v0.4.1:** `SC = 1.35`. Todo se diseña en coordenadas de diseño (x 0..150, yy -120..312) y se convierte con `X(x)` y `Y(yy)`.
-  - El mapa real mide 203×583 baldosas.
-  - Las avenidas se ajustan a la cuadrícula con `snapRow`/`snapCol`, y `fitLM` mueve cada lugar para no tapar avenidas ni el río.
-  - Las distancias de los oficios (sub-zonas, órdenes, tiempos límite) se multiplican por `SC`.
-  - Para cambiar el tamaño del mapa basta con cambiar `SC` y correr las pruebas (verifican que todo sea alcanzable).
-- Al norte de Bello el río gira al noreste (`bendN`) y el valle se vuelve un corredor (`mW`/`mE`) con pueblos (`TOWNS_N`: Copacabana, Girardota y Barbosa).
-  Entre pueblos el terreno es rural: potreros, sin calles menores.
-- 106 estaciones con nombres de barrio (`STATIONS_DEF`, 10 municipios). Son aproximados: **pedirle al usuario la lista oficial por zonas**.
-- Por el tamaño, cada oficio trabaja en una **sub-zona** (`subZone`).
-  - Monitoreo ve solo su zona (T1 centro, T2 sur, T3 norte), con la vista recortada y una base local.
-  - Supervisor atiende estaciones a menos de 100 baldosas de la bodega.
-  - Las órdenes de Balance quedan a menos de 900 px.
-- El minimapa es un radar alrededor del jugador; al tocarlo se ve el valle completo.
+**v0.7 · EnCicla real (lo más importante para continuar):**
+
+*Mapa real del Valle de Aburrá* (`tools/geo/`, `src/data/`, `19-lugares.js`, `20-map.js`, `21-map-art.js`):
+- `tools/geo/fetch.py` baja datos abiertos: calles, ciclorrutas, Metro, tranvía, ríos, quebradas, parques y municipios de **Overture Maps**
+  (datos de OpenStreetMap, licencia ODbL) con DuckDB, y el relieve de **Terrain Tiles** (AWS Open Data, SRTM). Caché en `tools/geo/cache/` (no se sube).
+  Para el bucket público hay que correrlo sin credenciales AWS: `env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 tools/geo/fetch.py`.
+- `tools/geo/build.py` hace la cuadrícula: **1 casilla = 20 m**, 2158×2461 casillas (lon −75,70…−75,31, lat 6,46…6,015), fila 0 = norte.
+  - Rasteriza vías por clase y ancho (autopista, avenida, calle, ciclorruta al lado de la vía, andén, escaleras), agua con puentes, parques, zonas urbanas,
+    potreros y monte; adelgaza las calles (número de Yokoi, 4 subcampos) para que no queden bloques de asfalto; fuera de los 10 municipios todo es montaña.
+  - Saca líneas en JSON: carriles de carros (troncales, primarias y secundarias encadenadas), 758 semáforos (cruces de vías principales),
+    Metro A y B y Tranvía de Ayacucho siguiendo la vía real, y el río Medellín.
+  - Salida: `src/data/valle.bin` (casillas + relieve cada 80 m + municipio y comuna cada 8 casillas, deflate) y `src/data/valle.json`. ~700 KB + 110 KB.
+  - `tools/build.js` los incrusta en el HTML (`VALLE_BIN` en base64 y `VALLE_META`). El juego descomprime con `DecompressionStream` o con `inflateRaw` propio (≈0,2 s).
+- `19-lugares.js`: **estaciones con lat/lon** (`ESTACIONES`: id, nombre, municipio, lat, lon, tipo m/a, demanda, zona del Apoyo), `LUGARES` (45 postales),
+  `APOYO_ZONAS` (Poblado 7, Vegas 5, AMVA 7, Laureles 4, Aeropuerto 2, Carabobo 2, Sabaneta 10, Itagüí 10, Envigado 13, Bello 5),
+  `CORREDOR_E` (estaciones del corredor eléctrico), `PUNTOS` (Casa EnCicla en el Parque de Malibú, parqueadero de la Terminal del Norte,
+  Puente Pandequeso, Suramericana, Campus Nacional, taller) y `CABLES` (Metrocable con posiciones aproximadas).
+  **Las posiciones de las estaciones son aproximadas por barrio: cuando llegue la lista oficial, solo hay que cambiar lat/lon aquí** (`carveStation` las acomoda en 4×2 casillas junto a una vía).
+- `20-map.js`: carga (`load()` asíncrono en el arranque), relieve (`elevT`, `elev`, `slope`), `muniAt`/`comunaAt`, semáforos (`lightIdx`), carriles (`lanes`, `lanesNear`, polilíneas con `at`/`project`),
+  rutas Dial **en ventana** (`flow(tx,ty,truck,fx,fy)` mira solo el rectángulo destino+origen ±90 casillas; `fv(F,x,y)` lee el campo; `fx=-1` = todo el mapa, solo para pruebas).
+- **Dibujo:** las calles se "autoajustan" (asfalto de ~10 m en el centro de la casilla, andenes a los lados); cada bloque de 32×32 casillas se dibuja una vez y se le aplican
+  **sombras del relieve** (luz del noroeste) y curvas de nivel en el campo (`relief()`), que es la parte de "dibujo 2D" sobre el pixel. El minimapa va a mitad de resolución (`miniK = 2`).
+- **Sin temblor:** la cámara es continua. El búfer pixelado del suelo mide vw+1 × vh+1 y `View.present` lo corre por la fracción de pixel (`subX/subY`).
+  Todo lo que se mueve (jugador, carros, trenes, tranvía, cables, partículas, lluvia, noche, luces) se dibuja en `Ride.renderTop` directamente en el canvas de pantalla,
+  con posiciones decimales y giro suave. **No volver a dibujar objetos que se mueven en el búfer pixelado.**
+- **Pendientes** (como Run Scooter): `Ride.update` mide la pendiente en la dirección de avance (±40 m). Bici: velocidad × clamp(1 − 2,2·pendiente, 0,5, 1,32);
+  camión: × clamp(1 − 0,9·pendiente, 0,7, 1,12); bici eléctrica (`ride.ebike`, estaciones de `CORREDOR_E`) no pierde velocidad en subida.
+  En bajadas de más de 7 % a más de 112 % de la velocidad máxima hay que soltar el dedo: a los 3,2 s la bici "se desboca" (aturdida 0,5 s). Aviso ▲ SUBIDA / ▼ BAJADA sobre el ciclista.
+
+*Oficios reales* (`52-oficios.js`, minijuegos nuevos en `46-mg3.js`):
+- `ShiftMode` juega un turno por **fases**: `{name, from, to, tasks}` (tareas en el mapa con hora límite, opcionales `opt`, en orden `ordered`, con condición `can`)
+  o `{mg, secs}` (un minijuego a pantalla completa). Entre fases el reloj salta (sello ⏩). `timed` = la fase dura un tiempo fijo y en ella aparecen avisos (`spawn`, `every`, `maxDyn`).
+  El reloj de cada fase se calcula con el recorrido estimado (`calRate`). Red de seguridad: ninguna fase dura más de 240 s reales.
+- Anfitrión T1: tula a las 5:00, abre 2–5 automáticas cercanas + la suya (apertura con inventario) antes de las 5:30; ventanilla (MGAnfitrion: saca la bici, la entrega y
+  **ajusta el sillín** a la estatura, `seatMove`/`seatOk`). T3: ventanilla, a las 21:00 solo devoluciones hasta las 22:00 (`returnsOnly`), inventario y cierre de su estación, y cierre de 2–5 automáticas antes de las 22:30.
+- Apoyo: zona elegida en el briefing (`o.zona`). T1 abre todas las automáticas de la zona antes de las 5:30, relevos (2–5) de 8 a 12 e inventarios de control opcionales (`MGConteo`).
+  T3 relevos de 16:00 a 20:30 + inventarios, y cierre de la zona a las 22:00.
+- Supervisor: T1 arma tulas (`MGTulas` modo armar: llave del color + celular con batería) en Casa EnCicla a las 4:00, las entrega en carro a las 5:00 y luego atiende avisos
+  (relevo, bicis con falla, usuario inconforme, semáforo dañado, celular descargado, visita al anfitrión). T2 avisos + inventarios. T3 avisos, recoge tulas a las 22:30 y carga celulares (`MGTulas` modo cargar).
+- Técnico: fallas de tótem (Laser/Simon), LED de anclajes (Loop/Simon) y celular (Cables); los celulares de las estaciones físicas pierden batería (los "medio malos" el doble):
+  se lleva un power bank (máx. 3, se recargan en Casa EnCicla). Meta: ningún celular apagado.
+- Bodega: `MGBodega2` en 4 pasos (descargar, verificar etiqueta/golpes, organizar en estantes, cargar el pedido exacto) y luego manejar el camión al taller.
+- Mecánico: reparación (MGMecanico con diagnóstico) y ensamble (`MGEnsamble`: marco, ruedas, manubrio, cadena, sillín, frenos, luces; las tuercas se aprietan en la zona verde).
+- Balance: capacidad 14 (40 en el camión especial). T1 sale del parqueadero de la Terminal del Norte con una de 4 rutas de tulas (supervisor jefe a Suramericana, universidades,
+  Puente Pandequeso, Sabaneta/La Estrella) y luego balancea; recoge **bicis dañadas** que van al taller (`sim.shop`). T2 corredor Campus Nacional–Suramericana–Estadio + tanteo del sur.
+  T3 balanceo nocturno, recoge tulas, las entrega en Casa EnCicla y guarda el camión en la Terminal del Norte.
+- Monitoreo: sala de control (`ModeMonitoreoR`: cada hora aparece la verificación de inventario, hay que encontrar la estación que no cuadra) y atención al cliente
+  (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
+- **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
+  y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*Tu personaje, rankings, personajes y controles* (`67-personaje.js`):
+- Al primer "Jugar", después de la introducción se abre **Crea tu personaje** (`UI.avatar(true)`): piel (7), peinado (9: `PEINADOS`), color de pelo (10), barba, gafas,
+  camiseta, estilo (camiseta, manga larga, chaleco EnCicla), pantalón, zapatos, casco, color de bici y timbre (tienda). Perfil: `hair, hairCol, beard, glasses, sleeve, pants, shoes`.
+  `Art.me()` arma la persona para los minijuegos; `Art.person` dibuja los peinados nuevos; `Art.rider` agrega la cola de pelo largo en la vista de arriba.
+- **Ranking** (`UI.ranking`): rango por experiencia (`RANGOS`, 11 rangos), "El valle" contra rivales ficticios (`RIVALES`), "Mis marcas" (10 mejores partidas) y "Por oficio" (récord por turno).
+- **Personajes** (`UI.personajes`): fichas del elenco (`CAST` + `BIOS`). Espacio listo para la trama que va a mandar el usuario.
+- **Controles** (Más > Controles, `Save.data.settings.ctrl`): joystick flotante (por defecto), joystick fijo abajo a la izquierda, o flechas grandes (para abuelos). `Ctrl` en 67-personaje.js.
 
 **Minijuegos v0.4 (inspirados en las referencias del usuario):**
 - Infinity Loop → Circuito (Técnico T2/T3, anclajes).
@@ -121,7 +169,7 @@ Las pistas están en "¿Sabías que?" y hay 4 logros secretos.
 - **Ritmo** (Ajustes): tranquilo (+40 % de tiempo y +35 % de paciencia), normal o arcade.
 - **Reto del día:** la semilla es la fecha. **Código de reto** `N-T-SEMILLA36`: multijugador asíncrono sin servidor.
 
-**Escalas del mundo:** 1 baldosa = 20 m. Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
+**Escalas del mundo:** 1 casilla = 20 m reales (mapa real). Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
 Cada modo tiene su propia velocidad de reloj (minutos de juego por segundo real), por ejemplo Usuario 1,2 y Monitoreo ~4,5.
 El préstamo dura máximo 60 min de juego.
 

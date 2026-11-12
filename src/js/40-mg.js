@@ -197,7 +197,7 @@ class MGAnfitrion extends MG {
     if (hi && this.step === 'place' && this.cur) { if (this.cur.bike.dmg) pring(b, tx + 11, gy - 13, 14, '#fff'); else if (!this.freeSlots().length) pring(b, tx + 11, gy - 39, 14, '#fff'); }
     // caseta con el anfitrión
     Art.booth(b, bx0, gy + 2, bw, 34);
-    const pr = Save.data.profile; Art.person(b, bx0 + bw / 2 + 2, gy - 4, { skin: SKINS[pr.skin], hair: '#2a1a10', hairStyle: 2, cap: PAL.vd, shirt: '#1d4a80', pants: '#1d2c44', vest: true }, 0, 1);
+    Art.person(b, bx0 + bw / 2 + 2, gy - 4, Art.me({ shirt: '#1d4a80', vest: true }), 0, 1);
     prect(b, bx0, gy - 6, bw, 8, '#e9eef3'); prect(b, bx0, gy - 6, bw, 1, PAL.vd);
     // camión
     if (this.truck) Art.truckSide(b, this.truck.x, V.vh - 1, 6, 1);

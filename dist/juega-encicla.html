@@ -225,6 +225,16 @@ body.big .hist-b p{font-size:17px}
 #coach.mini{font-size:12.5px;padding:4px 9px;border-width:2px;box-shadow:none;background:#f6efd9e0;line-height:1.25;left:calc(8px + var(--sal));transform:none;text-align:left;max-width:min(440px,calc(100% - 124px - var(--sal)))}
 body.big #coach.mini{font-size:14.5px}
 .zonas{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.zonas .chip{cursor:pointer;border:2px solid var(--az3)}.zonas .chip.on{background:var(--vd);color:var(--az);border-color:var(--bl)}
+.avprev{width:100%;max-width:288px;height:auto;aspect-ratio:64/40;image-rendering:pixelated;border:3px solid var(--bl);display:block;margin:6px auto 10px}
+.seg.wrap{flex-wrap:wrap;gap:4px}.seg.wrap button{flex:0 0 auto;padding:6px 10px}.avtabs{margin:12px 0 4px}.avtabs button{flex:1}
+.rkcard{display:flex;gap:12px;align-items:center;background:var(--crema);color:var(--az);border:3px solid var(--az);padding:10px;margin:8px 0;box-shadow:4px 4px 0 var(--amb)}
+.rkcard .rkn{font:900 44px Titulos,Impact,sans-serif;color:var(--az);min-width:52px;text-align:center}.rkcard .rkt{font:900 22px Titulos,Impact,sans-serif}.rkcard .pag{color:#0a2342aa}
+.xpbar{height:8px;background:#0a234222;border:1px solid var(--az);margin:4px 0}.xpbar i{display:block;height:100%;background:var(--vd)}
+.rktabs{margin:8px 0}.rktabs button{flex:1}.rklist{max-height:46vh;overflow:auto}.rklist .li{display:flex;gap:10px;align-items:center;padding:6px 4px;border-bottom:1px solid #ffffff22}
+.rklist .li b{min-width:26px;text-align:center}.rklist .li span{flex:1;display:flex;flex-direction:column}.rklist .li small{opacity:.7;font-size:12px}.rklist .li i{font-style:normal;font-weight:800}
+.rklist .li.me{background:#9bd34133;outline:2px solid var(--vd)}.rklist .li.off{opacity:.45}
+.chars{display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow:auto}.char{display:flex;gap:10px;background:#fff;color:#0a2342;border:3px solid #0a2342;padding:8px;box-shadow:3px 3px 0 var(--vd)}
+.char img{width:52px;height:52px;image-rendering:pixelated;border:2px solid #0a2342;flex:none}.char p{margin:2px 0;font-style:italic}.char .pag{color:#0a2342aa}.char small{font-size:12px;line-height:1.3;display:block}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -280,7 +290,7 @@ const VALLE_BIN = '7J2LcuO4rq4pks0KZqq69vs/7TaJCwFedHGSWZMe4Jw9q5PYsizL4qcfwI/j8
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.6.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.7.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -1743,7 +1753,8 @@ class Ride {
       c.restore();
       V.text('MAPA', x + w / 2, y + h + 14, { size: 11, align: 'center', color: '#c4ec7c', bg: '#0a2342cc', pad: 2 });
     }
-    // joystick
+    // controles (flechas o joystick fijo) y joystick
+    if (!this.big) Ctrl.draw(V);
     const j = Input.joy; if (j.on) { c.globalAlpha = .55; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(j.ox, j.oy, 46, 0, TAU); c.stroke(); const dx = j.x - j.ox, dy = j.y - j.oy, l = Math.hypot(dx, dy), k2 = l > 46 ? 46 / l : 1; c.fillStyle = PAL.vd; c.beginPath(); c.arc(j.ox + dx * k2, j.oy + dy * k2, 20, 0, TAU); c.fill(); c.globalAlpha = 1; }
     if (this.big) drawOverview(V, { sim: this.sim, markers: this.markers, player: P, target: T, title: 'VISTA GENERAL · toca para cerrar' });
   }
@@ -2113,7 +2124,7 @@ class MGAnfitrion extends MG {
     if (hi && this.step === 'place' && this.cur) { if (this.cur.bike.dmg) pring(b, tx + 11, gy - 13, 14, '#fff'); else if (!this.freeSlots().length) pring(b, tx + 11, gy - 39, 14, '#fff'); }
     // caseta con el anfitrión
     Art.booth(b, bx0, gy + 2, bw, 34);
-    const pr = Save.data.profile; Art.person(b, bx0 + bw / 2 + 2, gy - 4, { skin: SKINS[pr.skin], hair: '#2a1a10', hairStyle: 2, cap: PAL.vd, shirt: '#1d4a80', pants: '#1d2c44', vest: true }, 0, 1);
+    Art.person(b, bx0 + bw / 2 + 2, gy - 4, Art.me({ shirt: '#1d4a80', vest: true }), 0, 1);
     prect(b, bx0, gy - 6, bw, 8, '#e9eef3'); prect(b, bx0, gy - 6, bw, 1, PAL.vd);
     // camión
     if (this.truck) Art.truckSide(b, this.truck.x, V.vh - 1, 6, 1);
@@ -2835,7 +2846,7 @@ class MGTulas extends MG {
   hud(V) {
     this.btns = []; const L = this.L; if (!L) return; const s = V.s;
     V.text(this.mode === 'armar' ? 'ARMAR TULAS · Casa EnCicla' : 'RECOGER TULAS · cargar celulares', V.w / 2, 66, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
-    this.tulas.forEach((t, i) => V.text(t.name.split(' ').slice(-2).join(' '), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30, { size: 10, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 2 }));
+    this.tulas.forEach((t, i) => V.text(t.name.replace(/^(Parque (de |del |Principal de )?|Estación |Universidad )/, '').slice(0, 12), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30 + (i % 2) * 16, { size: 10, align: 'center', color: '#fff', bg: t.col + 'cc', pad: 2 }));
     if (this.mode === 'armar') {
       const n = this.keys.length, bw = Math.min(64, (V.w - 20) / Math.max(n, 4) - 6); let y = V.h - 170;
       this.keys.forEach((k, i) => { if (!k.used) this.button(V, 10 + i * (bw + 6), y, bw, 52, '🔑', () => this.key(i), { bg: k.col, size: 22, key: 'k' + i }); });
@@ -2987,8 +2998,9 @@ class MGEnsamble extends MG {
     if (this.gauge) { const gx = vw / 2, gyy = 44; prect(b, gx - 40, gyy - 4, 80, 8, '#0a2342'); prect(b, gx - 40 + 80 * .6, gyy - 4, 80 * .22, 8, PAL.vd2); prect(b, Math.round(gx - 40 + 80 * this.gauge.v), gyy - 7, 2, 14, '#fff'); }
   }
   hud(V) {
-    this.btns = []; V.text('ENSAMBLE · bicis armadas: ' + this.built, 12, 66, { size: 16, color: PAL.vd1 });
-    V.text('Manual · paso ' + (this.k + 1) + ' de ' + PASOS.length + ': ' + PASOS[this.k][1], 12, 88, { size: 14, color: '#fff', bg: '#0a2342cc', pad: 3, body: true });
+    this.btns = []; const ty = Math.round(V.h * .2);
+    V.text('Manual · paso ' + (this.k + 1) + ' de ' + PASOS.length + ': ' + PASOS[this.k][1], V.w / 2, ty, { size: 16, align: 'center', color: '#fff', bg: '#0a2342dd', pad: 5, body: true });
+    V.text('Bicis armadas: ' + this.built, V.w / 2, ty + 28, { size: 14, align: 'center', color: PAL.vd1 });
     const n = PASOS.length, pad = 5, bw = Math.min(96, (V.w - pad * (n + 1)) / n), bh = Math.min(72, Math.max(56, V.h * .1)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + (this.gauge ? 96 : 26);
     this.order.forEach((id, i) => { const p = PASOS.find(q => q[0] === id); this.button(V, x0 + i * (bw + pad), y, bw, bh, p[1], () => this.part(id), { icon: p[2], key: 'p_' + id }); });
     if (this.gauge) this.button(V, V.w / 2 - 80, y - 74, 160, 58, 'APRETAR', () => this.tighten(), { bg: PAL.vd2, size: 22, key: 'ya' });
@@ -3033,7 +3045,7 @@ class MGLlamadas extends MG {
   render(V) {
     const b = V.b, vw = V.vw, vh = V.vh; prect(b, 0, 0, vw, vh, '#1d2c44'); prect(b, 0, vh * .6, vw, vh, '#2b3a55');
     for (let i = 0; i < 4; i++) { const x = 16 + i * 46, y = Math.round(vh * .6) - 26; prect(b, x, y, 36, 24, '#0e2d55'); prect(b, x + 2, y + 2, 32, 16, '#56c7ff55'); prect(b, x + 14, y + 24, 8, 6, '#59606c'); }
-    const pr = Save.data.profile; Art.person(b, vw / 2, Math.round(vh * .6) + 30, { skin: SKINS[pr.skin], hair: '#2a1a10', hairStyle: 1, shirt: '#56c7ff', pants: '#1d2c44' }, 0, 1);
+    Art.person(b, vw / 2, Math.round(vh * .6) + 30, Art.me({ shirt: '#56c7ff' }), 0, 1);
     this.queue.forEach((q, i) => { const x = 14 + i * 28, y = 14, f = clamp(q.wait / this.pat, 0, 1); prect(b, x, y, 20, 26, q === this.cur ? PAL.vd : '#e9eef3'); prect(b, x + 4, y + 4, 12, 10, '#1d2c44'); prect(b, x, y + 28, Math.round(20 * f), 2, f > .5 ? PAL.vd : f > .25 ? PAL.amb : PAL.cor); if (q !== this.cur && (this.t * 4 | 0) % 2) pring(b, x + 10, y + 12, 14, '#fff'); });
   }
   hud(V) {
@@ -4420,7 +4432,7 @@ const UI = JE.ui = {
   cur: 'sCover', tab: 'ruta',
   init() {
     $('#ver').textContent = 'v' + JE.version;
-    $('#bPlay').onclick = () => { if (!Save.data.settings.seen.intro) this.intro(() => this.go('sHome')); else this.go('sHome'); };
+    $('#bPlay').onclick = () => { const first = () => { if (!Save.data.settings.seen.profile) this.avatar(true); }; if (!Save.data.settings.seen.intro) this.intro(() => { this.go('sHome'); first(); }); else { this.go('sHome'); first(); } };
     $('#bReto').onclick = () => this.reto();
     $('#bHow').onclick = () => this.howto();
     $('#bShare').onclick = () => this.share('🚲 Juega EnCicla: el videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. ¡Pruébalo!');
@@ -4501,18 +4513,19 @@ const UI = JE.ui = {
   carnet() {
     const S = Save.data, top = ROLES.filter(r => (S.stars[r.id] || [0])[0] > 0).pop() || ROLES[0], km = (S.stats.km || 0).toFixed(1);
     const rec = ROLES.map(r => { const b = Math.max(0, ...[1, 2, 3].map(t => S.best[r.id + t] || 0)), st = this.stars(r.id).reduce((a, b) => a + b, 0); return `<tr class="${b ? '' : 'off'}"><td><img class="px" width="16" height="16" src="${Art.iconURL(r.icon)}" alt=""> ${esc(r.name)}</td><td>${b ? fmtInt(b) : '—'}</td><td style="color:var(--amb)">${'★'.repeat(st)}<i>${'★'.repeat(3 * nShifts(r.id) - st)}</i></td></tr>`; }).join('');
-    return `<div class="carnet"><div class="ch"><canvas id="cnAv" width="80" height="50"></canvas><div><div class="pag">Carnet EnCicla · nivel ${this.level()}</div><div class="cn">${esc(S.profile.name)}</div><div class="cr">${esc(top.name)}</div><div class="pag">${km} km · ${fmtInt(S.stats.bells || 0)} timbrazos · ${S.logros.length}/${LOGROS.length} logros</div></div></div><table class="rec"><tr><th>Oficio</th><th>Récord</th><th>Estrellas</th></tr>${rec}</table></div>`;
+    return `<div class="carnet"><div class="ch"><canvas id="cnAv" width="80" height="50"></canvas><div><div class="pag">Carnet EnCicla · nivel ${this.level()}</div><div class="cn">${esc(S.profile.name)}</div><div class="cr">${esc(top.name)}</div> <span class="chip">🏆 ${esc(RANGOS[rangoDe(S.xp)][0])}</span><div class="pag">${km} km · ${fmtInt(S.stats.bells || 0)} timbrazos · ${S.logros.length}/${LOGROS.length} logros</div></div></div><table class="rec"><tr><th>Oficio</th><th>Récord</th><th>Estrellas</th></tr>${rec}</table></div>`;
   },
   renderParts() {
     const S = Save.data, st = S.stats;
     let h = `<div class="pag">PAG 3 · Tus partidas (se guardan en este dispositivo)</div><div class="sect"><span class="outline">${S.history.length}</span><h2 class="mega">Partidas</h2></div>`;
     h += `<div class="stat"><div><b>${fmtInt(st.plays)}</b><span>turnos jugados</span></div><div><b>${fmtInt(S.xp)}</b><span>experiencia</span></div><div><b>${fmtInt(st.trips)}</b><span>viajes en bici</span></div><div><b>${fmtInt(st.leaves)}</b><span>hojas verdes</span></div><div><b>${S.bestStreak}</b><span>mejor racha</span></div><div><b>${S.postales.length}</b><span>postales</span></div></div>`;
     h += this.carnet();
-    h += `<div class="row" style="margin:12px 0"><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
+    h += `<div class="row" style="margin:12px 0"><button class="btn sm amb" data-act="ranking">🏆 Ranking</button><button class="btn sm" id="bExp">⇩ Exportar partidas</button><button class="btn sm" id="bImp">⇧ Importar</button><button class="btn sm gh" id="bDel">Borrar todo</button></div>`;
     if (!S.history.length) h += `<p class="m">Aún no has jugado. ¡Empieza por el Usuario!</p>`;
     else { h += `<table class="hist">`; for (const e of S.history.slice(0, 60)) { const d = new Date(e.d); h += `<tr><td>${d.toLocaleDateString('es-CO')} ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(ROLE[e.m] ? ROLE[e.m].name : e.m)} ${e.free ? 'libre' : 'T' + e.t}${e.reto ? ' · reto' : ''}</td><td>${fmtInt(e.s)} pts</td><td style="color:var(--amb)">${'★'.repeat(e.st)}</td></tr>`; } h += `</table>`; }
     h += Logros.html();
     const el = $('#tab-parts'); el.innerHTML = h;
+    const rb = $('[data-act=ranking]', el); if (rb) rb.onclick = () => this.ranking();
     const cv = $('#cnAv', el); if (cv) { const x = cv.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#143a6b'; x.fillRect(0, 0, 80, 50); x.fillStyle = '#5e9a1e'; x.fillRect(0, 40, 80, 10); Art.cover(x, 80, 50, 0); }
     $('#bExp').onclick = () => this.exportSave(); $('#bImp').onclick = () => $('#fileIn').click();
     $('#bDel').onclick = () => this.confirm('¿Borrar todas tus partidas y progreso?', () => { Save.reset(); this.renderHome(); this.toast('Progreso borrado'); });
@@ -4526,14 +4539,16 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Mano guía (ayudas)</span><button class="sw ${S.hints !== false ? 'on' : ''}" data-sw="hints" aria-label="Ayudas"></button></div>`;
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
+    h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'flotante') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
-    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
+    h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="personajes">👥 Personajes</button><button class="btn" data-act="ranking">🏆 Ranking</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
     const el = $('#tab-mas'); el.innerHTML = h;
     $$('[data-sw]', el).forEach(b => b.onclick = () => { const k = b.dataset.sw; S[k] = !(S[k] !== false); Save.save(); b.classList.toggle('on', S[k]); if (k === 'music') Snd.music(S.music); if (k === 'big') document.body.classList.toggle('big', !!S.big); Snd.sfx('tap'); });
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
-    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+    $$('[data-ctrl]', el).forEach(b => b.onclick = () => { S.ctrl = b.dataset.ctrl; Save.save(); this.renderMas(); Snd.sfx('tap'); });
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), personajes: () => this.personajes(), ranking: () => this.ranking(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
   },
   /* ---------- briefing ---------- */
   brief(roleId, turno, o = {}) {
@@ -4677,7 +4692,8 @@ const UI = JE.ui = {
   },
   credits() {
     this.modal(`<h2>Créditos</h2><p class="m">Juega EnCicla v${JE.version} · demo presentada a EnCicla por Juan Felipe Rico. Diseño evolucionado de la revista EMSAY y Doc Element.</p>
-    <p class="m">Juego de demostración NO oficial. EnCicla es el sistema de bicicletas públicas del Área Metropolitana del Valle de Aburrá. Mapa estilizado y datos aproximados con fines didácticos; consulta la información oficial de EnCicla.</p>
+    <p class="m">Juego de demostración NO oficial. EnCicla es el sistema de bicicletas públicas del Área Metropolitana del Valle de Aburrá. Las ubicaciones de las estaciones son aproximadas y con fines didácticos; consulta la información oficial de EnCicla.</p>
+    <p class="m">${esc(VALLE_META.src)}</p>
     <p class="m">Tipografías: TeX Gyre Heros Condensed (GUST) e Inter (OFL). Gráficos, música y sonidos generados por código.</p><div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`);
   },
   avatar() {
@@ -4748,7 +4764,7 @@ const Game = JE.game = {
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
-    $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : isMulti(roleId) ? '' : ' · ' + (role.shifts && role.shifts[turno - 1] ? role.shifts[turno - 1].n.replace('Turno ', 'T').replace(' · ', ' ') : 'T' + turno)); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
+    $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : isMulti(roleId) ? '' : ' · ' + (role.shifts && role.shifts[turno - 1] ? role.shifts[turno - 1].n.replace(/^Turno (\d) · /, 'T$1 ') : 'T' + turno)); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
     this.coachT = 0; this._coachEr = 0; $('#coach').textContent = '';
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));
@@ -4841,10 +4857,10 @@ function bindCanvas() {
     e.preventDefault(); Snd.init(); Snd.resume(); const M = Game.mode; if (!M || Game.paused) return;
     const { cx, cy } = pos(e), v = View.toV(cx, cy), a = M.sub || M;
     const used = a.pointer('down', v.x, v.y, cx, cy);
-    if (!used && !M.sub && M.ride && M.view.kind === 'map' && !Input.joy.on) { Input.joy = { on: true, id: e.pointerId, ox: cx, oy: cy, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { } }
+    if (!used && !M.sub && M.ride && M.view.kind === 'map' && !Input.joy.on) Ctrl.down(e, cx, cy, cv);
   });
   cv.addEventListener('pointermove', e => { const j = Input.joy; if (j.on && e.pointerId === j.id) { const { cx, cy } = pos(e); j.x = cx; j.y = cy; } });
-  const up = e => { const j = Input.joy; if (j.on && e.pointerId === j.id) j.on = false; const M = Game.mode; if (M) { const a = M.sub || M, { cx, cy } = pos(e), v = View.toV(cx, cy); a.pointer('up', v.x, v.y, cx, cy); } };
+  const up = e => { const j = Input.joy; if (j.on && e.pointerId === j.id) j.on = false; Ctrl.up(e); const M = Game.mode; if (M) { const a = M.sub || M, { cx, cy } = pos(e), v = View.toV(cx, cy); a.pointer('up', v.x, v.y, cx, cy); } };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('contextmenu', e => e.preventDefault());
 }
@@ -5056,6 +5072,158 @@ LOGROS.push(
   { id: 'estreno', name: 'De estreno', desc: 'Compra algo en la tienda con hojas verdes', icon: 'hoja', test: S => (S.owned || []).length > 0 },
   { id: 'equipo', name: 'Trabajo en equipo', desc: 'Aprueba un turno cooperativo con amigos', icon: 'monitoreo', test: S => S.history.some(h => h.m === 'equipo' && h.p) }
 );
+
+/* ---- 67-personaje.js ---- */
+/* =====================================================================
+   TU PERSONAJE, RANKINGS, PERSONAJES Y CONTROLES (v0.7)
+   ===================================================================== */
+SKINS.push('#fbe3cf', '#4a2c1c');
+const PEINADOS = ['Corto', 'Largo', 'Gorra', 'Rapado', 'Afro', 'Coleta', 'Moño', 'Trenzas', 'Crespo'];
+const PELO = ['#2a1a10', '#4a2c18', '#7a4a22', '#c9a25a', '#e8d27a', '#b8402a', '#d9d9d9', '#151515', '#3f6fd8', '#ff8fc7'];
+const CARAS = ['Sin barba', 'Bigote', 'Barba'];
+const GAFAS = ['Sin gafas', 'Gafas', 'Gafas de sol'];
+const MANGAS = ['Camiseta', 'Manga larga', 'Chaleco EnCicla'];
+const PANTALON = ['#2a3b5c', '#3d4a5a', '#5a4632', '#1f2a3a', '#6a7a8a', '#7a3b3b', '#c9b38a', '#3d6b3a'];
+const ZAPATOS = ['#111111', '#ffffff', '#ff6b5a', '#56c7ff', '#9bd341', '#ffc93c'];
+/* tu apariencia completa (para los minijuegos de vista lateral) */
+Art.me = function (extra) {
+  const P = Save.data.profile;
+  return Object.assign({ skin: SKINS[P.skin] || SKINS[1], hair: PELO[P.hairCol | 0], hairStyle: P.hair | 0, shirt: SHIRTS[P.shirt] || PAL.vd, pants: PANTALON[P.pants | 0], shoes: ZAPATOS[P.shoes | 0], sleeve: P.sleeve | 0, beard: P.beard | 0, glasses: P.glasses | 0, cap: HELMETS[P.helmet] }, extra || {});
+};
+/* persona de lado: más peinados, barba, gafas de sol, zapatos y mangas */
+Art.person = function (c, x, y, p, ph = 0, face = -1) {
+  c.save(); c.translate(Math.round(x), Math.round(y)); if (face > 0) c.scale(-1, 1);
+  const kid = p.kid, H = kid ? .72 : 1, legH = Math.round(6 * H), torso = Math.round(7 * H), hy = -legH - torso - 5, st = Math.floor(ph * 4) % 2, hc = p.hair || '#2a1a10';
+  prect(c, -2 + (st ? -1 : 0), -legH, 2, legH, p.pants); prect(c, 0 + (st ? 1 : 0), -legH, 2, legH, shade(p.pants, -.18));
+  const sh = p.shoes || '#111'; prect(c, -2 + (st ? -1 : 0), -1, 2, 1, sh); prect(c, 0 + (st ? 1 : 0), -1, 2, 1, sh);
+  if (p.bag) prect(c, 2, -legH - torso + 1, 2, torso - 2, p.bag);
+  prect(c, -3, -legH - torso, 5, torso, p.shirt); prect(c, -4, -legH - torso + 2, 1, torso - 3, p.sleeve === 1 ? p.shirt : p.shirt); prect(c, -4, -legH - 2, 1, 1, p.skin);
+  if (!p.sleeve && !kid) prect(c, -4, -legH - torso + 4, 1, 2, p.skin);
+  if (p.vest || p.sleeve === 2) { prect(c, -3, -legH - torso, 5, torso, PAL.vd); prect(c, -3, -legH - torso + 3, 5, 1, '#e8f4d0'); prect(c, -1, -legH - torso, 1, torso, p.shirt); }
+  prect(c, -3, hy, 5, 5, p.skin); prect(c, -3, hy + 2, 1, 1, '#141414');
+  switch (p.hairStyle | 0) {
+    case 0: prect(c, -2, hy - 1, 5, 2, hc); prect(c, 1, hy, 1, 3, hc); break;
+    case 1: prect(c, -2, hy - 1, 5, 2, hc); prect(c, 1, hy, 2, 6, hc); break;
+    case 2: prect(c, -3, hy - 1, 6, 2, p.cap || PAL.az2); prect(c, -5, hy, 3, 1, p.cap || PAL.az2); break;
+    case 3: prect(c, 0, hy - 1, 3, 1, hc); break;
+    case 4: prect(c, -4, hy - 3, 8, 4, hc); prect(c, 1, hy, 3, 3, hc); break;
+    case 5: prect(c, -2, hy - 1, 5, 2, hc); prect(c, 2, hy, 2, 2, hc); prect(c, 3, hy + 1, 2, 4, hc); break;
+    case 6: prect(c, -2, hy - 1, 5, 2, hc); prect(c, 0, hy - 3, 3, 2, hc); break;
+    case 7: prect(c, -2, hy - 1, 5, 2, hc); prect(c, 1, hy, 2, 7, hc); prect(c, 1, hy + 7, 2, 1, '#ff6b5a'); break;
+    case 8: prect(c, -3, hy - 2, 6, 2, hc); prect(c, -3, hy, 1, 1, hc); prect(c, 2, hy - 1, 2, 3, hc); break;
+  }
+  if (p.beard === 1) prect(c, -3, hy + 3, 2, 1, hc); else if (p.beard === 2) { prect(c, -3, hy + 3, 4, 2, hc); prect(c, -3, hy + 2, 1, 1, hc); }
+  if (p.glasses === 2) prect(c, -3, hy + 2, 3, 1, '#0a0a0a'); else if (p.glasses) prect(c, -3, hy + 2, 2, 1, '#333');
+  if (p.cane) pline(c, -6, 0, -5, -legH - 2, '#7a5230');
+  c.restore();
+};
+/* ciclista visto desde arriba: si tiene pelo largo se le ve la cola bajo el casco */
+Art.rider = function (shirt) {
+  const P = Save.data.profile, base = this.riderTop(shirt || SHIRTS[P.shirt] || PAL.vd, HELMETS[P.helmet] || '#fff', SKINS[P.skin] || SKINS[1], bikeCol());
+  if (![1, 5, 7].includes(P.hair | 0)) return base;
+  const k = 'rl' + (shirt || P.shirt) + P.helmet + P.skin + P.hairCol + P.bike + (Save.data.flags.gold ? 1 : 0); let c = this.cache.get(k); if (c) return c;
+  c = this.mk(base.width, base.height, x => { x.drawImage(base, 0, 0); x.fillStyle = PELO[P.hairCol | 0]; x.fillRect(3, 8, 1, 2); });
+  this.cache.set(k, c); return c;
+};
+/* retrato grande para el creador */
+function drawAvatar(cv) {
+  const x = cv.getContext('2d'), w = cv.width, h = cv.height, P = Save.data.profile; x.imageSmoothingEnabled = false;
+  x.fillStyle = "#143a6b"; x.fillRect(0, 0, w, h); x.fillStyle = "#5e9a1e"; x.fillRect(0, h - 10, w, 10); x.fillStyle = "#bdb9ab"; x.fillRect(0, h - 12, w, 2);
+  Art.bikeSide(x, w * .66, h - 12, { r: 5, face: 1, col: bikeCol() });
+  Art.person(x, w * .32, h - 12, Art.me(), 0, 1);
+  x.save(); x.translate(w * .32, h - 12); x.scale(1, 1); x.restore();
+}
+
+/* ---------- creador de personaje (al empezar y en Mi ciclista) ---------- */
+UI.avatar = function (first) {
+  const P = Save.data.profile, S = Save.data, req = (key, i) => (COSMETIC_REQ[key] || {})[i], price = (key, i) => (SHOP[key] || {})[i];
+  const locked = (key, i) => { const r = req(key, i), p = price(key, i); return (r && !S.logros.includes(r[0])) || (p && !S.owned.includes(key + i)); };
+  const sw = (arr, key, em) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), p = price(key, i), lk = locked(key, i); return `<button data-k="${key}" data-i="${i}" class="${(P[key] | 0) === i ? 'on' : ''} ${lk ? (p ? 'buy' : 'lock') : ''} ${em ? 'em' : ''}" style="background:${em ? '#143a6b' : c}" aria-label="${esc((r || p || [0, key + ' ' + (i + 1)])[1])}">${em ? c : ''}${lk ? (p ? '<small>🍃' + p[0] + '</small>' : '🔒') : r ? '★' : ''}</button>`; }).join('')}</div>`;
+  const txt = (arr, key) => `<div class="seg wrap">${arr.map((t, i) => `<button data-k="${key}" data-i="${i}" class="${(P[key] | 0) === i ? 'on' : ''}">${esc(t)}</button>`).join('')}</div>`;
+  const tab = this._avTab || 'cuerpo';
+  const body = {
+    cuerpo: `<p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Peinado</p>${txt(PEINADOS, 'hair')}<p class="pag">Color de pelo</p>${sw(PELO, 'hairCol')}<p class="pag">Cara</p>${txt(CARAS, 'beard')}<p class="pag">Gafas</p>${txt(GAFAS, 'glasses')}`,
+    ropa: `<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Estilo</p>${txt(MANGAS, 'sleeve')}<p class="pag">Pantalón</p>${sw(PANTALON, 'pants')}<p class="pag">Zapatos</p>${sw(ZAPATOS, 'shoes')}<p class="pag">Casco (siempre se pedalea con casco)</p>${sw(HELMETS, 'helmet')}`,
+    bici: `<div class="paper" style="margin:6px 0 4px"><div class="t">Tienda · <span id="avHojas"></span></div><p style="margin:4px 0 0;font-size:13px">Las hojas verdes se ganan pedaleando y con las estrellas de cada turno. Lo que tiene precio se compra con dos toques.</p></div><p class="pag">Color de la bici</p>${sw(BIKES, 'bike')}<p class="pag">Timbre</p>${sw(BELLS, 'bell', true)}`
+  }[tab];
+  this.modal(`<h2>${first ? 'Crea tu personaje' : 'Mi ciclista'}</h2><canvas id="avPrev" class="avprev" width="64" height="40"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
+    <div class="seg avtabs">${[['cuerpo', '🙂 Cuerpo'], ['ropa', '👕 Ropa'], ['bici', '🚲 Bici']].map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>${body}
+    <div class="col"><button class="btn pri" id="avOk">${first ? '¡Listo, a pedalear!' : 'Guardar'}</button>${first ? '' : '<button class="btn gh" id="avRnd">🎲 Al azar</button>'}</div>`, () => {
+    const draw = () => { drawAvatar($('#avPrev')); const hj = $('#avHojas'); if (hj) hj.textContent = '🍃 ' + hojas() + ' hojas'; };
+    const keepName = () => { P.name = ($('#avName').value || 'Ciclista').trim().slice(0, 16) || 'Ciclista'; };
+    let arm = null; draw();
+    $$('.avtabs button').forEach(b => b.onclick = () => { keepName(); this._avTab = b.dataset.tab; Snd.sfx('tap'); this.avatar(first); });
+    $$('#mBody [data-k]').forEach(b => b.onclick = () => {
+      const k = b.dataset.k, i = +b.dataset.i, r = req(k, i), p = price(k, i);
+      if (r && !S.logros.includes(r[0])) { const L = LOGROS.find(l => l.id === r[0]); Snd.sfx('bad'); return this.toast('🔒 ' + r[1] + ': se gana con el logro «' + (L && !L.secret ? L.name : '???') + '»'); }
+      if (p && !S.owned.includes(k + i)) {
+        if (hojas() < p[0]) { Snd.sfx('bad'); return this.toast('🍃 ' + p[1] + ' cuesta ' + p[0] + ' hojas: te faltan ' + (p[0] - hojas())); }
+        if (arm !== b) { arm = b; Snd.sfx('tap'); return this.toast('🍃 ' + p[1] + ' · ' + p[0] + ' hojas. Toca otra vez para comprar.'); }
+        S.spent = (S.spent | 0) + p[0]; S.owned.push(k + i); S.stats.bought = (S.stats.bought | 0) + 1; b.classList.remove('buy'); const sm = b.querySelector('small'); if (sm) sm.remove(); Snd.sfx('star'); this.toast('¡Compraste ' + p[1] + '!');
+      }
+      arm = null; P[k] = i; $$(`#mBody [data-k=${k}]`).forEach(x => x.classList.toggle('on', x === b)); Save.save(); draw(); if (k === 'bell') Snd.sfx('bell'); else Snd.sfx('tap');
+    });
+    const rnd = $('#avRnd'); if (rnd) rnd.onclick = () => { keepName(); const R = Math.random, pk = n => Math.floor(R() * n); Object.assign(P, { skin: pk(SKINS.length), hair: pk(PEINADOS.length), hairCol: pk(8), beard: pk(3), glasses: pk(3), shirt: pk(7), sleeve: pk(3), pants: pk(PANTALON.length), shoes: pk(ZAPATOS.length), helmet: pk(5) }); Save.save(); this.avatar(first); };
+    $('#avOk').onclick = () => { keepName(); S.settings.seen.profile = 1; Save.save(); this.closeModal(); this.renderHome(); Snd.sfx('ok'); if (first) this.toast('¡Bienvenido, ' + P.name + '! Empieza por el Usuario.'); };
+  });
+};
+
+/* ---------- rangos y ranking del valle ---------- */
+const RANGOS = [['Ciclista novato', 0], ['Usuario frecuente', 150], ['Anfitrión en formación', 400], ['Taller de confianza', 800], ['Rueda firme', 1400], ['Apoyo todoterreno', 2200], ['Técnico de luz verde', 3300], ['Balance experto', 4800], ['Voz de Monitoreo', 6600], ['Supervisor del valle', 9000], ['Leyenda EnCicla', 12500]];
+const rangoDe = xp => { let i = 0; while (i < RANGOS.length - 1 && xp >= RANGOS[i + 1][1]) i++; return i; };
+const RIVALES = [['Don Rubén', 'Supervisor · Belén', 15800], ['Cata', 'Monitoreo · Robledo', 11900], ['Wilson', 'Balance · Bello', 8700], ['La Patinadora de Laureles', 'Usuaria', 7600], ['Ing. Paola', 'Técnica · Envigado', 6400],
+  ['Kevin', 'Apoyo · Manrique', 4900], ['Mango Biche', 'Usuario · Itagüí', 4100], ['Yuli', 'Bodega · Guayabal', 3500], ['Don Jairo', 'Mecánico · Aranjuez', 2600], ['Rueda Loca', 'Usuaria · Copacabana', 2000],
+  ['Santi', 'Anfitrión · Floresta', 1700], ['Paz Pedal', 'Usuaria · Sabaneta', 1200], ['Doña Luz', 'Usuaria desde 2011', 1100], ['El Tinto', 'Usuario · Caldas', 700], ['Bici Bebé', 'Usuaria · Girardota', 300], ['El Domingo', 'Usuario de ciclovía', 120]];
+UI.ranking = function (tab) {
+  tab = tab || this._rkTab || 'valle'; this._rkTab = tab; const S = Save.data, rk = rangoDe(S.xp), nx = RANGOS[rk + 1], pct = nx ? (S.xp - RANGOS[rk][1]) / (nx[1] - RANGOS[rk][1]) * 100 : 100;
+  let h = `<h2>Ranking</h2><div class="rkcard"><div class="rkn">${rk + 1}</div><div><div class="pag">Tu rango</div><div class="rkt">${esc(RANGOS[rk][0])}</div><div class="xpbar"><i style="width:${pct.toFixed(1)}%"></i></div><div class="pag">${fmtInt(S.xp)} de experiencia${nx ? ' · faltan ' + fmtInt(nx[1] - S.xp) + ' para ' + esc(nx[0]) : ' · ¡rango máximo!'}</div></div></div>`;
+  h += `<div class="seg rktabs">${[['valle', 'El valle'], ['marcas', 'Mis marcas'], ['oficios', 'Por oficio']].map(([k, n]) => `<button data-rk="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div><div class="rklist">`;
+  if (tab === 'valle') { const L = RIVALES.map(r => ({ n: r[0], s: r[1], v: r[2] })).concat([{ n: S.profile.name + ' (tú)', s: RANGOS[rk][0], v: S.xp, me: 1 }]).sort((a, b) => b.v - a.v); L.forEach((x, i) => { h += `<div class="li ${x.me ? 'me' : ''}"><b>${i + 1}</b><span>${esc(x.n)}<small>${esc(x.s)}</small></span><i>${fmtInt(x.v)} XP</i></div>`; }); }
+  else if (tab === 'marcas') { const R = S.history.filter(e => !e.free).slice().sort((a, b) => b.s - a.s).slice(0, 10); if (!R.length) h += '<p class="m">Aún no hay partidas. ¡A rodar!</p>'; R.forEach((e, i) => { h += `<div class="li"><b>${i + 1}</b><span>${fmtInt(e.s)} pts<small>${esc(ROLE[e.m] ? ROLE[e.m].name : e.m)} · ${esc(ROLE[e.m] && ROLE[e.m].shifts ? shiftName(e.m, e.t) : '')} · ${new Date(e.d).toLocaleDateString('es-CO')}</small></span><i style="color:var(--amb)">${'★'.repeat(e.st)}</i></div>`; }); }
+  else ROLES.forEach(r => { for (let t = 1; t <= nShifts(r.id); t++) { const b = S.best[r.id + t] || 0; h += `<div class="li ${b ? '' : 'off'}"><b><img class="px" width="16" height="16" src="${Art.iconURL(r.icon)}" alt=""></b><span>${esc(r.name)}<small>${esc(shiftName(r.id, t))}</small></span><i>${b ? fmtInt(b) : '—'}</i></div>`; } });
+  this.modal(h + `</div><div class="col"><button class="btn pri" id="mClose">Cerrar</button></div>`, () => $$('[data-rk]').forEach(b => b.onclick = () => { Snd.sfx('tap'); this.ranking(b.dataset.rk); }));
+};
+
+/* ---------- personajes (la trama llega pronto) ---------- */
+const BIOS = {
+  usuario: ['Belén', 'Del afán no queda sino el cansancio.', 'Pedalea desde que EnCicla era un piloto entre universidades en 2011. Conoce cada ciclorruta del valle y no perdona a quien pasa en rojo.'],
+  anfitrion: ['Floresta', 'Una sonrisa también se presta.', 'Madruga a las 4:30 para recibir la tula a las 5 en punto. Ajusta los sillines sin que se lo pidan y se sabe el nombre de cada usuario de su estación.'],
+  mecanico: ['Aranjuez', 'Toda bici avisa lo que le duele.', 'Treinta años en talleres de bicicletas. Dice que reconoce una cadena seca por el ruido desde la esquina.'],
+  bodega: ['Guayabal', 'Cada cosa en su sitio.', 'Jefa de la bodega: nada entra sin verificar y nada sale sin estar completo. Su lema está pegado en la puerta.'],
+  apoyo: ['Manrique', 'El que sirve para todo, sirve para mucho.', 'Anfitrión de apoyo de la zona Envigado: trece estaciones que abrir, relevos de almuerzo y un inventario de control en cada rato libre.'],
+  tecnico: ['Envigado', 'Luz verde o nada.', 'Ingeniera electrónica. Tiene un plan para cada power bank y sabe qué celulares de estación están medio malos.'],
+  balance: ['Bello', 'Por las vías, nunca por la ciclorruta.', 'Sale a las 4 de la mañana del parqueadero de la Terminal del Norte y vuelve de noche, cuando el camión ya no cabe más bicis.'],
+  monitoreo: ['Robledo', 'El mapa habla.', 'Desde la sala de control ve el valle entero: rojo es vacía, azul es llena. Cada hora revisa que los inventarios cuadren.'],
+  supervisor: ['Belén · Malibú', 'Se manda como quien ha pasado por todos los puestos.', 'Empezó de usuario, luego fue anfitrión, mecánico y conductor. Hoy arma las tulas a las 4 a. m. en Casa EnCicla y las recoge a las 10:30 p. m.']
+};
+UI.personajes = function () {
+  let h = `<h2>Personajes</h2><p class="m">La gente que mueve EnCicla. Muy pronto cada uno tendrá su propia historia en el juego.</p><div class="chars">`;
+  ROLES.forEach(r => { const C = CAST[r.id], B = BIOS[r.id]; if (!C) return; h += `<div class="char"><img class="px" src="${Historia.face(r.id)}" alt=""><div><b>${esc(C[0])}</b><div class="pag">${esc(C[1])} · ${esc(B[0])}</div><p>«${esc(B[1])}»</p><small>${esc(B[2])}</small></div></div>`; });
+  this.modal(h + `</div><div class="paper" style="margin:10px 0"><div class="t">Próximamente</div><p style="margin:4px 0 0;font-size:13px">Historias de personajes y su trama a lo largo de los turnos.</p></div><div class="col"><button class="btn pri" id="mClose">Cerrar</button></div>`);
+};
+
+/* ---------- controles: joystick flotante, joystick fijo o flechas ---------- */
+const Ctrl = JE.ctrl = {
+  kind() { return (Save.data && Save.data.settings.ctrl) || 'flotante'; },
+  anchor() { return { x: 86 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sal')) || 0), y: View.h - 150 }; },
+  arrows() { const a = this.anchor(), s = 52; return [['ArrowUp', a.x, a.y - s, '▲'], ['ArrowDown', a.x, a.y + s, '▼'], ['ArrowLeft', a.x - s, a.y, '◀'], ['ArrowRight', a.x + s, a.y, '▶']]; },
+  /* devuelve true si el toque lo tomó el control */
+  down(e, cx, cy, cv) {
+    const k = this.kind();
+    if (k === 'flechas') { for (const [key, x, y] of this.arrows()) if (Math.abs(cx - x) < 28 && Math.abs(cy - y) < 28) { Input.keys[key] = true; (this.held || (this.held = {}))[e.pointerId] = key; return true; } return false; }
+    const a = k === 'fijo' ? this.anchor() : { x: cx, y: cy };
+    if (k === 'fijo' && dist(cx, cy, a.x, a.y) > 110) return false;
+    Input.joy = { on: true, id: e.pointerId, ox: a.x, oy: a.y, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { }
+    return true;
+  },
+  up(e) { const h = this.held && this.held[e.pointerId]; if (h) { Input.keys[h] = false; delete this.held[e.pointerId]; } },
+  draw(V) {
+    const k = this.kind(), c = V.ctx;
+    if (k === 'flechas') { c.globalAlpha = .7; for (const [key, x, y, l] of this.arrows()) { c.fillStyle = Input.keys[key] ? PAL.vd : '#0a2342cc'; c.beginPath(); c.arc(x, y, 25, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); V.text(l, x, y + 7, { size: 20, align: 'center', color: '#fff' }); } c.globalAlpha = 1; return; }
+    if (k === 'fijo' && !Input.joy.on) { const a = this.anchor(); c.globalAlpha = .35; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(a.x, a.y, 46, 0, TAU); c.stroke(); c.fillStyle = PAL.vd; c.beginPath(); c.arc(a.x, a.y, 18, 0, TAU); c.fill(); c.globalAlpha = 1; }
+  }
+};
+LOGROS.push({ id: 'rango5', name: 'Rueda firme', desc: 'Llega al rango 5 del ranking', icon: 'estrella', test: S => rangoDe(S.xp) >= 4 });
 
 /* ---- 70-net.js ---- */
 /* =====================================================================
