@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.7.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.8.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -142,23 +142,50 @@ const Snd = JE.snd = {
       if (!this.timer) { this.nextT = this.ctx.currentTime + .08; this.timer = setInterval(() => this.sched(), 70); }
     } else if (this.timer) { clearInterval(this.timer); this.timer = null; }
   },
+  /* ---------- música interactiva: sigue lo que pasa en el juego ----------
+     mood: e = energía (velocidad), t = tensión (horas límite, filas), k = racha de ciclorruta, n = noche, sl = pendiente.
+     El tempo, la batería, el bajo, la melodía y las capas cambian suave con el mood. Snd.note() toca notas del acorde actual. */
+  mood: { e: .3, t: 0, k: 0, n: 0, sl: 0 }, mt: { e: .3, t: 0, k: 0, n: 0, sl: 0 }, root: 43, spb: .14,
+  setMood(m) { Object.assign(this.mt, m); },
   sched() {
-    const c = this.ctx; if (!c) return; const spb = 60 / 108 / 4;
+    const c = this.ctx; if (!c) return; const M = this.mood;
+    for (const k in this.mt) M[k] += (this.mt[k] - M[k]) * .12;
+    const bpm = 90 + 30 * M.e + 12 * M.t - 10 * M.n + (M.sl < -.04 ? 8 : M.sl > .04 ? -8 : 0), spb = this.spb = 60 / bpm / 4;
     while (this.nextT < c.currentTime + .3) { this.playStep(this.step, this.nextT); this.nextT += spb; this.step = (this.step + 1) % 128; }
   },
+  kick(t, v) { const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + .13); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + .16); o.connect(g); g.connect(this.musG); o.start(t); o.stop(t + .2); },
   playStep(s, t) {
-    const mf = m => 440 * Math.pow(2, (m - 69) / 12);
-    const bar = Math.floor(s / 16) % 8, st = s % 16;
-    const prog = this.theme === 1 ? [45, 41, 43, 40, 45, 41, 43, 44] : [43, 40, 36, 38, 43, 40, 36, 38];
-    const minor = this.theme === 1 ? [1, 0, 0, 1, 1, 0, 0, 0] : [0, 1, 0, 0, 0, 1, 0, 0];
-    const r = prog[bar], third = minor[bar] ? 3 : 4, D = this.musG;
-    if (st === 0 || st === 6 || st === 8 || st === 14) this.tone(mf(r + (st === 6 ? 7 : st === 14 ? 12 : 0)), .18, { t, type: 'triangle', v: .22, dest: D });
-    if (st === 4 || st === 12 || st === 10) [0, third, 7].forEach(i => this.tone(mf(r + 24 + i), .07, { t, type: 'square', v: .035, dest: D }));
-    if (st % 2 === 0) this.hat(t, st % 4 === 0 ? .03 : .018);
-    const pent = [0, 2, 4, 7, 9, 12, 14, 16];
-    const k = h2(s, bar, this.theme * 7 + 3);
-    if ((st % 4 === 2 && k < .55) || (st === 0 && k < .8)) this.tone(mf(r + 24 + pent[Math.floor(h2(s, 5, bar) * pent.length)]), .14, { t, type: 'square', v: .045, dest: D });
-  }
+    const M = this.mood, mf = m => 440 * Math.pow(2, (m - 69) / 12), D = this.musG;
+    const bar = Math.floor(s / 16) % 8, st = s % 16, tense = M.t > .55 || this.theme === 1;
+    const prog = tense ? [45, 41, 43, 40, 45, 41, 43, 44] : [43, 40, 36, 38, 43, 40, 36, 38], minor = tense ? [1, 0, 0, 1, 1, 0, 0, 0] : [0, 1, 0, 0, 0, 1, 0, 0];
+    const r = this.root = prog[bar], third = minor[bar] ? 3 : 4; this.third = third;
+    // bajo
+    if (st === 0 || st === 6 || st === 8 || st === 14) this.tone(mf(r + (st === 6 ? 7 : st === 14 ? 12 : 0)), .18, { t, type: 'triangle', v: .2 * (1 - .35 * M.n), dest: D });
+    // bombo: más golpes con más velocidad
+    if (st % 8 === 0 || (M.e > .65 && st % 4 === 0)) this.kick(t, .1 + .12 * M.e);
+    // acordes
+    if (st === 4 || st === 12 || (M.e > .4 && st === 10)) [0, third, 7].forEach(i => this.tone(mf(r + 24 + i), .07, { t, type: 'square', v: .018 + .025 * M.e, dest: D }));
+    // platillos: densidad según la energía
+    const hd = M.e > .75 ? 1 : M.e > .35 ? 2 : 4; if (st % hd === 0) this.hat(t, (st % 4 === 0 ? .03 : .018) * (.6 + .6 * M.e));
+    // melodía: aparece con velocidad o racha; en bajada sube de registro, en subida baja
+    const pent = [0, 2, 4, 7, 9, 12, 14, 16], k = h2(s, bar, this.theme * 7 + 3), reg = M.sl < -.04 ? 31 : M.sl > .04 ? 19 : 24;
+    const play = M.k >= 1 || M.e > .5 ? (st % 2 === 0 && k < .35 + .15 * M.k) || (st === 0 && k < .8) : (st % 4 === 2 && k < .4);
+    if (play) this.tone(mf(r + reg + pent[Math.floor(h2(s, 5, bar) * pent.length)]), .14, { t, type: 'square', v: .035 + .012 * M.k, dest: D });
+    // racha x3/x4: arpegio rápido de fiesta
+    if (M.k >= 2.5 && st % 2 === 1) this.tone(mf(r + 36 + [0, third, 7, 12][(st >> 1) % 4]), .06, { t, type: 'triangle', v: .025, dest: D });
+    // tensión: pulso agudo que avisa que se acaba el tiempo
+    if (M.t > .5 && st % 4 === 0) this.tone(mf(r + 37), .05, { t, type: 'square', v: .012 + .02 * M.t, dest: D });
+    // noche: colchón suave
+    if (M.n > .5 && st === 0) [0, third, 7].forEach(i => this.tone(mf(r + 12 + i), 1.6, { t, type: 'sine', v: .022, dest: D }));
+  },
+  /* nota interactiva del acorde actual, a tiempo con la música (si está apagada suena ya) */
+  note(deg, o = {}) {
+    const c = this.ctx; if (!c || JE.headless || !Save.data.settings.sfx) return; this.resume();
+    const mf = m => 440 * Math.pow(2, (m - 69) / 12), sc = [0, 2, this.third || 4, 7, 9], q = sc[((deg % 5) + 5) % 5] + 12 * Math.floor(deg / 5);
+    const t = this.timer ? Math.max(c.currentTime + .01, this.nextT) : c.currentTime;
+    this.tone(mf((this.root || 43) + 36 + q), o.d || .2, { t, type: o.type || 'triangle', v: o.v || .07, dest: this.timer ? this.musG : this.out });
+  },
+  fanfare() { for (let i = 0; i < 4; i++) setTimeout(() => this.note(i * 2, { v: .06, d: .22 }), i * (this.spb || .14) * 1000); }
 };
 
 /* ---------- entrada: teclado + joystick flotante ---------- */
@@ -181,7 +208,7 @@ window.addEventListener('blur', () => { Input.keys = {}; Input.joy.on = false; }
 
 /* ---------- vista: búfer pixelado + capa nítida para textos ---------- */
 const View = JE.view = {
-  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150, subX: 0, subY: 0,
+  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150, subX: 0, subY: 0, top: 52,
   init() {
     this.cv = $('#cv'); this.ctx = this.cv.getContext('2d');
     this.buf = document.createElement('canvas'); this.b = this.buf.getContext('2d');
@@ -198,7 +225,7 @@ const View = JE.view = {
   setMode(kind, dw, dh) { this.kind = kind; this.dw = dw || 200; this.dh = dh || 150; this.apply(); },
   apply() {
     let s;
-    if (this.kind === 'map') { s = Math.round(Math.min(this.w, this.h) / 125); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / 330)); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 2, 8); }
+    if (this.kind === 'map') { s = Math.round(Math.min(this.w, this.h) / 185); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / 460)); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 1, 8); }   // casillas de 16 px: se ve ~12 casillas (240 m) de ancho en el celular
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);

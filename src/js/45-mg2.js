@@ -38,7 +38,7 @@ class MGLoop extends MG {
       const deg = [1, 2, 4, 8].filter(k => m & k).length; if (deg === 1) pdisc(b, x + h, y + h, Math.max(2, cs >> 3), i === this.src ? PAL.amb : col); else prect(b, x + h - t, y + h - t, t * 2, t * 2, col);
     }
   }
-  hud(V) { this.btns = []; V.text('CIRCUITO DEL TÓTEM', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); V.text('Giros: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#c4ec7c', body: true }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('CIRCUITO DEL TÓTEM', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); V.text('Giros: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#c4ec7c', body: true }); this.drawPops(V); }
   tap(vx, vy) { const { cs, x0, y0 } = this.geo(), gx = Math.floor((vx - x0) / cs), gy = Math.floor((vy - y0) / cs); if (gx < 0 || gy < 0 || gx >= this.W || gy >= this.H) return false; this.turn(gy * this.W + gx); return true; }
   hint(V) { const i = this.m.findIndex((m, k) => m !== this.sol[k]); if (i < 0 || this.moves > 3) return null; const { cs, x0, y0 } = this.geo(); return { x: (x0 + (i % this.W) * cs + cs / 2) * V.s, y: (y0 + ((i / this.W) | 0) * cs + cs / 2) * V.s }; }
   bot() { if (this.endT) return; for (let i = 0; i < this.m.length; i++) if (this.m[i] !== this.sol[i]) { const s = this.sol[i]; if (s === 5 || s === 10) { if (this.m[i] === s) continue; } this.turn(i); return; } }
@@ -90,7 +90,7 @@ class MGLaser extends MG {
     const tr = this.trace(), col = tr.hit ? PAL.vd1 : '#ff4b6a';
     for (let k = 0; k < tr.pts.length - 1; k++) { const [ax, ay] = tr.pts[k], [bx, by] = tr.pts[k + 1]; pline(b, cx(ax), cy(ay), cx(bx), cy(by), col); pline(b, cx(ax) + 1, cy(ay), cx(bx) + 1, cy(by), col); }
   }
-  hud(V) { this.btns = []; V.text('SEÑAL DE LA ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('SEÑAL DE LA ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
   tap(vx, vy) { const { cs, x0, y0 } = this.geo(), gx = Math.floor((vx - x0) / cs), gy = Math.floor((vy - y0) / cs); if (gx < 0 || gy < 0 || gx >= this.n || gy >= this.n) return false; this.flip(gy * this.n + gx); return true; }
   bot() { if (this.endT || !this.cell) return; for (let i = 0; i < this.cell.length; i++) if ((this.sol[i] === 1 || this.sol[i] === 2) && this.cell[i] !== this.sol[i]) return this.flip(i); }
 }
@@ -136,7 +136,7 @@ class MGTraffix extends MG {
   }
   hud(V) {
     this.btns = []; const s = V.s, L = this.L; if (!L) return; const cx = L.vw / 2 * s, cy = (L.vh / 2 + 6) * s;
-    V.text('Pasaron ' + this.passed + '/' + this.target + ' · choques ' + this.crashes, V.w / 2, 70, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 4 });
+    V.text('Pasaron ' + this.passed + '/' + this.target + ' · choques ' + this.crashes, V.w / 2, V.top + 18, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 4 });
     const bt = (a, x, y) => this.button(V, x - 34, y - 22, 68, 44, this.go[a] ? 'SIGA' : 'PARE', () => this.toggle(a), { bg: this.go[a] ? PAL.vd2 : '#7a2a24', size: 17, key: 'a' + a });
     bt(0, cx, cy - 70); bt(2, cx + 80, cy - 40); this.drawPops(V);
   }
@@ -201,7 +201,7 @@ class MGRutas extends MG {
   }
   hud(V) {
     this.btns = []; const s = V.s, g = this.geo();
-    if (this.p.ride) V.text(this.theme === 'metro' ? 'MAQUINISTA SECRETO' : 'BODEGA · DESVÍOS', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 4 });
+    if (this.p.ride) V.text(this.theme === 'metro' ? 'MAQUINISTA SECRETO' : 'BODEGA · DESVÍOS', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 4 });
     V.text('Bien ' + this.ok + ' · combo ' + this.combo + ' · precisión ' + Math.round(this.acc() * 100) + '%', V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true, stroke: '#0a2342', sw: 3 });
     this.button(V, g.xj1 * s - 34, (g.ym + g.dy * .5) * s + 8, 68, 46, this.sw[0] ? '↘ 1' : '↗ 1', () => this.toggle(0), { bg: PAL.az1, size: 20, key: 'j0' });
     this.button(V, g.xj2 * s - 34, (g.ym + g.dy * .5) * s + 8, 68, 46, this.sw[1] ? '↘ 2' : '↗ 2', () => this.toggle(1), { bg: PAL.az1, size: 20, key: 'j1' });
@@ -242,7 +242,7 @@ class MGLaberinto extends MG {
     const fx = x0 + this.gx * cs + cs / 2, fy = y0 + this.gy * cs + cs / 2; for (let k = 0; k < 5; k++) pdisc(b, fx + Math.cos(k * 1.26) * 2, fy + Math.sin(k * 1.26) * 2, 1, ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#fff'][k]); prect(b, fx, fy, 1, 1, PAL.amb);
     pdisc(b, x0 + this.bx * cs + cs / 2, y0 + this.by * cs + cs / 2, Math.max(2, cs / 3), '#fff'); prect(b, x0 + this.bx * cs + cs / 2 - 1, y0 + this.by * cs + cs / 2 - 1, 1, 1, PAL.vd2);
   }
-  hud(V) { this.btns = []; V.text('LABERINTO DE MORAVIA', V.w / 2, 70, { size: 20, align: 'center', color: '#ffd84a', stroke: '#0a2342', sw: 4 }); V.text('Movidas: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('LABERINTO DE MORAVIA', V.w / 2, V.top + 18, { size: 20, align: 'center', color: '#ffd84a', stroke: '#0a2342', sw: 4 }); V.text('Movidas: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true }); this.drawPops(V); }
   pointer(type, vx, vy, cx, cy) {
     if (type === 'down') { this.d0 = { cx, cy, vx, vy }; return true; }
     if (type === 'up' && this.d0) { const dx = cx - this.d0.cx, dy = cy - this.d0.cy; let d;

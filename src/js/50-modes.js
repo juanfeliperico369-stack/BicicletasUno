@@ -152,7 +152,7 @@ class MapMode extends Mode {
     const T = this.ride.target; if (!T) { this.botDir = { x: 0, y: 0, m: 0 }; return; }
     const P = this.ride.p; let tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS);
     const D = JE.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), P.veh === 'truck', tx, ty);
-    if (JE.map.fv(D, tx, ty) >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + 4, n.y * TS + 4); return; }
+    if (JE.map.fv(D, tx, ty) >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + TS / 2, n.y * TS + TS / 2); return; }
     let c = { x: tx, y: ty }; const h0 = this.botHist; const cur = JE.map.lightIdx(ty * MW + tx);
     for (let i = 0; i < 2; i++) {
       const n = JE.map.nextStep(D, c.x, c.y); if (!n) break;
@@ -160,9 +160,9 @@ class MapMode extends Mode {
       if (li >= 0 && li !== cur && JE.map.lightIdx(c.y * MW + c.x) !== li) { const ew = Math.abs(n.x - c.x) >= Math.abs(n.y - c.y), st = JE.map.lightState(JE.map.lights[li], this.t)[ew ? 0 : 1]; if (st !== 'g') { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
       c = n;
     }
-    if (c.x === tx && c.y === ty) this.botDir = this.dirTo(T.x, T.y); else this.botDir = this.dirTo(c.x * TS + 4, c.y * TS + 4);
+    if (c.x === tx && c.y === ty) this.botDir = this.dirTo(T.x, T.y); else this.botDir = this.dirTo(c.x * TS + TS / 2, c.y * TS + TS / 2);
     if (P.veh === 'bike' && this.ride.sl < -.07) this.botDir.m = .78;   // en bajada fuerte, frena un poco
-    for (const car of this.ride.cars) { const dx = car.x - P.x, dy = car.y - P.y, al = dx * this.botDir.x + dy * this.botDir.y, lat = Math.abs(-dx * this.botDir.y + dy * this.botDir.x); if (al > 0 && al < (P.veh === 'truck' ? 24 : 16) && lat < 8 && Math.cos(car.ang) * this.botDir.x + Math.sin(car.ang) * this.botDir.y > .5) { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
+    for (const car of this.ride.cars) { const dx = car.x - P.x, dy = car.y - P.y, al = dx * this.botDir.x + dy * this.botDir.y, lat = Math.abs(-dx * this.botDir.y + dy * this.botDir.x); if (al > 0 && al < (P.veh === 'truck' ? 24 : 16) * WK && lat < 8 * WK && Math.cos(car.ang) * this.botDir.x + Math.sin(car.ang) * this.botDir.y > .5) { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
     // si no avanza en 1 s, retrocede/gira al azar un momento
     const h = this.botHist || (this.botHist = { x: P.x, y: P.y, t: this.t, esc: 0 });
     if (h.esc > this.t) { this.botDir = h.dir; return; }
@@ -198,17 +198,17 @@ class ModeUsuario extends MapMode {
     // hojas verdes sobre las ciclorrutas reales cercanas (hasta ~4 km)
     const L = this.ride.leaves, C = JE.map.cicloIdx, P = this.ride.p, near = [];
     for (let k = 0; k < C.length; k++) { const x = C[k] % MW, y = (C[k] / MW) | 0; if (Math.abs(x * TS - P.x) < 200 * TS && Math.abs(y * TS - P.y) < 200 * TS) near.push(C[k]); }
-    for (let n = 0; n < 70 && near.length; n++) { const i = near.splice(this.rng.i(0, near.length - 1), 1)[0]; L.push({ x: (i % MW) * TS + 4, y: ((i / MW) | 0) * TS + 4 }); }
+    for (let n = 0; n < 70 && near.length; n++) { const i = near.splice(this.rng.i(0, near.length - 1), 1)[0]; L.push({ x: (i % MW) * TS + TS / 2, y: ((i / MW) | 0) * TS + TS / 2 }); }
   }
   onLeaf() { this.leavesGot++; this.score += 5; Save.data.stats.leaves++; }
   nextLeg(from) {
-    const R = this.rng, T = this.turno, minD = [0, 35, 45, 50][T] * SC, maxD = [0, 80, 95, 100][T] * SC;
+    const R = this.rng, T = this.turno, minD = [0, 35, 40, 40][T] * SC, maxD = [0, 80, 85, 80][T] * SC;
     const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
     const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
     const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
     this.ret = R.pick(near).s; this.phase = 'go';
     this.ride.markers = [];
-    const m = this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6, r: Math.max(L.w, L.h) * TS / 2 + 10, col: PAL.amb, label: L.name, num: 1, enter: () => this.reachLandmark() });
+    const m = this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6 * WK, r: Math.max(L.w, L.h) * TS / 2 + 10 * WK, col: PAL.amb, label: L.name, num: 1, enter: () => this.reachLandmark() });
     this.ride.target = m; this.toast('Viaje ' + (this.leg + 1) + ': ve a ' + L.name);
   }
   reachLandmark() {
@@ -230,12 +230,12 @@ class ModeUsuario extends MapMode {
   }
   freeSetup() {
     const todo = PUBLIC_LM().filter(l => !Save.data.postales.includes(l.id));
-    for (const L of todo) this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6, r: Math.max(L.w, L.h) * TS / 2 + 10, col: PAL.amb, label: L.name, enter: (m) => { this.collect(L); this.score += 20; Snd.sfx('star'); this.ride.float('¡Postal!', PAL.amb); this.ride.removeMarker(m); this.pickFreeTarget(); } });
+    for (const L of todo) this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6 * WK, r: Math.max(L.w, L.h) * TS / 2 + 10 * WK, col: PAL.amb, label: L.name, enter: (m) => { this.collect(L); this.score += 20; Snd.sfx('star'); this.ride.float('¡Postal!', PAL.amb); this.ride.removeMarker(m); this.pickFreeTarget(); } });
     this.pickFreeTarget();
   }
   pickFreeTarget() { const P = this.ride.p; let best = null, bd = 1e9; for (const m of this.ride.markers) { const d = dist(m.x, m.y, P.x, P.y); if (d < bd) { bd = d; best = m; } } this.ride.target = best; }
   toast(t) { this.toastMsg = t; if (JE.ui) JE.ui.toast(t); }
-  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => dist(s.x, s.y, P.x, P.y) < 24); }
+  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => dist(s.x, s.y, P.x, P.y) < 24 * WK); }
   tick(dt) {
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
     if (!this.free && this.loanMin() > 100) { this.toast('Pasaron más de 100 minutos: el préstamo se cerró con sanción'); this.end(); }
@@ -463,14 +463,14 @@ class ModeMonitoreo extends Mode {
     // sala de monitoreo por zona (el sistema va de Caldas a Barbosa): T1 centro, T2 sur, T3 norte
     this.zone = [null, 'centro', 'sur', 'norte'][T]; const zl = this.sim.st.filter(s => s.zone === this.zone), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
     this.zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16);
-    const bs = this.zs[0]; this.base = { x: bs.x + 14, y: bs.y + 10 };
+    const bs = this.zs[0]; this.base = { x: bs.x + 14 * WK, y: bs.y + 10 * WK };
     const xs = this.zs.map(s => s.x), ys = this.zs.map(s => s.y), m = 10 * TS; this.crop = { x0: Math.max(0, Math.min(...xs) - m), y0: Math.max(0, Math.min(...ys) - m), x1: Math.min(MW * TS, Math.max(...xs) + m), y1: Math.min(MH * TS, Math.max(...ys) + m) };
-    const dp = this.base; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
+    const dp = this.base; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6 * WK, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
     this.sel = null; this.radio = []; this.flags = new Map(); this.view = { kind: 'map' };
     const sv = [0, 70, 80, 85][T];
     this.goal('Nivel de servicio ≥ ' + sv + '%', true, () => this.serv() * 100 >= sv, () => Math.round(this.serv() * 100) + '%');
     this.goal('Al cierre, ninguna estación vacía', false, () => this.zs.every(s => s.bikes > 0), () => this.zs.filter(s => s.bikes <= 0).length + ' vacías');
-    this.goal('Camiones descargados en la bodega', false, () => this.trucks.every(t => t.load === 0 && !t.path && dist(t.x, t.y, dp.x, dp.y) < 30), () => this.trucks.filter(t => t.load === 0 && !t.path).length + '/' + this.trucks.length);
+    this.goal('Camiones descargados en la bodega', false, () => this.trucks.every(t => t.load === 0 && !t.path && dist(t.x, t.y, dp.x, dp.y) < 30 * WK), () => this.trucks.filter(t => t.load === 0 && !t.path).length + '/' + this.trucks.length);
     this.coach = 'Toca una estación: si está vacía (rojo) LLEVA bicis; si está llena (azul) RECÓGELAS.';
   }
   serv() { const T = Math.max(1, this.sim.elapsed) * this.zs.length; let bad = 0; for (const s of this.zs) bad += s.emptyT + s.fullT; return clamp(1 - bad / T, 0, 1); }
@@ -486,7 +486,7 @@ class ModeMonitoreo extends Mode {
   go(t, x, y) { t.path = [{ x, y: t.y }, { x, y }]; }
   update(dt) {
     this.t += dt; const dm = this.rate * dt; this.clock += dm; this.sim.step(dm, this.clock);
-    const dp = this.base, spd = 60 * dm * (this.tSpd || 1) * (this.has('camion') ? 1.15 : 1);
+    const dp = this.base, spd = 60 * WK * dm * (this.tSpd || 1) * (this.has('camion') ? 1.15 : 1);
     for (const t of this.trucks) {
       if (t.path) {
         const p = t.path[0], d = dist(t.x, t.y, p.x, p.y);

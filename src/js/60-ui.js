@@ -347,7 +347,16 @@ const UI = JE.ui = {
     if (navigator.share) navigator.share({ title: 'Juega EnCicla', text, url }).catch(() => { });
     else { const wa = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); }
   },
-  toast(t) { const el = $('#toast'); if (!el || this.mute) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
+  toast(t) {
+    const el = $('#toast'); if (!el || this.mute) return; const q = this._tq || (this._tq = []);
+    if (q.includes(t) || el.textContent === t && el.classList.contains('on')) return; q.push(t); if (q.length > 3) q.splice(0, q.length - 3);
+    if (!this._tt) this.toastNext();
+  },
+  toastNext() {
+    const el = $('#toast'), q = this._tq || []; const t = q.shift(); if (!t) { el.classList.remove('on'); this._tt = null; return; }
+    el.textContent = t; el.classList.add('on'); const ms = clamp(1600 + t.length * 38, 2200, 4500) * (q.length ? .75 : 1);
+    this._tt = setTimeout(() => { el.classList.remove('on'); this._tt = setTimeout(() => { this._tt = null; this.toastNext(); }, 220); }, ms);
+  },
   postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }
 };
 
@@ -361,7 +370,7 @@ const Game = JE.game = {
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
     $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : isMulti(roleId) ? '' : ' · ' + (role.shifts && role.shifts[turno - 1] ? role.shifts[turno - 1].n.replace(/^Turno (\d) · /, 'T$1 ') : 'T' + turno)); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
-    this.coachT = 0; this._coachEr = 0; $('#coach').textContent = '';
+    this.coachT = 0; this._coachEr = 0; $('#coach').textContent = ''; this.goalOpen = 7; this._gst = null; UI._tq = []; clearTimeout(UI._tt); UI._tt = null; $('#toast').classList.remove('on');
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
@@ -370,7 +379,7 @@ const Game = JE.game = {
     if (!this.mode) return;
     const dt = Math.min(.05, Math.max(0, (t - this.last) / 1000)); this.last = t;
     try {
-      if (!this.paused) this.mode.update(dt);
+      if (!this.paused) { this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
       this.draw(); this.dom(dt);
     } catch (e) { JE.errors.push('loop: ' + e.message); console.error(e); }
     if (this.mode.done) return this.finish();
@@ -399,9 +408,36 @@ const Game = JE.game = {
     const top = !!a.coachB && View.h < 520 && !ride; co.classList.toggle('coachTop', top);
     const cb = top ? '' : 'calc(var(--sab) + ' + (a.coachB || 12) + 'px)'; if (co.style.bottom !== cb) co.style.bottom = cb;
     const gm = $('#goalsMini'), hide = a.hideGoals ? 'none' : ''; if (gm.style.display !== hide) gm.style.display = hide;
-    this.goalT -= dt; if (this.goalT <= 0) { this.goalT = .4; $('#goalsMini').innerHTML = M.free && M.id === 'usuario' ? '' : M.goals.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join(''); }
+    this.goalT -= dt; this.goalOpen = Math.max(0, (this.goalOpen == null ? 7 : this.goalOpen) - dt);
+    if (this.goalT <= 0) {
+      this.goalT = .4; const st = M.goals.map(g => (g.ok() ? 1 : 0) + g.prog()).join('|'); if (st !== this._gst) { if (this._gst != null) this.goalOpen = 3.5; this._gst = st; }
+      const full = this.goalOpen > 0 && ride, L = M.free && M.id === 'usuario' ? [] : full ? M.goals : M.goals.filter(g => g.main);
+      gm.classList.toggle('mini', !full);
+      gm.innerHTML = L.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join('') + (!full && M.goals.length > 1 && ride ? `<div class="more">+${M.goals.length - 1} metas</div>` : '');
+    }
+    this.layout(ride);
     const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
     if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn" data-i="${i}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
+  },
+  /* lo que siente la música: velocidad, racha, pendiente, noche y apuro */
+  moodOf(M) {
+    const a = M.sub || M, R = M.ride; let e = .4, t = 0, k = 0, sl = 0; const n = Art.night(M.clock || 600);
+    if (R && !M.sub) { e = clamp(R.p.v / R.stats_().max, 0, 1); k = R.cicLv || 0; sl = R.sl || 0; }
+    else e = a.queue ? .45 + Math.min(.45, a.queue.length * .09) : .55;
+    const ph = M.phase; if (ph && ph.tasks) { let best = 1e9; for (const x of ph.tasks) if (!x.done && x.due) best = Math.min(best, (x.due - M.clock) / Math.max(.1, M.rate)); t = clamp(1 - best / 25, 0, 1); }
+    if (M.loanMin && !M.free) t = Math.max(t, clamp((M.loanMin() - 40) / 20, 0, 1));
+    if (a.queue && a.patMax) t = Math.max(t, clamp((a.queue.length - 2) / 4, 0, 1));
+    if (a.gauge || (a.state === 'walk' && Math.abs(a.th || 0) > .6)) t = Math.max(t, .7);
+    return { e, t, k, n, sl };
+  },
+  /* acomoda las capas para que nada quede encima de nada: HUD arriba, metas a la izquierda, mapa a la derecha, avisos debajo */
+  layout(ride) {
+    const hud = $('#hud').getBoundingClientRect(), gm = $('#goalsMini'), hb = Math.round(hud.bottom);
+    const gt = (hb + 6) + 'px'; if (gm.style.top !== gt) gm.style.top = gt;
+    const g = gm.style.display === 'none' ? { bottom: hb } : gm.getBoundingClientRect(), mmB = ride ? hb + 8 + Math.round(Math.min(84, View.w * .21) * 1.55) + 22 : hb;
+    View.hudB = hb; View.top = Math.max(hb, Math.round(g.bottom)) + 6;
+    const tt = Math.max(View.top, mmB) + 8 + 'px'; document.documentElement.style.setProperty('--toastTop', tt);
+    const ctrl = ride && Ctrl.kind() !== 'flotante'; document.body.classList.toggle('ctrlR', ctrl);
   },
   pause() {
     if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene

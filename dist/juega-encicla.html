@@ -151,7 +151,7 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .abtn{width:68px;height:68px;border-radius:50%;border:3px solid var(--bl);background:#0a2342e0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fd);font-size:12px;text-transform:uppercase;box-shadow:3px 3px 0 #0008}
 .abtn img{width:32px;height:32px}
 .abtn:active{transform:scale(.94)}
-#toast{position:fixed;left:50%;top:calc(var(--sat) + 150px);transform:translateX(-50%);background:var(--amb);color:var(--az);border:3px solid var(--az);padding:7px 14px;font-weight:800;font-size:14px;box-shadow:4px 4px 0 #0008;max-width:88%;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none;z-index:5}
+#toast{position:fixed;left:50%;top:var(--toastTop,calc(var(--sat) + 150px));transform:translateX(-50%);background:var(--amb);color:var(--az);border:3px solid var(--az);padding:7px 14px;font-weight:800;font-size:14px;box-shadow:4px 4px 0 #0008;max-width:88%;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none;z-index:5}
 #toast.on{opacity:1}
 /* ---------- modal ---------- */
 #modal{position:fixed;inset:0;background:#0a2342d0;display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
@@ -235,6 +235,10 @@ body.big #coach.mini{font-size:14.5px}
 .rklist .li.me{background:#9bd34133;outline:2px solid var(--vd)}.rklist .li.off{opacity:.45}
 .chars{display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow:auto}.char{display:flex;gap:10px;background:#fff;color:#0a2342;border:3px solid #0a2342;padding:8px;box-shadow:3px 3px 0 var(--vd)}
 .char img{width:52px;height:52px;image-rendering:pixelated;border:2px solid #0a2342;flex:none}.char p{margin:2px 0;font-style:italic}.char .pag{color:#0a2342aa}.char small{font-size:12px;line-height:1.3;display:block}
+#goalsMini.mini div{font-size:11.5px;padding:2px 6px}#goalsMini .more{font-size:10.5px;opacity:.7;background:none;border:0;padding:0 2px}
+body.ctrlR #actBar{bottom:calc(var(--sab) + 240px)}
+#goalsMini{max-width:calc(100% - 128px - var(--sal) - var(--sar))}
+body.ctrlR #coach.mini{max-width:calc(100% - 210px - var(--sal))}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -290,7 +294,7 @@ const VALLE_BIN = '7J2LcuO4rq4pks0KZqq69vs/7TaJCwFedHGSWZMe4Jw9q5PYsizL4qcfwI/j8
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '0.7.0', errors: [], headless: false };
+const JE = window.JE = { version: '0.8.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -430,23 +434,50 @@ const Snd = JE.snd = {
       if (!this.timer) { this.nextT = this.ctx.currentTime + .08; this.timer = setInterval(() => this.sched(), 70); }
     } else if (this.timer) { clearInterval(this.timer); this.timer = null; }
   },
+  /* ---------- música interactiva: sigue lo que pasa en el juego ----------
+     mood: e = energía (velocidad), t = tensión (horas límite, filas), k = racha de ciclorruta, n = noche, sl = pendiente.
+     El tempo, la batería, el bajo, la melodía y las capas cambian suave con el mood. Snd.note() toca notas del acorde actual. */
+  mood: { e: .3, t: 0, k: 0, n: 0, sl: 0 }, mt: { e: .3, t: 0, k: 0, n: 0, sl: 0 }, root: 43, spb: .14,
+  setMood(m) { Object.assign(this.mt, m); },
   sched() {
-    const c = this.ctx; if (!c) return; const spb = 60 / 108 / 4;
+    const c = this.ctx; if (!c) return; const M = this.mood;
+    for (const k in this.mt) M[k] += (this.mt[k] - M[k]) * .12;
+    const bpm = 90 + 30 * M.e + 12 * M.t - 10 * M.n + (M.sl < -.04 ? 8 : M.sl > .04 ? -8 : 0), spb = this.spb = 60 / bpm / 4;
     while (this.nextT < c.currentTime + .3) { this.playStep(this.step, this.nextT); this.nextT += spb; this.step = (this.step + 1) % 128; }
   },
+  kick(t, v) { const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + .13); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + .16); o.connect(g); g.connect(this.musG); o.start(t); o.stop(t + .2); },
   playStep(s, t) {
-    const mf = m => 440 * Math.pow(2, (m - 69) / 12);
-    const bar = Math.floor(s / 16) % 8, st = s % 16;
-    const prog = this.theme === 1 ? [45, 41, 43, 40, 45, 41, 43, 44] : [43, 40, 36, 38, 43, 40, 36, 38];
-    const minor = this.theme === 1 ? [1, 0, 0, 1, 1, 0, 0, 0] : [0, 1, 0, 0, 0, 1, 0, 0];
-    const r = prog[bar], third = minor[bar] ? 3 : 4, D = this.musG;
-    if (st === 0 || st === 6 || st === 8 || st === 14) this.tone(mf(r + (st === 6 ? 7 : st === 14 ? 12 : 0)), .18, { t, type: 'triangle', v: .22, dest: D });
-    if (st === 4 || st === 12 || st === 10) [0, third, 7].forEach(i => this.tone(mf(r + 24 + i), .07, { t, type: 'square', v: .035, dest: D }));
-    if (st % 2 === 0) this.hat(t, st % 4 === 0 ? .03 : .018);
-    const pent = [0, 2, 4, 7, 9, 12, 14, 16];
-    const k = h2(s, bar, this.theme * 7 + 3);
-    if ((st % 4 === 2 && k < .55) || (st === 0 && k < .8)) this.tone(mf(r + 24 + pent[Math.floor(h2(s, 5, bar) * pent.length)]), .14, { t, type: 'square', v: .045, dest: D });
-  }
+    const M = this.mood, mf = m => 440 * Math.pow(2, (m - 69) / 12), D = this.musG;
+    const bar = Math.floor(s / 16) % 8, st = s % 16, tense = M.t > .55 || this.theme === 1;
+    const prog = tense ? [45, 41, 43, 40, 45, 41, 43, 44] : [43, 40, 36, 38, 43, 40, 36, 38], minor = tense ? [1, 0, 0, 1, 1, 0, 0, 0] : [0, 1, 0, 0, 0, 1, 0, 0];
+    const r = this.root = prog[bar], third = minor[bar] ? 3 : 4; this.third = third;
+    // bajo
+    if (st === 0 || st === 6 || st === 8 || st === 14) this.tone(mf(r + (st === 6 ? 7 : st === 14 ? 12 : 0)), .18, { t, type: 'triangle', v: .2 * (1 - .35 * M.n), dest: D });
+    // bombo: más golpes con más velocidad
+    if (st % 8 === 0 || (M.e > .65 && st % 4 === 0)) this.kick(t, .1 + .12 * M.e);
+    // acordes
+    if (st === 4 || st === 12 || (M.e > .4 && st === 10)) [0, third, 7].forEach(i => this.tone(mf(r + 24 + i), .07, { t, type: 'square', v: .018 + .025 * M.e, dest: D }));
+    // platillos: densidad según la energía
+    const hd = M.e > .75 ? 1 : M.e > .35 ? 2 : 4; if (st % hd === 0) this.hat(t, (st % 4 === 0 ? .03 : .018) * (.6 + .6 * M.e));
+    // melodía: aparece con velocidad o racha; en bajada sube de registro, en subida baja
+    const pent = [0, 2, 4, 7, 9, 12, 14, 16], k = h2(s, bar, this.theme * 7 + 3), reg = M.sl < -.04 ? 31 : M.sl > .04 ? 19 : 24;
+    const play = M.k >= 1 || M.e > .5 ? (st % 2 === 0 && k < .35 + .15 * M.k) || (st === 0 && k < .8) : (st % 4 === 2 && k < .4);
+    if (play) this.tone(mf(r + reg + pent[Math.floor(h2(s, 5, bar) * pent.length)]), .14, { t, type: 'square', v: .035 + .012 * M.k, dest: D });
+    // racha x3/x4: arpegio rápido de fiesta
+    if (M.k >= 2.5 && st % 2 === 1) this.tone(mf(r + 36 + [0, third, 7, 12][(st >> 1) % 4]), .06, { t, type: 'triangle', v: .025, dest: D });
+    // tensión: pulso agudo que avisa que se acaba el tiempo
+    if (M.t > .5 && st % 4 === 0) this.tone(mf(r + 37), .05, { t, type: 'square', v: .012 + .02 * M.t, dest: D });
+    // noche: colchón suave
+    if (M.n > .5 && st === 0) [0, third, 7].forEach(i => this.tone(mf(r + 12 + i), 1.6, { t, type: 'sine', v: .022, dest: D }));
+  },
+  /* nota interactiva del acorde actual, a tiempo con la música (si está apagada suena ya) */
+  note(deg, o = {}) {
+    const c = this.ctx; if (!c || JE.headless || !Save.data.settings.sfx) return; this.resume();
+    const mf = m => 440 * Math.pow(2, (m - 69) / 12), sc = [0, 2, this.third || 4, 7, 9], q = sc[((deg % 5) + 5) % 5] + 12 * Math.floor(deg / 5);
+    const t = this.timer ? Math.max(c.currentTime + .01, this.nextT) : c.currentTime;
+    this.tone(mf((this.root || 43) + 36 + q), o.d || .2, { t, type: o.type || 'triangle', v: o.v || .07, dest: this.timer ? this.musG : this.out });
+  },
+  fanfare() { for (let i = 0; i < 4; i++) setTimeout(() => this.note(i * 2, { v: .06, d: .22 }), i * (this.spb || .14) * 1000); }
 };
 
 /* ---------- entrada: teclado + joystick flotante ---------- */
@@ -469,7 +500,7 @@ window.addEventListener('blur', () => { Input.keys = {}; Input.joy.on = false; }
 
 /* ---------- vista: búfer pixelado + capa nítida para textos ---------- */
 const View = JE.view = {
-  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150, subX: 0, subY: 0,
+  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150, subX: 0, subY: 0, top: 52,
   init() {
     this.cv = $('#cv'); this.ctx = this.cv.getContext('2d');
     this.buf = document.createElement('canvas'); this.b = this.buf.getContext('2d');
@@ -486,7 +517,7 @@ const View = JE.view = {
   setMode(kind, dw, dh) { this.kind = kind; this.dw = dw || 200; this.dh = dh || 150; this.apply(); },
   apply() {
     let s;
-    if (this.kind === 'map') { s = Math.round(Math.min(this.w, this.h) / 125); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / 330)); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 2, 8); }
+    if (this.kind === 'map') { s = Math.round(Math.min(this.w, this.h) / 185); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / 460)); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 1, 8); }   // casillas de 16 px: se ve ~12 casillas (240 m) de ancho en el celular
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
@@ -928,7 +959,7 @@ const CABLES = [
    Casillas de 20 m hechas con datos abiertos (tools/geo/build.py): calles, ciclorrutas, río, quebradas,
    parques, municipios, Metro, tranvía y relieve. Fila 0 = norte. Ver docs/GUIA.md §4.
    ===================================================================== */
-const VM = VALLE_META, MW = VM.W, MH = VM.H, TS = 8, CH = 32, SC = 1.35, ES = VM.es;
+const VM = VALLE_META, MW = VM.W, MH = VM.H, TS = 16, CH = 16, SC = 1.35, ES = VM.es, WK = TS / 8;   // WK: escala del mundo frente al diseño original de 8 px
 const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16 };
 const SOLID = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0];
 const TRUCK_OK = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0];
@@ -998,7 +1029,7 @@ const CityMap = JE.map = {
     this.stations = ESTACIONES.map((s, i) => this.carveStation(s, i)).filter(Boolean); this.stations.forEach((s, i) => s.i = i);
     this.buildLights(); this.buildLanes(); this.buildRail(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h + .5) * TS, name: 'Casa EnCicla' };
-    this.poi = {}; for (const k in PUNTOS) { const [la, lo, n] = PUNTOS[k], p = geoP(la, lo), o = this.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), k !== 'campus'); this.poi[k] = { x: o.x * TS + 4, y: o.y * TS + 4, name: n }; }
+    this.poi = {}; for (const k in PUNTOS) { const [la, lo, n] = PUNTOS[k], p = geoP(la, lo), o = this.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), k !== 'campus'); this.poi[k] = { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, name: n }; }
     this.poi.casa = Object.assign({}, this.depot, { name: PUNTOS.casa[2] });
   },
   /* ---------- relieve ---------- */
@@ -1078,7 +1109,7 @@ const CityMap = JE.map = {
     for (const [a, b] of VM.lights) {
       const tx = Math.floor(a / 4), ty = Math.floor(b / 4); if (!road(this.get(tx, ty))) continue;
       const id = this.lights.length, L = { id, x: (a / 4) * TS, y: (b / 4) * TS, off: h2(tx, ty, 77) * 10 };
-      L.x0 = L.x - 12; L.x1 = L.x + 12; L.y0 = L.y - 12; L.y1 = L.y + 12; this.lights.push(L);
+      L.x0 = L.x - 12 * WK; L.x1 = L.x + 12 * WK; L.y0 = L.y - 12 * WK; L.y1 = L.y + 12 * WK; this.lights.push(L);
       for (let y = ty - 1; y <= ty + 1; y++) for (let x = tx - 1; x <= tx + 1; x++) if (road(this.get(x, y))) this.lightAt.set(this.idx(x, y), id);
     }
   },
@@ -1100,16 +1131,16 @@ const CityMap = JE.map = {
     return { d: bd, s: bs };
   },
   buildLanes() {
-    const G = 64, cells = this.laneGrid = new Map(), SPD = { t: 46, p: 36, s: 30 };
+    const G = 64, cells = this.laneGrid = new Map(), SPD = { t: 46 * WK, p: 36 * WK, s: 30 * WK };
     const add = (ln) => { this.lanes.push(ln); const seen = new Set(); for (const p of ln.pts) { const k = Math.floor(p.x / TS / G) + ',' + Math.floor(p.y / TS / G); if (seen.has(k)) continue; seen.add(k); (cells.get(k) || cells.set(k, []).get(k)).push(ln); } };
     for (const l of VM.lanes) {
-      const P = this.poly(q4(l.p)), base = { pts: P.pts, cum: P.cum, len: P.len, spd: SPD[l.c] || 30, name: l.n, cv: CICLOVIA_AV.includes(l.n), cls: l.c };
-      if (l.o) add(Object.assign({ dir: 1, off: 0 }, base)); else { add(Object.assign({ dir: 1, off: 3 }, base)); add(Object.assign({ dir: -1, off: -3 }, base)); }
+      const P = this.poly(q4(l.p)), base = { pts: P.pts, cum: P.cum, len: P.len, spd: SPD[l.c] || 30 * WK, name: l.n, cv: CICLOVIA_AV.includes(l.n), cls: l.c };
+      if (l.o) add(Object.assign({ dir: 1, off: 0 }, base)); else { add(Object.assign({ dir: 1, off: 3 * WK }, base)); add(Object.assign({ dir: -1, off: -3 * WK }, base)); }
     }
     // semáforos sobre cada carril
     for (const ln of this.lanes) {
       ln.lights = [];
-      for (const g of this.lightsNear(ln)) { const pr = this.project(ln, g.x, g.y); if (pr.d < 14) { const q = this.at(ln, pr.s), ax = Math.abs(Math.cos(q.a)) > Math.abs(Math.sin(q.a)) ? 0 : 1; ln.lights.push({ p0: pr.s - 12, p1: pr.s + 12, g, ax }); } }
+      for (const g of this.lightsNear(ln)) { const pr = this.project(ln, g.x, g.y); if (pr.d < 14 * WK) { const q = this.at(ln, pr.s), ax = Math.abs(Math.cos(q.a)) > Math.abs(Math.sin(q.a)) ? 0 : 1; ln.lights.push({ p0: pr.s - 12 * WK, p1: pr.s + 12 * WK, g, ax }); } }
       ln.lights.sort((a, b) => a.p0 - b.p0);
     }
   },
@@ -1206,34 +1237,34 @@ const CityMap = JE.map = {
     for (const ln of this.lanesNear(px0 + S / 2, py0 + S / 2)) {
       if (seen.has(ln.pts) || ln.dir < 0) continue; seen.add(ln.pts);
       const col = ln.cls === 't' ? '#ffd166' : '#d8d8d0';
-      let hint = 0; for (let s = 0; s < ln.len; s += 1) { if (s % 8 >= 4) continue; const q = this.at(ln, s, 0, hint); hint = q.i; if (q.x < px0 - 2 || q.y < py0 - 2 || q.x > px0 + S + 2 || q.y > py0 + S + 2) continue; prect(c, q.x - px0, q.y - py0, 1, 1, col); }
+      let hint = 0; for (let s = 0; s < ln.len; s += 1) { if (s % 14 >= 7) continue; const q = this.at(ln, s, 0, hint); hint = q.i; if (q.x < px0 - 2 || q.y < py0 - 2 || q.x > px0 + S + 2 || q.y > py0 + S + 2) continue; prect(c, q.x - px0, q.y - py0, 1, 1, col); }
     }
     // cebras junto a los semáforos
     for (const g of this.lights) {
       if (g.x < px0 - 20 || g.y < py0 - 20 || g.x > px0 + S + 20 || g.y > py0 + S + 20) continue;
-      for (const [dx, dy] of [[-15, 0], [15, 0], [0, -15], [0, 15]]) { const x = g.x + dx - px0, y = g.y + dy - py0; if (!TRUCK_OK[this.get(Math.floor((g.x + dx) / TS), Math.floor((g.y + dy) / TS))]) continue; for (let k = -4; k <= 4; k += 2) dx ? prect(c, x - 1, y + k, 3, 1, '#e8e8e0') : prect(c, x + k, y - 1, 1, 3, '#e8e8e0'); }
+      for (const [dx, dy] of [[-15 * WK, 0], [15 * WK, 0], [0, -15 * WK], [0, 15 * WK]]) { const x = g.x + dx - px0, y = g.y + dy - py0; if (!TRUCK_OK[this.get(Math.floor((g.x + dx) / TS), Math.floor((g.y + dy) / TS))]) continue; for (let k = -6; k <= 6; k += 3) dx ? prect(c, x - 2, y + k, 5, 2, '#e8e8e0') : prect(c, x + k, y - 2, 2, 5, '#e8e8e0'); }
     }
-    LANDMARKS.forEach((L, i) => { if (L.x + L.w < x0 || L.x > x0 + CH || L.y + L.h < y0 || L.y > y0 + CH) return; c.drawImage(this.landmarkCanvas(i), (L.x - x0) * TS, (L.y - y0) * TS); });
+    c.imageSmoothingEnabled = false; LANDMARKS.forEach((L, i) => { if (L.x + L.w < x0 || L.x > x0 + CH || L.y + L.h < y0 || L.y > y0 + CH) return; c.drawImage(this.landmarkCanvas(i), (L.x - x0) * TS, (L.y - y0) * TS, L.w * TS, L.h * TS); });
     // árboles
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) {
       const v = this.get(x, y), r = h2(x, y, 5); let rad = 0;
-      if (v === TT.GRASS && r < .3 && !this.lid.has(this.idx(x, y))) rad = 3 + (r < .1 ? 1 : 0);
-      else if (v === TT.WALK && r < .1) rad = 2;
+      if (v === TT.GRASS && r < .3 && !this.lid.has(this.idx(x, y))) rad = 5 + (r < .1 ? 2 : 0);
+      else if (v === TT.WALK && r < .12) rad = 4;
       if (!rad) continue;
-      const px = (x - x0) * TS + 4, py = (y - y0) * TS + 4, g = h2(x, y, 6), col = g < .05 ? '#f2c230' : g < .09 ? '#e88ab8' : '#3f8a3f';
+      const px = (x - x0) * TS + TS / 2, py = (y - y0) * TS + TS / 2, g = h2(x, y, 6), col = g < .05 ? '#f2c230' : g < .09 ? '#e88ab8' : '#3f8a3f';
       pdisc(c, px + 1, py + 1, rad, '#0003'); pdisc(c, px, py, rad, col); pdisc(c, px - 1, py - 1, Math.max(1, rad - 2), g < .09 ? '#fff3a066' : '#5fae4f');
     }
     // tranvía (rieles) y viaductos del metro
     const inC = q => q.x > px0 - 12 && q.y > py0 - 12 && q.x < px0 + S + 12 && q.y < py0 + S + 12;
-    const T = this.tram; for (let s = 0; s < T.len; s += 1) { const q = this.at(T, s); if (!inC(q)) continue; const nx = -Math.sin(q.a), ny = Math.cos(q.a); prect(c, q.x - px0 + nx * 2, q.y - py0 + ny * 2, 1, 1, '#a7adb5'); prect(c, q.x - px0 - nx * 2, q.y - py0 - ny * 2, 1, 1, '#a7adb5'); if (s % 4 === 0) prect(c, q.x - px0, q.y - py0, 1, 1, '#5d5446'); }
+    const T = this.tram; for (let s = 0; s < T.len; s += 1) { const q = this.at(T, s); if (!inC(q)) continue; const nx = -Math.sin(q.a), ny = Math.cos(q.a); if (s % 5 === 0) for (let k = -5; k <= 5; k++) prect(c, q.x - px0 + nx * k, q.y - py0 + ny * k, 1, 1, '#5d5446'); prect(c, q.x - px0 + nx * 3, q.y - py0 + ny * 3, 1, 1, '#a7adb5'); prect(c, q.x - px0 - nx * 3, q.y - py0 - ny * 3, 1, 1, '#a7adb5'); }
     for (const L of [this.lineA, this.lineB]) {
       for (let s = 0; s < L.len; s += 1) {
         const q = this.at(L, s); if (!inC(q)) continue; const nx = -Math.sin(q.a), ny = Math.cos(q.a), x = q.x - px0, y = q.y - py0;
-        for (let k = -3; k <= 3; k++) prect(c, x + nx * k + 1, y + ny * k + 2, 1, 1, '#00000022');
-        for (let k = -3; k <= 3; k++) prect(c, x + nx * k, y + ny * k, 1, 1, Math.abs(k) === 2 ? '#7d838c' : '#c9ccd1');
-        if (s % 48 === 0) prect(c, x - 1, y - 1, 3, 3, '#00000044');
+        for (let k = -6; k <= 6; k++) prect(c, x + nx * k + 3, y + ny * k + 4, 1, 1, '#00000022');
+        for (let k = -6; k <= 6; k++) prect(c, x + nx * k, y + ny * k, 1, 1, Math.abs(k) === 6 ? '#8d939c' : Math.abs(k) === 3 ? '#7d838c' : '#c9ccd1');
+        if (s % 64 === 0) prect(c, x - 2, y - 2, 5, 5, '#00000044');
       }
-      for (const st of L.st) { const q = this.at(L, st.s); if (!inC(q)) continue; c.save(); c.translate(Math.round(q.x - px0), Math.round(q.y - py0)); c.rotate(Math.round(q.a / (Math.PI / 4)) * Math.PI / 4); prect(c, -10, -6, 20, 12, '#e8ebef'); prect(c, -10, -6, 20, 2, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -10, 4, 20, 2, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -8, -2, 16, 4, '#7d838c'); c.restore(); }
+      for (const st of L.st) { const q = this.at(L, st.s); if (!inC(q)) continue; c.save(); c.translate(Math.round(q.x - px0), Math.round(q.y - py0)); c.rotate(Math.round(q.a / (Math.PI / 4)) * Math.PI / 4); prect(c, -20, -11, 40, 22, '#e8ebef'); prect(c, -20, -11, 40, 3, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -20, 8, 40, 3, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -16, -3, 32, 6, '#7d838c'); prect(c, -18, -8, 4, 4, '#f4f4f4'); prect(c, 14, 4, 4, 4, '#f4f4f4'); c.restore(); }
     }
     this.relief(c, x0, y0);
   },
@@ -1251,67 +1282,103 @@ const CityMap = JE.map = {
     c.putImageData(img, 0, 0);
   },
   drawTile(c, x, y, px, py) {
+    // casilla de 16 px = 20 m. Calles con andén y sardinel, esquinas redondeadas; edificios por manzana.
     const v = this.get(x, y), r = h2(x, y), R = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(px + a, py + b, w, h); };
-    const rd = vv => vv === TT.ROAD || vv === TT.AVE || vv === TT.AUTO || vv === TT.BRIDGE;
+    const rd = vv => vv === TT.ROAD || vv === TT.AVE || vv === TT.AUTO || vv === TT.BRIDGE || vv === TT.DEPOT;
     switch (v) {
-      case TT.GRASS: R(0, 0, 8, 8, r < .5 ? '#5d9c4b' : '#62a350'); if (h2(x, y, 1) < .6) R((h2(x, y, 2) * 7) | 0, (h2(x, y, 3) * 7) | 0, 1, 1, '#78b862'); if (h2(x, y, 4) < .05) R(3, 3, 1, 1, h2(x, y, 7) < .5 ? '#ffd84a' : '#ff8fc7'); break;
-      case TT.MOUNT: R(0, 0, 8, 8, '#2f6b3a'); for (let i = 0; i < 3; i++) { const a = (h2(x, y, 10 + i) * 7) | 0, b = (h2(x, y, 20 + i) * 7) | 0; R(a, b, 2, 2, i ? '#275a31' : '#3a7d44'); } if (r < .02) R(3, 2, 2, 2, '#c9683f'); break;
-      case TT.BRICK: {
-        const cols = ['#b45a36', '#c9683f', '#8e959c', '#d8d2c4', '#a84f30', '#9c6b4e'];
-        for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { const col = cols[(h2(x * 2 + i, y * 2 + j, 3) * cols.length) | 0]; R(i * 4, j * 4, 4, 4, col); R(i * 4 + 3, j * 4, 1, 4, shade(col, -.25)); R(i * 4, j * 4 + 3, 4, 1, shade(col, -.25)); if (h2(x * 2 + i, y * 2 + j, 4) < .2) R(i * 4 + 1, j * 4 + 1, 1, 1, '#2b2f38'); }
+      case TT.GRASS: {
+        R(0, 0, 16, 16, r < .5 ? '#5d9c4b' : '#62a350');
+        for (let i = 0; i < 4; i++) R((h2(x, y, 2 + i) * 14) | 0, (h2(x, y, 9 + i) * 14) | 0, 2, 1, '#78b862');
+        if (h2(x, y, 4) < .06) { R(5, 6, 1, 1, h2(x, y, 7) < .5 ? '#ffd84a' : '#ff8fc7'); R(10, 11, 1, 1, '#fff3a0'); }
+        break;
+      }
+      case TT.MOUNT: {
+        R(0, 0, 16, 16, '#2f6b3a');
+        for (let i = 0; i < 3; i++) { const a = 3 + ((h2(x, y, 10 + i) * 10) | 0), b = 3 + ((h2(x, y, 20 + i) * 10) | 0); pdisc(c, px + a + 1, py + b + 1, 3, '#245530'); pdisc(c, px + a, py + b, 3, i ? '#3a7d44' : '#34763f'); R(a - 1, b - 2, 2, 1, '#4a8f4f'); }
+        if (r < .015) R(7, 6, 3, 3, '#c9683f');
+        break;
+      }
+      case TT.BRICK: {   // casas de ladrillo de las laderas, con terraza y tanque de agua
+        const cols = ['#b45a36', '#c9683f', '#a84f30', '#9c6b4e', '#d8d2c4', '#8e959c'];
+        for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+          const k = h2(x * 2 + i, y * 2 + j, 3), col = cols[(k * cols.length) | 0], X0 = i * 8, Y0 = j * 8;
+          R(X0, Y0, 8, 8, col); R(X0, Y0 + 7, 8, 1, shade(col, -.3)); R(X0 + 7, Y0, 1, 8, shade(col, -.25)); R(X0, Y0, 8, 1, shade(col, .18));
+          if (k < .35) R(X0 + 1, Y0 + 3, 6, 1, shade(col, -.15));
+          if (h2(x * 2 + i, y * 2 + j, 4) < .25) { R(X0 + 2, Y0 + 2, 3, 3, '#3f6fd8'); R(X0 + 2, Y0 + 2, 3, 1, '#7aa0ef'); }
+          else if (h2(x * 2 + i, y * 2 + j, 5) < .2) R(X0 + 4, Y0 + 4, 2, 2, '#2b2f38');
+        }
         break;
       }
       case TT.BLDG: {
         const d = this.district(x, y), lk = (xx, yy) => (Math.floor((xx + ((h2(Math.floor(yy / 3), 9) * 2) | 0)) / 3)) * 1000 + Math.floor(yy / 3);
         const my = lk(x, y), pal = d === 'centro' ? ['#c9c5bd', '#b3b7bd', '#8fa6bf', '#d8d4cb', '#a5aab2', '#c0623b'] : d === 'poblado' ? ['#e6e6e1', '#9fb8cf', '#c9ced6', '#7f9cb8', '#d9d4c8'] : d === 'laureles' ? ['#c0623b', '#b4552f', '#cf7a4f', '#d9d2c4', '#a85b3c'] : ['#b9653f', '#c9683f', '#9aa0a6', '#d8d2c4', '#a84f30', '#c4b49a'];
         const hh = h2(my, 7, 1), col = pal[(hh * pal.length) | 0], tall = (d === 'centro' || d === 'poblado') && h2(my, 8, 2) < .4;
-        R(0, 0, 8, 8, col);
-        if (tall) { for (let i = 1; i < 8; i += 3) R(i, 1, 1, 6, shade(col, -.12)); } else if (h2(x, y, 9) < .18) R(2 + ((h2(x, y, 8) * 3) | 0), 2, 2, 2, '#2b2f38');
+        R(0, 0, 16, 16, col);
+        if (tall) { for (let i = 2; i < 16; i += 4) R(i, 2, 2, 12, shade(col, -.12)); }
+        else { const k = h2(x, y, 9); if (k < .15) { R(4, 4, 4, 4, '#3f6fd8'); R(4, 4, 4, 1, '#7aa0ef'); } else if (k < .3) { R(9, 5, 3, 2, '#8e959c'); R(9, 5, 3, 1, '#c9ced6'); } else if (k < .36) R(3, 9, 6, 4, '#4f8f45'); }
         const n = (xx, yy) => this.get(xx, yy) === TT.BLDG && lk(xx, yy) === my;
-        if (!n(x, y - 1)) R(0, 0, 8, 1, shade(col, .25)); if (!n(x - 1, y)) R(0, 0, 1, 8, shade(col, .15));
-        if (!n(x, y + 1)) R(0, 7, 8, 1, shade(col, tall ? -.5 : -.3)); if (!n(x + 1, y)) R(7, 0, 1, 8, shade(col, tall ? -.45 : -.25));
+        if (!n(x, y - 1)) R(0, 0, 16, 2, shade(col, .25)); if (!n(x - 1, y)) R(0, 0, 2, 16, shade(col, .15));
+        if (!n(x, y + 1)) { R(0, 14, 16, 2, shade(col, tall ? -.5 : -.3)); } if (!n(x + 1, y)) R(14, 0, 2, 16, shade(col, tall ? -.45 : -.25));
         break;
       }
       case TT.ROAD: case TT.AVE: case TT.AUTO: case TT.BRIDGE: case TT.DEPOT: {
-        // calzada "autoajustada": la casilla mide 20 m y una calle real ~10 m, así que el asfalto ocupa el centro
-        // y se une con las casillas vecinas; lo demás es andén. En avenidas anchas las casillas se funden.
         const base = v === TT.AUTO ? '#30364a' : v === TT.DEPOT ? '#8d97a5' : v === TT.AVE ? '#3a4152' : '#3d4454';
+        if (v === TT.DEPOT) { R(0, 0, 16, 16, base); if ((x + y) % 2 === 0) R(2, 7, 12, 1, '#ffd166'); break; }
         const n = [this.get(x, y - 1), this.get(x + 1, y), this.get(x, y + 1), this.get(x - 1, y)].map(rd), d = [rd(this.get(x + 1, y - 1)), rd(this.get(x + 1, y + 1)), rd(this.get(x - 1, y + 1)), rd(this.get(x - 1, y - 1))];
-        const wide = v !== TT.ROAD, a0 = wide ? 1 : 2, a1 = wide ? 7 : 6, side = v === TT.BRIDGE ? '#c9ccd1' : '#a9a596';
-        if (v === TT.DEPOT) { R(0, 0, 8, 8, base); if ((x + y) % 3 === 0) R(1, 3, 6, 1, '#ffd166'); break; }
-        R(0, 0, 8, 8, side); R(a0, a0, a1 - a0, a1 - a0, base);
-        if (n[0]) R(a0, 0, a1 - a0, a0, base); if (n[2]) R(a0, a1, a1 - a0, 8 - a1, base); if (n[3]) R(0, a0, a0, a1 - a0, base); if (n[1]) R(a1, a0, 8 - a1, a1 - a0, base);
-        if (n[0] && n[1] && d[0]) R(a1, 0, 8 - a1, a0, base); if (n[1] && n[2] && d[1]) R(a1, a1, 8 - a1, 8 - a1, base); if (n[2] && n[3] && d[2]) R(0, a1, a0, 8 - a1, base); if (n[3] && n[0] && d[3]) R(0, 0, a0, a0, base);
-        if (r < .3) R(3 + ((h2(x, y, 2) * 2) | 0), 3 + ((h2(x, y, 3) * 2) | 0), 1, 1, shade(base, .08));
+        const a0 = v === TT.ROAD ? 4 : v === TT.AVE ? 2 : 1, a1 = 16 - a0, side = v === TT.BRIDGE ? '#c9ccd1' : '#bab6a8', curb = v === TT.BRIDGE ? '#9aa0a8' : '#8d897c';
+        if (v === TT.BRIDGE) R(0, 0, 16, 16, '#3d7c8c'); else R(0, 0, 16, 16, side);
+        // asfalto: núcleo + brazos hacia las vías vecinas + rellenos de esquina
+        const rects = [[a0, a0, a1 - a0, a1 - a0]];
+        if (n[0]) rects.push([a0, 0, a1 - a0, a0]); if (n[2]) rects.push([a0, a1, a1 - a0, 16 - a1]); if (n[3]) rects.push([0, a0, a0, a1 - a0]); if (n[1]) rects.push([a1, a0, 16 - a1, a1 - a0]);
+        if (n[0] && n[1] && d[0]) rects.push([a1, 0, 16 - a1, a0]); if (n[1] && n[2] && d[1]) rects.push([a1, a1, 16 - a1, 16 - a1]); if (n[2] && n[3] && d[2]) rects.push([0, a1, a0, 16 - a1]); if (n[3] && n[0] && d[3]) rects.push([0, 0, a0, a0]);
+        if (v !== TT.BRIDGE) for (const [a, b, w, h] of rects) { const X0 = Math.max(0, a - 1), Y0 = Math.max(0, b - 1); R(X0, Y0, Math.min(16, a + w + 1) - X0, Math.min(16, b + h + 1) - Y0, curb); }
+        for (const [a, b, w, h] of rects) R(a, b, w, h, base);
+        // esquinas redondeadas: el andén se curva donde dos calles doblan
+        if (a0 > 1) {
+          const fil = (cx, cy) => { R(cx, cy, 1, 1, base); };
+          if (n[0] && n[1] && !d[0]) { fil(a1, a0 - 1); fil(a1, a0 - 2); fil(a1 + 1, a0 - 1); }
+          if (n[1] && n[2] && !d[1]) { fil(a1, a1); fil(a1, a1 + 1); fil(a1 + 1, a1); }
+          if (n[2] && n[3] && !d[2]) { fil(a0 - 1, a1); fil(a0 - 1, a1 + 1); fil(a0 - 2, a1); }
+          if (n[3] && n[0] && !d[3]) { fil(a0 - 1, a0 - 1); fil(a0 - 1, a0 - 2); fil(a0 - 2, a0 - 1); }
+          // núcleo sin salida por dos lados: la esquina exterior del asfalto se redondea
+          if (!n[0] && !n[3]) R(a0, a0, 1, 1, curb); if (!n[0] && !n[1]) R(a1 - 1, a0, 1, 1, curb); if (!n[2] && !n[1]) R(a1 - 1, a1 - 1, 1, 1, curb); if (!n[2] && !n[3]) R(a0, a1 - 1, 1, 1, curb);
+        }
+        if (r < .35) R(5 + ((h2(x, y, 2) * 6) | 0), 5 + ((h2(x, y, 3) * 6) | 0), 1, 1, shade(base, .1));
+        if (r > .93) R(4 + ((h2(x, y, 6) * 7) | 0), 6, 2, 1, shade(base, -.15));   // parche
         if (v === TT.AUTO) { const yl = '#ffd166'; if (!n[0]) R(a0, a0, a1 - a0, 1, yl); if (!n[2]) R(a0, a1 - 1, a1 - a0, 1, yl); if (!n[3]) R(a0, a0, 1, a1 - a0, yl); if (!n[1]) R(a1 - 1, a0, 1, a1 - a0, yl); }
-        if (v === TT.BRIDGE) { const w = '#3d7c8c'; if (!n[0] && !n[2]) { R(0, 0, 8, 1, w); R(0, 7, 8, 1, w); } if (!n[1] && !n[3]) { R(0, 0, 1, 8, w); R(7, 0, 1, 8, w); } }
+        if (v === TT.BRIDGE) { const w = '#dfe3e8'; if (!n[0] && !n[2]) { R(0, a0 - 1, 16, 1, w); R(0, a1, 16, 1, w); } if (!n[1] && !n[3]) { R(a0 - 1, 0, 1, 16, w); R(a1, 0, 1, 16, w); } }
         break;
       }
       case TT.WALK: {
-        R(0, 0, 8, 8, '#bdb9ab'); R(0, 3, 8, 1, '#b0ac9d'); R(3, 0, 1, 8, '#b0ac9d');
-        if (rd(this.get(x, y - 1))) R(0, 0, 8, 1, '#8f8b7e'); if (rd(this.get(x, y + 1))) R(0, 7, 8, 1, '#8f8b7e');
-        if (rd(this.get(x - 1, y))) R(0, 0, 1, 8, '#8f8b7e'); if (rd(this.get(x + 1, y))) R(7, 0, 1, 8, '#8f8b7e');
+        R(0, 0, 16, 16, '#c2beb0'); for (let i = 0; i < 16; i += 4) { R(0, i, 16, 1, '#b4b0a2'); R(((i / 4) & 1) * 2 + i % 8, 0, 1, 16, '#b8b4a6'); }
+        if (rd(this.get(x, y - 1))) R(0, 0, 16, 2, '#8d897c'); if (rd(this.get(x, y + 1))) R(0, 14, 16, 2, '#8d897c');
+        if (rd(this.get(x - 1, y))) R(0, 0, 2, 16, '#8d897c'); if (rd(this.get(x + 1, y))) R(14, 0, 2, 16, '#8d897c');
         break;
       }
-      case TT.STEPS: R(0, 0, 8, 8, '#a8a396'); for (let i = 1; i < 8; i += 2) R(0, i, 8, 1, '#8c877a'); R(0, 0, 1, 8, '#7a7568'); R(7, 0, 1, 8, '#7a7568'); break;
+      case TT.STEPS: R(0, 0, 16, 16, '#a8a396'); for (let i = 1; i < 16; i += 3) R(1, i, 14, 1, '#8c877a'); R(0, 0, 1, 16, '#6f6a5e'); R(15, 0, 1, 16, '#6f6a5e'); R(2, 0, 1, 16, '#c9c4b6'); break;
       case TT.CICLO: {
-        R(0, 0, 8, 8, '#4a9a2c'); if (r < .4) R((h2(x, y, 2) * 7) | 0, (h2(x, y, 3) * 7) | 0, 1, 1, '#55a634');
-        const cc = vv => vv === TT.CICLO;
-        if (!cc(this.get(x, y - 1))) R(0, 0, 8, 1, '#9bd341'); if (!cc(this.get(x, y + 1))) R(0, 7, 8, 1, '#9bd341');
-        if (!cc(this.get(x - 1, y))) R(0, 0, 1, 8, '#9bd341'); if (!cc(this.get(x + 1, y))) R(7, 0, 1, 8, '#9bd341');
-        if (h2(x, y, 31) < .045) { R(2, 3, 1, 2, '#eaf7d4'); R(5, 3, 1, 2, '#eaf7d4'); R(3, 2, 2, 1, '#eaf7d4'); }
+        R(0, 0, 16, 16, '#4a9a2c'); if (r < .4) R(3 + ((h2(x, y, 2) * 10) | 0), 3 + ((h2(x, y, 3) * 10) | 0), 1, 1, '#55a634');
+        const cc = vv => vv === TT.CICLO, N = cc(this.get(x, y - 1)), S = cc(this.get(x, y + 1)), W = cc(this.get(x - 1, y)), E = cc(this.get(x + 1, y));
+        if (!N) R(0, 0, 16, 2, '#9bd341'); if (!S) R(0, 14, 16, 2, '#9bd341'); if (!W) R(0, 0, 2, 16, '#9bd341'); if (!E) R(14, 0, 2, 16, '#9bd341');
+        if ((N || S) && !(W || E)) { if ((y & 1) === 0) R(7, 3, 2, 6, '#eaf7d4'); } else if ((W || E) && !(N || S)) { if ((x & 1) === 0) R(3, 7, 6, 2, '#eaf7d4'); }
+        if (h2(x, y, 31) < .05) { pring(c, px + 5, py + 9, 2, '#eaf7d4'); pring(c, px + 11, py + 9, 2, '#eaf7d4'); R(6, 6, 5, 1, '#eaf7d4'); }
         break;
       }
-      case TT.WATER: R(0, 0, 8, 8, '#3d7c8c'); if (r < .5) R((h2(x, y, 2) * 5) | 0, (h2(x, y, 3) * 7) | 0, 3, 1, '#5b9aa8'); if (r > .85) R(1, 5, 2, 1, '#7fb6c0'); break;
-      case TT.CANAL: R(0, 0, 8, 8, '#4f8796'); R(0, 0, 8, 1, '#9a9a92'); R(0, 7, 8, 1, '#9a9a92'); if (r < .4) R(2, 3, 3, 1, '#6aa3b0'); break;
-      case TT.PLAZA: R(0, 0, 8, 8, '#ddd3b8'); if ((x + y) & 1) R(0, 0, 4, 4, '#d3c8aa'), R(4, 4, 4, 4, '#d3c8aa'); break;
+      case TT.WATER: {
+        R(0, 0, 16, 16, '#3d7c8c'); if (r < .6) R((h2(x, y, 2) * 10) | 0, (h2(x, y, 3) * 14) | 0, 5, 1, '#5b9aa8'); if (r > .8) R(3, 10, 3, 1, '#7fb6c0');
+        const wa = vv => vv === TT.WATER || vv === TT.BRIDGE || vv === TT.CANAL;
+        if (!wa(this.get(x, y - 1))) R(0, 0, 16, 2, '#2f6370'); if (!wa(this.get(x, y + 1))) R(0, 14, 16, 2, '#2f6370'); if (!wa(this.get(x - 1, y))) R(0, 0, 2, 16, '#2f6370'); if (!wa(this.get(x + 1, y))) R(14, 0, 2, 16, '#2f6370');
+        break;
+      }
+      case TT.CANAL: R(0, 0, 16, 16, '#9a9a92'); R(3, 3, 10, 10, '#4f8796'); R(3, 3, 10, 1, '#3d6f7c'); if (r < .5) R(5, 7, 4, 1, '#6aa3b0'); break;
+      case TT.PLAZA: R(0, 0, 16, 16, '#ddd3b8'); R(0, 0, 8, 8, '#d3c8aa'); R(8, 8, 8, 8, '#d3c8aa'); R(0, 7, 16, 1, '#cbbf9f'); R(7, 0, 1, 16, '#cbbf9f'); break;
       case TT.STATION: {
-        R(0, 0, 8, 8, '#eef2f5'); R(0, 7, 8, 1, '#dde3e8');
-        if (this.get(x, y - 1) !== TT.STATION) R(0, 0, 8, 2, PAL.vd); if (this.get(x, y + 1) !== TT.STATION) R(0, 7, 8, 1, PAL.vd2);
-        if (this.get(x - 1, y) !== TT.STATION) R(0, 0, 1, 8, PAL.vd); if (this.get(x + 1, y) !== TT.STATION) R(7, 0, 1, 8, PAL.vd);
+        R(0, 0, 16, 16, '#eef2f5'); R(0, 14, 16, 2, '#dde3e8');
+        if (this.get(x, y - 1) !== TT.STATION) R(0, 0, 16, 3, PAL.vd); if (this.get(x, y + 1) !== TT.STATION) R(0, 14, 16, 2, PAL.vd2);
+        if (this.get(x - 1, y) !== TT.STATION) R(0, 0, 2, 16, PAL.vd); if (this.get(x + 1, y) !== TT.STATION) R(14, 0, 2, 16, PAL.vd);
         break;
       }
-      case TT.LAND: R(0, 0, 8, 8, '#7e8a99'); break;
+      case TT.LAND: R(0, 0, 16, 16, '#7e8a99'); break;
     }
   },
   landmarkCanvas: null   // en 21-map-art.js
@@ -1323,7 +1390,7 @@ const CityMap = JE.map = {
    ===================================================================== */
 CityMap.landmarkCanvas = function (i) {
     if (this.lmCanvas[i]) return this.lmCanvas[i];
-    const L = LANDMARKS[i], W = L.w * TS, H = L.h * TS;
+    const L = LANDMARKS[i], W = L.w * 8, H = L.h * 8;   // el dibujo es de 8 px por casilla y se escala al pintarlo
     const cv = Art.mk(W, H, c => {
       const R = (a, b, w, h, col) => prect(c, a, b, w, h, col), cx = W >> 1, cy = H >> 1;
       const trees = (n, seed, area) => { for (let k = 0; k < n; k++) { const tx = area[0] + h2(k, seed) * area[2], ty = area[1] + h2(k, seed + 1) * area[3], g = h2(k, seed + 2); pdisc(c, tx + 1, ty + 1, 3, '#0003'); pdisc(c, tx, ty, 3, g < .15 ? '#f2c230' : g < .25 ? '#e88ab8' : '#3f8a3f'); pdisc(c, tx - 1, ty - 1, 1, '#5fae4f'); } };
@@ -1479,21 +1546,22 @@ class Ride {
     this.stats = { dist: 0, ciclo: 0, crashes: 0, bells: 0, reds: 0 }; this.cicT = 0; this.offC = 0; this.cicLv = 0; this.lastLight = -1; this.stamp = null; this.opps = []; this.shake = 0; this.gps = []; this.gpsT = 0; this.big = false; this.spawnT = 0; this.honkT = 0;
     const LA = this.map.lineA, LB = this.map.lineB;
     this.trains = [0, .25, .5, .75].map((f, i) => ({ L: LA, s: f * LA.len, dir: i % 2 ? 1 : -1, wait: 0 })).concat([{ L: LB, s: 0, dir: 1, wait: 0 }, { L: LB, s: LB.len, dir: -1, wait: 0 }]);
-    if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), this.p.veh === 'truck'); this.p.x = n.x * TS + 4; this.p.y = n.y * TS + 4; }
+    if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), this.p.veh === 'truck'); this.p.x = n.x * TS + TS / 2; this.p.y = n.y * TS + TS / 2; }
     this.initLife();
     this.mmRect = null; this.sl = 0; this.over = 0; this.cxf = s.x; this.cyf = s.y; this.joyDraw = null; this.ox = 0; this.oy = 0;
   }
-  stats_() { return this.p.veh === 'truck' ? { max: 50, acc: 55, dec: 95, turn: 2.7, r: 3.4 } : { max: 60, acc: 120, dec: 150, turn: 5.6, r: 2.5 }; }
+  stats_() { const v = this.p.veh; return v === 'truck' ? { max: 50 * WK, acc: 55 * WK, dec: 95 * WK, turn: 2.7, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK, acc: 160 * WK, dec: 220 * WK, turn: 9, r: 2 } : { max: 60 * WK, acc: 120 * WK, dec: 150 * WK, turn: 5.6, r: 2.5 }; }
   solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }
   setVeh(v) {
-    this.p.veh = v; if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), v === 'truck'); this.p.x = n.x * TS + 4; this.p.y = n.y * TS + 4; }
+    this.p.veh = v; if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), v === 'truck'); this.p.x = n.x * TS + TS / 2; this.p.y = n.y * TS + TS / 2; }
   }
-  marker(m) { m.inside = false; m.r = m.r || 14; this.markers.push(m); return m; }
+  /* radios fijos (≤ 30 px, del diseño de 8 px) se escalan; los calculados con el tamaño del lugar ya vienen en la escala */
+  marker(m) { m.inside = false; m.r = (m.r || 14) <= 30 ? (m.r || 14) * WK : m.r; this.markers.push(m); return m; }
   removeMarker(m) { const i = this.markers.indexOf(m); if (i >= 0) this.markers.splice(i, 1); if (this.target === m) this.target = null; }
   bell() {
-    if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); this.bellPeds(); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2;
+    if (this.belT > 0) return; this.belT = .6; this.stats.bells++; Snd.sfx('bell'); Snd.note(5 + (this.stats.bells % 3) * 2, { type: 'sine', v: .05 }); this.bellPeds(); for (const c of this.cars) if (dist(c.x, c.y, this.p.x, this.p.y) < 50) c.yield = 1.2;
     // Easter eggs: tres timbrazos seguidos bajo una estación del Metro o en Moravia
     const now = this.mode.t; this.bellLog = (this.bellLog || []).filter(t => now - t < 3); this.bellLog.push(now);
     if (this.bellLog.length >= 3 && this.mode.easter) {
@@ -1509,13 +1577,13 @@ class Ride {
     const P = this.p, S = this.stats_(), M = this.mode, rain = M.mods.rain;
     this.belT = Math.max(0, (this.belT || 0) - dt); this.inv = Math.max(0, (this.inv || 0) - dt);
     if (P.stun > 0) { P.stun -= dt; dir = { x: 0, y: 0, m: 0 }; }
-    let mult = P.veh === 'truck' ? 1 : (SURF[this.tileAt()] || .5);
+    let mult = P.veh === 'truck' ? 1 : P.veh === 'walk' ? (WSURF[this.tileAt()] || .8) : (SURF[this.tileAt()] || .5);
     mult *= (M.has('llantas') && P.veh === 'bike' ? 1.12 : 1) * (M.has('camion') && P.veh === 'truck' ? 1.15 : 1) * (rain ? .93 : 1) * (M.mods.ciclovia && P.veh === 'bike' ? 1.06 : 1);
     // relieve real: en subida se pedalea más lento y en bajada se va más rápido (el camión lo siente menos; la bici eléctrica no sufre en subida)
     const sl = this.sl = this.map.slope(P.x, P.y, P.a), eb = P.veh === 'bike' && !!(M.ebike || this.ebike);
-    mult *= P.veh === 'truck' ? clamp(1 - .9 * sl, .7, 1.12) : eb && sl > 0 ? 1 : clamp(1 - 2.2 * sl, .5, 1.32);
+    mult *= P.veh === 'truck' ? clamp(1 - .9 * sl, .7, 1.12) : P.veh === 'walk' ? clamp(1 - 1.1 * sl, .6, 1.15) : eb && sl > 0 ? 1 : clamp(1 - 2.2 * sl, .5, 1.32);
     if (dir.m > 0) {
-      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), turn = S.turn * (rain ? .8 : 1) * (P.v < 10 ? 1.7 : 1);
+      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), turn = S.turn * (rain ? .8 : 1) * (P.v < 10 * WK ? 1.7 : 1);
       P.a += clamp(da, -turn * dt, turn * dt);
       const tv = S.max * mult * dir.m * (.3 + .7 * Math.max(0, Math.cos(da))), acc = tv > P.v ? S.acc : S.dec;
       P.v += clamp(tv - P.v, -acc * dt, acc * dt);
@@ -1538,18 +1606,18 @@ class Ride {
     } else this.over = Math.max(0, this.over - dt * 1.5);
     this.stats.dist += st; const onC = this.tileAt() === TT.CICLO; if (onC) this.stats.ciclo += st;
     const ti = Math.floor(P.y / TS) * MW + Math.floor(P.x / TS), li = this.map.lightIdx(ti);
-    if (li >= 0 && li !== this.lastLight && P.v > 6 && this.mode.t > 2) {
+    if (li >= 0 && li !== this.lastLight && P.v > 6 * WK && this.mode.t > 2 && P.veh !== 'walk') {
       const ew = Math.abs(Math.cos(P.a)) > Math.abs(Math.sin(P.a)), LT = this.map.lights[li], s = this.map.lightState(LT, this.mode.t)[ew ? 0 : 1] === 'r' && this.map.lightState(LT, this.mode.t - .7)[ew ? 0 : 1] === 'r' ? 'r' : 'ok';
       if (s === 'r') { this.stats.reds++; this.float('¡En rojo!', PAL.cor); Snd.sfx('bad'); vib(40); if (this.mode.onRed) this.mode.onRed(); if (!this.redTold) { this.redTold = 1; JE.ui && JE.ui.toast('🚦 En rojo se espera: ¡respeta el semáforo!'); } }
     }
     this.lastLight = li;
     if (P.veh === 'bike') {
-      if (onC && P.v > 20) { this.cicT += dt; this.offC = 0; } else if ((this.offC += dt) > .7) this.cicT = 0;
+      if (onC && P.v > 20 * WK) { this.cicT += dt; this.offC = 0; } else if ((this.offC += dt) > .7) this.cicT = 0;
       const lv = this.cicT >= 15 ? 3 : this.cicT >= 8 ? 2 : this.cicT >= 4 ? 1 : 0;
       if (lv === 3 && !JE.headless) Save.data.flags.cic4 = 1;
       if (lv > this.cicLv) { this.float('¡Racha ciclorruta x' + (lv + 1) + '!', PAL.vd1); Snd.sfx('coin'); if (this.mode.onStreak) this.mode.onStreak(lv); }
       this.cicLv = lv;
-      if (lv && P.v > 35 && !JE.headless && this.rng.f() < .5) this.fx.push({ k: 'p', x: P.x - Math.cos(P.a) * 6 + (this.rng.f() - .5) * 4, y: P.y - Math.sin(P.a) * 6 + (this.rng.f() - .5) * 4, vx: -Math.cos(P.a) * 30, vy: -Math.sin(P.a) * 30, t: .3, col: lv > 1 ? '#ffffff' : PAL.vd1 });
+      if (lv && P.v > 35 * WK && !JE.headless && this.rng.f() < .5) this.fx.push({ k: 'p', x: P.x - Math.cos(P.a) * 6 + (this.rng.f() - .5) * 4, y: P.y - Math.sin(P.a) * 6 + (this.rng.f() - .5) * 4, vx: -Math.cos(P.a) * 30, vy: -Math.sin(P.a) * 30, t: .3, col: lv > 1 ? '#ffffff' : PAL.vd1 });
     }
     this.updCars(dt); this.updTrains(dt); this.updLife(dt);
     // marcadores
@@ -1559,8 +1627,9 @@ class Ride {
       else if (d > r + 6 && m.inside) { m.inside = false; if (m.leave) m.leave(m); }
     }
     // hojas
-    for (const l of this.leaves) if (!l.got && Math.abs(l.x - P.x) < 7 && Math.abs(l.y - P.y) < 7) { l.got = true; Snd.sfx('leaf'); this.float('+5', PAL.vd1); if (M.onLeaf) M.onLeaf(l); }
+    for (const l of this.leaves) if (!l.got && Math.abs(l.x - P.x) < 9 && Math.abs(l.y - P.y) < 9) { l.got = true; Snd.sfx('leaf'); this.leafK = this.mode.t - (this.leafT || -9) < 4 ? (this.leafK || 0) + 1 : 0; this.leafT = this.mode.t; Snd.note(this.leafK); this.float('+5', PAL.vd1); if (M.onLeaf) M.onLeaf(l); }
     // efectos
+    if (this.stamp && !this.stamp.fan) { this.stamp.fan = 1; Snd.fanfare(); }
     if (this.stamp && (this.stamp.t -= dt) <= 0) this.stamp = null;
     for (const f of this.fx) { f.t -= dt; if (f.k === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= .9; f.vy *= .9; } else f.y -= 14 * dt; }
     this.fx = this.fx.filter(f => f.t > 0);
@@ -1576,18 +1645,18 @@ class Ride {
     let c = { x: Math.floor(this.p.x / TS), y: Math.floor(this.p.y / TS) };
     const D = this.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), this.p.veh === 'truck', c.x, c.y);
     if (this.map.fv(D, c.x, c.y) >= 1e9) { const n = this.map.nearestOpen(c.x, c.y, this.p.veh === 'truck'); c = n; }
-    for (let i = 0; i < 90; i++) { const n = this.map.nextStep(D, c.x, c.y); if (!n) break; c = n; if (i % 2 === 1) this.gps.push({ x: c.x * TS + 4, y: c.y * TS + 4 }); }
+    for (let i = 0; i < 90; i++) { const n = this.map.nextStep(D, c.x, c.y); if (!n) break; c = n; if (i % 2 === 1) this.gps.push({ x: c.x * TS + TS / 2, y: c.y * TS + TS / 2 }); }
     this.flowD = D;
   }
   /* ---- tráfico: carros por las vías principales reales ---- */
   updCars(dt) {
-    const P = this.p, R = 260, want = Math.round(16 * this.traffic * (this.mode.mods.pico ? 1.4 : 1)), M = this.map;
+    const P = this.p, R = 210 * WK, want = Math.round(20 * this.traffic * (this.mode.mods.pico ? 1.4 : 1)), M = this.map;
     this.spawnT -= dt;
     if (this.spawnT <= 0 && this.cars.length < want) {
       this.spawnT = .12; const near = M.lanesNear(this.cam.x, this.cam.y), L = near.length ? near[Math.floor(this.rng.f() * near.length)] : null;
       if (L && !(this.mode.mods.ciclovia && L.cv)) for (let k = 0; k < 4; k++) {
         const p = this.rng.f() * L.len, q = M.at(L, p, L.off);
-        if (Math.abs(q.x - this.cam.x) > R || Math.abs(q.y - this.cam.y) > R || dist(q.x, q.y, P.x, P.y) < 70) continue;
+        if (Math.abs(q.x - this.cam.x) > R || Math.abs(q.y - this.cam.y) > R || dist(q.x, q.y, P.x, P.y) < 70 * WK) continue;
         const c = { L, p, v: 0, spd: L.spd * this.rng.range(.8, 1.15), yield: 0, stop: 0, si: q.i }, r = this.rng.f();
         c.kind = L.spd > 30 && r < .1 ? 'bus' : r < .32 ? 'taxi' : 'car';
         c.col = c.kind === 'taxi' ? '#f5c400' : c.kind === 'bus' ? '#3f8f5a' : this.rng.pick(['#e9eef3', '#c43a26', '#2a5a92', '#1d1f24', '#9aa7b8', '#7a3b3b', '#3d6b3a', '#d98a3a']);
@@ -1601,13 +1670,13 @@ class Ride {
       const LL = c.L.lights; if (LL.length) {
         const front = c.p + len / 2 * c.L.dir; let s = null;
         if (c.L.dir > 0) { for (const q of LL) if (q.p0 >= front - 1) { s = q; break; } } else { for (let k = LL.length - 1; k >= 0; k--) if (LL[k].p1 <= front + 1) { s = LL[k]; break; } }
-        if (s) { const d = c.L.dir > 0 ? s.p0 - front : front - s.p1, st = M.lightState(s.g, this.mode.t)[s.ax]; if (d < 24 && (st === 'r' || (st === 'a' && d > 6))) v = Math.min(v, Math.max(0, (d - 2) * 3)); }
+        if (s) { const d = c.L.dir > 0 ? s.p0 - front : front - s.p1, st = M.lightState(s.g, this.mode.t)[s.ax]; if (d < 24 * WK && (st === 'r' || (st === 'a' && d > 6 * WK))) v = Math.min(v, Math.max(0, (d - 2) * 3)); }
       }
       const fx = Math.cos(c.ang), fy = Math.sin(c.ang), dx = P.x - c.x, dy = P.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
-      const pr = this.stats_().r; if (along > 0 && along < 20 + pr * 2 && lat < 4 + pr) { v = along < 12 + pr * 2 ? 0 : Math.min(v, 6); if (this.honkT <= 0 && P.v > 2 && dist(P.x, P.y, c.x, c.y) < 60) { this.honkT = 2.5; Snd.sfx('honk'); } }
+      const pr = this.stats_().r; if (along > 0 && along < 28 + pr * 2 && lat < 5 + pr) { v = along < 16 + pr * 2 ? 0 : Math.min(v, 6 * WK); if (this.honkT <= 0 && P.v > 2 && dist(P.x, P.y, c.x, c.y) < 60 * WK) { this.honkT = 2.5; Snd.sfx('honk'); } }
       c.v = v; c.p += v * c.L.dir * dt; this.carPos(c);
       // choque con el jugador (rectángulo orientado con el carro)
-      if (c.ghost > 0) c.ghost -= dt; else if (Math.abs(along) < (c.kind === 'bus' ? 13 : 6) + pr && lat < 3 + pr && P.stun <= 0 && !(this.inv > 0)) this.crash(c);
+      if (c.ghost > 0) c.ghost -= dt; else if (Math.abs(along) < ({ bus: 13, camion: 11, moto: 3 }[c.kind] || 6) + pr && lat < (c.kind === 'moto' ? 1.5 : 3) + pr && P.stun <= 0 && !(this.inv > 0)) this.crash(c);
     }
     this.honkT -= dt;
     this.cars = this.cars.filter(c => c.p > -12 && c.p < c.L.len + 12 && dist(c.x, c.y, this.cam.x, this.cam.y) < R * 1.5);
@@ -1617,7 +1686,7 @@ class Ride {
     const P = this.p;
     c.ghost = 2.5; this.inv = 1.4;
     if (this.mode.has('chaleco') && !this.vestUsed) { this.vestUsed = true; this.float('¡Chaleco!', PAL.amb); return; }
-    const a = Math.atan2(P.y - c.y, P.x - c.x); let nx = P.x + Math.cos(a) * 9, ny = P.y + Math.sin(a) * 9;
+    const a = Math.atan2(P.y - c.y, P.x - c.x); let nx = P.x + Math.cos(a) * 9 * WK, ny = P.y + Math.sin(a) * 9 * WK;
     if (!this.blocked(nx, ny, this.stats_().r)) { P.x = nx; P.y = ny; }
     P.v = 0; P.stun = .6; c.stop = .5; this.stats.crashes++; this.shake = .35; Snd.sfx('bad'); vib(60);
     this.float('¡Cuidado!', PAL.cor); this.burst(P.x, P.y, '#ffffff', 6);
@@ -1626,7 +1695,7 @@ class Ride {
   updTrains(dt) {
     for (const t of this.trains) {
       if (t.wait > 0) { t.wait -= dt; continue; }
-      const prev = t.s; t.s += 70 * t.dir * dt;
+      const prev = t.s; t.s += 70 * WK * t.dir * dt;
       for (const st of t.L.st) if ((prev - st.s) * (t.s - st.s) < 0) { t.wait = 1.4; t.s = st.s; }
       if (t.s > t.L.len) { t.s = t.L.len; t.dir = -1; t.wait = 2; } if (t.s < 0) { t.s = 0; t.dir = 1; t.wait = 2; }
     }
@@ -1655,31 +1724,33 @@ class Ride {
     for (const s of this.map.stations) {
       if (!inV(s.x, s.y, 30)) continue;
       const ss = this.sim ? this.sim.st[s.i] : null, bikes = ss ? ss.bikes : Math.round(s.cap * .55), x0 = s.tx * TS - ox, y0 = s.ty * TS - oy;
-      prect(b, x0 + 1, y0 + 7, 24, 2, PAL.vd2); prect(b, x0 + 1, y0 + 7, 24, 1, PAL.vd1);
-      const per = Math.ceil(s.cap / 2), sp = Math.min(3, 22 / per);
-      for (let k = 0; k < s.cap; k++) { const row = k < per ? 0 : 1, bx = x0 + 2 + (k % per) * sp, by = y0 + (row ? 8 : 0); if (k < bikes) b.drawImage(Art.bikeTop(), Math.round(bx), by); else prect(b, Math.round(bx) + 1, by + 3, 1, 2, '#9aa7b8'); }
-      if (s.type === 'm') { prect(b, x0 + 26, y0 + 4, 5, 8, '#1d2c44'); prect(b, x0 + 26, y0 + 3, 5, 2, '#e9eef3'); prect(b, x0 + 27, y0 + 6, 3, 2, '#9fb8cf'); }
-      else { prect(b, x0 + 27, y0 + 4, 3, 7, '#2b2f38'); prect(b, x0 + 27, y0 + 5, 3, 2, (t * 2 | 0) % 2 ? PAL.vd : PAL.vd1); }
-      if (ss && ss.broken) { if ((t * 3 | 0) % 2) { pline(b, x0 + 8, y0 + 2, x0 + 18, y0 + 14, PAL.cor); pline(b, x0 + 18, y0 + 2, x0 + 8, y0 + 14, PAL.cor); } }
-      if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, 32, 16); }
+      const W = 4 * TS, H = 2 * TS;
+      prect(b, x0 + 3, y0 + 14, W - 16, 3, PAL.vd2); prect(b, x0 + 3, y0 + 14, W - 16, 1, PAL.vd1);
+      const per = Math.ceil(s.cap / 2), sp = Math.min(5, (W - 18) / per);
+      for (let k = 0; k < s.cap; k++) { const row = k < per ? 0 : 1, bx = x0 + 4 + (k % per) * sp, by = y0 + (row ? 19 : 4); prect(b, Math.round(bx) + 1, row ? y0 + 17 : y0 + 12, 1, 2, '#59606c'); if (k < bikes) b.drawImage(Art.bikeTop(), Math.round(bx), by); else prect(b, Math.round(bx) + 1, by + 4, 1, 2, '#9aa7b8'); }
+      if (s.type === 'm') { prect(b, x0 + W - 12, y0 + 5, 9, 14, '#1d2c44'); prect(b, x0 + W - 12, y0 + 4, 9, 2, '#e9eef3'); prect(b, x0 + W - 10, y0 + 9, 5, 3, '#9fb8cf'); prect(b, x0 + W - 12, y0 + 19, 9, 2, PAL.vd); }
+      else { prect(b, x0 + W - 10, y0 + 6, 5, 13, '#2b2f38'); prect(b, x0 + W - 9, y0 + 8, 3, 3, (t * 2 | 0) % 2 ? PAL.vd : PAL.vd1); prect(b, x0 + W - 9, y0 + 13, 3, 1, '#9aa7b8'); }
+      if (s.e) { prect(b, x0 + W - 14, y0 + 1, 3, 4, '#ffd84a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, '#ffd84a'); }
+      if (ss && ss.broken) { if ((t * 3 | 0) % 2) { pline(b, x0 + 12, y0 + 4, x0 + 30, y0 + 28, PAL.cor); pline(b, x0 + 30, y0 + 4, x0 + 12, y0 + 28, PAL.cor); } }
+      if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
     }
     // ruta GPS
     const ph = (t * 4) | 0;
-    const gc = this.target && this.target.col || PAL.amb; this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, '#0a2342'); prect(b, g.x - ox - 1, g.y - oy - 1, 2, 2, c); });
+    const gc = this.target && this.target.col || PAL.amb; this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 3, g.y - oy - 3, 6, 6, '#0a2342'); prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, c); });
     // marcadores (aros que laten)
     for (const m of this.markers) {
       if (!inV(m.x, m.y, 40)) continue; const pr = m.r * .7 + Math.sin(t * 5) * 2, col = m.col || PAL.amb;
       pring(b, m.x - ox, m.y - oy, Math.round(pr), col); pring(b, m.x - ox, m.y - oy, Math.round(pr) + 1, '#0a234288'); if (m === this.target) pring(b, m.x - ox, m.y - oy, Math.round(pr * .6), '#fff');
     }
     // hojas
-    for (const l of this.leaves) if (!l.got && inV(l.x, l.y)) { const bob = Math.sin(t * 4 + l.x) * 1; b.drawImage(Art.icon('hoja'), 0, 0, 16, 16, Math.round(l.x - ox - 3), Math.round(l.y - oy - 3 + bob), 7, 7); }
+    for (const l of this.leaves) if (!l.got && inV(l.x, l.y)) { const bob = Math.sin(t * 4 + l.x) * 1; b.drawImage(Art.icon('hoja'), 0, 0, 16, 16, Math.round(l.x - ox - 5), Math.round(l.y - oy - 5 + bob), 10, 10); }
     // ciclovía: conos en las avenidas cerradas a los carros
-    if (this.mode.mods.ciclovia) for (const ln of this.map.lanesNear(this.cam.x, this.cam.y)) { if (!ln.cv || ln.dir < 0) continue; for (let s = 0; s < ln.len; s += 40) { const q = this.map.at(ln, s); if (!inV(q.x, q.y)) continue; prect(b, q.x - ox - 1, q.y - oy, 3, 3, '#ff8a3d'); prect(b, q.x - ox, q.y - oy - 1, 1, 1, '#ffffff'); } }
+    if (this.mode.mods.ciclovia) for (const ln of this.map.lanesNear(this.cam.x, this.cam.y)) { if (!ln.cv || ln.dir < 0) continue; for (let s = 0; s < ln.len; s += 40 * WK) { const q = this.map.at(ln, s); if (!inV(q.x, q.y)) continue; prect(b, q.x - ox - 1, q.y - oy, 3, 3, '#ff8a3d'); prect(b, q.x - ox, q.y - oy - 1, 1, 1, '#ffffff'); } }
     // semáforos
     const LC = { g: '#4cff6a', a: '#ffc93c', r: '#ff4b3a' };
     for (const L of this.map.lights) {
       if (!inV(L.x, L.y, 30)) continue; const s = this.map.lightState(L, this.mode.t);
-      const lamp = (x, y, k) => { prect(b, x - ox, y - oy, 3, 3, '#11151d'); prect(b, x - ox + 1, y - oy + 1, 1, 1, LC[k]); };
+      const lamp = (x, y, k) => { prect(b, x - ox, y - oy, 4, 4, '#11151d'); prect(b, x - ox + 1, y - oy + 1, 2, 2, LC[k]); };
       lamp(L.x0 - 3, L.y0 - 3, s[0]); lamp(L.x1, L.y1, s[0]); lamp(L.x1, L.y0 - 3, s[1]); lamp(L.x0 - 3, L.y1, s[1]);
     }
   }
@@ -1692,7 +1763,7 @@ class Ride {
     this.drawGround(c, ox, oy, inV);
     for (const cr of this.cars) if (inV(cr.x, cr.y)) spr(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, '#0004');
     for (const o of this.opps) if (inV(o.x, o.y)) { c.globalAlpha = .9; spr(Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]), o.x, o.y, o.a); c.globalAlpha = 1; }
-    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : Art.rider(this.mode.shirt);
+    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : P.veh === 'walk' ? Art.walker((this.stepT | 0) % 2) : Art.rider(this.mode.shirt);
     spr(sp, P.x, P.y, P.a, '#0005');
     // trenes del metro sobre el viaducto
     const tc = Art.trainCar();
@@ -1710,12 +1781,17 @@ class Ride {
   /* ---- capa nítida: etiquetas, flecha, minimapa, joystick ---- */
   hud(V, opts = {}) {
     const c = V.ctx, s = V.s, ox = this.cxf, oy = this.cyf, P = this.p;
+    { const w = Math.round(Math.min(84, V.w * .21)); this.mmRect = opts.noMini ? null : { x: V.w - w - 10, y: (View.hudB || 50) + 8, w, h: Math.round(w * 1.55) }; }
     const sx = x => (x - ox) * s, sy = y => (y - oy) * s;
-    if (s >= 3 || V.w > 700) {
-      for (const st of this.map.stations) { const x = sx(st.x), y = sy(st.y) - 16 * s / 3; if (x > -60 && x < V.w + 60 && y > 40 && y < V.h) V.text(st.name, x, y, { size: 11, align: 'center', bg: '#0a2342dd', color: '#c4ec7c', pad: 3 }); }
-      for (const L of LANDMARKS) { const x = sx((L.x + L.w / 2) * TS), y = sy((L.y + L.h / 2) * TS); if (x > -80 && x < V.w + 80 && y > 40 && y < V.h) V.text(L.name, x, y, { size: 12, align: 'center', stroke: '#0a2342', sw: 4, color: '#fff' }); }
-    }
-    for (const o of this.opps) { const x = sx(o.x), y = sy(o.y) - 14; if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
+    const used = this.lblR = [], top = View.top || 60, mm = this.mmRect, bot = V.h - 70 - (this.mode.coachB || 0);
+    const room = (x, y, w, h) => { if (y - h < top || y > bot || x - w / 2 < 4 || x + w / 2 > V.w - 4) return false; if (mm && x + w / 2 > mm.x - 8 && y - h < mm.y + mm.h + 20) return false; for (const r of used) if (Math.abs(r.x - x) < (r.w + w) / 2 + 3 && Math.abs(r.y - y) < (r.h + h) / 2 + 2) return false; used.push({ x, y, w, h }); return true; };
+    this.lblRoom = room;
+    const lab = [];
+    for (const st of this.map.stations) { const x = sx(st.x), y = sy(st.y) - 16 * WK * s / 2; if (x > -60 && x < V.w + 60 && y > 40 && y < V.h) lab.push({ t: st.name, x, y, d: dist(st.x, st.y, P.x, P.y), st: 1 }); }
+    for (const L of LANDMARKS) { if (L.secret) continue; const x = sx((L.x + L.w / 2) * TS), y = sy((L.y + L.h / 2) * TS); if (x > -80 && x < V.w + 80 && y > 40 && y < V.h) lab.push({ t: L.name, x, y, d: dist((L.x + L.w / 2) * TS, (L.y + L.h / 2) * TS, P.x, P.y) }); }
+    lab.sort((a, b) => a.d - b.d);
+    for (const l of lab.slice(0, 10)) { const sz = l.st ? 11 : 12, w = l.t.length * sz * .52 + 8; if (!room(l.x, l.y, w, sz + 6)) continue; V.text(l.t, l.x, l.y, l.st ? { size: sz, align: 'center', bg: '#0a2342dd', color: '#c4ec7c', pad: 3 } : { size: sz, align: 'center', stroke: '#0a2342', sw: 4, color: '#fff' }); }
+    for (const o of this.opps) { const x = sx(o.x), y = sy(o.y) - 14; if (x > 0 && x < V.w && y > 0 && y < V.h && room(x, y, o.name.length * 6 + 6, 16)) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
     if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .38); c.rotate(-.08); const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
     this.hudLife(V, sx, sy);
     // subida / bajada (como en Run Scooter): aviso sobre el ciclista
@@ -1737,7 +1813,7 @@ class Ride {
     // minimapa
     if (!opts.noMini) {
       // radar: ventana del mapa alrededor del jugador (el valle completo se ve tocándolo)
-      const w = Math.round(Math.min(84, V.w * .21)), h = Math.round(w * 1.55), x = V.w - w - 10, y = 58, WT = 160, HT = Math.round(WT * h / w), MK = this.map.miniK;
+      const w = Math.round(Math.min(84, V.w * .21)), h = Math.round(w * 1.55), x = V.w - w - 10, y = (View.hudB || 50) + 8, WT = 160, HT = Math.round(WT * h / w), MK = this.map.miniK;
       const t0x = clamp(P.x / TS - WT / 2, 0, MW - WT), t0y = clamp(P.y / TS - HT / 2, 0, MH - HT), k = w / (WT * TS), ox0 = t0x * TS, oy0 = t0y * TS;
       this.mmRect = { x, y, w, h };
       c.fillStyle = '#0a2342'; c.fillRect(x - 3, y - 3, w + 6, h + 6); c.imageSmoothingEnabled = false; c.drawImage(this.map.mini, t0x / MK, t0y / MK, WT / MK, HT / MK, x, y, w, h);
@@ -1812,27 +1888,27 @@ Ride.prototype.updLife = function (dt) {
   const T = this.map.tram, tr = this.trm, P = this.p, r = this.stats_().r;
   // postal secreta (Easter egg): Cerro de las Tres Cruces
   const sc = LM.trescruces;
-  if (sc && !this.secretGot && Math.abs(P.x - (sc.x + sc.w / 2) * TS) < sc.w * TS / 2 + 16 && Math.abs(P.y - (sc.y + sc.h / 2) * TS) < sc.h * TS / 2 + 16) {
+  if (sc && !this.secretGot && Math.abs(P.x - (sc.x + sc.w / 2) * TS) < sc.w * TS / 2 + 16 * WK && Math.abs(P.y - (sc.y + sc.h / 2) * TS) < sc.h * TS / 2 + 16 * WK) {
     this.secretGot = true;
     if (!JE.headless && !Save.data.postales.includes(sc.id)) { Save.data.postales.push(sc.id); this.stamp = { t: 2.4, title: '¡POSTAL SECRETA!', sub: sc.name, bg: '#ff8fc7' }; Snd.sfx('star'); this.mode.score += 50; }
   }
   // tranvía: va y viene, para en sus estaciones
   if (tr.stop > 0) tr.stop -= dt; else if (tr.wait > 0) tr.wait -= dt;
   else {
-    const prev = tr.s; tr.s += 26 * tr.dir * dt;
+    const prev = tr.s; tr.s += 26 * WK * tr.dir * dt;
     for (const s of T.st) if ((prev - s.s) * (tr.s - s.s) < 0) { tr.wait = 1.6; tr.s = s.s; }
-    if (tr.s > T.len - 22) { tr.s = T.len - 22; tr.dir = -1; tr.wait = 2.5; } if (tr.s < 22) { tr.s = 22; tr.dir = 1; tr.wait = 2.5; }
+    if (tr.s > T.len - 44) { tr.s = T.len - 44; tr.dir = -1; tr.wait = 2.5; } if (tr.s < 44) { tr.s = 44; tr.dir = 1; tr.wait = 2.5; }
   }
   const tq = this.map.at(T, tr.s); tr.x = tq.x; tr.y = tq.y; tr.a = tq.a;
   const tdx = P.x - tr.x, tdy = P.y - tr.y, tal = Math.abs(tdx * Math.cos(tr.a) + tdy * Math.sin(tr.a)), tla = Math.abs(-tdx * Math.sin(tr.a) + tdy * Math.cos(tr.a));
-  if (tr.ghost > 0) tr.ghost -= dt; else if (tal < 21 + r && tla < 4 + r && P.stun <= 0 && !(this.inv > 0)) { this.crash(tr); if (!this.tramTold) { this.tramTold = 1; JE.ui && JE.ui.toast('🚋 ¡Cuidado con el tranvía! Cruza por detrás o espera.'); } }
+  if (tr.ghost > 0) tr.ghost -= dt; else if (tal < 42 + r && tla < 7 + r && P.stun <= 0 && !(this.inv > 0)) { this.crash(tr); if (!this.tramTold) { this.tramTold = 1; JE.ui && JE.ui.toast('🚋 ¡Cuidado con el tranvía! Cruza por detrás o espera.'); } }
   // sonido ambiente por zona (no usa la semilla para no cambiar la simulación)
   if (!JE.headless && (this.ambT = (this.ambT || 2) - dt) <= 0) {
     this.ambT = 2.5 + Math.random() * 3.5;
     const tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS), night = Art.night(this.mode.clock || 360) > .5; let g = 0, w = 0;
     for (let y = -4; y <= 4; y += 2) for (let x = -4; x <= 4; x += 2) { const v = this.map.get(tx + x, ty + y); if (v === TT.GRASS || v === TT.MOUNT) g++; else if (v === TT.WATER || v === TT.CANAL) w++; }
-    const metro = this.map.metroA.concat(this.map.metroB).some(s => dist(s.px, s.py, P.x, P.y) < 70);
-    if (dist(tr.x, tr.y, P.x, P.y) < 90 && Math.random() < .5) Snd.amb('tram');
+    const metro = this.map.metroA.concat(this.map.metroB).some(s => dist(s.px, s.py, P.x, P.y) < 70 * WK);
+    if (dist(tr.x, tr.y, P.x, P.y) < 90 * WK && Math.random() < .5) Snd.amb('tram');
     else if (metro && Math.random() < .45) Snd.amb('metro');
     else if (w >= 3) Snd.amb('river');
     else if (g >= 8 || night) Snd.amb(night ? 'crickets' : 'birds');
@@ -1843,30 +1919,30 @@ Ride.prototype.updLife = function (dt) {
     this.pedT = .15;
     for (let k = 0; k < 6; k++) {
       const tx = Math.floor(cam.x / TS) + this.rng.i(-18, 18), ty = Math.floor(cam.y / TS) + this.rng.i(-24, 24);
-      if (!PED_OK(this.map.get(tx, ty))) continue; const x = tx * TS + 4, y = ty * TS + 4; if (dist(x, y, P.x, P.y) < 50) continue;
+      if (!PED_OK(this.map.get(tx, ty))) continue; const x = tx * TS + TS / 2, y = ty * TS + TS / 2; if (dist(x, y, P.x, P.y) < 50 * WK) continue;
       const d = this.rng.pick([[1, 0], [-1, 0], [0, 1], [0, -1]]);
-      this.peds.push({ x, y, dx: d[0], dy: d[1], spd: this.rng.range(6, 11), col: this.rng.pick(['#ff6b5a', '#56c7ff', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#7fd1b9']), skin: this.rng.pick(SKINS), ph: this.rng.f(), hit: 0, side: 0, sil: !!this.mode.mods.flores && this.rng.f() < .45 });
+      this.peds.push({ x, y, dx: d[0], dy: d[1], spd: this.rng.range(9, 16), col: this.rng.pick(['#ff6b5a', '#56c7ff', '#ffc93c', '#ffffff', '#b07cff', '#ff8fc7', '#7fd1b9']), skin: this.rng.pick(SKINS), ph: this.rng.f(), hit: 0, side: 0, sil: !!this.mode.mods.flores && this.rng.f() < .45 });
       break;
     }
   }
   for (const q of this.peds) {
     q.ph += dt * q.spd * .15; if (q.hit > 0) q.hit -= dt;
     if (q.side > 0) { q.side -= dt; continue; }
-    const nx = q.x + q.dx * q.spd * dt, ny = q.y + q.dy * q.spd * dt, ahead = this.map.get(Math.floor((nx + q.dx * 3) / TS), Math.floor((ny + q.dy * 3) / TS));
+    const nx = q.x + q.dx * q.spd * dt, ny = q.y + q.dy * q.spd * dt, ahead = this.map.get(Math.floor((nx + q.dx * 6) / TS), Math.floor((ny + q.dy * 6) / TS));
     if (PED_OK(ahead) && this.rng.f() > .002) { q.x = nx; q.y = ny; }
     else { const opts = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(d => PED_OK(this.map.get(Math.floor(q.x / TS) + d[0], Math.floor(q.y / TS) + d[1]))); if (opts.length) { const d = this.rng.pick(opts); q.dx = d[0]; q.dy = d[1]; } }
-    if (P.veh === 'bike' && !q.hit && Math.abs(q.x - P.x) < 4 && Math.abs(q.y - P.y) < 4 && P.v > 14) {
+    if (P.veh === 'bike' && !q.hit && Math.abs(q.x - P.x) < 4 && Math.abs(q.y - P.y) < 4 && P.v > 14 * WK) {
       q.hit = 2; this.stats.peds = (this.stats.peds || 0) + 1; P.v *= .35; this.float('¡Ojo, peatón!', PAL.amb); Snd.sfx('bad'); vib(30);
       if (this.mode.onPed) this.mode.onPed(); if (!this.pedTold) { this.pedTold = 1; JE.ui && JE.ui.toast('🚶 En la acera el peatón tiene prioridad: usa el timbre.'); }
     }
   }
-  this.peds = this.peds.filter(q => Math.abs(q.x - cam.x) < 320 && Math.abs(q.y - cam.y) < 320);
+  this.peds = this.peds.filter(q => Math.abs(q.x - cam.x) < 320 * WK && Math.abs(q.y - cam.y) < 320 * WK);
 };
 /* el timbre aparta a los peatones cercanos */
 Ride.prototype.bellPeds = function () {
   let n = 0; const P = this.p;
-  for (const q of this.peds || []) if (dist(q.x, q.y, P.x, P.y) < 40) {
-    const sx = -q.dy, sy = q.dx; for (const s of [1, -1]) { const nx = q.x + sx * 5 * s, ny = q.y + sy * 5 * s; if (PED_OK(this.map.get(Math.floor(nx / TS), Math.floor(ny / TS)))) { q.x = nx; q.y = ny; break; } }
+  for (const q of this.peds || []) if (dist(q.x, q.y, P.x, P.y) < 40 * WK) {
+    const sx = -q.dy, sy = q.dx; for (const s of [1, -1]) { const nx = q.x + sx * 5 * WK * s, ny = q.y + sy * 5 * WK * s; if (PED_OK(this.map.get(Math.floor(nx / TS), Math.floor(ny / TS)))) { q.x = nx; q.y = ny; break; } }
     q.side = .8; n++;
   }
   if (n && this.thanks < 30) { this.thanks++; this.float('¡Gracias!', PAL.vd1); if (this.mode.onThanks) this.mode.onThanks(n); }
@@ -1874,8 +1950,8 @@ Ride.prototype.bellPeds = function () {
 Ride.prototype.drawGround = function (b, ox, oy, inV) {
   const tr = this.trm; if (!tr) return; const T = this.map.tram;
   for (let k = -1; k <= 1; k++) {
-    const q = this.map.at(T, clamp(tr.s + k * 14, 0, T.len)); if (!inV(q.x, q.y)) continue;
-    b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a);
+    const q = this.map.at(T, clamp(tr.s + k * 14 * WK, 0, T.len)); if (!inV(q.x, q.y)) continue;
+    b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a); b.scale(WK, WK);
     b.fillStyle = '#0004'; b.fillRect(-6, -2, 13, 6); b.fillStyle = '#f1f4f7'; b.fillRect(-7, -3, 13, 6); b.fillStyle = '#1d2c44'; b.fillRect(-7, -2, 13, 1); b.fillRect(-7, 1, 13, 1); b.fillStyle = PAL.cie; b.fillRect(-7, -3, 13, 1);
     if (k === tr.dir) { b.fillStyle = '#fff3a0'; b.fillRect(tr.dir > 0 ? 6 : -8, -1, 1, 2); }
     b.restore();
@@ -1898,9 +1974,9 @@ const ALUM = ['#ff5a5a', '#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7', '#ffffff'];
 Ride.prototype.drawAlum = function (b, ox, oy) {
   const R = this.map.river, k = Math.floor(this.mode.t * 2.5), vw = View.vw + 2, vh = View.vh + 2;
   const pr = this.map.project(R, ox + vw / 2, oy + vh / 2); if (pr.d > vw + vh) return;
-  for (let s = Math.max(0, pr.s - vw - vh); s < Math.min(R.len, pr.s + vw + vh); s += 5) {
-    const q = this.map.at(R, s), i = s / 5 | 0, nx = -Math.sin(q.a), ny = Math.cos(q.a);
-    for (const d of [-14, 14]) { const x = q.x + nx * d - ox, y = q.y + ny * d - oy; if (x < -4 || y < -4 || x > vw + 4 || y > vh + 4) continue; b.fillStyle = (i + k) % 4 ? ALUM[(i * (d > 0 ? 3 : 1) + k) % ALUM.length] : '#3b4250'; b.fillRect(x - 1, y - 1, 2, 2); }
+  for (let s = Math.max(0, pr.s - vw - vh); s < Math.min(R.len, pr.s + vw + vh); s += 5 * WK) {
+    const q = this.map.at(R, s), i = s / (5 * WK) | 0, nx = -Math.sin(q.a), ny = Math.cos(q.a);
+    for (const d of [-14 * WK, 14 * WK]) { const x = q.x + nx * d - ox, y = q.y + ny * d - oy; if (x < -4 || y < -4 || x > vw + 4 || y > vh + 4) continue; b.fillStyle = (i + k) % 4 ? ALUM[(i * (d > 0 ? 3 : 1) + k) % ALUM.length] : '#3b4250'; b.fillRect(x - 1, y - 1, 2, 2); }
     if (i % 28 === 14) for (let j = -5; j <= 5; j++) { const x = q.x + nx * j * 2.6 - ox, y = q.y + ny * j * 2.6 - oy - 3 + j * j * .15; b.fillStyle = ALUM[(j + 6 + k) % ALUM.length]; b.fillRect(x - 1, y - 1, 2, 2); }
   }
 };
@@ -1908,20 +1984,19 @@ Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
   if (this.mode.mods.alumbrados && !JE.headless) this.drawAlum(b, ox, oy);
   if (n < .25 || JE.headless) return; const g = Art.glow(), M = this.map;
   b.save(); b.globalCompositeOperation = 'lighter'; b.globalAlpha = Math.min(1, n) * .6;
-  for (const s of M.stations) if (inV(s.x, s.y, 40)) b.drawImage(g, s.x - ox - 26, s.y - oy - 26, 52, 52);
+  for (const s of M.stations) if (inV(s.x, s.y, 60)) b.drawImage(g, s.x - ox - 44, s.y - oy - 44, 88, 88);
   const x0 = Math.floor(ox / TS), y0 = Math.floor(oy / TS), x1 = x0 + Math.ceil(View.vw / TS) + 1, y1 = y0 + Math.ceil(View.vh / TS) + 1;
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     if ((x * 3 + y * 5) % 7 !== 0 || M.get(x, y) !== TT.WALK) continue;
     const a = v => v === TT.AVE || v === TT.AUTO; if (!(a(M.get(x - 1, y)) || a(M.get(x + 1, y)) || a(M.get(x, y - 1)) || a(M.get(x, y + 1)))) continue;
-    b.drawImage(g, x * TS + 4 - ox - 12, y * TS + 4 - oy - 12, 24, 24);
+    b.drawImage(g, x * TS + TS / 2 - ox - 20, y * TS + TS / 2 - oy - 20, 40, 40);
   }
   for (const c of this.cars) if (inV(c.x, c.y)) b.drawImage(g, c.x + Math.cos(c.ang) * 9 - ox - 6, c.y + Math.sin(c.ang) * 9 - oy - 6, 12, 12);
   b.restore();
 };
 Ride.prototype.hudLife = function (V, sx, sy) {
-  if (V.s < 3 && V.w < 700) return;
-  for (const cb of this.map.cables) { if (!cb.name) continue; const x = sx(cb.bx), y = sy(cb.by) - 12; if (x > 20 && x < V.w - 20 && y > 50 && y < V.h - 20) V.text(cb.name, x, y, { size: 11, align: 'center', color: '#fff', bg: cb.col, pad: 3 }); }
-  const T = this.map.tram; for (const s of T.st) { const x = sx(s.px), y = sy(s.py) - 24; if (x > 0 && x < V.w && y > 50 && y < V.h) V.text('Tranvía · ' + s.name, x, y, { size: 10, align: 'center', color: PAL.az, bg: PAL.cie, pad: 2 }); }
+  for (const cb of this.map.cables) { if (!cb.name) continue; const x = sx(cb.bx), y = sy(cb.by) - 12; if (x > 20 && x < V.w - 20 && y > 50 && y < V.h - 20 && (!this.lblRoom || this.lblRoom(x, y, cb.name.length * 6 + 8, 16))) V.text(cb.name, x, y, { size: 11, align: 'center', color: '#fff', bg: cb.col, pad: 3 }); }
+  const T = this.map.tram; for (const s of T.st) { const x = sx(s.px), y = sy(s.py) - 24; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 50, 14))) V.text('Tranvía · ' + s.name, x, y, { size: 10, align: 'center', color: PAL.az, bg: PAL.cie, pad: 2 }); }
 };
 
 /* ---- 40-mg.js ---- */
@@ -1954,8 +2029,7 @@ class MG {
     return false;
   }
   card(V, w, h, title) {
-    const hudB = (($('#hud') || {}).getBoundingClientRect ? $('#hud').getBoundingClientRect().bottom : 50) || 50;
-    const c = V.ctx, x = (V.w - w) / 2, y = Math.max(58, Math.round(hudB) + 8); c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
+    const c = V.ctx, x = (V.w - w) / 2, y = Math.max(58, V.top + 4); c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
     c.fillStyle = PAL.crema; c.fillRect(x, y, w, h); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(x + 2, y + 2, w - 4, h - 4);
     c.fillStyle = PAL.az; c.fillRect(x, y, w, 24); V.text(title, x + 10, y + 17, { size: 15, color: PAL.vd1 });
     return { x, y };
@@ -2283,7 +2357,7 @@ class MGMecanico extends MG {
   hud(V) {
     this.btns = []; const s = V.s, L = this.L; if (!L || !this.bike) return;
     this.bike.faults.forEach(f => { if (f.ok) return; const h = this.hot(f); V.text(f.seen ? '!' : '?', h.x * s, h.y * s + 6, { size: 16, align: 'center', color: '#fff', stroke: '#0a2342', sw: 4 }); });
-    V.text('Bicis listas: ' + this.fixed + (this.o.short ? '/' + this.o.target : ''), 12, 66, { size: 16, color: PAL.vd1 });
+    V.text('Bicis listas: ' + this.fixed + (this.o.short ? '/' + this.o.target : ''), 12, V.top + 18, { size: 16, color: PAL.vd1 });
     const n = TOOLS.length, pad = 6, bw = Math.min(110, (V.w - pad * (n + 1)) / n), bh = Math.min(76, Math.max(58, V.h * .11)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + (this.gauge ? 96 : 26);
     TOOLS.forEach(([id, label], i) => {
       const col = Object.values(FAULTS).find(f => f.tool === id).col;
@@ -2368,7 +2442,7 @@ class MGBodega extends MG {
     this.btns = []; if (!this.L) return;
     const s = V.s; V.text('ESCÁNER', this.L.vw * .62 * s, (this.L.belt - 24) * s, { size: 11, align: 'center', color: '#ff8fd6' });
     V.text('Camión ' + this.truck + '/10', this.L.vw * .87 * s, (this.L.belt + 26) * s, { size: 12, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 2 });
-    V.text('Bicis nuevas: ' + this.newBikes + '  ·  Precisión ' + Math.round(this.acc() * 100) + '%', 12, 66, { size: 14, color: PAL.vd1 });
+    V.text('Bicis nuevas: ' + this.newBikes + '  ·  Precisión ' + Math.round(this.acc() * 100) + '%', 12, V.top + 18, { size: 14, color: PAL.vd1 });
     const n = this.cats.length, pad = 6, bw = Math.min(120, (V.w - pad * (n + 1)) / n), bh = Math.min(84, Math.max(60, V.h * .12)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + 26;
     this.cats.forEach((c, i) => this.button(V, x0 + i * (bw + pad), y, bw, bh, CATS[c].name, () => this.sort(c), { icon: c, border: CATS[c].col, color: CATS[c].col, key: 'c_' + c }));
     this.drawPops(V);
@@ -2414,7 +2488,7 @@ class MGApertura extends MG {
   }
   hud(V) {
     this.btns = []; const s = V.s; if (!this.L) return;
-    V.text(this.mode === 'apertura' ? 'APERTURA DE ESTACIÓN' : 'CIERRE DE ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    V.text(this.mode === 'apertura' ? 'APERTURA DE ESTACIÓN' : 'CIERRE DE ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     if (this.step === 'power' || this.step === 'off') this.button(V, V.w / 2 - 110, V.h - 110, 220, 70, this.holding ? 'SOSTÉN… ' + Math.round(this.hold / .8 * 100) + '%' : (this.step === 'power' ? '⏻ ENCENDER' : '⏻ APAGAR'), () => this.press(true), { bg: PAL.vd2, size: 22, key: 'pw' });
     if (this.step === 'count' && this.opts) { const bw = Math.min(110, (V.w - 40) / 3); this.opts.forEach((v, i) => this.button(V, V.w / 2 - (bw * 3 + 20) / 2 + i * (bw + 10), V.h - 100, bw, 64, String(v), () => this.answer(v), { size: 30, key: 'n' + v })); }
     this.drawPops(V);
@@ -2463,7 +2537,7 @@ class MGCables extends MG {
       if (this.links[i] >= 0) { const rr = this.pos(1, this.links[i]); pline(b, l.x + 2, l.y, rr.x - 2, rr.y, WCOL[i]); pline(b, l.x + 2, l.y + 1, rr.x - 2, rr.y + 1, WCOL[i]); }
     }
   }
-  hud(V) { this.btns = []; V.text('REPARA EL ANCLAJE', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('REPARA EL ANCLAJE', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
   tap(vx, vy) { for (let i = 0; i < this.n; i++) { const l = this.pos(0, i), r = this.pos(1, i); if (dist(vx, vy, l.x - 3, l.y) < 12) { this.pickL(i); return true; } if (dist(vx, vy, r.x + 3, r.y) < 12) { this.pickR(i); return true; } } return false; }
   hint(V) { if (this.links.some(l => l >= 0) || !this.L) return null; const p = this.sel < 0 ? this.pos(0, 0) : this.pos(1, this.right.indexOf(this.sel)); return { x: (p.x + (this.sel < 0 ? -3 : 3)) * V.s, y: p.y * V.s }; }
   bot(err) { if (this.sel < 0) { const i = this.links.findIndex(l => l < 0); if (i >= 0) this.pickL(i); } else { const j = this.rng.f() < err ? this.rng.i(0, this.n - 1) : this.right.indexOf(this.sel); this.pickR(j); } }
@@ -2490,7 +2564,7 @@ class MGSimon extends MG {
     const k0 = this.kr(0); prect(b, k0.x - 10, k0.y - 26, k0.s * 2 + 28, k0.s * 2 + 40, '#2b2f38'); prect(b, k0.x - 4, k0.y - 20, k0.s * 2 + 16, 10, '#10243f');
     for (let i = 0; i < 4; i++) { const r = this.kr(i); prect(b, r.x, r.y, r.s, r.s, this.lit === i ? '#ffffff' : shade(KCOL[i], -.45)); prect(b, r.x + 2, r.y + 2, r.s - 4, r.s - 4, this.lit === i ? KCOL[i] : shade(KCOL[i], -.25)); }
   }
-  hud(V) { this.btns = []; V.text('REINICIA EL TÓTEM', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('REINICIA EL TÓTEM', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
   tap(vx, vy) { for (let i = 0; i < 4; i++) { const r = this.kr(i); if (vx >= r.x && vx <= r.x + r.s && vy >= r.y && vy <= r.y + r.s) { this.key(i); return true; } } return false; }
   bot(err) { if (this.phase === 'in') this.key(this.rng.f() < err ? this.rng.i(0, 3) : this.seq[this.inp]); }
 }
@@ -2510,7 +2584,7 @@ class MGInspeccion extends MG {
     prect(b, 26, gy - 46, n * sp + 8, 5, PAL.vd); prect(b, 26, gy - 28, n * sp + 8, 30, '#eef2f5');
     this.bikes.forEach((bk, i) => { const x = Math.round(this.bx(i)); prect(b, x + 3, gy - 9, 2, 1, bk.bad ? PAL.cor : PAL.vd); if (!bk.found) Art.bikeFront(b, x, gy, bk.bad ? 'bad' : 'ok'); else prect(b, x - 2, gy - 4, 6, 2, PAL.vd); });
   }
-  hud(V) { this.btns = []; V.text('VERIFICA LA ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('VERIFICA LA ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 }); this.drawPops(V); }
   tap(vx, vy) { if (!this.L) return false; for (let i = 0; i < this.bikes.length; i++) if (Math.abs(vx - this.bx(i)) < this.L.sp / 2 + 1 && vy > this.L.gy - 22 && vy < this.L.gy + 3) { this.pick(i); return true; } return false; }
   bot(err) { const i = this.rng.f() < err ? this.rng.i(0, this.bikes.length - 1) : this.bikes.findIndex(b => b.bad && !b.found); if (i >= 0) this.pick(i); }
 }
@@ -2556,7 +2630,7 @@ class MGLoop extends MG {
       const deg = [1, 2, 4, 8].filter(k => m & k).length; if (deg === 1) pdisc(b, x + h, y + h, Math.max(2, cs >> 3), i === this.src ? PAL.amb : col); else prect(b, x + h - t, y + h - t, t * 2, t * 2, col);
     }
   }
-  hud(V) { this.btns = []; V.text('CIRCUITO DEL TÓTEM', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); V.text('Giros: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#c4ec7c', body: true }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('CIRCUITO DEL TÓTEM', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); V.text('Giros: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#c4ec7c', body: true }); this.drawPops(V); }
   tap(vx, vy) { const { cs, x0, y0 } = this.geo(), gx = Math.floor((vx - x0) / cs), gy = Math.floor((vy - y0) / cs); if (gx < 0 || gy < 0 || gx >= this.W || gy >= this.H) return false; this.turn(gy * this.W + gx); return true; }
   hint(V) { const i = this.m.findIndex((m, k) => m !== this.sol[k]); if (i < 0 || this.moves > 3) return null; const { cs, x0, y0 } = this.geo(); return { x: (x0 + (i % this.W) * cs + cs / 2) * V.s, y: (y0 + ((i / this.W) | 0) * cs + cs / 2) * V.s }; }
   bot() { if (this.endT) return; for (let i = 0; i < this.m.length; i++) if (this.m[i] !== this.sol[i]) { const s = this.sol[i]; if (s === 5 || s === 10) { if (this.m[i] === s) continue; } this.turn(i); return; } }
@@ -2608,7 +2682,7 @@ class MGLaser extends MG {
     const tr = this.trace(), col = tr.hit ? PAL.vd1 : '#ff4b6a';
     for (let k = 0; k < tr.pts.length - 1; k++) { const [ax, ay] = tr.pts[k], [bx, by] = tr.pts[k + 1]; pline(b, cx(ax), cy(ay), cx(bx), cy(by), col); pline(b, cx(ax) + 1, cy(ay), cx(bx) + 1, cy(by), col); }
   }
-  hud(V) { this.btns = []; V.text('SEÑAL DE LA ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('SEÑAL DE LA ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
   tap(vx, vy) { const { cs, x0, y0 } = this.geo(), gx = Math.floor((vx - x0) / cs), gy = Math.floor((vy - y0) / cs); if (gx < 0 || gy < 0 || gx >= this.n || gy >= this.n) return false; this.flip(gy * this.n + gx); return true; }
   bot() { if (this.endT || !this.cell) return; for (let i = 0; i < this.cell.length; i++) if ((this.sol[i] === 1 || this.sol[i] === 2) && this.cell[i] !== this.sol[i]) return this.flip(i); }
 }
@@ -2654,7 +2728,7 @@ class MGTraffix extends MG {
   }
   hud(V) {
     this.btns = []; const s = V.s, L = this.L; if (!L) return; const cx = L.vw / 2 * s, cy = (L.vh / 2 + 6) * s;
-    V.text('Pasaron ' + this.passed + '/' + this.target + ' · choques ' + this.crashes, V.w / 2, 70, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 4 });
+    V.text('Pasaron ' + this.passed + '/' + this.target + ' · choques ' + this.crashes, V.w / 2, V.top + 18, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 4 });
     const bt = (a, x, y) => this.button(V, x - 34, y - 22, 68, 44, this.go[a] ? 'SIGA' : 'PARE', () => this.toggle(a), { bg: this.go[a] ? PAL.vd2 : '#7a2a24', size: 17, key: 'a' + a });
     bt(0, cx, cy - 70); bt(2, cx + 80, cy - 40); this.drawPops(V);
   }
@@ -2719,7 +2793,7 @@ class MGRutas extends MG {
   }
   hud(V) {
     this.btns = []; const s = V.s, g = this.geo();
-    if (this.p.ride) V.text(this.theme === 'metro' ? 'MAQUINISTA SECRETO' : 'BODEGA · DESVÍOS', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 4 });
+    if (this.p.ride) V.text(this.theme === 'metro' ? 'MAQUINISTA SECRETO' : 'BODEGA · DESVÍOS', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 4 });
     V.text('Bien ' + this.ok + ' · combo ' + this.combo + ' · precisión ' + Math.round(this.acc() * 100) + '%', V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true, stroke: '#0a2342', sw: 3 });
     this.button(V, g.xj1 * s - 34, (g.ym + g.dy * .5) * s + 8, 68, 46, this.sw[0] ? '↘ 1' : '↗ 1', () => this.toggle(0), { bg: PAL.az1, size: 20, key: 'j0' });
     this.button(V, g.xj2 * s - 34, (g.ym + g.dy * .5) * s + 8, 68, 46, this.sw[1] ? '↘ 2' : '↗ 2', () => this.toggle(1), { bg: PAL.az1, size: 20, key: 'j1' });
@@ -2760,7 +2834,7 @@ class MGLaberinto extends MG {
     const fx = x0 + this.gx * cs + cs / 2, fy = y0 + this.gy * cs + cs / 2; for (let k = 0; k < 5; k++) pdisc(b, fx + Math.cos(k * 1.26) * 2, fy + Math.sin(k * 1.26) * 2, 1, ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#fff'][k]); prect(b, fx, fy, 1, 1, PAL.amb);
     pdisc(b, x0 + this.bx * cs + cs / 2, y0 + this.by * cs + cs / 2, Math.max(2, cs / 3), '#fff'); prect(b, x0 + this.bx * cs + cs / 2 - 1, y0 + this.by * cs + cs / 2 - 1, 1, 1, PAL.vd2);
   }
-  hud(V) { this.btns = []; V.text('LABERINTO DE MORAVIA', V.w / 2, 70, { size: 20, align: 'center', color: '#ffd84a', stroke: '#0a2342', sw: 4 }); V.text('Movidas: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('LABERINTO DE MORAVIA', V.w / 2, V.top + 18, { size: 20, align: 'center', color: '#ffd84a', stroke: '#0a2342', sw: 4 }); V.text('Movidas: ' + this.moves, V.w / 2, 92, { size: 13, align: 'center', color: '#fff', body: true }); this.drawPops(V); }
   pointer(type, vx, vy, cx, cy) {
     if (type === 'down') { this.d0 = { cx, cy, vx, vy }; return true; }
     if (type === 'up' && this.d0) { const dx = cx - this.d0.cx, dy = cy - this.d0.cy; let d;
@@ -2801,7 +2875,7 @@ class MGConteo extends MG {
     this.docks.forEach((d, i) => { const x = Math.round(r0 + i * sp + sp / 2); prect(b, x - 1, gy - 12, 3, 12, '#59606c'); prect(b, x - 2, gy - 15, 5, 3, PAL.vd); if (d) Art.bikeFront(b, x + 4, gy, 'ok'); });
   }
   hud(V) {
-    this.btns = []; V.text(this.o.title || 'INVENTARIO DE LA ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    this.btns = []; V.text(this.o.title || 'INVENTARIO DE LA ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     const bw = Math.min(110, (V.w - 40) / 3); this.opts.forEach((v, i) => this.button(V, V.w / 2 - (bw * 3 + 20) / 2 + i * (bw + 10), V.h - 100, bw, 64, String(v), () => this.answer(v), { size: 30, key: 'n' + v }));
     this.drawPops(V);
   }
@@ -2845,7 +2919,7 @@ class MGTulas extends MG {
   }
   hud(V) {
     this.btns = []; const L = this.L; if (!L) return; const s = V.s;
-    V.text(this.mode === 'armar' ? 'ARMAR TULAS · Casa EnCicla' : 'RECOGER TULAS · cargar celulares', V.w / 2, 66, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    V.text(this.mode === 'armar' ? 'ARMAR TULAS · Casa EnCicla' : 'RECOGER TULAS · cargar celulares', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     this.tulas.forEach((t, i) => V.text(t.name.replace(/^(Parque (de |del |Principal de )?|Estación |Universidad )/, '').slice(0, 12), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30 + (i % 2) * 16, { size: 10, align: 'center', color: '#fff', bg: t.col + 'cc', pad: 2 }));
     if (this.mode === 'armar') {
       const n = this.keys.length, bw = Math.min(64, (V.w - 20) / Math.max(n, 4) - 6); let y = V.h - 170;
@@ -2924,7 +2998,7 @@ class MGBodega2 extends MG {
   }
   hud(V) {
     this.btns = []; const L = this.L; if (!L) return; const s = V.s, B = this.curBox();
-    V.text({ descargar: '1 · DESCARGAR', verificar: '2 · VERIFICAR', organizar: '3 · ORGANIZAR', cargar: '4 · CARGAR EL PEDIDO' }[this.step] || '', V.w / 2, 66, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    V.text({ descargar: '1 · DESCARGAR', verificar: '2 · VERIFICAR', organizar: '3 · ORGANIZAR', cargar: '4 · CARGAR EL PEDIDO' }[this.step] || '', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     if (this.step === 'descargar') { const left = this.boxes.map((x, i) => x.where === 'truck' ? i : -1).filter(i => i >= 0); left.slice(0, 6).forEach((i, k) => this.button(V, 10 + k * 56, V.h - 96, 50, 60, '📦', () => this.unload(i), { size: 26, key: 'b' + k })); }
     if (this.step === 'verificar' && B) {
       const w = Math.min(380, V.w - 20), { x, y } = this.card(V, w, 140, 'CAJA ' + (this.table.indexOf(B) + 1) + ' DE ' + this.table.length);
@@ -3049,7 +3123,7 @@ class MGLlamadas extends MG {
     this.queue.forEach((q, i) => { const x = 14 + i * 28, y = 14, f = clamp(q.wait / this.pat, 0, 1); prect(b, x, y, 20, 26, q === this.cur ? PAL.vd : '#e9eef3'); prect(b, x + 4, y + 4, 12, 10, '#1d2c44'); prect(b, x, y + 28, Math.round(20 * f), 2, f > .5 ? PAL.vd : f > .25 ? PAL.amb : PAL.cor); if (q !== this.cur && (this.t * 4 | 0) % 2) pring(b, x + 10, y + 12, 14, '#fff'); });
   }
   hud(V) {
-    this.btns = []; V.text('ATENCIÓN AL CLIENTE · resueltas ' + this.solved, 12, 66, { size: 15, color: PAL.vd1 });
+    this.btns = []; V.text('ATENCIÓN AL CLIENTE · resueltas ' + this.solved, 12, V.top + 18, { size: 15, color: PAL.vd1 });
     if (!this.cur && this.queue.length) this.button(V, V.w / 2 - 90, V.h - 100, 180, 64, '📞 CONTESTAR', () => this.answer(), { bg: PAL.vd2, size: 20, key: 'tel' });
     const q = this.cur; this.hideGoals = !!q;
     if (q) {
@@ -3219,7 +3293,7 @@ class MapMode extends Mode {
     const T = this.ride.target; if (!T) { this.botDir = { x: 0, y: 0, m: 0 }; return; }
     const P = this.ride.p; let tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS);
     const D = JE.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), P.veh === 'truck', tx, ty);
-    if (JE.map.fv(D, tx, ty) >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + 4, n.y * TS + 4); return; }
+    if (JE.map.fv(D, tx, ty) >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + TS / 2, n.y * TS + TS / 2); return; }
     let c = { x: tx, y: ty }; const h0 = this.botHist; const cur = JE.map.lightIdx(ty * MW + tx);
     for (let i = 0; i < 2; i++) {
       const n = JE.map.nextStep(D, c.x, c.y); if (!n) break;
@@ -3227,9 +3301,9 @@ class MapMode extends Mode {
       if (li >= 0 && li !== cur && JE.map.lightIdx(c.y * MW + c.x) !== li) { const ew = Math.abs(n.x - c.x) >= Math.abs(n.y - c.y), st = JE.map.lightState(JE.map.lights[li], this.t)[ew ? 0 : 1]; if (st !== 'g') { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
       c = n;
     }
-    if (c.x === tx && c.y === ty) this.botDir = this.dirTo(T.x, T.y); else this.botDir = this.dirTo(c.x * TS + 4, c.y * TS + 4);
+    if (c.x === tx && c.y === ty) this.botDir = this.dirTo(T.x, T.y); else this.botDir = this.dirTo(c.x * TS + TS / 2, c.y * TS + TS / 2);
     if (P.veh === 'bike' && this.ride.sl < -.07) this.botDir.m = .78;   // en bajada fuerte, frena un poco
-    for (const car of this.ride.cars) { const dx = car.x - P.x, dy = car.y - P.y, al = dx * this.botDir.x + dy * this.botDir.y, lat = Math.abs(-dx * this.botDir.y + dy * this.botDir.x); if (al > 0 && al < (P.veh === 'truck' ? 24 : 16) && lat < 8 && Math.cos(car.ang) * this.botDir.x + Math.sin(car.ang) * this.botDir.y > .5) { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
+    for (const car of this.ride.cars) { const dx = car.x - P.x, dy = car.y - P.y, al = dx * this.botDir.x + dy * this.botDir.y, lat = Math.abs(-dx * this.botDir.y + dy * this.botDir.x); if (al > 0 && al < (P.veh === 'truck' ? 24 : 16) * WK && lat < 8 * WK && Math.cos(car.ang) * this.botDir.x + Math.sin(car.ang) * this.botDir.y > .5) { this.botDir = { x: 0, y: 0, m: 0 }; if (h0) { h0.t = this.t; h0.x = P.x; h0.y = P.y; } return; } }
     // si no avanza en 1 s, retrocede/gira al azar un momento
     const h = this.botHist || (this.botHist = { x: P.x, y: P.y, t: this.t, esc: 0 });
     if (h.esc > this.t) { this.botDir = h.dir; return; }
@@ -3265,17 +3339,17 @@ class ModeUsuario extends MapMode {
     // hojas verdes sobre las ciclorrutas reales cercanas (hasta ~4 km)
     const L = this.ride.leaves, C = JE.map.cicloIdx, P = this.ride.p, near = [];
     for (let k = 0; k < C.length; k++) { const x = C[k] % MW, y = (C[k] / MW) | 0; if (Math.abs(x * TS - P.x) < 200 * TS && Math.abs(y * TS - P.y) < 200 * TS) near.push(C[k]); }
-    for (let n = 0; n < 70 && near.length; n++) { const i = near.splice(this.rng.i(0, near.length - 1), 1)[0]; L.push({ x: (i % MW) * TS + 4, y: ((i / MW) | 0) * TS + 4 }); }
+    for (let n = 0; n < 70 && near.length; n++) { const i = near.splice(this.rng.i(0, near.length - 1), 1)[0]; L.push({ x: (i % MW) * TS + TS / 2, y: ((i / MW) | 0) * TS + TS / 2 }); }
   }
   onLeaf() { this.leavesGot++; this.score += 5; Save.data.stats.leaves++; }
   nextLeg(from) {
-    const R = this.rng, T = this.turno, minD = [0, 35, 45, 50][T] * SC, maxD = [0, 80, 95, 100][T] * SC;
+    const R = this.rng, T = this.turno, minD = [0, 35, 40, 40][T] * SC, maxD = [0, 80, 85, 80][T] * SC;
     const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
     const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
     const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
     this.ret = R.pick(near).s; this.phase = 'go';
     this.ride.markers = [];
-    const m = this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6, r: Math.max(L.w, L.h) * TS / 2 + 10, col: PAL.amb, label: L.name, num: 1, enter: () => this.reachLandmark() });
+    const m = this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6 * WK, r: Math.max(L.w, L.h) * TS / 2 + 10 * WK, col: PAL.amb, label: L.name, num: 1, enter: () => this.reachLandmark() });
     this.ride.target = m; this.toast('Viaje ' + (this.leg + 1) + ': ve a ' + L.name);
   }
   reachLandmark() {
@@ -3297,12 +3371,12 @@ class ModeUsuario extends MapMode {
   }
   freeSetup() {
     const todo = PUBLIC_LM().filter(l => !Save.data.postales.includes(l.id));
-    for (const L of todo) this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6, r: Math.max(L.w, L.h) * TS / 2 + 10, col: PAL.amb, label: L.name, enter: (m) => { this.collect(L); this.score += 20; Snd.sfx('star'); this.ride.float('¡Postal!', PAL.amb); this.ride.removeMarker(m); this.pickFreeTarget(); } });
+    for (const L of todo) this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6 * WK, r: Math.max(L.w, L.h) * TS / 2 + 10 * WK, col: PAL.amb, label: L.name, enter: (m) => { this.collect(L); this.score += 20; Snd.sfx('star'); this.ride.float('¡Postal!', PAL.amb); this.ride.removeMarker(m); this.pickFreeTarget(); } });
     this.pickFreeTarget();
   }
   pickFreeTarget() { const P = this.ride.p; let best = null, bd = 1e9; for (const m of this.ride.markers) { const d = dist(m.x, m.y, P.x, P.y); if (d < bd) { bd = d; best = m; } } this.ride.target = best; }
   toast(t) { this.toastMsg = t; if (JE.ui) JE.ui.toast(t); }
-  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => dist(s.x, s.y, P.x, P.y) < 24); }
+  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => dist(s.x, s.y, P.x, P.y) < 24 * WK); }
   tick(dt) {
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
     if (!this.free && this.loanMin() > 100) { this.toast('Pasaron más de 100 minutos: el préstamo se cerró con sanción'); this.end(); }
@@ -3530,14 +3604,14 @@ class ModeMonitoreo extends Mode {
     // sala de monitoreo por zona (el sistema va de Caldas a Barbosa): T1 centro, T2 sur, T3 norte
     this.zone = [null, 'centro', 'sur', 'norte'][T]; const zl = this.sim.st.filter(s => s.zone === this.zone), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
     this.zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16);
-    const bs = this.zs[0]; this.base = { x: bs.x + 14, y: bs.y + 10 };
+    const bs = this.zs[0]; this.base = { x: bs.x + 14 * WK, y: bs.y + 10 * WK };
     const xs = this.zs.map(s => s.x), ys = this.zs.map(s => s.y), m = 10 * TS; this.crop = { x0: Math.max(0, Math.min(...xs) - m), y0: Math.max(0, Math.min(...ys) - m), x1: Math.min(MW * TS, Math.max(...xs) + m), y1: Math.min(MH * TS, Math.max(...ys) + m) };
-    const dp = this.base; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
+    const dp = this.base; this.trucks = []; for (let i = 0; i < (T === 1 ? 2 : 3); i++) { const t = { x: dp.x + i * 6 * WK, y: dp.y, a: -Math.PI / 2, load: 0, cap: 20, q: [], path: null, id: i + 1 }; this.trucks.push(t); this.sim.trucks.push(t); }
     this.sel = null; this.radio = []; this.flags = new Map(); this.view = { kind: 'map' };
     const sv = [0, 70, 80, 85][T];
     this.goal('Nivel de servicio ≥ ' + sv + '%', true, () => this.serv() * 100 >= sv, () => Math.round(this.serv() * 100) + '%');
     this.goal('Al cierre, ninguna estación vacía', false, () => this.zs.every(s => s.bikes > 0), () => this.zs.filter(s => s.bikes <= 0).length + ' vacías');
-    this.goal('Camiones descargados en la bodega', false, () => this.trucks.every(t => t.load === 0 && !t.path && dist(t.x, t.y, dp.x, dp.y) < 30), () => this.trucks.filter(t => t.load === 0 && !t.path).length + '/' + this.trucks.length);
+    this.goal('Camiones descargados en la bodega', false, () => this.trucks.every(t => t.load === 0 && !t.path && dist(t.x, t.y, dp.x, dp.y) < 30 * WK), () => this.trucks.filter(t => t.load === 0 && !t.path).length + '/' + this.trucks.length);
     this.coach = 'Toca una estación: si está vacía (rojo) LLEVA bicis; si está llena (azul) RECÓGELAS.';
   }
   serv() { const T = Math.max(1, this.sim.elapsed) * this.zs.length; let bad = 0; for (const s of this.zs) bad += s.emptyT + s.fullT; return clamp(1 - bad / T, 0, 1); }
@@ -3553,7 +3627,7 @@ class ModeMonitoreo extends Mode {
   go(t, x, y) { t.path = [{ x, y: t.y }, { x, y }]; }
   update(dt) {
     this.t += dt; const dm = this.rate * dt; this.clock += dm; this.sim.step(dm, this.clock);
-    const dp = this.base, spd = 60 * dm * (this.tSpd || 1) * (this.has('camion') ? 1.15 : 1);
+    const dp = this.base, spd = 60 * WK * dm * (this.tSpd || 1) * (this.has('camion') ? 1.15 : 1);
     for (const t of this.trucks) {
       if (t.path) {
         const p = t.path[0], d = dist(t.x, t.y, p.x, p.y);
@@ -3811,7 +3885,7 @@ class ShiftMode extends MapMode {
     if (ph.timed) { this.rate = (ph.to - this.clock) / ph.secs; return; }
     let x = this.ride.p.x, y = this.ride.p.y, px = 0; const left = ph.tasks.filter(t => !t.done && !t.opt);
     while (left.length) { left.sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)); const t = left.shift(); px += dist(t.x, t.y, x, y) * 1.35; x = t.x; y = t.y; }
-    const secs = px / (this.ride.p.veh === 'truck' ? 40 : 48) + ph.tasks.filter(t => !t.done && !t.opt).length * (ph.mgSecs || 12) + 8;
+    const secs = px / ((this.ride.p.veh === 'truck' ? 40 : 48) * WK) + ph.tasks.filter(t => !t.done && !t.opt).length * (ph.mgSecs || 12) + 8;
     this.rate = Math.max(.2, (ph.to - this.clock) / (secs * 1.3));
   }
   doTask(t) {
@@ -3853,10 +3927,11 @@ class ShiftMode extends MapMode {
     const o = (ph.tasks || []).filter(t => !t.done && !t.opt);
     this.coach = ph.coach ? ph.coach(o) : o.length ? 'Siguiente: ' + o[0].label + (o[0].due ? ' · antes de ' + fmtClock(o[0].due) : '') : '';
   }
-  get coachB() { const ph = this.phase; return 30 + Math.min(6, ph && ph.tasks ? ph.tasks.filter(t => !t.done).length : 0) * 22; }
+  get coachB() { const ph = this.phase; return 30 + Math.min(5, ph && ph.tasks ? ph.tasks.filter(t => !t.done).length : 0) * 22; }
   hud2(V) {
-    const ph = this.phase; if (!ph || !ph.tasks) return; const L = ph.tasks.filter(t => !t.done).slice(0, 6); let y = V.h - 24 - L.length * 22;
-    for (const t of L) { V.text((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : ''), 10, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
+    const ph = this.phase; if (!ph || !ph.tasks) return; const L = ph.tasks.filter(t => !t.done).slice(0, 5); let y = V.h - 24 - L.length * 22;
+    const maxC = Math.floor((V.w - (document.body.classList.contains('ctrlR') ? 200 : 120)) / 6.6), cut = x => x.length > maxC ? x.slice(0, maxC - 1) + '…' : x;
+    for (const t of L) { V.text(cut((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : '')), 10, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
   }
   info() { const ph = this.phase; return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: ph ? ph.short || ph.name.split(':')[0] : '' }].concat(this.chips ? this.chips() : []) }; }
   bot(err) { if (this.sub) return this.sub.bot(err); this.retarget(); this.botDrive(); }
@@ -3867,19 +3942,22 @@ const nearestOf = (list, x, y, n) => list.slice().sort((a, b) => dist(a.x, a.y, 
 
 /* ======================= 2. ANFITRIÓN ======================= */
 class ModeAnfitrionR extends ShiftMode {
+  addSvc(s) { const v = this.svc || (this.svc = { served: 0, errors: 0 }); v.served += s.served || 0; v.errors += s.errors || 0; }
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng, M = JE.map, tm = this.timeMul;
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const mans = M.stations.filter(s => s.type === 'm' && M.stations.some(a => a.type === 'a' && dist(a.x, a.y, s.x, s.y) < 120 * TS));
     const home = this.home = R.pick(mans.length ? mans : M.stations.filter(s => s.type === 'm'));
-    this.setupRide({ sim: this.sim, start: { x: home.x, y: home.y + 10 } });
+    this.setupRide({ sim: this.sim, start: { x: home.x, y: home.y + 10 * WK } });
     const n = 2 + R.i(0, 3), autos = this.autos = nearestOf(M.stations.filter(s => s.type === 'a'), home.x, home.y, n);
     const ap = s => new MGApertura(this, { inv: true, docks: 5 + R.i(0, 2), clock0: this.clock }), ci = s => new MGApertura(this, { cierre: true, docks: 5 + R.i(0, 2), clock0: this.clock });
     if (T === 1) {
       this.begin([
         { name: 'Apertura e inventario', short: 'Apertura', from: 300, to: 330, mgSecs: 13, toast: '🎒 5:00 a. m.: el supervisor te entregó la tula (llaves y celular). Abre ' + n + ' estaciones automáticas y la tuya antes de las 5:30.',
           tasks: autos.map(s => T_ST(s, { label: 'Abrir ' + s.name, due: 330, mg: () => ap(s) })).concat([T_ST(home, { label: 'Abrir tu estación: ' + home.name, due: 330, col: PAL.vd, mg: () => new MGApertura(this, { inv: true, docks: 8, clock0: this.clock }) })]) },
-        { name: 'Sistema abierto: atención en ' + home.name, short: 'Ventanilla', from: 330, to: 810, secs: 110, mg: () => new MGAnfitrion(this, { turno: 2, dur: 110 * tm, clock0: 330, rate: 480 / (110 * tm), cap: Math.min(12, home.cap) }), after: s => { this.svc = s; } },
+        { name: 'Sistema abierto: atención en ' + home.name, short: 'Ventanilla', from: 330, to: 570, secs: 60, mg: () => new MGAnfitrion(this, { turno: 2, dur: 60 * tm, clock0: 330, rate: 240 / (60 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
+        { name: 'Llegó el carro de balance: baja y organiza las bicis', short: 'Balance', from: 570, to: 585, secs: 25, mg: () => new MGDescarga(this, { type: 'llevar', n: 4, dist: 25 + R.i(0, 30), clock0: 570 }) },
+        { name: 'Atención en ' + home.name, short: 'Ventanilla', from: 585, to: 810, secs: 50, mg: () => new MGAnfitrion(this, { turno: 2, dur: 50 * tm, clock0: 585, rate: 225 / (50 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
         { name: 'Relevo de turno: entregas la estación', from: 810, to: 811, timed: true, secs: 1 }
       ]);
       this.goal('Abre las ' + n + ' automáticas y la tuya', true, () => this.phases[0].tasks.every(t => t.done && !t.lost), () => this.phases[0].tasks.filter(t => t.done).length + '/' + (n + 1));
@@ -3887,13 +3965,16 @@ class ModeAnfitrionR extends ShiftMode {
       this.goal('Atiende 14 usuarios con máximo 2 errores', false, () => this.svc && this.svc.served >= 14 && this.svc.errors <= 2, () => this.svc ? this.svc.served + ' atendidos' : 'pendiente');
     } else {
       this.begin([
-        { name: 'Turno de cierre: atención en ' + home.name, short: 'Ventanilla', from: 810, to: 1260, secs: 100, mg: () => new MGAnfitrion(this, { turno: 3, dur: 100 * tm, clock0: 810, rate: 450 / (100 * tm), cap: Math.min(12, home.cap) }), after: s => { this.svc = s; } },
+        { name: 'Turno de cierre: atención en ' + home.name, short: 'Ventanilla', from: 810, to: 1080, secs: 55, mg: () => new MGAnfitrion(this, { turno: 3, dur: 55 * tm, clock0: 810, rate: 270 / (55 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
+        { name: 'Estación llena: ayuda al carro de balance a recoger bicis', short: 'Balance', from: 1080, to: 1095, secs: 25, mg: () => new MGDescarga(this, { type: 'recoger', n: 4, dist: 25 + R.i(0, 30), clock0: 1080 }) },
+        { name: 'Atención en ' + home.name, short: 'Ventanilla', from: 1095, to: 1260, secs: 45, mg: () => new MGAnfitrion(this, { turno: 3, dur: 45 * tm, clock0: 1095, rate: 165 / (45 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
         { name: 'El sistema cerró: recibe bicis hasta las 10 p. m.', short: 'Devoluciones', from: 1260, to: 1320, secs: 30, mg: () => new MGAnfitrion(this, { turno: 2, returnsOnly: true, seats: false, dur: 30 * tm, clock0: 1260, rate: 60 / (30 * tm), cap: Math.min(12, home.cap) }), after: s => { this.ret = s; } },
         { name: 'Inventario y cierre de tu estación', short: 'Inventario', from: 1320, to: 1325, secs: 14, mg: () => new MGApertura(this, { cierre: true, docks: 8, clock0: 1320 }), after: s => { this.invErr += s.invErr || 0; } },
         { name: 'Cierre de las estaciones automáticas', short: 'Cierre', from: 1325, to: 1350, mgSecs: 12, tasks: autos.map(s => T_ST(s, { label: 'Cerrar ' + s.name, due: 1350, mg: () => ci(s) })) }
       ]);
-      this.goal('Cierra tu estación y las ' + n + ' automáticas', true, () => this.pi >= 3 && this.phases[3].tasks.every(t => t.done && !t.lost), () => this.pi >= 3 ? this.phases[3].tasks.filter(t => t.done).length + '/' + n : 'pendiente');
-      this.goal('Inventarios exactos', false, () => this.pi >= 3 && this.invErr === 0, () => this.invErr + ' errores');
+      const last = () => this.phases[this.phases.length - 1];
+      this.goal('Cierra tu estación y las ' + n + ' automáticas', true, () => this.pi >= this.phases.length - 1 && last().tasks.every(t => t.done && !t.lost), () => this.pi >= this.phases.length - 1 ? last().tasks.filter(t => t.done).length + '/' + n : 'pendiente');
+      this.goal('Inventarios exactos', false, () => this.pi >= this.phases.length - 1 && this.invErr === 0, () => this.invErr + ' errores');
       this.goal('Atiende 12 usuarios', false, () => this.svc && this.svc.served + (this.ret ? this.ret.served : 0) >= 12, () => (this.svc ? this.svc.served + (this.ret ? this.ret.served : 0) : 0) + ' atendidos');
     }
   }
@@ -3907,7 +3988,7 @@ class ModeApoyoR extends ShiftMode {
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const autos = M.stations.filter(s => s.az === z[0]), cx = autos.reduce((a, s) => a + s.x, 0) / autos.length, cy = autos.reduce((a, s) => a + s.y, 0) / autos.length;
     const nr = 2 + R.i(0, 3), mans = nearestOf(M.stations.filter(s => s.type === 'm'), cx, cy, nr), start = nearestOf(autos, cx, cy, 1)[0];
-    this.setupRide({ sim: this.sim, start: { x: start.x, y: start.y + 10 } });
+    this.setupRide({ sim: this.sim, start: { x: start.x, y: start.y + 10 * WK } });
     const relevo = s => new MGAnfitrion(this, { turno: 2, short: true, dur: 24 * tm, cap: 6, clock0: this.clock, rate: 2 });
     const invs = () => nearestOf(autos, cx, cy, Math.min(4, autos.length)).map(s => T_ST(s, { label: 'Inventario de control · ' + s.name, opt: true, col: PAL.vd, pts: 12, mg: () => new MGConteo(this, { docks: 6, clock0: this.clock, title: 'INVENTARIO DE CONTROL' }), after: () => { this.invOk++; } }));
     const rel = (a, b) => mans.map((s, i) => T_ST(s, { label: 'Relevo en ' + s.name, due: Math.round(a + (b - a) * (i + 1) / mans.length), col: PAL.cie, mg: () => relevo(s) }));
@@ -3954,7 +4035,7 @@ class ModeSupervisorR extends ShiftMode {
     } else if (T === 2) {
       this.begin([{ name: 'Turno intermedio: control, inventarios y cuidado de los anfitriones', short: 'Intermedio', from: 540, to: 1080, timed: true, secs: 170, spawn: inc, every: 10, maxDyn: 4,
         start: ph => nearestOf(area.filter(s => s.type === 'a'), seed.x, seed.y, 3).forEach(s => ph.tasks.push(T_ST(s, { label: 'Inventario · ' + s.name, opt: true, col: PAL.vd, pts: 12, mg: () => new MGConteo(this, { clock0: this.clock }), after: () => this.invOk++ }))) }]);
-      this.goal('Resuelve 4 avisos', true, () => this.incOk >= 4, () => this.incOk + '/4');
+      this.goal('Resuelve 3 avisos', true, () => this.incOk >= 3, () => this.incOk + '/3');
       this.goal('2 inventarios exactos', false, () => this.invOk >= 2, () => this.invOk + '/2');
       this.goal('Ningún aviso vencido', false, () => this.incLost === 0, () => this.incLost + ' vencidos');
     } else {
@@ -3989,7 +4070,7 @@ class ModeTecnicoR extends ShiftMode {
     super(role, T, opt); const R = this.rng, M = JE.map, casa = M.poi.casa;
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const seed = R.pick(M.stations.filter(s => s.zone === R.pick(['centro', 'sur', 'centro']))); this.zs = nearestOf(this.sim.st, seed.x, seed.y, 14);
-    this.setupRide({ sim: this.sim, start: { x: casa.x, y: casa.y + 6 } });
+    this.setupRide({ sim: this.sim, start: { x: casa.x, y: casa.y + 6 * WK } });
     this.banks = 2; this.fixed = 0; this.dead = 0; this.opSum = 0; this.opT = 0;
     this.phones = this.zs.filter(s => s.type === 'm').map(s => ({ s, bat: R.i(45, 90), weak: R.f() < .35, task: null }));
     this.baseM = this.ride.marker({ x: casa.x, y: casa.y, r: 22, col: PAL.cie, label: 'Casa EnCicla · power banks', enter: () => { if (this.banks < 3) { this.banks = 3; this.ride.float('Power banks: 3', PAL.cie); Snd.sfx('coin'); } } });
@@ -4024,7 +4105,7 @@ class ModeTecnicoR extends ShiftMode {
 class ModeBodegaR extends ShiftMode {
   constructor(role, T, opt) {
     super(role, T, opt); const M = JE.map, tm = this.timeMul, b = geoP(PUNTO_BODEGA[0], PUNTO_BODEGA[1]), bo = M.nearestOpen(Math.floor(b.x / TS), Math.floor(b.y / TS), true), taller = M.poi.taller;
-    this.setupRide({ start: { x: bo.x * TS + 4, y: bo.y * TS + 4 }, veh: 'truck', load: 0, cap: 14 });
+    this.setupRide({ start: { x: bo.x * TS + TS / 2, y: bo.y * TS + TS / 2 }, veh: 'truck', load: 0, cap: 14 });
     this.begin([
       { name: 'Recepción en la bodega', short: 'Bodega', from: 480, to: 720, secs: 100, mg: () => new MGBodega2(this, { boxes: 7, clock0: 480 }), after: s => { this.bod = s; this.ride.p.load = Math.min(14, PARTES.reduce((a, k) => a + s.loaded[k], 0)); } },
       { name: 'Llevar el pedido al taller', short: 'Entrega', from: 720, to: 780, mgSecs: 3, toast: '🚚 El pedido va en el camión: llévalo al taller de los mecánicos (Casa EnCicla).', tasks: [{ x: taller.x, y: taller.y, r: 22, label: 'Taller de mecánicos', due: 780, col: PAL.cie, pts: 30, after: () => { this.entregado = true; this.ride.p.load = 0; } }] }
@@ -4099,13 +4180,14 @@ class ModeBalanceR extends ShiftMode {
   /* orden de Monitoreo: llevar o recoger bicis; a veces recoger una bici dañada para el taller */
   orden(ph, pool) {
     const R = this.rng, P = this.ride.p, used = new Set(ph.tasks.filter(t => !t.done).map(t => t.st));
-    const st = (pool ? this.sim.st.filter(s => pool.some(p => p.i === s.i)) : this.sim.st).filter(s => !used.has(s) && s.open && dist(s.x, s.y, P.x, P.y) > 120 && dist(s.x, s.y, P.x, P.y) < 900 * SC);
+    const st = (pool ? this.sim.st.filter(s => pool.some(p => p.i === s.i)) : this.sim.st).filter(s => !used.has(s) && s.open && dist(s.x, s.y, P.x, P.y) > 120 * WK && dist(s.x, s.y, P.x, P.y) < 900 * SC * WK);
     if (!st.length) return null;
     if (R.f() < .22) { const s = R.pick(st); return T_ST(s, { label: '🔧 Bici dañada · ' + s.name, say: 'Hay una bici dañada en ' + s.name + ': recógela para el taller', due: Math.round(this.clock + this.rate * 60), col: PAL.cor, pts: 12, can: (t, q) => { if (P.load < P.cap && s.bikes > 0) return true; if (!q) JE.ui && JE.ui.toast('El camión está lleno: descarga en Casa EnCicla'); return false; }, after: () => { s.bikes--; P.load++; this.dmg++; } }); }
     st.sort((a, b) => a.bikes / a.cap - b.bikes / b.cap); const low = R.f() < .55, s = R.pick(low ? st.slice(0, 5) : st.slice(-5)), type = s.bikes / s.cap < .5 ? 'llevar' : 'recoger', n = Math.max(3, Math.round(Math.abs(s.bikes - s.cap * .55)));
     const t = T_ST(s, { label: (type === 'llevar' ? 'LLEVAR ' : 'RECOGER ') + n + ' · ' + s.name + (s.e ? ' ⚡' : ''), say: 'Orden de Monitoreo: ' + (type === 'llevar' ? 'lleva ' : 'recoge ') + n + ' bicis a ' + s.name, due: Math.round(this.clock + this.rate * 55), col: type === 'llevar' ? PAL.vd : PAL.amb, pts: 30 });
     t.can = (tt, q) => { const ok = type === 'llevar' ? P.load > 0 : P.load < P.cap; if (!ok && !q) JE.ui && JE.ui.toast(type === 'llevar' ? 'Camión vacío: carga en Casa EnCicla' : 'Camión lleno: descarga en Casa EnCicla'); return ok; };
     t.after = () => { let m; if (type === 'llevar') { m = Math.min(n, P.load - this.dmg > 0 ? P.load - this.dmg : 0, s.cap - s.bikes); P.load -= m; s.bikes += m; } else { m = Math.min(n, s.bikes, P.cap - P.load); P.load += m; s.bikes -= m; } this.ordOk++; Snd.sfx('truck'); };
+    t.mg = () => new MGDescarga(this, { type, n: Math.min(6, n), dist: 15 + this.rng.i(0, 45), clock0: this.clock });   // el camión parquea lejos: bajar y organizar
     t.onLost = () => { this.ordLost++; };
     return t;
   }
@@ -4178,16 +4260,16 @@ class ModeCarrera extends MapMode {
     super(role, T, opt); const R = this.rng; this.rate = 1.2; this.clock = 480; this.limit = 300;
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const st0 = R.pick(JE.map.stations.filter(s => s.zone === 'centro'));
-    this.setupRide({ sim: this.sim, start: { x: st0.x - 5, y: st0.y } });
+    this.setupRide({ sim: this.sim, start: { x: st0.x - 5 * WK, y: st0.y } });
     const pool = PUBLIC_LM(); let cur = { x: st0.x / TS, y: st0.y / TS }; this.cps = [];
     for (let k = 0; k < 4; k++) {
       const free = pool.filter(l => !this.cps.includes(l)), c = free.filter(l => { const d = Math.hypot(l.x + l.w / 2 - cur.x, l.y + l.h / 2 - cur.y); return d >= 22 * SC && d <= 70 * SC; });
       const pick = R.pick(c.length ? c : free); this.cps.push(pick); cur = { x: pick.x + pick.w / 2, y: pick.y + pick.h / 2 };
     }
     const meta = JE.map.stations.filter(s => s !== st0).sort((a, b) => Math.hypot(a.x / TS - cur.x, a.y / TS - cur.y) - Math.hypot(b.x / TS - cur.x, b.y / TS - cur.y))[0];
-    this.pts = this.cps.map(l => ({ x: (l.x + l.w / 2) * TS, y: (l.y + l.h) * TS + 6, r: Math.max(l.w, l.h) * TS / 2 + 10, name: l.name, l })).concat([{ x: meta.x, y: meta.y, r: 18, name: 'Meta: EnCicla ' + meta.name, meta: true }]);
+    this.pts = this.cps.map(l => ({ x: (l.x + l.w / 2) * TS, y: (l.y + l.h) * TS + 6 * WK, r: Math.max(l.w, l.h) * TS / 2 + 10 * WK, name: l.name, l })).concat([{ x: meta.x, y: meta.y, r: 18 * WK, name: 'Meta: EnCicla ' + meta.name, meta: true }]);
     this.idx = 0; this.place(); this.net = !!opt.net; this.countdown = 3.2; this.netT = 0;
-    const mk = (id, name, shirt, k) => ({ id, name, shirt: shirt || PAL.cor, x: st0.x + 5 + k * 3, y: st0.y + k * 2, a: -Math.PI / 2, idx: 0, done: false, ai: !this.net, spd: [0, .72, .84, .95][T], tx: st0.x + 5, ty: st0.y, t: null });
+    const mk = (id, name, shirt, k) => ({ id, name, shirt: shirt || PAL.cor, x: st0.x + (5 + k * 3) * WK, y: st0.y + k * 2 * WK, a: -Math.PI / 2, idx: 0, done: false, ai: !this.net, spd: [0, .72, .84, .95][T], tx: st0.x + 5, ty: st0.y, t: null });
     this.opps = this.net ? (opt.players || [{ id: 0, name: opt.oppName || 'Amigo', shirt: opt.oppShirt }]).map((p, k) => mk(p.id, String(p.name || 'Amigo').slice(0, 16), p.shirt, k)) : [mk(-1, ['', 'Bot Tranquilo', 'Bot Veloz', 'Bot Turbo'][T], opt.oppShirt, 0)];
     this.opp = this.opps[0]; this.ride.opps = this.opps; this.myT = null; this.oppT = null; this.won = false; this.place1 = 0;
     if (this.net) Net.onmsg = m => this.msg(m);
@@ -4235,9 +4317,9 @@ class ModeCarrera extends MapMode {
     const p = this.pts[o.idx]; if (!p) return;
     let c = { x: Math.floor(o.x / TS), y: Math.floor(o.y / TS) }; const D = JE.map.flow(Math.floor(p.x / TS), Math.floor(p.y / TS), false, c.x, c.y);
     for (let i = 0; i < 2; i++) { const n = JE.map.nextStep(D, c.x, c.y); if (!n) break; c = n; }
-    const tx = c.x * TS + 4, ty = c.y * TS + 4, d0 = Math.hypot(tx - o.x, ty - o.y), ta = d0 > 1 ? Math.atan2(ty - o.y, tx - o.x) : Math.atan2(p.y - o.y, p.x - o.x);
+    const tx = c.x * TS + TS / 2, ty = c.y * TS + TS / 2, d0 = Math.hypot(tx - o.x, ty - o.y), ta = d0 > 1 ? Math.atan2(ty - o.y, tx - o.x) : Math.atan2(p.y - o.y, p.x - o.x);
     o.a += clamp(angDiff(o.a, ta), -6 * dt, 6 * dt);
-    const v = 60 * o.spd * (SURF[JE.map.get(Math.floor(o.x / TS), Math.floor(o.y / TS))] || .6) * (this.mods.rain ? .93 : 1);
+    const v = 60 * WK * o.spd * (SURF[JE.map.get(Math.floor(o.x / TS), Math.floor(o.y / TS))] || .6) * (this.mods.rain ? .93 : 1);
     o.x += Math.cos(o.a) * v * dt; o.y += Math.sin(o.a) * v * dt;
     if (dist(o.x, o.y, p.x, p.y) < p.r) { o.idx++; if (p.meta) this.oppFinish(o); }
   }
@@ -4272,8 +4354,8 @@ const isMulti = id => id === 'carrera' || id === 'equipo';
 /* la misma zona y base para todos (la de Monitoreo turno 1: centro) */
 function coopZone(st) {
   const zl = st.filter(s => s.zone === 'centro'), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
-  const zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16), n = JE.map.nearestOpen(Math.floor((zs[0].x + 14) / TS), Math.floor((zs[0].y + 10) / TS), true);
-  return { zs, road: { x: n.x * TS + 4, y: n.y * TS + 4 } };
+  const zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16), n = JE.map.nearestOpen(Math.floor((zs[0].x + 14 * WK) / TS), Math.floor((zs[0].y + 10 * WK) / TS), true);
+  return { zs, road: { x: n.x * TS + TS / 2, y: n.y * TS + TS / 2 } };
 }
 
 /* ---------- anfitrión: Monitoreo con camiones humanos ---------- */
@@ -4751,7 +4833,16 @@ const UI = JE.ui = {
     if (navigator.share) navigator.share({ title: 'Juega EnCicla', text, url }).catch(() => { });
     else { const wa = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url); if (window.Capacitor) location.href = wa; else window.open(wa, '_blank'); }
   },
-  toast(t) { const el = $('#toast'); if (!el || this.mute) return; el.textContent = t; el.classList.add('on'); clearTimeout(this._tt); this._tt = setTimeout(() => el.classList.remove('on'), 3200); },
+  toast(t) {
+    const el = $('#toast'); if (!el || this.mute) return; const q = this._tq || (this._tq = []);
+    if (q.includes(t) || el.textContent === t && el.classList.contains('on')) return; q.push(t); if (q.length > 3) q.splice(0, q.length - 3);
+    if (!this._tt) this.toastNext();
+  },
+  toastNext() {
+    const el = $('#toast'), q = this._tq || []; const t = q.shift(); if (!t) { el.classList.remove('on'); this._tt = null; return; }
+    el.textContent = t; el.classList.add('on'); const ms = clamp(1600 + t.length * 38, 2200, 4500) * (q.length ? .75 : 1);
+    this._tt = setTimeout(() => { el.classList.remove('on'); this._tt = setTimeout(() => { this._tt = null; this.toastNext(); }, 220); }, ms);
+  },
   postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }
 };
 
@@ -4765,7 +4856,7 @@ const Game = JE.game = {
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
     $('#hudTtl').textContent = role.name + (o.free ? ' · libre' : o.reto ? ' · reto' : isMulti(roleId) ? '' : ' · ' + (role.shifts && role.shifts[turno - 1] ? role.shifts[turno - 1].n.replace(/^Turno (\d) · /, 'T$1 ') : 'T' + turno)); this.hudKey = ''; this.actKey = ''; $('#actBar').innerHTML = '';
-    this.coachT = 0; this._coachEr = 0; $('#coach').textContent = '';
+    this.coachT = 0; this._coachEr = 0; $('#coach').textContent = ''; this.goalOpen = 7; this._gst = null; UI._tq = []; clearTimeout(UI._tt); UI._tt = null; $('#toast').classList.remove('on');
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
@@ -4774,7 +4865,7 @@ const Game = JE.game = {
     if (!this.mode) return;
     const dt = Math.min(.05, Math.max(0, (t - this.last) / 1000)); this.last = t;
     try {
-      if (!this.paused) this.mode.update(dt);
+      if (!this.paused) { this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
       this.draw(); this.dom(dt);
     } catch (e) { JE.errors.push('loop: ' + e.message); console.error(e); }
     if (this.mode.done) return this.finish();
@@ -4803,9 +4894,36 @@ const Game = JE.game = {
     const top = !!a.coachB && View.h < 520 && !ride; co.classList.toggle('coachTop', top);
     const cb = top ? '' : 'calc(var(--sab) + ' + (a.coachB || 12) + 'px)'; if (co.style.bottom !== cb) co.style.bottom = cb;
     const gm = $('#goalsMini'), hide = a.hideGoals ? 'none' : ''; if (gm.style.display !== hide) gm.style.display = hide;
-    this.goalT -= dt; if (this.goalT <= 0) { this.goalT = .4; $('#goalsMini').innerHTML = M.free && M.id === 'usuario' ? '' : M.goals.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join(''); }
+    this.goalT -= dt; this.goalOpen = Math.max(0, (this.goalOpen == null ? 7 : this.goalOpen) - dt);
+    if (this.goalT <= 0) {
+      this.goalT = .4; const st = M.goals.map(g => (g.ok() ? 1 : 0) + g.prog()).join('|'); if (st !== this._gst) { if (this._gst != null) this.goalOpen = 3.5; this._gst = st; }
+      const full = this.goalOpen > 0 && ride, L = M.free && M.id === 'usuario' ? [] : full ? M.goals : M.goals.filter(g => g.main);
+      gm.classList.toggle('mini', !full);
+      gm.innerHTML = L.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join('') + (!full && M.goals.length > 1 && ride ? `<div class="more">+${M.goals.length - 1} metas</div>` : '');
+    }
+    this.layout(ride);
     const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
     if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn" data-i="${i}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
+  },
+  /* lo que siente la música: velocidad, racha, pendiente, noche y apuro */
+  moodOf(M) {
+    const a = M.sub || M, R = M.ride; let e = .4, t = 0, k = 0, sl = 0; const n = Art.night(M.clock || 600);
+    if (R && !M.sub) { e = clamp(R.p.v / R.stats_().max, 0, 1); k = R.cicLv || 0; sl = R.sl || 0; }
+    else e = a.queue ? .45 + Math.min(.45, a.queue.length * .09) : .55;
+    const ph = M.phase; if (ph && ph.tasks) { let best = 1e9; for (const x of ph.tasks) if (!x.done && x.due) best = Math.min(best, (x.due - M.clock) / Math.max(.1, M.rate)); t = clamp(1 - best / 25, 0, 1); }
+    if (M.loanMin && !M.free) t = Math.max(t, clamp((M.loanMin() - 40) / 20, 0, 1));
+    if (a.queue && a.patMax) t = Math.max(t, clamp((a.queue.length - 2) / 4, 0, 1));
+    if (a.gauge || (a.state === 'walk' && Math.abs(a.th || 0) > .6)) t = Math.max(t, .7);
+    return { e, t, k, n, sl };
+  },
+  /* acomoda las capas para que nada quede encima de nada: HUD arriba, metas a la izquierda, mapa a la derecha, avisos debajo */
+  layout(ride) {
+    const hud = $('#hud').getBoundingClientRect(), gm = $('#goalsMini'), hb = Math.round(hud.bottom);
+    const gt = (hb + 6) + 'px'; if (gm.style.top !== gt) gm.style.top = gt;
+    const g = gm.style.display === 'none' ? { bottom: hb } : gm.getBoundingClientRect(), mmB = ride ? hb + 8 + Math.round(Math.min(84, View.w * .21) * 1.55) + 22 : hb;
+    View.hudB = hb; View.top = Math.max(hb, Math.round(g.bottom)) + 6;
+    const tt = Math.max(View.top, mmB) + 8 + 'px'; document.documentElement.style.setProperty('--toastTop', tt);
+    const ctrl = ride && Ctrl.kind() !== 'flotante'; document.body.classList.toggle('ctrlR', ctrl);
   },
   pause() {
     if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene
@@ -5205,7 +5323,7 @@ UI.personajes = function () {
 /* ---------- controles: joystick flotante, joystick fijo o flechas ---------- */
 const Ctrl = JE.ctrl = {
   kind() { return (Save.data && Save.data.settings.ctrl) || 'flotante'; },
-  anchor() { return { x: 86 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sal')) || 0), y: View.h - 150 }; },
+  anchor() { return { x: View.w - 86 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sar')) || 0), y: View.h - 120 }; },   // a la derecha: a la izquierda van las tareas y la ayuda
   arrows() { const a = this.anchor(), s = 52; return [['ArrowUp', a.x, a.y - s, '▲'], ['ArrowDown', a.x, a.y + s, '▼'], ['ArrowLeft', a.x - s, a.y, '◀'], ['ArrowRight', a.x + s, a.y, '▶']]; },
   /* devuelve true si el toque lo tomó el control */
   down(e, cx, cy, cv) {
@@ -5224,6 +5342,156 @@ const Ctrl = JE.ctrl = {
   }
 };
 LOGROS.push({ id: 'rango5', name: 'Rueda firme', desc: 'Llega al rango 5 del ranking', icon: 'estrella', test: S => rangoDe(S.xp) >= 4 });
+
+/* ---- 68-ciudad.js ---- */
+/* =====================================================================
+   CIUDAD VIVA (v0.8): motos, camiones, ciclistas en las ciclorrutas, caminar en el modo libre
+   y el minijuego de bajar y organizar bicis con equilibrio (Balance y Anfitrión).
+   ===================================================================== */
+/* ---------- vehículos nuevos: moto y camión ---------- */
+const _carTop = Art.carTop;
+Art.carTop = function (col, kind) {
+  if (kind !== 'moto' && kind !== 'camion') return _carTop.call(this, col, kind);
+  const k = 'ct' + col + kind; let c = this.cache.get(k); if (c) return c;
+  c = kind === 'moto' ? this.mk(3, 7, x => { prect(x, 1, 0, 1, 2, '#151a22'); prect(x, 0, 2, 3, 3, col); prect(x, 1, 3, 1, 2, '#1d2c44'); prect(x, 1, 5, 1, 2, '#151a22'); prect(x, 1, 0, 1, 1, '#fff6c0'); })
+    : this.mk(8, 22, x => { prect(x, 0, 0, 8, 6, col); prect(x, 1, 1, 6, 2, '#1d2c44'); prect(x, 0, 7, 8, 15, '#d8dde3'); prect(x, 0, 7, 8, 1, '#9aa7b8'); for (let i = 9; i < 21; i += 3) prect(x, 1, i, 6, 1, '#c3cad2'); prect(x, 0, 21, 1, 1, PAL.cor); prect(x, 7, 21, 1, 1, PAL.cor); prect(x, 0, 0, 1, 1, '#fff6c0'); prect(x, 7, 0, 1, 1, '#fff6c0'); });
+  this.cache.set(k, c); return c;
+};
+/* persona caminando vista desde arriba (2 cuadros) */
+Art.walker = function (f) {
+  const P = Save.data.profile, k = 'wk' + f + P.skin + P.hair + P.hairCol + P.shirt + P.pants; let c = this.cache.get(k); if (c) return c;
+  const me = Art.me();
+  c = this.mk(7, 8, x => {
+    prect(x, 1, 2, 5, 3, me.shirt); prect(x, 0, 3, 1, 2, me.skin); prect(x, 6, 3, 1, 2, me.skin);
+    prect(x, 2, f ? 5 : 6, 1, 2, me.pants); prect(x, 4, f ? 6 : 5, 1, 2, me.pants);
+    prect(x, 2, 0, 3, 3, me.skin); if (me.hairStyle !== 3) prect(x, 2, 0, 3, me.hairStyle === 2 ? 2 : 1, me.hairStyle === 2 ? me.cap : me.hair); if ([1, 5, 7].includes(me.hairStyle)) prect(x, 3, 2, 1, 2, me.hair);
+  });
+  this.cache.set(k, c); return c;
+};
+const WSURF = [.85, 0, 0, 0, .95, .95, 1, 1, 0, 0, 1, .95, 1, 0, .9, 1, .85];   // caminando
+/* ---------- tráfico más variado y ciclistas en las ciclorrutas ---------- */
+const _updCars = Ride.prototype.updCars;
+Ride.prototype.updCars = function (dt) {
+  const n0 = this.cars.length; _updCars.call(this, dt);
+  for (let i = n0; i < this.cars.length; i++) {   // carros recién creados: algunos son motos o camiones
+    const c = this.cars[i], r = this.rng.f(); if (c.kind !== 'car') continue;
+    if (r < .38) { c.kind = 'moto'; c.spd *= 1.12; c.col = this.rng.pick(['#c43a26', '#1d1f24', '#2a5a92', '#e9eef3', '#ffc93c']); }
+    else if (r < .5 && c.L.cls !== 's') { c.kind = 'camion'; c.spd *= .82; c.col = this.rng.pick(['#e9eef3', '#2a5a92', '#c43a26', '#3d6b3a']); }
+  }
+};
+const _updLife = Ride.prototype.updLife;
+Ride.prototype.updLife = function (dt) {
+  _updLife.call(this, dt);
+  const B = this.npcB || (this.npcB = []), P = this.p, cam = this.cam, M = this.map, want = JE.headless ? 3 : 8;
+  if ((this.npcT = (this.npcT || 0) - dt) <= 0 && B.length < want) {
+    this.npcT = .3;
+    for (let k = 0; k < 8; k++) {
+      const tx = Math.floor(cam.x / TS) + this.rng.i(-14, 14), ty = Math.floor(cam.y / TS) + this.rng.i(-20, 20); if (M.get(tx, ty) !== TT.CICLO) continue;
+      const x = tx * TS + TS / 2, y = ty * TS + TS / 2; if (dist(x, y, P.x, P.y) < 60 * WK) continue;
+      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(d => M.get(tx + d[0], ty + d[1]) === TT.CICLO); if (!dirs.length) continue;
+      const d = this.rng.pick(dirs); B.push({ x, y, dx: d[0], dy: d[1], a: Math.atan2(d[1], d[0]), v: this.rng.range(34, 50) * WK, shirt: this.rng.pick(SHIRTS.slice(0, 7)), helmet: this.rng.pick(HELMETS.slice(0, 5)), skin: this.rng.pick(SKINS) }); break;
+    }
+  }
+  for (const q of B) {
+    const nx = q.x + q.dx * q.v * dt, ny = q.y + q.dy * q.v * dt, tx = Math.floor(nx / TS), ty = Math.floor(ny / TS);
+    const cx = Math.floor(q.x / TS), cy = Math.floor(q.y / TS), cxc = cx * TS + TS / 2, cyc = cy * TS + TS / 2;
+    if (M.get(Math.floor((nx + q.dx * TS / 2) / TS), Math.floor((ny + q.dy * TS / 2) / TS)) === TT.CICLO) { q.x = nx; q.y = ny; if (q.dx) q.y += (cyc - q.y) * Math.min(1, dt * 4); else q.x += (cxc - q.x) * Math.min(1, dt * 4); }
+    else { const opts = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(d => !(d[0] === -q.dx && d[1] === -q.dy) && M.get(cx + d[0], cy + d[1]) === TT.CICLO); const d = opts.length ? this.rng.pick(opts) : [-q.dx, -q.dy]; q.dx = d[0]; q.dy = d[1]; q.x = cxc; q.y = cyc; }
+    q.a += angDiff(q.a, Math.atan2(q.dy, q.dx)) * Math.min(1, dt * 8);
+    if (P.veh !== 'truck' && dist(q.x, q.y, P.x, P.y) < 6 && P.v > 10) { P.v *= .6; q.v *= .5; if (!this.bTold) { this.bTold = 1; this.float('¡Ojo, ciclista!', PAL.amb); } }
+    q.v = Math.min(q.v + dt * 10, 50 * WK);
+  }
+  this.npcB = B.filter(q => Math.abs(q.x - cam.x) < 300 * WK && Math.abs(q.y - cam.y) < 300 * WK);
+};
+const _drawGround = Ride.prototype.drawGround;
+Ride.prototype.drawGround = function (b, ox, oy, inV) {
+  _drawGround.call(this, b, ox, oy, inV);
+  for (const q of this.npcB || []) { if (!inV(q.x, q.y)) continue; const sp = Art.riderTop(q.shirt, q.helmet, q.skin); b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a + Math.PI / 2); b.fillStyle = '#0004'; b.fillRect(-sp.width / 2 + 1, -sp.height / 2 + 1.5, sp.width, sp.height); b.drawImage(sp, -sp.width / 2, -sp.height / 2); b.restore(); }
+  if (this.parked) { const pk = this.parked; if (inV(pk.x, pk.y)) { b.save(); b.translate(pk.x - ox, pk.y - oy); b.rotate(pk.a + Math.PI / 2); b.drawImage(Art.bikeTop(), -1.5, -4); b.restore(); } }
+};
+/* ---------- caminar (modo libre): bajarse de la bici y recorrer la ciudad a pie ---------- */
+const _rideUpdate = Ride.prototype.update;
+Ride.prototype.update = function (dt, dir) {
+  if (this.p.veh === 'walk') { this.stepT = (this.stepT || 0) + dt * this.p.v * .12; }
+  _rideUpdate.call(this, dt, dir);
+};
+Ride.prototype.getOff = function () { const P = this.p; this.parked = { x: P.x, y: P.y, a: P.a }; P.veh = 'walk'; P.v = 0; Snd.sfx('tap'); this.float('A pie', PAL.vd1); };
+Ride.prototype.getOn = function () { const P = this.p, pk = this.parked; if (!pk || dist(pk.x, pk.y, P.x, P.y) > 22 * WK) return false; P.x = pk.x; P.y = pk.y; P.a = pk.a; this.parked = null; P.veh = 'bike'; Snd.sfx('coin'); this.float('¡A pedalear!', PAL.vd1); return true; };
+const _uActions = ModeUsuario.prototype.actions;
+ModeUsuario.prototype.actions = function () {
+  const a = _uActions.call(this); if (!this.free || this.sub) return a; const R = this.ride, P = R.p;
+  if (P.veh === 'bike') a.push({ id: 'off', icon: 'usuario', label: 'Bajarse', fn: () => R.getOff() });
+  else if (P.veh === 'walk') a.push({ id: 'on', icon: 'estacion', label: R.parked && dist(R.parked.x, R.parked.y, P.x, P.y) < 22 * WK ? 'Subirse' : 'Ir a la bici', fn: () => { if (!R.getOn()) { R.target = R.marker({ x: R.parked.x, y: R.parked.y, r: 12, col: PAL.vd, label: 'Tu bici', enter: m => R.removeMarker(m) }); JE.ui && JE.ui.toast('🚲 Sigue la línea hasta tu bici'); } } });
+  return a;
+};
+
+/* ---------- BAJAR Y ORGANIZAR BICIS (con equilibrio) ----------
+   El carro no puede parquear pegado a la estación: hay que llevar las bicis a pie, una o dos a la vez, sin que se caigan. */
+class MGDescarga extends MG {
+  constructor(parent, o) {
+    super(parent, o); this.type = o.type || 'llevar'; this.n = clamp(o.n || 4, 1, 6); this.dist = o.dist || 30; this.min = o.clock0 || 600;
+    this.moved = 0; this.drops = 0; this.doubles = 0; this.state = 'pick'; this.carry = 0; this.wx = 0; this.th = 0; this.tv = 0; this.push = 0; this.fallT = 0;
+    this.docks = []; const cap = 10; for (let i = 0; i < cap; i++) this.docks.push(this.type === 'recoger' ? i < this.n + 2 : i < 2);
+    this.coach = this.type === 'llevar' ? 'Toma 1 o 2 bicis del camión. Mientras caminas, usa ◀ ▶ para no dejarlas caer.' : 'Toma bicis de la estación y llévalas al camión. ◀ ▶ para mantener el equilibrio.';
+  }
+  srcX() { return this.type === 'llevar' ? 0 : 1; }
+  update(dt) {
+    this.tick(dt); this.min += dt * 1.5;
+    if (this.fallT > 0) { this.fallT -= dt; if (this.fallT <= 0) { this.th = 0; this.tv = 0; } return; }
+    if (this.state === 'walk' || this.state === 'back') {
+      const to = this.state === 'walk' ? 1 - this.srcX() : this.srcX(), sp = (this.carry === 2 ? .3 : .36) * (this.p.paceRate || 1) * (this.state === 'back' ? 1.6 : 1);
+      this.wx += Math.sign(to - this.wx) * sp * dt;
+      if (this.state === 'walk') {
+        const k = this.carry === 2 ? 1.9 : 1;   // dos bicis: el doble de difícil
+        this.tv += ((this.rng.f() - .5) * 3.2 * k + this.th * 1.6 * k + this.push * 4.5) * dt; this.tv *= Math.pow(.35, dt); this.th += this.tv * dt;
+        if (Math.abs(this.th) > 1) { this.drops++; this.errors++; this.fallT = 1.4; this.score = Math.max(0, this.score - 2); Snd.sfx('bad'); vib(50); this.pop('¡Se cayeron!', 100, 40, PAL.cor); this.wx = this.srcX(); this.state = 'pick'; this.carry = 0; return; }
+      }
+      if ((to === 1 && this.wx >= 1) || (to === 0 && this.wx <= 0)) { this.wx = to; if (this.state === 'walk') this.state = 'drop'; else this.state = this.moved >= this.n ? 'end' : 'pick'; this.th = 0; this.tv = 0; }
+    }
+    if (this.state === 'drop') this.place();
+    if (this.state === 'end' && !this.endT) { this.endT = .6; this.good(8 + (this.drops ? 0 : 10), 100, 30, this.drops ? '¡Listo!' : '¡Sin una caída!'); }
+    if (this.endT && (this.endT -= dt) <= 0) this.done = true;
+  }
+  take(k) { if (this.state !== 'pick' || this.fallT > 0) return; k = Math.min(k, this.n - this.moved); if (k < 1) return; this.carry = k; if (k === 2) this.doubles++; this.state = 'walk'; Snd.sfx('tap'); }
+  hold(d) { this.push = d; }
+  place() {
+    const k = this.carry; if (this.type === 'llevar') { let put = 0; for (let i = 0; i < this.docks.length && put < k; i++) if (!this.docks[i]) { this.docks[i] = true; put++; } }
+    else { let took = 0; for (let i = this.docks.length - 1; i >= 0 && took < k; i--) if (this.docks[i]) { this.docks[i] = false; took++; } }
+    this.moved += k; this.score += 5 * k + (k === 2 ? 3 : 0); Snd.sfx('coin'); this.pop('+' + (5 * k), 100, 40, PAL.vd1); this.carry = 0; this.state = 'back';
+  }
+  render(V) {
+    const b = V.b, vw = V.vw, { gy } = this.bgStation(V, this.min), x0 = 34, x1 = vw * .62; this.L = { gy, x0, x1 };
+    Art.truckSide(b, 22, gy + 2, this.type === 'llevar' ? this.n - this.moved : this.moved, 1);
+    prect(b, x1 - 6, gy - 46, vw - x1, 5, PAL.vd); prect(b, x1 - 4, gy - 28, vw - x1 - 4, 30, '#eef2f5');
+    const sp = (vw - x1 - 10) / this.docks.length;
+    this.docks.forEach((d, i) => { const x = Math.round(x1 + i * sp + sp / 2); prect(b, x, gy - 10, 2, 10, '#59606c'); prect(b, x, gy - 12, 2, 2, d ? PAL.vd : '#9aa7b8'); if (d) Art.bikeFront(b, x + 4, gy, 'ok'); });
+    // camino con la distancia
+    for (let x = x0 + 4; x < x1 - 8; x += 6) prect(b, x, gy + 4, 3, 1, '#ffffff88');
+    const px = lerp(x0 + 6, x1 - 10, this.wx), fall = this.fallT > 0;
+    b.save(); b.translate(Math.round(px), gy); b.rotate(fall ? 1.2 : this.th * .55);
+    if (this.carry || fall) for (let j = 0; j < Math.max(1, this.carry); j++) Art.bikeSide(b, 4 + j * 3, -6 - j * 3, { r: 4, face: 1 });
+    b.restore();
+    Art.person(b, px, gy, Art.me({ vest: true }), (this.state === 'walk' || this.state === 'back') ? this.t * 2 : 0, this.wx < (this.state === 'back' ? 1 - this.srcX() : this.srcX()) ? 1 : -1);
+  }
+  hud(V) {
+    this.btns = []; const s = V.s, L = this.L; if (!L) return;
+    V.text((this.type === 'llevar' ? 'BAJAR Y ORGANIZAR BICIS' : 'RECOGER BICIS') + ' · ' + this.moved + '/' + this.n, V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    V.text('El camión quedó a ' + this.dist + ' m: la estación no deja parquear más cerca', V.w / 2, V.top + 40, { size: 12, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 3, body: true });
+    // barra de equilibrio
+    if (this.state === 'walk') { const w = Math.min(260, V.w - 40), x = (V.w - w) / 2, y = V.top + 56, c = V.ctx; c.fillStyle = '#0a2342dd'; c.fillRect(x, y, w, 14); c.fillStyle = PAL.vd2; c.fillRect(x + w * .35, y, w * .3, 14); c.fillStyle = Math.abs(this.th) > .7 ? PAL.cor : '#fff'; c.fillRect(x + w / 2 + this.th * w / 2 - 3, y - 3, 6, 20); }
+    const bh = 66, y = V.h - bh - 14, half = (V.w - 36) / 2;
+    if (this.state === 'pick') { this.button(V, 12, y, half, bh, 'Llevar 1', () => this.take(1), { bg: PAL.vd2, size: 18, key: 'one' }); if (this.n - this.moved >= 2) this.button(V, 24 + half, y, half, bh, 'Llevar 2 (difícil)', () => this.take(2), { bg: '#b0651a', size: 15, key: 'two' }); }
+    else if (this.state === 'walk') { this.button(V, 12, y, half, bh, '◀', () => this.hold(-1), { size: 30, key: 'l' }); this.button(V, 24 + half, y, half, bh, '▶', () => this.hold(1), { size: 30, key: 'r' }); this.coachB = bh + 26; }
+    this.drawPops(V); void s;
+  }
+  release() { this.push = 0; }
+  key(e) { if (e.code === 'ArrowLeft') this.hold(-1); if (e.code === 'ArrowRight') this.hold(1); }
+  hint() { const R = this.rects || {}; if (this.moved >= 2) return null; if (this.state === 'pick') return R.one || null; if (this.state === 'walk' && Math.abs(this.th) > .3) return R[this.th > 0 ? 'l' : 'r'] || null; return null; }
+  bot(err) {
+    if (this.state === 'pick') return this.take(!this.drops && this.n - this.moved >= 2 && this.rng.f() > err ? 2 : 1);
+    if (this.state === 'walk') this.hold(this.th > .12 ? -1 : this.th < -.12 ? 1 : 0);
+  }
+}
 
 /* ---- 70-net.js ---- */
 /* =====================================================================

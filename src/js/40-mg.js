@@ -27,8 +27,7 @@ class MG {
     return false;
   }
   card(V, w, h, title) {
-    const hudB = (($('#hud') || {}).getBoundingClientRect ? $('#hud').getBoundingClientRect().bottom : 50) || 50;
-    const c = V.ctx, x = (V.w - w) / 2, y = Math.max(58, Math.round(hudB) + 8); c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
+    const c = V.ctx, x = (V.w - w) / 2, y = Math.max(58, V.top + 4); c.fillStyle = '#0008'; c.fillRect(x + 6, y + 6, w, h);
     c.fillStyle = PAL.crema; c.fillRect(x, y, w, h); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(x + 2, y + 2, w - 4, h - 4);
     c.fillStyle = PAL.az; c.fillRect(x, y, w, 24); V.text(title, x + 10, y + 17, { size: 15, color: PAL.vd1 });
     return { x, y };
@@ -356,7 +355,7 @@ class MGMecanico extends MG {
   hud(V) {
     this.btns = []; const s = V.s, L = this.L; if (!L || !this.bike) return;
     this.bike.faults.forEach(f => { if (f.ok) return; const h = this.hot(f); V.text(f.seen ? '!' : '?', h.x * s, h.y * s + 6, { size: 16, align: 'center', color: '#fff', stroke: '#0a2342', sw: 4 }); });
-    V.text('Bicis listas: ' + this.fixed + (this.o.short ? '/' + this.o.target : ''), 12, 66, { size: 16, color: PAL.vd1 });
+    V.text('Bicis listas: ' + this.fixed + (this.o.short ? '/' + this.o.target : ''), 12, V.top + 18, { size: 16, color: PAL.vd1 });
     const n = TOOLS.length, pad = 6, bw = Math.min(110, (V.w - pad * (n + 1)) / n), bh = Math.min(76, Math.max(58, V.h * .11)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + (this.gauge ? 96 : 26);
     TOOLS.forEach(([id, label], i) => {
       const col = Object.values(FAULTS).find(f => f.tool === id).col;
@@ -441,7 +440,7 @@ class MGBodega extends MG {
     this.btns = []; if (!this.L) return;
     const s = V.s; V.text('ESCÁNER', this.L.vw * .62 * s, (this.L.belt - 24) * s, { size: 11, align: 'center', color: '#ff8fd6' });
     V.text('Camión ' + this.truck + '/10', this.L.vw * .87 * s, (this.L.belt + 26) * s, { size: 12, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 2 });
-    V.text('Bicis nuevas: ' + this.newBikes + '  ·  Precisión ' + Math.round(this.acc() * 100) + '%', 12, 66, { size: 14, color: PAL.vd1 });
+    V.text('Bicis nuevas: ' + this.newBikes + '  ·  Precisión ' + Math.round(this.acc() * 100) + '%', 12, V.top + 18, { size: 14, color: PAL.vd1 });
     const n = this.cats.length, pad = 6, bw = Math.min(120, (V.w - pad * (n + 1)) / n), bh = Math.min(84, Math.max(60, V.h * .12)), y = V.h - bh - 12, x0 = (V.w - (bw * n + pad * (n - 1))) / 2; this.coachB = bh + 26;
     this.cats.forEach((c, i) => this.button(V, x0 + i * (bw + pad), y, bw, bh, CATS[c].name, () => this.sort(c), { icon: c, border: CATS[c].col, color: CATS[c].col, key: 'c_' + c }));
     this.drawPops(V);
@@ -487,7 +486,7 @@ class MGApertura extends MG {
   }
   hud(V) {
     this.btns = []; const s = V.s; if (!this.L) return;
-    V.text(this.mode === 'apertura' ? 'APERTURA DE ESTACIÓN' : 'CIERRE DE ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    V.text(this.mode === 'apertura' ? 'APERTURA DE ESTACIÓN' : 'CIERRE DE ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     if (this.step === 'power' || this.step === 'off') this.button(V, V.w / 2 - 110, V.h - 110, 220, 70, this.holding ? 'SOSTÉN… ' + Math.round(this.hold / .8 * 100) + '%' : (this.step === 'power' ? '⏻ ENCENDER' : '⏻ APAGAR'), () => this.press(true), { bg: PAL.vd2, size: 22, key: 'pw' });
     if (this.step === 'count' && this.opts) { const bw = Math.min(110, (V.w - 40) / 3); this.opts.forEach((v, i) => this.button(V, V.w / 2 - (bw * 3 + 20) / 2 + i * (bw + 10), V.h - 100, bw, 64, String(v), () => this.answer(v), { size: 30, key: 'n' + v })); }
     this.drawPops(V);
@@ -536,7 +535,7 @@ class MGCables extends MG {
       if (this.links[i] >= 0) { const rr = this.pos(1, this.links[i]); pline(b, l.x + 2, l.y, rr.x - 2, rr.y, WCOL[i]); pline(b, l.x + 2, l.y + 1, rr.x - 2, rr.y + 1, WCOL[i]); }
     }
   }
-  hud(V) { this.btns = []; V.text('REPARA EL ANCLAJE', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('REPARA EL ANCLAJE', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
   tap(vx, vy) { for (let i = 0; i < this.n; i++) { const l = this.pos(0, i), r = this.pos(1, i); if (dist(vx, vy, l.x - 3, l.y) < 12) { this.pickL(i); return true; } if (dist(vx, vy, r.x + 3, r.y) < 12) { this.pickR(i); return true; } } return false; }
   hint(V) { if (this.links.some(l => l >= 0) || !this.L) return null; const p = this.sel < 0 ? this.pos(0, 0) : this.pos(1, this.right.indexOf(this.sel)); return { x: (p.x + (this.sel < 0 ? -3 : 3)) * V.s, y: p.y * V.s }; }
   bot(err) { if (this.sel < 0) { const i = this.links.findIndex(l => l < 0); if (i >= 0) this.pickL(i); } else { const j = this.rng.f() < err ? this.rng.i(0, this.n - 1) : this.right.indexOf(this.sel); this.pickR(j); } }
@@ -563,7 +562,7 @@ class MGSimon extends MG {
     const k0 = this.kr(0); prect(b, k0.x - 10, k0.y - 26, k0.s * 2 + 28, k0.s * 2 + 40, '#2b2f38'); prect(b, k0.x - 4, k0.y - 20, k0.s * 2 + 16, 10, '#10243f');
     for (let i = 0; i < 4; i++) { const r = this.kr(i); prect(b, r.x, r.y, r.s, r.s, this.lit === i ? '#ffffff' : shade(KCOL[i], -.45)); prect(b, r.x + 2, r.y + 2, r.s - 4, r.s - 4, this.lit === i ? KCOL[i] : shade(KCOL[i], -.25)); }
   }
-  hud(V) { this.btns = []; V.text('REINICIA EL TÓTEM', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('REINICIA EL TÓTEM', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1 }); this.drawPops(V); }
   tap(vx, vy) { for (let i = 0; i < 4; i++) { const r = this.kr(i); if (vx >= r.x && vx <= r.x + r.s && vy >= r.y && vy <= r.y + r.s) { this.key(i); return true; } } return false; }
   bot(err) { if (this.phase === 'in') this.key(this.rng.f() < err ? this.rng.i(0, 3) : this.seq[this.inp]); }
 }
@@ -583,7 +582,7 @@ class MGInspeccion extends MG {
     prect(b, 26, gy - 46, n * sp + 8, 5, PAL.vd); prect(b, 26, gy - 28, n * sp + 8, 30, '#eef2f5');
     this.bikes.forEach((bk, i) => { const x = Math.round(this.bx(i)); prect(b, x + 3, gy - 9, 2, 1, bk.bad ? PAL.cor : PAL.vd); if (!bk.found) Art.bikeFront(b, x, gy, bk.bad ? 'bad' : 'ok'); else prect(b, x - 2, gy - 4, 6, 2, PAL.vd); });
   }
-  hud(V) { this.btns = []; V.text('VERIFICA LA ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 }); this.drawPops(V); }
+  hud(V) { this.btns = []; V.text('VERIFICA LA ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 }); this.drawPops(V); }
   tap(vx, vy) { if (!this.L) return false; for (let i = 0; i < this.bikes.length; i++) if (Math.abs(vx - this.bx(i)) < this.L.sp / 2 + 1 && vy > this.L.gy - 22 && vy < this.L.gy + 3) { this.pick(i); return true; } return false; }
   bot(err) { const i = this.rng.f() < err ? this.rng.i(0, this.bikes.length - 1) : this.bikes.findIndex(b => b.bad && !b.found); if (i >= 0) this.pick(i); }
 }

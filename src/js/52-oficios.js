@@ -57,7 +57,7 @@ class ShiftMode extends MapMode {
     if (ph.timed) { this.rate = (ph.to - this.clock) / ph.secs; return; }
     let x = this.ride.p.x, y = this.ride.p.y, px = 0; const left = ph.tasks.filter(t => !t.done && !t.opt);
     while (left.length) { left.sort((a, b) => dist(a.x, a.y, x, y) - dist(b.x, b.y, x, y)); const t = left.shift(); px += dist(t.x, t.y, x, y) * 1.35; x = t.x; y = t.y; }
-    const secs = px / (this.ride.p.veh === 'truck' ? 40 : 48) + ph.tasks.filter(t => !t.done && !t.opt).length * (ph.mgSecs || 12) + 8;
+    const secs = px / ((this.ride.p.veh === 'truck' ? 40 : 48) * WK) + ph.tasks.filter(t => !t.done && !t.opt).length * (ph.mgSecs || 12) + 8;
     this.rate = Math.max(.2, (ph.to - this.clock) / (secs * 1.3));
   }
   doTask(t) {
@@ -99,10 +99,11 @@ class ShiftMode extends MapMode {
     const o = (ph.tasks || []).filter(t => !t.done && !t.opt);
     this.coach = ph.coach ? ph.coach(o) : o.length ? 'Siguiente: ' + o[0].label + (o[0].due ? ' · antes de ' + fmtClock(o[0].due) : '') : '';
   }
-  get coachB() { const ph = this.phase; return 30 + Math.min(6, ph && ph.tasks ? ph.tasks.filter(t => !t.done).length : 0) * 22; }
+  get coachB() { const ph = this.phase; return 30 + Math.min(5, ph && ph.tasks ? ph.tasks.filter(t => !t.done).length : 0) * 22; }
   hud2(V) {
-    const ph = this.phase; if (!ph || !ph.tasks) return; const L = ph.tasks.filter(t => !t.done).slice(0, 6); let y = V.h - 24 - L.length * 22;
-    for (const t of L) { V.text((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : ''), 10, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
+    const ph = this.phase; if (!ph || !ph.tasks) return; const L = ph.tasks.filter(t => !t.done).slice(0, 5); let y = V.h - 24 - L.length * 22;
+    const maxC = Math.floor((V.w - (document.body.classList.contains('ctrlR') ? 200 : 120)) / 6.6), cut = x => x.length > maxC ? x.slice(0, maxC - 1) + '…' : x;
+    for (const t of L) { V.text(cut((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : '')), 10, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
   }
   info() { const ph = this.phase; return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: ph ? ph.short || ph.name.split(':')[0] : '' }].concat(this.chips ? this.chips() : []) }; }
   bot(err) { if (this.sub) return this.sub.bot(err); this.retarget(); this.botDrive(); }
@@ -113,19 +114,22 @@ const nearestOf = (list, x, y, n) => list.slice().sort((a, b) => dist(a.x, a.y, 
 
 /* ======================= 2. ANFITRIÓN ======================= */
 class ModeAnfitrionR extends ShiftMode {
+  addSvc(s) { const v = this.svc || (this.svc = { served: 0, errors: 0 }); v.served += s.served || 0; v.errors += s.errors || 0; }
   constructor(role, T, opt) {
     super(role, T, opt); const R = this.rng, M = JE.map, tm = this.timeMul;
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const mans = M.stations.filter(s => s.type === 'm' && M.stations.some(a => a.type === 'a' && dist(a.x, a.y, s.x, s.y) < 120 * TS));
     const home = this.home = R.pick(mans.length ? mans : M.stations.filter(s => s.type === 'm'));
-    this.setupRide({ sim: this.sim, start: { x: home.x, y: home.y + 10 } });
+    this.setupRide({ sim: this.sim, start: { x: home.x, y: home.y + 10 * WK } });
     const n = 2 + R.i(0, 3), autos = this.autos = nearestOf(M.stations.filter(s => s.type === 'a'), home.x, home.y, n);
     const ap = s => new MGApertura(this, { inv: true, docks: 5 + R.i(0, 2), clock0: this.clock }), ci = s => new MGApertura(this, { cierre: true, docks: 5 + R.i(0, 2), clock0: this.clock });
     if (T === 1) {
       this.begin([
         { name: 'Apertura e inventario', short: 'Apertura', from: 300, to: 330, mgSecs: 13, toast: '🎒 5:00 a. m.: el supervisor te entregó la tula (llaves y celular). Abre ' + n + ' estaciones automáticas y la tuya antes de las 5:30.',
           tasks: autos.map(s => T_ST(s, { label: 'Abrir ' + s.name, due: 330, mg: () => ap(s) })).concat([T_ST(home, { label: 'Abrir tu estación: ' + home.name, due: 330, col: PAL.vd, mg: () => new MGApertura(this, { inv: true, docks: 8, clock0: this.clock }) })]) },
-        { name: 'Sistema abierto: atención en ' + home.name, short: 'Ventanilla', from: 330, to: 810, secs: 110, mg: () => new MGAnfitrion(this, { turno: 2, dur: 110 * tm, clock0: 330, rate: 480 / (110 * tm), cap: Math.min(12, home.cap) }), after: s => { this.svc = s; } },
+        { name: 'Sistema abierto: atención en ' + home.name, short: 'Ventanilla', from: 330, to: 570, secs: 60, mg: () => new MGAnfitrion(this, { turno: 2, dur: 60 * tm, clock0: 330, rate: 240 / (60 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
+        { name: 'Llegó el carro de balance: baja y organiza las bicis', short: 'Balance', from: 570, to: 585, secs: 25, mg: () => new MGDescarga(this, { type: 'llevar', n: 4, dist: 25 + R.i(0, 30), clock0: 570 }) },
+        { name: 'Atención en ' + home.name, short: 'Ventanilla', from: 585, to: 810, secs: 50, mg: () => new MGAnfitrion(this, { turno: 2, dur: 50 * tm, clock0: 585, rate: 225 / (50 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
         { name: 'Relevo de turno: entregas la estación', from: 810, to: 811, timed: true, secs: 1 }
       ]);
       this.goal('Abre las ' + n + ' automáticas y la tuya', true, () => this.phases[0].tasks.every(t => t.done && !t.lost), () => this.phases[0].tasks.filter(t => t.done).length + '/' + (n + 1));
@@ -133,13 +137,16 @@ class ModeAnfitrionR extends ShiftMode {
       this.goal('Atiende 14 usuarios con máximo 2 errores', false, () => this.svc && this.svc.served >= 14 && this.svc.errors <= 2, () => this.svc ? this.svc.served + ' atendidos' : 'pendiente');
     } else {
       this.begin([
-        { name: 'Turno de cierre: atención en ' + home.name, short: 'Ventanilla', from: 810, to: 1260, secs: 100, mg: () => new MGAnfitrion(this, { turno: 3, dur: 100 * tm, clock0: 810, rate: 450 / (100 * tm), cap: Math.min(12, home.cap) }), after: s => { this.svc = s; } },
+        { name: 'Turno de cierre: atención en ' + home.name, short: 'Ventanilla', from: 810, to: 1080, secs: 55, mg: () => new MGAnfitrion(this, { turno: 3, dur: 55 * tm, clock0: 810, rate: 270 / (55 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
+        { name: 'Estación llena: ayuda al carro de balance a recoger bicis', short: 'Balance', from: 1080, to: 1095, secs: 25, mg: () => new MGDescarga(this, { type: 'recoger', n: 4, dist: 25 + R.i(0, 30), clock0: 1080 }) },
+        { name: 'Atención en ' + home.name, short: 'Ventanilla', from: 1095, to: 1260, secs: 45, mg: () => new MGAnfitrion(this, { turno: 3, dur: 45 * tm, clock0: 1095, rate: 165 / (45 * tm), cap: Math.min(12, home.cap) }), after: s => this.addSvc(s) },
         { name: 'El sistema cerró: recibe bicis hasta las 10 p. m.', short: 'Devoluciones', from: 1260, to: 1320, secs: 30, mg: () => new MGAnfitrion(this, { turno: 2, returnsOnly: true, seats: false, dur: 30 * tm, clock0: 1260, rate: 60 / (30 * tm), cap: Math.min(12, home.cap) }), after: s => { this.ret = s; } },
         { name: 'Inventario y cierre de tu estación', short: 'Inventario', from: 1320, to: 1325, secs: 14, mg: () => new MGApertura(this, { cierre: true, docks: 8, clock0: 1320 }), after: s => { this.invErr += s.invErr || 0; } },
         { name: 'Cierre de las estaciones automáticas', short: 'Cierre', from: 1325, to: 1350, mgSecs: 12, tasks: autos.map(s => T_ST(s, { label: 'Cerrar ' + s.name, due: 1350, mg: () => ci(s) })) }
       ]);
-      this.goal('Cierra tu estación y las ' + n + ' automáticas', true, () => this.pi >= 3 && this.phases[3].tasks.every(t => t.done && !t.lost), () => this.pi >= 3 ? this.phases[3].tasks.filter(t => t.done).length + '/' + n : 'pendiente');
-      this.goal('Inventarios exactos', false, () => this.pi >= 3 && this.invErr === 0, () => this.invErr + ' errores');
+      const last = () => this.phases[this.phases.length - 1];
+      this.goal('Cierra tu estación y las ' + n + ' automáticas', true, () => this.pi >= this.phases.length - 1 && last().tasks.every(t => t.done && !t.lost), () => this.pi >= this.phases.length - 1 ? last().tasks.filter(t => t.done).length + '/' + n : 'pendiente');
+      this.goal('Inventarios exactos', false, () => this.pi >= this.phases.length - 1 && this.invErr === 0, () => this.invErr + ' errores');
       this.goal('Atiende 12 usuarios', false, () => this.svc && this.svc.served + (this.ret ? this.ret.served : 0) >= 12, () => (this.svc ? this.svc.served + (this.ret ? this.ret.served : 0) : 0) + ' atendidos');
     }
   }
@@ -153,7 +160,7 @@ class ModeApoyoR extends ShiftMode {
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const autos = M.stations.filter(s => s.az === z[0]), cx = autos.reduce((a, s) => a + s.x, 0) / autos.length, cy = autos.reduce((a, s) => a + s.y, 0) / autos.length;
     const nr = 2 + R.i(0, 3), mans = nearestOf(M.stations.filter(s => s.type === 'm'), cx, cy, nr), start = nearestOf(autos, cx, cy, 1)[0];
-    this.setupRide({ sim: this.sim, start: { x: start.x, y: start.y + 10 } });
+    this.setupRide({ sim: this.sim, start: { x: start.x, y: start.y + 10 * WK } });
     const relevo = s => new MGAnfitrion(this, { turno: 2, short: true, dur: 24 * tm, cap: 6, clock0: this.clock, rate: 2 });
     const invs = () => nearestOf(autos, cx, cy, Math.min(4, autos.length)).map(s => T_ST(s, { label: 'Inventario de control · ' + s.name, opt: true, col: PAL.vd, pts: 12, mg: () => new MGConteo(this, { docks: 6, clock0: this.clock, title: 'INVENTARIO DE CONTROL' }), after: () => { this.invOk++; } }));
     const rel = (a, b) => mans.map((s, i) => T_ST(s, { label: 'Relevo en ' + s.name, due: Math.round(a + (b - a) * (i + 1) / mans.length), col: PAL.cie, mg: () => relevo(s) }));
@@ -200,7 +207,7 @@ class ModeSupervisorR extends ShiftMode {
     } else if (T === 2) {
       this.begin([{ name: 'Turno intermedio: control, inventarios y cuidado de los anfitriones', short: 'Intermedio', from: 540, to: 1080, timed: true, secs: 170, spawn: inc, every: 10, maxDyn: 4,
         start: ph => nearestOf(area.filter(s => s.type === 'a'), seed.x, seed.y, 3).forEach(s => ph.tasks.push(T_ST(s, { label: 'Inventario · ' + s.name, opt: true, col: PAL.vd, pts: 12, mg: () => new MGConteo(this, { clock0: this.clock }), after: () => this.invOk++ }))) }]);
-      this.goal('Resuelve 4 avisos', true, () => this.incOk >= 4, () => this.incOk + '/4');
+      this.goal('Resuelve 3 avisos', true, () => this.incOk >= 3, () => this.incOk + '/3');
       this.goal('2 inventarios exactos', false, () => this.invOk >= 2, () => this.invOk + '/2');
       this.goal('Ningún aviso vencido', false, () => this.incLost === 0, () => this.incLost + ' vencidos');
     } else {
@@ -235,7 +242,7 @@ class ModeTecnicoR extends ShiftMode {
     super(role, T, opt); const R = this.rng, M = JE.map, casa = M.poi.casa;
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const seed = R.pick(M.stations.filter(s => s.zone === R.pick(['centro', 'sur', 'centro']))); this.zs = nearestOf(this.sim.st, seed.x, seed.y, 14);
-    this.setupRide({ sim: this.sim, start: { x: casa.x, y: casa.y + 6 } });
+    this.setupRide({ sim: this.sim, start: { x: casa.x, y: casa.y + 6 * WK } });
     this.banks = 2; this.fixed = 0; this.dead = 0; this.opSum = 0; this.opT = 0;
     this.phones = this.zs.filter(s => s.type === 'm').map(s => ({ s, bat: R.i(45, 90), weak: R.f() < .35, task: null }));
     this.baseM = this.ride.marker({ x: casa.x, y: casa.y, r: 22, col: PAL.cie, label: 'Casa EnCicla · power banks', enter: () => { if (this.banks < 3) { this.banks = 3; this.ride.float('Power banks: 3', PAL.cie); Snd.sfx('coin'); } } });
@@ -270,7 +277,7 @@ class ModeTecnicoR extends ShiftMode {
 class ModeBodegaR extends ShiftMode {
   constructor(role, T, opt) {
     super(role, T, opt); const M = JE.map, tm = this.timeMul, b = geoP(PUNTO_BODEGA[0], PUNTO_BODEGA[1]), bo = M.nearestOpen(Math.floor(b.x / TS), Math.floor(b.y / TS), true), taller = M.poi.taller;
-    this.setupRide({ start: { x: bo.x * TS + 4, y: bo.y * TS + 4 }, veh: 'truck', load: 0, cap: 14 });
+    this.setupRide({ start: { x: bo.x * TS + TS / 2, y: bo.y * TS + TS / 2 }, veh: 'truck', load: 0, cap: 14 });
     this.begin([
       { name: 'Recepción en la bodega', short: 'Bodega', from: 480, to: 720, secs: 100, mg: () => new MGBodega2(this, { boxes: 7, clock0: 480 }), after: s => { this.bod = s; this.ride.p.load = Math.min(14, PARTES.reduce((a, k) => a + s.loaded[k], 0)); } },
       { name: 'Llevar el pedido al taller', short: 'Entrega', from: 720, to: 780, mgSecs: 3, toast: '🚚 El pedido va en el camión: llévalo al taller de los mecánicos (Casa EnCicla).', tasks: [{ x: taller.x, y: taller.y, r: 22, label: 'Taller de mecánicos', due: 780, col: PAL.cie, pts: 30, after: () => { this.entregado = true; this.ride.p.load = 0; } }] }
@@ -345,13 +352,14 @@ class ModeBalanceR extends ShiftMode {
   /* orden de Monitoreo: llevar o recoger bicis; a veces recoger una bici dañada para el taller */
   orden(ph, pool) {
     const R = this.rng, P = this.ride.p, used = new Set(ph.tasks.filter(t => !t.done).map(t => t.st));
-    const st = (pool ? this.sim.st.filter(s => pool.some(p => p.i === s.i)) : this.sim.st).filter(s => !used.has(s) && s.open && dist(s.x, s.y, P.x, P.y) > 120 && dist(s.x, s.y, P.x, P.y) < 900 * SC);
+    const st = (pool ? this.sim.st.filter(s => pool.some(p => p.i === s.i)) : this.sim.st).filter(s => !used.has(s) && s.open && dist(s.x, s.y, P.x, P.y) > 120 * WK && dist(s.x, s.y, P.x, P.y) < 900 * SC * WK);
     if (!st.length) return null;
     if (R.f() < .22) { const s = R.pick(st); return T_ST(s, { label: '🔧 Bici dañada · ' + s.name, say: 'Hay una bici dañada en ' + s.name + ': recógela para el taller', due: Math.round(this.clock + this.rate * 60), col: PAL.cor, pts: 12, can: (t, q) => { if (P.load < P.cap && s.bikes > 0) return true; if (!q) JE.ui && JE.ui.toast('El camión está lleno: descarga en Casa EnCicla'); return false; }, after: () => { s.bikes--; P.load++; this.dmg++; } }); }
     st.sort((a, b) => a.bikes / a.cap - b.bikes / b.cap); const low = R.f() < .55, s = R.pick(low ? st.slice(0, 5) : st.slice(-5)), type = s.bikes / s.cap < .5 ? 'llevar' : 'recoger', n = Math.max(3, Math.round(Math.abs(s.bikes - s.cap * .55)));
     const t = T_ST(s, { label: (type === 'llevar' ? 'LLEVAR ' : 'RECOGER ') + n + ' · ' + s.name + (s.e ? ' ⚡' : ''), say: 'Orden de Monitoreo: ' + (type === 'llevar' ? 'lleva ' : 'recoge ') + n + ' bicis a ' + s.name, due: Math.round(this.clock + this.rate * 55), col: type === 'llevar' ? PAL.vd : PAL.amb, pts: 30 });
     t.can = (tt, q) => { const ok = type === 'llevar' ? P.load > 0 : P.load < P.cap; if (!ok && !q) JE.ui && JE.ui.toast(type === 'llevar' ? 'Camión vacío: carga en Casa EnCicla' : 'Camión lleno: descarga en Casa EnCicla'); return ok; };
     t.after = () => { let m; if (type === 'llevar') { m = Math.min(n, P.load - this.dmg > 0 ? P.load - this.dmg : 0, s.cap - s.bikes); P.load -= m; s.bikes += m; } else { m = Math.min(n, s.bikes, P.cap - P.load); P.load += m; s.bikes -= m; } this.ordOk++; Snd.sfx('truck'); };
+    t.mg = () => new MGDescarga(this, { type, n: Math.min(6, n), dist: 15 + this.rng.i(0, 45), clock0: this.clock });   // el camión parquea lejos: bajar y organizar
     t.onLost = () => { this.ordLost++; };
     return t;
   }

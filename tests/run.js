@@ -79,6 +79,37 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   await p.evaluate(() => { if (JE.game.mode) JE.game.stop(); });
   const rt = await p.evaluate(() => { const t = Save.exportText(); Save.importText(t); return Save.valid(Save.data); }); ok(rt, 'exportar/importar partidas');
 
+  console.log('3b) Pantalla sin encimados, caminar, descarga con equilibrio y música');
+  const ov = await p.evaluate(async () => {
+    const out = [], hit = (a, b) => a && b && a.width > 0 && b.width > 0 && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+    const R = id => { const e = document.querySelector(id); if (!e || getComputedStyle(e).display === 'none' || getComputedStyle(e).opacity === '0') return null; return e.getBoundingClientRect(); };
+    const cv = document.querySelector('#cv').getBoundingClientRect(), mm = () => { const r = JE.game.mode && JE.game.mode.ride && JE.game.mode.ride.mmRect; return r ? { left: cv.left + r.x, right: cv.left + r.x + r.w, top: cv.top + r.y, bottom: cv.top + r.y + r.h + 18 } : null; };
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    for (const [role, t, ctrl] of [['usuario', 2, 'flotante'], ['balance', 1, 'flechas'], ['apoyo', 1, 'fijo'], ['anfitrion', 1, 'flotante'], ['mecanico', 2, 'flotante']]) {
+      Save.data.settings.ctrl = ctrl; if (JE.game.mode) JE.game.stop(); JE.game.start(role, t, { seed: 31, nov: NOVEDADES[0] }); UI.toast('Aviso de prueba para revisar que no tape nada en la pantalla');
+      await wait(700);
+      const g = R('#goalsMini'), to = R('#toast.on'), co = R('#coach'), ab = R('#actBar'), hud = R('#hud'), m = mm();
+      if (hit(g, m)) out.push(role + ': metas sobre el minimapa'); if (hit(to, g)) out.push(role + ': aviso sobre las metas'); if (hit(to, m)) out.push(role + ': aviso sobre el minimapa');
+      if (hit(co, ab) && ab.height > 0) out.push(role + ': ayuda sobre los botones'); if (g && hud && g.top < hud.bottom - 1) out.push(role + ': metas debajo del HUD');
+      if (ctrl === 'flechas') { for (const [, x, y] of Ctrl.arrows()) { const r = { left: cv.left + x - 26, right: cv.left + x + 26, top: cv.top + y - 26, bottom: cv.top + y + 26 }; if (hit(co, r)) out.push(role + ': ayuda sobre las flechas'); if (hit(ab, r) && ab.height > 0) out.push(role + ': botones sobre las flechas'); } }
+    }
+    Save.data.settings.ctrl = 'flotante';
+    // caminar en el modo libre
+    JE.game.stop(); JE.game.start('usuario', 1, { seed: 5, nov: NOVEDADES[0], free: true }); const M = JE.game.mode, Rd = M.ride; Rd.getOff();
+    const x0 = Rd.p.x, y0 = Rd.p.y; Input.botDir = { x: 1, y: 0, m: 1 }; for (let i = 0; i < 60; i++) M.update(1 / 30); Input.botDir = { x: -1, y: 0, m: 1 }; for (let i = 0; i < 60; i++) M.update(1 / 30); Input.botDir = null;
+    const walked = Rd.p.veh === 'walk' && (Math.abs(Rd.p.x - x0) + Math.abs(Rd.p.y - y0) > 0 || Rd.stats.dist > 10); Rd.p.x = Rd.parked.x; Rd.p.y = Rd.parked.y; const on = Rd.getOn() && Rd.p.veh === 'bike';
+    // descarga con equilibrio: el bot la termina sin perder bicis
+    JE.headless = true; const D = new MGDescarga({ rng: new RNG(3), has: () => false, mods: { demand: 1 }, patMul: 1, paceRate: 1 }, { type: 'llevar', n: 5, dist: 40 }); let k = 0;
+    while (!D.done && k < 30 * 120) { if (k % 3 === 0) D.bot(.05); D.update(1 / 30); k++; } JE.headless = false;
+    // música: más velocidad = tempo más rápido
+    Snd.init(); Snd.mood = { e: 0, t: 0, k: 0, n: 0, sl: 0 }; Snd.mt = { e: 0, t: 0, k: 0, n: 0, sl: 0 }; Snd.nextT = 1e9; Snd.sched(); const slow = Snd.spb; Snd.setMood({ e: 1, k: 3 }); for (let i = 0; i < 40; i++) Snd.sched(); const fast = Snd.spb;
+    JE.game.stop(); UI.go('sHome');
+    return { out, walked, on, descarga: D.done && D.moved === 5, drops: D.drops, music: fast < slow };
+  });
+  ok(!ov.out.length, 'sin textos ni avisos encimados en 5 pantallas ' + ov.out.join(' | '));
+  ok(ov.walked && ov.on, 'modo libre: bajarse, caminar y volver a subirse a la bici');
+  ok(ov.descarga, 'bajar y organizar bicis con equilibrio (el bot lleva las 5, ' + ov.drops + ' caídas)');
+  ok(ov.music, 'la música se acelera con la velocidad y la racha');
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

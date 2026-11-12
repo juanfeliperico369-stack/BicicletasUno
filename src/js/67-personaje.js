@@ -129,7 +129,7 @@ UI.personajes = function () {
 /* ---------- controles: joystick flotante, joystick fijo o flechas ---------- */
 const Ctrl = JE.ctrl = {
   kind() { return (Save.data && Save.data.settings.ctrl) || 'flotante'; },
-  anchor() { return { x: 86 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sal')) || 0), y: View.h - 150 }; },
+  anchor() { return { x: View.w - 86 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sar')) || 0), y: View.h - 120 }; },   // a la derecha: a la izquierda van las tareas y la ayuda
   arrows() { const a = this.anchor(), s = 52; return [['ArrowUp', a.x, a.y - s, '▲'], ['ArrowDown', a.x, a.y + s, '▼'], ['ArrowLeft', a.x - s, a.y, '◀'], ['ArrowRight', a.x + s, a.y, '▶']]; },
   /* devuelve true si el toque lo tomó el control */
   down(e, cx, cy, cv) {

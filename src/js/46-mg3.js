@@ -19,7 +19,7 @@ class MGConteo extends MG {
     this.docks.forEach((d, i) => { const x = Math.round(r0 + i * sp + sp / 2); prect(b, x - 1, gy - 12, 3, 12, '#59606c'); prect(b, x - 2, gy - 15, 5, 3, PAL.vd); if (d) Art.bikeFront(b, x + 4, gy, 'ok'); });
   }
   hud(V) {
-    this.btns = []; V.text(this.o.title || 'INVENTARIO DE LA ESTACIÓN', V.w / 2, 70, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    this.btns = []; V.text(this.o.title || 'INVENTARIO DE LA ESTACIÓN', V.w / 2, V.top + 18, { size: 20, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     const bw = Math.min(110, (V.w - 40) / 3); this.opts.forEach((v, i) => this.button(V, V.w / 2 - (bw * 3 + 20) / 2 + i * (bw + 10), V.h - 100, bw, 64, String(v), () => this.answer(v), { size: 30, key: 'n' + v }));
     this.drawPops(V);
   }
@@ -63,7 +63,7 @@ class MGTulas extends MG {
   }
   hud(V) {
     this.btns = []; const L = this.L; if (!L) return; const s = V.s;
-    V.text(this.mode === 'armar' ? 'ARMAR TULAS · Casa EnCicla' : 'RECOGER TULAS · cargar celulares', V.w / 2, 66, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    V.text(this.mode === 'armar' ? 'ARMAR TULAS · Casa EnCicla' : 'RECOGER TULAS · cargar celulares', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     this.tulas.forEach((t, i) => V.text(t.name.replace(/^(Parque (de |del |Principal de )?|Estación |Universidad )/, '').slice(0, 12), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30 + (i % 2) * 16, { size: 10, align: 'center', color: '#fff', bg: t.col + 'cc', pad: 2 }));
     if (this.mode === 'armar') {
       const n = this.keys.length, bw = Math.min(64, (V.w - 20) / Math.max(n, 4) - 6); let y = V.h - 170;
@@ -142,7 +142,7 @@ class MGBodega2 extends MG {
   }
   hud(V) {
     this.btns = []; const L = this.L; if (!L) return; const s = V.s, B = this.curBox();
-    V.text({ descargar: '1 · DESCARGAR', verificar: '2 · VERIFICAR', organizar: '3 · ORGANIZAR', cargar: '4 · CARGAR EL PEDIDO' }[this.step] || '', V.w / 2, 66, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
+    V.text({ descargar: '1 · DESCARGAR', verificar: '2 · VERIFICAR', organizar: '3 · ORGANIZAR', cargar: '4 · CARGAR EL PEDIDO' }[this.step] || '', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
     if (this.step === 'descargar') { const left = this.boxes.map((x, i) => x.where === 'truck' ? i : -1).filter(i => i >= 0); left.slice(0, 6).forEach((i, k) => this.button(V, 10 + k * 56, V.h - 96, 50, 60, '📦', () => this.unload(i), { size: 26, key: 'b' + k })); }
     if (this.step === 'verificar' && B) {
       const w = Math.min(380, V.w - 20), { x, y } = this.card(V, w, 140, 'CAJA ' + (this.table.indexOf(B) + 1) + ' DE ' + this.table.length);
@@ -267,7 +267,7 @@ class MGLlamadas extends MG {
     this.queue.forEach((q, i) => { const x = 14 + i * 28, y = 14, f = clamp(q.wait / this.pat, 0, 1); prect(b, x, y, 20, 26, q === this.cur ? PAL.vd : '#e9eef3'); prect(b, x + 4, y + 4, 12, 10, '#1d2c44'); prect(b, x, y + 28, Math.round(20 * f), 2, f > .5 ? PAL.vd : f > .25 ? PAL.amb : PAL.cor); if (q !== this.cur && (this.t * 4 | 0) % 2) pring(b, x + 10, y + 12, 14, '#fff'); });
   }
   hud(V) {
-    this.btns = []; V.text('ATENCIÓN AL CLIENTE · resueltas ' + this.solved, 12, 66, { size: 15, color: PAL.vd1 });
+    this.btns = []; V.text('ATENCIÓN AL CLIENTE · resueltas ' + this.solved, 12, V.top + 18, { size: 15, color: PAL.vd1 });
     if (!this.cur && this.queue.length) this.button(V, V.w / 2 - 90, V.h - 100, 180, 64, '📞 CONTESTAR', () => this.answer(), { bg: PAL.vd2, size: 20, key: 'tel' });
     const q = this.cur; this.hideGoals = !!q;
     if (q) {

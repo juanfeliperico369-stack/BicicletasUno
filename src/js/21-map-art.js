@@ -3,7 +3,7 @@
    ===================================================================== */
 CityMap.landmarkCanvas = function (i) {
     if (this.lmCanvas[i]) return this.lmCanvas[i];
-    const L = LANDMARKS[i], W = L.w * TS, H = L.h * TS;
+    const L = LANDMARKS[i], W = L.w * 8, H = L.h * 8;   // el dibujo es de 8 px por casilla y se escala al pintarlo
     const cv = Art.mk(W, H, c => {
       const R = (a, b, w, h, col) => prect(c, a, b, w, h, col), cx = W >> 1, cy = H >> 1;
       const trees = (n, seed, area) => { for (let k = 0; k < n; k++) { const tx = area[0] + h2(k, seed) * area[2], ty = area[1] + h2(k, seed + 1) * area[3], g = h2(k, seed + 2); pdisc(c, tx + 1, ty + 1, 3, '#0003'); pdisc(c, tx, ty, 3, g < .15 ? '#f2c230' : g < .25 ? '#e88ab8' : '#3f8a3f'); pdisc(c, tx - 1, ty - 1, 1, '#5fae4f'); } };

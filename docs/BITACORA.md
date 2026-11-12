@@ -216,3 +216,20 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - La primera fase de cada turno arrancaba a las 6:00 y todo salía tarde; un turno de supervisor no terminaba; dos minijuegos no cerraban con el bot.
 
 **Qué falta:** la lista oficial de estaciones, horarios por confirmar (Monitoreo, Balance T2/T3), ubicación real de la bodega y el taller, y la trama de los personajes.
+
+## 2026-11-12 · v0.8.0 · Ciudad con espacio, gente, equilibrio y música interactiva
+
+**Qué cambió**
+1. **Calles con más espacio y redondeadas:** el mundo se dibuja al doble (16 px por casilla de 20 m). Hay andenes, sardineles y esquinas curvas, y el ciclista ya cabe en proporción.
+2. **Ciudad viva:** motos, camiones, buses, taxis, ciclistas en las ciclorrutas y peatones.
+3. **Modo libre a pie:** te bajas de la bici, caminas por donde quieras y vuelves a subirte.
+4. **Bajar y organizar bicis con equilibrio:** el carro parquea lejos de la estación; se llevan 1 o 2 bicis sin dejarlas caer (Balance y Anfitrión).
+5. **Pantalla ordenada:** nada se tapa; las metas y los avisos duran poco, y los controles van a la derecha.
+6. **Música interactiva:** cambia con la velocidad, la racha, las subidas, la noche y el apuro; las hojas y el timbre suenan en el tono.
+
+**Qué se probó**
+- 100 partidas del bot y humo de interfaz.
+- Prueba nueva sin encimados en 5 pantallas, caminar, descarga con equilibrio y música que reacciona.
+- CPU 4x lenta y la sala de 3 dispositivos.
+
+**Qué falta:** la lista oficial de estaciones, la confirmación de horarios y de la ubicación de bodega y taller, y la trama de los personajes.

@@ -9,16 +9,16 @@ class ModeCarrera extends MapMode {
     super(role, T, opt); const R = this.rng; this.rate = 1.2; this.clock = 480; this.limit = 300;
     this.sim = new StationSim(R, { demand: this.mods.demand });
     const st0 = R.pick(JE.map.stations.filter(s => s.zone === 'centro'));
-    this.setupRide({ sim: this.sim, start: { x: st0.x - 5, y: st0.y } });
+    this.setupRide({ sim: this.sim, start: { x: st0.x - 5 * WK, y: st0.y } });
     const pool = PUBLIC_LM(); let cur = { x: st0.x / TS, y: st0.y / TS }; this.cps = [];
     for (let k = 0; k < 4; k++) {
       const free = pool.filter(l => !this.cps.includes(l)), c = free.filter(l => { const d = Math.hypot(l.x + l.w / 2 - cur.x, l.y + l.h / 2 - cur.y); return d >= 22 * SC && d <= 70 * SC; });
       const pick = R.pick(c.length ? c : free); this.cps.push(pick); cur = { x: pick.x + pick.w / 2, y: pick.y + pick.h / 2 };
     }
     const meta = JE.map.stations.filter(s => s !== st0).sort((a, b) => Math.hypot(a.x / TS - cur.x, a.y / TS - cur.y) - Math.hypot(b.x / TS - cur.x, b.y / TS - cur.y))[0];
-    this.pts = this.cps.map(l => ({ x: (l.x + l.w / 2) * TS, y: (l.y + l.h) * TS + 6, r: Math.max(l.w, l.h) * TS / 2 + 10, name: l.name, l })).concat([{ x: meta.x, y: meta.y, r: 18, name: 'Meta: EnCicla ' + meta.name, meta: true }]);
+    this.pts = this.cps.map(l => ({ x: (l.x + l.w / 2) * TS, y: (l.y + l.h) * TS + 6 * WK, r: Math.max(l.w, l.h) * TS / 2 + 10 * WK, name: l.name, l })).concat([{ x: meta.x, y: meta.y, r: 18 * WK, name: 'Meta: EnCicla ' + meta.name, meta: true }]);
     this.idx = 0; this.place(); this.net = !!opt.net; this.countdown = 3.2; this.netT = 0;
-    const mk = (id, name, shirt, k) => ({ id, name, shirt: shirt || PAL.cor, x: st0.x + 5 + k * 3, y: st0.y + k * 2, a: -Math.PI / 2, idx: 0, done: false, ai: !this.net, spd: [0, .72, .84, .95][T], tx: st0.x + 5, ty: st0.y, t: null });
+    const mk = (id, name, shirt, k) => ({ id, name, shirt: shirt || PAL.cor, x: st0.x + (5 + k * 3) * WK, y: st0.y + k * 2 * WK, a: -Math.PI / 2, idx: 0, done: false, ai: !this.net, spd: [0, .72, .84, .95][T], tx: st0.x + 5, ty: st0.y, t: null });
     this.opps = this.net ? (opt.players || [{ id: 0, name: opt.oppName || 'Amigo', shirt: opt.oppShirt }]).map((p, k) => mk(p.id, String(p.name || 'Amigo').slice(0, 16), p.shirt, k)) : [mk(-1, ['', 'Bot Tranquilo', 'Bot Veloz', 'Bot Turbo'][T], opt.oppShirt, 0)];
     this.opp = this.opps[0]; this.ride.opps = this.opps; this.myT = null; this.oppT = null; this.won = false; this.place1 = 0;
     if (this.net) Net.onmsg = m => this.msg(m);
@@ -66,9 +66,9 @@ class ModeCarrera extends MapMode {
     const p = this.pts[o.idx]; if (!p) return;
     let c = { x: Math.floor(o.x / TS), y: Math.floor(o.y / TS) }; const D = JE.map.flow(Math.floor(p.x / TS), Math.floor(p.y / TS), false, c.x, c.y);
     for (let i = 0; i < 2; i++) { const n = JE.map.nextStep(D, c.x, c.y); if (!n) break; c = n; }
-    const tx = c.x * TS + 4, ty = c.y * TS + 4, d0 = Math.hypot(tx - o.x, ty - o.y), ta = d0 > 1 ? Math.atan2(ty - o.y, tx - o.x) : Math.atan2(p.y - o.y, p.x - o.x);
+    const tx = c.x * TS + TS / 2, ty = c.y * TS + TS / 2, d0 = Math.hypot(tx - o.x, ty - o.y), ta = d0 > 1 ? Math.atan2(ty - o.y, tx - o.x) : Math.atan2(p.y - o.y, p.x - o.x);
     o.a += clamp(angDiff(o.a, ta), -6 * dt, 6 * dt);
-    const v = 60 * o.spd * (SURF[JE.map.get(Math.floor(o.x / TS), Math.floor(o.y / TS))] || .6) * (this.mods.rain ? .93 : 1);
+    const v = 60 * WK * o.spd * (SURF[JE.map.get(Math.floor(o.x / TS), Math.floor(o.y / TS))] || .6) * (this.mods.rain ? .93 : 1);
     o.x += Math.cos(o.a) * v * dt; o.y += Math.sin(o.a) * v * dt;
     if (dist(o.x, o.y, p.x, p.y) < p.r) { o.idx++; if (p.meta) this.oppFinish(o); }
   }

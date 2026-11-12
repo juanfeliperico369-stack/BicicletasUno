@@ -16,8 +16,8 @@ const isMulti = id => id === 'carrera' || id === 'equipo';
 /* la misma zona y base para todos (la de Monitoreo turno 1: centro) */
 function coopZone(st) {
   const zl = st.filter(s => s.zone === 'centro'), cx = zl.reduce((a, s) => a + s.x, 0) / zl.length, cy = zl.reduce((a, s) => a + s.y, 0) / zl.length;
-  const zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16), n = JE.map.nearestOpen(Math.floor((zs[0].x + 14) / TS), Math.floor((zs[0].y + 10) / TS), true);
-  return { zs, road: { x: n.x * TS + 4, y: n.y * TS + 4 } };
+  const zs = zl.slice().sort((a, b) => dist(a.x, a.y, cx, cy) - dist(b.x, b.y, cx, cy)).slice(0, 16), n = JE.map.nearestOpen(Math.floor((zs[0].x + 14 * WK) / TS), Math.floor((zs[0].y + 10 * WK) / TS), true);
+  return { zs, road: { x: n.x * TS + TS / 2, y: n.y * TS + TS / 2 } };
 }
 
 /* ---------- anfitrión: Monitoreo con camiones humanos ---------- */

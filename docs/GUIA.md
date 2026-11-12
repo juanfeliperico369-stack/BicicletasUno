@@ -50,6 +50,7 @@ src/js/60-ui.js       UI (portada, escalafón, briefing, resultados, álbum, par
 src/js/90-bot.js      bot de pruebas (JE.bot.run): juega partidas y valida invariantes
 src/js/95-promo.js    íconos de la app e imagen OG 1200x630
 src/js/67-personaje.js creador de personaje, rankings, personajes y tipos de control
+src/js/68-ciudad.js   motos, camiones, ciclistas de las ciclorrutas, caminar en el modo libre y MGDescarga (bajar bicis con equilibrio)
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
@@ -143,13 +144,38 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v0.8 · Ciudad con espacio, gente y música* (`68-ciudad.js` y cambios en 20/30/35/00/60):
+- **Escala del mundo ×2:** `TS = 16` px por casilla (antes 8) y `WK = TS / 8` = 2. Toda distancia o velocidad en px que venía del diseño de 8 px se multiplica por `WK`
+  (velocidades de bici, camión, carros, trenes, tranvía y peatones; radios de llegada; distancias de órdenes). `Ride.marker` escala solo los radios fijos (≤ 30 px);
+  los que se calculan con el tamaño del lugar ya vienen en la escala. Bloques de dibujo de 16×16 casillas (`CH = 16`). Zoom del mapa: `View.apply` divide entre 185 (≈ 12 casillas de ancho en el celular).
+- **Dibujo de 16 px por casilla** (`drawTile`): calles con andén y sardinel, asfalto de ~10 m, **esquinas redondeadas**, bordes amarillos en autopistas, puentes con baranda;
+  edificios por manzana con tanques de agua, aires y terrazas verdes; casas de ladrillo de las laderas; bosque con copas; ciclorrutas con línea central y bici pintada.
+  Los dibujos de los lugares (`21-map-art.js`) siguen siendo de 8 px por casilla y se escalan ×2 al pintarlos. Las estaciones ocupan 64×32 px.
+- **Gente y vehículos:** además de carros, taxis y buses hay **motos** (rápidas, ~38 % de los vehículos) y **camiones** en las vías grandes (`Art.carTop` 'moto'/'camion');
+  **ciclistas** que recorren las ciclorrutas (`ride.npcB`, si los rozas frenas) y peatones.
+- **Caminar (modo libre de Usuario):** botón **Bajarse** deja la bici parqueada (`ride.parked`) y el jugador camina (`veh: 'walk'`, `WSURF`, sprite `Art.walker`);
+  **Subirse** vuelve a la bici cuando estás cerca, o **Ir a la bici** marca el camino. A pie no hay multas de semáforo ni choques con peatones.
+- **Bajar y organizar bicis con equilibrio** (`MGDescarga`): el carro de balance parquea lejos (15–60 m) porque la estación no lo deja acercarse; se llevan 1 o 2 bicis a la vez
+  (2 = el doble de inestable) y con ◀ ▶ se mantiene el equilibrio; si pasa de la raya, se caen. Lo usan las órdenes de **Balance** (cada orden de llevar/recoger)
+  y el **Anfitrión** a mitad de turno (T1: llega el carro y hay que bajar bicis a las 9:30; T3: recoger bicis a las 6 p. m.).
+- **Pantalla sin encimados** (`Game.layout`): las metas van debajo del HUD y a la izquierda (completas 7 s al empezar y 3,5 s cuando cambian; luego una línea),
+  el minimapa a la derecha debajo del HUD, los avisos (`UI.toast`, en cola, 2,2–4,5 s según el largo) debajo de las metas y del minimapa,
+  las tareas y la ayuda abajo a la izquierda (recortadas para no llegar a los controles), y el joystick fijo o las flechas abajo a la derecha (los botones de acción suben).
+  Los nombres de estaciones y lugares se muestran en cualquier tamaño de pantalla pero solo si caben sin taparse entre sí ni con el HUD (`lblRoom`).
+  En los minijuegos, los títulos usan **`V.top`** (debajo del HUD y de las metas): **no volver a poner textos en y fijas (66/70)**.
+- **Música interactiva** (`Snd.mood` = energía, tensión, racha, noche, pendiente; `Game.moodOf` la calcula cada cuadro): el tempo va de ~90 a ~130 BPM, entran bombo,
+  platillos y melodía con la velocidad, arpegio de fiesta con la racha de ciclorruta, pulso de tensión cuando una tarea está por vencer o la fila crece,
+  colchón suave de noche, registro más alto en bajada. **Notas interactivas** en el acorde actual (`Snd.note`): cada hoja verde seguida sube una nota, el timbre suena en el tono
+  y cada sello de postal toca un arpegio (`Snd.fanfare`).
+- Prueba nueva **3b**: revisa en 5 pantallas que metas, minimapa, avisos, ayuda, botones y flechas no se encimen; caminar; la descarga con equilibrio; y que la música reaccione.
+
 *Tu personaje, rankings, personajes y controles* (`67-personaje.js`):
 - Al primer "Jugar", después de la introducción se abre **Crea tu personaje** (`UI.avatar(true)`): piel (7), peinado (9: `PEINADOS`), color de pelo (10), barba, gafas,
   camiseta, estilo (camiseta, manga larga, chaleco EnCicla), pantalón, zapatos, casco, color de bici y timbre (tienda). Perfil: `hair, hairCol, beard, glasses, sleeve, pants, shoes`.
   `Art.me()` arma la persona para los minijuegos; `Art.person` dibuja los peinados nuevos; `Art.rider` agrega la cola de pelo largo en la vista de arriba.
 - **Ranking** (`UI.ranking`): rango por experiencia (`RANGOS`, 11 rangos), "El valle" contra rivales ficticios (`RIVALES`), "Mis marcas" (10 mejores partidas) y "Por oficio" (récord por turno).
 - **Personajes** (`UI.personajes`): fichas del elenco (`CAST` + `BIOS`). Espacio listo para la trama que va a mandar el usuario.
-- **Controles** (Más > Controles, `Save.data.settings.ctrl`): joystick flotante (por defecto), joystick fijo abajo a la izquierda, o flechas grandes (para abuelos). `Ctrl` en 67-personaje.js.
+- **Controles** (Más > Controles, `Save.data.settings.ctrl`): joystick flotante (por defecto), joystick fijo o flechas grandes (para abuelos), los dos abajo a la derecha. `Ctrl` en 67-personaje.js.
 
 **Minijuegos v0.4 (inspirados en las referencias del usuario):**
 - Infinity Loop → Circuito (Técnico T2/T3, anclajes).
