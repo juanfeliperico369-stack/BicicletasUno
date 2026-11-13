@@ -61,6 +61,7 @@ src/js/76-red-libre.js mundo libre en red y competencias personalizadas
 src/js/77-piloto.js   daltonismo, retos con QR, escenas de la historia y Bluetooth
 src/js/78-ciudad-viva.js NPC con rutas por toda la ciudad y mapa grande interactivo con destino
 src/js/79-interfaz.js avisos al frente y breves; carga del mapa grande por partes
+src/js/80-limpieza.js brigada de limpieza, accesos rápidos del inicio, creador al empezar y horario del sábado
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
@@ -154,6 +155,13 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v1.0.2 · Limpieza, accesos rápidos y creador al empezar* (`80-limpieza.js`):
+- **Limpieza** (oficio 7, brigada mensual 9 a. m.–5 p. m., SUPUESTO): dos supervisores y el anfitrión limpian el habitáculo de 3 estaciones con anfitrión. `MGLimpieza`: elegir herramienta
+  (escoba: polvo y hojas; trapero: manchas del piso; paño: vidrio y mostrador; bolsa: basura) y tocar lo sucio; la brigada limpia también. Metas: los 3 habitáculos, impecables, máximo 2 errores.
+- **Accesos rápidos** en el inicio: Mi ciclista, Historia, Personajes, Ranking, Amigos y Retos.
+- **Creador al empezar:** si no hay personaje, se abre al entrar al inicio o a una ficha. La app de Android ya no restaura datos viejos al reinstalar (`allowBackup=false`).
+  En Mi ciclista: «Empezar con un personaje nuevo» (borra el progreso).
+
 *v1.0 · Piloto: ciudad 3D, calles rectas, mapa interactivo, interfaz limpia* (archivos 75, 77, 78 y 79):
 - **Calles rectas** (`CityMap.vectorize`, al cargar): la red de vías y de ciclorrutas se rastrea casilla por casilla, se simplifica a tramos rectos (Ramer-Douglas-Peucker, tolerancia 0,95 casillas)
   y se guarda en `CityMap.chains` con un índice por celdas (`chainsNear`). Las casillas bajo cada tramo pasan a ser vía, para que la física siga la misma línea que se dibuja.
@@ -209,7 +217,8 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Fecha real** (`Cal`, `JE.cal`): `Cal.now()` usa el reloj del dispositivo; para probar otra fecha: `?fecha=2026-12-24T19:00` en la URL o `JE.fecha = '...'`.
   Festivos de Colombia calculados (fijos, Ley Emiliani al lunes y Semana Santa con la Pascua), tipo de día (`semana`, `sabado`, `domingo`, `festivo`).
   **Horario según el día** (`Cal.service`: `open` primer préstamo, `lend` desde esa hora ya no se presta, `close` hasta esa hora se reciben bicis): de lunes a viernes se presta de 5:30 a. m. a 8:59 p. m.
-  y se recibe hasta las 10 p. m. (dato del equipo). Sábado (6:30 a. m. a 9 p. m.) y domingos y festivos (8 a. m. a 4 p. m.) son APROXIMADOS; en ellos el último préstamo es una hora antes del cierre.
+  y se recibe hasta las 10 p. m. (dato del equipo). Sábado: se presta de 6:30 a. m. a 6:59 p. m. y se recibe hasta las 8 p. m.; anfitriones T1 6:00 a. m.–1:30 p. m. y T3 1:00–8:30 p. m. (7 h 30 min), supervisores una hora antes y media hora después
+  (`80-limpieza.js`: `SAB_H`, `horasDelDia`, y `ModeAnfitrionR.prototype.begin` corre las fases con `SAB_MAP`). Domingos y festivos (8 a. m. a 4 p. m., último préstamo 3 p. m.) son APROXIMADOS.
   **Ciclovía:** domingos y festivos de 7 a. m. a 1 p. m. (`Cal.cicloviaNow`): ese día la novedad del turno pasa a ser Ciclovía sola.
 - **Festividades automáticas** (`FIESTAS`): Navidad y Alumbrados (1 dic–7 ene), Velitas (7–8 dic), Semana Santa, Día del Niño, de la Madre y del Padre, Independencia (19–20 jul),
   Feria de las Flores (desde el primer viernes de agosto, 10 días), Independencia de Antioquia (11 ago), Fiesta del Libro (desde el segundo viernes de septiembre),

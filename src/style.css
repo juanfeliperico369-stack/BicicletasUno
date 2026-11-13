@@ -338,3 +338,8 @@ body.big .turnos button{font-size:18px}
 .mbox{border:0;border-radius:22px;box-shadow:0 20px 50px #000a}
 .mbox h2{text-transform:none;font-stretch:88%;line-height:1}
 .paper .m{color:var(--az2)}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px}
+.quick button{background:#ffffff14;border-radius:16px;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;font-size:13.5px;color:var(--bl);box-shadow:0 3px 0 #0005}
+.quick button b{font-size:26px;line-height:1}
+.quick button:active{transform:translateY(2px)}
+#coach.mg{top:46%!important}

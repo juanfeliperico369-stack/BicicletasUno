@@ -7,6 +7,7 @@ Game.dom = function (dt) {
   _dom79.call(this, dt);
   const co = $('#coach'), to = $('#toast'), map = MapView.live();
   if (co && (map || (to && to.classList.contains('on')) || Tutor.showing)) co.style.opacity = '0';
+  if (co && this.mode) co.classList.toggle('mg', !!this.mode.sub || !this.mode.ride);
   const gm = $('#goalsMini'), ab = $('#actBar'); if (gm) gm.style.visibility = map ? 'hidden' : ''; if (ab) ab.style.visibility = map ? 'hidden' : '';
   if (map && to) to.classList.remove('on');
 };
