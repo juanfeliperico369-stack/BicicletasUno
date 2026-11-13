@@ -426,7 +426,7 @@ const Game = JE.game = {
     const g = gm.style.display === 'none' ? { bottom: hb } : gm.getBoundingClientRect(), mmB = ride ? hb + 8 + Math.round(Math.min(84, View.w * .21) * 1.55) + 22 : hb;
     View.hudB = hb; View.top = Math.max(hb, Math.round(g.bottom)) + 6;
     const tt = Math.max(View.top, mmB) + 8 + 'px'; document.documentElement.style.setProperty('--toastTop', tt);
-    const ctrl = ride && Ctrl.kind() !== 'flotante'; document.body.classList.toggle('ctrlR', ctrl);
+    const ctrl = ride && Ctrl.pad() && Ctrl.side() === 'der'; document.body.classList.toggle('ctrlR', ctrl);
   },
   pause() {
     if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene

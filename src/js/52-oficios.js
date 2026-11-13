@@ -102,8 +102,8 @@ class ShiftMode extends MapMode {
   get coachB() { const ph = this.phase; return 30 + Math.min(5, ph && ph.tasks ? ph.tasks.filter(t => !t.done).length : 0) * 22; }
   hud2(V) {
     const ph = this.phase; if (!ph || !ph.tasks) return; const L = ph.tasks.filter(t => !t.done).slice(0, 5); let y = V.h - 24 - L.length * 22;
-    const maxC = Math.floor((V.w - (document.body.classList.contains('ctrlR') ? 200 : 120)) / 6.6), cut = x => x.length > maxC ? x.slice(0, maxC - 1) + '…' : x;
-    for (const t of L) { V.text(cut((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : '')), 10, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
+    const gx = 10 + Ctrl.leftGap(), maxC = Math.floor((V.w - gx - (document.body.classList.contains('ctrlR') ? 190 : 110)) / 6.6), cut = x => x.length > maxC ? x.slice(0, maxC - 1) + '…' : x;
+    for (const t of L) { V.text(cut((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : '')), gx, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
   }
   info() { const ph = this.phase; return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: ph ? ph.short || ph.name.split(':')[0] : '' }].concat(this.chips ? this.chips() : []) }; }
   bot(err) { if (this.sub) return this.sub.bot(err); this.retarget(); this.botDrive(); }

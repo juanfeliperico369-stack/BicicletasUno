@@ -215,6 +215,16 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   const mv = await p.evaluate(() => MapView.open && Game.paused); await p.evaluate(() => { Game.pause(); UI.closeModal(); Game.stop(); JE.game.start('usuario', 1, { seed: 4, nov: NOVEDADES[0], free: true }); }); await p.waitForTimeout(700);
   const k2 = await probeMove(); await p.evaluate(() => { JE.game.stop(); UI.go('sHome'); });
   ok(k1.moved && k1.act && mv && k2.moved && k2.act && !k2.map, 'joystick visible por defecto; tras salir con el mapa grande abierto, el ciclista se mueve y los botones se ven ' + JSON.stringify([k1, k2]));
+  console.log('3g) Panel de controles: tipo, lado, tamaño e inclinar el celular');
+  const cg = await p.evaluate(async () => {
+    const S = Save.data.settings, out = {}, keep = { ctrl: S.ctrl, cside: S.cside, csize: S.csize }, click = (k, v) => document.querySelector(`[data-c="${k}"][data-v="${v}"]`).click(), wait = ms => new Promise(r => setTimeout(r, ms));
+    JE.game.start('apoyo', 1, { seed: 3, nov: NOVEDADES[0] }); Game.pause(); out.btn = !!document.querySelector('#pCtrl'); document.querySelector('#pCtrl').click(); await wait(50);
+    click('ctrl', 'flechas'); await wait(50); click('cside', 'izq'); await wait(50); click('csize', '2'); await wait(50);
+    out.left = Ctrl.anchor().x < View.w / 2 && Ctrl.size() > 1 && Ctrl.leftGap() > 100; document.querySelector('#mClose').click(); await wait(400); out.layout = !document.body.classList.contains('ctrlR') && !Game.paused;
+    Tilt.start(); const ev = (b, g) => { const e = new Event('deviceorientation'); e.beta = b; e.gamma = g; window.dispatchEvent(e); }; ev(30, 0); Tilt.calib(); S.ctrl = 'inclinar'; ev(30, 20); const d = Input.dir(); out.tilt = d.m > .5 && d.x > .9; ev(30, 0); out.still = Input.dir().m === 0;
+    JE.game.stop(); Object.assign(S, keep); if (keep.ctrl == null) delete S.ctrl; UI.go('sHome'); return out;
+  });
+  ok(cg.btn && cg.left && cg.layout && cg.tilt && cg.still, 'controles: botón en la pausa, flechas a la izquierda en grande, e inclinar el celular mueve al ciclista ' + JSON.stringify(cg));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};
