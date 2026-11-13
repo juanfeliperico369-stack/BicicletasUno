@@ -163,7 +163,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     for (const [gfx, vista] of [['hibrido', 'cenital'], ['2d', 'cenital'], ['pixel', 'pano']]) { Object.assign(S, { gfx, vista }); Art.cache.clear(); CityMap.chunks2.clear(); JE.game.start('usuario', 1, { seed: 4, nov: NOVEDADES[0] }); out[gfx + vista] = { q: View.q, pano: panoOn(JE.game.mode.ride) }; await wait(500); JE.game.stop(); }
     Object.assign(S, keep); Art.cache.clear();
     out.music = [Snd.styleNow()]; JE.game.start('balance', 1, { seed: 3, nov: NOVEDADES[0] }); Snd.mood.n = 0; out.music.push(Snd.styleNow()); Snd.mood.n = 1; out.music.push(Snd.styleNow()); Snd.mood.n = 0; JE.game.stop();
-    const st = id => JE.map.stations.find(s => s.id === id); out.e = ['floresta', 'c4ta', 'udea', 'hinfantil', 'sancayetano', 'estrella'].map(id => (st(id) || {}).e || 'x').join();
+    const st = id => JE.map.stations.find(s => s.id === id); out.e = ['floresta', 'c4ta', 'udea', 'hinfantil', 'sancayetano', 'estrella', 'pascualbravo', 'pablotobon'].map(id => (st(id) || {}).e || 'x').join();
     JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0] }); const M = JE.game.mode; M.clock = 19 * 60 + 30; M.takeBike(st('c4ta')); out.eLate = M.ride.ebike; M.clock = 10 * 60; M.takeBike(st('c4ta')); out.eDay = M.ride.ebike; JE.game.stop();
     UI._tuto = true; JE.game.start('pausas', 1, { seed: 5, nov: NOVEDADES[0] }); UI._tuto = false; for (let i = 0; i < 40; i++) Game.dom(1 / 30); out.tut = Tutor.on && Tutor.showing && /Maryi/.test(document.querySelector('#tutor').textContent); document.querySelector('#tutOk').click(); JE.game.stop();
     JE.headless = true; const P = new MGPausa({ rng: new RNG(2), has: () => false }, { lvl: 1 }); P.bot(0); let k = 0; while (!P.done && k < 30 * 90) { P.update(1 / 30); k++; } out.pausa = P.acc; JE.headless = false;
@@ -171,7 +171,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   });
   ok(g3.hibridocenital.q > 1 && g3['2dcenital'].q > 1 && g3.pixelpano.pano && !g3.err.length, 'gráficos híbrido y 2D con mapa dibujado, y vista panorámica sin errores ' + g3.err.join(' | '));
   ok(g3.music.join() === 'lofi,rock,jazz', 'música automática: lo-fi en menús, soft rock en turnos y jazz de noche (' + g3.music.join() + ')');
-  ok(g3.e === 'mix,solo,mix,solo,mix,solo' && !g3.eLate && g3.eDay, 'corredores eléctricos: 3 pares mixta y solo eléctricas; servicio eléctrico hasta las 7 p. m.');
+  ok(g3.e === 'mix,solo,mix,solo,mix,solo,mix,solo' && !g3.eLate && g3.eDay, 'corredores eléctricos: 4 pares mixta y solo eléctricas; servicio eléctrico hasta las 7 p. m.');
   ok(g3.tut, 'tutorial opcional con compañero (Maryi en Pausas Activas)');
   ok(g3.pausa >= 80, 'pausa activa: el bot sigue la coreografía (' + g3.pausa + ' %)');
   console.log('3e) Piloto: daltonismo, retos con QR, escenas de la historia y Bluetooth (simulado)');

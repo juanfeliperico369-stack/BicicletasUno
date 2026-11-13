@@ -209,7 +209,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Minijuegos nuevos del técnico:** tótem (`MGTotem`: medir con multímetro, cambiar la pieza y reiniciar en la zona verde), luces de los anclajes (`MGLeds`: prueba, marcar y soldar)
   y celular de la estación (`MGCelular`: power bank, reinicio, PIN de la tula y sincronizar).
 - **Corredores eléctricos** (`CORREDOR_E`, `CORREDORES`): Floresta (mixta) – C4TA (solo eléctricas); Universidad de Antioquia (mixta) – Hospital Infantil (solo eléctricas);
-  San Cayetano (mixta) – La Estrella (solo eléctricas). Servicio eléctrico hasta las 7 p. m. (`E_HASTA`); las estaciones solo eléctricas cierran a las 8 p. m. (`E_CIERRE`).
+  San Cayetano (mixta) – La Estrella (solo eléctricas); Pascual Bravo (mixta) – Hospital Pablo Tobón Uribe (solo eléctricas, ubicaciones aproximadas). Servicio eléctrico hasta las 7 p. m. (`E_HASTA`); las estaciones solo eléctricas cierran a las 8 p. m. (`E_CIERRE`).
   C4TA está en San Javier (antigua cárcel El Buen Pastor); Hospital Infantil y San Cayetano tienen posición APROXIMADA.
 - **Día y noche de 24 horas** en el modo libre: el reloj sigue la hora real, cambia de día a medianoche, el tráfico depende de la hora y avisa antes del cierre de EnCicla.
 - **Música por estilos** (`73-musica.js`): jazz (walking bass, ride con swing, acordes de 7.ª), lo-fi (crujido de vinilo, teclado suave, filtro), soft rock (rasgueo, bajo en corcheas)

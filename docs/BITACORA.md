@@ -309,3 +309,7 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 1. **Bici de EnCicla:** el reloj va más lento, hay que renovar cada hora en una estación y se respeta el horario. Con bici propia, el modo libre es de 24 horas.
 2. **Tolerancia:** 10 strikes para renovar tarde. Sin strikes, suspensiones de 3 a 60 días.
 3. **Bici abandonada:** la pueden reportar, y el reporte negativo no se quita.
+
+## 2026-11-14 · v1.0.6 · Cuarto corredor eléctrico
+
+1. **Pascual Bravo – Hospital Pablo Tobón Uribe:** Pascual Bravo es estación mixta y el Hospital Pablo Tobón Uribe solo presta eléctricas. Las ubicaciones son aproximadas.
