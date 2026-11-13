@@ -12,7 +12,7 @@ const TIPS = [
   'EnCicla nació en 2011 y lo gestiona el Área Metropolitana del Valle de Aburrá.',
   'El préstamo es gratis: te registras y prestas la bici en cualquier estación.',
   'Máximo 1 hora por préstamo: devuelve a tiempo y evita sanciones.',
-  'Horario de referencia: lunes a viernes de 5:30 a. m. a 10 p. m., sábados de 6:30 a. m. a 9 p. m. y domingos y festivos de 8 a. m. a 4 p. m.',
+  'De lunes a viernes se presta de 5:30 a. m. a 8:59 p. m. y las bicis se reciben hasta las 10 p. m.',
   'Usa casco, respeta los semáforos y prefiere la ciclorruta.',
   'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).',
   'El sistema va desde Caldas, donde nace el río, hasta Barbosa, al norte del valle.',
@@ -127,7 +127,7 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Mano guía (ayudas)</span><button class="sw ${S.hints !== false ? 'on' : ''}" data-sw="hints" aria-label="Ayudas"></button></div>`;
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
-    h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'flotante') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
+    h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'fijo') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="personajes">👥 Personajes</button><button class="btn" data-act="ranking">🏆 Ranking</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;

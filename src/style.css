@@ -337,3 +337,4 @@ body.big .turnos button{font-size:18px}
 #modal h2{text-transform:none;letter-spacing:0}
 .mbox{border:0;border-radius:22px;box-shadow:0 20px 50px #000a}
 .mbox h2{text-transform:none;font-stretch:88%;line-height:1}
+.paper .m{color:var(--az2)}

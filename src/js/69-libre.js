@@ -130,7 +130,7 @@ class ModeUsuarioR extends ModeUsuario {
   constructor(role, T, opt) {
     super(role, T, opt);
     const now = Cal.now(), sv = Cal.service(now), m = Cal.min(now);
-    if (!this.free) { this.clock = clamp(m, sv.open + 10, sv.close - 90); this.loan0 = this.clock; return; }   // préstamo a la hora real (dentro del horario)
+    if (!this.free) { this.clock = clamp(m, sv.open + 10, sv.lend - 30); this.loan0 = this.clock; return; }   // préstamo a la hora real (dentro del horario)
     this.libreInit(now);
   }
   libreInit(now) {
@@ -142,7 +142,7 @@ class ModeUsuarioR extends ModeUsuario {
     for (const ms of genMisiones(now)) if (!day.done.includes(ms.id)) this.addMision(ms);
     this.goals = []; this.misiones.forEach((ms, i) => this.goal(ms.txt, i === 0, () => ms.done, () => ms.prog ? ms.prog() : ms.done ? 'hecha' : ms.due ? 'antes de ' + Cal.hora(ms.due) : '¡vamos!'));
     if (!this.goals.length) this.goal('Ya hiciste las misiones de hoy: explora y colecciona postales', true, () => true);
-    this.retarget(); if (JE.ui) JE.ui.toast((open ? '' : '🌙 EnCicla presta de ' + Cal.hora(Cal.service(now).open) + ' a ' + Cal.hora(Cal.service(now).close) + ': sales en tu bici. ') + (this.misiones.length ? '📋 Tienes ' + this.misiones.length + ' misiones para hoy' : ''));
+    this.retarget(); if (JE.ui) JE.ui.toast((open ? '' : '🌙 EnCicla presta de ' + Cal.hora(Cal.service(now).open) + ' a ' + Cal.hora(Cal.service(now).lend - 1) + ': sales en tu bici. ') + (this.misiones.length ? '📋 Tienes ' + this.misiones.length + ' misiones para hoy' : ''));
   }
   addMision(ms) {
     const R = this.ride, M = JE.map; ms.marks = []; this.misiones.push(ms);
@@ -200,7 +200,7 @@ class ModeUsuarioR extends ModeUsuario {
     // día y noche de 24 horas: tráfico según la hora, aviso de cierre de EnCicla y cambio de día a medianoche
     if (this.clock >= 1440) { this.clock -= 1440; this.fecha = addD(this.fecha, 1); JE.ui && JE.ui.toast('🌅 Nuevo día: ' + Cal.label(this.fecha)); }
     const hr = this.clock / 60, base = this.mods.ciclovia ? .5 : 1; R.traffic = base * (hr < 5 ? .25 : hr < 6 ? .5 : (hr < 9 || (hr >= 17 && hr < 19.5)) ? 1.3 : hr >= 21 ? .55 : 1);
-    if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
+    if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.lend && m < sv.lend + 2 && !this.lendTold) { this.lendTold = 1; JE.ui && JE.ui.toast('🕘 Ya no se prestan bicis; puedes devolver la tuya hasta las ' + Cal.hora(sv.close)); } if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
     // energía: las subidas cansan, parar descansa; con poca energía se pedalea más lento
     const sl = Math.max(0, R.sl || 0), drain = P.v > 5 ? (P.veh === 'walk' ? .12 : .35 + sl * 30) : -3;
     this.energy = clamp(this.energy - drain * dt, 0, 100); if (this.energy < 15 && !this.tiredTold) { this.tiredTold = 1; JE.ui && JE.ui.toast('😮‍💨 Poca energía: siéntate en una banca de un parque o para un momento'); } if (this.energy > 40) this.tiredTold = 0;
@@ -285,7 +285,7 @@ UI.brief = function (roleId, turno, o = {}) {
     const now = Cal.now(), open = Cal.open(now), bici = o.bici || (open ? 'encicla' : 'propia'), L = genMisiones(now), go = $('#bGo');
     const box = document.createElement('div'); box.className = 'paper libre';
     box.innerHTML = `<div class="t">Hoy en el modo libre</div><p style="margin:4px 0">${esc(Cal.resumen(now).txt)}</p><div class="pag">¿Con qué bici sales?</div><div class="zonas"><button class="chip ${bici === 'encicla' ? 'on' : ''}" data-bici="encicla" ${open ? '' : 'disabled'}>🟢 EnCicla${open ? '' : ' (cerrada)'}</button><button class="chip ${bici === 'propia' ? 'on' : ''}" data-bici="propia">🚲 Mi bici</button></div>
-      <div class="pag">Misiones de hoy (según tu vida, el día y las fiestas)</div><ul class="goals">${L.map(m => `<li><b>☆</b><span>${esc(m.txt)}</span></li>`).join('') || '<li><span>Explora el valle y colecciona postales</span></li>'}</ul>
+      <div class="pag">Misiones de hoy</div><ul class="goals">${L.map(m => `<li><b>☆</b><span>${esc(m.txt)}</span></li>`).join('') || '<li><span>Explora el valle y colecciona postales</span></li>'}</ul>
       ${Save.data.profile.uni || Save.data.profile.trabajo || Save.data.profile.colegio ? '' : '<p class="m" style="font-size:13px">Cuéntanos de ti en Mi ciclista › Tú para tener misiones de colegio, universidad o trabajo.</p>'}`;
     go.parentNode.parentNode.insertBefore(box, go.parentNode);
     $$('[data-bici]', box).forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(roleId, turno, Object.assign({}, o, { bici: b.dataset.bici })); });

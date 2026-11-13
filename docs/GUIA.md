@@ -168,6 +168,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Mapa grande** (`MapView`): se abre tocando el minimapa; se arrastra, se acerca con dos dedos, rueda o botones + y −, ◎ vuelve a tu posición y ✕ lo cierra.
   Muestra municipios, metro con sus estaciones, lugares, estaciones EnCicla, tareas y la ruta. **Tocar el mapa marca un destino** (`ride.way`, como en los juegos de mundo abierto):
   la flecha, la línea punteada y el mapa lo siguen hasta que llegas o lo quitas. De cerca se ve la ciudad real; los bloques se cargan de a dos por cuadro.
+- **Controles:** por defecto el joystick fijo se ve siempre abajo a la derecha y también se puede arrastrar en cualquier parte (`Ctrl.kind()` = `fijo`). El mapa grande se cierra solo al empezar, salir o terminar un turno (`MapView.reset`, `MapView.live`).
 - **Interfaz** (`79-interfaz.js` y el bloque «tema limpio» de `style.css`): letras Fredoka (títulos, con eje de ancho) y Nunito (texto), ambas OFL; tarjetas y botones redondeados,
   sin trama, sin franjas ni etiquetas de revista. Inicio, ficha y portada con poco texto. Los avisos (`#coach`) salen al frente, debajo de las metas y del minimapa,
   y duran de 2 a 3,4 s; los mensajes (`UI.toast`) de 1,5 a 2,8 s; el aviso se oculta mientras hay un mensaje o el mapa grande abierto.
@@ -207,7 +208,8 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 *v0.9 · El juego sabe qué día es; modo libre con vida propia* (`69-calendario.js`, `69-libre.js`):
 - **Fecha real** (`Cal`, `JE.cal`): `Cal.now()` usa el reloj del dispositivo; para probar otra fecha: `?fecha=2026-12-24T19:00` en la URL o `JE.fecha = '...'`.
   Festivos de Colombia calculados (fijos, Ley Emiliani al lunes y Semana Santa con la Pascua), tipo de día (`semana`, `sabado`, `domingo`, `festivo`).
-  **Horario de préstamo según el día** (`Cal.service`, APROXIMADO, confirmar con EnCicla): lunes a viernes 5:30 a. m.–10 p. m.; sábado 6:30 a. m.–9 p. m.; domingos y festivos 8 a. m.–4 p. m.
+  **Horario según el día** (`Cal.service`: `open` primer préstamo, `lend` desde esa hora ya no se presta, `close` hasta esa hora se reciben bicis): de lunes a viernes se presta de 5:30 a. m. a 8:59 p. m.
+  y se recibe hasta las 10 p. m. (dato del equipo). Sábado (6:30 a. m. a 9 p. m.) y domingos y festivos (8 a. m. a 4 p. m.) son APROXIMADOS; en ellos el último préstamo es una hora antes del cierre.
   **Ciclovía:** domingos y festivos de 7 a. m. a 1 p. m. (`Cal.cicloviaNow`): ese día la novedad del turno pasa a ser Ciclovía sola.
 - **Festividades automáticas** (`FIESTAS`): Navidad y Alumbrados (1 dic–7 ene), Velitas (7–8 dic), Semana Santa, Día del Niño, de la Madre y del Padre, Independencia (19–20 jul),
   Feria de las Flores (desde el primer viernes de agosto, 10 días), Independencia de Antioquia (11 ago), Fiesta del Libro (desde el segundo viernes de septiembre),

@@ -117,7 +117,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     const fest = Object.keys(Cal.festivos(2026)).sort(), want = ['2026-01-01', '2026-01-12', '2026-03-23', '2026-04-02', '2026-04-03', '2026-05-01', '2026-05-18', '2026-06-08', '2026-06-15', '2026-06-29', '2026-07-20', '2026-08-07', '2026-08-17', '2026-10-12', '2026-11-02', '2026-11-16', '2026-12-08', '2026-12-25'];
     const fi = s => (Cal.fiesta(new Date(s)) || {}).id || '';
     const fiestas = [fi('2026-12-06T10:00'), fi('2027-01-03T10:00'), fi('2026-12-07T20:00'), fi('2026-10-31T10:00'), fi('2026-08-10T10:00'), fi('2026-09-19T10:00'), fi('2026-07-20T10:00'), fi('2026-11-12T10:00')];
-    const sv = [Cal.service(new Date('2026-11-12T10:00')).open, Cal.service(new Date('2026-11-15T10:00')).open, Cal.service(new Date('2026-12-08T10:00')).close];
+    const sv = [Cal.service(new Date('2026-11-12T10:00')).open, Cal.service(new Date('2026-11-15T10:00')).open, Cal.service(new Date('2026-12-08T10:00')).close, Cal.open(new Date('2026-11-12T20:59')), Cal.open(new Date('2026-11-12T21:00')), Cal.service(new Date('2026-11-12T10:00')).close];
     // misiones: estudiante un martes, trabajador un viernes, ciclovía un domingo
     const P = Save.data.profile, bak = JSON.stringify(P); Save.data.dia = null;
     Object.assign(P, { uni: 1, trabajo: 0, colegio: 0 }); const m1 = genMisiones(new Date('2026-11-10T07:00')).map(m => m.id);
@@ -150,7 +150,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   });
   ok(JSON.stringify(cal.fest) === JSON.stringify(cal.want) && cal.easter === '2026-04-05', 'festivos de Colombia 2026 (Ley Emiliani y Semana Santa) ' + (JSON.stringify(cal.fest) === JSON.stringify(cal.want) ? '' : cal.fest.filter(x => !cal.want.includes(x)) + ' / ' + cal.want.filter(x => !cal.fest.includes(x))));
   ok(cal.fiestas.join() === 'navidad,navidad,velitas,halloween,flores,amor,patria,', 'fiestas automáticas por fecha: ' + cal.fiestas.join());
-  ok(cal.sv.join() === '330,480,960', 'horario de EnCicla según el día');
+  ok(cal.sv.join() === '330,480,960,true,false,1320', 'horario de EnCicla según el día: se presta hasta las 8:59 p. m. y se recibe hasta las 10 p. m. ' + cal.sv.join());
   ok(cal.m1.includes('uni') && cal.m2.includes('trabajo') && cal.m2.includes('viernes') && cal.m3.includes('carrera'), 'misiones según tu vida y el día: ' + [cal.m1, cal.m2, cal.m3].map(x => x.join('+')).join(' | '));
   ok(cal.sub === 'MGRutina' && cal.rutina, 'llegar a la universidad: animación de clase y el reloj avanza');
   ok(cal.drained && cal.rest && cal.foto, 'energía, banca y foto para el álbum');
@@ -208,6 +208,13 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(pl.np && pl.same && pl.res1 && pl.lib && pl.res2, 'retos: misma ruta para todos y marca para compartir (carrera y hojas)');
   ok(pl.cine && pl.cineTxt && pl.cineEnd && pl.cineFlag, 'escena de la historia: se reproduce, avanza y se salta; sale al aprobar un turno por primera vez');
   ok(pl.btId && pl.btLobby && pl.btBye && pl.btStop && !pl.err.length, 'Bluetooth (simulado): el anfitrión acepta, ve al invitado en la sala y cierra ' + pl.err.join(' | '));
+  console.log('3f) Controles: siempre disponibles, también después de salir con el mapa grande abierto');
+  const probeMove = async () => { const box = await p.locator('#cv').boundingBox(), d0 = await p.evaluate(() => JE.game.mode.ride.stats.dist); await p.mouse.move(box.x + 120, box.y + 560); await p.mouse.down(); await p.mouse.move(box.x + 120, box.y + 470, { steps: 6 }); await p.waitForTimeout(1200); await p.mouse.up(); return p.evaluate(d0 => ({ moved: JE.game.mode.ride.stats.dist - d0 > 5, act: getComputedStyle(document.querySelector('#actBar')).visibility === 'visible' && document.querySelectorAll('#actBar > *').length > 0, map: MapView.open }), d0); };
+  await p.evaluate(() => { delete Save.data.settings.ctrl; UI.closeModal(); JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true }); }); await p.waitForTimeout(700);
+  const k1 = await probeMove(); await p.evaluate(() => { JE.game.mode.ride.big = true; }); await p.waitForTimeout(400);
+  const mv = await p.evaluate(() => MapView.open && Game.paused); await p.evaluate(() => { Game.pause(); UI.closeModal(); Game.stop(); JE.game.start('usuario', 1, { seed: 4, nov: NOVEDADES[0], free: true }); }); await p.waitForTimeout(700);
+  const k2 = await probeMove(); await p.evaluate(() => { JE.game.stop(); UI.go('sHome'); });
+  ok(k1.moved && k1.act && mv && k2.moved && k2.act && !k2.map, 'joystick visible por defecto; tras salir con el mapa grande abierto, el ciclista se mueve y los botones se ven ' + JSON.stringify([k1, k2]));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

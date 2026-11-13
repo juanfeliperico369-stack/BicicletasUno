@@ -66,7 +66,7 @@ const MapView = JE.mapView = {
   open: false, ride: null, cx: 0, cy: 0, z: .12, pts: new Map(), route: null, btns: [],
   init() {
     if (this._on) return; this._on = true; const st = $('#sGame'), cv = $('#cv'), pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-    st.addEventListener('pointerdown', e => { if (!this.open || e.target !== cv) return; e.stopPropagation(); e.preventDefault(); const p = pos(e); this.pts.set(e.pointerId, { x: p.x, y: p.y, x0: p.x, y0: p.y, t: performance.now() }); if (this.pts.size === 2) this.pinch0 = this.span(); }, true);
+    st.addEventListener('pointerdown', e => { if (!this.live() || e.target !== cv) return; e.stopPropagation(); e.preventDefault(); const p = pos(e); this.pts.set(e.pointerId, { x: p.x, y: p.y, x0: p.x, y0: p.y, t: performance.now() }); if (this.pts.size === 2) this.pinch0 = this.span(); }, true);
     st.addEventListener('pointermove', e => {
       const q = this.pts.get(e.pointerId); if (!this.open || !q) return; e.stopPropagation(); const p = pos(e);
       if (this.pts.size === 1) { this.cx -= (p.x - q.x) / this.z; this.cy -= (p.y - q.y) / this.z; }
@@ -77,6 +77,8 @@ const MapView = JE.mapView = {
     st.addEventListener('pointerup', up, true); st.addEventListener('pointercancel', up, true);
     st.addEventListener('wheel', e => { if (!this.open) return; e.preventDefault(); this.zoom(e.deltaY < 0 ? 1.2 : 1 / 1.2); }, { passive: false });
   },
+  live() { if (this.open && !(Game.mode && this.ride && Game.mode.ride === this.ride && this.ride.big)) this.reset(); return this.open; },
+  reset() { this.open = false; this.pts.clear(); if (this.ride) this.ride.big = false; this.ride = null; },
   span() { const a = [...this.pts.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1; },
   zoom(f) { this.z = clamp(this.z * f, this.zMin(), 2.2); this.clampC(); },
   zMin() { return Math.min(View.w / (MW * TS), View.h / (MH * TS)) * .95; },

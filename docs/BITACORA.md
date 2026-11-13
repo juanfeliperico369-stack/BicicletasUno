@@ -273,3 +273,9 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 6. **Piloto:** modo daltonismo, retos con QR, escenas de la historia y Bluetooth en la app de Android.
 
 **Qué falta:** los datos oficiales que llegarán del equipo de EnCicla.
+
+## 2026-11-13 · v1.0.1 · Controles y horario
+
+1. **Controles siempre disponibles:** si salías del juego con el mapa grande abierto, la siguiente partida quedaba sin controles. Ya no pasa, y el joystick se ve siempre abajo a la derecha.
+2. **Horario real:** de lunes a viernes se presta hasta las 8:59 p. m. y se reciben bicis hasta las 10 p. m.
+3. **Pruebas nuevas:** controles después de salir con el mapa abierto, y hora límite de préstamo.

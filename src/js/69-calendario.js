@@ -49,8 +49,9 @@ const Cal = JE.cal = {
   festivo(d) { return this.festivos(d.getFullYear())[this.key(d)] || null; },
   dayType(d) { return this.festivo(d) ? 'festivo' : d.getDay() === 0 ? 'domingo' : d.getDay() === 6 ? 'sabado' : 'semana'; },
   /* horario de préstamo de EnCicla según el día (aproximado: confirmar con el equipo) */
-  service(d) { const t = this.dayType(d); return t === 'semana' ? { open: 330, close: 1320 } : t === 'sabado' ? { open: 390, close: 1260 } : { open: 480, close: 960 }; },
-  open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.close; },
+  /* open: primer préstamo · lend: desde esa hora ya no se presta (la última es un minuto antes) · close: hasta esa hora se reciben bicis */
+  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, close: 1320 } : t === 'sabado' ? { open: 390, close: 1260 } : { open: 480, close: 960 }; s.lend = s.close - 60; return s; },
+  open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.lend; },
   /* ciclovía de Medellín: domingos y festivos de 7:00 a. m. a 1:00 p. m. */
   ciclovia(d) { const t = this.dayType(d); return t === 'domingo' || t === 'festivo'; },
   cicloviaNow(d) { const m = this.min(d); return this.ciclovia(d) && m >= 420 && m < 780; },
@@ -65,7 +66,7 @@ const Cal = JE.cal = {
   /* resumen para la portada y el escalafón */
   resumen(d) {
     d = d || this.now(); const s = this.service(d), f = this.fiesta(d), fe = this.festivo(d), t = this.dayType(d);
-    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.close);
+    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close);
     if (this.ciclovia(d)) txt += ' · 🚴 Ciclovía de 7 a. m. a 1 p. m.';
     return { txt, f, t };
   }

@@ -130,15 +130,14 @@ UI.personajes = function () {
 
 /* ---------- controles: joystick flotante, joystick fijo o flechas ---------- */
 const Ctrl = JE.ctrl = {
-  kind() { return (Save.data && Save.data.settings.ctrl) || 'flotante'; },
+  kind() { return (Save.data && Save.data.settings.ctrl) || 'fijo'; },
   anchor() { return { x: View.w - 86 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sar')) || 0), y: View.h - 120 }; },   // a la derecha: a la izquierda van las tareas y la ayuda
   arrows() { const a = this.anchor(), s = 52; return [['ArrowUp', a.x, a.y - s, '▲'], ['ArrowDown', a.x, a.y + s, '▼'], ['ArrowLeft', a.x - s, a.y, '◀'], ['ArrowRight', a.x + s, a.y, '▶']]; },
   /* devuelve true si el toque lo tomó el control */
   down(e, cx, cy, cv) {
     const k = this.kind();
     if (k === 'flechas') { for (const [key, x, y] of this.arrows()) if (Math.abs(cx - x) < 28 && Math.abs(cy - y) < 28) { Input.keys[key] = true; (this.held || (this.held = {}))[e.pointerId] = key; return true; } return false; }
-    const a = k === 'fijo' ? this.anchor() : { x: cx, y: cy };
-    if (k === 'fijo' && dist(cx, cy, a.x, a.y) > 110) return false;
+    const fx = this.anchor(), a = k === 'fijo' && dist(cx, cy, fx.x, fx.y) <= 110 ? fx : { x: cx, y: cy };   // fijo: se ve siempre, pero también se puede arrastrar en cualquier parte
     Input.joy = { on: true, id: e.pointerId, ox: a.x, oy: a.y, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { }
     return true;
   },
@@ -146,7 +145,7 @@ const Ctrl = JE.ctrl = {
   draw(V) {
     const k = this.kind(), c = V.ctx;
     if (k === 'flechas') { c.globalAlpha = .7; for (const [key, x, y, l] of this.arrows()) { c.fillStyle = Input.keys[key] ? PAL.vd : '#0a2342cc'; c.beginPath(); c.arc(x, y, 25, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); V.text(l, x, y + 7, { size: 20, align: 'center', color: '#fff' }); } c.globalAlpha = 1; return; }
-    if (k === 'fijo' && !Input.joy.on) { const a = this.anchor(); c.globalAlpha = .35; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(a.x, a.y, 46, 0, TAU); c.stroke(); c.fillStyle = PAL.vd; c.beginPath(); c.arc(a.x, a.y, 18, 0, TAU); c.fill(); c.globalAlpha = 1; }
+    if (k === 'fijo' && !Input.joy.on) { const a = this.anchor(); c.globalAlpha = .55; c.fillStyle = '#0a2342'; c.beginPath(); c.arc(a.x, a.y, 50, 0, TAU); c.fill(); c.globalAlpha = .8; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(a.x, a.y, 48, 0, TAU); c.stroke(); c.fillStyle = PAL.vd; c.beginPath(); c.arc(a.x, a.y, 20, 0, TAU); c.fill(); c.globalAlpha = 1; }
   }
 };
 LOGROS.push({ id: 'rango5', name: 'Rueda firme', desc: 'Llega al rango 5 del ranking', icon: 'estrella', test: S => rangoDe(S.xp) >= 4 });

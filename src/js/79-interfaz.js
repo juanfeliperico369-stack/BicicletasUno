@@ -5,7 +5,7 @@
 const _dom79 = Game.dom;
 Game.dom = function (dt) {
   _dom79.call(this, dt);
-  const co = $('#coach'), to = $('#toast'), map = typeof MapView !== 'undefined' && MapView.open;
+  const co = $('#coach'), to = $('#toast'), map = MapView.live();
   if (co && (map || (to && to.classList.contains('on')) || Tutor.showing)) co.style.opacity = '0';
   const gm = $('#goalsMini'), ab = $('#actBar'); if (gm) gm.style.visibility = map ? 'hidden' : ''; if (ab) ab.style.visibility = map ? 'hidden' : '';
   if (map && to) to.classList.remove('on');
@@ -27,3 +27,5 @@ Game.start = function (roleId, turno, o = {}) {
   if (Save.data.settings.vista === 'pano' && this.mode && this.mode.ride && innerHeight > innerWidth && !UI._giro) { UI._giro = 1; setTimeout(() => UI.toast('📱 Gira el celular: la vista panorámica se ve mejor de lado'), 1200); }
   return r;
 };
+/* el mapa grande nunca queda abierto al salir, reiniciar o terminar un turno */
+for (const k of ['start', 'stop', 'finish']) { const f = Game[k]; Game[k] = function () { MapView.reset(); return f.apply(this, arguments); }; }
