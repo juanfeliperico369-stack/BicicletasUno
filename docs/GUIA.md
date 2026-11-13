@@ -62,6 +62,7 @@ src/js/77-piloto.js   daltonismo, retos con QR, escenas de la historia y Bluetoo
 src/js/78-ciudad-viva.js NPC con rutas por toda la ciudad y mapa grande interactivo con destino
 src/js/79-interfaz.js avisos al frente y breves; carga del mapa grande por partes
 src/js/80-limpieza.js brigada de limpieza, accesos rápidos del inicio, creador al empezar y horario del sábado
+src/js/81-controles.js panel de controles: tipo, lado, tamaño e inclinar el celular
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
@@ -176,7 +177,9 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Mapa grande** (`MapView`): se abre tocando el minimapa; se arrastra, se acerca con dos dedos, rueda o botones + y −, ◎ vuelve a tu posición y ✕ lo cierra.
   Muestra municipios, metro con sus estaciones, lugares, estaciones EnCicla, tareas y la ruta. **Tocar el mapa marca un destino** (`ride.way`, como en los juegos de mundo abierto):
   la flecha, la línea punteada y el mapa lo siguen hasta que llegas o lo quitas. De cerca se ve la ciudad real; los bloques se cargan de a dos por cuadro.
-- **Controles:** por defecto el joystick fijo se ve siempre abajo a la derecha y también se puede arrastrar en cualquier parte (`Ctrl.kind()` = `fijo`). El mapa grande se cierra solo al empezar, salir o terminar un turno (`MapView.reset`, `MapView.live`).
+- **Controles** (`81-controles.js`, `UI.controles`, botón en la pausa y en Más): joystick fijo (por defecto, también se puede arrastrar en cualquier parte), arrastrar, flechas grandes
+  o **inclinar el celular** (`Tilt`: sensor de orientación; la posición al empezar es la neutra, botón Recalibrar). Lado (`settings.cside`) y tamaño (`settings.csize` 0-2);
+  si el control va a la izquierda, la lista de tareas se corre (`Ctrl.leftGap`) y los botones de acción no suben (`ctrlR` solo a la derecha). El mapa grande se cierra solo al empezar, salir o terminar un turno (`MapView.reset`, `MapView.live`).
 - **Interfaz** (`79-interfaz.js` y el bloque «tema limpio» de `style.css`): letras Fredoka (títulos, con eje de ancho) y Nunito (texto), ambas OFL; tarjetas y botones redondeados,
   sin trama, sin franjas ni etiquetas de revista. Inicio, ficha y portada con poco texto. Los avisos (`#coach`) salen al frente, debajo de las metas y del minimapa,
   y duran de 2 a 3,4 s; los mensajes (`UI.toast`) de 1,5 a 2,8 s; el aviso se oculta mientras hay un mensaje o el mapa grande abierto.

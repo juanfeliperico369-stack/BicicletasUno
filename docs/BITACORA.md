@@ -294,3 +294,12 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 1. **Horario:** de 8 a. m. a 4 p. m., solo con estaciones automáticas, porque los anfitriones descansan.
 2. **En el juego:** el Usuario y el modo libre prestan y devuelven solo en automáticas, y las manuales se ven cerradas en el mapa.
 3. **Ficha del anfitrión:** ese día avisa que el turno se juega con el horario de entre semana.
+
+## 2026-11-14 · v1.0.4 · Panel de controles
+
+1. **Panel de controles en la pausa y en Más:**
+   - Tipo: joystick fijo, arrastrar, flechas o inclinar el celular, con recalibración.
+   - Lado: izquierdo o derecho.
+   - Tamaño: pequeño, normal o grande.
+   - Vibración.
+2. **Control a la izquierda:** la lista de tareas se corre para no quedar tapada.
