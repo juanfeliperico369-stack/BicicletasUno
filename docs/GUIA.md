@@ -58,6 +58,9 @@ src/js/72-oficios2.js Pausas Activas, Rescate y los minijuegos nuevos del técni
 src/js/73-musica.js   música por estilos (jazz, lo-fi, soft rock, electrónica)
 src/js/75-graficos.js gráficos pixel, híbrido y 2D; vista panorámica de plataformas
 src/js/76-red-libre.js mundo libre en red y competencias personalizadas
+src/js/77-piloto.js   daltonismo, retos con QR, escenas de la historia y Bluetooth
+src/js/78-ciudad-viva.js NPC con rutas por toda la ciudad y mapa grande interactivo con destino
+src/js/79-interfaz.js avisos al frente y breves; carga del mapa grande por partes
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
@@ -150,6 +153,28 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.0 · Piloto: ciudad 3D, calles rectas, mapa interactivo, interfaz limpia* (archivos 75, 77, 78 y 79):
+- **Calles rectas** (`CityMap.vectorize`, al cargar): la red de vías y de ciclorrutas se rastrea casilla por casilla, se simplifica a tramos rectos (Ramer-Douglas-Peucker, tolerancia 0,95 casillas)
+  y se guarda en `CityMap.chains` con un índice por celdas (`chainsNear`). Las casillas bajo cada tramo pasan a ser vía, para que la física siga la misma línea que se dibuja.
+  Antes, `CityMap.bridge` une puntas sueltas de calles (hasta 3 casillas) y de ciclorrutas (hasta 5), y vuelve andén los retazos de ciclorruta de 1 o 2 casillas.
+- **Ciudad 3D** (`GFX() === '3d'`, por defecto; Más > Gráficos: Ciudad 3D o Pixel clásico): suelo dibujado con andenes en losas, sardinel, asfalto, bordes y línea de centro
+  (amarilla en avenidas, blanca en autopistas), cebras en los semáforos, ciclorrutas verdes, árboles con sombra, sombras de edificios y metro elevado.
+  Los edificios (`CityMap.blocks`: rectángulos por manzana de 4×4 casillas y casas de 2×2) se dibujan en cada cuadro con **perspectiva desde el jugador** (`Ride.draw3D`):
+  muros con pisos, techos con tanques, aires y helipuertos; más altos en el Centro, El Poblado y los centros municipales (`TALL`). De noche las ventanas se encienden.
+  La cámara se acerca más (`View.apply`: divisor 128) y los vehículos se dibujan al 74 % (`SPRK`), para que las calles se sientan anchas.
+- **NPC con rutas** (`78-ciudad-viva.js`): ciclistas y peatones eligen un destino (una estación) y avanzan casilla a casilla por toda la red (`npcNext`/`npcMove`):
+  ciclistas por ciclorrutas y calles (por la derecha), frenan en rojo, ante el jugador y ante otros; peatones por andenes, plazas y parques, y cruzan la calle.
+- **Mapa grande** (`MapView`): se abre tocando el minimapa; se arrastra, se acerca con dos dedos, rueda o botones + y −, ◎ vuelve a tu posición y ✕ lo cierra.
+  Muestra municipios, metro con sus estaciones, lugares, estaciones EnCicla, tareas y la ruta. **Tocar el mapa marca un destino** (`ride.way`, como en los juegos de mundo abierto):
+  la flecha, la línea punteada y el mapa lo siguen hasta que llegas o lo quitas. De cerca se ve la ciudad real; los bloques se cargan de a dos por cuadro.
+- **Interfaz** (`79-interfaz.js` y el bloque «tema limpio» de `style.css`): letras Fredoka (títulos, con eje de ancho) y Nunito (texto), ambas OFL; tarjetas y botones redondeados,
+  sin trama, sin franjas ni etiquetas de revista. Inicio, ficha y portada con poco texto. Los avisos (`#coach`) salen al frente, debajo de las metas y del minimapa,
+  y duran de 2 a 3,4 s; los mensajes (`UI.toast`) de 1,5 a 2,8 s; el aviso se oculta mientras hay un mensaje o el mapa grande abierto.
+- **Piloto** (`77-piloto.js`): colores para daltonismo (Okabe-Ito, magenta en vez de rojo y etiquetas en los juegos de colores), retos con código y QR (`Reto`: `RC<postales><zona><rival>-<semilla>`
+  o `RH<minutos>-<semilla>`, también como enlace `?reto=`), escenas de la historia (`Cine`) al aprobar un turno por primera vez, y **Bluetooth en la app de Android**
+  (`BluetoothPlugin.java`, RFCOMM entre celulares emparejados, hasta 3 invitados; en JS cada conexión se comporta como un canal de datos de `Net`).
+- Corredores eléctricos: San Cayetano está en los bajos de la estación Estrella del metro; Hospital Infantil en la calle 72A con carrera 48 (aproximados).
 
 *v0.10 · Oficios nuevos, gráficos, vistas, música por estilos y mundo libre en red* (archivos 71 a 76):
 - **Tutorial opcional con compañero** (`71-tutor.js`, `Tutor`): en la ficha de cada turno, botón «Con <compañero> (tutorial)». El juego se detiene mientras el compañero habla

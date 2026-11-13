@@ -62,24 +62,21 @@ const UI = JE.ui = {
   starStr(n, of = 3) { return '★'.repeat(n) + '<i>' + '★'.repeat(of - n) + '</i>'; },
   renderRuta() {
     const S = Save.data, tot = this.totalStars();
-    let h = `<div class="pag">${esc(S.profile.name)} · racha ${S.streak}</div><div class="sect"><span class="outline">${tot}</span><div><div class="pag">estrellas de ${MAX_STARS()}</div><h2 class="mega">Escalafón<br><span style="color:var(--vd)">EnCicla</span></h2></div></div>`;
-    h += `<div class="boxh" style="font-size:14px;letter-spacing:.2em">Del usuario al supervisor: ${ROLES.length} oficios con sus turnos reales</div>`;
-    if (S.perks.length) h += `<div class="pag">Mejoras activas (se pierden si fallas un turno)</div><div class="perks">${S.perks.map(p => `<span class="chip"><img class="px" width="20" height="20" src="${Art.iconURL(PERKS[p].icon, 2)}" alt="">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
+    let h = `<div class="hhead"><div><div class="hname">Hola, ${esc(S.profile.name)}</div><div class="hsub">★ ${tot} de ${MAX_STARS()}${S.streak > 1 ? ' · racha ' + S.streak : ''}</div></div><div class="hbar"><i style="width:${Math.round(100 * tot / MAX_STARS())}%"></i></div></div>`;
+    if (S.perks.length) h += `<div class="pag">Tus mejoras</div><div class="perks">${S.perks.map(p => `<span class="chip"><img class="px" width="20" height="20" src="${Art.iconURL(PERKS[p].icon, 2)}" alt="">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     if (!S.settings.seen.profile) h += `<div class="paper" style="margin:0 0 16px"><div class="t">Crea tu ciclista</div><p style="margin:6px 0 10px">Elige tu nombre y colores antes de empezar.</p><button class="btn sm" data-act="avatar">Personalizar</button></div>`;
-    h += `<div class="paper race"><div class="pag" style="color:var(--az2)">Multijugador · nuevo</div><div class="t">Carrera de postales</div><p style="margin:6px 0 10px">Pasa por 4 lugares del valle y llega primero a la meta. Contra un bot o contra un amigo en otro celular.</p><div class="row"><button class="btn sm" data-race="1">Bot tranquilo</button><button class="btn sm" data-race="2">Bot veloz</button><button class="btn sm" data-race="3">Bot turbo</button><button class="btn sm pri" data-act="multi">Con un amigo</button></div></div>`;
+    h += `<div class="paper race"><div class="t">🏁 Carrera de postales</div><div class="row" style="margin-top:10px"><button class="btn sm" data-race="1">Fácil</button><button class="btn sm" data-race="2">Rápida</button><button class="btn sm" data-race="3">Turbo</button><button class="btn sm pri" data-act="multi">Con amigos</button></div></div>`;
     for (const r of ROLES) {
       const ok = this.unlocked(r), st = this.stars(r.id);
-      h += `<div class="role ${ok ? '' : 'lock'}"><span class="num">${r.n}</span><div><div class="tier">${esc(r.tier)}</div><h3><img class="px" src="${Art.iconURL(r.icon)}" alt="">${esc(r.name)}</h3><div class="vista">${esc(r.vista)}</div></div>`;
-      h += `<div class="d">${esc(r.desc)}</div>`;
-      if (!ok) h += `<div class="lockmsg">🔒 Se desbloquea con ${r.unlock} ★ (tienes ${tot})</div>`;
+      h += `<div class="role ${ok ? '' : 'lock'}"><span class="num">${r.n}</span><div><div class="tier">${esc(r.tier)}</div><h3><img class="px" src="${Art.iconURL(r.icon)}" alt="">${esc(r.name)}</h3></div>`;
+      if (!ok) h += `<div class="lockmsg">🔒 Con ${r.unlock} ★</div>`;
       else {
         h += `<div class="turnos">`;
-        for (let t = 1; t <= nShifts(r.id); t++) h += `<button data-role="${r.id}" data-t="${t}" ${this.turnoOk(r, t) ? '' : 'disabled'}>${esc(shiftName(r.id, t))}<small>${r.shifts && r.id !== 'usuario' ? esc(r.shifts[t - 1].h) + ' · ' : ''}${'★'.repeat(st[t - 1])}${'☆'.repeat(3 - st[t - 1])}</small></button>`;
+        for (let t = 1; t <= nShifts(r.id); t++) h += `<button data-role="${r.id}" data-t="${t}" ${this.turnoOk(r, t) ? '' : 'disabled'}><span>${esc(shiftName(r.id, t))}</span>${r.shifts && r.id !== 'usuario' ? `<small class="h">${esc(r.shifts[t - 1].h)}</small>` : ''}<small>${'★'.repeat(st[t - 1])}${'☆'.repeat(3 - st[t - 1])}</small></button>`;
         h += `<button class="free" data-role="${r.id}" data-free="1">Libre<small>práctica</small></button></div>`;
       }
       h += `</div>`;
     }
-    h += `<div class="squig"></div><p class="m">${STARS_UNLOCK_INFO} Cada turno tiene 3 metas: la primera es obligatoria. Al aprobar eliges una mejora (estilo roguelite): si fallas, la pierdes.</p>`;
     const el = $('#tab-ruta'); el.innerHTML = h;
     $$('button[data-role]', el).forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(b.dataset.role, +b.dataset.t || 1, { free: !!b.dataset.free }); });
     const av = $('[data-act=avatar]', el); if (av) av.onclick = () => this.avatar();
@@ -148,16 +145,15 @@ const UI = JE.ui = {
     this.mute = true; JE.briefing = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free, zona: o.zona }); } finally { this.mute = false; JE.briefing = false; }   // solo para leer las metas: sin avisos
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
     let h = `<div class="row" style="justify-content:space-between"><span class="pag">${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
-    h += `<div class="boxh">${esc(r.name)}</div><div class="kick">${esc(r.vista)} · ${esc(r.tier)}</div><p class="m" style="font-size:16px">${esc(r.desc)}</p>`;
+    h += `<div class="boxh">${esc(r.name)}</div>`;
     if (r.shifts && !isMulti(roleId) && roleId !== 'usuario') h += `<div class="paper" style="margin:8px 0"><div class="t">${esc(shiftName(roleId, turno))}</div><p style="margin:4px 0 0">🕐 ${esc(r.shifts[turno - 1].h)}</p></div>`;
     if (roleId === 'apoyo') { const zz = o.zona || APOYO_ZONAS[(seed >>> 5) % APOYO_ZONAS.length][0]; o.zona = zz; h += `<div class="pag">Tu zona (toca para cambiarla)</div><div class="zonas">${APOYO_ZONAS.map(z => `<button class="chip ${z[0] === zz ? 'on' : ''}" data-zona="${z[0]}">${esc(z[1])} · ${z[2]}</button>`).join('')}</div>`; }
     h += Historia.brief(roleId, turno, o);
     h += `<div class="howto">${r.how.map((t, i) => `<div><b>${i + 1}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
     if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas ${roleId === 'carrera' ? 'de la carrera' : 'del turno'}</div><ul class="goals">${goals}</ul>`;
-    h += `<div class="paper" style="margin:14px 0"><div class="t">Novedad del día: ${esc(nov.name)}</div><p style="margin:6px 0 0">${esc(nov.desc)}</p>${o.reto || roleId === 'carrera' ? '' : `<p style="margin:8px 0 0;font-size:13px;opacity:.8">${sea.icon} <b>${esc(sea.name)}.</b> ${esc(sea.desc)}</p>`}</div>`;
+    h += `<div class="nov"><b>Hoy: ${esc(nov.name)}</b> · ${esc(nov.desc)}</div>`;
     if (!o.free && Save.data.perks.length) h += `<div class="perks">${Save.data.perks.map(p => `<span class="chip">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
     h += `<div class="row" style="margin-top:16px"><button class="btn pri" id="bGo" style="flex:1">▶ Empezar ${o.free ? 'práctica' : 'turno'}</button></div>`;
-    h += `<p class="m" style="margin-top:14px">💡 ${esc(TIPS[(seed >>> 3) % TIPS.length])}</p>`;
     $('#briefBody').innerHTML = h; this.go('sBrief');
     $('#bBack').onclick = () => this.go(o.reto ? 'sCover' : 'sHome');
     $$('[data-zona]').forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(roleId, turno, Object.assign({}, o, { seed, zona: b.dataset.zona })); });
@@ -198,7 +194,7 @@ const UI = JE.ui = {
   },
   /* ---------- reto / código ---------- */
   code(meta) { return ROLE[meta.roleId].n + '-' + meta.turno + '-' + (meta.seed >>> 0).toString(36).toUpperCase(); },
-  parseCode(c) { const m = String(c).trim().toUpperCase().match(/^(\d)-(\d)-([0-9A-Z]+)$/); if (!m) return null; const r = ROLES[+m[1] - 1], t = +m[2]; if (!r || t < 1 || t > nShifts(r.id)) return null; return { roleId: r.id, turno: t, seed: parseInt(m[3], 36) >>> 0 }; },
+  parseCode(c) { const m = String(c).trim().toUpperCase().match(/^(\d{1,2})-(\d)-([0-9A-Z]+)$/); if (!m) return null; const r = ROLES[+m[1] - 1], t = +m[2]; if (!r || t < 1 || t > nShifts(r.id)) return null; return { roleId: r.id, turno: t, seed: parseInt(m[3], 36) >>> 0 }; },
   reto() {
     const seed = todaySeed(), av = ROLES.filter(r => this.unlocked(r)), r = av[seed % av.length], t = Math.min(nShifts(r.id), this.turnoOk(r, 2) ? 2 : 1);
     const rng = new RNG(seed); this.brief(r.id, t, { reto: true, seed, nov: rng.pick(NOVEDADES) });
@@ -206,7 +202,7 @@ const UI = JE.ui = {
   multi() {
     const net = Net.supported();
     this.modal(`<h2>Jugar con amigos</h2>
-    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera o turno en equipo · hasta 4</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos, elige <b>Carrera</b> (compiten) o <b>Turno en equipo</b> (uno dirige desde Monitoreo y los demás manejan los camiones). En la misma red Wi-Fi funciona sin internet.</p></div>
+    <div class="paper" style="margin:8px 0 14px"><div class="t">Carrera, mundo libre o turno en equipo · hasta 4</div><p style="margin:6px 0 0;font-size:14px">1) Quien crea la sala toca <b>Invitar</b> y muestra el QR o envía el código. 2) Cada amigo toca <b>Unirme</b>, escanea o pega el código y devuelve su respuesta. 3) Cuando estén todos, elige <b>Carrera</b> (compiten) o <b>Turno en equipo</b> (uno dirige desde Monitoreo y los demás manejan los camiones). En la misma red Wi-Fi funciona sin internet.</p></div>
     ${net ? '<div class="row"><button class="btn pri" id="nHost">Crear sala</button><button class="btn" id="nJoin">Unirme</button></div><div id="nBox" style="margin-top:10px"></div>' : '<p class="m">Este navegador no permite salas (WebRTC).</p>'}
     <div class="squig"></div><p class="m"><b>Reto con código</b> (sin internet): todos juegan las mismas condiciones y comparan puntos.</p>
     <input class="txtin" id="codeIn" placeholder="Ej: 2-1-K3F9QZ" maxlength="16" autocomplete="off"><div class="col"><button class="btn" id="bCode">Jugar ese código</button><button class="btn gh" id="mClose">Cerrar</button></div>`, () => {
@@ -347,7 +343,7 @@ const UI = JE.ui = {
   },
   toastNext() {
     const el = $('#toast'), q = this._tq || []; const t = q.shift(); if (!t) { el.classList.remove('on'); this._tt = null; return; }
-    el.textContent = t; el.classList.add('on'); const ms = clamp(1600 + t.length * 38, 2200, 4500) * (q.length ? .75 : 1);
+    el.textContent = t; el.classList.add('on'); const ms = clamp(1000 + t.length * 22, 1500, 2800) * (q.length ? .75 : 1);
     this._tt = setTimeout(() => { el.classList.remove('on'); this._tt = setTimeout(() => { this._tt = null; this.toastNext(); }, 220); }, ms);
   },
   postal(L) { this.toast('📮 ¡Nueva postal! ' + L.name); }
@@ -395,7 +391,7 @@ const Game = JE.game = {
     if (co.textContent !== ct) { co.textContent = ct; this.coachT = 0; }
     if (er !== this._coachEr) { if (er > (this._coachEr | 0)) this.coachT = 0; this._coachEr = er; }
     this.coachT = (this.coachT || 0) + dt;
-    const life = (ride ? clamp(2 + ct.length * .05, 3.5, 6) : clamp(2.5 + ct.length * .06, 4, 9)) * (Save.data.settings.pace === 'tranquilo' ? 1.4 : 1) * (this.hintsOn ? 1 : .65);
+    const life = clamp(1.2 + ct.length * .028, 2, 3.4) * (Save.data.settings.pace === 'tranquilo' ? 1.4 : 1) * (this.hintsOn ? 1 : .65);
     const op = ct && this.coachT < life ? '1' : '0'; if (co.style.opacity !== op) co.style.opacity = op;
     co.classList.toggle('mini', ride);
     const top = !!a.coachB && View.h < 520 && !ride; co.classList.toggle('coachTop', top);

@@ -111,7 +111,7 @@ const ESTACIONES = [
   ['prados', 'Prados de Sabaneta', 'Sabaneta', 6.1535, -75.6100, 'a', 'res', 'sabaneta'], ['lomitas', 'Las Lomitas', 'Sabaneta', 6.1440, -75.6080, 'a', 'res', 'sabaneta'], ['restrepo', 'Restrepo Naranjo', 'Sabaneta', 6.1490, -75.6230, 'a', 'res', 'sabaneta'],
   ['entreamigos', 'Entreamigos', 'Sabaneta', 6.1545, -75.6225, 'a', 'res', 'sabaneta'], ['doctora', 'La Doctora', 'Sabaneta', 6.1390, -75.6110, 'a', 'res', 'sabaneta'],
   // La Estrella, Caldas
-  ['yarumito', 'Yarumito', 'La Estrella', 6.1600, -75.6400, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 6.1570, -75.6425, 'a', 'res'], ['c4ta', 'C4TA', 'Medellín', 6.2478, -75.6108, 'a', 'uni'], ['hinfantil', 'Hospital Infantil', 'Medellín', 6.2702, -75.5552, 'a', 'res'], ['sancayetano', 'San Cayetano', 'Sabaneta', 6.1542, -75.6198, 'm', 'mix'],
+  ['yarumito', 'Yarumito', 'La Estrella', 6.1600, -75.6400, 'a', 'res'], ['estrella', 'Parque de La Estrella', 'La Estrella', 6.1570, -75.6425, 'a', 'res'], ['c4ta', 'C4TA', 'Medellín', 6.2478, -75.6108, 'a', 'uni'], ['hinfantil', 'Hospital Infantil', 'Medellín', 6.2716, -75.5598, 'a', 'res'], ['sancayetano', 'San Cayetano', 'Sabaneta', 6.1529, -75.6268, 'm', 'mix'],
   ['quintas', 'Quintas de la Quinta', 'La Estrella', 6.1520, -75.6420, 'm', 'res'], ['tablaza', 'La Tablaza', 'La Estrella', 6.1300, -75.6350, 'a', 'res'],
   ['caldas', 'Parque de Caldas', 'Caldas', 6.0905, -75.6365, 'm', 'res'], ['caldas2', 'Caldas Centro', 'Caldas', 6.0950, -75.6340, 'a', 'res'], ['caldas3', 'Caldas Sur', 'Caldas', 6.0860, -75.6370, 'a', 'res']
 ];

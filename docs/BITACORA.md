@@ -261,3 +261,15 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 **Qué se probó:** 100 partidas del bot con los 11 oficios, la interfaz, que no haya elementos encimados, el calendario, gráficos y vistas, la música, los corredores, el tutorial, el rendimiento y la red con 3 dispositivos, incluida «La lleva».
 
 **Qué falta:** la lista oficial de estaciones con su dificultad por turno, el organigrama y los horarios por oficio, las zonas y el personal, las festividades de EnCicla y las cantidades del sistema.
+
+## 2026-11-13 · v1.0.0 · Versión piloto
+
+**Qué cambió**
+1. **Calles rectas y continuas:** la red real se convierte en tramos rectos al cargar, sin escalones. Se unen las calles y las ciclorrutas sueltas.
+2. **Ciudad 3D:** edificios con volumen y perspectiva, andenes, cebras, árboles y sombras; cámara más cercana y calles anchas.
+3. **NPC con rutas:** ciclistas y peatones recorren toda la ciudad hacia un destino y respetan los semáforos.
+4. **Mapa grande interactivo:** se mueve y se acerca, muestra referencias (municipios, metro, lugares y estaciones) y permite marcar un destino.
+5. **Interfaz limpia:** letra nueva, poco texto, avisos breves al frente y nada encimado.
+6. **Piloto:** modo daltonismo, retos con QR, escenas de la historia y Bluetooth en la app de Android.
+
+**Qué falta:** los datos oficiales que llegarán del equipo de EnCicla.

@@ -48,7 +48,7 @@ class ModeLibreRed extends ModeUsuario {
   finish() {
     const c = this.comp, me = { id: this.myId(), name: Save.data.profile.name, v: c.k === 'lleva' ? -this.itT : this.sc }, L = [me].concat(this.peers.filter(o => !o.gone).map(o => ({ id: o.id, name: o.name, v: c.k === 'lleva' ? -o.sc : o.sc }))).sort((a, b) => b.v - a.v);
     const pos = L.findIndex(x => x === me) + 1; this.res = { pos, win: pos === 1, L }; this.score += pos === 1 ? 120 : Math.max(10, 70 - pos * 15);
-    this.ride.stamp = { t: 3, title: pos === 1 ? '¡GANASTE!' : 'QUEDASTE ' + pos + 'º', sub: L.map((x, i) => (i + 1) + '. ' + x.name).join('  '), bg: pos === 1 ? PAL.vd : PAL.amb }; Snd.sfx(pos === 1 ? 'win' : 'ok');
+    this.ride.stamp = L.length === 1 ? { t: 3, title: '¡RETO TERMINADO!', sub: c.k === 'hojas' ? this.sc + ' hojas verdes' : '', bg: PAL.vd } : { t: 3, title: pos === 1 ? '¡GANASTE!' : 'QUEDASTE ' + pos + 'º', sub: L.map((x, i) => (i + 1) + '. ' + x.name).join('  '), bg: pos === 1 ? PAL.vd : PAL.amb }; Snd.sfx(pos === 1 ? 'win' : 'ok');
     this.endT = 3.2;
   }
   actions() { const a = super.actions(); const b = a.find(x => x.id === 'bell'); if (b) { const f = b.fn; b.fn = () => { f(); if (this.net) Net.send({ t: 'bell' }); }; } return this.comp.k === 'paseo' ? a : a.filter(x => x.id !== 'dock'); }
@@ -69,7 +69,7 @@ const _multi76 = UI.multi;
 UI.multi = function () {
   _multi76.call(this); const h = $('#nHost'); if (!h) return; Net.lan = Net.lan !== false;
   const d = document.createElement('div'); d.innerHTML = `<p class="pag" style="margin-top:4px">Conexión</p><div class="seg wrap" id="nLan"><button data-lan="1" class="${Net.lan ? 'on' : ''}">📶 Misma red o zona Wi-Fi (sin internet)</button><button data-lan="0" class="${Net.lan ? '' : 'on'}">🌐 Por internet</button></div>
-    <p class="m" style="font-size:12px;margin:6px 0 10px">El celular que crea la sala es el servidor: no se usan servidores externos. Sin internet, un celular comparte su zona Wi-Fi y los demás se conectan a ella. Bluetooth no está disponible en la versión web.</p>`;
+    <p class="m" style="font-size:12px;margin:6px 0 10px">El celular que crea la sala es el servidor: no se usan servidores externos. Sin internet, un celular comparte su zona Wi-Fi y los demás se conectan a ella. Bluetooth funciona en la app de Android, con los celulares emparejados.</p>`;
   h.parentNode.parentNode.insertBefore(d, h.parentNode);
   $$('[data-lan]', d).forEach(b => b.onclick = () => { Net.lan = b.dataset.lan === '1'; $$('[data-lan]', d).forEach(x => x.classList.toggle('on', x === b)); Snd.sfx('tap'); });
 };

@@ -62,6 +62,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   // fin de turno -> resultados -> mejora -> pestañas y modales
   await p.evaluate(() => { const M = JE.game.mode; M.solved = 99; M.perfectOpen = true; M.cierre = true; M.end(); });
   await p.waitForTimeout(300); ok(await p.isVisible('#sResult'), 'pantalla de resultados');
+  if (await p.isVisible('#cineSkip')) await p.click('#cineSkip');
   if (await p.isVisible('[data-perk]')) { await p.click('[data-perk]'); ok(await p.evaluate(() => Save.data.perks.length > 0), 'elegir mejora (roguelite)'); }
   if (SHOTS) await p.screenshot({ path: path.join(OUT, 'resultado.png') });
   ok(await p.evaluate(() => { const c = Art.resultCard({ score: 1234, stars: 2, goals: [{ txt: 'a', ok: true, main: true }, { txt: 'b', ok: false }, { txt: 'c', ok: true }] }, { roleId: 'anfitrion', turno: 2, nov: NOVEDADES[1] }); return c.width === 1080 && c.toDataURL().length > 20000; }), 'tarjeta de resultado para compartir');
@@ -173,6 +174,40 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(g3.e === 'mix,solo,mix,solo,mix,solo' && !g3.eLate && g3.eDay, 'corredores eléctricos: 3 pares mixta y solo eléctricas; servicio eléctrico hasta las 7 p. m.');
   ok(g3.tut, 'tutorial opcional con compañero (Maryi en Pausas Activas)');
   ok(g3.pausa >= 80, 'pausa activa: el bot sigue la coreografía (' + g3.pausa + ' %)');
+  console.log('3e) Piloto: daltonismo, retos con QR, escenas de la historia y Bluetooth (simulado)');
+  const pl = await p.evaluate(async () => {
+    const wait = ms => new Promise(r => setTimeout(r, ms)), out = {}, e0 = JE.errors.length, S = Save.data.settings;
+    const run = async (max) => { const M = JE.game.mode; JE.headless = true; let k = 0; while (JE.game.mode === M && !M.done && k < 30 * max) { M.bot(.05); M.update(1 / 30); k++; } JE.headless = false; await wait(350); };
+    // colores para daltonismo
+    const c0 = PAL.cor, w0 = WCOL[0]; S.cb = true; applyCB(); out.cb = PAL.cor !== c0 && WCOL[0] === OKABE[0] && document.body.classList.contains('cb'); S.cb = false; applyCB(); out.cbOff = PAL.cor === c0 && WCOL[0] === w0;
+    // retos: el código lleva la ruta y las reglas
+    const c = { k: 'carrera', n: 3, zona: 'sur', lvl: 1, seed: 123456789 }, code = Reto.make(c); out.code = code; out.round = JSON.stringify(Reto.parse(Reto.url(code))) === JSON.stringify(c);
+    const h = Reto.parse('rh2-abc'); out.hojas = !!h && h.k === 'hojas' && h.min === 2; out.bad = Reto.parse('hola') === null && UI.parseCode('10-1-ABC') != null;
+    UI.retoVer(c, true); out.qr = !!document.querySelector('#rQR canvas');
+    Reto.play(c); const M1 = JE.game.mode; out.np = M1.id === 'carrera' && M1.np === 3; const pts1 = M1.pts.map(q => q.name).join('|'); M1.countdown = 0; M1.limit = 200; await run(260);
+    out.res1 = !!document.querySelector('#rShareM') && /Tu marca/.test(document.querySelector('#resBody').textContent);
+    Reto.play(c); out.same = JE.game.mode.pts.map(q => q.name).join('|') === pts1; JE.game.stop();
+    Reto.play(h); const M2 = JE.game.mode; out.lib = M2.id === 'libre' && M2.comp.k === 'hojas'; M2.countdown = 0; M2.sc = 7; M2.left = .2; await run(20); await wait(3600);
+    out.res2 = /7 hojas/.test((document.querySelector('#resBody') || {}).textContent || '');
+    // escena de la historia: se puede ver y saltar
+    S.cine = true; Cine.play('usuario', 1, { unlocks: ['Anfitrión'] }); await wait(200); out.cine = !!document.querySelector('#cine canvas');
+    document.querySelector('#cineNext').click(); await wait(250); const txt = document.querySelector('#cine .ctext p').textContent; document.querySelector('#cineNext').click(); await wait(80); out.cineTxt = txt.length > 3 && document.querySelector('#cine .ctext p').textContent.length > txt.length;
+    document.querySelector('#cineSkip').click(); out.cineEnd = !document.querySelector('#cine');
+    const st0 = JSON.stringify(Save.data.stars.bodega || null); Save.data.stars.bodega = [0]; const pr = Progress.apply({ score: 50, stars: 2, pass: true, goals: [] }, { roleId: 'bodega', turno: 1, seed: 1, nov: NOVEDADES[0], dur: 30 }, { stats: {}, ride: null, id: 'bodega', errors: 0 }); out.cineFlag = pr.cine === true;
+    // Bluetooth simulado: el anfitrión acepta un invitado y lo ve en la sala
+    const sent = []; window.Capacitor = { isNativePlatform: () => true, nativePromise: (pl, m, o) => { sent.push([m, o]); return Promise.resolve(m === 'host' ? { name: 'Celular de prueba' } : m === 'devices' ? { devices: [] } : {}); } };
+    const fire = d => { const ev = new Event('jeBt'); Object.assign(ev, d); window.dispatchEvent(ev); };
+    UI.go('sHome'); UI.multi(); document.querySelector('#nBt').click(); document.querySelector('#nHost').click(); await wait(100);
+    fire({ k: 'open', id: 1, name: 'Amigo BT' }); await wait(50); const idMsg = sent.find(x => x[0] === 'send'); out.btId = !!idMsg && JSON.parse(idMsg[1].data).t === 'id' && JSON.parse(idMsg[1].data).id === 1;
+    fire({ k: 'data', id: 1, d: JSON.stringify({ t: 'hi', name: 'Amigo BT', shirt: '#ff6b5a' }) }); await wait(50); out.btLobby = Object.keys(UI.netPlayers).length === 1 && /Bluetooth/.test(document.querySelector('#nInv').textContent) && !document.querySelector('#nLibre').disabled;
+    fire({ k: 'close', id: 1 }); await wait(50); out.btBye = Object.keys(UI.netPlayers).length === 0; Net.reset(); out.btStop = sent.some(x => x[0] === 'stop'); delete window.Capacitor; UI.closeModal();
+    out.err = JE.errors.slice(e0); UI.go('sHome'); return out;
+  });
+  ok(pl.cb && pl.cbOff, 'colores para daltonismo: paleta segura y vuelta a los colores normales');
+  ok(pl.round && pl.hojas && pl.bad && pl.qr, 'retos: código ' + pl.code + ' con QR, ida y vuelta por enlace, y códigos de oficios de 2 cifras');
+  ok(pl.np && pl.same && pl.res1 && pl.lib && pl.res2, 'retos: misma ruta para todos y marca para compartir (carrera y hojas)');
+  ok(pl.cine && pl.cineTxt && pl.cineEnd && pl.cineFlag, 'escena de la historia: se reproduce, avanza y se salta; sale al aprobar un turno por primera vez');
+  ok(pl.btId && pl.btLobby && pl.btBye && pl.btStop && !pl.err.length, 'Bluetooth (simulado): el anfitrión acepta, ve al invitado en la sala y cierra ' + pl.err.join(' | '));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

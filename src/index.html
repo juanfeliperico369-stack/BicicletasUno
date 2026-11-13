@@ -10,29 +10,24 @@
 <style>/*FONTS*//*CSS*/</style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
- <section id="sCover" class="scr on halftone">
-  <div class="cband"><div>Valle de Aburrá</div><div>Bicicleta pública</div></div>
+ <section id="sCover" class="scr on">
   <div class="cbody">
-   <div class="srf">Préstamos, estaciones, ciclorrutas, balanceo, taller y más</div>
    <h1 class="mega">Juega</h1>
    <h1 class="mega g b2">EnCicla</h1>
    <canvas id="coverArt" width="200" height="125" aria-label="Ciclista pedaleando por la ciclorruta al atardecer en el Valle de Aburrá"></canvas>
-   <span class="sticker" style="right:4%;top:46%">¡11 oficios!</span>
-   <div class="kick">¿Sabes cuántas bicis mueve tu ciudad?</div>
-   <div class="ctag">¡Entérate de todo lo que pasa detrás de cada préstamo!</div>
    <div class="cbtns">
     <button class="btn pri" id="bPlay">▶ Jugar</button>
     <button class="btn amb" id="bReto">★ Reto del día</button>
     <div class="row" style="justify-content:center"><button class="btn sm" id="bHow">Cómo jugar</button><button class="btn sm" id="bShare">Compartir</button></div>
    </div>
   </div>
-  <div class="cfoot"><span class="mega">Creado por OneZero</span><span class="pag" id="ver">v</span></div>
+  <div class="cfoot"><span>Creado por OneZero</span><span id="ver">v</span></div>
  </section>
 
  <section id="sHome" class="scr">
   <header class="mast"><div class="brand">Juega<b>EnCicla</b></div><div class="chips"><span class="chip">NIV <b id="hLvl">1</b></span><span class="chip">★ <b id="hStars">0</b></span></div><button class="ib" id="bHomeCover" aria-label="Portada">⌂</button></header>
   <nav id="tabs"><button data-tab="ruta" class="on">Escalafón</button><button data-tab="album">Álbum</button><button data-tab="parts">Partidas</button><button data-tab="mas">Más</button></nav>
-  <div class="scroll halftone"><div class="wrap">
+  <div class="scroll"><div class="wrap">
    <div id="tab-ruta" class="tab on"></div>
    <div id="tab-album" class="tab"></div>
    <div id="tab-parts" class="tab"></div>
@@ -40,7 +35,7 @@
   </div></div>
  </section>
 
- <section id="sBrief" class="scr halftone"><div class="scroll"><div class="wrap" id="briefBody"></div></div></section>
+ <section id="sBrief" class="scr"><div class="scroll"><div class="wrap" id="briefBody"></div></div></section>
 
  <section id="sGame" class="scr">
   <canvas id="cv"></canvas>
@@ -50,7 +45,7 @@
   <div id="actBar"></div>
  </section>
 
- <section id="sResult" class="scr halftone"><div class="scroll"><div class="wrap" id="resBody"></div></div></section>
+ <section id="sResult" class="scr"><div class="scroll"><div class="wrap" id="resBody"></div></div></section>
  <div id="toast"></div>
  <div id="modal" hidden><div class="mbox" id="mBody"></div></div>
  <input type="file" id="fileIn" accept=".json,application/json" hidden>

@@ -225,11 +225,11 @@ const View = JE.view = {
   setMode(kind, dw, dh) { this.kind = kind; this.dw = dw || 200; this.dh = dh || 150; this.apply(); },
   apply() {
     let s;
-    if (this.kind === 'map') { s = Math.round(Math.min(this.w, this.h) / 185); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / 460)); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 1, 8); }   // casillas de 16 px: se ve ~12 casillas (240 m) de ancho en el celular
+    if (this.kind === 'map') { const d3 = !!Save.data && Save.data.settings.gfx !== 'pixel' && Save.data.settings.vista !== 'pano'; s = Math.round(Math.min(this.w, this.h) / (d3 ? 128 : 185)); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / (d3 ? 330 : 460))); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 1, 8); }   // casillas de 16 px: se ve ~12 casillas (240 m) de ancho en el celular
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
-    const G = JE.game && JE.game.mode, q = this.q = this.kind === 'map' && G && G.ride && Save.data && (Save.data.settings.gfx || 'pixel') !== 'pixel' ? clamp(Math.round(s * this.dpr / 1.5), 2, 4) : 1;   // mapa dibujado: búfer a mayor resolución
+    const G = JE.game && JE.game.mode, q = this.q = this.kind === 'map' && G && G.ride && Save.data && Save.data.settings.gfx !== 'pixel' ? clamp(Math.round(s * this.dpr / 1.5), 2, 4) : 1;   // mapa dibujado: búfer a mayor resolución
     if (this.buf.width !== (this.vw + 1) * q || this.buf.height !== (this.vh + 1) * q) { this.buf.width = (this.vw + 1) * q; this.buf.height = (this.vh + 1) * q; }
     this.b.setTransform(1, 0, 0, 1, 0, 0);   // +1: corrimiento por fracción de pixel
     this.b.imageSmoothingEnabled = false;
@@ -242,7 +242,7 @@ const View = JE.view = {
   /* texto nítido en coordenadas CSS */
   text(t, x, y, o = {}) {
     const c = this.ctx, sz = Math.round((o.size || 14) * (Save.data && Save.data.settings.big ? 1.15 : 1));
-    c.font = (o.bold === false ? '' : '700 ') + sz + 'px ' + (o.body ? 'Cuerpo,system-ui,sans-serif' : 'Titulos,"Arial Narrow",Impact,sans-serif');
+    c.font = (o.bold === false ? '' : o.body ? '700 ' : '600 ') + sz + 'px ' + (o.body ? 'Cuerpo,system-ui,sans-serif' : 'Titulos,system-ui,sans-serif'); if ('fontStretch' in c) c.fontStretch = o.body ? 'normal' : 'semi-condensed';
     c.textAlign = o.align || 'left'; c.textBaseline = o.base || 'alphabetic';
     if (o.bg) { const w = c.measureText(t).width, p = o.pad || 4; let bx = x - (c.textAlign === 'center' ? w / 2 : c.textAlign === 'right' ? w : 0) - p; c.fillStyle = o.bg; c.fillRect(bx, y - sz * .82 - p * .6, w + p * 2, sz + p * 1.1); if (o.border) { c.strokeStyle = o.border; c.lineWidth = 2; c.strokeRect(bx, y - sz * .82 - p * .6, w + p * 2, sz + p * 1.1); } }
     if (o.stroke) { c.lineWidth = o.sw || 3; c.strokeStyle = o.stroke; c.lineJoin = 'round'; c.strokeText(t, x, y); }

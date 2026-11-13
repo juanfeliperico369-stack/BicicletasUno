@@ -54,9 +54,7 @@ Ride.prototype.updLife = function (dt) {
   for (const q of this.peds) {
     q.ph += dt * q.spd * .15; if (q.hit > 0) q.hit -= dt;
     if (q.side > 0) { q.side -= dt; continue; }
-    const nx = q.x + q.dx * q.spd * dt, ny = q.y + q.dy * q.spd * dt, ahead = this.map.get(Math.floor((nx + q.dx * 6) / TS), Math.floor((ny + q.dy * 6) / TS));
-    if (PED_OK(ahead) && this.rng.f() > .002) { q.x = nx; q.y = ny; }
-    else { const opts = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(d => PED_OK(this.map.get(Math.floor(q.x / TS) + d[0], Math.floor(q.y / TS) + d[1]))); if (opts.length) { const d = this.rng.pick(opts); q.dx = d[0]; q.dy = d[1]; } }
+    this.pedStep(q, dt);
     if (P.veh === 'bike' && !q.hit && Math.abs(q.x - P.x) < 4 && Math.abs(q.y - P.y) < 4 && P.v > 14 * WK) {
       q.hit = 2; this.stats.peds = (this.stats.peds || 0) + 1; P.v *= .35; this.float('¡Ojo, peatón!', PAL.amb); Snd.sfx('bad'); vib(30);
       if (this.mode.onPed) this.mode.onPed(); if (!this.pedTold) { this.pedTold = 1; JE.ui && JE.ui.toast('🚶 En la acera el peatón tiene prioridad: usa el timbre.'); }

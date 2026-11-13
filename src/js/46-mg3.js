@@ -64,10 +64,10 @@ class MGTulas extends MG {
   hud(V) {
     this.btns = []; const L = this.L; if (!L) return; const s = V.s;
     V.text(this.mode === 'armar' ? 'ARMAR TULAS · Casa EnCicla' : 'RECOGER TULAS · cargar celulares', V.w / 2, V.top + 18, { size: 18, align: 'center', color: PAL.vd1, stroke: '#0a2342', sw: 5 });
-    this.tulas.forEach((t, i) => V.text(t.name.replace(/^(Parque (de |del |Principal de )?|Estación |Universidad )/, '').slice(0, 12), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30 + (i % 2) * 16, { size: 10, align: 'center', color: '#fff', bg: t.col + 'cc', pad: 2 }));
+    this.tulas.forEach((t, i) => V.text((CB() ? (i + 1) + '·' : '') + t.name.replace(/^(Parque (de |del |Principal de )?|Estación |Universidad )/, '').slice(0, 12), (10 + i * L.tw + L.tw / 2) * s, L.vh * .3 * s + 30 + (i % 2) * 16, { size: 10, align: 'center', color: '#fff', bg: t.col + 'cc', pad: 2 }));
     if (this.mode === 'armar') {
       const n = this.keys.length, bw = Math.min(64, (V.w - 20) / Math.max(n, 4) - 6); let y = V.h - 170;
-      this.keys.forEach((k, i) => { if (!k.used) this.button(V, 10 + i * (bw + 6), y, bw, 52, '🔑', () => this.key(i), { bg: k.col, size: 22, key: 'k' + i }); });
+      this.keys.forEach((k, i) => { if (!k.used) this.button(V, 10 + i * (bw + 6), y, bw, 52, CB() ? '🔑' + (k.i + 1) : '🔑', () => this.key(i), { bg: k.col, size: CB() ? 17 : 22, key: 'k' + i }); });
       y = V.h - 100; const m = this.cels.length, cw = Math.min(64, (V.w - 20) / m - 6);
       this.cels.forEach((c, i) => { if (!c.used) this.button(V, 10 + i * (cw + 6), y, cw, 60, '📱' + c.bat + '%', () => this.cel(i), { bg: c.bat < 60 ? '#7a2a24' : PAL.az1, size: 13, key: 'c' + i }); });
     } else {
@@ -151,14 +151,15 @@ class MGBodega2 extends MG {
     }
     if (this.step === 'organizar' || this.step === 'cargar') {
       const n = PARTES.length, bw = Math.min(110, (V.w - 10 * (n + 1)) / n), y = V.h - 90;
-      PARTES.forEach((k, i) => this.button(V, 10 + i * (bw + 10), y, bw, 70, CATS[k].name + (this.step === 'cargar' ? ' · ' + this.shelf[k] : ''), () => this.step === 'organizar' ? this.store(k) : this.load(k), { icon: k, border: CATS[k].col, color: CATS[k].col, key: 's_' + k }));
+      PARTES.forEach((k, i) => this.button(V, 10 + i * (bw + 10), y, bw, 70, this.step === 'cargar' ? '× ' + this.shelf[k] : CATS[k].name, () => this.step === 'organizar' ? this.store(k) : this.load(k), { icon: k, border: CATS[k].col, color: CATS[k].col, key: 's_' + k }));
       if (this.step === 'organizar' && B) V.text('Caja: ' + B.q + ' × ' + CATS[B.type].name, V.w / 2, V.h - 104, { size: 16, align: 'center', color: '#fff', bg: '#0a2342cc', pad: 4 });
     }
     if (this.step === 'cargar' && this.order) {
-      const txt = 'Pedido del taller: ' + PARTES.filter(k => this.order[k]).map(k => this.order[k] + ' ' + CATS[k].name.toLowerCase() + ' (' + this.loaded[k] + ')').join(' · ');
-      V.text(txt, V.w / 2, V.h - 130, { size: 13, align: 'center', color: '#fff', bg: '#0a2342dd', pad: 4, body: true });
-      this.button(V, V.w / 2 - 70, 84, 140, 48, '✓ LISTO', () => this.ready(), { bg: PAL.vd2, key: 'ok' });
-      PARTES.forEach((k, i) => { if (this.loaded[k] > (this.order[k] || 0)) this.button(V, 10 + i * 70, 140, 62, 34, '− ' + CATS[k].name.slice(0, 5), () => this.unloadOne(k), { size: 12, bg: '#7a2a24', key: 'u_' + k }); });
+      const it = PARTES.filter(k => this.order[k]), w = Math.min(380, V.w - 20), x = (V.w - w) / 2, y = V.top + 34, rows = Math.ceil(it.length / 2), c = V.ctx;
+      c.fillStyle = '#0a2342e6'; c.beginPath(); c.roundRect(x, y, w, 30 + rows * 24, 14); c.fill();
+      V.text('Pedido del taller', x + 12, y + 20, { size: 14, color: PAL.vd1, body: true });
+      it.forEach((k, i) => { const ok = this.loaded[k] === this.order[k], over = this.loaded[k] > this.order[k], cx = x + 12 + (i % 2) * (w / 2), cy = y + 44 + Math.floor(i / 2) * 24; V.text((ok ? '✓ ' : '') + CATS[k].name + ': ' + this.loaded[k] + '/' + this.order[k], cx, cy, { size: 14, color: over ? PAL.cor : ok ? PAL.vd : '#fff', body: true }); if (over) this.button(V, cx + w / 2 - 54, cy - 17, 34, 24, '−', () => this.unloadOne(k), { size: 16, bg: '#7a2a24', key: 'u_' + k }); });
+      this.button(V, V.w / 2 - 80, V.h - 160, 160, 52, '✓ Listo', () => this.ready(), { bg: PAL.vd2, key: 'ok' });
     }
     this.drawPops(V); void s;
   }

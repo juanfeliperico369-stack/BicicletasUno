@@ -134,7 +134,7 @@ class MapMode extends Mode {
   hud2() { }
   pointer(type, vx, vy, cx, cy) {
     if (type !== 'down') return false;
-    if (this.ride.big) { this.ride.big = false; return true; }
+    if (this.ride.big) return true;
     if (super.pointer(type, vx, vy, cx, cy)) return true;
     if (this.ride.inMini(cx, cy)) { this.ride.big = true; Snd.sfx('tap'); return true; }
     return false;

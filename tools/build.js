@@ -14,7 +14,7 @@ const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '
 js = VALLE + js;
 const version = (js.match(/version: '([^']+)'/) || [])[1] || '0.0.0';
 const b64 = f => fs.readFileSync(path.join(SRC, 'assets', f)).toString('base64');
-const fonts = `@font-face{font-family:"Titulos";src:url(data:font/woff;base64,${b64('titulos.woff')}) format("woff");font-display:swap}@font-face{font-family:"Cuerpo";font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}`;
+const fonts = `@font-face{font-family:"Titulos";font-weight:300 700;font-stretch:75% 125%;src:url(data:font/woff2;base64,${b64('titulos.woff2')}) format("woff2");font-display:swap}@font-face{font-family:"Cuerpo";font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}`;
 const css = rd('style.css');
 const tpl = rd('index.html');
 const svgIcon = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges"><rect width="32" height="32" fill="#0a2342"/><circle cx="16" cy="16" r="13" fill="#9bd341"/><g fill="none" stroke="#fff" stroke-width="2"><circle cx="10" cy="19" r="4"/><circle cx="22" cy="19" r="4"/></g><path d="M10 19 15 13 22 19M15 13h5M15 19 20 13M13 12h4" stroke="#0a2342" stroke-width="1.6" fill="none"/></svg>`);

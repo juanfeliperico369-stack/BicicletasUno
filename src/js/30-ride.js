@@ -150,7 +150,7 @@ class Ride {
     this.gpsT -= dt; if (this.gpsT <= 0) { this.gpsT = .35; this.calcGps(); }
   }
   calcGps() {
-    this.gps = []; const T = this.target; if (!T) return;
+    this.gps = []; const T = this.way || this.target; if (!T) return;
     let c = { x: Math.floor(this.p.x / TS), y: Math.floor(this.p.y / TS) };
     const D = this.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), this.p.veh === 'truck', c.x, c.y);
     if (this.map.fv(D, c.x, c.y) >= 1e9) { const n = this.map.nearestOpen(c.x, c.y, this.p.veh === 'truck'); c = n; }
@@ -245,7 +245,7 @@ class Ride {
     }
     // ruta GPS
     const ph = (t * 4) | 0;
-    const gc = this.target && this.target.col || PAL.amb; this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 3, g.y - oy - 3, 6, 6, '#0a2342'); prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, c); });
+    const gc = (this.way || this.target || {}).col || PAL.amb; this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 3, g.y - oy - 3, 6, 6, '#0a2342'); prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, c); });
     // marcadores (aros que laten)
     for (const m of this.markers) {
       if (!inV(m.x, m.y, 40)) continue; const pr = m.r * .7 + Math.sin(t * 5) * 2, col = m.col || PAL.amb;
@@ -256,7 +256,7 @@ class Ride {
     // ciclovía: conos en las avenidas cerradas a los carros
     if (this.mode.mods.ciclovia) for (const ln of this.map.lanesNear(this.cam.x, this.cam.y)) { if (!ln.cv || ln.dir < 0) continue; for (let s = 0; s < ln.len; s += 40 * WK) { const q = this.map.at(ln, s); if (!inV(q.x, q.y)) continue; prect(b, q.x - ox - 1, q.y - oy, 3, 3, '#ff8a3d'); prect(b, q.x - ox, q.y - oy - 1, 1, 1, '#ffffff'); } }
     // semáforos
-    const LC = { g: '#4cff6a', a: '#ffc93c', r: '#ff4b3a' };
+    const LC = CB() ? { g: '#35b8ff', a: '#ffc93c', r: '#ff3fa4' } : { g: '#4cff6a', a: '#ffc93c', r: '#ff4b3a' };
     for (const L of this.map.lights) {
       if (!inV(L.x, L.y, 30)) continue; const s = this.map.lightState(L, this.mode.t);
       const lamp = (x, y, k) => { prect(b, x - ox, y - oy, 4, 4, '#11151d'); prect(b, x - ox + 1, y - oy + 1, 2, 2, LC[k]); };
@@ -272,6 +272,7 @@ class Ride {
     this.drawGround(c, ox, oy, inV);
     for (const cr of this.cars) if (inV(cr.x, cr.y)) spr(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, '#0004');
     for (const o of this.opps) if (inV(o.x, o.y)) { c.globalAlpha = .9; spr(Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]), o.x, o.y, o.a); c.globalAlpha = 1; }
+    this.draw3D(c, ox, oy, vw, vh);
     const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : P.veh === 'walk' ? Art.walker((this.stepT | 0) % 2) : Art.rider(this.mode.shirt);
     spr(sp, P.x, P.y, P.a, '#0005');
     // trenes del metro sobre el viaducto
@@ -308,7 +309,7 @@ class Ride {
     for (const f of this.fx) if (f.k === 't') V.text(f.txt, sx(f.x), sy(f.y), { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col });
     for (const m of this.markers) if (m.label && m.num) { const x = sx(m.x), y = sy(m.y); if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(String(m.num), x, y + 5, { size: 14, align: 'center', stroke: '#0a2342', sw: 4, color: m.col || PAL.amb }); }
     // flecha al objetivo
-    const T = this.target;
+    const T = this.way || this.target;
     if (T) {
       const tx = sx(T.x), ty = sy(T.y), d = dist(P.x, P.y, T.x, T.y) * M_PER_PX, L = 30, Rr = V.w - 30 - (V.w > 600 ? 0 : 0), Tt = Math.min(160, V.h * .3), B = V.h - 110;
       if (tx < L || tx > Rr || ty < 60 || ty > V.h - 70) {
@@ -341,7 +342,7 @@ class Ride {
     // controles (flechas o joystick fijo) y joystick
     if (!this.big) Ctrl.draw(V);
     const j = Input.joy; if (j.on) { c.globalAlpha = .55; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(j.ox, j.oy, 46, 0, TAU); c.stroke(); const dx = j.x - j.ox, dy = j.y - j.oy, l = Math.hypot(dx, dy), k2 = l > 46 ? 46 / l : 1; c.fillStyle = PAL.vd; c.beginPath(); c.arc(j.ox + dx * k2, j.oy + dy * k2, 20, 0, TAU); c.fill(); c.globalAlpha = 1; }
-    if (this.big) drawOverview(V, { sim: this.sim, markers: this.markers, player: P, target: T, title: 'VISTA GENERAL · toca para cerrar' });
+    if (this.big) { if (!MapView.open) MapView.show(this); MapView.draw(V); } else if (MapView.open && MapView.ride === this) MapView.hide();
   }
   inMini(x, y) { const r = this.mmRect; return r && x > r.x - 8 && x < r.x + r.w + 8 && y > r.y - 8 && y < r.y + r.h + 24; }
 }

@@ -59,7 +59,7 @@ async function abrirJuego(browser, dsf) {
 
 const b64 = f => fs.readFileSync(path.join(ASSETS, f)).toString('base64');
 const featureHTML = (arte, icono) => `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-@font-face{font-family:Titulos;src:url(data:font/woff;base64,${b64('titulos.woff')}) format("woff")}
+@font-face{font-family:Titulos;font-weight:300 700;src:url(data:font/woff2;base64,${b64('titulos.woff2')}) format("woff2")}
 @font-face{font-family:Cuerpo;font-weight:100 900;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}
 *{box-sizing:border-box}html,body{margin:0;width:1024px;height:500px;overflow:hidden}
 body{background:#0a2342 radial-gradient(rgba(255,255,255,.08) 1.4px,transparent 2px) 0 0/9px 9px;color:#fff;font-family:Cuerpo,sans-serif;position:relative}
@@ -125,7 +125,7 @@ body{background:#0a2342 radial-gradient(rgba(255,255,255,.08) 1.4px,transparent 
 
   // 4) ícono 512 y fuentes para la página
   fs.copyFileSync(ICON, path.join(STORE, 'icon-512.png')); hechos.push('dist/store/icon-512.png');
-  for (const f of ['titulos.woff', 'cuerpo.woff2']) { fs.copyFileSync(path.join(ASSETS, f), path.join(FONTS, f)); hechos.push('landing/fuentes/' + f); }
+  for (const f of ['titulos.woff2', 'cuerpo.woff2']) { fs.copyFileSync(path.join(ASSETS, f), path.join(FONTS, f)); hechos.push('landing/fuentes/' + f); }
 
   const kb = f => (fs.statSync(path.join(ROOT, f)).size / 1024).toFixed(0) + ' KB';
   console.log(hechos.map(f => '  ' + f + ' · ' + kb(f)).join('\n'));
