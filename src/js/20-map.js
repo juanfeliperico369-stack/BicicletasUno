@@ -130,7 +130,9 @@ const CityMap = JE.map = {
     const [id, name, muni, lat, lon, type, kind, az] = s, g = geoT(lat, lon), tx = Math.round(g.x), ty = Math.round(g.y), ok = [TT.BLDG, TT.BRICK, TT.GRASS, TT.PLAZA, TT.WALK];
     const acc = v => v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD || v === TT.AVE;
     let best = null, bd = 1e9;
-    for (let y = ty - 16; y <= ty + 16; y++) for (let x = tx - 16; x <= tx + 16; x++) {
+    // primero cerca (±16 casillas), luego más lejos (±26) y, si el barrio está lleno de vías, sobre una calle menor
+    for (const [R, extra] of [[16, 0], [26, 0], [16, TT.ROAD]]) { if (best) break; if (extra) ok.push(extra);
+    for (let y = ty - R; y <= ty + R; y++) for (let x = tx - R; x <= tx + R; x++) {
       const d = Math.abs(x + 2 - tx) + Math.abs(y + 1 - ty); if (d >= bd) continue;
       let good = true;
       for (let yy = y; yy < y + 2 && good; yy++) for (let xx = x; xx < x + 4; xx++) if (!ok.includes(this.get(xx, yy)) || this.lid.has(this.idx(xx, yy))) { good = false; break; }
@@ -140,7 +142,7 @@ const CityMap = JE.map = {
       for (let yy = y; yy < y + 2 && !a; yy++) if (acc(this.get(x - 1, yy)) || acc(this.get(x + 4, yy))) a = true;
       if (!a) continue;
       bd = d; best = { x, y };
-    }
+    } }
     if (!best) { (this.dropped || (this.dropped = [])).push(name); return null; }
     for (let yy = best.y; yy < best.y + 2; yy++) for (let xx = best.x; xx < best.x + 4; xx++) this.set(xx, yy, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
