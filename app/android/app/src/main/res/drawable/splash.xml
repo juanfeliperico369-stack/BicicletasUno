@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch screen (pre-Android 12): brand navy with the pixel-art icon centered, unfiltered. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+    <item
+        android:width="144dp"
+        android:height="144dp"
+        android:gravity="center">
+        <bitmap
+            android:filter="false"
+            android:antialias="false"
+            android:src="@drawable/splash_icon" />
+    </item>
+</layer-list>
