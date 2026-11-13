@@ -416,7 +416,7 @@ const VALLE_BIN = '7J2LcuO4rq4pks0KZqq69vs/7TaJCwFedHGSWZMe4Jw9q5PYsizL4qcfwI/j8
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '1.0.5', errors: [], headless: false };
+const JE = window.JE = { version: '1.0.6', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -1011,7 +1011,7 @@ const ESTACIONES = [
   ['calle44', 'Calle 44 · Bello', 'Bello', 6.3215, -75.5585, 'a', 'mix', 'bello'], ['madera', 'Madera', 'Bello', 6.3165, -75.5535, 'a', 'mix', 'bello'],
   // Medellín norte
   ['juanes', 'Parque Juanes de la Paz', 'Medellín', 6.2960, -75.5700, 'm', 'res'], ['calle80', 'Calle 80', 'Medellín', 6.2830, -75.5735, 'a', 'mix'], ['pilarica', 'Pilarica', 'Medellín', 6.2805, -75.5845, 'm', 'res'],
-  ['robledo', 'Robledo', 'Medellín', 6.2780, -75.5950, 'a', 'res'], ['unal', 'Universidad Nacional', 'Medellín', 6.2625, -75.5755, 'm', 'uni'], ['terminalN', 'Terminal del Norte', 'Medellín', 6.2795, -75.5695, 'm', 'mix'],
+  ['robledo', 'Robledo', 'Medellín', 6.2780, -75.5950, 'a', 'res'], ['pascualbravo', 'Pascual Bravo', 'Medellín', 6.2775, -75.5880, 'm', 'uni'], ['pablotobon', 'Hospital Pablo Tobón Uribe', 'Medellín', 6.2806, -75.5788, 'a', 'res'], ['unal', 'Universidad Nacional', 'Medellín', 6.2625, -75.5755, 'm', 'uni'], ['terminalN', 'Terminal del Norte', 'Medellín', 6.2795, -75.5695, 'm', 'mix'],
   ['moravia', 'Moravia', 'Medellín', 6.2760, -75.5655, 'm', 'res'], ['aranjuez', 'Aranjuez', 'Medellín', 6.2830, -75.5560, 'm', 'res'], ['botanico', 'Jardín Botánico', 'Medellín', 6.2722, -75.5625, 'a', 'mix'],
   ['universidad', 'Estación Universidad', 'Medellín', 6.2690, -75.5650, 'a', 'mix'], ['campovaldes', 'Campo Valdés', 'Medellín', 6.2790, -75.5530, 'm', 'res'], ['udea', 'Universidad de Antioquia', 'Medellín', 6.2650, -75.5690, 'm', 'uni'],
   ['manrique', 'Manrique', 'Medellín', 6.2730, -75.5500, 'a', 'res'], ['explora', 'Parque Explora', 'Medellín', 6.2712, -75.5675, 'a', 'mix'], ['prado', 'Prado', 'Medellín', 6.2575, -75.5640, 'm', 'res'],
@@ -1061,8 +1061,8 @@ const ESTACIONES = [
 ];
 /* corredores de bicicletas eléctricas (estaciones con bici asistida: la subida no frena) */
 /* corredores de bicis eléctricas: 'mix' presta normales y eléctricas, 'solo' solo eléctricas. Servicio eléctrico hasta las 7 p. m.; las estaciones solo eléctricas cierran a las 8 p. m. */
-const CORREDOR_E = { floresta: 'mix', c4ta: 'solo', udea: 'mix', hinfantil: 'solo', sancayetano: 'mix', estrella: 'solo' };
-const CORREDORES = [['floresta', 'c4ta', 'Floresta – C4TA'], ['udea', 'hinfantil', 'Universidad de Antioquia – Hospital Infantil'], ['sancayetano', 'estrella', 'San Cayetano – La Estrella']];
+const CORREDOR_E = { floresta: 'mix', c4ta: 'solo', udea: 'mix', hinfantil: 'solo', sancayetano: 'mix', estrella: 'solo', pascualbravo: 'mix', pablotobon: 'solo' };
+const CORREDORES = [['floresta', 'c4ta', 'Floresta – C4TA'], ['udea', 'hinfantil', 'Universidad de Antioquia – Hospital Infantil'], ['sancayetano', 'estrella', 'San Cayetano – La Estrella'], ['pascualbravo', 'pablotobon', 'Pascual Bravo – Hospital Pablo Tobón Uribe']];
 const E_HASTA = 19 * 60, E_CIERRE = 20 * 60;
 /* puntos de la operación (no son postales) */
 const PUNTOS = {
