@@ -360,6 +360,7 @@ body.big .turnos button{font-size:18px}
 #modal h2{text-transform:none;letter-spacing:0}
 .mbox{border:0;border-radius:22px;box-shadow:0 20px 50px #000a}
 .mbox h2{text-transform:none;font-stretch:88%;line-height:1}
+.paper .m{color:var(--az2)}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -410,7 +411,7 @@ const VALLE_BIN = '7J2LcuO4rq4pks0KZqq69vs/7TaJCwFedHGSWZMe4Jw9q5PYsizL4qcfwI/j8
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '1.0.0', errors: [], headless: false };
+const JE = window.JE = { version: '1.0.1', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -4622,7 +4623,7 @@ const TIPS = [
   'EnCicla nació en 2011 y lo gestiona el Área Metropolitana del Valle de Aburrá.',
   'El préstamo es gratis: te registras y prestas la bici en cualquier estación.',
   'Máximo 1 hora por préstamo: devuelve a tiempo y evita sanciones.',
-  'Horario de referencia: lunes a viernes de 5:30 a. m. a 10 p. m., sábados de 6:30 a. m. a 9 p. m. y domingos y festivos de 8 a. m. a 4 p. m.',
+  'De lunes a viernes se presta de 5:30 a. m. a 8:59 p. m. y las bicis se reciben hasta las 10 p. m.',
   'Usa casco, respeta los semáforos y prefiere la ciclorruta.',
   'Hay estaciones manuales (con anfitrión) y automáticas (con anclajes y tótem).',
   'El sistema va desde Caldas, donde nace el río, hasta Barbosa, al norte del valle.',
@@ -4737,7 +4738,7 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Mano guía (ayudas)</span><button class="sw ${S.hints !== false ? 'on' : ''}" data-sw="hints" aria-label="Ayudas"></button></div>`;
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
-    h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'flotante') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
+    h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'fijo') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="personajes">👥 Personajes</button><button class="btn" data-act="ranking">🏆 Ranking</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
@@ -5437,15 +5438,14 @@ UI.personajes = function () {
 
 /* ---------- controles: joystick flotante, joystick fijo o flechas ---------- */
 const Ctrl = JE.ctrl = {
-  kind() { return (Save.data && Save.data.settings.ctrl) || 'flotante'; },
+  kind() { return (Save.data && Save.data.settings.ctrl) || 'fijo'; },
   anchor() { return { x: View.w - 86 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sar')) || 0), y: View.h - 120 }; },   // a la derecha: a la izquierda van las tareas y la ayuda
   arrows() { const a = this.anchor(), s = 52; return [['ArrowUp', a.x, a.y - s, '▲'], ['ArrowDown', a.x, a.y + s, '▼'], ['ArrowLeft', a.x - s, a.y, '◀'], ['ArrowRight', a.x + s, a.y, '▶']]; },
   /* devuelve true si el toque lo tomó el control */
   down(e, cx, cy, cv) {
     const k = this.kind();
     if (k === 'flechas') { for (const [key, x, y] of this.arrows()) if (Math.abs(cx - x) < 28 && Math.abs(cy - y) < 28) { Input.keys[key] = true; (this.held || (this.held = {}))[e.pointerId] = key; return true; } return false; }
-    const a = k === 'fijo' ? this.anchor() : { x: cx, y: cy };
-    if (k === 'fijo' && dist(cx, cy, a.x, a.y) > 110) return false;
+    const fx = this.anchor(), a = k === 'fijo' && dist(cx, cy, fx.x, fx.y) <= 110 ? fx : { x: cx, y: cy };   // fijo: se ve siempre, pero también se puede arrastrar en cualquier parte
     Input.joy = { on: true, id: e.pointerId, ox: a.x, oy: a.y, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { }
     return true;
   },
@@ -5453,7 +5453,7 @@ const Ctrl = JE.ctrl = {
   draw(V) {
     const k = this.kind(), c = V.ctx;
     if (k === 'flechas') { c.globalAlpha = .7; for (const [key, x, y, l] of this.arrows()) { c.fillStyle = Input.keys[key] ? PAL.vd : '#0a2342cc'; c.beginPath(); c.arc(x, y, 25, 0, TAU); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); V.text(l, x, y + 7, { size: 20, align: 'center', color: '#fff' }); } c.globalAlpha = 1; return; }
-    if (k === 'fijo' && !Input.joy.on) { const a = this.anchor(); c.globalAlpha = .35; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(a.x, a.y, 46, 0, TAU); c.stroke(); c.fillStyle = PAL.vd; c.beginPath(); c.arc(a.x, a.y, 18, 0, TAU); c.fill(); c.globalAlpha = 1; }
+    if (k === 'fijo' && !Input.joy.on) { const a = this.anchor(); c.globalAlpha = .55; c.fillStyle = '#0a2342'; c.beginPath(); c.arc(a.x, a.y, 50, 0, TAU); c.fill(); c.globalAlpha = .8; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(a.x, a.y, 48, 0, TAU); c.stroke(); c.fillStyle = PAL.vd; c.beginPath(); c.arc(a.x, a.y, 20, 0, TAU); c.fill(); c.globalAlpha = 1; }
   }
 };
 LOGROS.push({ id: 'rango5', name: 'Rueda firme', desc: 'Llega al rango 5 del ranking', icon: 'estrella', test: S => rangoDe(S.xp) >= 4 });
@@ -5660,8 +5660,9 @@ const Cal = JE.cal = {
   festivo(d) { return this.festivos(d.getFullYear())[this.key(d)] || null; },
   dayType(d) { return this.festivo(d) ? 'festivo' : d.getDay() === 0 ? 'domingo' : d.getDay() === 6 ? 'sabado' : 'semana'; },
   /* horario de préstamo de EnCicla según el día (aproximado: confirmar con el equipo) */
-  service(d) { const t = this.dayType(d); return t === 'semana' ? { open: 330, close: 1320 } : t === 'sabado' ? { open: 390, close: 1260 } : { open: 480, close: 960 }; },
-  open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.close; },
+  /* open: primer préstamo · lend: desde esa hora ya no se presta (la última es un minuto antes) · close: hasta esa hora se reciben bicis */
+  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, close: 1320 } : t === 'sabado' ? { open: 390, close: 1260 } : { open: 480, close: 960 }; s.lend = s.close - 60; return s; },
+  open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.lend; },
   /* ciclovía de Medellín: domingos y festivos de 7:00 a. m. a 1:00 p. m. */
   ciclovia(d) { const t = this.dayType(d); return t === 'domingo' || t === 'festivo'; },
   cicloviaNow(d) { const m = this.min(d); return this.ciclovia(d) && m >= 420 && m < 780; },
@@ -5676,7 +5677,7 @@ const Cal = JE.cal = {
   /* resumen para la portada y el escalafón */
   resumen(d) {
     d = d || this.now(); const s = this.service(d), f = this.fiesta(d), fe = this.festivo(d), t = this.dayType(d);
-    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.close);
+    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close);
     if (this.ciclovia(d)) txt += ' · 🚴 Ciclovía de 7 a. m. a 1 p. m.';
     return { txt, f, t };
   }
@@ -5857,7 +5858,7 @@ class ModeUsuarioR extends ModeUsuario {
   constructor(role, T, opt) {
     super(role, T, opt);
     const now = Cal.now(), sv = Cal.service(now), m = Cal.min(now);
-    if (!this.free) { this.clock = clamp(m, sv.open + 10, sv.close - 90); this.loan0 = this.clock; return; }   // préstamo a la hora real (dentro del horario)
+    if (!this.free) { this.clock = clamp(m, sv.open + 10, sv.lend - 30); this.loan0 = this.clock; return; }   // préstamo a la hora real (dentro del horario)
     this.libreInit(now);
   }
   libreInit(now) {
@@ -5869,7 +5870,7 @@ class ModeUsuarioR extends ModeUsuario {
     for (const ms of genMisiones(now)) if (!day.done.includes(ms.id)) this.addMision(ms);
     this.goals = []; this.misiones.forEach((ms, i) => this.goal(ms.txt, i === 0, () => ms.done, () => ms.prog ? ms.prog() : ms.done ? 'hecha' : ms.due ? 'antes de ' + Cal.hora(ms.due) : '¡vamos!'));
     if (!this.goals.length) this.goal('Ya hiciste las misiones de hoy: explora y colecciona postales', true, () => true);
-    this.retarget(); if (JE.ui) JE.ui.toast((open ? '' : '🌙 EnCicla presta de ' + Cal.hora(Cal.service(now).open) + ' a ' + Cal.hora(Cal.service(now).close) + ': sales en tu bici. ') + (this.misiones.length ? '📋 Tienes ' + this.misiones.length + ' misiones para hoy' : ''));
+    this.retarget(); if (JE.ui) JE.ui.toast((open ? '' : '🌙 EnCicla presta de ' + Cal.hora(Cal.service(now).open) + ' a ' + Cal.hora(Cal.service(now).lend - 1) + ': sales en tu bici. ') + (this.misiones.length ? '📋 Tienes ' + this.misiones.length + ' misiones para hoy' : ''));
   }
   addMision(ms) {
     const R = this.ride, M = JE.map; ms.marks = []; this.misiones.push(ms);
@@ -5927,7 +5928,7 @@ class ModeUsuarioR extends ModeUsuario {
     // día y noche de 24 horas: tráfico según la hora, aviso de cierre de EnCicla y cambio de día a medianoche
     if (this.clock >= 1440) { this.clock -= 1440; this.fecha = addD(this.fecha, 1); JE.ui && JE.ui.toast('🌅 Nuevo día: ' + Cal.label(this.fecha)); }
     const hr = this.clock / 60, base = this.mods.ciclovia ? .5 : 1; R.traffic = base * (hr < 5 ? .25 : hr < 6 ? .5 : (hr < 9 || (hr >= 17 && hr < 19.5)) ? 1.3 : hr >= 21 ? .55 : 1);
-    if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
+    if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.lend && m < sv.lend + 2 && !this.lendTold) { this.lendTold = 1; JE.ui && JE.ui.toast('🕘 Ya no se prestan bicis; puedes devolver la tuya hasta las ' + Cal.hora(sv.close)); } if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
     // energía: las subidas cansan, parar descansa; con poca energía se pedalea más lento
     const sl = Math.max(0, R.sl || 0), drain = P.v > 5 ? (P.veh === 'walk' ? .12 : .35 + sl * 30) : -3;
     this.energy = clamp(this.energy - drain * dt, 0, 100); if (this.energy < 15 && !this.tiredTold) { this.tiredTold = 1; JE.ui && JE.ui.toast('😮‍💨 Poca energía: siéntate en una banca de un parque o para un momento'); } if (this.energy > 40) this.tiredTold = 0;
@@ -6012,7 +6013,7 @@ UI.brief = function (roleId, turno, o = {}) {
     const now = Cal.now(), open = Cal.open(now), bici = o.bici || (open ? 'encicla' : 'propia'), L = genMisiones(now), go = $('#bGo');
     const box = document.createElement('div'); box.className = 'paper libre';
     box.innerHTML = `<div class="t">Hoy en el modo libre</div><p style="margin:4px 0">${esc(Cal.resumen(now).txt)}</p><div class="pag">¿Con qué bici sales?</div><div class="zonas"><button class="chip ${bici === 'encicla' ? 'on' : ''}" data-bici="encicla" ${open ? '' : 'disabled'}>🟢 EnCicla${open ? '' : ' (cerrada)'}</button><button class="chip ${bici === 'propia' ? 'on' : ''}" data-bici="propia">🚲 Mi bici</button></div>
-      <div class="pag">Misiones de hoy (según tu vida, el día y las fiestas)</div><ul class="goals">${L.map(m => `<li><b>☆</b><span>${esc(m.txt)}</span></li>`).join('') || '<li><span>Explora el valle y colecciona postales</span></li>'}</ul>
+      <div class="pag">Misiones de hoy</div><ul class="goals">${L.map(m => `<li><b>☆</b><span>${esc(m.txt)}</span></li>`).join('') || '<li><span>Explora el valle y colecciona postales</span></li>'}</ul>
       ${Save.data.profile.uni || Save.data.profile.trabajo || Save.data.profile.colegio ? '' : '<p class="m" style="font-size:13px">Cuéntanos de ti en Mi ciclista › Tú para tener misiones de colegio, universidad o trabajo.</p>'}`;
     go.parentNode.parentNode.insertBefore(box, go.parentNode);
     $$('[data-bici]', box).forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(roleId, turno, Object.assign({}, o, { bici: b.dataset.bici })); });
@@ -7646,7 +7647,7 @@ const MapView = JE.mapView = {
   open: false, ride: null, cx: 0, cy: 0, z: .12, pts: new Map(), route: null, btns: [],
   init() {
     if (this._on) return; this._on = true; const st = $('#sGame'), cv = $('#cv'), pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-    st.addEventListener('pointerdown', e => { if (!this.open || e.target !== cv) return; e.stopPropagation(); e.preventDefault(); const p = pos(e); this.pts.set(e.pointerId, { x: p.x, y: p.y, x0: p.x, y0: p.y, t: performance.now() }); if (this.pts.size === 2) this.pinch0 = this.span(); }, true);
+    st.addEventListener('pointerdown', e => { if (!this.live() || e.target !== cv) return; e.stopPropagation(); e.preventDefault(); const p = pos(e); this.pts.set(e.pointerId, { x: p.x, y: p.y, x0: p.x, y0: p.y, t: performance.now() }); if (this.pts.size === 2) this.pinch0 = this.span(); }, true);
     st.addEventListener('pointermove', e => {
       const q = this.pts.get(e.pointerId); if (!this.open || !q) return; e.stopPropagation(); const p = pos(e);
       if (this.pts.size === 1) { this.cx -= (p.x - q.x) / this.z; this.cy -= (p.y - q.y) / this.z; }
@@ -7657,6 +7658,8 @@ const MapView = JE.mapView = {
     st.addEventListener('pointerup', up, true); st.addEventListener('pointercancel', up, true);
     st.addEventListener('wheel', e => { if (!this.open) return; e.preventDefault(); this.zoom(e.deltaY < 0 ? 1.2 : 1 / 1.2); }, { passive: false });
   },
+  live() { if (this.open && !(Game.mode && this.ride && Game.mode.ride === this.ride && this.ride.big)) this.reset(); return this.open; },
+  reset() { this.open = false; this.pts.clear(); if (this.ride) this.ride.big = false; this.ride = null; },
   span() { const a = [...this.pts.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1; },
   zoom(f) { this.z = clamp(this.z * f, this.zMin(), 2.2); this.clampC(); },
   zMin() { return Math.min(View.w / (MW * TS), View.h / (MH * TS)) * .95; },
@@ -7728,7 +7731,7 @@ Ride.prototype.drawGround = function (b, ox, oy, inV) { _dg78.call(this, b, ox, 
 const _dom79 = Game.dom;
 Game.dom = function (dt) {
   _dom79.call(this, dt);
-  const co = $('#coach'), to = $('#toast'), map = typeof MapView !== 'undefined' && MapView.open;
+  const co = $('#coach'), to = $('#toast'), map = MapView.live();
   if (co && (map || (to && to.classList.contains('on')) || Tutor.showing)) co.style.opacity = '0';
   const gm = $('#goalsMini'), ab = $('#actBar'); if (gm) gm.style.visibility = map ? 'hidden' : ''; if (ab) ab.style.visibility = map ? 'hidden' : '';
   if (map && to) to.classList.remove('on');
@@ -7750,6 +7753,8 @@ Game.start = function (roleId, turno, o = {}) {
   if (Save.data.settings.vista === 'pano' && this.mode && this.mode.ride && innerHeight > innerWidth && !UI._giro) { UI._giro = 1; setTimeout(() => UI.toast('📱 Gira el celular: la vista panorámica se ve mejor de lado'), 1200); }
   return r;
 };
+/* el mapa grande nunca queda abierto al salir, reiniciar o terminar un turno */
+for (const k of ['start', 'stop', 'finish']) { const f = Game[k]; Game[k] = function () { MapView.reset(); return f.apply(this, arguments); }; }
 
 /* ---- 90-bot.js ---- */
 /* =====================================================================
