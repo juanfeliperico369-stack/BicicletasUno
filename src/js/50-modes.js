@@ -176,7 +176,7 @@ class ModeUsuario extends MapMode {
   constructor(role, turno, opt) {
     super(role, turno, opt); const T = turno, R = this.rng;
     this.sim = new StationSim(R, { demand: this.mods.demand }); this.rate = .95; this.clock = 390 + R.i(0, 60);   // 60 min ≈ 63 s reales (el valle real tiene lomas)
-    const starts = this.free ? JE.map.stations : JE.map.stations.filter(s => s.zone === (T === 1 ? 'centro' : R.pick(['norte', 'centro', 'sur'])));
+    const starts = (this.free ? JE.map.stations : JE.map.stations.filter(s => s.zone === (T === 1 ? 'centro' : R.pick(['norte', 'centro', 'sur'])))).filter(stOk);
     this.st0 = R.pick(starts); this.setupRide({ sim: this.sim, start: { x: this.st0.x, y: this.st0.y } });
     this.legs = this.free ? 0 : T; this.leg = 0; this.lateLegs = 0; this.okLegs = 0; this.leavesGot = 0; this.newPost = 0; this.loan0 = this.clock; this.phase = 'go';
     this.makeLeaves(); if (!this.free) this.nextLeg(this.st0); else this.freeSetup();
@@ -205,7 +205,7 @@ class ModeUsuario extends MapMode {
     const R = this.rng, T = this.turno, minD = [0, 35, 40, 40][T] * SC, maxD = [0, 80, 85, 80][T] * SC;
     const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
     const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
-    const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
+    const near = JE.map.stations.filter(s => s !== from && stOk(s)).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
     this.ret = R.pick(near).s; this.phase = 'go';
     this.ride.markers = [];
     const m = this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6 * WK, r: Math.max(L.w, L.h) * TS / 2 + 10 * WK, col: PAL.amb, label: L.name, num: 1, enter: () => this.reachLandmark() });
@@ -235,7 +235,7 @@ class ModeUsuario extends MapMode {
   }
   pickFreeTarget() { const P = this.ride.p; let best = null, bd = 1e9; for (const m of this.ride.markers) { const d = dist(m.x, m.y, P.x, P.y); if (d < bd) { bd = d; best = m; } } this.ride.target = best; }
   toast(t) { this.toastMsg = t; if (JE.ui) JE.ui.toast(t); }
-  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => dist(s.x, s.y, P.x, P.y) < 24 * WK); }
+  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => stOk(s) && dist(s.x, s.y, P.x, P.y) < 24 * WK); }
   tick(dt) {
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
     if (!this.free && this.loanMin() > 100) { this.toast('Pasaron más de 100 minutos: el préstamo se cerró con sanción'); this.end(); }

@@ -12,8 +12,8 @@ const TRABAJOS = [['centro', 'el Centro', 6.2490, -75.5680], ['poblado', 'El Pob
 const EDADES = ['Niño o niña', 'Joven', 'Adulto', 'Adulto mayor'];
 const placeP = (lat, lon) => { const p = geoP(lat, lon), o = JE.map.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), false); return { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2 }; };
 function homeStation() {
-  const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni);
-  return L.length ? L[(h2(P.name.length, 3, 11) * L.length) | 0] : JE.map.stations[0];
+  const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni && stOk(s));
+  return L.length ? L[(h2(P.name.length, 3, 11) * L.length) | 0] : JE.map.stations.filter(stOk)[0];
 }
 
 /* ---------- persona con contextura y estatura; uniforme EnCicla para los trabajadores ---------- */

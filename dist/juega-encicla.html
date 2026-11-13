@@ -402,7 +402,7 @@ const VALLE_BIN = '7J2LcuO4rq4pks0KZqq69vs/7TaJCwFedHGSWZMe4Jw9q5PYsizL4qcfwI/j8
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '1.0.2', errors: [], headless: false };
+const JE = window.JE = { version: '1.0.3', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -1846,6 +1846,7 @@ class Ride {
       for (let k = 0; k < s.cap; k++) { const row = k < per ? 0 : 1, bx = x0 + 4 + (k % per) * sp, by = y0 + (row ? 19 : 4); prect(b, Math.round(bx) + 1, row ? y0 + 17 : y0 + 12, 1, 2, '#59606c'); if (k < bikes) b.drawImage(Art.bikeTop(), Math.round(bx), by); else prect(b, Math.round(bx) + 1, by + 4, 1, 2, '#9aa7b8'); }
       if (s.type === 'm') { prect(b, x0 + W - 12, y0 + 5, 9, 14, '#1d2c44'); prect(b, x0 + W - 12, y0 + 4, 9, 2, '#e9eef3'); prect(b, x0 + W - 10, y0 + 9, 5, 3, '#9fb8cf'); prect(b, x0 + W - 12, y0 + 19, 9, 2, PAL.vd); }
       else { prect(b, x0 + W - 10, y0 + 6, 5, 13, '#2b2f38'); prect(b, x0 + W - 9, y0 + 8, 3, 3, (t * 2 | 0) % 2 ? PAL.vd : PAL.vd1); prect(b, x0 + W - 9, y0 + 13, 3, 1, '#9aa7b8'); }
+      if (JE.soloAuto && s.type === 'm') { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
       if (s.e) { const on = (this.mode.clock | 0) < E_HASTA; prect(b, x0 + W - 14, y0 + 1, 3, 4, on ? '#ffd84a' : '#8a8a8a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, on ? '#ffd84a' : '#8a8a8a'); if (s.e === 'solo' && (this.mode.clock | 0) >= E_CIERRE) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, 8); } }
       if (ss && ss.broken) { if ((t * 3 | 0) % 2) { pline(b, x0 + 12, y0 + 4, x0 + 30, y0 + 28, PAL.cor); pline(b, x0 + 30, y0 + 4, x0 + 12, y0 + 28, PAL.cor); } }
       if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
@@ -3433,7 +3434,7 @@ class ModeUsuario extends MapMode {
   constructor(role, turno, opt) {
     super(role, turno, opt); const T = turno, R = this.rng;
     this.sim = new StationSim(R, { demand: this.mods.demand }); this.rate = .95; this.clock = 390 + R.i(0, 60);   // 60 min ≈ 63 s reales (el valle real tiene lomas)
-    const starts = this.free ? JE.map.stations : JE.map.stations.filter(s => s.zone === (T === 1 ? 'centro' : R.pick(['norte', 'centro', 'sur'])));
+    const starts = (this.free ? JE.map.stations : JE.map.stations.filter(s => s.zone === (T === 1 ? 'centro' : R.pick(['norte', 'centro', 'sur'])))).filter(stOk);
     this.st0 = R.pick(starts); this.setupRide({ sim: this.sim, start: { x: this.st0.x, y: this.st0.y } });
     this.legs = this.free ? 0 : T; this.leg = 0; this.lateLegs = 0; this.okLegs = 0; this.leavesGot = 0; this.newPost = 0; this.loan0 = this.clock; this.phase = 'go';
     this.makeLeaves(); if (!this.free) this.nextLeg(this.st0); else this.freeSetup();
@@ -3462,7 +3463,7 @@ class ModeUsuario extends MapMode {
     const R = this.rng, T = this.turno, minD = [0, 35, 40, 40][T] * SC, maxD = [0, 80, 85, 80][T] * SC;
     const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
     const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
-    const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
+    const near = JE.map.stations.filter(s => s !== from && stOk(s)).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
     this.ret = R.pick(near).s; this.phase = 'go';
     this.ride.markers = [];
     const m = this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6 * WK, r: Math.max(L.w, L.h) * TS / 2 + 10 * WK, col: PAL.amb, label: L.name, num: 1, enter: () => this.reachLandmark() });
@@ -3492,7 +3493,7 @@ class ModeUsuario extends MapMode {
   }
   pickFreeTarget() { const P = this.ride.p; let best = null, bd = 1e9; for (const m of this.ride.markers) { const d = dist(m.x, m.y, P.x, P.y); if (d < bd) { bd = d; best = m; } } this.ride.target = best; }
   toast(t) { this.toastMsg = t; if (JE.ui) JE.ui.toast(t); }
-  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => dist(s.x, s.y, P.x, P.y) < 24 * WK); }
+  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => stOk(s) && dist(s.x, s.y, P.x, P.y) < 24 * WK); }
   tick(dt) {
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
     if (!this.free && this.loanMin() > 100) { this.toast('Pasaron más de 100 minutos: el préstamo se cerró con sanción'); this.end(); }
@@ -5652,7 +5653,9 @@ const Cal = JE.cal = {
   dayType(d) { return this.festivo(d) ? 'festivo' : d.getDay() === 0 ? 'domingo' : d.getDay() === 6 ? 'sabado' : 'semana'; },
   /* horario de préstamo de EnCicla según el día (aproximado: confirmar con el equipo) */
   /* open: primer préstamo · lend: desde esa hora ya no se presta (la última es un minuto antes) · close: hasta esa hora se reciben bicis */
-  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, lend: 1260, close: 1320 } : t === 'sabado' ? { open: 390, lend: 1140, close: 1200 } : { open: 480, lend: 900, close: 960 }; return s; },
+  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, lend: 1260, close: 1320 } : t === 'sabado' ? { open: 390, lend: 1140, close: 1200 } : { open: 480, lend: 960, close: 960 }; return s; },
+  /* domingos y festivos: los anfitriones descansan, solo prestan y reciben las estaciones automáticas */
+  soloAuto(d) { const t = this.dayType(d || this.now()); return t === 'domingo' || t === 'festivo'; },
   open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.lend; },
   /* ciclovía de Medellín: domingos y festivos de 7:00 a. m. a 1:00 p. m. */
   ciclovia(d) { const t = this.dayType(d); return t === 'domingo' || t === 'festivo'; },
@@ -5668,7 +5671,7 @@ const Cal = JE.cal = {
   /* resumen para la portada y el escalafón */
   resumen(d) {
     d = d || this.now(); const s = this.service(d), f = this.fiesta(d), fe = this.festivo(d), t = this.dayType(d);
-    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close);
+    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + (s.lend === s.close ? ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.close) + ', solo en estaciones automáticas' : ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close));
     if (this.ciclovia(d)) txt += ' · 🚴 Ciclovía de 7 a. m. a 1 p. m.';
     return { txt, f, t };
   }
@@ -5731,8 +5734,8 @@ const TRABAJOS = [['centro', 'el Centro', 6.2490, -75.5680], ['poblado', 'El Pob
 const EDADES = ['Niño o niña', 'Joven', 'Adulto', 'Adulto mayor'];
 const placeP = (lat, lon) => { const p = geoP(lat, lon), o = JE.map.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), false); return { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2 }; };
 function homeStation() {
-  const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni);
-  return L.length ? L[(h2(P.name.length, 3, 11) * L.length) | 0] : JE.map.stations[0];
+  const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni && stOk(s));
+  return L.length ? L[(h2(P.name.length, 3, 11) * L.length) | 0] : JE.map.stations.filter(stOk)[0];
 }
 
 /* ---------- persona con contextura y estatura; uniforme EnCicla para los trabajadores ---------- */
@@ -7883,6 +7886,17 @@ UI.avatar = function (first) {
   _av80.call(this, first); if (first) return; const ok = $('#avOk'); if (!ok) return;
   const b = document.createElement('button'); b.className = 'btn gh sm'; b.textContent = 'Empezar con un personaje nuevo'; ok.parentNode.appendChild(b);
   b.onclick = () => this.confirm('Se borra tu progreso y creas un personaje desde cero. ¿Seguro?', () => { Save.reset(); this.go('sHome'); this.renderHome(); this.avatar(true); });
+};
+
+/* ---------- domingos y festivos: solo estaciones automáticas (los anfitriones descansan) ---------- */
+const stOk = s => !(s.type === 'm' && JE.soloAuto);
+const _start80 = Game.start;
+Game.start = function () { JE.soloAuto = !JE.briefing && Cal.soloAuto(Cal.now()); return _start80.apply(this, arguments); };
+const _brief80b = UI.brief;
+UI.brief = function (roleId, turno, o = {}) {
+  JE.soloAuto = Cal.soloAuto(Cal.now()); _brief80b.call(this, roleId, turno, o); const go = $('#bGo'); if (!go || !JE.soloAuto || o.reto || isMulti(roleId)) return;
+  const msg = roleId === 'anfitrion' ? '🛌 Hoy los anfitriones descansan: este turno se juega con el horario de entre semana.' : roleId === 'usuario' ? '🟢 Hoy solo prestan las estaciones automáticas, de 8 a. m. a 4 p. m.' : '';
+  if (msg) { const d = document.createElement('div'); d.className = 'nov'; d.textContent = msg; go.parentNode.parentNode.insertBefore(d, go.parentNode); }
 };
 
 /* ---- 90-bot.js ---- */

@@ -288,3 +288,9 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 4. **Sábado:** se presta de 6:30 a. m. a 6:59 p. m. y se recibe hasta las 8 p. m.
    - Anfitriones de 6:00 a. m. a 1:30 p. m. y de 1:00 a 8:30 p. m.
    - Supervisores, una hora antes y media hora después.
+
+## 2026-11-14 · v1.0.3 · Domingos y festivos
+
+1. **Horario:** de 8 a. m. a 4 p. m., solo con estaciones automáticas, porque los anfitriones descansan.
+2. **En el juego:** el Usuario y el modo libre prestan y devuelven solo en automáticas, y las manuales se ven cerradas en el mapa.
+3. **Ficha del anfitrión:** ese día avisa que el turno se juega con el horario de entre semana.

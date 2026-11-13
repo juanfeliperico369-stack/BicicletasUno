@@ -133,3 +133,14 @@ UI.avatar = function (first) {
   const b = document.createElement('button'); b.className = 'btn gh sm'; b.textContent = 'Empezar con un personaje nuevo'; ok.parentNode.appendChild(b);
   b.onclick = () => this.confirm('Se borra tu progreso y creas un personaje desde cero. ¿Seguro?', () => { Save.reset(); this.go('sHome'); this.renderHome(); this.avatar(true); });
 };
+
+/* ---------- domingos y festivos: solo estaciones automáticas (los anfitriones descansan) ---------- */
+const stOk = s => !(s.type === 'm' && JE.soloAuto);
+const _start80 = Game.start;
+Game.start = function () { JE.soloAuto = !JE.briefing && Cal.soloAuto(Cal.now()); return _start80.apply(this, arguments); };
+const _brief80b = UI.brief;
+UI.brief = function (roleId, turno, o = {}) {
+  JE.soloAuto = Cal.soloAuto(Cal.now()); _brief80b.call(this, roleId, turno, o); const go = $('#bGo'); if (!go || !JE.soloAuto || o.reto || isMulti(roleId)) return;
+  const msg = roleId === 'anfitrion' ? '🛌 Hoy los anfitriones descansan: este turno se juega con el horario de entre semana.' : roleId === 'usuario' ? '🟢 Hoy solo prestan las estaciones automáticas, de 8 a. m. a 4 p. m.' : '';
+  if (msg) { const d = document.createElement('div'); d.className = 'nov'; d.textContent = msg; go.parentNode.parentNode.insertBefore(d, go.parentNode); }
+};

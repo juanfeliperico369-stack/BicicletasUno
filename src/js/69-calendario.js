@@ -50,7 +50,9 @@ const Cal = JE.cal = {
   dayType(d) { return this.festivo(d) ? 'festivo' : d.getDay() === 0 ? 'domingo' : d.getDay() === 6 ? 'sabado' : 'semana'; },
   /* horario de préstamo de EnCicla según el día (aproximado: confirmar con el equipo) */
   /* open: primer préstamo · lend: desde esa hora ya no se presta (la última es un minuto antes) · close: hasta esa hora se reciben bicis */
-  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, lend: 1260, close: 1320 } : t === 'sabado' ? { open: 390, lend: 1140, close: 1200 } : { open: 480, lend: 900, close: 960 }; return s; },
+  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, lend: 1260, close: 1320 } : t === 'sabado' ? { open: 390, lend: 1140, close: 1200 } : { open: 480, lend: 960, close: 960 }; return s; },
+  /* domingos y festivos: los anfitriones descansan, solo prestan y reciben las estaciones automáticas */
+  soloAuto(d) { const t = this.dayType(d || this.now()); return t === 'domingo' || t === 'festivo'; },
   open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.lend; },
   /* ciclovía de Medellín: domingos y festivos de 7:00 a. m. a 1:00 p. m. */
   ciclovia(d) { const t = this.dayType(d); return t === 'domingo' || t === 'festivo'; },
@@ -66,7 +68,7 @@ const Cal = JE.cal = {
   /* resumen para la portada y el escalafón */
   resumen(d) {
     d = d || this.now(); const s = this.service(d), f = this.fiesta(d), fe = this.festivo(d), t = this.dayType(d);
-    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close);
+    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + (s.lend === s.close ? ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.close) + ', solo en estaciones automáticas' : ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close));
     if (this.ciclovia(d)) txt += ' · 🚴 Ciclovía de 7 a. m. a 1 p. m.';
     return { txt, f, t };
   }
