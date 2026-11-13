@@ -225,6 +225,15 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     JE.game.stop(); Object.assign(S, keep); if (keep.ctrl == null) delete S.ctrl; UI.go('sHome'); return out;
   });
   ok(cg.btn && cg.left && cg.layout && cg.tilt && cg.still, 'controles: botón en la pausa, flechas a la izquierda en grande, e inclinar el celular mueve al ciclista ' + JSON.stringify(cg));
+  console.log('3h) Préstamo EnCicla en el modo libre: renovar cada hora, strikes, suspensión y reporte por abandono');
+  const pr = await p.evaluate(() => { const keep = JSON.stringify(Save.data.encicla || null), out = {}; delete Save.data.encicla; JE.fecha = '2026-11-12T10:00'; JE.headless = true;
+    JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true, bici: 'encicla' }); let M = JE.game.mode; out.slow = M.rate < .9;
+    M.clock = M.loan0 + 70; const s = JE.map.stations.find(q => stOk(q)); M.ride.p.x = s.x; M.ride.p.y = s.y; out.btn = M.actions().some(a => a.id === 'renovar'); M.renovar(); out.strike = Cuenta.get().strikes === 9 && M.loanMin() === 0;
+    Cuenta.get().strikes = 0; M.clock = M.loan0 + 75; M.renovar(); out.susp = Cuenta.get().susp === '2026-11-15';
+    M.ride.getOff(); M.ride.p.x += 200; for (let i = 0; i < 30 * 60 && !M.sinBici; i++) { M.ride.p.v = 0; M.tick(1 / 30); } out.rep = Cuenta.get().rep === 1; JE.game.stop();
+    JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true, bici: 'encicla' }); out.own = JE.game.mode.ownBike && JE.game.mode.rate === .9; JE.game.stop();
+    JE.fecha = null; JE.headless = false; const k = JSON.parse(keep); if (k) Save.data.encicla = k; else delete Save.data.encicla; UI.go('sHome'); return out; });
+  ok(pr.slow && pr.btn && pr.strike && pr.susp && pr.rep && pr.own, 'préstamo: reloj más lento, Renovar, strike por renovar tarde, suspensión sin strikes, reporte por abandono y bici propia si estás suspendido ' + JSON.stringify(pr));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

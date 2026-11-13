@@ -63,6 +63,7 @@ src/js/78-ciudad-viva.js NPC con rutas por toda la ciudad y mapa grande interact
 src/js/79-interfaz.js avisos al frente y breves; carga del mapa grande por partes
 src/js/80-limpieza.js brigada de limpieza, accesos rápidos del inicio, creador al empezar y horario del sábado
 src/js/81-controles.js panel de controles: tipo, lado, tamaño e inclinar el celular
+src/js/82-prestamo.js préstamo EnCicla en el modo libre: renovar cada hora, strikes, suspensiones y reportes
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
@@ -155,6 +156,13 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.0.5 · Préstamo EnCicla en el modo libre* (`82-prestamo.js`, `Cuenta`, `Save.data.encicla`):
+- Con bici de EnCicla el reloj va más lento (`rate` 0,55: una hora ≈ 2 minutos), el préstamo se renueva cada hora con el botón **Renovar** cerca de una estación
+  (solo mientras se presta) y se respeta el horario: al cierre la bici debía estar devuelta (sanción y fin de la sesión). Con bici propia el modo libre es de 24 horas (`rate` 0,9).
+- Renovar o devolver tarde gasta uno de los **10 strikes**; sin strikes, **suspensión** de 3, 7, 15, 30 y 60 días (fechas reales): mientras dura, el modo libre es con bici propia.
+- **Bici abandonada:** si te bajas y te alejas más de 30 m, alguien (anfitrión, funcionario del Área o usuario) puede reportarla: el reporte negativo queda para siempre
+  y te quedas sin bici. La ficha del modo libre muestra el estado de la cuenta.
 
 *v1.0.2 · Limpieza, accesos rápidos y creador al empezar* (`80-limpieza.js`):
 - **Limpieza** (oficio 7, brigada mensual 9 a. m.–5 p. m., SUPUESTO): dos supervisores y el anfitrión limpian el habitáculo de 3 estaciones con anfitrión. `MGLimpieza`: elegir herramienta
