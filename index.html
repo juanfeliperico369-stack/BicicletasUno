@@ -416,7 +416,7 @@ const VALLE_BIN = '7J2LcuO4rq4pks0KZqq69vs/7TaJCwFedHGSWZMe4Jw9q5PYsizL4qcfwI/j8
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '1.0.2', errors: [], headless: false };
+const JE = window.JE = { version: '1.0.4', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -1860,6 +1860,7 @@ class Ride {
       for (let k = 0; k < s.cap; k++) { const row = k < per ? 0 : 1, bx = x0 + 4 + (k % per) * sp, by = y0 + (row ? 19 : 4); prect(b, Math.round(bx) + 1, row ? y0 + 17 : y0 + 12, 1, 2, '#59606c'); if (k < bikes) b.drawImage(Art.bikeTop(), Math.round(bx), by); else prect(b, Math.round(bx) + 1, by + 4, 1, 2, '#9aa7b8'); }
       if (s.type === 'm') { prect(b, x0 + W - 12, y0 + 5, 9, 14, '#1d2c44'); prect(b, x0 + W - 12, y0 + 4, 9, 2, '#e9eef3'); prect(b, x0 + W - 10, y0 + 9, 5, 3, '#9fb8cf'); prect(b, x0 + W - 12, y0 + 19, 9, 2, PAL.vd); }
       else { prect(b, x0 + W - 10, y0 + 6, 5, 13, '#2b2f38'); prect(b, x0 + W - 9, y0 + 8, 3, 3, (t * 2 | 0) % 2 ? PAL.vd : PAL.vd1); prect(b, x0 + W - 9, y0 + 13, 3, 1, '#9aa7b8'); }
+      if (JE.soloAuto && s.type === 'm') { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
       if (s.e) { const on = (this.mode.clock | 0) < E_HASTA; prect(b, x0 + W - 14, y0 + 1, 3, 4, on ? '#ffd84a' : '#8a8a8a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, on ? '#ffd84a' : '#8a8a8a'); if (s.e === 'solo' && (this.mode.clock | 0) >= E_CIERRE) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, 8); } }
       if (ss && ss.broken) { if ((t * 3 | 0) % 2) { pline(b, x0 + 12, y0 + 4, x0 + 30, y0 + 28, PAL.cor); pline(b, x0 + 30, y0 + 4, x0 + 12, y0 + 28, PAL.cor); } }
       if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
@@ -3447,7 +3448,7 @@ class ModeUsuario extends MapMode {
   constructor(role, turno, opt) {
     super(role, turno, opt); const T = turno, R = this.rng;
     this.sim = new StationSim(R, { demand: this.mods.demand }); this.rate = .95; this.clock = 390 + R.i(0, 60);   // 60 min ≈ 63 s reales (el valle real tiene lomas)
-    const starts = this.free ? JE.map.stations : JE.map.stations.filter(s => s.zone === (T === 1 ? 'centro' : R.pick(['norte', 'centro', 'sur'])));
+    const starts = (this.free ? JE.map.stations : JE.map.stations.filter(s => s.zone === (T === 1 ? 'centro' : R.pick(['norte', 'centro', 'sur'])))).filter(stOk);
     this.st0 = R.pick(starts); this.setupRide({ sim: this.sim, start: { x: this.st0.x, y: this.st0.y } });
     this.legs = this.free ? 0 : T; this.leg = 0; this.lateLegs = 0; this.okLegs = 0; this.leavesGot = 0; this.newPost = 0; this.loan0 = this.clock; this.phase = 'go';
     this.makeLeaves(); if (!this.free) this.nextLeg(this.st0); else this.freeSetup();
@@ -3476,7 +3477,7 @@ class ModeUsuario extends MapMode {
     const R = this.rng, T = this.turno, minD = [0, 35, 40, 40][T] * SC, maxD = [0, 80, 85, 80][T] * SC;
     const cands = PUBLIC_LM().filter(l => { const d = Math.hypot(l.x + l.w / 2 - from.x / TS, l.y + l.h / 2 - from.y / TS); return d >= minD && d <= maxD; });
     const L = R.pick(cands.length ? cands : PUBLIC_LM()); this.lm = L;
-    const near = JE.map.stations.filter(s => s !== from).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
+    const near = JE.map.stations.filter(s => s !== from && stOk(s)).map(s => ({ s, d: Math.hypot(s.x / TS - (L.x + L.w / 2), s.y / TS - (L.y + L.h / 2)) })).sort((a, b) => a.d - b.d).slice(0, 3);
     this.ret = R.pick(near).s; this.phase = 'go';
     this.ride.markers = [];
     const m = this.ride.marker({ x: (L.x + L.w / 2) * TS, y: (L.y + L.h) * TS + 6 * WK, r: Math.max(L.w, L.h) * TS / 2 + 10 * WK, col: PAL.amb, label: L.name, num: 1, enter: () => this.reachLandmark() });
@@ -3506,7 +3507,7 @@ class ModeUsuario extends MapMode {
   }
   pickFreeTarget() { const P = this.ride.p; let best = null, bd = 1e9; for (const m of this.ride.markers) { const d = dist(m.x, m.y, P.x, P.y); if (d < bd) { bd = d; best = m; } } this.ride.target = best; }
   toast(t) { this.toastMsg = t; if (JE.ui) JE.ui.toast(t); }
-  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => dist(s.x, s.y, P.x, P.y) < 24 * WK); }
+  nearStation() { const P = this.ride.p; return JE.map.stations.find(s => stOk(s) && dist(s.x, s.y, P.x, P.y) < 24 * WK); }
   tick(dt) {
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
     if (!this.free && this.loanMin() > 100) { this.toast('Pasaron más de 100 minutos: el préstamo se cerró con sanción'); this.end(); }
@@ -4060,8 +4061,8 @@ class ShiftMode extends MapMode {
   get coachB() { const ph = this.phase; return 30 + Math.min(5, ph && ph.tasks ? ph.tasks.filter(t => !t.done).length : 0) * 22; }
   hud2(V) {
     const ph = this.phase; if (!ph || !ph.tasks) return; const L = ph.tasks.filter(t => !t.done).slice(0, 5); let y = V.h - 24 - L.length * 22;
-    const maxC = Math.floor((V.w - (document.body.classList.contains('ctrlR') ? 200 : 120)) / 6.6), cut = x => x.length > maxC ? x.slice(0, maxC - 1) + '…' : x;
-    for (const t of L) { V.text(cut((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : '')), 10, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
+    const gx = 10 + Ctrl.leftGap(), maxC = Math.floor((V.w - gx - (document.body.classList.contains('ctrlR') ? 190 : 110)) / 6.6), cut = x => x.length > maxC ? x.slice(0, maxC - 1) + '…' : x;
+    for (const t of L) { V.text(cut((t.opt ? '📋 ' : t.n + '. ') + t.label + (t.due ? ' · ' + fmtClock(t.due) : '')), gx, y, { size: 13, color: t.due && this.clock > t.due ? PAL.cor : t.opt ? PAL.vd1 : '#fff', bg: '#0a2342cc', pad: 3, body: true }); y += 22; }
   }
   info() { const ph = this.phase; return { clock: fmtClock(this.clock), score: Math.round(this.score), chips: [{ t: ph ? ph.short || ph.name.split(':')[0] : '' }].concat(this.chips ? this.chips() : []) }; }
   bot(err) { if (this.sub) return this.sub.bot(err); this.retarget(); this.botDrive(); }
@@ -5042,7 +5043,7 @@ const Game = JE.game = {
     const g = gm.style.display === 'none' ? { bottom: hb } : gm.getBoundingClientRect(), mmB = ride ? hb + 8 + Math.round(Math.min(84, View.w * .21) * 1.55) + 22 : hb;
     View.hudB = hb; View.top = Math.max(hb, Math.round(g.bottom)) + 6;
     const tt = Math.max(View.top, mmB) + 8 + 'px'; document.documentElement.style.setProperty('--toastTop', tt);
-    const ctrl = ride && Ctrl.kind() !== 'flotante'; document.body.classList.toggle('ctrlR', ctrl);
+    const ctrl = ride && Ctrl.pad() && Ctrl.side() === 'der'; document.body.classList.toggle('ctrlR', ctrl);
   },
   pause() {
     if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene
@@ -5666,7 +5667,9 @@ const Cal = JE.cal = {
   dayType(d) { return this.festivo(d) ? 'festivo' : d.getDay() === 0 ? 'domingo' : d.getDay() === 6 ? 'sabado' : 'semana'; },
   /* horario de préstamo de EnCicla según el día (aproximado: confirmar con el equipo) */
   /* open: primer préstamo · lend: desde esa hora ya no se presta (la última es un minuto antes) · close: hasta esa hora se reciben bicis */
-  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, lend: 1260, close: 1320 } : t === 'sabado' ? { open: 390, lend: 1140, close: 1200 } : { open: 480, lend: 900, close: 960 }; return s; },
+  service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, lend: 1260, close: 1320 } : t === 'sabado' ? { open: 390, lend: 1140, close: 1200 } : { open: 480, lend: 960, close: 960 }; return s; },
+  /* domingos y festivos: los anfitriones descansan, solo prestan y reciben las estaciones automáticas */
+  soloAuto(d) { const t = this.dayType(d || this.now()); return t === 'domingo' || t === 'festivo'; },
   open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.lend; },
   /* ciclovía de Medellín: domingos y festivos de 7:00 a. m. a 1:00 p. m. */
   ciclovia(d) { const t = this.dayType(d); return t === 'domingo' || t === 'festivo'; },
@@ -5682,7 +5685,7 @@ const Cal = JE.cal = {
   /* resumen para la portada y el escalafón */
   resumen(d) {
     d = d || this.now(); const s = this.service(d), f = this.fiesta(d), fe = this.festivo(d), t = this.dayType(d);
-    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close);
+    let txt = '📅 ' + this.label(d) + (fe ? ' · festivo: ' + fe : '') + (s.lend === s.close ? ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.close) + ', solo en estaciones automáticas' : ' · EnCicla presta de ' + this.hora(s.open) + ' a ' + this.hora(s.lend - 1) + ' y recibe hasta las ' + this.hora(s.close));
     if (this.ciclovia(d)) txt += ' · 🚴 Ciclovía de 7 a. m. a 1 p. m.';
     return { txt, f, t };
   }
@@ -5745,8 +5748,8 @@ const TRABAJOS = [['centro', 'el Centro', 6.2490, -75.5680], ['poblado', 'El Pob
 const EDADES = ['Niño o niña', 'Joven', 'Adulto', 'Adulto mayor'];
 const placeP = (lat, lon) => { const p = geoP(lat, lon), o = JE.map.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), false); return { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2 }; };
 function homeStation() {
-  const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni);
-  return L.length ? L[(h2(P.name.length, 3, 11) * L.length) | 0] : JE.map.stations[0];
+  const P = Save.data.profile, muni = (VM.munis || [])[P.casaM | 0] || 'Medellín', L = JE.map.stations.filter(s => s.muni === muni && stOk(s));
+  return L.length ? L[(h2(P.name.length, 3, 11) * L.length) | 0] : JE.map.stations.filter(stOk)[0];
 }
 
 /* ---------- persona con contextura y estatura; uniforme EnCicla para los trabajadores ---------- */
@@ -7897,6 +7900,102 @@ UI.avatar = function (first) {
   _av80.call(this, first); if (first) return; const ok = $('#avOk'); if (!ok) return;
   const b = document.createElement('button'); b.className = 'btn gh sm'; b.textContent = 'Empezar con un personaje nuevo'; ok.parentNode.appendChild(b);
   b.onclick = () => this.confirm('Se borra tu progreso y creas un personaje desde cero. ¿Seguro?', () => { Save.reset(); this.go('sHome'); this.renderHome(); this.avatar(true); });
+};
+
+/* ---------- domingos y festivos: solo estaciones automáticas (los anfitriones descansan) ---------- */
+const stOk = s => !(s.type === 'm' && JE.soloAuto);
+const _start80 = Game.start;
+Game.start = function () { JE.soloAuto = !JE.briefing && Cal.soloAuto(Cal.now()); return _start80.apply(this, arguments); };
+const _brief80b = UI.brief;
+UI.brief = function (roleId, turno, o = {}) {
+  JE.soloAuto = Cal.soloAuto(Cal.now()); _brief80b.call(this, roleId, turno, o); const go = $('#bGo'); if (!go || !JE.soloAuto || o.reto || isMulti(roleId)) return;
+  const msg = roleId === 'anfitrion' ? '🛌 Hoy los anfitriones descansan: este turno se juega con el horario de entre semana.' : roleId === 'usuario' ? '🟢 Hoy solo prestan las estaciones automáticas, de 8 a. m. a 4 p. m.' : '';
+  if (msg) { const d = document.createElement('div'); d.className = 'nov'; d.textContent = msg; go.parentNode.parentNode.insertBefore(d, go.parentNode); }
+};
+
+/* ---- 81-controles.js ---- */
+/* =====================================================================
+   CONTROLES: tipo (joystick fijo, arrastrar en cualquier parte, flechas o inclinar el celular),
+   lado de la pantalla y tamaño. Se cambian en la pausa o en Más > Controles.
+   ===================================================================== */
+const cssPx = v => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v)) || 0;
+/* inclinar el celular: el sensor de orientación da la dirección; la posición al empezar es la neutra */
+const Tilt = JE.tilt = {
+  on: false, ok: false, x: 0, y: 0, y0: null,
+  start() {
+    if (this.on) return; this.on = true;
+    window.addEventListener('deviceorientation', e => {
+      if (e.beta == null || e.gamma == null) return; this.ok = true; const o = screen.orientation ? screen.orientation.angle : (window.orientation || 0);
+      let x = e.gamma, y = e.beta; if (o === 90) { x = e.beta; y = -e.gamma; } else if (o === 270 || o === -90) { x = -e.beta; y = e.gamma; }
+      this.x = x; this.y = y; if (this.y0 == null) this.y0 = y;
+    });
+  },
+  ask() {
+    const D = window.DeviceOrientationEvent; if (!D) return Promise.resolve(false);
+    if (typeof D.requestPermission === 'function') return D.requestPermission().then(r => { if (r === 'granted') this.start(); return r === 'granted'; }).catch(() => false);
+    this.start(); return Promise.resolve(true);
+  },
+  calib() { this.y0 = this.ok ? this.y : null; },
+  dir() { if (!this.ok) return null; const dx = clamp(this.x / 22, -1, 1), dy = clamp((this.y - (this.y0 == null ? this.y : this.y0)) / 22, -1, 1), l = Math.hypot(dx, dy); if (l < .18) return { x: 0, y: 0, m: 0 }; return { x: dx / l, y: dy / l, m: clamp((l - .18) / .6, .25, 1) }; }
+};
+const _dir81 = Input.dir;
+Input.dir = function () { const d = _dir81.call(this); if (this.botDir || d.m) return d; if (Ctrl.kind() === 'inclinar') { const t = Tilt.dir(); if (t) return t; } return d; };
+Object.assign(Ctrl, {
+  side() { return (Save.data && Save.data.settings.cside) || 'der'; },
+  size() { const v = Save.data && Save.data.settings.csize; return [.8, 1, 1.25][v == null ? 1 : v]; },
+  pad() { return ['fijo', 'flechas'].includes(this.kind()); },            // ¿hay un control dibujado en pantalla?
+  anchor() { const k = this.size(), m = 40 + 46 * k; return { x: this.side() === 'izq' ? m + cssPx('--sal') : View.w - m - cssPx('--sar'), y: View.h - 74 - 46 * k }; },
+  arrows() { const a = this.anchor(), s = 52 * this.size(); return [['ArrowUp', a.x, a.y - s, '▲'], ['ArrowDown', a.x, a.y + s, '▼'], ['ArrowLeft', a.x - s, a.y, '◀'], ['ArrowRight', a.x + s, a.y, '▶']]; },
+  down(e, cx, cy, cv) {
+    const k = this.kind(), z = this.size();
+    if (k === 'flechas') { for (const [key, x, y] of this.arrows()) if (Math.abs(cx - x) < 28 * z && Math.abs(cy - y) < 28 * z) { Input.keys[key] = true; (this.held || (this.held = {}))[e.pointerId] = key; return true; } return false; }
+    const fx = this.anchor(), a = k === 'fijo' && dist(cx, cy, fx.x, fx.y) <= 110 * z ? fx : { x: cx, y: cy };   // también se puede arrastrar en cualquier parte
+    Input.joy = { on: true, id: e.pointerId, ox: a.x, oy: a.y, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { }
+    return true;
+  },
+  draw(V) {
+    const k = this.kind(), c = V.ctx, z = this.size();
+    if (k === 'flechas') { for (const [key, x, y, l] of this.arrows()) { c.globalAlpha = .75; c.fillStyle = Input.keys[key] ? PAL.vd : '#0a2342'; c.beginPath(); c.arc(x, y, 25 * z, 0, TAU); c.fill(); c.globalAlpha = 1; c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke(); V.text(l, x, y + 7 * z, { size: 20 * z, align: 'center', color: '#fff' }); } return; }
+    if (k === 'fijo' && !Input.joy.on) { const a = this.anchor(); c.globalAlpha = .55; c.fillStyle = '#0a2342'; c.beginPath(); c.arc(a.x, a.y, 50 * z, 0, TAU); c.fill(); c.globalAlpha = .8; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(a.x, a.y, 48 * z, 0, TAU); c.stroke(); c.fillStyle = PAL.vd; c.beginPath(); c.arc(a.x, a.y, 20 * z, 0, TAU); c.fill(); c.globalAlpha = 1; }
+    if (k === 'inclinar' && !Input.joy.on) {   // nivel de burbuja: muestra hacia dónde estás inclinando
+      const a = this.anchor(), r = 34, d = Tilt.dir() || { x: 0, y: 0, m: 0 }; c.globalAlpha = .6; c.fillStyle = '#0a2342'; c.beginPath(); c.arc(a.x, a.y, r, 0, TAU); c.fill(); c.globalAlpha = .9; c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke();
+      c.fillStyle = Tilt.ok ? PAL.vd : PAL.amb; c.beginPath(); c.arc(a.x + d.x * d.m * (r - 10), a.y + d.y * d.m * (r - 10), 9, 0, TAU); c.fill(); c.globalAlpha = 1; if (!Tilt.ok) V.text('Sin sensor', a.x, a.y + r + 14, { size: 11, align: 'center', color: '#fff', body: true });
+    }
+  }
+});
+/* las tareas de abajo a la izquierda se corren si el control está a la izquierda */
+Ctrl.leftGap = () => Ctrl.pad() && Ctrl.side() === 'izq' ? 40 + 92 * Ctrl.size() + 12 : 0;
+const _start81 = Game.start;
+Game.start = function () { Tilt.y0 = null; if (Ctrl.kind() === 'inclinar') Tilt.start(); return _start81.apply(this, arguments); };
+
+/* ---------- panel de controles ---------- */
+const CTRL_TXT = { fijo: 'El joystick se queda en su sitio. También puedes arrastrar el dedo en cualquier parte.', flotante: 'Pon el dedo donde quieras y arrástralo hacia donde quieres ir.', flechas: 'Cuatro botones grandes: ideal para niños y abuelos.', inclinar: 'Inclina el celular hacia donde quieres ir. Al empezar, la posición en que lo tienes es la neutra.' };
+UI.controles = function (inGame) {
+  const S = Save.data.settings, k = Ctrl.kind(), seg = (key, cur, opts) => `<div class="seg wrap">${opts.map(([v, n]) => `<button data-c="${key}" data-v="${v}" class="${String(cur) === String(v) ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  this.modal(`<h2>Controles</h2><p class="pag">Cómo te mueves</p>${seg('ctrl', k, [['fijo', '🕹️ Joystick fijo'], ['flotante', '👆 Arrastrar'], ['flechas', '⬆️ Flechas'], ['inclinar', '📱 Inclinar']])}
+    <p class="m" style="font-size:13px;margin:6px 0 10px">${CTRL_TXT[k]}</p>
+    ${Ctrl.pad() || k === 'inclinar' ? `<p class="pag">Lado</p>${seg('cside', Ctrl.side(), [['izq', '◀ Izquierda'], ['der', 'Derecha ▶']])}` : ''}
+    ${Ctrl.pad() ? `<p class="pag">Tamaño</p>${seg('csize', S.csize == null ? 1 : S.csize, [[0, 'Pequeño'], [1, 'Normal'], [2, 'Grande']])}` : ''}
+    ${k === 'inclinar' ? '<div class="col" style="margin:8px 0"><button class="btn sm" id="cCal">🎯 Recalibrar</button></div>' : ''}
+    <p class="pag">Vibración</p>${seg('vib', S.vib ? 1 : 0, [[1, 'Sí'], [0, 'No']])}
+    <p class="m" style="font-size:12.5px;margin-top:10px">En computador: flechas o WASD para moverte y espacio para el timbre.</p>
+    <div class="col"><button class="btn pri" id="mClose">${inGame ? '▶ Volver al juego' : 'Listo'}</button></div>`, () => {
+    $$('[data-c]').forEach(b => b.onclick = async () => {
+      const key = b.dataset.c, v = b.dataset.v;
+      if (key === 'ctrl' && v === 'inclinar') { const ok = await Tilt.ask(); if (!ok) { Snd.sfx('bad'); return this.toast('Este celular no deja usar el sensor de movimiento'); } Tilt.y0 = null; }
+      S[key] = key === 'csize' ? +v : key === 'vib' ? v === '1' : v; Save.save(); Snd.sfx('tap'); this.controles(inGame);
+    });
+    const cal = $('#cCal'); if (cal) cal.onclick = () => { Tilt.calib(); Snd.sfx('ok'); this.toast('Listo: esta es tu posición neutra'); };
+    if (inGame) $('#mClose').onclick = () => { this.closeModal(); Game.resume(); };
+  });
+};
+const _pause81 = Game.pause;
+Game.pause = function () { _pause81.call(this); const go = $('#pGo'); if (!go || !this.mode || !this.mode.ride) return; const b = document.createElement('button'); b.className = 'btn'; b.id = 'pCtrl'; b.textContent = '🎮 Controles'; go.after(b); b.onclick = () => UI.controles(true); };
+const _mas81 = UI.renderMas;
+UI.renderMas = function () {
+  _mas81.call(this); const c = $('#tab-mas [data-ctrl]'); if (!c) return; const row = c.closest('.opt');
+  row.innerHTML = '<span>Controles<br><small class="m">Joystick, flechas o inclinar el celular</small></span><button class="btn sm" id="mCtrl">🎮 Ajustar</button>';
+  $('#mCtrl').onclick = () => this.controles(false);
 };
 
 /* ---- 90-bot.js ---- */
