@@ -1,0 +1,1169 @@
+# JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
+
+> **Versión del juego v{{VERSION}} · compilado el {{FECHA}}.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+>
+> **SI ERES UNA IA:**
+> 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
+> 2. **Lee TODO**, de principio a fin (si no te cabe de una vez, léelo por partes hasta terminar).
+> 3. Reflexiona, responde el **cuestionario** y prueba en pequeño.
+> 4. **Auto‑ajústate** guardando tus “Reglas aprendidas”.
+> 5. Solo entonces haz **tu** parte, con precisión.
+> 6. **Al terminar**, entrega un **documento con todo tu trabajo** en **tres versiones**: **PDF maestro**, **MD con el código de las imágenes** y **ZIP con las imágenes y el PDF maestro** (parte 12).
+
+## Índice
+- 0 · Protocolo para toda IA
+- 1 · Léeme: qué es y cómo usarlo
+- 2 · Contexto: misión, visión, estado y la próxima revolución
+- 3 · Roles de las IA
+- 4 · Biblia de estilo
+- 5 · El reparto: personajes
+- 6 · Encargos de Gemini (G)
+- 7 · Encargos de ChatGPT (C)
+- 8 · Encargos del Guionista (H)
+- 9 · EnCicla y el valle: datos para crear
+- 10 · Huevos de pascua del Metro (fragmentos guardados)
+- 11 · Correcciones frecuentes
+- 12 · Entregas: el documento de cada IA y las tres versiones
+- 13 · Integración: qué hago con lo que entregas
+- 14 · Galería de referencia (créditos)
+- 15 · Bitácora de encargos
+- Anexo A · Textos actuales de la historia
+- Anexo B · Guía del juego
+- Anexo C · Bitácora de desarrollo
+
+---
+
+# 0 · Protocolo para toda IA
+
+> Aplica a **cualquier IA** que trabaje en *Juega EnCicla*:
+> - Gemini (Nano Banana), **Artista 1**;
+> - ChatGPT, **Artista 2** y **ensamblador** de las entregas;
+> - el **Guionista** (ChatGPT o Gemini en modo texto);
+> - Claude Code y cualquier otro agente de código.
+>
+> El autor pide **precisión**. Cada IA lee todo, reflexiona, comprueba que entendió, prueba, se auto‑ajusta y hace **solo** su parte.
+
+### Los 7 pasos (en orden, sin saltarse ninguno)
+1. **LEE TODO.**
+   - El documento completo, de principio a fin, con sus anexos.
+   - Si no te cabe de una vez, **léelo por partes hasta terminarlo**. No empieces sin terminar.
+2. **REFLEXIONA.**
+   - Resume en pocas líneas: misión y visión, estado del juego, **tu rol**, **tus encargos** y **lo que NO debes hacer**.
+   - Si hay dudas, vacíos o contradicciones, **pregunta antes de empezar**.
+   - Si dos partes chocan, manda la parte 2 (contexto) y después la 4 (biblia de estilo).
+3. **COMPRUEBA QUE ENTENDISTE.** Responde el **cuestionario** de abajo. Si fallas o dudas, vuelve a leer esa parte.
+4. **PRUEBA EN PEQUEÑO.** Haz tu prueba, evalúala con la **lista de control** y muéstrasela al autor antes de seguir.
+
+   | IA | Prueba |
+   |---|---|
+   | Gemini | **G-00** (ancla de estilo) |
+   | ChatGPT | **C-00** (un ícono: el oficio Anfitrión) |
+   | Guionista | **H-00** (tres frases de tres personajes) |
+   | Agentes de código | `node tools/build.js` y `node tests/run.js` sin errores, y jugar un turno de cada oficio |
+
+5. **AUTO‑AJÚSTATE.**
+   - Corrige tu forma de trabajar con lo que te enseñó la prueba.
+   - Guarda tus **Reglas aprendidas**:
+
+     | IA | Dónde las guardas |
+     |---|---|
+     | Gemini | Instrucciones de tu **Gem** |
+     | ChatGPT y Guionista | Instrucciones de tu **Proyecto** |
+     | Agentes de código | Skills `encicla-*` y la bitácora |
+
+     ```
+     REGLAS APRENDIDAS · <IA> · Juega EnCicla
+     1. <regla corta y verificable>
+     2. ...
+     Última prueba aprobada: <encargo> · <fecha>
+     ```
+   - Repite la prueba hasta que pase.
+   - **Nunca** cambies la misión, la visión ni las reglas del autor: ajusta solo **cómo** trabajas tú.
+6. **HAZ SOLO LO TUYO, CON PRECISIÓN.**
+   - Un encargo a la vez, en el orden de prioridad (12.1).
+   - Respeta exactamente la vista, la paleta, el fondo, la relación de aspecto, el nombre de archivo y el formato.
+   - Si te piden algo de otra IA, di a quién le corresponde y no lo hagas.
+7. **ENTREGA Y REGISTRA.**
+   - Después de **cada imagen o texto**, escribe en el chat su **nombre de archivo** y el **prompt final que funcionó**.
+   - **Al terminar tu trabajo** (o una tanda grande), entrega el **documento de entrega** con **todo** lo que hiciste, en **tres versiones**: **PDF maestro**, **MD con el código de las imágenes** y **ZIP con las imágenes y el PDF maestro** (parte 12).
+   - Anota tu avance en la bitácora de encargos (parte 15).
+
+### Cuestionario de comprensión
+Responde con tus palabras y di en qué parte lo leíste.
+1. ¿Qué es *Juega EnCicla*, quién lo crea y para quién es?
+2. ¿Cuáles son los tres colores de EnCicla para uniformes y bicis, con su código?
+3. ¿Qué fondo lleva un sprite o un ícono? ¿Y la capa lejana de una panorámica?
+4. ¿Qué vista lleva un sprite cenital y hacia dónde mira el personaje?
+5. Entre semana, ¿hasta qué hora se prestan bicis y hasta qué hora se reciben? ¿Y los domingos y festivos?
+6. ¿Cuáles son los cuatro corredores eléctricos y hasta qué hora funcionan las eléctricas?
+7. ¿Qué nunca puede aparecer en una imagen o en un texto?
+8. ¿Cuáles son tus encargos, en qué orden, y cuáles no son tuyos?
+9. ¿Qué entregas al terminar, con qué nombres y en qué tres versiones?
+10. ¿Qué haces si un encargo choca con la biblia de estilo o si te falta un dato de EnCicla?
+
+### Lista de control (antes de entregar cada pieza)
+- [ ] Es el encargo correcto y tiene el **nombre de archivo** exacto.
+- [ ] **Vista** correcta: cenital, perfil, tres cuartos o frontal, según el encargo.
+- [ ] **Paleta** de la biblia; uniformes y bicis en **azul oscuro, verde claro y blanco**.
+- [ ] **Fondo** pedido: magenta plano `#FF00FF` o escena completa. Nunca blanco ni con degradado.
+- [ ] **Sin texto**, letras, números, logos, marcas, firmas ni marca de agua.
+- [ ] Las piezas de juego **se entienden en pequeño**: reducidas a 48 px siguen claras.
+- [ ] Cada personaje es **igual a su hoja**: cara, peinado, ropa y colores.
+- [ ] Parece **Medellín y el Valle de Aburrá**, no una ciudad cualquiera.
+- [ ] Nada inseguro ni inapropiado (2.5).
+- [ ] Guardaste el **prompt final**, en el chat y en un `.txt` con el mismo nombre de la imagen.
+
+---
+
+# 1 · Léeme: qué es y cómo usarlo
+
+- **Qué es.** El encargo de arte e historia para la próxima gran versión de *Juega EnCicla*. Hoy el juego dibuja todo su arte con código. Con este documento, las IA crean el arte hecho a mano y la historia que lo reemplazan y lo amplían.
+- **Cómo usarlo (autor):**
+  1. Crea un **Gem** en Gemini (Artista 1), un **Proyecto** en ChatGPT (Artista 2) y otro **Proyecto** para el Guionista. Sube este documento completo como archivo o pégalo en sus instrucciones.
+  2. Pídele a cada IA: “Sigue el protocolo de la parte 0 y empieza por tu prueba”.
+  3. Aprueba la prueba. Después pide los encargos en el orden de prioridad (12.1), por tandas.
+  4. Al terminar cada IA, pide su **documento de entrega en tres versiones** (parte 12).
+  5. Cuando todas terminen, pide a ChatGPT la **consolidación final** (C-99) y entrégame las tres versiones finales.
+- **Las entregas parciales sirven.** Integro lo que llegue y el resto sigue con el dibujo actual.
+- **Una conversación por tanda.** Si la conversación se alarga, abre otra con el mismo Gem o Proyecto y di en qué encargo vas.
+
+---
+
+# 2 · Contexto: misión, visión, estado y la próxima revolución
+
+## 2.1 Misión
+Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la gente que lo hace andar: usuarios, anfitriones, mecánicos, bodega, apoyo, técnicos, conductores de balance, sala de control, supervisores, pausas activas, rescate y brigada de limpieza. Que jugar enseñe a usar el sistema, a convivir en la vía y a valorar cada oficio.
+
+## 2.2 Visión
+Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
+
+## 2.3 Estado actual (v{{VERSION}})
+- **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
+- Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
+- Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
+- Gráficos pixel, 3D y vista panorámica de plataformas. Música por estilos: jazz, lo-fi, soft rock y electrónica.
+- Multijugador (red local, internet y Bluetooth), retos por QR, modo para daltonismo, tutor con compañero y escenas de historia.
+- **Todo el arte se dibuja con código.** Cada pieza que entregues cambia mucho el juego.
+- Creado por **OneZero**, con permiso de EnCicla para la demostración.
+
+## 2.4 La próxima revolución
+1. **Arte hecho a mano:** personajes con hoja de modelo y retratos, sprites, ciudad con identidad paisa, estaciones, postales, panorámicas por capas, íconos, fiestas y arte clave.
+2. **Historia “Un día del valle”:** 24 horas de EnCicla contadas por sus oficios, de las tulas de las 4 a. m. al cierre de las 10 p. m., con los **15 años de EnCicla** (2011–2026) de fondo.
+3. **Huevos de pascua del Metro:** cruces con *El Metro*, el juego hermano (parte 10).
+4. **Datos oficiales en camino:** el autor entregará la información oficial de EnCicla (estaciones y su dificultad por turno, organigrama, horarios por zona, festividades y cantidades). Mientras llega, **no inventes datos**: usa la parte 9 y marca lo que falte como *por confirmar*.
+
+## 2.5 Reglas del autor (no se negocian)
+- **Precisión** y **poco texto en pantalla**: es un juego, no un manual.
+- **Colores de EnCicla** para uniformes y bicis: **azul oscuro `#0e2d55`**, **verde claro `#9bd341`** y **blanco `#ffffff`**.
+- **Sin logos reales** (EnCicla, Metro, Área Metropolitana, alcaldías, marcas comerciales) y **sin texto** en las imágenes. Los logos y textos oficiales los pongo yo en el juego.
+- **Personas ficticias:** nadie reconocible (ni empleados reales, ni famosos, ni políticos).
+- **Nada de** cigarrillos, alcohol, drogas, armas, violencia ni groserías. Sin estereotipos negativos de barrios o comunas.
+- **La seguridad vial como ejemplo:** casco al montar, luces de noche, nada de celular en la mano mientras se pedalea, respeto al peatón y al semáforo. Lo inseguro solo aparece como error que el juego corrige.
+- **La diversidad real del valle:** edades, tonos de piel, cuerpos, mujeres y hombres en todos los oficios, personas con discapacidad.
+- **Inspiración, no copia:** nada de personajes, escenarios ni estilos idénticos a los de otros juegos.
+- Créditos del juego: **Creado por OneZero**. Datos del mapa: © colaboradores de OpenStreetMap (ODbL).
+
+---
+
+# 3 · Roles de las IA
+
+| Rol | IA | Hace | No hace |
+|---|---|---|---|
+| **Artista 1** | Gemini (Nano Banana) | Encargos **G**: ancla de estilo, hojas de personaje y retratos, estaciones e interiores, postales, panorámicas, fiestas, huevos de pascua, escenas de la historia y arte clave | Íconos, sprites cenitales, texturas, interfaz, textos |
+| **Artista 2** | ChatGPT (imágenes y Python) | Encargos **C**: íconos, sprites cenitales (bicis, personajes, peatones, vehículos), texturas, vegetación, fachadas, objetos de minijuegos, interfaz, decoraciones de fiestas y marcadores del mapa. Además, la **consolidación final (C-99)** | Retratos, escenas, postales, textos de historia |
+| **Guionista** | ChatGPT o Gemini (texto) | Encargos **H**: biblia narrativa, voces, historia principal, historias por oficio, frases de la ciudad, logros, tutor, fiestas, cameos del Metro y guion visual de las escenas | Imágenes |
+| **Integrador** | Claude Code | Revisa, limpia, reduce a pixel art, arma atlas, integra al código, prueba y publica | Generar arte |
+
+**Cómo trabaja cada una**
+- **Gemini:** adjunta la ancla **G-00** como referencia de estilo en cada encargo; para un personaje, adjunta también su hoja (G-01 a G-12). Una imagen por mensaje; después de cada una, escribe su nombre de archivo y el prompt final.
+- **ChatGPT:** trabaja en hojas con cuadrícula exacta. Usa Python para revisar el fondo, recortar celdas, nombrar archivos y armar la entrega con el script de 12.6.
+- **Guionista:** entrega cada texto legible (`.md`) y en JSON válido (`.json`) con los límites de caracteres de cada encargo.
+
+---
+
+# 4 · Biblia de estilo
+
+## 4.1 Dirección de arte
+**Pixel art moderno, limpio y cálido**, como un juego independiente de 16 bits: formas grandes y legibles, contorno oscuro de 1 píxel, sombreado plano de 2 o 3 tonos, luz desde arriba a la izquierda, colores alegres sin ser chillones. La ciudad se reconoce por el **ladrillo a la vista**, las **montañas verdes** que encierran el valle, los **guayacanes** florecidos, el **río canalizado**, el **viaducto del metro** y los **cables** que suben las laderas.
+
+| Familia | Qué | Acabado |
+|---|---|---|
+| **Piezas de juego** | sprites, íconos, texturas, objetos, interfaz, marcadores | pixel art estricto, pocos tonos, fondo magenta |
+| **Ilustraciones** | retratos, hojas, estaciones, postales, panorámicas, escenas, fiestas, arte clave | pixel art de alta resolución con luz ambiental, misma paleta |
+
+## 4.2 Paleta
+| Nombre | HEX | Uso |
+|---|---|---|
+| Azul noche | `#0a2342` | noche, interfaz, sombras profundas |
+| Azul EnCicla | `#0e2d55` | uniformes, bicis, interfaz |
+| Azul medio | `#143a6b` · `#2a5a92` | sombras y luces del azul |
+| Verde EnCicla | `#9bd341` | uniformes, bicis, botones, bordes de ciclorruta |
+| Verde brillo | `#c4ec7c` | brillos del verde |
+| Verde hoja | `#5e9a1e` | vegetación y sombras del verde |
+| Verde ciclorruta | `#4a9a2c` | piso de la ciclorruta |
+| Blanco | `#ffffff` | uniformes, bicis, pictogramas |
+| Crema | `#f4efd8` | papel, fondos claros |
+| Ámbar | `#ffc93c` | sol, alertas, guayacán amarillo |
+| Coral | `#ff6b5a` | error, peligro, guayacán rosado |
+| Cielo | `#56c7ff` | cielo, agua, pantallas |
+| Ladrillo | `#c0623b` | fachadas, laderas, techos |
+| Tinta | `#0a1424` | contorno de sprites |
+| Gris · plata | `#9aa7b8` · `#d6dde6` | concreto, metal, andenes |
+
+- Piezas de juego: **máximo 32 colores** (sin contar el magenta). Ilustraciones: libres dentro de esta gama.
+- Pieles: tonos naturales variados; las de cada personaje están en la parte 5.
+
+## 4.3 Vistas
+| Vista | Para qué | Regla |
+|---|---|---|
+| **Cenital** | sprites del mapa, texturas, árboles, vehículos, decoraciones | desde arriba a 90°, como un mapa. El personaje o el vehículo **mira hacia arriba (norte)**; el juego lo rota |
+| **Perfil** | estaciones, panorámicas, vehículos de perfil | lateral puro, sin perspectiva, suelo plano abajo |
+| **Tres cuartos** | hojas de personaje, postales, escenas | cámara a la altura de los ojos o un poco elevada |
+| **Frontal** | retratos e íconos | de frente y centrado |
+
+## 4.4 Formatos y tamaños
+Genera a la **mayor resolución posible**: yo reduzco a la escala del juego con vecino más cercano y cuantizo a la paleta.
+
+| Pieza | Relación | Contenido | En el juego |
+|---|---|---|---|
+| Hoja de personaje | 16:9 | 4 vistas de cuerpo entero en fila: frente, tres cuartos, perfil, espalda | referencia |
+| Retrato | 1:1 | busto centrado | 96 px |
+| Hoja de sprites | 1:1 | cuadrícula de **4×4** celdas iguales (1024×1024, celdas de 256 px) | 24–40 px |
+| Hoja de íconos | 1:1 | cuadrícula de 4×4 | 32–64 px |
+| Textura | 1:1 | se repite sin costuras por los cuatro lados | casillas de 16 px |
+| Estación o vehículo de perfil | 16:9 | un objeto completo, suelo abajo | 160–320 px de ancho |
+| Postal | 4:3 | escena completa | 320×240 |
+| Capa de panorámica | 21:9 | se repite en bucle: el borde izquierdo empata con el derecho | ancho de pantalla |
+| Escena de historia | 16:9 | escena completa | pantalla completa |
+| Arte clave | 9:16 y 16:9 | escena completa | portada |
+
+> Si tu herramienta no logra la cuadrícula exacta, entrega cada celda como imagen aparte, todas del mismo tamaño y encuadre, numeradas `_01`, `_02`, `_03`…
+
+## 4.5 Fondos
+- **Magenta plano `#FF00FF`** en todo lo que va recortado: sprites, íconos, objetos, retratos, hojas de personaje, estaciones y vehículos de perfil, y capas 2 a 4 de las panorámicas. Sin sombras, degradados ni brillos en el fondo. El magenta **no** puede aparecer dentro del dibujo.
+- **Escena completa** en postales, interiores, escenas, fiestas, arte clave y la capa 1 (cielo) de las panorámicas.
+- **Nunca** fondo blanco, ajedrezado falso de transparencia ni degradado.
+
+## 4.6 Personas, uniforme y bicis
+- **Proporción:** 4 cabezas de alto en hojas y escenas; 2,5 cabezas en sprites cenitales (cabeza grande y legible). Manos simples. Caras amables y expresivas.
+- **Uniforme EnCicla** (todos los trabajadores): polo **azul oscuro `#0e2d55`** con cuello y franja en los hombros **verde claro `#9bd341`** y vivos **blancos**; pantalón azul oscuro; **gorra blanca**; carné colgado; zapatos cerrados. En el pecho, un **círculo blanco liso**: ahí va el logo en el juego.
+- **Oficios de calle** (apoyo, pausas activas, limpieza, técnico, rescate y balance): **chaleco reflectivo verde claro** con cintas plateadas.
+- **Color personal:** cada trabajador lleva un accesorio de su color (parte 5) para reconocerlo de lejos.
+- **Usuarios:** ropa de calle variada y casco al montar.
+- **Bici EnCicla mecánica:** urbana, marco **blanco** con detalles **verde claro** y **azul oscuro**, guardabarros, **canasta delantera**, sillín negro con ajuste rápido, luces adelante y atrás, cadena con protector. Plato y cadena al lado **derecho**. Sin texto ni logos.
+- **Bici EnCicla eléctrica:** igual, con **batería azul oscuro** en el tubo diagonal y un **rayo verde claro** pequeño.
+- **Bici propia:** colores variados, nunca la combinación de EnCicla.
+
+## 4.7 Ciudad y naturaleza
+- **Ladrillo a la vista** (`#c0623b`) en laderas y edificios; techos de losa gris, teja de barro y zinc; casas de colores en el centro y en los pueblos; torres de vidrio en El Poblado y Ciudad del Río.
+- **Montañas verdes** alrededor del valle; nubes blancas en la tarde; neblina en la madrugada; aguacero corto en la tarde.
+- **Árboles:** guayacán amarillo y guayacán rosado florecidos, ceiba, mango, palma, yarumo.
+- **Río Medellín:** canalizado, con orillas de concreto, zonas verdes y puentes.
+- **Metro:** viaducto de concreto gris y trenes por encima de la ciudad; cables de colores subiendo las laderas.
+- **Ciclorruta:** franja exclusiva **verde `#4a9a2c`** con bordes **verde claro `#9bd341`**, línea central clara y pictograma blanco de bici en el piso (el pictograma no cuenta como texto).
+- **Estaciones EnCicla:** fila de anclajes con bicis. Las **con anfitrión** tienen un pequeño **habitáculo** con mostrador; las **automáticas**, un **tótem** de autoservicio; las **eléctricas**, anclajes con carga. Usa las fotos de la galería (parte 14) como referencia de formas, sin copiar logos.
+
+## 4.8 Referencias de videojuegos (inspiración, no copia)
+| Juego | Qué tomar |
+|---|---|
+| *Stardew Valley* | calidez del pixel art, retratos expresivos, vida de pueblo |
+| *Celeste*, *Owlboy* | panorámicas por capas y luz ambiental en pixel art |
+| *Mini Motorways* | un mapa de ciudad que se lee de un vistazo |
+| *Overcooked* | oficios caóticos y cooperativos |
+| Juegos de bolsillo de 16 bits | íconos y objetos legibles en pequeño |
+| Juegos de ciudad cenitales de los 90 | ciudad vista desde arriba con tráfico vivo |
+
+## 4.9 Prohibido
+Texto, letras y números (salvo los símbolos universales ✓ ✗ + ! ? en íconos); logos y marcas; marcas de agua y firmas; personas reales; estilo fotográfico; 3D con brillos plásticos; desenfoque; degradados de fondo; magenta dentro del dibujo; cigarrillos, alcohol, armas o violencia; conductas inseguras presentadas como buenas.
+
+---
+
+# 5 · El reparto: personajes
+
+Edades propuestas para el arte. Colores de piel y cabello tomados del juego.
+
+| # | Personaje | Oficio | Barrio | Edad | Lema |
+|---|---|---|---|---|---|
+| 1 | **Doña Luz** | usuaria desde 2011 | Belén | 63 | “Del afán no queda sino el cansancio.” |
+| 2 | **Santi** | anfitrión de estación | Floresta | 24 | “Una sonrisa también se presta.” |
+| 3 | **Don Jairo** | mecánico del taller | Aranjuez | 58 | “Toda bici avisa lo que le duele.” |
+| 4 | **Yuli** | jefa de bodega | Guayabal | 34 | “Cada cosa en su sitio.” |
+| 5 | **Kevin** | apoyo en ruta | Manrique | 21 | “El que sirve para todo, sirve para mucho.” |
+| 6 | **Maryi** | pausas activas | Laureles | 29 | “Un cuerpo que se mueve trabaja mejor.” |
+| 7 | **Doña Marta** | brigada de limpieza | Belén | 52 | “Un habitáculo limpio también presta mejor servicio.” |
+| 8 | **Ing. Paola** | técnica de estaciones | Envigado | 31 | “Luz verde o nada.” |
+| 9 | **Jhon** | rescate de bicis | Manrique | 26 | “Ninguna bici se queda atrás.” |
+| 10 | **Wilson** | conductor de balance | Bello | 45 | “Por las vías, nunca por la ciclorruta.” |
+| 11 | **Cata** | sala de control | Robledo | 27 | “El mapa habla.” |
+| 12 | **Don Rubén** | supervisor | Belén · Malibú | 55 | “Se manda como quien ha pasado por todos los puestos.” |
+
+**Historias cortas (del juego)**
+- **Doña Luz:** pedalea desde que EnCicla era un piloto entre universidades en 2011. Conoce cada ciclorruta del valle y no perdona a quien pasa en rojo.
+- **Santi:** madruga a las 4:30 para recibir la tula a las 5 en punto. Ajusta los sillines sin que se lo pidan y se sabe el nombre de cada usuario de su estación.
+- **Don Jairo:** treinta años en talleres de bicicletas. Reconoce una cadena seca por el ruido desde la esquina.
+- **Yuli:** nada entra a la bodega sin verificar y nada sale sin estar completo. Su lema está pegado en la puerta.
+- **Kevin:** anfitrión de apoyo de la zona Envigado: trece estaciones que abrir, relevos de almuerzo e inventario en cada rato libre.
+- **Maryi:** recorre las estaciones a mitad de turno con su parlante y pone a estirar a todo el que encuentre, del anfitrión al supervisor.
+- **Doña Marta:** cada mes sale con otro supervisor a recorrer las estaciones con anfitrión: vidrio, mostrador, piso y basura, sin dejar nada.
+- **Ing. Paola:** ingeniera electrónica. Tiene un plan para cada power bank y sabe qué celulares de estación están medio malos.
+- **Jhon:** encuentra bicis abandonadas en parques y esquinas y las devuelve pedaleando con una mano y llevando la otra bici con la otra.
+- **Wilson:** sale a las 4 de la mañana del parqueadero de la Terminal del Norte y vuelve de noche, cuando el camión ya no cabe más bicis.
+- **Cata:** desde la sala de control ve el valle entero: rojo es vacía, azul es llena. Cada hora revisa que los inventarios cuadren.
+- **Don Rubén:** empezó de usuario; luego fue anfitrión, mecánico y conductor. Hoy arma las tulas a las 4 a. m. en Casa EnCicla y las recoge al cierre.
+
+**Descripción para los prompts** (cópiala donde diga `[PERSONAJE]`)
+
+| # | Archivo | Descripción |
+|---|---|---|
+| 1 | `dona_luz` | Doña Luz, usuaria de EnCicla de 63 años: piel #e0ac7e, canas #d9d9d9 recogidas en un moño, gafas redondas, blusa lila #b07cff, pantalón gris cómodo, tenis blancos, mochila de tela y casco lila; mirada pícara y cariñosa |
+| 2 | `santi` | Santi, anfitrión de estación de 24 años: piel #c68a5c, pelo negro #2b1d14 corto, delgado, sonrisa grande; uniforme EnCicla con gorra blanca; carné con cordón verde claro y reloj verde claro |
+| 3 | `don_jairo` | Don Jairo, mecánico de 58 años: piel #a86a3d, canas #8a8a8a, bigote gris, brazos fuertes; uniforme EnCicla con delantal de taller azul #143a6b manchado de grasa, gafas de seguridad en la frente, trapo en el bolsillo y llave en la mano |
+| 4 | `yuli` | Yuli, jefa de bodega de 34 años: piel #e0ac7e, pelo castaño #5a2d0c en cola de caballo, segura y ordenada; uniforme EnCicla, tabla de inventario amarilla #ffc93c bajo el brazo, lápiz en la oreja y guantes de trabajo |
+| 5 | `kevin` | Kevin, apoyo en ruta de 21 años: afrocolombiano, piel #8d5524, pelo negro #141414 muy corto con diseño rapado, atlético y alegre; uniforme EnCicla con chaleco reflectivo verde claro, gorra blanca y morral verde claro #9bd341 con llaves colgando |
+| 6 | `maryi` | Maryi, instructora de pausas activas de 29 años: piel #c68a5c, pelo negro #2b1d14 en trenza larga, llena de energía; uniforme EnCicla deportivo (camiseta azul oscuro con hombros verde claro, licra azul oscuro, tenis), chaleco reflectivo, banda coral #ff6b5a en la cabeza y parlante portátil al hombro |
+| 7 | `dona_marta` | Doña Marta, supervisora de la brigada de limpieza, 52 años: piel #c68a5c, pelo castaño #5a2d0c recogido con pañoleta blanca, exigente pero cálida; uniforme EnCicla con chaleco reflectivo, guantes de caucho amarillos #ffc93c y rociador en la mano |
+| 8 | `paola` | Ingeniera Paola, técnica de estaciones de 31 años: piel clara #f1c9a5, pelo negro #141414 corto tipo bob, gafas rectangulares, concentrada; uniforme EnCicla con chaleco reflectivo, casco de seguridad amarillo #ffc93c, multímetro y destornillador en el cinturón |
+| 9 | `jhon` | Jhon, rescatista de bicis de 26 años: piel #a86a3d, pelo negro #141414 y barba corta, fuerte y tranquilo; uniforme EnCicla con chaleco reflectivo, casco y guantes de ciclismo blancos y rodilleras |
+| 10 | `wilson` | Wilson, conductor del camión de balance, 45 años: piel #c68a5c, pelo negro #2b1d14 con entradas, bigote, robusto y bonachón; uniforme EnCicla con chaleco reflectivo, gorra blanca, gafas de sol colgadas y termo coral #ff6b5a |
+| 11 | `cata` | Cata, operadora de la sala de control, 27 años: piel #a86a3d, pelo negro #2b1d14 rizado y voluminoso, atenta; uniforme EnCicla, diadema con micrófono azul cielo #56c7ff y taza de tinto |
+| 12 | `don_ruben` | Don Rubén, supervisor de 55 años: piel #e0ac7e, canas #bbbbbb peinadas hacia atrás, porte sereno de líder; uniforme EnCicla con chaqueta azul noche #0a2342, radio en el cinturón, linterna y un llavero grande con las llaves de las estaciones |
+
+> El jugador crea su propio personaje al empezar el juego. Para él no hay hoja: lo cubren los cuerpos base de **C-11** y **C-12**.
+
+---
+
+# 6 · Encargos de Gemini (G)
+
+### 6.0 Prompt base de Gemini (pégalo al inicio de cada encargo)
+```
+Estilo "Juega EnCicla": pixel art moderno, limpio y cálido, de videojuego independiente de 16 bits. Formas grandes y legibles, contorno oscuro de 1 píxel (#0a1424), sombreado plano de 2 o 3 tonos, luz desde arriba a la izquierda. Paleta: azul oscuro #0e2d55, azul noche #0a2342, verde claro #9bd341, verde hoja #5e9a1e, blanco, crema #f4efd8, ámbar #ffc93c, coral #ff6b5a, cielo #56c7ff, ladrillo #c0623b, gris #9aa7b8. Lugar: Medellín y el Valle de Aburrá, Colombia. Uniforme EnCicla: polo azul oscuro #0e2d55 con cuello y franja de hombros verde claro #9bd341, vivos blancos, gorra blanca y un círculo blanco liso en el pecho. Bici EnCicla: urbana, marco blanco con detalles verde claro y azul oscuro, canasta delantera. Sin texto, letras, números, logos, marcas, firmas ni marca de agua. Personas ficticias.
+```
+> Adjunta siempre **G-00** como referencia de estilo y, para un personaje, su hoja.
+
+### G-00 · Ancla de estilo (prueba)
+- 16:9 · escena completa · `g00_ancla_estilo.png`
+```
+[PROMPT BASE]
+Escena de mañana en una estación EnCicla con anfitrión, junto a una ciclorruta arborizada de Medellín. Santi, anfitrión de 24 años (piel #c68a5c, pelo negro corto, uniforme EnCicla, gorra blanca, carné con cordón verde claro), le entrega una bici EnCicla a Doña Luz, usuaria de 63 años (piel #e0ac7e, canas recogidas en un moño, gafas redondas, blusa lila #b07cff, casco lila). Al lado, un habitáculo pequeño con mostrador y una fila de anclajes con bicis. Al fondo, edificios de ladrillo a la vista, un guayacán amarillo florecido, el viaducto gris del metro y montañas verdes. Vista tres cuartos, luz cálida de las 8 de la mañana.
+```
+> Esta imagen fija el estilo de todo. Guárdala y adjúntala en cada encargo siguiente.
+
+### G-01 a G-12 · Hojas de personaje y retratos
+Por personaje, **4 imágenes** (la descripción `[PERSONAJE]` está en la parte 5):
+
+| Encargo | Personaje | Archivos |
+|---|---|---|
+| G-01 | Doña Luz | `g01_per_dona_luz_hoja.png` · `g01_ret_dona_luz_neutra.png` · `_alegre.png` · `_preocupada.png` |
+| G-02 | Santi | `g02_per_santi_hoja.png` · `g02_ret_santi_<neutra│alegre│preocupada>.png` |
+| G-03 | Don Jairo | `g03_per_don_jairo_hoja.png` · `g03_ret_don_jairo_…` |
+| G-04 | Yuli | `g04_per_yuli_hoja.png` · `g04_ret_yuli_…` |
+| G-05 | Kevin | `g05_per_kevin_hoja.png` · `g05_ret_kevin_…` |
+| G-06 | Maryi | `g06_per_maryi_hoja.png` · `g06_ret_maryi_…` |
+| G-07 | Doña Marta | `g07_per_dona_marta_hoja.png` · `g07_ret_dona_marta_…` |
+| G-08 | Ing. Paola | `g08_per_paola_hoja.png` · `g08_ret_paola_…` |
+| G-09 | Jhon | `g09_per_jhon_hoja.png` · `g09_ret_jhon_…` |
+| G-10 | Wilson | `g10_per_wilson_hoja.png` · `g10_ret_wilson_…` |
+| G-11 | Cata | `g11_per_cata_hoja.png` · `g11_ret_cata_…` |
+| G-12 | Don Rubén | `g12_per_don_ruben_hoja.png` · `g12_ret_don_ruben_…` |
+
+**Hoja** (16:9):
+```
+[PROMPT BASE]
+Hoja de modelo de personaje: [PERSONAJE]. Cuatro vistas de cuerpo entero en una sola fila, del mismo tamaño y alineadas por los pies: de frente, tres cuartos, de perfil mirando a la derecha y de espaldas. Proporción de 4 cabezas de alto, pose neutra, brazos relajados. Fondo magenta plano #FF00FF, sin sombras en el piso.
+```
+**Retrato** (1:1, uno por expresión):
+```
+[PROMPT BASE]
+Retrato de busto de [PERSONAJE], de frente y centrado, con los hombros visibles. Expresión: [neutra y amable | alegre, sonriendo | preocupada, con las cejas levantadas]. Idéntico a su hoja de modelo adjunta. Fondo magenta plano #FF00FF.
+```
+
+### G-20 a G-28 · Estaciones, vehículo e interiores
+Para las piezas de **perfil** agrega: `Vista de perfil pura (lateral, sin perspectiva), suelo plano en la parte de abajo, objeto completo y centrado. Fondo magenta plano #FF00FF.`
+Para los **interiores** agrega: `Interior visto de perfil, como un escenario de juego de plataformas. Escena completa.`
+
+| Encargo | Archivo | Tipo | Qué dibujar |
+|---|---|---|---|
+| G-20 | `g20_est_anfitrion.png` | perfil | Estación con anfitrión: habitáculo pequeño de metal blanco y azul oscuro con ventanilla y mostrador, alero verde claro, y a su lado una fila de 8 anclajes con bicis EnCicla. Sin letreros |
+| G-21 | `g21_est_automatica.png` | perfil | Estación automática: tótem de autoservicio (columna blanca con pantalla y lector de tarjeta, franja verde claro) y 8 anclajes con luces LED verdes, con bicis |
+| G-22 | `g22_est_electrica.png` | perfil | Estación solo eléctrica: tótem con un rayo verde claro y anclajes con cargador; bicis eléctricas EnCicla (batería azul oscuro) cargando |
+| G-23 | `g23_est_mixta.png` | perfil | Estación mixta: mitad anclajes normales y mitad con cargador; bicis mecánicas y eléctricas mezcladas |
+| G-24 | `g24_casa_encicla.png` | perfil | Casa EnCicla, la sede operativa: bodega de ladrillo con un gran portón abierto; adentro, estantes con tulas (maletines azul oscuro) y bicis en fila; afuera, un camión de balance; luces encendidas |
+| G-25 | `g25_int_taller.png` | interior | Taller de mecánica: bancos de trabajo, bicis en soportes, tablero con herramientas colgadas, llantas, lámparas cálidas |
+| G-26 | `g26_int_bodega.png` | interior | Bodega de repuestos: estanterías con cajas de colores por tipo de pieza (llantas, cadenas, frenos, sillines, luces, herramientas), carretilla, tabla de inventario |
+| G-27 | `g27_int_control.png` | interior | Sala de control: pared de pantallas con el mapa del valle lleno de puntos rojos (vacías), azules (llenas) y verdes; escritorios, operadores con diadema y una ventana a la ciudad de noche |
+| G-28 | `g28_camion_balance.png` | perfil | Camión de balance: camión mediano blanco con franja verde claro y azul oscuro, plataforma trasera de dos pisos con bicis EnCicla amarradas y rampa plegable |
+
+### G-30 a G-74 · Postales del valle (45)
+- 4:3 · escena completa · `gNN_pos_<lugar>.png`. Primero las 15 marcadas con ★.
+```
+[PROMPT BASE]
+Postal ilustrada de [LUGAR] ([MUNICIPIO]), Valle de Aburrá: [QUÉ MOSTRAR]. En primer plano, una ciclorruta o un andén con una bici EnCicla parqueada. Vista tres cuartos, de día, cielo con nubes de tarde, colores cálidos. Escena completa, sin marco ni texto.
+```
+
+| Encargo | Archivo | Lugar · municipio | Qué mostrar |
+|---|---|---|---|
+| G-30 | `g30_pos_bello` | Parque de Bello · Bello | parque principal con su iglesia de torres altas, árboles y bancas |
+| G-31 | `g31_pos_terminaln` | Terminal del Norte · Medellín | la terminal de buses con su gran techo y, en el parqueadero, los camiones de balance |
+| G-32 | `g32_pos_volador` | Cerro El Volador · Medellín | cerro verde en medio de la ciudad, senderos y caminantes, el valle abajo |
+| G-33 | `g33_pos_unal` | Universidad Nacional · Medellín | campus arborizado con edificios de ladrillo y estudiantes en bici |
+| G-34 | `g34_pos_moravia` | Moravia · Medellín | la ladera convertida en jardín comunitario lleno de flores, casas de colores alrededor |
+| G-35 ★ | `g35_pos_botanico` | Jardín Botánico · Medellín | el orquideorama (techo de madera en forma de flores hexagonales), el lago y orquídeas |
+| G-36 ★ | `g36_pos_udea` | Ciudad Universitaria UdeA · Medellín | plazoleta central, edificios de ladrillo y estudiantes en los prados |
+| G-37 ★ | `g37_pos_explora` | Parque Explora · Medellín | los edificios en forma de cubos rojos del museo de ciencia y niños entrando |
+| G-38 ★ | `g38_pos_estadio` | Estadio Atanasio Girardot · Medellín | el estadio y su unidad deportiva, hinchas de verde y de rojo, sin escudos |
+| G-39 ★ | `g39_pos_botero` | Plaza Botero · Medellín | plaza con esculturas de bronce redondas y voluminosas (sin copiar obras concretas) y el palacio a cuadros al fondo |
+| G-40 ★ | `g40_pos_coltejer` | Edificio Coltejer · Medellín | el rascacielos del centro con su punta de aguja, entre edificios más bajos |
+| G-41 | `g41_pos_teatro` | Teatro Metropolitano · Medellín | edificio escalonado de ladrillo junto al río |
+| G-42 | `g42_pos_laureles` | Primer Parque de Laureles · Medellín | glorieta redonda arborizada, casas bajas con antejardín y ciclistas |
+| G-43 ★ | `g43_pos_pies` | Parque de los Pies Descalzos · Medellín | fuentes, arena y bambú, gente descalza, un edificio moderno de vidrio al fondo |
+| G-44 ★ | `g44_pos_luces` | Parque de las Luces · Medellín | cientos de postes altos de luz en una plaza, junto a un edificio en forma de pirámide invertida y edificios antiguos restaurados |
+| G-45 | `g45_pos_depot` | Casa EnCicla · Medellín | la sede operativa: portón, bicis en fila, tulas y el camión de balance (lugar del juego) |
+| G-46 ★ | `g46_pos_cerro` | Cerro Nutibara · Pueblito Paisa · Medellín | réplica de un pueblo antioqueño con iglesia blanca, plaza y balcones de colores en la cima, la ciudad abajo |
+| G-47 | `g47_pos_mamm` | MAMM · Ciudad del Río · Medellín | museo en una antigua bodega de ladrillo con un volumen de acero oxidado, parque y patinadores |
+| G-48 | `g48_pos_poblado` | Parque del Poblado · Medellín | parque fundacional con su iglesia blanca y árboles grandes |
+| G-49 | `g49_pos_aeropuerto` | Aeropuerto Olaya Herrera · Medellín | terminal blanca de estilo art déco con su torre y avionetas en la pista |
+| G-50 | `g50_pos_lleras` | Parque Lleras · Medellín | parque arborizado rodeado de cafés y restaurantes, de tarde |
+| G-51 | `g51_pos_terminals` | Terminal del Sur · Medellín | terminal de buses del sur, buses intermunicipales, montañas al fondo |
+| G-52 ★ | `g52_pos_eafit` | Universidad EAFIT · Medellín | campus con lago y árboles, edificios de ladrillo y una iguana tomando el sol |
+| G-53 ★ | `g53_pos_envigado` | Parque de Envigado · Envigado | parque principal con su iglesia de dos torres, árboles y bancas |
+| G-54 | `g54_pos_itagui` | Parque de Itagüí · Itagüí | parque principal con su iglesia y vida de pueblo |
+| G-55 | `g55_pos_sabaneta` | Parque de Sabaneta · Sabaneta | parque principal con su iglesia y fondas alrededor, sin letreros |
+| G-56 | `g56_pos_estrella` | Parque de La Estrella · La Estrella | parque principal con su basílica y montañas cercanas |
+| G-57 | `g57_pos_barbosa` | Parque de Barbosa · Barbosa | parque de pueblo cálido con su iglesia, palmas y un puesto de piñas |
+| G-58 | `g58_pos_girardota` | Parque de Girardota · Girardota | parque con su gran catedral de ladrillo y peregrinos |
+| G-59 | `g59_pos_copacabana` | Parque de Copacabana · Copacabana | parque principal con su iglesia y montañas verdes |
+| G-60 | `g60_pos_quitasol` | Cerro Quitasol · Bello | gran cerro verde sobre Bello y senderistas |
+| G-61 | `g61_pos_fabricato` | Fabricato · Bello | fábrica textil histórica de ladrillo con chimeneas altas |
+| G-62 | `g62_pos_hospbello` | Hospital Marco Fidel Suárez · Bello | hospital de fachada sencilla, ambulancia y jardín al frente |
+| G-63 | `g63_pos_otraparte` | Casa Museo Otraparte · Envigado | casa blanca de estilo campestre con jardín y café al aire libre |
+| G-64 | `g64_pos_ditaires` | Parque Ditaires · Itagüí | parque ecológico con árboles grandes, lago y familias |
+| G-65 | `g65_pos_caldas` | Parque de Caldas · Caldas | parque principal con su iglesia, en el sur frío del valle, gente con ruana |
+| G-66 | `g66_pos_nacimiento` | Alto de San Miguel · Caldas | bosque de niebla donde nace el río Medellín, una quebrada cristalina entre helechos |
+| G-67 ★ | `g67_pos_comuna13` | Comuna 13 · Escaleras eléctricas · Medellín | escaleras eléctricas al aire libre con techos naranjas subiendo la ladera, grafitis coloridos de figuras (sin letras) y casas de ladrillo |
+| G-68 ★ | `g68_pos_bibespana` | Parque Biblioteca España · Medellín | tres edificios oscuros con forma de rocas en lo alto de la ladera, junto al metrocable |
+| G-69 ★ | `g69_pos_palacio` | Palacio de la Cultura · Medellín | palacio de estilo gótico con fachada a cuadros blancos y negros |
+| G-70 ★ | `g70_pos_catedral` | Catedral Metropolitana · Medellín | gran catedral de ladrillo frente a un parque con palomas |
+| G-71 | `g71_pos_parquenorte` | Parque Norte · Medellín | parque de diversiones con rueda de Chicago y montaña rusa |
+| G-72 | `g72_pos_unidadbelen` | Unidad Deportiva de Belén · Medellín | canchas, pista atlética y coliseo, gente haciendo deporte |
+| G-73 | `g73_pos_memoria` | Museo Casa de la Memoria · Medellín | edificio contemporáneo de concreto en un parque, con un jardín sereno |
+| G-74 | `g74_pos_trescruces` | Cerro de las Tres Cruces · Medellín | cerro con tres cruces blancas en la cima y gente subiendo al amanecer |
+
+### G-80 a G-83 · Panorámicas por capas
+- 21:9 · 4 capas por zona y momento · `gNN_pan_<zona>_<momento>_<capa>.png`, con capa `1` lejana, `2` laderas, `3` ciudad y `4` frente.
+- Prioridad: centro de día y de noche → occidente de día → sur de día → norte de tarde → lo demás.
+```
+[PROMPT BASE]
+Capa [N] de 4 de una panorámica lateral (vista de perfil, para desplazamiento horizontal como en un juego de plataformas) de [ZONA], Medellín, [MOMENTO]. Contenido de la capa: [CAPA]. Relación 21:9. El borde izquierdo debe continuar exactamente el borde derecho, porque la imagen se repite en bucle. [Capas 2 a 4: por encima de la silueta, fondo magenta plano #FF00FF.]
+```
+
+| Capa | Contenido |
+|---|---|
+| 1 · lejana | cielo del momento con nubes y las montañas más lejanas del valle en tonos azulados (escena completa) |
+| 2 · laderas | cerros y laderas con barrios de casas de ladrillo, techos de zinc y teja y, donde aplique, cables del metrocable subiendo |
+| 3 · ciudad | edificios de ladrillo y de vidrio, los lugares de la zona y el viaducto gris del metro con un tren |
+| 4 · frente | ciclorruta con bordes verdes, andén, guayacanes, postes de luz, bancas y una estación EnCicla pequeña |
+
+| Encargo | Zona | Lugares de la capa 3 |
+|---|---|---|
+| G-80 | `centro` | rascacielos con punta de aguja, palacio a cuadros blancos y negros, catedral de ladrillo, viaducto sobre la ciudad |
+| G-81 | `norte` (Bello) | chimeneas de fábrica textil, Cerro Quitasol, terminal de buses, casas de ladrillo |
+| G-82 | `sur` (Envigado, Sabaneta, Itagüí, La Estrella) | torres de las iglesias de los parques, fábricas bajas, montañas cercanas, más verde |
+| G-83 | `occidente` (Laureles, Floresta, Belén) | casas bajas con antejardín, glorietas arborizadas, estadio, Cerro Nutibara |
+
+| Momento | Archivo | Luz |
+|---|---|---|
+| Día | `dia` | cielo azul `#56c7ff`, sol alto |
+| Tarde | `tarde` | cielo naranja y rosado, sombras largas |
+| Noche | `noche` | azul noche, ventanas encendidas, faroles amarillos |
+| Alumbrados | `alumbrados` | noche de diciembre con luces de colores en árboles, río y puentes (solo centro y occidente) |
+
+### G-84 a G-89 · Fiestas (ambiente)
+- 16:9 · escena completa · `gNN_fie_<fiesta>.png`
+```
+[PROMPT BASE]
+Escena de fiesta en Medellín: [FIESTA]. Bicis EnCicla y ciclistas con casco en la escena. Vista tres cuartos, ambiente alegre y familiar. Escena completa.
+```
+
+| Encargo | Archivo | Fiesta |
+|---|---|---|
+| G-84 | `g84_fie_flores` | Feria de las Flores (agosto): desfile de silleteros con grandes silletas de flores a la espalda, gente aplaudiendo, bicis adornadas con flores |
+| G-85 | `g85_fie_alumbrados` | Navidad y Alumbrados (diciembre y enero): el río y sus puentes llenos de luces de colores de noche, familias paseando, bicis con luces |
+| G-86 | `g86_fie_velitas` | Noche de las Velitas (7 de diciembre): andenes y balcones con velitas y faroles de papel de colores, familias, una estación cerrando |
+| G-87 | `g87_fie_halloween` | Halloween (31 de octubre): niños con disfraces tiernos recorren una ciclorruta con sus familias; calabazas y dulces, sin nada de terror |
+| G-88 | `g88_fie_libro` | Fiesta del Libro y la Cultura (septiembre, Jardín Botánico): carpas de libros bajo el orquideorama, lectores, bicis parqueadas |
+| G-89 | `g89_fie_ciclovia` | Ciclovía de los domingos: avenida cerrada a los carros, familias en bici y en patines, gente trotando, conos naranjas y guías con chaleco |
+
+### G-90 a G-96 · Huevos de pascua del Metro (parte 10)
+- Si en *El Metro* ya existe la hoja de un personaje, úsala como referencia y no la repitas: solo adáptala al estilo de este documento.
+
+| Encargo | Archivo | Qué dibujar | Formato |
+|---|---|---|---|
+| G-90 | `g90_per_rosalba_hoja` + 3 retratos | Rosalba, conductora del Metro de unos 60 años que manejó el primer tren de 1995: canas #dcd8d0, uniforme azul #12446c con franja #1C5C9C, pañoleta y termo de tinto | como G-01 |
+| G-91 | `g91_per_nieta_hoja` + 3 retratos | La nieta de Rosalba, 16 años: chaqueta azul, morral y tenis blancos; con casco, aprendiendo a montar en bici EnCicla | como G-01 |
+| G-92 | `g92_per_efrain_hoja` | Don Efraín, de unos 65 años, del Puesto de Control del Metro: chaqueta gris #5a6470 y audífonos de radio | hoja 16:9 |
+| G-93 | `g93_obj_arepas_marleny` | Doña Marleny, de unos 55 años, con ruana roja #c8201f, en su puesto de arepas con parrilla de carbón | perfil, magenta |
+| G-94 | `g94_veh_alimentador` | Bus alimentador del metro, blanco con franja azul #1C5C9C y sin texto, con Wílmar al volante (unos 40 años, piel #8a5a3b, camisa blanca, gorra azul) | perfil, magenta |
+| G-95 | `g95_esc_primer_tren` | 4:20 a. m. frente a la estación Niquía del metro: neblina, faroles amarillos, cielo azul oscuro que empieza a aclarar; Rosalba, con su termo, saluda a Wilson que pasa en el camión de balance | 16:9, escena |
+| G-96 | `g96_esc_ultima_vuelta` | 10 p. m.: el último tren pasa por el viaducto; abajo, Santi recibe la última bici del día y saluda a Rosalba, que se asoma desde la cabina; luces de la ciudad | 16:9, escena |
+
+### G-100 a G-115 · Escenas de la historia “Un día del valle”
+- 16:9 · escena completa · `gNN_esc_dia<NN>.png` (por ejemplo `g100_esc_dia01.png`).
+- La descripción de cada escena la escribe el Guionista en **H-80**. Sin ella, usa la línea de la tabla.
+```
+[PROMPT BASE]
+Escena de historia, viñeta a pantalla completa: [DESCRIPCIÓN DE H-80]. Personajes idénticos a sus hojas adjuntas. Vista tres cuartos, luz según la hora. Escena completa.
+```
+
+| Encargo | Hora · lugar | Momento |
+|---|---|---|
+| G-100 | 4:00 a. m. · Casa EnCicla | Don Rubén arma las tulas a la luz de una lámpara |
+| G-101 | 4:45 a. m. · Floresta | Santi espera la tula frente a su estación todavía cerrada |
+| G-102 | 4:50 a. m. · Terminal del Norte | Wilson enciende el camión de balance |
+| G-103 | 5:30 a. m. · Sala de control | Cata abre el mapa: el valle amanece en rojo y azul |
+| G-104 | 6:30 a. m. · Taller, Aranjuez | Don Jairo escucha una cadena seca |
+| G-105 | 7:15 a. m. · Belén | Doña Luz frena en el semáforo en rojo en plena hora pico |
+| G-106 | 9:00 a. m. · Bodega, Guayabal | Yuli revisa que el pedido salga completo |
+| G-107 | 10:30 a. m. · Envigado | Ing. Paola revive un tótem apagado |
+| G-108 | 11:30 a. m. · Zona Envigado | Kevin llega al relevo de almuerzo |
+| G-109 | 12:30 p. m. · Laureles | Maryi pone a bailar a toda una estación |
+| G-110 | 2:00 p. m. · Un parque de Manrique | Jhon rescata una bici abandonada |
+| G-111 | 3:00 p. m. · Belén | Doña Marta y la brigada del mes dejan brillando el habitáculo |
+| G-112 | 6:15 p. m. · Corredor UdeA–Hospital Infantil | carrera contra las 7 p. m., cuando terminan las eléctricas |
+| G-113 | 8:59 p. m. · Floresta | el último préstamo del día |
+| G-114 | 10:00 p. m. · Cierre | todas las bicis en su anclaje; Don Rubén recoge las tulas |
+| G-115 | Domingo · Ciclovía | epílogo: los 15 años de EnCicla, todo el reparto pedaleando junto |
+
+### G-120 a G-124 · Arte clave
+| Encargo | Archivo | Relación | Qué dibujar |
+|---|---|---|---|
+| G-120 | `g120_clave_portada_vertical.png` | 9:16 | Los 12 personajes en una ciclorruta del valle al atardecer, Santi y Doña Luz al frente con bicis EnCicla, el viaducto del metro y las montañas detrás, guayacanes. Tercio superior más limpio: ahí va el título |
+| G-121 | `g121_clave_portada_horizontal.png` | 16:9 | La misma composición en horizontal; tercio izquierdo más limpio para el título |
+| G-122 | `g122_clave_compartir.png` | 16:9 | Doña Luz y Santi pedalean juntos hacia la cámara por una ciclorruta con el valle detrás y mucho cielo (la recorto a 1200×630) |
+| G-123 | `g123_clave_icono.png` | 1:1 | Ícono de la app: una bici EnCicla de tres cuartos sobre un círculo verde claro, fondo azul oscuro liso, formas muy simples; debe entenderse a 48 px |
+| G-124 | `g124_clave_carga.png` | 9:16 | Pantalla de carga: amanecer sobre el valle visto desde una ladera, la ciudad encendiéndose y un ciclista subiendo |
+
+---
+
+# 7 · Encargos de ChatGPT (C)
+
+### 7.0 Prompt base de ChatGPT (pégalo al inicio de cada encargo)
+```
+Estilo "Juega EnCicla": pixel art estricto de videojuego de 16 bits. Contorno de 1 píxel #0a1424, 2 o 3 tonos por color, luz desde arriba a la izquierda, máximo 32 colores de esta paleta: #0e2d55, #0a2342, #143a6b, #9bd341, #c4ec7c, #5e9a1e, #4a9a2c, #ffffff, #f4efd8, #ffc93c, #ff6b5a, #56c7ff, #c0623b, #9aa7b8, #d6dde6 y tonos de piel naturales. Fondo magenta plano #FF00FF, sin sombras ni degradados; el magenta no aparece dentro del dibujo. Sin texto, letras, números, logos ni marcas. Hoja de 1024×1024 en una cuadrícula de 4×4 celdas iguales de 256 px: cada elemento centrado en su celda, ocupando cerca del 80 % y sin tocar los bordes. Todo a la misma escala dentro de la hoja.
+```
+- **Sprites cenitales:** agrega `Vista cenital exacta a 90°, como un mapa. Cada personaje o vehículo mira hacia arriba (norte).`
+- **Animaciones:** cada fila es un personaje y sus 4 celdas son los 4 cuadros del ciclo, en orden.
+- Con Python, revisa que el fondo sea `#FF00FF` exacto, recorta las celdas si hace falta y nombra los archivos.
+
+### C-00 · Prueba
+- `c00_ico_prueba.png` · 1:1 · un solo ícono: **el oficio Anfitrión** (un habitáculo pequeño con mostrador y una bici EnCicla al lado), fondo magenta.
+
+### C-01 a C-03 · Íconos y logros
+| Encargo | Archivo | Celdas (en orden, de izquierda a derecha y de arriba abajo) |
+|---|---|---|
+| C-01 | `c01_ico_oficios.png` | usuario (bici EnCicla de perfil) · anfitrión (habitáculo con bici) · mecánico (llave cruzada con un rin) · bodega (caja con una llanta) · apoyo (morral con llaves) · pausas activas (persona estirando los brazos con notas musicales) · limpieza (escoba y rociador con destellos) · técnico (tótem con un rayo) · rescate (bici con una flecha curva de regreso) · balance (camión con bicis) · monitoreo (pantalla con mapa y puntos) · supervisor (radio y tabla con ✓) · modo libre (pin sobre montañas) · multijugador (dos bicis lado a lado) · reto QR (cuadro QR estilizado) · historia (libro abierto con una bici) |
+| C-02 | `c02_ico_acciones.png` | prestar (bici saliendo del anclaje con flecha) · devolver (bici entrando con flecha) · renovar (reloj con flecha circular) · timbre (campana de bici) · mapa (mapa plegado) · destino (pin de GPS) · foto (cámara) · pausa (dos barras) · controles (joystick) · música (nota) · gráficos (cubo de píxeles) · tutor (globo de diálogo con un bombillo) · compartir (tres nodos unidos) · energía (batería con rayo) · postal (sello postal con montañas) · alerta (triángulo con !) |
+| C-03 | `c03_ico_logros_1.png` · `c03_ico_logros_2.png` | una **medalla redonda** por logro, con un símbolo grande en el centro: los 21 logros de 9.8, más *Saludo de alimentador* y *Frenada al centímetro* (10.10). Borde verde claro sobre azul oscuro; las secretas, borde ámbar |
+
+### C-10 a C-16 · Sprites cenitales
+| Encargo | Archivo | Contenido |
+|---|---|---|
+| C-10 | `c10_spr_bicis.png` | bicis solas, estacionadas: EnCicla mecánica · EnCicla eléctrica · propia roja · propia amarilla · propia negra · propia azul cielo · EnCicla con llanta pinchada · sin cadena · sin sillín · tirada en el piso, de lado · con un tinto en la canasta · adornada con flores · con luces de navidad · bici de niño · triciclo de carga · bici de carreras |
+| C-11 | `c11_spr_ciclistas_1.png` a `_4.png` | personajes **en bici EnCicla**, 4 cuadros de pedaleo por fila. Hoja 1: Doña Luz, Santi, Don Jairo, Yuli · hoja 2: Kevin, Maryi, Doña Marta, Paola · hoja 3: Jhon, Wilson, Cata, Don Rubén · hoja 4: cuerpos base del jugador (mujer joven, hombre joven, niño o niña, persona mayor) con ropa neutra |
+| C-12 | `c12_spr_caminando_1.png` a `_4.png` | los mismos personajes **a pie**, 4 cuadros de caminar por fila, en el mismo orden de hojas |
+| C-13 | `c13_spr_acciones.png` | fila 1: Jhon pedalea con una mano y lleva otra bici de la otra · fila 2: Doña Marta barre · fila 3: Maryi baila (brazos arriba, a la izquierda, a la derecha, abajo) · fila 4: Santi entrega una bici |
+| C-14 | `c14_spr_peatones_1.png` a `_4.png` | 16 peatones, 4 cuadros de caminar cada uno: estudiante con morral · oficinista con maletín · señora con bolsas de mercado · abuelo con bastón · niña con casco y patines · vendedor de frutas con carrito · turista con cámara · persona trotando · mamá con coche de bebé · persona en silla de ruedas · vendedor de tintos con termo · agente de tránsito con chaleco #c7e000 · perro · gato · palomas · pareja caminando |
+| C-15 | `c15_spr_vehiculos.png` | carro rojo · carro blanco · carro gris · carro azul · taxi amarillo · moto con conductor y casco · moto con parrillero y cascos · buseta urbana · alimentador del metro (blanco con franja azul #1C5C9C) · bus articulado verde azulado #0E6F76 · camión de balance EnCicla con bicis en la plataforma · camión de reparto · patrulla de tránsito · ambulancia · volqueta · chiva de colores (fiestas). Escala común: una bici mide un cuarto de un carro |
+| C-16 | `c16_veh_perfil.png` | de **perfil**, para la panorámica: carro · taxi amarillo · moto · buseta · alimentador · bus articulado · tren del metro de 2 vagones (azul #1C5C9C) · cabina de metrocable (verde lima #B8CF40) |
+
+### C-20 a C-22 · Ciudad: texturas, vegetación y fachadas
+| Encargo | Archivo | Contenido |
+|---|---|---|
+| C-20 | `c20_tex_<material>.png` (una imagen de 512×512 por material) | Texturas que **se repiten sin costuras** por los cuatro lados: `asfalto` · `asfalto_linea` (línea blanca discontinua) · `cebra` · `ciclorruta` (verde #4a9a2c, bordes #9bd341) · `anden_baldosa` · `anden_ladrillo` · `adoquin` · `pasto` · `pasto_flores` · `tierra` · `rio` (agua del río canalizado) · `quebrada` · `viaducto` (vista superior con rieles) · `techo_losa` · `techo_teja` · `techo_zinc` · `arena` · `cancha` · `madera` · `piso_estacion` |
+| C-21 | `c21_spr_vegetacion.png` | vista cenital con sombra suave hacia abajo a la derecha, dentro de la celda: guayacán amarillo florecido · guayacán rosado florecido · ceiba · mango · palma · yarumo · bambú · arbusto · jardín de flores · matera · árbol pequeño de andén · seto · flores de Moravia · árbol de navidad iluminado · árbol con alumbrados · tronco cortado |
+| C-22 | `c22_fac_<tipo>.png` (512×512 cada una) | Fachadas para los edificios 3D y la panorámica, repetibles en horizontal y vertical: `ladrillo_ventanas` · `apartamentos_blancos` · `torre_vidrio` · `casa_colores_balcon` · `local_persiana` (sin letreros) · `fabrica_ladrillo` · `iglesia_ladrillo` · `casa_ladera` (ladrillo, zinc y rejas) · `institucional_gris` · `muro_grafiti` (figuras, sin letras) · `muro_enredadera` · `garaje` |
+
+### C-30 a C-38 · Objetos de minijuegos (una hoja de 4×4 por oficio)
+| Encargo | Archivo | Objetos |
+|---|---|---|
+| C-30 | `c30_obj_mecanico.png` | llanta pinchada · parche · bomba de aire · llave inglesa · destornillador · cadena · aceitera · pastilla de freno · sillín · pedal · rin con radios · neumático (cámara de aire) · guaya de freno · manubrio · luz delantera · luz trasera |
+| C-31 | `c31_obj_bodega.png` | 6 cajas de repuestos con pictograma y color propio (llantas azul, cadenas verde, frenos ámbar, sillines coral, luces cielo, herramientas gris) · estantería vacía · estantería llena · carretilla · estiba · cinta de embalar · tabla de inventario · caja abierta · caja dañada · marco de bici nuevo · rueda nueva |
+| C-32 | `c32_obj_tecnico.png` | tótem cerrado · tótem abierto por dentro · anclaje con LED verde · rojo · ámbar · apagado · celular de estación sano · con la pantalla rota · power bank lleno · vacío · cable USB · tarjeta electrónica · fusible · tablero eléctrico · multímetro · cinta aislante |
+| C-33 | `c33_obj_anfitrion.png` | tula (maletín azul oscuro) · llavero de la estación · celular de préstamo · tarjeta de transporte azul sin logo ni texto · carné · sello · planilla · radio · linterna · sombrilla · botiquín · vaso de tinto · reloj de pared · candado · cono · campana de mostrador |
+| C-34 | `c34_obj_limpieza.png` | escoba · trapero · paño · bolsa de basura · balde con agua · rociador · guantes · recogedor · mancha de barro · polvo · telaraña · chicle · hojas secas · vaso desechable · papel arrugado · destello de limpio |
+| C-35 | `c35_obj_pausas.png` | parlante portátil · flecha de baile arriba · abajo · izquierda · derecha (verde claro) · botella de agua · toalla · estrella de “perfecto” · nota musical · colchoneta · banda elástica · reloj · corazón · confeti · brillo · tenis |
+| C-36 | `c36_obj_rescate_balance.png` | bici abandonada en el pasto · amarrada a un poste · con hojas encima · en un charco · volteada · eslinga · rampa del camión · plataforma con 6 bicis · plataforma vacía · anclaje rápido · conos · cinta de seguridad · chaleco · guantes · linterna · mapa doblado |
+| C-37 | `c37_obj_monitoreo.png` | marcador de estación vacía (rojo) · normal (verde) · llena (azul) · cerrada (gris) · eléctrica (con rayo) · con anfitrión · automática · pantalla pequeña · alerta · flecha de ruta · camioncito · reloj · gráfico de barras sin números · audífonos · taza de tinto · teclado |
+| C-38 | `c38_obj_ciudad.png` | tinto en taza · termo · arepa · mango biche en vaso · empanada · salpicón · botella de agua · cámara de fotos · casco · guantes · hoja verde (coleccionable) · postal · candado de la bici propia · mapa · gafas de sol · paraguas |
+
+### C-40 y C-41 · Interfaz y mapa
+| Encargo | Archivo | Contenido |
+|---|---|---|
+| C-40 | `c40_ui_botones.png` · `c40_ui_marcos.png` | botón principal verde (normal, presionado, apagado) · botón secundario azul · botón redondo · marco de diálogo con espacio para retrato (esquinas y bordes por separado, para estirarlo) · globo de diálogo · pastilla de información · barra de progreso vacía y llena · interruptor · casilla con ✓ · estrella vacía y llena · corazón · reloj de préstamo · dedo de toque · flecha de navegación |
+| C-41 | `c41_ui_mapa.png` | pin de destino tipo GPS verde · flecha del jugador · marcadores de estación por tipo (con anfitrión, automática, eléctrica, mixta) y por estado (vacía, normal, llena, cerrada) · marcador de lugar con postal · marcador de misión · marcador de amigo · marco redondo del minimapa · rosa de los vientos sin letras |
+
+### C-50 · Decoraciones de fiestas (cenitales)
+- `c50_dec_fiestas_1.png` y `_2.png`: silleta de flores · macetas de flores · guirnalda de luces · árbol con alumbrados · farol de papel · velita encendida · banderín de Colombia (amarillo, azul y rojo) · banderín de Antioquia (blanco y verde) · calabaza · telaraña de adorno · globos · corazones · libros apilados · carpa de feria · fuegos artificiales · cono de ciclovía · confeti · estrella de navidad · pesebre pequeño · ramo de palma · ramo de flores · caja de regalo · serpentinas · bandera de cuadros de llegada.
+
+### C-60 · Marcadores de lugares para el mapa
+- `c60_ico_lugares_1.png` y `_2.png`: un marcador redondo por tipo de lugar, en este orden: iglesia · terminal · cerro con antena · campus · jardín de Moravia · orquideorama · cubos rojos (Explora) · estadio · escultura redonda · rascacielos de aguja · teatro escalonado · parque con árboles · pie descalzo · postes de luz · Casa EnCicla · pueblito en el cerro · fábrica de acero oxidado · avión · escalera eléctrica · rocas oscuras (biblioteca) · palacio a cuadros · catedral de ladrillo · rueda de Chicago · coliseo · casa de la memoria · tres cruces · chimeneas · hospital · casa blanca con jardín · lago con árboles · nacimiento del río · aeropuerto.
+
+### C-70 y C-71 · Huevos de pascua del Metro
+| Encargo | Archivo | Contenido |
+|---|---|---|
+| C-70 | `c70_obj_metro.png` | termo de tinto de Rosalba · taza de tinto humeante · pañoleta · gorra azul de Wílmar · arepa en la parrilla · radio con audífonos · tren del metro cenital, 2 vagones azul #1C5C9C · cabina de metrocable cenital #B8CF40 · tranvía cenital #59AB42 · alimentador cenital · medalla “La última vuelta” (taza de tinto) · “Antes del primer tren” (luna y tren) · “Ni una gota” (taza en equilibrio) · “Punta a punta” (dos pines) · “Ciudad colgante” (cabina de cable) · “Turno de noche” (luna y bici) |
+| C-71 | `c71_spr_metro.png` | 4 cuadros por fila: Rosalba caminando con su termo · la nieta en bici EnCicla con casco · Wílmar caminando · Doña Marleny volteando arepas |
+
+### C-99 · Consolidación final
+Cuando todas las IA terminen, ChatGPT junta todas las entregas y arma las **tres versiones finales** (12.5).
+
+---
+
+# 8 · Encargos del Guionista (H)
+
+**Reglas de escritura**
+- Español de Colombia con sabor paisa, cálido y con humor. Frases cortas. Una idea por frase.
+- Respeta los límites de caracteres (incluyen espacios). Los textos se leen en un celular, sobre el juego.
+- Usa solo los datos de la parte 9. Lo que no esté, márcalo *por confirmar*; no lo inventes.
+- Cada encargo se entrega legible (`.md`) y en JSON válido (`.json`), en UTF-8.
+
+| Encargo | Archivo | Qué escribir |
+|---|---|---|
+| **H-00** | `h00_prueba.md` | Prueba: una frase (máx. 120) de Doña Luz, Santi y Don Rubén ante un usuario que devuelve la bici diez minutos tarde |
+| **H-01** | `h01_biblia.md` | Biblia narrativa (1 página): tono, temas (cuidado, puntualidad, convivencia vial, orgullo del oficio, la ciudad), glosario paisa permitido (mijo, mija, parce, ¿sí o qué?, bacano, de una, pues, ome, ¡Ave María!, listo pues, a la orden, camellar, tinto) y palabras prohibidas (groserías, insultos, burlas a barrios) |
+| **H-02** | `h02_voces.json` | Ficha de voz de los 12 personajes: saludo, muletilla, cómo celebra, cómo regaña, cómo consuela y una frase típica (máx. 80 cada una) |
+| **H-10** | `h10_dia_del_valle.json` | Historia principal **“Un día del valle”**: 16 capítulos (los de G-100 a G-115, mismo orden y horas) con este formato ↓ |
+| **H-20** | `h20_oficios.json` | Un texto por cada uno de los **22 turnos** (9.5), con el formato del juego `{ "t", "a", "d" }`: título (máx. 28), antes del turno (máx. 220) y después de aprobarlo (máx. 160). Mejora los textos actuales (Anexo A) sin cambiar sus datos. Además, propón **2 turnos nuevos por oficio** (nombre, horario y texto), marcados como *propuesta* |
+| **H-30** | `h30_ciudad.json` | 96 frases de la ciudad viva (máx. 60): 12 por contexto: mañana, hora pico, mediodía, lluvia, noche, ciclovía del domingo, fiesta y cerca de una estación. Hablan peatones, usuarios, vendedores y conductores amables |
+| **H-40** | `h40_logros.json` | 12 logros nuevos para el contenido nuevo: nombre (máx. 24) y descripción (máx. 60); revisa también los nombres actuales (9.8) |
+| **H-50** | `h50_tutor.json` | Compañero del tutorial: 3 consejos por oficio y 3 del modo libre (máx. 80) |
+| **H-60** | `h60_fiestas.json` | Por cada fiesta de 9.6: título, frase de un personaje (máx. 140) y misión sugerida (máx. 90) |
+| **H-70** | `h70_metro.json` | Cameos del Metro (parte 10): diálogos (máx. 160) de Rosalba, la nieta, Don Efraín, Doña Marleny y Wílmar para cada idea de 10.10, usando las frases guardadas donde encajen; y la minihistoria **“La nieta aprende a pedalear”** en 5 escenas con el formato de H-10 |
+| **H-80** | `h80_guion_visual.json` | Para cada capítulo de H-10, la descripción de su escena para Gemini (máx. 400): encuadre, personajes, acción, hora, luz y detalles del lugar |
+
+**Formato de H-10** (y de la minihistoria de H-70):
+```json
+{
+  "id": "dia-01",
+  "hora": "4:00 a. m.",
+  "lugar": "Casa EnCicla",
+  "oficio": "supervisor",
+  "titulo": "Las tulas de las cuatro",
+  "escena": "Qué pasa, para el guion visual (máx. 300)",
+  "antes": "Lo que dice el personaje antes de jugar (máx. 220)",
+  "despues": "Al aprobar (máx. 160)",
+  "fallo": "Si no aprueba (máx. 120)",
+  "npc": ["Frase de la ciudad (máx. 60)", "…", "…"],
+  "consejo": "Seguridad vial o cultura ciudadana (máx. 90)"
+}
+```
+Los valores de `oficio` son: `usuario`, `anfitrion`, `mecanico`, `bodega`, `apoyo`, `pausas`, `limpieza`, `tecnico`, `rescate`, `balance`, `monitoreo` y `supervisor`.
+
+---
+
+# 9 · EnCicla y el valle: datos para crear
+
+## 9.1 Horarios (como están en el juego)
+| Día | Préstamo | Devolución | Personal |
+|---|---|---|---|
+| Lunes a viernes | 5:30 a. m. – 8:59 p. m. | hasta las 10:00 p. m. | el supervisor arma las tulas a las 4 a. m.; el anfitrión recibe la tula a las 5 a. m. |
+| Sábado | 6:30 a. m. – 6:59 p. m. | hasta las 8:00 p. m. | anfitriones en dos turnos: 6:00 a. m. – 1:30 p. m. y 1:00 p. m. – 8:30 p. m.; supervisores desde 1 hora antes hasta 30 minutos después |
+| Domingos y festivos | 8:00 a. m. – 4:00 p. m. | hasta las 4:00 p. m. | **solo estaciones automáticas**; los anfitriones descansan |
+| Bicis eléctricas | hasta las 7:00 p. m. | — | las estaciones solo eléctricas cierran a las 8:00 p. m. |
+
+## 9.2 Préstamo en el modo libre
+- Con bici de EnCicla: **una hora** por préstamo; se **renueva** en cualquier estación. El reloj del juego corre más despacio.
+- Renovar o devolver tarde gasta un **strike**: la cuenta empieza con **10**. Sin strikes, cada retraso trae una **suspensión** de 3, 7, 15, 30 y 60 días.
+- Si cierra el sistema y no devolviste la bici, también cuenta como retraso.
+- **Bici abandonada:** si la dejas sola, un anfitrión, un funcionario o un usuario puede reportarla. El **reporte negativo** queda para siempre.
+- Con **bici propia** el modo libre dura las 24 horas.
+
+## 9.3 Estaciones y corredores eléctricos
+- **133 estaciones** en el juego: con anfitrión (manuales), automáticas, eléctricas y mixtas.
+- Corredores de bici eléctrica (salen de una estación mixta y llegan a una solo eléctrica):
+
+| Corredor | Desde (mixta) | Hasta (solo eléctricas) |
+|---|---|---|
+| 1 | Floresta | C4TA |
+| 2 | UdeA | Hospital Infantil |
+| 3 | San Cayetano (Sabaneta) | La Estrella |
+| 4 | Pascual Bravo | Hospital Pablo Tobón Uribe |
+
+## 9.4 El valle
+Diez territorios, de norte a sur: **Barbosa, Girardota, Copacabana, Bello, Medellín, Itagüí, Envigado, Sabaneta, La Estrella y Caldas**. El río Medellín nace en el Alto de San Miguel (Caldas) y atraviesa el valle de sur a norte.
+
+## 9.5 Oficios
+| Oficio | Personaje | Qué hace en el juego | Turnos en el juego (entre semana) |
+|---|---|---|---|
+| Usuario | Doña Luz | presta, viaja y devuelve antes de la hora; en el modo libre recorre el valle | Primer préstamo · Dos viajes · Día de ciclista |
+| Anfitrión | Santi | recibe la tula, abre la estación, presta y recibe bicis, ajusta sillines y cierra | Turno 1 · Apertura (5:00 a. m. – 1:30 p. m.) · Turno 3 · Cierre (1:30 p. m. – 10:30 p. m.) |
+| Mecánico | Don Jairo | repara bicis contra el reloj en el taller | Equipo de reparación · Equipo de ensamble (8:00 a. m. – 5:00 p. m.) |
+| Bodega | Yuli | clasifica repuestos y despacha pedidos completos | Turno intermedio (8:00 a. m. – 5:00 p. m.) |
+| Apoyo | Kevin | recorre su zona: abre estaciones, cubre relevos y hace inventarios | Turno 1 · Apertura y relevos (5:00 a. m. – 1:30 p. m.) · Turno 3 · Relevos y cierre (1:30 p. m. – 10:30 p. m.) |
+| Pausas activas | Maryi | visita estaciones a mitad de turno y pone a todos a moverse con un juego de ritmo | Turno intermedio (9:00 a. m. – 6:00 p. m.) |
+| Limpieza | Doña Marta | una vez al mes, dos supervisores y el anfitrión limpian el habitáculo | Brigada mensual (9:00 a. m. – 5:00 p. m.) |
+| Técnico | Ing. Paola | arregla tótems, luces de los anclajes, celulares y power banks | Turno intermedio (8:00 a. m. – 5:00 p. m.) |
+| Rescate | Jhon | encuentra bicis abandonadas y las devuelve llevándolas a mano | Turno de rescate (8:00 a. m. – 5:00 p. m.) |
+| Balance | Wilson | mueve bicis en camión de las estaciones llenas a las vacías, por las vías | Turno de apertura (4:00 a. m. – 1:00 p. m.) · Camión especial de 40 bicis (9:00 a. m. – 6:00 p. m.) · Turno de cierre (2:00 p. m. – 11:00 p. m.) |
+| Monitoreo | Cata | vigila el mapa desde la sala de control (rojo vacía, azul llena) y despacha | Sala de control (inventario cada hora) · Atención al cliente (llamadas e inscripciones) |
+| Supervisor | Don Rubén | arma y entrega las tulas, abre y cierra el sistema y coordina | Turno de apertura (4:00 a. m. – 12:00 m.) · Turno intermedio (9:00 a. m. – 6:00 p. m.) · Turno de cierre (2:00 p. m. – 11:00 p. m.) |
+
+Los sábados, anfitriones y apoyo trabajan de 6:00 a. m. a 1:30 p. m. y de 1:00 p. m. a 8:30 p. m.; los supervisores, de 5:00 a. m. a 1:00 p. m., de 9:00 a. m. a 6:00 p. m. y de 1:00 p. m. a 9:00 p. m. En total hay **22 turnos**, uno por cada texto de historia del Anexo A.
+
+## 9.6 Fiestas del calendario
+| Fiesta | Fecha en el juego |
+|---|---|
+| Año Nuevo | 1 de enero |
+| Semana Santa | del Domingo de Ramos al Domingo de Pascua |
+| Día del Niño | último sábado de abril |
+| Día de la Madre | segundo domingo de mayo |
+| Día del Padre | tercer domingo de junio |
+| Independencia de Colombia | 19 y 20 de julio |
+| Feria de las Flores | 10 días desde el primer viernes de agosto |
+| Independencia de Antioquia | 11 de agosto |
+| Fiesta del Libro y la Cultura | 10 días desde el segundo viernes de septiembre |
+| Amor y Amistad | tercer sábado de septiembre |
+| Halloween | 24 al 31 de octubre |
+| Noche de las Velitas | 7 y 8 de diciembre |
+| Navidad y Alumbrados | 1 de diciembre al 7 de enero |
+
+## 9.7 Lugares
+Los 45 lugares con postal están en la tabla de G-30 a G-74. Hay además una **postal secreta** que no aparece en el álbum hasta encontrarla pedaleando.
+
+## 9.8 Logros actuales
+Primer pedalazo · ¡Aprobado! · Turno perfecto · En racha · Turista paisa · Conocedor del valle · Álbum completo · Explorador secreto · Ciclorrutero · Pulmón verde · 10 km pedaleados · Buena convivencia · Todero EnCicla · Supervisor de corazón · Más rápido que el bot · Pedalear en compañía · Retador · Maquinista secreto · Jardinero de Moravia · Bici dorada · De Caldas a Copacabana.
+
+## 9.9 Historia de EnCicla (lo que sabemos)
+> Datos de prensa y fuentes públicas. **Por confirmar** con la información oficial que entregará el autor.
+
+- **2011 · El piloto.** La idea nació entre estudiantes de EAFIT. El piloto conectó estaciones del metro con universidades por los corredores de las carreras 65 y 70; sus primeros usuarios fueron estudiantes de la Universidad Nacional y de la UPB, y visitantes del Parque Arví. Un registro fecha el inicio el **10 de octubre de 2011**, con seis estaciones manuales; las fuentes hablan de entre 105 y 145 bicis.
+- **Quiénes lo hacen posible.** El Área Metropolitana del Valle de Aburrá lo impulsa y lo opera; EAFIT apoyó el piloto.
+- **Crecimiento.** Pasó de Medellín a los diez territorios del valle.
+- **Bicis eléctricas.** Llegaron con un piloto posterior (fecha por confirmar) y hoy tienen corredores propios (9.3).
+- **Cifras.** Cambian según la fecha y la fuente: una fuente anterior habla de 101 estaciones, 2.000 bicis y 112.363 usuarios activos; una publicación reciente, de 156 estaciones y más de 150.000 usuarios registrados.
+- **2026 · 15 años.** El aniversario es el telón de fondo de “Un día del valle”.
+
+Fuentes: [EnCicla en Wikipedia](https://en.wikipedia.org/wiki/EnCicla) · [Portafolio: de piloto a referente, 15 años](https://www.portafolio.co/contenido-patrocinado/de-piloto-a-referente-encicla-cumple-15-anos-en-el-valle-de-aburra-505236) · [Alcaldía de Medellín: diez años de EnCicla](https://www.medellin.gov.co/es/sala-de-prensa/noticias/con-los-recorridos-turisticos-encicla-en-el-centro-de-medellin-es-un-parche-se-celebran-diez-anos-del-sistema-de-bicicletas/) · [Telemedellín](https://telemedellin.tv/?p=200223) · [El Colombiano: universitarios estrenarán bicis públicas](https://www.elcolombiano.com/historico/universitarios_estrenaran_145_bicis_publicas-IYEC_153029)
+
+## 9.10 Datos que llegarán
+Estaciones con su dificultad por turno, organigrama, horarios por zona, festividades propias de EnCicla y cantidades (bicis, estaciones, personal). Hasta entonces, el juego usa los datos de esta parte.
+
+---
+
+# 10 · Huevos de pascua del Metro (fragmentos guardados)
+
+## 10.1 El juego hermano
+*El Metro* es el videojuego del Metro de Medellín del mismo autor. Usa el mismo mapa real del valle. Su historia se llama **“La última vuelta”**.
+- Web: https://juanfeliperico369-stack.github.io/MetroZero/
+- Repositorio: `juanfeliperico369-stack/MetroZero`
+
+## 10.2 Personajes
+| Personaje | Quién es | Colores |
+|---|---|---|
+| **Rosalba** (~60) | conductora del primer tren, en 1995 | uniforme azul `#12446c` con franja `#1C5C9C`, pañoleta, termo de tinto, canas `#dcd8d0` |
+| **La nieta** (16) | nieta de Rosalba | chaqueta azul, morral, tenis blancos |
+| **Don Efraín** (~65) | Puesto de Control | chaqueta gris `#5a6470`, audífonos de radio |
+| **Doña Marleny** (~55) | vende arepas en Santo Domingo | ruana roja `#c8201f` |
+| **Wílmar** (~40) | conductor de alimentador | piel `#8a5a3b`, camisa blanca, gorra azul |
+| Agente de tránsito | — | chaleco `#c7e000` |
+
+## 10.3 “La última vuelta”: capítulos
+Niquía, 4:30 a. m. · El Puesto de Control · Santo Domingo mira al cielo · Los que alimentan la red · Wílmar presta el timón · Belén – Aranjuez · El articulado · Ayacucho sobre llantas · La hora pico · La última vuelta · Epílogo.
+
+## 10.4 Frases guardadas
+- “Mija, despierte. El primer tren sale a las cuatro y media y la ciudad no espera a nadie.”
+- “Nadie aplaude al conductor, pero todos llegan.”
+- “Los trenes son como los nietos: hay que mandarlos para donde es.”
+- “Usted tiene mano.”
+- “El valle se ve como un pesebre encendido.”
+- “Wílmar pitó dos veces al despedirse.”
+- “Y ojo con las motos, mija. Esas se cuelan hasta por el ojo de una aguja.”
+- “Sobrevivir a la hora pico es el diploma no oficial…”
+- “…sin regar ni una gota.”
+- “La red no es de hierro, mija. Es de la gente que la cuida. Cultura Metro, ¿sí o qué?”
+- “Tranquila, mija. Nadie nace aprendido. Otra vez.”
+
+## 10.5 Logros de *El Metro*
+Frenada al centímetro · Punta a punta · Ciudad colgante · Ni una gota (tinto en equilibrio) · La última vuelta (taza de tinto) · Turno de noche · Antes del primer tren.
+
+## 10.6 Colores de las líneas
+| Línea | HEX | Línea | HEX |
+|---|---|---|---|
+| A | `#1C5C9C` | H | `#EB318E` |
+| B | `#E38835` | L | `#8E612A` |
+| T (tranvía) | `#59AB42` | M | `#743D90` |
+| K | `#B8CF40` | P | `#EC343A` |
+| J | `#F6C538` | Metroplús 1 · 2 | `#0E6F76` · `#65A9AC` |
+
+## 10.7 Cultura Metro → Cultura EnCicla
+| Cultura Metro | Versión EnCicla |
+|---|---|
+| Respeta la línea amarilla | Respeta la ciclorruta y la cebra |
+| Deja salir antes de entrar | Cede el paso al peatón |
+| Cede la silla | Ayuda al que está aprendiendo |
+| Mantén limpio | Devuelve la bici limpia y a tiempo |
+
+## 10.8 Fechas
+| Fecha | Hito |
+|---|---|
+| 30 de noviembre de 1995 | inauguración del Metro |
+| 28 de febrero de 1996 | Línea B |
+| 7 de agosto de 2004 | Metrocable K |
+| 3 de marzo de 2008 | Línea J |
+| Febrero de 2010 | Línea L (Arví) |
+| 22 de diciembre de 2011 | Metroplús |
+| 2015–2016 | Tranvía de Ayacucho |
+| 2016 | Línea H |
+| Febrero de 2019 | Línea M |
+| 10 de junio de 2021 | Línea P |
+| 30 de noviembre de 2025 | 30 años del Metro |
+| Futuro | Metro de la 80 |
+
+## 10.9 Lo que ya existe en *Juega EnCicla*
+**Maquinista secreto:** tres timbrazos seguidos debajo de una estación del metro abren el minijuego “¡Maquinista del Metro!” y el logro *Maquinista secreto*.
+
+## 10.10 Ideas de huevos de pascua
+| # | Idea | Dónde y cómo se activa | Piezas |
+|---|---|---|---|
+| 1 | **Antes del primer tren** | modo libre, de 4:00 a 4:29 a. m., cerca de la estación Niquía: Rosalba con su termo dice la frase del primer tren. Logro *Antes del primer tren* | G-90, G-95, C-71, H-70 |
+| 2 | **Rosalba en la cabina** | en el Maquinista secreto, Rosalba acompaña: “Usted tiene mano” al ganar y “Tranquila, mija. Nadie nace aprendido. Otra vez.” al perder | G-90, H-70 |
+| 3 | **Ni una gota** | modo libre: llevar un tinto en la canasta de una estación a otra sin chocar ni frenar en seco. Logro *Ni una gota* | C-10, C-70 |
+| 4 | **Wílmar pita dos veces** | a veces un alimentador pasa y pita dos veces; si le respondes con el timbre, logro *Saludo de alimentador* | G-94, C-15, C-03 |
+| 5 | **Las arepas de Doña Marleny** | en las mañanas, cerca de Santo Domingo: comprar una arepa recupera energía | G-93, C-70 |
+| 6 | **La red no es de hierro** | en Monitoreo, Don Efraín habla a veces por la radio (“Puesto de Control, ¿me copia?”); al terminar un turno perfecto aparece su frase | G-92, H-70 |
+| 7 | **Cumpleaños del Metro** | cada 30 de noviembre, banderines en el viaducto y un aviso: “El Metro cumple N años” | C-50 |
+| 8 | **Frenada al centímetro** | devolver la bici exacta en el centro del anclaje y a buena velocidad | C-03 |
+| 9 | **Punta a punta** | recorrer el valle de Niquía a La Estrella en una sola salida del modo libre | C-70 |
+| 10 | **Ciudad colgante** | visitar las tres zonas de cables (Santo Domingo, San Javier y Arví) | C-70 |
+| 11 | **Turno de noche** | pedalear con bici propia y luces entre las 11 p. m. y las 4 a. m. | C-70 |
+| 12 | **La última vuelta** | al terminar toda la historia: “Nadie aplaude al anfitrión, pero todos llegan.” y la medalla de la taza de tinto | G-96, C-70 |
+| 13 | **La nieta aprende a pedalear** | compañera opcional del tutorial del usuario y minihistoria de 5 escenas | G-91, C-71, H-70 |
+| 14 | **Metro de la 80** | vallas de obra por la carrera 80 y un trabajador que dice: “Algún día pasará por aquí” | C-14, H-70 |
+| 15 | **Código MetroZero** | escribir *MetroZero* como nombre en el creador desbloquea la pañoleta de Rosalba y el termo de tinto | C-70 |
+| 16 | **Juega El Metro** | en los créditos: “¿Te gustan los trenes? Juega El Metro”, con el enlace | — |
+
+## 10.11 Fragmento de código listo para integrar
+```js
+/* Huevos de pascua de El Metro, el juego hermano. */
+const METRO_EGG = {
+  web: 'https://juanfeliperico369-stack.github.io/MetroZero/',
+  lineas: { A: '#1C5C9C', B: '#E38835', T: '#59AB42', K: '#B8CF40', J: '#F6C538', H: '#EB318E', L: '#8E612A', M: '#743D90', P: '#EC343A', MP1: '#0E6F76', MP2: '#65A9AC' },
+  gente: {
+    rosalba: { n: 'Rosalba', d: 'conductora del primer tren de 1995', uniforme: '#12446c', franja: '#1C5C9C', pelo: '#dcd8d0' },
+    nieta: { n: 'La nieta', d: '16 años, chaqueta azul, morral y tenis blancos' },
+    efrain: { n: 'Don Efraín', d: 'Puesto de Control', chaqueta: '#5a6470' },
+    marleny: { n: 'Doña Marleny', d: 'arepas en Santo Domingo', ruana: '#c8201f' },
+    wilmar: { n: 'Wílmar', d: 'conductor de alimentador', piel: '#8a5a3b' },
+    transito: { n: 'Agente de tránsito', chaleco: '#c7e000' }
+  },
+  frases: {
+    primerTren: 'Mija, despierte. El primer tren sale a las cuatro y media y la ciudad no espera a nadie.',
+    aplauso: 'Nadie aplaude al conductor, pero todos llegan.',
+    aplausoEnCicla: 'Nadie aplaude al anfitrión, pero todos llegan.',
+    nietos: 'Los trenes son como los nietos: hay que mandarlos para donde es.',
+    mano: 'Usted tiene mano.',
+    pesebre: 'El valle se ve como un pesebre encendido.',
+    motos: 'Y ojo con las motos, mija. Esas se cuelan hasta por el ojo de una aguja.',
+    red: 'La red no es de hierro, mija. Es de la gente que la cuida. Cultura Metro, ¿sí o qué?',
+    otraVez: 'Tranquila, mija. Nadie nace aprendido. Otra vez.',
+    control: 'Puesto de Control, ¿me copia?',
+    la80: 'Algún día pasará por aquí.'
+  },
+  capitulos: ['Niquía, 4:30 a. m.', 'El Puesto de Control', 'Santo Domingo mira al cielo', 'Los que alimentan la red', 'Wílmar presta el timón', 'Belén – Aranjuez', 'El articulado', 'Ayacucho sobre llantas', 'La hora pico', 'La última vuelta', 'Epílogo'],
+  logros: ['Antes del primer tren', 'Ni una gota', 'Saludo de alimentador', 'Frenada al centímetro', 'Punta a punta', 'Ciudad colgante', 'Turno de noche', 'La última vuelta'],
+  fechas: [['1995-11-30', 'Inauguración del Metro'], ['1996-02-28', 'Línea B'], ['2004-08-07', 'Metrocable K'], ['2008-03-03', 'Línea J'], ['2011-12-22', 'Metroplús'], ['2021-06-10', 'Línea P']],
+  cumple: d => d.getMonth() === 10 && d.getDate() === 30 ? d.getFullYear() - 1995 : 0,   // años del Metro el 30 de noviembre
+  codigo: 'metrozero'                                                                     // nombre secreto en el creador
+};
+```
+
+---
+
+# 11 · Correcciones frecuentes
+
+| Problema | Pide así |
+|---|---|
+| Salió texto, letras o un logo | “Repite exactamente igual, pero sin ningún texto, letra, número, letrero ni logo.” |
+| Fondo blanco, ajedrezado o con degradado | “Fondo magenta plano #FF00FF, uniforme, sin sombras ni degradados.” |
+| Magenta dentro del dibujo | “Cambia los tonos rosados y morados del dibujo: el magenta solo va en el fondo.” |
+| Perspectiva equivocada en un sprite | “Vista cenital exacta a 90°, como un mapa visto desde arriba; el personaje mira hacia arriba.” |
+| No respeta la cuadrícula | “Cuadrícula exacta de 4×4 celdas iguales; cada elemento centrado en su celda, sin tocar los bordes.” O entrega las celdas sueltas |
+| El personaje no es igual a su hoja | “Usa la hoja adjunta: misma cara, peinado, ropa y colores.” |
+| Demasiado detalle | “Simplifica: formas grandes, máximo 16 colores, que se entienda a 48 píxeles.” |
+| Colores de EnCicla equivocados | “Uniforme y bici solo en azul oscuro #0e2d55, verde claro #9bd341 y blanco.” |
+| Bici mal dibujada | “Bici urbana con ruedas redondas iguales, cadena y plato a la derecha, canasta adelante, sillín y manubrio alineados.” |
+| Manos o caras raras | “Manos simples y cara sencilla, con ojos pequeños y claros.” |
+| No parece Medellín | “Agrega ladrillo a la vista, laderas con casas de ladrillo, montañas verdes alrededor, guayacanes y el viaducto del metro.” |
+| Luz incoherente | “Luz desde arriba a la izquierda; sombras hacia abajo a la derecha.” |
+| Parece foto o 3D | “Pixel art plano, sin brillos plásticos, sin desenfoque ni texturas de foto.” |
+| La panorámica no empata | “El borde izquierdo debe continuar exactamente el borde derecho: la imagen se repite en bucle.” |
+| Texto largo (Guionista) | “Recorta al límite de caracteres; una idea por frase.” |
+| Dato inventado (Guionista) | “Usa solo los datos de la parte 9; lo demás, márcalo por confirmar.” |
+
+---
+
+# 12 · Entregas: el documento de cada IA y las tres versiones
+
+## 12.1 Orden recomendado (de más a menos impacto)
+1. Pruebas: **G-00**, **C-00** y **H-00**.
+2. Personajes: **G-01 a G-12**, con **H-01** y **H-02**.
+3. Sprites de personajes y bicis: **C-11**, **C-12**, **C-10**.
+4. Ciudad: **C-20**, **C-21** y **C-22**.
+5. Peatones y vehículos: **C-14**, **C-15**.
+6. Estaciones e interiores: **G-20 a G-28**.
+7. Íconos, logros, interfaz y mapa: **C-01 a C-03**, **C-40**, **C-41** y **C-60**.
+8. Objetos de minijuegos: **C-30 a C-38**, y **C-13**.
+9. Panorámicas: **G-80 a G-83** (centro primero) y **C-16**.
+10. Historia: **H-10**, **H-20** y **H-80**; después las escenas **G-100 a G-115**.
+11. Postales: **G-30 a G-74**, primero las 15 con ★.
+12. Fiestas: **G-84 a G-89**, **C-50** y **H-60**.
+13. Huevos de pascua: **G-90 a G-96**, **C-70**, **C-71** y **H-70**; además **H-30**, **H-40** y **H-50**.
+14. Arte clave: **G-120 a G-124**.
+15. Consolidación final: **C-99**.
+
+## 12.2 Carpetas y nombres
+```
+entrega/                 una carpeta por IA (gemini, chatgpt, guionista)
+  entrega.md             documento de entrega (obligatorio)
+  00_pruebas/            g00_ancla_estilo.png · c00_ico_prueba.png · h00_prueba.md
+  personajes/            g01_per_dona_luz_hoja.png · g01_ret_dona_luz_alegre.png …
+  estaciones/            g20_est_anfitrion.png … g28_camion_balance.png
+  postales/              g30_pos_bello.png … g74_pos_trescruces.png
+  panoramicas/           g80_pan_centro_dia_1.png … (1 lejana, 2 laderas, 3 ciudad, 4 frente)
+  fiestas/               g84_fie_flores.png …
+  metro/                 g90… g96 · c70_obj_metro.png · c71_spr_metro.png
+  escenas/               g100_esc_dia01.png … g115_esc_dia16.png
+  clave/                 g120_clave_portada_vertical.png …
+  iconos/                c01_ico_oficios.png · c02 · c03 · c60
+  sprites/               c10_spr_bicis.png · c11_spr_ciclistas_1.png … c16_veh_perfil.png
+  ciudad/                c20_tex_asfalto.png … c21 · c22_fac_…
+  objetos/               c30_obj_mecanico.png … c38_obj_ciudad.png
+  interfaz/              c40_ui_botones.png · c41_ui_mapa.png · c50_dec_fiestas_1.png
+  textos/                h01_biblia.md · h10_dia_del_valle.json …
+```
+- **Nombre:** `<encargo>_<tipo>_<nombre>[_<variante>].<ext>`. El encargo va primero (`g01`, `c10`, `h20`). Todo en minúsculas, sin tildes ni espacios, con guion bajo.
+- **PNG** para todo; JPG de buena calidad solo en escenas, postales, fiestas y arte clave.
+- Cada imagen lleva al lado un **`.txt` con el mismo nombre** y el **prompt final**.
+- Los textos del Guionista van en `.md` y en `.json`, en UTF-8.
+- Gemini en la app no crea carpetas: después de cada imagen dice su nombre de archivo y el autor la guarda con ese nombre.
+
+## 12.3 Al terminar: el documento de entrega (obligatorio)
+Cuando termines tu trabajo (o una tanda grande), escribe **`entrega.md`** con **todo** lo que hiciste. **Sin este documento, la entrega no está completa.**
+
+```markdown
+# Entrega de <IA> · Juega EnCicla · <aaaa-mm-dd>
+
+## Resumen
+Qué hiciste, cuántas piezas, qué quedó pendiente.
+
+## Encargos
+| Encargo | Archivos | Estado | Notas |
+|---|---|---|---|
+| G-00 | 00_pruebas/g00_ancla_estilo.png | ✅ listo | aprobado por el autor |
+
+## Detalle por encargo
+### G-00 · Ancla de estilo
+- Prompt final: …
+- Correcciones que hicieron falta: …
+- Para integrar: cuadrícula, número de cuadros, punto de apoyo (pies o ruedas), escala.
+
+## Reglas aprendidas
+1. …
+
+## Pendientes y dudas
+- …
+```
+Estados: ✅ listo · 🔁 para corregir · ⏳ pendiente · ❌ descartado.
+
+## 12.4 Las tres versiones
+El documento de entrega se da, al final, en **tres versiones**:
+
+| # | Versión | Archivo | Contiene |
+|---|---|---|---|
+| 1 | **PDF maestro** | `encicla_maestro_<ia>_<fecha>.pdf` | todo el trabajo: portada, documento de entrega, cada imagen visible con su encargo, archivo y prompt, y todos los textos |
+| 2 | **MD con el código de las imágenes** | `encicla_imagenes_<ia>_<fecha>.md` | cada imagen codificada en base64 entre marcas, con su manifiesto (encargo, ruta, tamaño, SHA-256 y prompt). Con él reconstruyo cada imagen idéntica y la ensamblo en el juego. Si pasa de 45 MB, se divide en partes |
+| 3 | **ZIP** | `encicla_entrega_<ia>_<fecha>.zip` | las imágenes originales en sus carpetas, los `.txt` de prompts, los textos, el documento de entrega, el manifiesto y el **PDF maestro** |
+
+- **Cómo se arman:** con el script de 12.6 (Python). ChatGPT lo corre directamente.
+- **Si tu herramienta no puede crear archivos** (por ejemplo, Gemini en la app): entrega las imágenes descargables con sus nombres y el texto de `entrega.md` en el chat. El autor se los pasa a ChatGPT (C-99) o a Claude Code, que arman las tres versiones.
+
+## 12.5 Consolidación final (C-99 · ChatGPT)
+1. El autor sube a ChatGPT los ZIP de cada IA.
+2. ChatGPT los descomprime en `consolidado/gemini/`, `consolidado/chatgpt/` y `consolidado/guionista/`; revisa los nombres y que cada imagen tenga su `.txt`.
+3. Corre `python armar_entrega.py armar consolidado final`.
+4. Entrega las **tres versiones finales**: `encicla_maestro_final_<fecha>.pdf`, `encicla_imagenes_final_<fecha>.md` y `encicla_entrega_final_<fecha>.zip`, con un resumen en el chat: piezas por IA y lo que falta.
+
+## 12.6 Script `armar_entrega.py`
+Cópialo en un archivo `armar_entrega.py` y córrelo con Python 3 (necesita Pillow; con reportlab el PDF queda mejor).
+```
+python armar_entrega.py armar entrega gemini
+python armar_entrega.py desarmar encicla_imagenes_gemini_2026-11-20.md reconstruidas
+```
+```python
+<!-- incluir:tools/armar_entrega.py -->
+```
+
+## 12.7 Cómo me lo entregas (elige una)
+1. **Aquí mismo:** adjunta el PDF maestro, el MD y el ZIP en la conversación con Claude Code y di “ya está la entrega de …”.
+2. **GitHub:** en `juanfeliperico369-stack/BicicletasUno`, rama `ccr-bed2d98a-uho2kr`, carpeta `arte/entregas/<ia>/` → *Add file* → *Upload files* (la web acepta archivos de hasta 25 MB; si el ZIP es más grande, usa la opción 3).
+3. **Google Drive:** una carpeta “Juega EnCicla · Arte” con una subcarpeta por IA; comparte el enlace.
+
+## 12.8 Créditos y licencias
+- Lo que generes con Gemini o ChatGPT en la cuenta del autor es del autor, según los términos de cada servicio. Lo registro en `arte/CREDITOS.md`.
+- Las fotos de la galería son **solo referencia**. Si alguna se usa tal cual, se cita con su licencia; las de licencia NC no se usan en el juego.
+
+---
+
+# 13 · Integración: qué hago con lo que entregas
+
+1. **Recibo:** desarmo el MD (verifica el SHA-256) o abro el ZIP.
+2. **Reviso** cada pieza con la lista de control. Lo que no cumpla vuelve con una corrección concreta (parte 11).
+3. **Limpio:** magenta a transparencia, recorte y alineación a la cuadrícula.
+4. **Reduzco a pixel art:** vecino más cercano a la escala del juego (casillas de 16 px, sprites de 24 a 40 px, retratos de 96 px) y cuantizo a la paleta.
+5. **Armo atlas** comprimidos (`src/art/*.png` + `*.json`). Meta: **menos de 4 MB** de arte, para que el juego siga liviano y sin internet.
+6. **Código con respaldo:** si falta una pieza, el juego sigue con el dibujo actual.
+7. **Variantes por hora y fiesta:** el juego elige la capa según la hora y la fecha reales.
+8. **Pruebas:** `node tests/run.js` (100 partidas sin errores) y capturas en vertical y horizontal, de día y de noche.
+9. **Publicación:** nueva versión en GitHub Pages, APK y bitácora.
+
+| Pieza | Dónde entra |
+|---|---|
+| Retratos | `66-historia.js` (caras), `67-personaje.js` (personajes), `71-tutor.js` (compañero), `77-piloto.js` (escenas) |
+| Sprites de personajes y bicis | `75-graficos.js`, `30-ride.js` |
+| Peatones y vehículos | `35-life.js`, `68-ciudad.js`, `78-ciudad-viva.js` |
+| Texturas, vegetación y fachadas | `20-map.js`, `75-graficos.js` (suelo y edificios 3D) |
+| Estaciones de perfil y panorámicas | `75-graficos.js` (vista panorámica) |
+| Postales y marcadores de lugares | `21-map-art.js` (mapa), `60-ui.js` (álbum) |
+| Íconos y logros | `10-art.js`, `65-extra.js` |
+| Objetos de minijuegos | `40-mg.js`, `45-mg2.js`, `46-mg3.js`, `72-oficios2.js`, `80-limpieza.js` |
+| Interfaz y mapa grande | `style.css`, `60-ui.js`, `79-interfaz.js`, `78-ciudad-viva.js` |
+| Fiestas | `69-calendario.js` |
+| Arte clave | `95-promo.js` y `tools/assets.js` (ícono de la app e imagen para compartir) |
+| Textos | `66-historia.js` (historia), `71-tutor.js` (tutor), `69-libre.js` (misiones), `65-extra.js` (logros) |
+
+---
+
+# 14 · Galería de referencia (créditos)
+
+Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wikimedia Commons y Flickr). **No se copiaron al repositorio:** se enlazan a su fuente con autor y licencia. Úsalas como referencia de formas, materiales, colores y ambiente, **sin copiar logos ni personas**.
+
+### EnCicla: estaciones, bicis y eventos (17)
+
+- [EnCicla Bicicletas Públicas](https://www.flickr.com/photos/59505201@N07/6224413289) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Recorridos miércoles EnCicla](https://www.flickr.com/photos/59505201@N07/10043175106) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla Bicicletas Públicas](https://www.flickr.com/photos/59505201@N07/6224934420) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla Bicicletas Públicas](https://www.flickr.com/photos/59505201@N07/6220379291) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla Bicicletas Públicas](https://www.flickr.com/photos/59505201@N07/6224939262) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla Bicicletas Públicas](https://www.flickr.com/photos/59505201@N07/6220376711) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla Bicicletas Públicas](https://www.flickr.com/photos/59505201@N07/6224420913) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla - Estación Ruta N](https://commons.wikimedia.org/w/index.php?curid=64019042) — Bertahan Luxing · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Lanzamiento de los nuevos tramos y estaciones EnCiCla](https://www.flickr.com/photos/59505201@N07/9725263989) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Lanzamiento de los nuevos tramos y estaciones EnCiCla](https://www.flickr.com/photos/59505201@N07/9728492890) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla en la Feria](https://www.flickr.com/photos/90132199@N07/14879533082) — EnCicla · [CC BY-NC 2.0](https://creativecommons.org/licenses/by-nc/2.0/) · solo referencia
+- [EnCicla en la Feria](https://www.flickr.com/photos/90132199@N07/14693309678) — EnCicla · [CC BY-NC 2.0](https://creativecommons.org/licenses/by-nc/2.0/) · solo referencia
+- [EnCicla en la Feria](https://www.flickr.com/photos/90132199@N07/14856957016) — EnCicla · [CC BY-NC 2.0](https://creativecommons.org/licenses/by-nc/2.0/) · solo referencia
+- [EnCicla Pura Vida](https://www.flickr.com/photos/59505201@N07/16439324487) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Lanzamiento de los nuevos tramos y estaciones EnCiCla](https://www.flickr.com/photos/59505201@N07/9728508622) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Lanzamiento de los nuevos tramos y estaciones EnCiCla](https://www.flickr.com/photos/59505201@N07/9725266101) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [EnCicla en la #F2Ruedas](https://www.flickr.com/photos/90132199@N07/13936514310) — EnCicla · [CC BY-NC 2.0](https://creativecommons.org/licenses/by-nc/2.0/) · solo referencia
+
+### Ciudad, fiestas y transporte (de la galería de *El Metro*)
+
+#### Metro (líneas A y B): trenes y estaciones (12)
+
+- [Metro de Medellín - Tren MAN en estación San Antonio](https://commons.wikimedia.org/w/index.php?curid=149715874) — AXF02 · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Nuevos trenes del Metro de Medellín](https://www.flickr.com/photos/59505201@N07/5726674779) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Ayacucho Tram's San Antonio terminus, with 2 Translohr cars underneath metro station (2016)](https://commons.wikimedia.org/w/index.php?curid=67254775) — J Daoss · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Estación Bello Metro de Medellín (08-25)](https://commons.wikimedia.org/w/index.php?curid=174260177) — Minoh09 · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- [Estación Envigado (Metro de Medellín)](https://commons.wikimedia.org/w/index.php?curid=54053732) — Jdapenao Di · [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/)
+- [Estación Alpujarra (Metro de Medellín)](https://commons.wikimedia.org/w/index.php?curid=51651121) — Jdapenao Di · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Imaginario estación Parque Berrío Metro de Medellín](https://commons.wikimedia.org/w/index.php?curid=48420073) — Jdapenao Di · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Estación Parque Berrío - metro de Medellín](https://commons.wikimedia.org/w/index.php?curid=35826419) — Yimicorrea · [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+- [Tren CAF del Metro de Medellín en la estación Hospital](https://commons.wikimedia.org/w/index.php?curid=154001126) — Daniel Angulo Ibarbo · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Tren CAF del Metro de Medellín saliendo de la estación Exposiciones](https://commons.wikimedia.org/w/index.php?curid=154000807) — Daniel Angulo Ibarbo · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Metro de Medellín - Tren MAN Modernizado](https://commons.wikimedia.org/w/index.php?curid=141587939) — AXF02 · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- [Medellín: metro station](https://www.flickr.com/photos/27035950@N00/6432088363) — Daniel-Latorre · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+
+#### Metrocable (10)
+
+- [Metrocable Arví](https://www.flickr.com/photos/46785962@N03/7543321676) — Saluda UdeA · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Estación Metrocable Arví](https://www.flickr.com/photos/18618970@N00/4480800604) — medea_material · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Estación metrocable Arví](https://www.flickr.com/photos/18618970@N00/4480150765) — medea_material · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Metro cable Santo domingo y Metro Cable Arví](https://www.flickr.com/photos/18618970@N00/4480152131) — medea_material · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [2018 Línea H del Metrocable Medellín - estación Villa Sierra](https://commons.wikimedia.org/w/index.php?curid=69379966) — Felipe Restrepo Acosta · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Sobrevolando Arví](https://www.flickr.com/photos/18618970@N00/4480845032) — medea_material · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Metrocable Medellín](https://www.flickr.com/photos/59505201@N07/8067331943) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Metrocable Medellín](https://www.flickr.com/photos/59505201@N07/8067325861) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Metrocable - Reaching the least developed suburban areas of Medellín (5083096780)](https://commons.wikimedia.org/w/index.php?curid=31949822) — Jorge Láscar from Australia · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Línea H (Metrocable Medellín)](https://commons.wikimedia.org/w/index.php?curid=44252575) — Andinodecorazón · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+#### Tranvía de Ayacucho (4)
+
+- [Presentación de la primera unidad del Tranvía de Ayacucho](https://www.flickr.com/photos/59505201@N07/14433527190) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Presentación de la primera unidad del Tranvía de Ayacucho](https://www.flickr.com/photos/59505201@N07/14433528230) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Tranvía de Ayacucho](https://www.flickr.com/photos/63488671@N00/49850407138) — chilangoco · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Medellin Tram](https://commons.wikimedia.org/w/index.php?curid=47852637) — FoxerMG · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+#### Metroplús, alimentadores y busetas (8)
+
+- [Metro Medellin](https://www.flickr.com/photos/11121717@N02/4148901975) — Omar Uran · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [2018 Medellín - buseta en la calle 45 con carrera 53 A](https://commons.wikimedia.org/w/index.php?curid=69393596) — Felipe Restrepo Acosta · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [2018 Medellín calle 41 con carrera 51, buseta bajo la vía del metro](https://commons.wikimedia.org/w/index.php?curid=69393616) — Felipe Restrepo Acosta · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Buseta en Medellín](https://commons.wikimedia.org/w/index.php?curid=169989884) — Xemenendura · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Alimentador Metro Medellin](https://commons.wikimedia.org/w/index.php?curid=44342629) — Petruss · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Estación Universidad de Medellín (Metroplús)](https://commons.wikimedia.org/w/index.php?curid=54158668) — Jdapenao Di · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Intervención a peatones en la Estación de Metroplús Los Alpes](https://www.flickr.com/photos/59505201@N07/27976747553) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Estación Fátima (Metroplús)](https://commons.wikimedia.org/w/index.php?curid=54508580) — Jdapenao Di · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+
+#### Ciudad: barrios, río, plazas y vistas (20)
+
+- [Medellín](https://www.flickr.com/photos/100759833@N05/52473316749) — santiagolopezpastor · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Medellin Skyline](https://www.flickr.com/photos/7942389@N04/504021074) — sergejf · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Medellin... que chimba parce!!!!](https://www.flickr.com/photos/72494726@N00/280693114) — jduquetr · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Una vista de Medellín](https://www.flickr.com/photos/44124369279@N01/10968329364) — morrissey · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [el poblado, medellin](https://www.flickr.com/photos/37083012@N00/1354729251) — willy gil · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Medellin, Comuna 13](https://www.flickr.com/photos/11121717@N02/4148916737) — Omar Uran · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Medellín](https://www.flickr.com/photos/92529460@N00/5919196715) — Hugo Quintero · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Iglesia San José (Medellín)](https://www.flickr.com/photos/92529460@N00/4842401044) — Hugo Quintero · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Graffiti in Comuna 13, Medellín 10](https://commons.wikimedia.org/w/index.php?curid=99422890) — Bernard Gagnon · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Graffiti in Comuna 13, Medellín 11](https://commons.wikimedia.org/w/index.php?curid=99422914) — Bernard Gagnon · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Gato by Fernando Botero - Plaza Botero - Medellín - Colombia 2024](https://commons.wikimedia.org/w/index.php?curid=148836121) — José Luiz · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Hombre a Caballo by Fernando Botero - Plaza Botero - Medellín - Colombia 2024](https://commons.wikimedia.org/w/index.php?curid=148835816) — José Luiz · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [Parque de los pies descalzos](https://www.flickr.com/photos/63488671@N00/321377268) — chilangoco · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Parque de los pies descalzos](https://www.flickr.com/photos/63488671@N00/321377264) — chilangoco · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Pueblito Paisa](https://www.flickr.com/photos/63488671@N00/321345952) — chilangoco · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Pueblito Paisa](https://www.flickr.com/photos/63488671@N00/321353707) — chilangoco · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Esa noche en el Pueblito Paisa](https://www.flickr.com/photos/123844098@N03/21065460872) — dgorrz · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Río Medellín](https://www.flickr.com/photos/15072398@N00/45869123621) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Río Medellín](https://www.flickr.com/photos/15072398@N00/45705409781) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [2018 Río Medellín y estación de metro Poblado](https://commons.wikimedia.org/w/index.php?curid=69377388) — Felipe Restrepo Acosta · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+#### Fiestas: Feria de las Flores y Alumbrados (12)
+
+- [Río Medellín en navidad 2007](https://www.flickr.com/photos/63488671@N00/2168714421) — chilangoco · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Alumbrado en el Río Medellín](https://www.flickr.com/photos/63488671@N00/347034965) — chilangoco · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [DESFILE DE SILLETEROS - 2014](https://www.flickr.com/photos/15072398@N00/14719290768) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Desfile de Silleteros](https://www.flickr.com/photos/54818270@N05/5278143814) — Guía de Viajes Oficial de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [De Flores y Silletas.... #silleteros #medellíncity #medellín #instamedellín #ig_colombia_ #feriadelasflores #IgersColombia #orquídea #igers](https://www.flickr.com/photos/15072398@N00/20405838375) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [MEDELLÍN - FERIA DE LAS FLORES](https://www.flickr.com/photos/15072398@N00/14895383753) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Bazar de las Flores](https://www.flickr.com/photos/59505201@N07/20094775915) — Secretaría de Movilidad de Medellín · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [MEDELLÍN - NAVIDAD 2014](https://www.flickr.com/photos/15072398@N00/15356148703) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [MEDELLÍN - NAVIDAD 2014](https://www.flickr.com/photos/15072398@N00/15975111382) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [ALUMBRADOS 2010](https://www.flickr.com/photos/15072398@N00/5263449320) — *Iván Erre Jota* · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Desfile de Autos Clasicos y Antiguos(57)](https://commons.wikimedia.org/w/index.php?curid=2518840) — SajoR · [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/)
+- [Desfile de Autos Clasicos y Antiguos(56)](https://commons.wikimedia.org/w/index.php?curid=2518836) — SajoR · [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/)
+
+#### Cultura: chivas y comida (5)
+
+- [Chiva Colombiana - bus escalera - FORD 600 1965 SYJ 097](https://www.flickr.com/photos/59102567@N02/7919623836) — @ferchos04 - F04 °°II YES · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Locombia Colombia PANACA Quindío Bus Chiva](https://www.flickr.com/photos/36283871@N03/4093177918) — 15Adar2 [340 cu.in.] Mamá ha muerto · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Dodge 600 bus escalera chiva Colombiana en Piendamó](https://www.flickr.com/photos/41979499@N03/15550435167) — N Fernando Sotelo Castro@Ferchos04 - V.2.0 · [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+- [Bandeja Paisa](https://www.flickr.com/photos/25834786@N03/4346303841) — secretlondon123 · [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- [Bandeja paisa 30062011](https://commons.wikimedia.org/w/index.php?curid=15705199) — Dtarazona · [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+---
+
+# 15 · Bitácora de encargos
+
+| Fecha | IA | Encargos | Estado | Notas |
+|---|---|---|---|---|
+| {{FECHA}} | Claude Code | documento creado (v{{VERSION}}) | ✅ | primera versión de los encargos de arte e historia |

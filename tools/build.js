@@ -33,7 +33,7 @@ const head = [
   '<link rel="apple-touch-icon" href="apple-touch-icon.png">',
   '<meta property="og:type" content="website">', '<meta property="og:locale" content="es_CO">',
   '<meta property="og:title" content="Juega EnCicla">',
-  '<meta property="og:description" content="El videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. 9 oficios, 27 turnos, sin internet.">',
+  '<meta property="og:description" content="El videojuego arcade del sistema de bicicletas públicas del Valle de Aburrá. 12 oficios, modo libre y multijugador, sin internet.">',
   `<meta property="og:url" content="${URL}">`, `<meta property="og:image" content="${URL}compartir.png">`,
   '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">', '<meta property="og:image:alt" content="Portada de Juega EnCicla">',
   '<meta name="twitter:card" content="summary_large_image">', `<link rel="canonical" href="${URL}">`
@@ -69,3 +69,5 @@ const apk = fs.readdirSync(DIST).filter(f => f.endsWith('.apk')).sort().pop();
 if (apk) { fs.mkdirSync(path.join(WEB, 'descargas'), { recursive: true }); fs.copyFileSync(path.join(DIST, apk), path.join(WEB, 'descargas', 'JuegaEnCicla.apk')); }
 fs.writeFileSync(path.join(DIST, 'build.json'), JSON.stringify({ version, hash, cache: CACHE, files: jsFiles, bytes: { single: single.length, web: web.length, js: js.length } }, null, 1));
 console.log('OK v' + version, 'cache', CACHE, '| único', (single.length / 1024).toFixed(0) + ' KB | js', (js.length / 1024).toFixed(0) + ' KB');
+// documento único para las IA de arte e historia (docs/IA-ENCICLA.md + anexos)
+try { const r = require('./todo-ia.js')(); console.log('Documento para IA: dist/ENCICLA-TODO.md ·', (r.bytes / 1024).toFixed(0), 'KB'); } catch (e) { console.warn('Documento para IA:', e.message); }

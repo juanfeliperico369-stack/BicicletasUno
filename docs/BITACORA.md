@@ -313,3 +313,17 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 ## 2026-11-14 · v1.0.6 · Cuarto corredor eléctrico
 
 1. **Pascual Bravo – Hospital Pablo Tobón Uribe:** Pascual Bravo es estación mixta y el Hospital Pablo Tobón Uribe solo presta eléctricas. Las ubicaciones son aproximadas.
+
+## 2026-11-17 · v1.0.6 · Documento único para las IA de arte e historia
+
+1. **`docs/IA-ENCICLA.md`:** encargos de arte e historia para la próxima gran versión, con el formato del documento de *El Metro*.
+   - Protocolo de 7 pasos, cuestionario y lista de control.
+   - Roles: Gemini (G), ChatGPT (C) y Guionista (H). Biblia de estilo, reparto con descripciones para los prompts y prompts listos.
+   - Historia “Un día del valle” (16 capítulos) y los 15 años de EnCicla.
+   - Datos reales: horarios, préstamo, corredores eléctricos, los 22 turnos, fiestas e historia con fuentes.
+2. **Entregas:** cada IA entrega un documento con todo su trabajo en tres versiones: PDF maestro, MD con el código de las imágenes y ZIP con las imágenes y el PDF. ChatGPT consolida todo al final (C-99).
+3. **`tools/armar_entrega.py`:** arma las tres versiones y reconstruye las imágenes desde el MD, verificando el SHA-256. Probado con reportlab y con Pillow, y con el MD dividido en partes.
+4. **Huevos de pascua de *El Metro*:** personajes, frases, capítulos, logros, colores de líneas y fechas guardados, más 16 ideas y el objeto `METRO_EGG`.
+5. **`tools/todo-ia.js`:** `build.js` compila `dist/ENCICLA-TODO.md` con los anexos (historia actual, guía y bitácora).
+6. Descripción para compartir y gráfico de la tienda: “12 oficios”, en vez de “9 oficios, 27 turnos”.
+

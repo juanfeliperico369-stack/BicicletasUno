@@ -69,6 +69,9 @@ src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
+tools/todo-ia.js      compila dist/ENCICLA-TODO.md: docs/IA-ENCICLA.md + script de entregas + historia actual, guía y bitácora
+tools/armar_entrega.py arma las entregas de las IA (PDF maestro, MD con el código de las imágenes, ZIP) y las desarma
+docs/IA-ENCICLA.md    documento único para las IA de arte e historia (fuente; lo compila tools/todo-ia.js)
 tests/run.js          pruebas: sintaxis, N partidas con el bot, humo de interfaz, rendimiento con CPU 4x lenta
 app/                  proyecto Capacitor (Android); ver sección 8
 ```
@@ -81,6 +84,8 @@ Objeto global de depuración: `window.JE` (`JE.map`, `JE.game`, `JE.ui`, `JE.bot
 ```bash
 node tools/build.js            # construye dist/
 node tools/assets.js           # íconos + compartir.png (necesita dist/juega-encicla.html)
+node tools/todo-ia.js          # solo el documento para IA (build.js ya lo genera)
+python3 tools/armar_entrega.py desarmar <entrega.md> <carpeta>   # reconstruye las imágenes de una entrega
 node tests/run.js --n=100      # pruebas; --shots guarda capturas en tests/out/
 ```
 Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En consola: `JE.bot.run({n:27}).then(r=>console.log(JE.bot.format(r)))`.
@@ -422,6 +427,8 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 
 ## 9. Pendientes / ideas (feedback del usuario)
 
+- **Arte e historia hechos por IA:** `docs/IA-ENCICLA.md` reparte los encargos (G: Gemini, C: ChatGPT, H: Guionista). Cada IA entrega un documento con todo su trabajo en tres versiones (PDF maestro, MD con el código de las imágenes y ZIP). Al llegar: desarmar, revisar, reducir a pixel art, atlas de menos de 4 MB e integración con respaldo al dibujo actual (parte 13 del documento).
+- **Huevos de pascua de *El Metro*:** fragmentos e ideas guardados en la parte 10 de `docs/IA-ENCICLA.md`, con el objeto `METRO_EGG` listo para integrar.
 - Pulir cada oficio con el conocimiento real del equipo EnCicla (procesos de anfitrión, relevos, balanceo, taller).
 - Multijugador: ya hay carrera 1 contra 1 por código. Faltan salas de más de 2 jugadores, código QR, TURN y modos cooperativos (por ejemplo, Monitoreo con Balance).
 - Bluetooth: solo en la app nativa (plugin de Capacitor); los navegadores no permiten Bluetooth entre celulares.

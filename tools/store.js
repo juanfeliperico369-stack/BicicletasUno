@@ -80,7 +80,7 @@ body{background:#0a2342 radial-gradient(rgba(255,255,255,.08) 1.4px,transparent 
 <div class="band">ÁREA METROPOLITANA · VALLE DE ABURRÁ<span>GRATIS · SIN INTERNET</span></div>
 <div class="t t1">Juega</div><div class="t t2">EnCicla</div>
 <div class="kick">¿Sabes cuántas bicis mueve tu ciudad?</div>
-<div class="chips"><b>9 oficios</b><b>27 turnos</b><b>Carrera 1 vs 1</b></div>
+<div class="chips"><b>12 oficios</b><b>Modo libre</b><b>Multijugador</b></div>
 <div class="art"></div><div class="stk">¡Del usuario al supervisor!</div>
 <div class="foot"><b>La revista arcade más pedaleada</b><span><img src="${icono}" alt="">Pixel art · Android y web</span></div>
 </body></html>`;
