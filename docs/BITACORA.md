@@ -349,3 +349,19 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
    - Las rayas siguen el eje de cada calle y las cebras atraviesan cada calle que llega al semáforo.
    - En el modo pixel, el asfalto solo va donde pasa una calle.
 
+## 2026-11-17 · v1.2.0 · Mapa reconocible: cada calle, cada barrio
+
+1. **Calles exactas:** cada vía sale de los datos de OpenStreetMap como vector (32.785 vías, 2.607 nombres), no de la cuadrícula. Se reconocen Laureles, sus circulares y diagonales, la Avenida San Juan y los nombres de las calles.
+2. **Peatonales limpios:**
+   - Los andenes y cruces trazados como líneas no se pintan.
+   - Los senderos solo van en parques, plazas y monte.
+   - Las vías de servicio sin nombre no se dibujan como calles.
+3. **Nombres de calles y barrios:**
+   - Calles: sobre la vía, en el juego y en el mapa grande.
+   - Barrios y veredas (672): al entrar a cada uno y en el mapa grande; las comunas también aparecen en el mapa grande.
+4. **Casas en fila:** los barrios son casas angostas frente a la calle, con teja, losa, tanques y ropa tendida. Los edificios quedan en el centro, El Poblado, el comercio, la industria y las avenidas.
+5. **Estaciones en su punto:** típicamente a 46 m de su coordenada (antes 73 m), y la más lejana a 195 m (antes 441 m). Floresta e Industriales tienen coordenadas de Overture.
+6. **Vida:** parqueaderos con carros, postes, árboles de avenida y guayacanes, bancas, palomas, nubes y brillos en el río.
+7. **Ni una gota:** misión del modo libre con logro secreto (de *El Metro*).
+8. **Corrección:** *Un día del valle* y las misiones diarias del modo libre usaban la misma clave de guardado. Ahora están separadas y el avance se migra solo.
+

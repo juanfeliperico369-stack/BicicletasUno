@@ -107,17 +107,27 @@ RC = {  # clase -> (código, radio en casillas, prioridad)
     'steps': (STEPS, .5, 9), 'service': (ROAD, .5, 11), 'unknown': (ROAD, .5, 11),
     'residential': (ROAD, .5, 12), 'unclassified': (ROAD, .5, 12), 'living_street': (ROAD, .5, 12),
     'tertiary': (ROAD, .75, 13), 'secondary': (AVE, 1.0, 14), 'primary': (AVE, 1.1, 15), 'trunk': (AUTO, 1.2, 16), 'motorway': (AUTO, 1.25, 16)}
-majors, cycles = [], []
+majors, cycles, vias = [], [], []
+WALKISH = ('track', 'bridleway', 'path', 'footway')
+VK = {'residential': 1, 'unclassified': 1, 'living_street': 1, 'service': 1, 'unknown': 1, 'tertiary': 4, 'secondary': 2, 'primary': 2, 'trunk': 3, 'motorway': 3,
+      'pedestrian': 6, 'steps': 7, 'footway': 8, 'path': 8, 'track': 8, 'bridleway': 8}   # tipo de vía para el dibujo vectorial (1 calle, 4 carrera, 2 avenida, 3 autopista, 6 peatonal, 7 escalas, 8 sendero)
 for cl, sub, name, w in rows(f"select class, subclass, name, wkt from '{P('roads')}'"):
     if cl == 'cycleway':
         for g in geoms(WKT.loads(w)):
             if isinstance(g, LineString): cycles.append(line_cells(tcoords(g.coords), .5))
         continue
     if cl not in RC or (cl == 'service' and sub in ('parking_aisle', 'driveway')): continue
+    if cl == 'service' and sub != 'alley' and not name: continue   # vías de servicio sin nombre (parqueaderos, entradas privadas): no son calles
+    if cl in WALKISH and sub in ('sidewalk', 'crosswalk'): continue   # andenes y cruces trazados como líneas: no son caminos propios
     cv, r, pr = RC[cl]
     for g in geoms(WKT.loads(w)):
         if not isinstance(g, LineString): continue
-        pts = tcoords(g.coords); put(line_cells(pts, r), cv, pr)
+        pts = tcoords(g.coords)
+        if cl in WALKISH:   # senderos solo en parques, plazas y monte: dentro de las manzanas son andenes y pasajes que ensucian el mapa
+            ix, iy = (int(v) for v in pts[len(pts) // 2])
+            if 0 <= ix < MW and 0 <= iy < MH and URB[iy, ix] and not (PARK[iy, ix] or PLZ[iy, ix]): continue
+        put(line_cells(pts, r), cv, pr)
+        if cl != 'service' or sub == 'alley' or name: vias.append((VK[cl], name or '', pts))
         if cl in ('trunk', 'motorway', 'primary', 'secondary'): majors.append((cl, name or '', pts))
 # adelgazar calles: quita casillas de calle que forman bloques 2x2 sin cortar la red (número de Yokoi = 1)
 def thin(code, iters=3):
@@ -186,8 +196,14 @@ way = np.isin(code, [ROAD, AVE, AUTO, BRIDGE, WALK, CICLO, STEPS])
 nearway = box(way, 2) > 0
 empty = prio == 0
 rnd = np.random.default_rng(7).random((MH, MW))
-fill = np.where(urban, np.where((SLOPE > .14) | (rnd < .05), BRICK, BLDG), np.where(nearway & (SLOPE < .55), GRASS, MOUNT))
+# casas (ladrillo): laderas y barrios residenciales; edificios: comercio, industria, centro y El Poblado (torres)
+RES = np.array(poly_mask(lu("subtype = 'residential'"))) > 0
+COMM = np.array(poly_mask(lu("class in ('commercial','retail','industrial') or subtype in ('education','medical','military','transportation')"))) > 0
+POB = np.isin(COM, [i + 1 for i, (n, _) in enumerate(comunas) if 'Poblado' in n or 'Candelaria' in n])
+fill = np.where(urban, np.where((SLOPE > .14) | (rnd < .05) | (RES & ~COMM & ~POB), BRICK, BLDG), np.where(nearway & (SLOPE < .55), GRASS, MOUNT))
 code[empty] = fill[empty]
+nearAve = box(np.isin(code, [AVE, AUTO]), 1) > 0
+code[(code == BLDG) & (prio <= 2) & ~COMM & ~POB & ~nearAve & (rnd < .92)] = BRICK   # barrios: casas; edificios en el centro, El Poblado, comercio, industria y corredores de avenida
 code[(code == BLDG) & (rnd < .012)] = GRASS                        # patios y lotes
 # andenes junto a avenidas y autopistas
 big = np.isin(code, [AVE, AUTO]); nb = np.zeros_like(big); nb[1:] |= big[:-1]; nb[:-1] |= big[1:]; nb[:, 1:] |= big[:, :-1]; nb[:, :-1] |= big[:, 1:]
@@ -295,14 +311,51 @@ rv = max(rv, key=lambda kl: LineString(kl[1]).length)[1]
 if rv[0][1] < rv[-1][1]: rv = rv[::-1]
 river = [int(round(v * 4)) for p in LineString(rv).simplify(.8).coords for v in p]
 
+# ---------------- vías como vectores (para dibujar cada calle como es) ----------------
+from shapely.ops import linemerge
+grp = {}
+for k, name, pts in vias: grp.setdefault((k, name), []).append(LineString(pts))
+VIAS = []
+for (k, name), ls in grp.items():
+    for g in geoms(linemerge(ls) if len(ls) > 1 else ls[0]):
+        if not isinstance(g, LineString): continue
+        q = np.round(np.array(g.simplify(.06).coords) * 8).astype(np.int32)
+        keep = np.ones(len(q), bool); keep[1:] = np.any(np.diff(q, axis=0) != 0, axis=1); q = q[keep]
+        if len(q) < 2: continue
+        ix, iy = (int(v) for v in q[len(q) // 2] / 8)
+        if not (0 <= ix < MW and 0 <= iy < MH) or MUNI[iy, ix] == 0: continue
+        for a0 in range(0, len(q) - 1, 60000): VIAS.append((k, name, q[a0:a0 + 60001]))
+calles = sorted({n for _, n, _ in VIAS if n}); cid = {n: i + 1 for i, n in enumerate(calles)}
+vb = bytearray(struct.pack('<I', len(VIAS)))
+for k, name, q in VIAS:
+    vb += struct.pack('<BHH', k, cid.get(name, 0), len(q)); vb += np.concatenate([q[:1], np.diff(q, axis=0)]).astype('<i2').tobytes()
+comp = zlib.compressobj(9, zlib.DEFLATED, -15); vdata = comp.compress(bytes(vb)) + comp.flush()
+open(os.path.join(OUT, 'vias.bin'), 'wb').write(vdata)
+print('vías', len(VIAS), 'líneas ·', sum(len(q) for _, _, q in VIAS), 'puntos ·', len(calles), 'nombres · vias.bin', len(vdata) // 1024, 'KB')
+
+# ---------------- barrios y veredas (punto con nombre más cercano, en celdas de 8 casillas) ----------------
+BAD = ('Comuna', 'Parque', 'Plaza', 'Urbaniz', 'Conjunto', 'Unidad Residencial', 'Edificio', 'Torre', 'Mall', 'Atrio', 'Cabecera')
+bpts = []
+for sub, name, lat, lon in rows(f"select subtype, name, lat, lon from '{P('barrios')}' where name is not null"):
+    n = name.replace('Barrio ', '').strip()
+    if not n or n.startswith(BAD) or 'partamento' in n or 'asas' in n: continue
+    x, y = T(lon, lat); bpts.append((n, x / 8, y / 8, 1.0 if sub == 'neighborhood' else 1.35))
+barrios = sorted({b[0] for b in bpts}); bid = {n: i + 1 for i, n in enumerate(barrios)}
+M8 = MUNI[::8, ::8]; H8, W8 = M8.shape; by, bx = np.mgrid[0:H8, 0:W8] + .5
+best = np.full((H8, W8), 1e9); ba8 = np.zeros((H8, W8), np.uint16)
+for n, px, py, w in bpts:
+    d = np.hypot(bx - px, by - py) * w; m = d < best; best[m] = d[m]; ba8[m] = bid[n]
+ba8[(best > 12) | (M8 == 0)] = 0
+print('barrios', len(barrios), 'nombres ·', int((ba8 > 0).sum()), 'celdas con barrio')
+
 # ---------------- salida ----------------
 mu8 = MUNI[::8, ::8].astype(np.uint8); co8 = COM[::8, ::8].astype(np.uint8)
 dE = np.diff(np.concatenate([E[:, :1] * 0, E], 1), axis=1).astype(np.int16)        # deltas por fila
-blob = code.tobytes() + dE.tobytes() + mu8.tobytes() + co8.tobytes()
+blob = code.tobytes() + dE.tobytes() + mu8.tobytes() + co8.tobytes() + ba8.astype('<u2').tobytes()
 comp = zlib.compressobj(9, zlib.DEFLATED, -15); data = comp.compress(blob) + comp.flush()
 os.makedirs(OUT, exist_ok=True)
 open(os.path.join(OUT, 'valle.bin'), 'wb').write(data)
-meta = {'v': 1, 'W': MW, 'H': MH, 'tile': TILE, 'lon0': LON0, 'latN': LATN, 'kx': KX, 'ky': KY, 'es': ES, 'eW': EW, 'eH': EH, 'mW': mu8.shape[1], 'mH': mu8.shape[0],
+meta = {'v': 2, 'barrios': barrios, 'calles': calles, 'vias': len(VIAS), 'viasB': len(vb), 'W': MW, 'H': MH, 'tile': TILE, 'lon0': LON0, 'latN': LATN, 'kx': KX, 'ky': KY, 'es': ES, 'eW': EW, 'eH': EH, 'mW': mu8.shape[1], 'mH': mu8.shape[0],
         'munis': MUNIS, 'comunas': [n for n, _ in comunas], 'lanes': lanes, 'lights': [[int(round(x * 4)), int(round(y * 4))] for x, y in lights], 'metro': metro, 'river': river,
         'src': 'Datos del mapa: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps Foundation. Relieve: Terrain Tiles (AWS Open Data, SRTM/NASA).'}
 open(os.path.join(OUT, 'valle.json'), 'w').write(json.dumps(meta, ensure_ascii=False, separators=(',', ':')))

@@ -236,8 +236,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(pr.slow && pr.btn && pr.strike && pr.susp && pr.rep && pr.own, 'préstamo: reloj más lento, Renovar, strike por renovar tarde, suspensión sin strikes, reporte por abandono y bici propia si estás suspendido ' + JSON.stringify(pr));
   console.log('3i) Guion C-99: Un día del valle, ciudad que habla, tutor, fiestas, huevos del Metro y horario especial');
   const gi = await p.evaluate(() => {
-    const out = {}, keep = { dia: JSON.stringify(Save.data.dia || []), flags: JSON.stringify(Save.data.flags), logros: JSON.stringify(Save.data.logros), cine: Save.data.settings.cine }, T = [], _toast = UI.toast;
-    UI.toast = m => { T.push(m); }; Save.data.dia = []; Save.data.settings.cine = false; JE.headless = true;
+    const out = {}, keep = { dia: JSON.stringify(Save.data.diaValle || []), flags: JSON.stringify(Save.data.flags), logros: JSON.stringify(Save.data.logros), cine: Save.data.settings.cine }, T = [], _toast = UI.toast;
+    UI.toast = m => { T.push(m); }; Save.data.diaValle = []; Save.data.settings.cine = false; JE.headless = true;
     out.n = DIA.length; out.map = DIA.every(c => ROLE[c.rol] && (!c.turno || c.turno <= nShifts(c.rol)));
     UI.historia(); out.lista = document.querySelectorAll('#mBody .dia-c').length; out.lock = document.querySelectorAll('#mBody .dia-c.lock').length; UI.closeModal();
     Dia.play(DIA[0]); out.brief = /tulas/.test(document.querySelector('#briefBody').textContent) && !!document.querySelector('#briefBody .hist-b .tip');
@@ -247,7 +247,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     out.paso = Dia.done('dia-01') && !!bd && /Capítulo 2/.test(bd.textContent) && /Tulas listas/.test(document.querySelector('#resBody').textContent);
     bd.click(); document.querySelector('#bGo').click(); JE.game.mode.result = () => ({ pass: false, stars: 0, score: 0, goals: [] }); JE.game.finish();
     out.fallo = !Dia.done('dia-02') && !document.querySelector('#bDia') && /verificación/.test(document.querySelector('#resBody').textContent);
-    Save.data.dia = DIA.slice(0, 15).map(c => c.id); Dia.play(DIA[15]); out.epilogo = Dia.done('dia-16') && Save.data.logros.includes('diavalle');
+    Save.data.diaValle = DIA.slice(0, 15).map(c => c.id); Dia.play(DIA[15]); out.epilogo = Dia.done('dia-16') && Save.data.logros.includes('diavalle');
     UI.brief('mecanico', 1); const tip = document.querySelector('#briefBody .tip'); out.tutor = !!tip && /^💡/.test(tip.textContent);
     JE.fecha = '2026-08-07T10:00'; T.length = 0; JE.game.start('usuario', 1, { seed: 4, nov: NOVEDADES[0], free: true, bici: 'propia' }); out.fiesta = T.some(m => /Feria de las Flores/.test(m));
     let M = JE.game.mode; const R = M.ride; M.clock = 600; R.peds = R.peds || [];
@@ -261,7 +261,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     const mu = JE.map.stations.find(s => s.id === 'botero'), otra = JE.map.stations.find(s => s.type === 'a' && !HORARIO_ESP[s.id]);
     out.esp = !!mu && !stOk(mu) && stOk(otra); M.clock = 600; out.esp = out.esp && stOk(mu); JE.game.stop();
     UI.credits(); out.creditos = !!document.querySelector('#mMetro'); UI.closeModal();
-    JE.fecha = null; JE.headless = false; UI.toast = _toast; Save.data.dia = JSON.parse(keep.dia); Save.data.flags = JSON.parse(keep.flags); Save.data.logros = JSON.parse(keep.logros); Save.data.settings.cine = keep.cine; UI.go('sHome');
+    JE.fecha = null; JE.headless = false; UI.toast = _toast; Save.data.diaValle = JSON.parse(keep.dia); Save.data.flags = JSON.parse(keep.flags); Save.data.logros = JSON.parse(keep.logros); Save.data.settings.cine = keep.cine; UI.go('sHome');
     return out;
   });
   ok(gi.n === 16 && gi.map && gi.lista === 16 && gi.lock === 15, 'Un día del valle: 16 capítulos con oficio y turno válidos; solo el primero abierto ' + JSON.stringify({ n: gi.n, lista: gi.lista, lock: gi.lock }));
@@ -269,6 +269,26 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(gi.tutor && gi.fiesta && gi.habla && gi.lluvia, 'consejo del tutor en la ficha, saludo de la Feria de las Flores y peatones que hablan según el contexto');
   ok(gi.cumple && gi.tren && gi.creditos, 'Metro: cumpleaños el 30 de noviembre, Rosalba en Niquía antes de las 4:30 a. m. con logro secreto y enlace en los créditos');
   ok(gi.esp, 'horario especial: el Museo de Antioquia cierra a las 5:30 p. m.');
+  console.log('3j) Mapa reconocible: calles exactas con nombre, barrios, casas en fila; historia y misiones aparte; Ni una gota');
+  const mj = await p.evaluate(() => {
+    const out = {}, M = JE.map, keepV = JSON.stringify(Save.data.diaValle || []), keepD = JSON.stringify(Save.data.dia || null), keepF = JSON.stringify(Save.data.flags), keepL = JSON.stringify(Save.data.logros), T = [], _toast = UI.toast;
+    UI.toast = m => { T.push(m); }; JE.headless = true;
+    out.vias = (M.vias || []).length; out.nombres = M.chains.filter(c => c.n && c.k <= 4).length;
+    const fl = M.stations.find(s => s.id === 'floresta'); out.barrio = M.barrioAt(fl.x, fl.y); out.zona = M.zonaAt(fl.x, fl.y).sub;
+    out.casas = M.blocks(Math.floor(fl.x / TS / CH), Math.floor(fl.y / TS / CH)).every(b => !b.house);
+    Save.data.dia = ['dia-01']; delete Save.data.diaValle; out.migra = Dia.count() === 1 && Array.isArray(Save.data.diaValle) && !Array.isArray(Save.data.dia);
+    JE.fecha = '2026-11-12T10:00'; JE.game.start('usuario', 1, { seed: 6, nov: NOVEDADES[0], free: true, bici: 'propia' }); const G = JE.game.mode;
+    out.juntas = Dia.count() === 1 && !!Save.data.dia && Array.isArray(Save.data.dia.done); UI.historia(); out.hist = document.querySelectorAll('#mBody .dia-c').length === 16; UI.closeModal();
+    const ms = G.tinto; out.tinto = !!ms;
+    if (ms) { G.onCrash(); out.rego = !ms.ok; const st = M.stations.find(s => stOk(s)); G.ride.p.x = st.x; G.ride.p.y = st.y; G.tick(1 / 30); out.recarga = ms.ok; G.tintoLlega(ms); out.gota = ms.done && Save.data.flags.niUnaGota === 1 && Save.data.logros.includes('nigota'); }
+    JE.game.stop(); JE.fecha = null; JE.headless = false; UI.toast = _toast;
+    Save.data.diaValle = JSON.parse(keepV); const d = JSON.parse(keepD); if (d) Save.data.dia = d; else delete Save.data.dia; Save.data.flags = JSON.parse(keepF); Save.data.logros = JSON.parse(keepL); UI.go('sHome');
+    return out;
+  });
+  ok(mj.vias > 30000 && mj.nombres > 5000, 'calles exactas de OpenStreetMap: ' + mj.vias + ' vías, ' + mj.nombres + ' tramos con nombre');
+  ok(!!mj.barrio && /Laureles-Estadio/.test(mj.zona) && mj.casas, 'barrio en Floresta (' + mj.barrio + ' · ' + mj.zona + ') y casas en fila dibujadas en el suelo');
+  ok(mj.migra && mj.juntas && mj.hist, 'Un día del valle y las misiones del modo libre guardan aparte: migración y pantalla de Historia sin fallas');
+  ok(mj.tinto && mj.rego && mj.recarga && mj.gota, 'Ni una gota: chocar riega el tinto, se recarga en una estación y la entrega da el logro secreto ' + JSON.stringify(mj));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

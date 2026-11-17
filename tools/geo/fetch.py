@@ -22,6 +22,7 @@ q('rail', f"SELECT id, class, subclass, names.primary AS name, ST_AsText(geometr
 q('water', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=base/type=water/*', hive_partitioning=1) WHERE {inside}")
 q('landuse', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=base/type=land_use/*', hive_partitioning=1) WHERE {inside}")
 q('div', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=divisions/type=division_area/*', hive_partitioning=1) WHERE {inside} AND country='CO'")
+q('barrios', f"SELECT subtype, names.primary AS name, ST_Y(geometry) AS lat, ST_X(geometry) AS lon FROM read_parquet('{REL}/theme=divisions/type=division/*', hive_partitioning=1) WHERE {inside} AND country='CO' AND subtype IN ('neighborhood','locality')")
 # relieve
 Z = 13
 tx = lambda lon: int((lon + 180) / 360 * 2 ** Z)

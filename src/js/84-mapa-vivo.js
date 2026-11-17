@@ -4,7 +4,17 @@
    Todo es efecto visual: usa Math.random y no el azar de la partida (retos y multijugador no cambian).
    ===================================================================== */
 const zonaNom = n => (n || '').replace(/^Comuna \d+ - /, '');
-CityMap.zonaAt = function (x, y) { const mu = this.muniAt(x, y), co = mu === 'Medellín' ? zonaNom(this.comunaAt(x, y)) : ''; return { k: co || mu, txt: co || mu, sub: co ? 'Medellín' : 'Valle de Aburrá' }; };
+CityMap.barrioAt = function (x, y) { if (!this.ba) return ''; const v = this.ba[clamp(Math.floor(y / TS / 8), 0, VM.mH - 1) * VM.mW + clamp(Math.floor(x / TS / 8), 0, VM.mW - 1)]; return v ? VM.barrios[v - 1] : ''; };
+CityMap.zonaAt = function (x, y) {
+  const mu = this.muniAt(x, y), co = mu === 'Medellín' ? zonaNom(this.comunaAt(x, y)) : '', ba = this.barrioAt(x, y);
+  return { k: ba || co || mu, txt: ba || co || mu, sub: ba ? (co ? co + ' · ' + mu : mu) : co ? 'Medellín' : 'Valle de Aburrá' };
+};
+/* centro de cada barrio (para rotular el mapa grande de cerca) */
+CityMap.barrioCentros = function () {
+  if (this._bc || !this.ba) return this._bc || []; const n = VM.barrios.length, sx = new Float64Array(n), sy = new Float64Array(n), k = new Float64Array(n), C = 8 * TS;
+  for (let j = 0; j < VM.mH; j++) for (let i = 0; i < VM.mW; i++) { const v = this.ba[j * VM.mW + i]; if (v) { sx[v - 1] += i; sy[v - 1] += j; k[v - 1]++; } }
+  return (this._bc = VM.barrios.map((nm, q) => k[q] ? [nm, (sx[q] / k[q] + .5) * C, (sy[q] / k[q] + .5) * C] : null).filter(Boolean));
+};
 /* centro de cada comuna (para rotular el mapa grande) */
 CityMap.comunaCentros = function () {
   if (this._cc) return this._cc; const n = VM.comunas.length, sx = new Float64Array(n), sy = new Float64Array(n), k = new Float64Array(n), C = 8 * TS;

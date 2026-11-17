@@ -64,9 +64,10 @@ src/js/79-interfaz.js avisos al frente y breves; carga del mapa grande por parte
 src/js/80-limpieza.js brigada de limpieza, accesos rápidos del inicio, creador al empezar y horario del sábado
 src/js/81-controles.js panel de controles: tipo, lado, tamaño e inclinar el celular
 src/js/82-prestamo.js préstamo EnCicla en el modo libre: renovar cada hora, strikes, suspensiones y reportes
+src/js/84-mapa-vivo.js barrio/comuna al entrar, palomas, nubes y brillos del agua; centros de comunas y barrios para el mapa grande
 src/js/83-guion.js    guion: Un día del valle, frases de la ciudad, consejos del tutor, saludos de fiesta, huevos del Metro y logros
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
-src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
+src/data/             valle.bin + valle.json (casillas, relieve, municipios, comunas y barrios) y vias.bin (cada vía como vector, con su nombre); se regeneran con tools/geo/build.py
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
@@ -87,6 +88,7 @@ Objeto global de depuración: `window.JE` (`JE.map`, `JE.game`, `JE.ui`, `JE.bot
 ```bash
 node tools/build.js            # construye dist/
 node tools/assets.js           # íconos + compartir.png (necesita dist/juega-encicla.html)
+python3 tools/geo/fetch.py && python3 tools/geo/build.py   # rehace el mapa (duckdb, numpy, pillow, shapely)
 node tools/todo-ia.js          # solo el documento para IA (build.js ya lo genera)
 python3 tools/armar_entrega.py desarmar <entrega.md> <carpeta>   # reconstruye las imágenes de una entrega
 node tests/run.js --n=100      # pruebas; --shots guarda capturas en tests/out/
@@ -164,6 +166,23 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.2.0 · Mapa reconocible, como en un mapa real* (`tools/geo/build.py`, `src/data/vias.bin`, `75-graficos.js`, `84-mapa-vivo.js`):
+- **Calles exactas.** `build.py` exporta cada vía de OpenStreetMap como vector (`vias.bin`), y el juego las dibuja desde ahí en vez de rastrearlas en la cuadrícula.
+  - Formato de cada vía: tipo, nombre y puntos cada 2,5 m. Las vías del mismo nombre se unen.
+  - Tipos: 1 calle, 4 carrera, 2 avenida, 3 autopista, 6 peatonal, 7 escalas, 8 sendero. Hay 32.785 vías y 2.607 nombres.
+  - La física solo toma el eje de calles y carreras (`rp`), así las manzanas no se comen.
+- **Peatonales limpios.** Los andenes y cruces trazados como líneas no se pintan. Los senderos solo van en parques, plazas y monte, y las vías de servicio sin nombre (parqueaderos, entradas) no son calles.
+- **Nombres.**
+  - Calles: sobre la calzada y en el sentido de la vía, cada ~1 km; se ven en el juego y en el mapa grande de cerca.
+  - Barrios y veredas: 672 nombres, a partir de los puntos de Overture asignados a celdas de 8 casillas (`ba`). Aparecen al entrar (barrio · comuna · municipio) y en el mapa grande.
+- **Casas en fila.** Los barrios residenciales son casas (ladrillo), salvo el centro, El Poblado, el comercio, la industria y los corredores de avenida (`nearAve`), con un 8 % de edificios sueltos.
+  - Cada casilla son dos lotes de ~10 m con el frente hacia la calle, con teja, losa, tanques o ropa tendida.
+  - Se dibujan en el suelo, sin costo por cuadro; las cajas 3D quedan para los edificios.
+- **Estaciones en su punto.** Se colocan antes que los lugares, acostadas (4×2) o de pie (2×4). Pueden montarse sobre hasta 2 casillas de calle menor, con castigo. Quedan típicamente a 46 m, el 90 % a menos de 101 m.
+- **Vida:** parqueaderos con carros, postes, árboles de avenida con guayacanes, bancas, palomas que vuelan al pasar, sombras de nubes y brillos en el río.
+- **Ni una gota:** misión diaria del modo libre: llevar un tinto a otra estación sin chocar. Si chocas, se riega y se recarga en cualquier estación; la entrega da un logro secreto.
+- **Corrección:** el avance de *Un día del valle* se guarda en `Save.data.diaValle`. `Save.data.dia` es de las misiones del modo libre; antes chocaban, y la migración es automática.
 
 *v1.1.0 · Guion C-99 y mapa pulido* (`83-guion.js`, `contenido/guion/`, `docs/AUDITORIA-C99.md`):
 - **Un día del valle** (`Dia`, `DIA`, `Save.data.dia`): 16 capítulos en orden, de las 4 a. m. al cierre.
@@ -429,6 +448,7 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 - Prueba de humo de la interfaz: portada, escalafón, briefing, juego, dedo, resultados, mejora, pestañas, modales, bot desde Ajustes y código de reto.
 - Rendimiento con CPU 4x lenta: mediana del cuadro < 40 ms.
 - Multijugador: dos páginas crean la sala, se conectan, arrancan la misma carrera y cada una ve al rival en tiempo real.
+- Mapa (3j): vías exactas con nombre, barrio en Floresta, casas en el suelo, historia y misiones guardadas aparte, Ni una gota.
 - Guion (3i): capítulos válidos, ficha y resultado con diálogos, siguiente capítulo al aprobar, epílogo con logro, peatones que hablan, consejo, fiesta, Metro y horario especial.
 
 ## 7. Publicación web (GitHub Pages)

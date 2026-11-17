@@ -9,7 +9,7 @@ const horaMin = h => { const m = /(\d+):(\d+) ([ap])\. m\./.exec(h || ''); retur
 const DIA = (GUION.dia_del_valle || []).filter(c => ROLE[c.rol] && (!c.turno || c.turno <= nShifts(c.rol)));
 const Dia = JE.dia = {
   list: DIA,
-  saved() { const S = Save.data; return S.dia || (S.dia = []); },
+  saved() { const S = Save.data; if (Array.isArray(S.dia)) { S.diaValle = S.dia; delete S.dia; } return S.diaValle || (S.diaValle = []); },   // Save.data.dia es de las misiones del modo libre
   done(id) { return this.saved().includes(id); },
   next() { return DIA.find(c => !this.done(c.id)) || null; },
   count() { return DIA.filter(c => this.done(c.id)).length; },
@@ -137,7 +137,7 @@ UI.credits = function () {
 /* ---------- logros nuevos ---------- */
 const aprobados = (S, m) => S.history.filter(h => h.m === m && h.p && !h.free && !h.reto).length;
 LOGROS.push(
-  { id: 'diavalle', name: 'Un día del valle', desc: 'Completa los 16 capítulos de la historia principal', icon: 'usuario', test: S => (S.dia || []).length >= DIA.length },
+  { id: 'diavalle', name: 'Un día del valle', desc: 'Completa los 16 capítulos de la historia principal', icon: 'usuario', test: S => (S.diaValle || []).length >= DIA.length },
   { id: 'taller', name: 'Manos al taller', desc: 'Aprueba 5 turnos de Mecánico', icon: 'mecanico', test: S => aprobados(S, 'mecanico') >= 5 },
   { id: 'caja', name: 'Todo en su caja', desc: 'Aprueba 3 turnos de Bodega', icon: 'bodega', test: S => aprobados(S, 'bodega') >= 3 },
   { id: 'relevo', name: 'Relevo de oro', desc: 'Aprueba 3 turnos de Apoyo', icon: 'apoyo', test: S => aprobados(S, 'apoyo') >= 3 },
@@ -148,3 +148,27 @@ LOGROS.push(
   { id: 'mapavivo', name: 'Mapa vivo', desc: 'Aprueba 3 turnos de Monitoreo', icon: 'monitoreo', test: S => aprobados(S, 'monitoreo') >= 3 },
   { id: 'primertren', name: 'Antes del primer tren', desc: 'Encuentra a Rosalba en Niquía antes de las 4:30 a. m.', icon: 'monitoreo', secret: true, test: S => !!S.flags.primerTren }
 );
+
+/* ---------- Ni una gota (de El Metro): lleva un tinto en la canasta de una estación a otra sin chocar ---------- */
+const _initNG = ModeUsuarioR.prototype.libreInit;
+ModeUsuarioR.prototype.libreInit = function (now) {
+  _initNG.call(this, now); const day = Save.data.dia, R = this.ride, P = R.p;
+  if (!this.free || !GUION.metro || (day && day.done && day.done.includes('tinto'))) return;
+  const dest = JE.map.stations.filter(s => stOk(s) && dist(s.x, s.y, P.x, P.y) > 500 && dist(s.x, s.y, P.x, P.y) < 1400).sort((a, b) => dist(a.x, a.y, P.x, P.y) - dist(b.x, b.y, P.x, P.y))[0]; if (!dest) return;
+  const ms = { id: 'tinto', kind: 'tinto', txt: '☕ Ni una gota: lleva un tinto a ' + dest.name, h: 6, xp: 40, ok: true, marks: [] }; this.misiones.push(ms); this.tinto = ms;
+  const m = R.marker({ x: dest.x, y: dest.y, r: 14, col: '#8a5a3b', label: '☕ ' + dest.name, enter: () => this.tintoLlega(ms) }); m.mis = ms; ms.marks.push(m);
+  this.goal(ms.txt, false, () => ms.done, () => ms.ok ? 'sin regar' : 'se regó: recarga en una estación');
+};
+ModeUsuarioR.prototype.tintoLlega = function (ms) {
+  if (ms.done) return; if (!ms.ok) return JE.ui && JE.ui.toast('☕ Se te regó el tinto: recarga en una estación y vuelve');
+  this.cumplir(ms); Save.data.flags.niUnaGota = 1; const nw = Logros.check(); Save.save(); this.ride.stamp = { t: 2.6, title: '¡NI UNA GOTA!', sub: 'El tinto llegó completo', bg: '#8a5a3b' }; Snd.sfx('star');
+  if (JE.ui) { JE.ui.toast('☕ Rosalba: «Ese tinto también merece llegar completo.»'); if (nw.length) JE.ui.toast('🏅 Logro: ' + nw.map(l => l.name).join(', ')); }
+};
+ModeUsuarioR.prototype.onCrash = function () { const ms = this.tinto; if (ms && !ms.done && ms.ok) { ms.ok = false; JE.ui && JE.ui.toast('☕ ¡Se regó el tinto! Recarga en cualquier estación'); } };
+const _tickNG = ModeUsuarioR.prototype.tick;
+ModeUsuarioR.prototype.tick = function (dt) {
+  _tickNG.call(this, dt); const ms = this.tinto; if (!ms || ms.done || ms.ok) return; const P = this.ride.p;
+  if (JE.map.stations.some(s => stOk(s) && dist(s.x, s.y, P.x, P.y) < 26 * WK)) { ms.ok = true; JE.ui && JE.ui.toast('☕ Tinto recargado: ahora sí, sin regar'); }
+};
+LOGROS.push({ id: 'nigota', name: 'Ni una gota', desc: 'Lleva un tinto de estación a estación sin regarlo', icon: 'usuario', secret: true, test: S => !!S.flags.niUnaGota });
+

@@ -53,10 +53,16 @@ const CityMap = JE.map = {
   get(x, y) { return (x < 0 || y < 0 || x >= MW || y >= MH) ? TT.MOUNT : this.t[y * MW + x]; },
   set(x, y, v) { if (x >= 0 && y >= 0 && x < MW && y < MH) this.t[y * MW + x] = v; },
   lightIdx(i) { const v = this.lightAt.get(i); return v == null ? -1 : v; },
+  /* vías: [n] y por línea k (tipo), nombre (0 = sin nombre), puntos (el primero absoluto, luego diferencias, en octavos de casilla) */
+  parseVias(u8) {
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = dv.getUint32(0, true), L = new Array(n); let o = 4;
+    for (let i = 0; i < n; i++) { const k = dv.getUint8(o), nm = dv.getUint16(o + 1, true), np = dv.getUint16(o + 3, true); o += 5; const p = new Float32Array(np * 2); let x = 0, y = 0; for (let j = 0; j < np; j++) { x += dv.getInt16(o, true); y += dv.getInt16(o + 2, true); o += 4; p[j * 2] = x * TS / 8; p[j * 2 + 1] = y * TS / 8; } L[i] = { k, n: nm, p }; }
+    return L;
+  },
   /* ---------- carga ---------- */
   async load() {
     const bin = atob(VALLE_BIN), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    const nT = MW * MH, nE = VM.eW * VM.eH, nM = VM.mW * VM.mH, size = nT + nE * 2 + nM * 2;
+    const nT = MW * MH, nE = VM.eW * VM.eH, nM = VM.mW * VM.mH, nB = VM.barrios ? nM * 2 : 0, size = nT + nE * 2 + nM * 2 + nB;
     let raw = null;
     if (window.DecompressionStream) { try { raw = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); } catch (e) { raw = null; } }
     if (!raw || raw.length < size) raw = inflateRaw(u8, size);
@@ -64,6 +70,14 @@ const CityMap = JE.map = {
     const ed = new Int16Array(raw.slice(nT, nT + nE * 2).buffer), E = this.E = new Int16Array(nE);
     for (let j = 0; j < VM.eH; j++) { let a = 0; for (let i = 0; i < VM.eW; i++) { a += ed[j * VM.eW + i]; E[j * VM.eW + i] = a; } }
     this.mu = raw.slice(nT + nE * 2, nT + nE * 2 + nM); this.co = raw.slice(nT + nE * 2 + nM, nT + nE * 2 + nM * 2);
+    if (nB) this.ba = new Uint16Array(raw.slice(nT + nE * 2 + nM * 2, nT + nE * 2 + nM * 2 + nB).buffer);
+    // vías como vectores (cada calle con su forma y su nombre)
+    if (typeof VIAS_BIN === 'string' && VIAS_BIN && VM.viasB) {
+      const vb = atob(VIAS_BIN), v8 = new Uint8Array(vb.length); for (let i = 0; i < vb.length; i++) v8[i] = vb.charCodeAt(i); let vr = null;
+      if (window.DecompressionStream) { try { vr = new Uint8Array(await new Response(new Blob([v8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); } catch (e) { vr = null; } }
+      if (!vr || vr.length < VM.viasB) vr = inflateRaw(v8, VM.viasB);
+      this.vias = this.parseVias(vr);
+    }
     this.lid = new Map();
     this.build();
     const ci = []; for (let i = 0; i < this.t.length; i++) if (this.t[i] === TT.CICLO) ci.push(i); this.cicloIdx = Int32Array.from(ci);
@@ -131,6 +145,7 @@ const CityMap = JE.map = {
     const [id, name, muni, lat, lon, type, kind, az] = s, g = geoT(lat, lon), tx = g.x, ty = g.y, ok = [TT.BLDG, TT.BRICK, TT.GRASS, TT.PLAZA, TT.WALK];
     const acc = v => v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD || v === TT.AVE;
     let best = null, bd = 1e9;
+    const conecta = (sx, sy) => { const seen = new Set([sy * MW + sx]), q = [sx, sy]; for (let i = 0; i < q.length && seen.size < 600; i += 2) { const qx = q[i], qy = q[i + 1], v = this.get(qx, qy); if (v === TT.AVE || v === TT.AUTO) return true; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = qx + dx, ny = qy + dy, k = ny * MW + nx; if (seen.has(k) || SOLID[this.get(nx, ny)]) continue; seen.add(k); q.push(nx, ny); } } return seen.size >= 600; };
     // lo más cerca posible del punto real: acostada (4×2) o de pie (2×4), según quepa en la manzana.
     // Puede montarse sobre pocas casillas de calle menor (con castigo); nunca sobre avenidas, autopistas, ciclorrutas ni agua.
     for (const [R, maxR] of [[20, 2], [30, 8]]) { if (best) break;
@@ -141,16 +156,21 @@ const CityMap = JE.map = {
       const d = d0 + nr * 3.5; if (!good || nr > maxR || d >= bd) continue;
       for (let yy = y - 2; yy <= y + h + 1 && good; yy++) for (let xx = x - 2; xx <= x + w + 1; xx++) if (this.get(xx, yy) === TT.STATION) { good = false; break; }
       if (!good) continue;
-      let a = false; for (let xx = x; xx < x + w && !a; xx++) if (acc(this.get(xx, y - 1)) || acc(this.get(xx, y + h))) a = true;
-      for (let yy = y; yy < y + h && !a; yy++) if (acc(this.get(x - 1, yy)) || acc(this.get(x + w, yy))) a = true;
-      if (!a) continue;
-      bd = d; best = { x, y, w, h };
+      // da a una calle por su costado largo (no solo por una esquina) y el camión de balance llega a menos de 5 casillas
+      const hz = w > h; let lo = null, hi = null;
+      if (hz) for (let xx = x + 1; xx <= x + 3; xx++) { if (!lo && acc(this.get(xx, y + h))) lo = [xx, y + h]; if (!hi && acc(this.get(xx, y - 1))) hi = [xx, y - 1]; }
+      else for (let yy = y + 1; yy <= y + 3; yy++) { if (!lo && acc(this.get(x + w, yy))) lo = [x + w, yy]; if (!hi && acc(this.get(x - 1, yy))) hi = [x - 1, yy]; }
+      if (lo && !conecta(lo[0], lo[1])) lo = null; if (!lo && hi && !conecta(hi[0], hi[1])) hi = null;   // la calle de acceso debe ser parte de la red, no un retazo suelto
+      if (!lo && !hi) continue;
+      let tr = false; const cx = Math.floor(x + w / 2), cy = Math.floor(y + h / 2); for (let yy = cy - 5; yy <= cy + 5 && !tr; yy++) for (let xx = cx - 5; xx <= cx + 5; xx++) if (TRUCK_OK[this.get(xx, yy)]) { tr = true; break; }
+      if (!tr) continue;
+      bd = d; best = { x, y, w, h, up: !lo };
     } }
     if (!best) { (this.dropped || (this.dropped = [])).push(name); return null; }
     for (let yy = best.y; yy < best.y + best.h; yy++) for (let xx = best.x; xx < best.x + best.w; xx++) this.set(xx, yy, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
     const zone = lat > 6.272 ? 'norte' : lat > 6.205 ? 'centro' : 'sur';
-    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E[id] || '', lat, lon, v: best.h > best.w, tx: best.x, ty: best.y, x: (best.x + best.w / 2) * TS, y: (best.y + best.h / 2) * TS };
+    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E[id] || '', lat, lon, v: best.h > best.w, tx: best.x, ty: best.y, x: (best.x + best.w / 2) * TS - (best.up && best.h > best.w ? 1 : 0), y: (best.y + best.h / 2) * TS - (best.up && best.w > best.h ? 1 : 0) };
   },
   /* ---------- semáforos, carriles de carros, metro, tranvía, cables ---------- */
   buildLights() {
@@ -283,7 +303,7 @@ const CityMap = JE.map = {
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) this.drawTile(c, x, y, (x - x0) * TS, (y - y0) * TS);
     // rayas del centro: siguen el eje vectorizado de cada calle (sin rayas sueltas en las zonas anchas)
     if (this.chains) for (const ch of this.chainsNear(px0 - TS, py0 - TS, S + 2 * TS, S + 2 * TS)) {
-      if (!(ch.k >= 1 && ch.k <= 3)) continue; const p = ch.p, tot = chainLen(p); if (tot < 2.5 * TS) continue;
+      if (ch.k !== 2 && ch.k !== 3) continue; const p = ch.p, tot = chainLen(p); if (tot < 4 * TS) continue;   // en pixel, rayas solo en avenidas y autopistas (en las calles de barrio ensucian)
       const col = ch.k === 2 ? '#ffd166' : '#d8d8d0', per = ch.k === 1 ? 12 : 14, on = ch.k === 1 ? 5 : 7, m0 = ch.j0 ? TS : 2, m1 = ch.j1 ? tot - TS : tot - 2; let s0 = 0;
       for (let i = 2; i < p.length; i += 2) {
         const ax = p[i - 2], ay = p[i - 1], dx = p[i] - ax, dy = p[i + 1] - ay, L = Math.hypot(dx, dy) || 1;
