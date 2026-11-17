@@ -1,0 +1,482 @@
+[
+  {
+    "contexto": "mañana",
+    "frase": "El valle ya despierta.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Buen día, vecino.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Qué fresca amaneció la calle.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "El primer tinto está listo.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Parece que todos madrugamos.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Hoy se ve clarita la montaña.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "A pedalear suave.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Por acá se camina tranquilo.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Ya viene mi bus.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Qué bueno saludar.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Traje casco, como siempre.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mañana",
+    "frase": "Lleguemos sin afán.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Hay que ceder el paso.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Esa cebra no es adorno.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Atento con el semáforo.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Todos queremos llegar.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "La fila avanza despacio.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Gracias por esperar.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Qué buena esa ciclorruta.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "El afán no ayuda.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Primero pasa el peatón.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Voy llegando al trabajo.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Suena la campanita.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "hora_pico",
+    "frase": "Bien por el casco.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Un tintico y seguimos.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "La sombra cae muy bien.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Hora de almorzar.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Hace calorcito, ¿no?",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Toca tomar agua.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Ya casi es el relevo.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Qué jardín tan bonito.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "La ruta va tranquila.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Un descansito ayuda.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Me gusta esta avenida.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "El cielo se está nublando.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "mediodía",
+    "frase": "Cuidemos la bicicleta.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Se vino el aguacero.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Despacio sobre mojado.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Esta nube sí estaba esperando.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Las piedras resbalan.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Mejor encendamos las luces.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Qué bueno tener impermeable.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Hay charcos por allá.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Frene con tiempo, vecino.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "La tarde cambió de color.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Parece que ya escampa.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Cuida el manubrio.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "lluvia",
+    "frase": "Agua pa las plantas.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Qué bonito luce el viaducto.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Las luces ya prendieron.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Se ve el valle encendido.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Hoy sí rindió el día.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Con luces se rueda mejor.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Que lleguen bien a casa.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Ya refrescó bastante.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "La ciudad sigue viva.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Ojo al cruzar.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "No olvides tu casco.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "La estación va cerrando.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "noche",
+    "frase": "Hasta mañana, pues.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "La vía es de todos.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Hoy salimos en familia.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Qué bueno caminar sin carros.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "La peque lleva casco.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Los patines también ruedan.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Vamos por la derecha.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Cuidado con quienes caminan.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Se ve mucha alegría.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Disfruten el domingo.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Gracias por avisar con el timbre.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "A tomar agua.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "ciclovía del domingo",
+    "frase": "Nos vemos en el parque.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Se siente la fiesta en el barrio.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Qué luces tan bonitas.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Cuidemos las flores.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Por aquí huele a arepa.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Qué buen parche en familia.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Esta ciudad celebra bonito.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Los árboles están preciosos.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Vamos con calma por la multitud.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "No dejemos basura.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Qué paisaje de postal.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Una foto y seguimos.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "fiesta",
+    "frase": "Viva la convivencia.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "¿Hay bicis disponibles?",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "Acabo de devolver una.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "Súbale el sillín con cuidado.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "¿Me ayudas con el anclaje?",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "Gracias por atenderme.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "Qué ordenada la estación.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "La reviso antes de salir.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "No olvides la devolución.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "¿Ese tótem funciona?",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "El anfitrión nos saluda.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "Esta bici está impecable.",
+    "origen": "ficcion_creada_para_el_juego"
+  },
+  {
+    "contexto": "cerca de estación",
+    "frase": "A pedalear con respeto.",
+    "origen": "ficcion_creada_para_el_juego"
+  }
+]

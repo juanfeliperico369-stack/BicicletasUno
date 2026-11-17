@@ -1,0 +1,62 @@
+[
+  {
+    "nombre": "Manos al taller",
+    "descripcion": "Repara diez bicicletas sin omitir revisiones.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Relevo de oro",
+    "descripcion": "Llega a tres relevos puntuales.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Anclaje perfecto",
+    "descripcion": "Devuelve cinco bicis sin daños.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Mapa vivo",
+    "descripcion": "Equilibra cinco estaciones en una sesión.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Todo en su caja",
+    "descripcion": "Despacha tres pedidos completos.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Una pausa más",
+    "descripcion": "Completa diez pausas activas.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Cero residuos",
+    "descripcion": "Limpia una estación sin dejar residuos.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Ojo clínico",
+    "descripcion": "Diagnostica cinco fallas al primer intento.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Brigada del valle",
+    "descripcion": "Participa en tres rescates seguros.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Amigos en ruta",
+    "descripcion": "Completa una partida cooperativa.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Guardián del puente",
+    "descripcion": "Cruza una zona siguiendo la señalización.",
+    "estado": "propuesta"
+  },
+  {
+    "nombre": "Luz de regreso",
+    "descripcion": "Devuelve una bici antes del cierre verificado.",
+    "estado": "propuesta"
+  }
+]

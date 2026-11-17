@@ -1,0 +1,93 @@
+[
+  {
+    "fiesta": "Año Nuevo",
+    "personaje": "Doña Luz",
+    "frase": "Otro año para pedalear juntos.",
+    "mision": "Visita tres lugares sin prisa.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Semana Santa",
+    "personaje": "Santi",
+    "frase": "Hoy la ciudad camina a otro ritmo.",
+    "mision": "Respeta el paso en zona concurrida.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Día del Niño",
+    "personaje": "Maryi",
+    "frase": "Un juego en familia alegra el día.",
+    "mision": "Completa una ruta corta y segura.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Día de la Madre",
+    "personaje": "Doña Marta",
+    "frase": "Gracias por todos los cuidados.",
+    "mision": "Lleva una postal a una estación.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Día del Padre",
+    "personaje": "Wilson",
+    "frase": "Un paseo juntos vale más que el afán.",
+    "mision": "Completa una ruta compartida.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Independencia de Colombia",
+    "personaje": "Cata",
+    "frase": "Hoy el valle se viste de fiesta.",
+    "mision": "Encuentra dos decoraciones.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Feria de las Flores",
+    "personaje": "Doña Luz",
+    "frase": "Mire ese guayacán, mijo.",
+    "mision": "Visita un jardín del valle.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Independencia de Antioquia",
+    "personaje": "Yuli",
+    "frase": "Qué bonito celebrar cuidando lo nuestro.",
+    "mision": "Ordena un pedido especial.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Fiesta del Libro",
+    "personaje": "Santi",
+    "frase": "Un libro también lleva de viaje.",
+    "mision": "Encuentra una postal cultural.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Amor y Amistad",
+    "personaje": "Kevin",
+    "frase": "Un relevo a tiempo también es amistad.",
+    "mision": "Ayuda a un compañero.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Halloween",
+    "personaje": "Maryi",
+    "frase": "Que los disfraces no tapen la visión.",
+    "mision": "Recorre un tramo seguro.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Velitas",
+    "personaje": "Doña Marta",
+    "frase": "Cada luz se cuida entre todos.",
+    "mision": "Recoge residuos sin riesgo.",
+    "estado": "propuesta"
+  },
+  {
+    "fiesta": "Navidad y Alumbrados",
+    "personaje": "Don Rubén",
+    "frase": "El valle encendido es de todos.",
+    "mision": "Completa un paseo nocturno con luces.",
+    "estado": "propuesta"
+  }
+]

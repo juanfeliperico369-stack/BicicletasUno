@@ -1,0 +1,24 @@
+{
+ "primerTren": {
+  "quien": "Rosalba",
+  "dice": "Mija, despierte. El primer tren sale a las cuatro y media y la ciudad no espera a nadie."
+ },
+ "maquinistaGana": {
+  "quien": "Rosalba",
+  "dice": "Usted tiene mano."
+ },
+ "maquinistaPierde": {
+  "quien": "Rosalba",
+  "dice": "Tranquila, mija. Nadie nace aprendido. Otra vez."
+ },
+ "cumple": {
+  "quien": "La nieta de Rosalba",
+  "dice": "Qué bonito celebrar dos formas de movernos."
+ },
+ "red": {
+  "quien": "Don Efraín",
+  "dice": "La red no es de hierro, mija. Es de la gente que la cuida."
+ },
+ "creditos": "¿Te gustan los trenes? Juega El Metro",
+ "web": "https://juanfeliperico369-stack.github.io/MetroZero/"
+}

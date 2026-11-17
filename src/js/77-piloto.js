@@ -101,18 +101,27 @@ const Cine = JE.cine = {
   play(roleId, turno, prog, done) {
     const C = CAST[roleId], H = (HISTORIA[roleId] || [])[turno - 1]; done = done || (() => { });
     if (!C || !H || Save.data.settings.cine === false || JE.headless) return done();
-    this.stop(); const nx = this.next(roleId, turno), W = 160, Hh = 90, min = [420, 780, 1110][(turno - 1) % 3], npc = this.actor(roleId), me = Art.me(roleId === 'usuario' ? undefined : { uniforme: true });
-    const shots = [
-      { who: '', text: 'Capítulo ' + Historia.n(roleId, turno) + ' de ' + Historia.total + ' · ' + H.t, big: true, auto: 3.2, draw: (c, t) => { c.drawImage(Art.panorama(W, Hh, min, 62), 0, 0); prect(c, 0, 62, W, Hh - 62, '#3b4250'); prect(c, 0, 62, W, 2, '#b7b3a6'); prect(c, 0, 64, W, 5, '#5e9a1e'); const x = Math.round(-20 + t * 34); Art.bikeSide(c, x, 71, { r: 5, face: 1, col: PAL.vd }); c.save(); c.translate(x, 66); Art.person(c, 0, 0, me, t * 3, 1); c.restore(); } },
-      { who: C[0] + ', ' + C[1], text: H.d, draw: (c, t) => {
+    const nx = this.next(roleId, turno), min = [420, 780, 1110][(turno - 1) % 3], npc = this.actor(roleId), me = Art.me(roleId === 'usuario' ? undefined : { uniforme: true });
+    this.show([
+      { who: '', text: 'Capítulo ' + Historia.n(roleId, turno) + ' de ' + Historia.total + ' · ' + H.t, big: true, auto: 3.2, draw: this.paseo(min, me) },
+      { who: C[0] + ', ' + C[1], text: H.d, draw: this.charla(min, me, npc) },
+      { who: '', text: prog && prog.unlocks && prog.unlocks.length ? 'Nuevo oficio: ' + prog.unlocks.join(', ') + (nx ? ' · Próximo capítulo: «' + nx.H.t + '»' : '') : nx ? 'Próximo capítulo: «' + nx.H.t + '» · ' + nx.r.name : '¡Completaste la historia! La Gran Rodada te espera.', big: true, auto: 4, draw: (c, t) => Art.cover(c, 160, 90, t + 2) }
+    ], done);
+  },
+  /* escena: tu personaje pedalea por la ciclorruta (min = hora del día, para el cielo) */
+  paseo(min, me) { const W = 160, Hh = 90; return (c, t) => { c.drawImage(Art.panorama(W, Hh, min, 62), 0, 0); prect(c, 0, 62, W, Hh - 62, '#3b4250'); prect(c, 0, 62, W, 2, '#b7b3a6'); prect(c, 0, 64, W, 5, '#5e9a1e'); const x = Math.round(-20 + t * 34); Art.bikeSide(c, x, 71, { r: 5, face: 1, col: PAL.vd }); c.save(); c.translate(x, 66); Art.person(c, 0, 0, me, t * 3, 1); c.restore(); } },
+  /* escena: estación; un personaje llega caminando y te habla */
+  charla(min, me, npc) { const W = 160, Hh = 90; return (c, t) => {
         const gy = 66; c.drawImage(Art.panorama(W, Hh, min, gy - 14), 0, 0); prect(c, 0, gy - 14, W, Hh, '#bdb9ab'); for (let x = 0; x < W; x += 8) prect(c, x, gy - 14, 1, Hh, '#b0ac9d');
         prect(c, 96, gy - 44, 60, 4, PAL.vd); prect(c, 100, gy - 40, 2, 40, '#9aa7b8'); prect(c, 150, gy - 40, 2, 40, '#9aa7b8'); for (let i = 0; i < 4; i++) { prect(c, 110 + i * 10, gy - 12, 1, 12, '#59606c'); Art.bikeSide(c, 112 + i * 10, gy - 3, { r: 3, face: 1, col: PAL.vd }); }
         const nxp = Math.round(Math.max(92, 170 - t * 60)), talk = nxp === 92, bob = talk && Math.floor(t * 5) % 2 ? -1 : 0;
         c.save(); c.translate(52, gy + 16); c.scale(2, 2); Art.person(c, 0, 0, me, 0, 1); c.restore();
         c.save(); c.translate(nxp, gy + 16 + bob); c.scale(2, 2); Art.person(c, 0, 0, npc, talk ? 0 : t * 4, -1); c.restore();
-      } },
-      { who: '', text: prog && prog.unlocks && prog.unlocks.length ? 'Nuevo oficio: ' + prog.unlocks.join(', ') + (nx ? ' · Próximo capítulo: «' + nx.H.t + '»' : '') : nx ? 'Próximo capítulo: «' + nx.H.t + '» · ' + nx.r.name : '¡Completaste la historia! La Gran Rodada te espera.', big: true, auto: 4, draw: (c, t) => Art.cover(c, W, Hh, t + 2) }
-    ];
+      }; },
+  /* reproduce una lista de tomas { who, text, big, auto, draw } */
+  show(shots, done) {
+    done = done || (() => { }); if (Save.data.settings.cine === false || JE.headless) return done();
+    this.stop(); const W = 160, Hh = 90;
     const el = this.el = document.createElement('div'); el.id = 'cine';
     el.innerHTML = '<canvas width="' + W + '" height="' + Hh + '"></canvas><div class="ctext"><b></b><p></p></div><div class="cbtn"><button class="btn sm pri" id="cineNext">Siguiente ▶</button><button class="btn sm gh" id="cineSkip">Saltar escena</button></div>';
     document.body.appendChild(el); const cv = el.querySelector('canvas'), c = cv.getContext('2d'), wb = el.querySelector('b'), tp = el.querySelector('p'); c.imageSmoothingEnabled = false;

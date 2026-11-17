@@ -278,17 +278,20 @@ const CityMap = JE.map = {
   drawChunk(c, cx, cy) {
     const x0 = cx * CH, y0 = cy * CH, px0 = x0 * TS, py0 = y0 * TS, S = CH * TS;
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) this.drawTile(c, x, y, (x - x0) * TS, (y - y0) * TS);
-    // rayas de las vías principales (siguen la geometría real)
-    const seen = new Set();
-    for (const ln of this.lanesNear(px0 + S / 2, py0 + S / 2)) {
-      if (seen.has(ln.pts) || ln.dir < 0) continue; seen.add(ln.pts);
-      const col = ln.cls === 't' ? '#ffd166' : '#d8d8d0';
-      let hint = 0; for (let s = 0; s < ln.len; s += 1) { if (s % 14 >= 7) continue; const q = this.at(ln, s, 0, hint); hint = q.i; if (q.x < px0 - 2 || q.y < py0 - 2 || q.x > px0 + S + 2 || q.y > py0 + S + 2) continue; prect(c, q.x - px0, q.y - py0, 1, 1, col); }
+    // rayas del centro: siguen el eje vectorizado de cada calle (sin rayas sueltas en las zonas anchas)
+    if (this.chains) for (const ch of this.chainsNear(px0 - TS, py0 - TS, S + 2 * TS, S + 2 * TS)) {
+      if (!(ch.k >= 1 && ch.k <= 3)) continue; const p = ch.p, tot = chainLen(p); if (tot < 2.5 * TS) continue;
+      const col = ch.k === 2 ? '#ffd166' : '#d8d8d0', per = ch.k === 1 ? 12 : 14, on = ch.k === 1 ? 5 : 7, m0 = ch.j0 ? TS : 2, m1 = ch.j1 ? tot - TS : tot - 2; let s0 = 0;
+      for (let i = 2; i < p.length; i += 2) {
+        const ax = p[i - 2], ay = p[i - 1], dx = p[i] - ax, dy = p[i + 1] - ay, L = Math.hypot(dx, dy) || 1;
+        for (let k = 0; k < L; k++) { const ss = s0 + k; if (ss < m0 || ss > m1 || ss % per >= on) continue; const x = ax + dx * k / L - px0, y = ay + dy * k / L - py0; if (x < -1 || y < -1 || x > S + 1 || y > S + 1) continue; prect(c, Math.floor(x), Math.floor(y), 1, 1, col); }
+        s0 += L;
+      }
     }
-    // cebras junto a los semáforos
-    for (const g of this.lights) {
-      if (g.x < px0 - 20 || g.y < py0 - 20 || g.x > px0 + S + 20 || g.y > py0 + S + 20) continue;
-      for (const [dx, dy] of [[-15 * WK, 0], [15 * WK, 0], [0, -15 * WK], [0, 15 * WK]]) { const x = g.x + dx - px0, y = g.y + dy - py0; if (!TRUCK_OK[this.get(Math.floor((g.x + dx) / TS), Math.floor((g.y + dy) / TS))]) continue; for (let k = -6; k <= 6; k += 3) dx ? prect(c, x - 2, y + k, 5, 2, '#e8e8e0') : prect(c, x + k, y - 2, 2, 5, '#e8e8e0'); }
+    // cebras en los cruces con semáforo, de lado a lado de cada calle que llega
+    for (const z of this.zebras(px0 - 30, py0 - 30, S + 60, S + 60)) {
+      const nx = -z.uy, ny = z.ux;
+      for (let k = -z.hw + 1.5; k <= z.hw - 1.5; k += 3) for (let t = -3; t <= 3; t++) for (const w of [0, .9]) { const x = z.x + nx * (k + w) + z.ux * t - px0, y = z.y + ny * (k + w) + z.uy * t - py0; if (x >= 0 && y >= 0 && x < S && y < S) prect(c, Math.floor(x), Math.floor(y), 1, 1, '#e9e7df'); }
     }
     c.imageSmoothingEnabled = false; LANDMARKS.forEach((L, i) => { if (L.x + L.w < x0 || L.x > x0 + CH || L.y + L.h < y0 || L.y > y0 + CH) return; c.drawImage(this.landmarkCanvas(i), (L.x - x0) * TS, (L.y - y0) * TS, L.w * TS, L.h * TS); });
     // árboles
@@ -329,7 +332,8 @@ const CityMap = JE.map = {
   },
   drawTile(c, x, y, px, py) {
     // casilla de 16 px = 20 m. Calles con andén y sardinel, esquinas redondeadas; edificios por manzana.
-    const v = this.get(x, y), r = h2(x, y), R = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(px + a, py + b, w, h); };
+    const G = (xx, yy) => { const t = this.get(xx, yy); return this.cov && (t === TT.ROAD || t === TT.AVE || t === TT.AUTO) && xx >= 0 && yy >= 0 && xx < MW && yy < MH && !this.cov[yy * MW + xx] ? TT.PLAZA : t; };   // asfalto solo bajo las calles vectorizadas
+    const v = G(x, y), r = h2(x, y), R = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(px + a, py + b, w, h); };
     const rd = vv => vv === TT.ROAD || vv === TT.AVE || vv === TT.AUTO || vv === TT.BRIDGE || vv === TT.DEPOT;
     switch (v) {
       case TT.GRASS: {
@@ -362,7 +366,7 @@ const CityMap = JE.map = {
         R(0, 0, 16, 16, col);
         if (tall) { for (let i = 2; i < 16; i += 4) R(i, 2, 2, 12, shade(col, -.12)); }
         else { const k = h2(x, y, 9); if (k < .15) { R(4, 4, 4, 4, '#3f6fd8'); R(4, 4, 4, 1, '#7aa0ef'); } else if (k < .3) { R(9, 5, 3, 2, '#8e959c'); R(9, 5, 3, 1, '#c9ced6'); } else if (k < .36) R(3, 9, 6, 4, '#4f8f45'); }
-        const n = (xx, yy) => this.get(xx, yy) === TT.BLDG && lk(xx, yy) === my;
+        const n = (xx, yy) => G(xx, yy) === TT.BLDG && lk(xx, yy) === my;
         if (!n(x, y - 1)) R(0, 0, 16, 2, shade(col, .25)); if (!n(x - 1, y)) R(0, 0, 2, 16, shade(col, .15));
         if (!n(x, y + 1)) { R(0, 14, 16, 2, shade(col, tall ? -.5 : -.3)); } if (!n(x + 1, y)) R(14, 0, 2, 16, shade(col, tall ? -.45 : -.25));
         break;
@@ -370,7 +374,7 @@ const CityMap = JE.map = {
       case TT.ROAD: case TT.AVE: case TT.AUTO: case TT.BRIDGE: case TT.DEPOT: {
         const base = v === TT.AUTO ? '#30364a' : v === TT.DEPOT ? '#8d97a5' : v === TT.AVE ? '#3a4152' : '#3d4454';
         if (v === TT.DEPOT) { R(0, 0, 16, 16, base); if ((x + y) % 2 === 0) R(2, 7, 12, 1, '#ffd166'); break; }
-        const n = [this.get(x, y - 1), this.get(x + 1, y), this.get(x, y + 1), this.get(x - 1, y)].map(rd), d = [rd(this.get(x + 1, y - 1)), rd(this.get(x + 1, y + 1)), rd(this.get(x - 1, y + 1)), rd(this.get(x - 1, y - 1))];
+        const n = [G(x, y - 1), G(x + 1, y), G(x, y + 1), G(x - 1, y)].map(rd), d = [rd(G(x + 1, y - 1)), rd(G(x + 1, y + 1)), rd(G(x - 1, y + 1)), rd(G(x - 1, y - 1))];
         const a0 = v === TT.ROAD ? 4 : v === TT.AVE ? 2 : 1, a1 = 16 - a0, side = v === TT.BRIDGE ? '#c9ccd1' : '#bab6a8', curb = v === TT.BRIDGE ? '#9aa0a8' : '#8d897c';
         if (v === TT.BRIDGE) R(0, 0, 16, 16, '#3d7c8c'); else R(0, 0, 16, 16, side);
         // asfalto: núcleo + brazos hacia las vías vecinas + rellenos de esquina
@@ -397,14 +401,14 @@ const CityMap = JE.map = {
       }
       case TT.WALK: {
         R(0, 0, 16, 16, '#c2beb0'); for (let i = 0; i < 16; i += 4) { R(0, i, 16, 1, '#b4b0a2'); R(((i / 4) & 1) * 2 + i % 8, 0, 1, 16, '#b8b4a6'); }
-        if (rd(this.get(x, y - 1))) R(0, 0, 16, 2, '#8d897c'); if (rd(this.get(x, y + 1))) R(0, 14, 16, 2, '#8d897c');
-        if (rd(this.get(x - 1, y))) R(0, 0, 2, 16, '#8d897c'); if (rd(this.get(x + 1, y))) R(14, 0, 2, 16, '#8d897c');
+        if (rd(G(x, y - 1))) R(0, 0, 16, 2, '#8d897c'); if (rd(G(x, y + 1))) R(0, 14, 16, 2, '#8d897c');
+        if (rd(G(x - 1, y))) R(0, 0, 2, 16, '#8d897c'); if (rd(G(x + 1, y))) R(14, 0, 2, 16, '#8d897c');
         break;
       }
       case TT.STEPS: R(0, 0, 16, 16, '#a8a396'); for (let i = 1; i < 16; i += 3) R(1, i, 14, 1, '#8c877a'); R(0, 0, 1, 16, '#6f6a5e'); R(15, 0, 1, 16, '#6f6a5e'); R(2, 0, 1, 16, '#c9c4b6'); break;
       case TT.CICLO: {
         R(0, 0, 16, 16, '#4a9a2c'); if (r < .4) R(3 + ((h2(x, y, 2) * 10) | 0), 3 + ((h2(x, y, 3) * 10) | 0), 1, 1, '#55a634');
-        const cc = vv => vv === TT.CICLO, N = cc(this.get(x, y - 1)), S = cc(this.get(x, y + 1)), W = cc(this.get(x - 1, y)), E = cc(this.get(x + 1, y));
+        const cc = vv => vv === TT.CICLO, N = cc(G(x, y - 1)), S = cc(G(x, y + 1)), W = cc(G(x - 1, y)), E = cc(G(x + 1, y));
         if (!N) R(0, 0, 16, 2, '#9bd341'); if (!S) R(0, 14, 16, 2, '#9bd341'); if (!W) R(0, 0, 2, 16, '#9bd341'); if (!E) R(14, 0, 2, 16, '#9bd341');
         if ((N || S) && !(W || E)) { if ((y & 1) === 0) R(7, 3, 2, 6, '#eaf7d4'); } else if ((W || E) && !(N || S)) { if ((x & 1) === 0) R(3, 7, 6, 2, '#eaf7d4'); }
         if (h2(x, y, 31) < .05) { pring(c, px + 5, py + 9, 2, '#eaf7d4'); pring(c, px + 11, py + 9, 2, '#eaf7d4'); R(6, 6, 5, 1, '#eaf7d4'); }
@@ -413,15 +417,15 @@ const CityMap = JE.map = {
       case TT.WATER: {
         R(0, 0, 16, 16, '#3d7c8c'); if (r < .6) R((h2(x, y, 2) * 10) | 0, (h2(x, y, 3) * 14) | 0, 5, 1, '#5b9aa8'); if (r > .8) R(3, 10, 3, 1, '#7fb6c0');
         const wa = vv => vv === TT.WATER || vv === TT.BRIDGE || vv === TT.CANAL;
-        if (!wa(this.get(x, y - 1))) R(0, 0, 16, 2, '#2f6370'); if (!wa(this.get(x, y + 1))) R(0, 14, 16, 2, '#2f6370'); if (!wa(this.get(x - 1, y))) R(0, 0, 2, 16, '#2f6370'); if (!wa(this.get(x + 1, y))) R(14, 0, 2, 16, '#2f6370');
+        if (!wa(G(x, y - 1))) R(0, 0, 16, 2, '#2f6370'); if (!wa(G(x, y + 1))) R(0, 14, 16, 2, '#2f6370'); if (!wa(G(x - 1, y))) R(0, 0, 2, 16, '#2f6370'); if (!wa(G(x + 1, y))) R(14, 0, 2, 16, '#2f6370');
         break;
       }
       case TT.CANAL: R(0, 0, 16, 16, '#9a9a92'); R(3, 3, 10, 10, '#4f8796'); R(3, 3, 10, 1, '#3d6f7c'); if (r < .5) R(5, 7, 4, 1, '#6aa3b0'); break;
       case TT.PLAZA: R(0, 0, 16, 16, '#ddd3b8'); R(0, 0, 8, 8, '#d3c8aa'); R(8, 8, 8, 8, '#d3c8aa'); R(0, 7, 16, 1, '#cbbf9f'); R(7, 0, 1, 16, '#cbbf9f'); break;
       case TT.STATION: {
         R(0, 0, 16, 16, '#eef2f5'); R(0, 14, 16, 2, '#dde3e8');
-        if (this.get(x, y - 1) !== TT.STATION) R(0, 0, 16, 3, PAL.vd); if (this.get(x, y + 1) !== TT.STATION) R(0, 14, 16, 2, PAL.vd2);
-        if (this.get(x - 1, y) !== TT.STATION) R(0, 0, 2, 16, PAL.vd); if (this.get(x + 1, y) !== TT.STATION) R(14, 0, 2, 16, PAL.vd);
+        if (G(x, y - 1) !== TT.STATION) R(0, 0, 16, 3, PAL.vd); if (G(x, y + 1) !== TT.STATION) R(0, 14, 16, 2, PAL.vd2);
+        if (G(x - 1, y) !== TT.STATION) R(0, 0, 2, 16, PAL.vd); if (G(x + 1, y) !== TT.STATION) R(14, 0, 2, 16, PAL.vd);
         break;
       }
       case TT.LAND: R(0, 0, 16, 16, '#7e8a99'); break;

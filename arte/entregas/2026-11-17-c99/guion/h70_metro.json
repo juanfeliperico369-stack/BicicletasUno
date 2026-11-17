@@ -1,0 +1,169 @@
+{
+  "cameos": [
+    {
+      "idea": "Antes del primer tren",
+      "personaje": "Rosalba",
+      "dialogo": "Mija, despierte. El primer tren sale temprano.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Rosalba en la cabina",
+      "personaje": "Rosalba",
+      "dialogo": "Usted tiene mano.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Ni una gota",
+      "personaje": "Rosalba",
+      "dialogo": "Ese tinto también merece llegar completo.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Wílmar pita dos veces",
+      "personaje": "Wílmar",
+      "dialogo": "Dos pitazos para saludar a quien cuida la vía.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Las arepas de Doña Marleny",
+      "personaje": "Doña Marleny",
+      "dialogo": "Una arepita y a seguir el recorrido.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "La red no es de hierro",
+      "personaje": "Don Efraín",
+      "dialogo": "La red es la gente que la cuida.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Cumpleaños del Metro",
+      "personaje": "La nieta",
+      "dialogo": "Qué bonito celebrar dos formas de movernos.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Frenada al centímetro",
+      "personaje": "Rosalba",
+      "dialogo": "Suave con la frenada, mija.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Punta a punta",
+      "personaje": "Wílmar",
+      "dialogo": "De extremo a extremo, sin perder el rumbo.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Ciudad colgante",
+      "personaje": "La nieta",
+      "dialogo": "Desde aquí el valle parece otro mundo.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "Turno de noche",
+      "personaje": "Don Efraín",
+      "dialogo": "Con luces y atención se llega más lejos.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "La última vuelta",
+      "personaje": "Rosalba",
+      "dialogo": "Nadie aplaude al conductor, pero todos llegan.",
+      "estado": "cameo_ficticio"
+    },
+    {
+      "idea": "La nieta aprende a pedalear",
+      "personaje": "La nieta",
+      "dialogo": "Nadie nace aprendido. Otra vez.",
+      "estado": "cameo_ficticio"
+    }
+  ],
+  "minihistoria": [
+    {
+      "id": "nieta-01",
+      "hora": "día, por confirmar",
+      "lugar": "Valle de Aburrá",
+      "oficio": "usuario",
+      "titulo": "El casco",
+      "escena": "La nieta aprende a ajustarse el casco.",
+      "antes": "Vamos despacio y sin afán.",
+      "despues": "¡Eso, ya salió!",
+      "fallo": "Intentémoslo otra vez.",
+      "npc": [
+        "Qué bonito aprender juntos.",
+        "Un casco bien puesto ayuda.",
+        "Gracias por esperar."
+      ],
+      "consejo": "Respeta señales y peatones."
+    },
+    {
+      "id": "nieta-02",
+      "hora": "día, por confirmar",
+      "lugar": "Valle de Aburrá",
+      "oficio": "usuario",
+      "titulo": "La primera salida",
+      "escena": "Doña Luz muestra cómo revisar la bicicleta.",
+      "antes": "Vamos despacio y sin afán.",
+      "despues": "¡Eso, ya salió!",
+      "fallo": "Intentémoslo otra vez.",
+      "npc": [
+        "Qué bonito aprender juntos.",
+        "Un casco bien puesto ayuda.",
+        "Gracias por esperar."
+      ],
+      "consejo": "Respeta señales y peatones."
+    },
+    {
+      "id": "nieta-03",
+      "hora": "día, por confirmar",
+      "lugar": "Valle de Aburrá",
+      "oficio": "usuario",
+      "titulo": "Cebra y semáforo",
+      "escena": "La nieta practica una parada segura.",
+      "antes": "Vamos despacio y sin afán.",
+      "despues": "¡Eso, ya salió!",
+      "fallo": "Intentémoslo otra vez.",
+      "npc": [
+        "Qué bonito aprender juntos.",
+        "Un casco bien puesto ayuda.",
+        "Gracias por esperar."
+      ],
+      "consejo": "Respeta señales y peatones."
+    },
+    {
+      "id": "nieta-04",
+      "hora": "día, por confirmar",
+      "lugar": "Valle de Aburrá",
+      "oficio": "usuario",
+      "titulo": "El anclaje",
+      "escena": "Santi enseña a devolver la bici.",
+      "antes": "Vamos despacio y sin afán.",
+      "despues": "¡Eso, ya salió!",
+      "fallo": "Intentémoslo otra vez.",
+      "npc": [
+        "Qué bonito aprender juntos.",
+        "Un casco bien puesto ayuda.",
+        "Gracias por esperar."
+      ],
+      "consejo": "Respeta señales y peatones."
+    },
+    {
+      "id": "nieta-05",
+      "hora": "día, por confirmar",
+      "lugar": "Valle de Aburrá",
+      "oficio": "usuario",
+      "titulo": "El paseo",
+      "escena": "La nieta pedalea por la ciclovía con su familia.",
+      "antes": "Vamos despacio y sin afán.",
+      "despues": "¡Eso, ya salió!",
+      "fallo": "Intentémoslo otra vez.",
+      "npc": [
+        "Qué bonito aprender juntos.",
+        "Un casco bien puesto ayuda.",
+        "Gracias por esperar."
+      ],
+      "consejo": "Respeta señales y peatones."
+    }
+  ]
+}

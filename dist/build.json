@@ -1,7 +1,7 @@
 {
- "version": "1.0.6",
- "hash": "dab32ff2",
- "cache": "juega-encicla-v1.0.6-dab32ff2",
+ "version": "1.1.0",
+ "hash": "417e15af",
+ "cache": "juega-encicla-v1.1.0-417e15af",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -37,13 +37,14 @@
   "80-limpieza.js",
   "81-controles.js",
   "82-prestamo.js",
+  "83-guion.js",
   "90-bot.js",
   "95-promo.js",
   "99-boot.js"
  ],
  "bytes": {
-  "single": 2023279,
-  "web": 2024303,
-  "js": 1844688
+  "single": 2052798,
+  "web": 2053822,
+  "js": 1873374
  }
 }

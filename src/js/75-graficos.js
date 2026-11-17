@@ -54,8 +54,26 @@ CityMap.vectorize = function () {
       if (md > eps && mi > 0) { keep[mi] = 1; st.push([a, mi], [mi, b]); } }
     const o = []; for (let i = 0; i < n; i++) if (keep[i]) o.push(P[i * 2], P[i * 2 + 1]); return o;
   };
-  const trace = (isM, eps) => {
-    const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (isM(t[i])) m[i] = 1;
+  /* Zhang-Suen: una calle ancha o una plancha de asfalto se reduce a su eje de una casilla (las calles finas no cambian) */
+  const thin = m => {
+    let idx = []; for (let i = W; i < N - W; i++) if (m[i]) { const x = i % W; if (x > 0 && x < W - 1) idx.push(i); }
+    for (let it = 0, ch = 1; ch && it < 30; it++) {
+      ch = 0;
+      for (const step of [0, 1]) {
+        const del = [];
+        for (const i of idx) {
+          if (!m[i]) continue; const p2 = m[i - W], p3 = m[i - W + 1], p4 = m[i + 1], p5 = m[i + W + 1], p6 = m[i + W], p7 = m[i + W - 1], p8 = m[i - 1], p9 = m[i - W - 1];
+          const B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9; if (B < 2 || B > 6) continue;
+          const A = (!p2 & p3) + (!p3 & p4) + (!p4 & p5) + (!p5 & p6) + (!p6 & p7) + (!p7 & p8) + (!p8 & p9) + (!p9 & p2); if (A !== 1) continue;
+          if (step ? (p2 & p4 & p8) | (p2 & p6 & p8) : (p2 & p4 & p6) | (p4 & p6 & p8)) continue; del.push(i);
+        }
+        for (const i of del) m[i] = 0; if (del.length) ch = 1;
+      }
+      idx = idx.filter(i => m[i]);
+    }
+  };
+  const trace = (isM, eps, delgado) => {
+    const m = new Uint8Array(N); for (let i = 0; i < N; i++) if (isM(t[i])) m[i] = 1; if (delgado) thin(m);
     const nb = (i, f) => { const x = i % W, y = (i / W) | 0; for (let k = 0; k < 8; k++) { const dx = N8[k][0], dy = N8[k][1], nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const j = ny * W + nx; if (!m[j]) continue; if (dx && dy && (m[y * W + nx] || m[ny * W + x])) continue; f(j); } };
     const deg = new Uint8Array(N); for (let i = 0; i < N; i++) if (m[i]) { let d = 0; nb(i, () => d++); deg[i] = d; }
     const seen = new Uint8Array(N), pair = new Set();
@@ -64,16 +82,38 @@ CityMap.vectorize = function () {
     for (let i = 0; i < N; i++) { if (!m[i] || deg[i] === 2) continue; if (!deg[i]) { emit([i]); continue; } nb(i, j => { if (deg[j] === 2) { if (seen[j]) return; } else { const key = i < j ? i * N + j : j * N + i; if (pair.has(key)) return; pair.add(key); } emit(walk(i, j)); }); }
     for (let i = 0; i < N; i++) if (m[i] && deg[i] === 2 && !seen[i]) { let j0 = -1; nb(i, j => { if (j0 < 0) j0 = j; }); seen[i] = 1; emit(walk(i, j0)); }
   };
-  trace(isRoad, .95); trace(v => v === TT.CICLO, .95);
+  trace(isRoad, .95, true); trace(v => v === TT.CICLO, .95);
   // la física sigue a la línea: las casillas bajo cada tramo recto pasan a ser vía
   const soft = [TT.GRASS, TT.BRICK, TT.BLDG, TT.WALK, TT.PLAZA, TT.STEPS], code = { 1: TT.ROAD, 2: TT.AVE, 3: TT.AUTO, 5: TT.CICLO };
+  const cov = this.cov = new Uint8Array(N);
   for (const ch of chains) { const p = ch.p, r = ch.k === 5 ? .3 : CHW[ch.k] * .42, v = code[ch.k]; if (!v) continue;
     for (let i = 0; i + 3 < p.length; i += 2) { const ax = p[i] / TS, ay = p[i + 1] / TS, bx = p[i + 2] / TS, by = p[i + 3] / TS, L = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(L / .25));
-      for (let s = 0; s <= n; s++) { const x = ax + (bx - ax) * s / n, y = ay + (by - ay) * s / n; for (let yy = Math.floor(y - r); yy <= Math.floor(y + r); yy++) for (let xx = Math.floor(x - r); xx <= Math.floor(x + r); xx++) { if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const q = yy * W + xx, cur = t[q]; if (soft.includes(cur) && (v !== TT.CICLO || cur !== TT.BLDG && cur !== TT.BRICK)) t[q] = v; } } } }
+      for (let s = 0; s <= n; s++) { const x = ax + (bx - ax) * s / n, y = ay + (by - ay) * s / n; for (let yy = Math.floor(y - r); yy <= Math.floor(y + r); yy++) for (let xx = Math.floor(x - r); xx <= Math.floor(x + r); xx++) { if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const q = yy * W + xx, cur = t[q]; if (v !== TT.CICLO) cov[q] = 1; if (soft.includes(cur) && (v !== TT.CICLO || cur !== TT.BLDG && cur !== TT.BRICK)) t[q] = v; } } } }
   // índice espacial por celdas de 32 casillas
   const G = this.chainGrid = new Map(), C = 32 * TS;
   chains.forEach((ch, idx) => { const p = ch.p; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (let i = 0; i < p.length; i += 2) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); }
     for (let gy = Math.floor(y0 / C); gy <= Math.floor(y1 / C); gy++) for (let gx = Math.floor(x0 / C); gx <= Math.floor(x1 / C); gx++) { const k = gx + ',' + gy; (G.get(k) || G.set(k, []).get(k)).push(idx); } });
+};
+const chainLen = p => { let L = 0; for (let i = 2; i < p.length; i += 2) L += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]); return L; };
+/* cebras: en cada semáforo, una por cada calle que sale del cruce, a la distancia de su ancho y perpendicular a ella */
+CityMap.zebras = function (x0, y0, w, h) {
+  const out = [];
+  for (const L of this.lights) {
+    if (L.x < x0 || L.y < y0 || L.x > x0 + w || L.y > y0 + h) continue;
+    if (!L.zb) {
+      L.zb = [];
+      for (const ch of this.chainsNear(L.x - 2 * TS, L.y - 2 * TS, 4 * TS, 4 * TS)) {
+        if (!(ch.k >= 1 && ch.k <= 3) || ch.p.length < 4) continue; const p = ch.p, n = p.length, hw = CHW[ch.k] * TS / 2;
+        for (const e of [0, 1]) {
+          const ex = e ? p[n - 2] : p[0], ey = e ? p[n - 1] : p[1]; if (Math.hypot(ex - L.x, ey - L.y) > 1.6 * TS) continue;
+          const dx = (e ? p[n - 4] : p[2]) - ex, dy = (e ? p[n - 3] : p[3]) - ey, len = Math.hypot(dx, dy); if (len < 1.5 * TS) continue;
+          const ux = dx / len, uy = dy / len, d = Math.min(len * .45, hw + 7); L.zb.push({ x: ex + ux * d, y: ey + uy * d, ux, uy, hw });
+        }
+      }
+    }
+    for (const z of L.zb) out.push(z);
+  }
+  return out;
 };
 CityMap.chainsNear = function (x0, y0, w, h) { const C = 32 * TS, out = new Set(); for (let gy = Math.floor(y0 / C); gy <= Math.floor((y0 + h) / C); gy++) for (let gx = Math.floor(x0 / C); gx <= Math.floor((x0 + w) / C); gx++) for (const i of this.chainGrid.get(gx + ',' + gy) || []) out.add(this.chains[i]); return [...out]; };
 const _build75 = CityMap.build;
@@ -149,12 +189,10 @@ Object.assign(CityMap, {
     run(WIDE, (CHW[2] - .14) * TS, '#d9d6cc'); run(WIDE, (CHW[2] - .22) * TS, '#50545c'); run(q => q === 3, (CHW[3] - .16) * TS, '#e8c64a'); run(q => q === 3, (CHW[3] - .24) * TS, '#4a4e56');
     run(q => q === 1, .7, '#e6e4dc', [5, 7]); run(q => q === 2, .8, '#e8c64a', [8, 6]); run(q => q === 3, .8, '#f2f0e8', [9, 6]);
     for (const ch of CHS) { if (!RD(ch.k)) continue; const p = ch.p, w = CHW[ch.k] * TS / 2 - .5; c.fillStyle = ch.k === 3 ? '#4a4e56' : ch.k === 2 ? '#50545c' : '#565a62'; if (ch.j0) { c.beginPath(); c.arc(p[0], p[1], w, 0, TAU); c.fill(); } if (ch.j1) { c.beginPath(); c.arc(p[p.length - 2], p[p.length - 1], w, 0, TAU); c.fill(); } }
-    // cebras en los cruces con semáforo
-    c.fillStyle = '#eceae2';
-    for (const L of this.lights) {
-      if (L.x < px0 - 40 || L.y < py0 - 40 || L.x > px0 + S + 40 || L.y > py0 + S + 40) continue;
-      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) { const ax = L.x + dx * 26, ay = L.y + dy * 26, v = g(Math.floor(ax / TS), Math.floor(ay / TS)); if (!isRoad(v)) continue; const hw = ROADW[v] * TS / 2 - 1; for (let k = -hw + 1; k < hw - 1; k += 3) { if (dx) c.fillRect(ax - 3, ay + k, 6, 1.6); else c.fillRect(ax + k, ay - 3, 1.6, 6); } }
-    }
+    // cebras en los cruces con semáforo: de lado a lado de cada calle que llega, perpendiculares a ella
+    c.strokeStyle = '#eceae2'; c.lineWidth = 1.6; c.lineCap = 'butt'; c.beginPath();
+    for (const z of this.zebras(px0 - 40, py0 - 40, S + 80, S + 80)) { const nx = -z.uy, ny = z.ux; for (let k = -z.hw + 1.5; k <= z.hw - 1.5; k += 3) { const x = z.x + nx * k, y = z.y + ny * k; c.moveTo(x - z.ux * 3, y - z.uy * 3); c.lineTo(x + z.ux * 3, y + z.uy * 3); } }
+    c.stroke(); c.lineCap = 'round';
     // ciclorrutas: carril verde con bordes y bicis pintadas
     run(q => q === 5, .52 * TS, '#e9e6dc'); run(q => q === 5, .42 * TS, '#2e9d55'); run(q => q === 5, .55, '#d8f0c8', [3, 4]);
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) if (g(x, y) === TT.CICLO && h2(x, y, 12) < .12) { const X = x * TS + TS / 2, Y = y * TS + TS / 2; c.strokeStyle = '#e6f5da'; c.lineWidth = .6; c.beginPath(); c.arc(X - 1.6, Y, 1.2, 0, TAU); c.moveTo(X + 2.8, Y); c.arc(X + 1.6, Y, 1.2, 0, TAU); c.stroke(); }

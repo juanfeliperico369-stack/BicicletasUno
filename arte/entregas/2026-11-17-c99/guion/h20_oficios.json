@@ -1,0 +1,423 @@
+{
+  "turnos_fuente_actuales": [
+    {
+      "personaje": "Doña Luz · usuaria desde 2011",
+      "oficio": "usuario",
+      "t": "El primer pedalazo",
+      "a": "¡Bienvenido, mijo! Yo monto en EnCicla desde 2011. Presta tu primera bici y llévala a la otra estación antes de una hora. Suave, que nadie nace aprendido.",
+      "d": "¿Viste? Gratis, sin humo y sin trancón. Mañana te enseño a respetar los semáforos.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Doña Luz · usuaria desde 2011",
+      "oficio": "usuario",
+      "t": "Semáforo en rojo",
+      "a": "Hoy son dos viajes. Ojo con los semáforos: en bici también se frena en rojo, y en las bajadas suelta un poquito, que del afán no queda sino el cansancio.",
+      "d": "Así da gusto: pedaleas como todo un ciudadano. Dicen que EnCicla anda buscando anfitriones…",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Doña Luz · usuaria desde 2011",
+      "oficio": "usuario",
+      "t": "Tres viajes y una decisión",
+      "a": "Tres viajes seguidos, como cualquier día de trabajo. Si los logras, pasa por la estación: Santi, el anfitrión, quiere conocerte.",
+      "d": "¡Te lo dije! Santi dice que tienes madera. Ponte el chaleco: mañana madrugas a las 5.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Santi · anfitrión de estación",
+      "oficio": "anfitrion",
+      "t": "Las 5 de la mañana",
+      "a": "A las 5 en punto el supervisor te entrega la tula: llaves y celular. Tienes media hora para abrir las automáticas del sector y la tuya, con su inventario. A las 5:30 arranca el sistema.",
+      "d": "¡Abriste a tiempo! Y en la ventanilla: sacar la bici, entregarla y ajustar el sillín a la medida. Así se atiende.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Santi · anfitrión de estación",
+      "oficio": "anfitrion",
+      "t": "La estación es tuya",
+      "a": "Hoy te toca el cierre. A las 9 p. m. el sistema cierra, pero sigues recibiendo bicis hasta las 10. Después el inventario y a cerrar las automáticas antes de las 10:30.",
+      "d": "Estación impecable. Don Jairo, el mecánico, preguntó quién dejaba las bicis tan ordenadas.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Don Jairo · mecánico del taller",
+      "oficio": "mecanico",
+      "t": "El oído del mecánico",
+      "a": "Toda bici avisa lo que le duele. Las que llegan malas del camión de balance se diagnostican primero: el que adivina, daña.",
+      "d": "Eso. Bici que sale de aquí, sale como nueva. Mañana te paso al equipo de ensamble.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Don Jairo · mecánico del taller",
+      "oficio": "mecanico",
+      "t": "Bicis nuevas",
+      "a": "Llegaron las piezas de bodega. Marco, ruedas, manubrio, cadena, sillín, frenos y luces: en ese orden y con las tuercas en su punto.",
+      "d": "¡Qué berraquera! Bicis nuevas para el valle. Yuli, la de bodega, necesita a alguien juicioso.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Yuli · jefa de bodega",
+      "oficio": "bodega",
+      "t": "Cada cosa en su sitio",
+      "a": "La bodega es el corazón: aquí llega todo. Descarga, verifica que nada venga golpeado ni con cantidades raras, organiza y carga el pedido del taller. Después lo llevas tú mismo.",
+      "d": "Pedido exacto y a tiempo. Kevin, el de apoyo, anda pidiendo ayuda con los relevos.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Kevin · apoyo en ruta",
+      "oficio": "apoyo",
+      "t": "La zona entera",
+      "a": "El de apoyo abre todas las automáticas de su zona: Envigado tiene trece, Aeropuerto dos. Después, entre las 8 y las 12, los relevos. Y nunca pares de hacer inventarios de control.",
+      "d": "Llegaste a tiempo a cada relevo. Eso también es servicio.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Kevin · apoyo en ruta",
+      "oficio": "apoyo",
+      "t": "De relevo en relevo",
+      "a": "Turno 3: relevos de 4 a 8:30 de la noche, inventarios en cada rato libre y, a las 10, el cierre de toda la zona.",
+      "d": "Ni un relevo tarde. La ingeniera Paola pregunta si sabes de cables.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Ing. Paola · técnica de estaciones",
+      "oficio": "tecnico",
+      "t": "Luz verde",
+      "a": "Tótems, luces LED de los anclajes, celulares de las estaciones… y los power banks. Los celulares que están medio malos se descargan rápido: arma tu plan para que ninguno se apague.",
+      "d": "Todo encendido y ningún celular apagado. Wilson, el del carro de balance, te guarda puesto.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Wilson · conductor de balance",
+      "oficio": "balance",
+      "t": "Las tulas de las 4 a. m.",
+      "a": "El camión duerme en la Terminal del Norte. A las 4 sales: unos llevan al supervisor jefe a Suramericana, otros las tulas de la universidad, de Envigado e Itagüí (en el Puente Pandequeso) o de Sabaneta y La Estrella.",
+      "d": "Ruta cumplida. Y de paso, las bicis malas al taller.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Wilson · conductor de balance",
+      "oficio": "balance",
+      "t": "El camión de 40",
+      "a": "Hoy manejas el camión especial: 40 bicis entre el Campus de la Nacional, Suramericana y el Estadio, y tanteas las estaciones del sur.",
+      "d": "Corredor balanceado. Cata, la de la sala de control, quiere conocerte.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Wilson · conductor de balance",
+      "oficio": "balance",
+      "t": "Turno de noche",
+      "a": "Balanceo hasta las 10, también en los corredores eléctricos. Luego recoges las tulas, las entregas en Casa EnCicla y guardas el camión en la Terminal del Norte.",
+      "d": "Camión guardado y sin un rayón. Sube a la sala de control: Cata te espera.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Cata · sala de control",
+      "oficio": "monitoreo",
+      "t": "La sala de control",
+      "a": "Desde aquí se ve todo. Rojo es estación vacía; azul, llena. Manda las misiones a los carros y, cada hora, revisa que los inventarios cuadren.",
+      "d": "Buen ojo. El mapa te habla y tú ya lo entiendes.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Cata · sala de control",
+      "oficio": "monitoreo",
+      "t": "Atención al cliente",
+      "a": "Suena el teléfono: sanciones, bicis que no se sueltan, gente que se quiere inscribir. Lee el sistema antes de contestar.",
+      "d": "Nadie colgó bravo. Don Rubén anda preguntando por ti.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Don Rubén · supervisor",
+      "oficio": "supervisor",
+      "t": "Las tulas",
+      "a": "A las 4 llegas a Casa EnCicla, por el Parque de Malibú. Arma cada tula con su llave y un celular cargado, súbete al carro de balance y, a las 5, entrega cada una a su anfitrión.",
+      "d": "Sistema abierto sin novedad. Mandas como quien ha pasado por todos los puestos.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Don Rubén · supervisor",
+      "oficio": "supervisor",
+      "t": "Un día cualquiera",
+      "a": "No hay días cualquiera: relevos, bicis con falla, semáforos dañados y usuarios inconformes. Cuida las estaciones y cuida a tu gente.",
+      "d": "Todo resuelto. Falta una sola cosa: el cierre.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Don Rubén · supervisor",
+      "oficio": "supervisor",
+      "t": "La Gran Rodada",
+      "a": "Hoy el cierre es especial: miles pedalean de Caldas a Barbosa. A las 10:30 recoges todas las tulas y pones a cargar los celulares en Casa EnCicla.",
+      "d": "¡Lo lograste! Empezaste prestando una bici y hoy cuidas las de todo el valle. Gracias por rodar con EnCicla.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Maryi · pausas activas",
+      "oficio": "pausas",
+      "t": "A mover el cuerpo",
+      "a": "Hoy recorres las estaciones haciendo pausas activas. Llega, pon la música y que todos estiren: nadie aguanta un turno entero quieto.",
+      "d": "¡Así se cuida al equipo! Los anfitriones quedaron como nuevos.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Jhon · rescate de bicis",
+      "oficio": "rescate",
+      "t": "Ninguna bici atrás",
+      "a": "Nos reportaron bicis fuera de las estaciones. Ve por ellas y llévalas con una mano: despacio y derecho, que el equilibrio es todo.",
+      "d": "Todas de vuelta en su anclaje. Buen pulso, compañero.",
+      "estado": "texto_actual_del_juego"
+    },
+    {
+      "personaje": "Doña Marta · brigada de limpieza",
+      "oficio": "limpieza",
+      "t": "Brigada del mes",
+      "a": "Hoy toca brigada: vamos dos supervisores y en cada estación nos ayuda el anfitrión. Escoge bien la herramienta y que brille el habitáculo.",
+      "d": "¡Quedaron impecables! Los usuarios lo notan apenas llegan.",
+      "estado": "texto_actual_del_juego"
+    }
+  ],
+  "turnos_nuevos_propuestos": [
+    {
+      "oficio": "usuario",
+      "personaje": "Doña Luz",
+      "t": "Una mano a tiempo",
+      "a": "Doña Luz: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Celebra cada pedalazo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "usuario-extra-1"
+    },
+    {
+      "oficio": "usuario",
+      "personaje": "Doña Luz",
+      "t": "El cierre en orden",
+      "a": "Doña Luz: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Celebra cada pedalazo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "usuario-extra-2"
+    },
+    {
+      "oficio": "anfitrion",
+      "personaje": "Santi",
+      "t": "Una mano a tiempo",
+      "a": "Santi: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Choca las palmas.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "anfitrion-extra-1"
+    },
+    {
+      "oficio": "anfitrion",
+      "personaje": "Santi",
+      "t": "El cierre en orden",
+      "a": "Santi: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Choca las palmas.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "anfitrion-extra-2"
+    },
+    {
+      "oficio": "mecanico",
+      "personaje": "Don Jairo",
+      "t": "Una mano a tiempo",
+      "a": "Don Jairo: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Levanta la llave.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "mecanico-extra-1"
+    },
+    {
+      "oficio": "mecanico",
+      "personaje": "Don Jairo",
+      "t": "El cierre en orden",
+      "a": "Don Jairo: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Levanta la llave.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "mecanico-extra-2"
+    },
+    {
+      "oficio": "bodega",
+      "personaje": "Yuli",
+      "t": "Una mano a tiempo",
+      "a": "Yuli: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Revisa la planilla.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "bodega-extra-1"
+    },
+    {
+      "oficio": "bodega",
+      "personaje": "Yuli",
+      "t": "El cierre en orden",
+      "a": "Yuli: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Revisa la planilla.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "bodega-extra-2"
+    },
+    {
+      "oficio": "apoyo",
+      "personaje": "Kevin",
+      "t": "Una mano a tiempo",
+      "a": "Kevin: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Levanta los pulgares.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "apoyo-extra-1"
+    },
+    {
+      "oficio": "apoyo",
+      "personaje": "Kevin",
+      "t": "El cierre en orden",
+      "a": "Kevin: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Levanta los pulgares.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "apoyo-extra-2"
+    },
+    {
+      "oficio": "pausas",
+      "personaje": "Maryi",
+      "t": "Una mano a tiempo",
+      "a": "Maryi: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Aplaude al ritmo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "pausas-extra-1"
+    },
+    {
+      "oficio": "pausas",
+      "personaje": "Maryi",
+      "t": "El cierre en orden",
+      "a": "Maryi: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Aplaude al ritmo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "pausas-extra-2"
+    },
+    {
+      "oficio": "limpieza",
+      "personaje": "Doña Marta",
+      "t": "Una mano a tiempo",
+      "a": "Doña Marta: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Muestra el brillo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "limpieza-extra-1"
+    },
+    {
+      "oficio": "limpieza",
+      "personaje": "Doña Marta",
+      "t": "El cierre en orden",
+      "a": "Doña Marta: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Muestra el brillo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "limpieza-extra-2"
+    },
+    {
+      "oficio": "tecnico",
+      "personaje": "Ing. Paola",
+      "t": "Una mano a tiempo",
+      "a": "Ing. Paola: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Señala el indicador.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "tecnico-extra-1"
+    },
+    {
+      "oficio": "tecnico",
+      "personaje": "Ing. Paola",
+      "t": "El cierre en orden",
+      "a": "Ing. Paola: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Señala el indicador.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "tecnico-extra-2"
+    },
+    {
+      "oficio": "rescate",
+      "personaje": "Jhon",
+      "t": "Una mano a tiempo",
+      "a": "Jhon: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Asiente satisfecho.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "rescate-extra-1"
+    },
+    {
+      "oficio": "rescate",
+      "personaje": "Jhon",
+      "t": "El cierre en orden",
+      "a": "Jhon: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Asiente satisfecho.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "rescate-extra-2"
+    },
+    {
+      "oficio": "balance",
+      "personaje": "Wilson",
+      "t": "Una mano a tiempo",
+      "a": "Wilson: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Da un toque al volante.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "balance-extra-1"
+    },
+    {
+      "oficio": "balance",
+      "personaje": "Wilson",
+      "t": "El cierre en orden",
+      "a": "Wilson: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Da un toque al volante.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "balance-extra-2"
+    },
+    {
+      "oficio": "monitoreo",
+      "personaje": "Cata",
+      "t": "Una mano a tiempo",
+      "a": "Cata: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Marca punto verde.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "monitoreo-extra-1"
+    },
+    {
+      "oficio": "monitoreo",
+      "personaje": "Cata",
+      "t": "El cierre en orden",
+      "a": "Cata: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Marca punto verde.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "monitoreo-extra-2"
+    },
+    {
+      "oficio": "supervisor",
+      "personaje": "Don Rubén",
+      "t": "Una mano a tiempo",
+      "a": "Don Rubén: Completa una tarea breve de apoyo y comunicación con el equipo. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Sonríe con orgullo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "supervisor-extra-1"
+    },
+    {
+      "oficio": "supervisor",
+      "personaje": "Don Rubén",
+      "t": "El cierre en orden",
+      "a": "Don Rubén: Antes de terminar, revisa seguridad, equipo e inventario. Actividad nueva propuesta; horario por confirmar.",
+      "d": "Sonríe con orgullo.",
+      "horario": "por confirmar",
+      "estado": "propuesta_no_implementada",
+      "id": "supervisor-extra-2"
+    }
+  ],
+  "nota": "Los 22 textos fuente se preservan literalmente del Anexo A; algunos sobrepasan los límites de edición y deben revisarse antes de sustituirlos en el juego."
+}

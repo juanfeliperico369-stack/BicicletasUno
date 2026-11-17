@@ -1,0 +1,274 @@
+[
+  {
+    "id": "dia-01",
+    "hora": "4:00 a. m.",
+    "lugar": "Casa EnCicla",
+    "oficio": "supervisor",
+    "titulo": "Las tulas de las cuatro",
+    "escena": "Don Rubén prepara las tulas y los celulares antes de que despierte el valle.",
+    "antes": "Cada tula lleva herramientas para que una estación pueda abrir.",
+    "despues": "Sin la primera llave, nadie pedalea.",
+    "fallo": "Mañana lo revisamos con más calma.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Prepara cada equipo antes de salir."
+  },
+  {
+    "id": "dia-02",
+    "hora": "4:45 a. m.",
+    "lugar": "Floresta",
+    "oficio": "anfitrion",
+    "titulo": "El primer saludo",
+    "escena": "Santi espera el relevo junto a la estación aún cerrada.",
+    "antes": "A esta hora hasta el semáforo bosteza. Hoy abrimos con cuidado.",
+    "despues": "Ya está lista la estación para recibir usuarios.",
+    "fallo": "Faltó una verificación; volvamos al inicio.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Haz inventario antes de prestar."
+  },
+  {
+    "id": "dia-03",
+    "hora": "4:50 a. m.",
+    "lugar": "Terminal del Norte",
+    "oficio": "balance",
+    "titulo": "En marcha",
+    "escena": "Wilson enciende el camión y prepara su recorrido.",
+    "antes": "Las bicis no llegan solas a donde hacen falta.",
+    "despues": "La primera ruta quedó completa.",
+    "fallo": "La carga necesita más cuidado.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "No invadas la ciclorruta con el camión."
+  },
+  {
+    "id": "dia-04",
+    "hora": "5:30 a. m.",
+    "lugar": "Sala de control",
+    "oficio": "monitoreo",
+    "titulo": "El valle en colores",
+    "escena": "Cata vigila el panel de ocupación mientras amanece.",
+    "antes": "Rojo es vacía; azul es llena. El mapa habla.",
+    "despues": "Las estaciones quedaron equilibradas.",
+    "fallo": "Revisemos los datos antes de enviar el reporte.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Contrasta el mapa con los inventarios."
+  },
+  {
+    "id": "dia-05",
+    "hora": "6:30 a. m.",
+    "lugar": "Taller de Aranjuez",
+    "oficio": "mecanico",
+    "titulo": "El oído del taller",
+    "escena": "Don Jairo escucha una cadena seca y busca su origen.",
+    "antes": "Toda bici avisa lo que le duele.",
+    "despues": "Ahora rueda sin ruido.",
+    "fallo": "No adivinemos: vuelve a diagnosticar.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Comprueba frenos y cadena antes de liberar."
+  },
+  {
+    "id": "dia-06",
+    "hora": "7:15 a. m.",
+    "lugar": "Belén",
+    "oficio": "usuario",
+    "titulo": "Luz roja",
+    "escena": "Doña Luz se detiene ante el semáforo rojo.",
+    "antes": "Mijo, en bicicleta también se espera el verde.",
+    "despues": "Bien. El peatón llegó primero y seguro.",
+    "fallo": "Hay que frenar antes de la cebra.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "El semáforo vale para todos."
+  },
+  {
+    "id": "dia-07",
+    "hora": "9:00 a. m.",
+    "lugar": "Bodega de Guayabal",
+    "oficio": "bodega",
+    "titulo": "Conteo exacto",
+    "escena": "Yuli prepara un pedido de repuestos para el taller.",
+    "antes": "Cada cosa en su sitio, incluso la más pequeña.",
+    "despues": "Pedido completo. Nadie se quedó sin herramienta.",
+    "fallo": "Falta verificar una caja.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Cuenta antes de despachar."
+  },
+  {
+    "id": "dia-08",
+    "hora": "10:30 a. m.",
+    "lugar": "Envigado",
+    "oficio": "tecnico",
+    "titulo": "Luz verde",
+    "escena": "Paola examina un tótem y restablece su funcionamiento.",
+    "antes": "Cuando la pantalla calla, toca escuchar los cables.",
+    "despues": "Tótem listo para prestar.",
+    "fallo": "Un contacto sigue fallando.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Aísla la energía antes de intervenir."
+  },
+  {
+    "id": "dia-09",
+    "hora": "11:30 a. m.",
+    "lugar": "Zona Envigado",
+    "oficio": "apoyo",
+    "titulo": "La hora del relevo",
+    "escena": "Kevin recorre su zona para cubrir un descanso.",
+    "antes": "El relevo también mueve la ciudad.",
+    "despues": "Nadie tuvo que cerrar por descansar.",
+    "fallo": "Llegamos tarde al siguiente punto.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Planifica una ruta con margen."
+  },
+  {
+    "id": "dia-10",
+    "hora": "12:30 p. m.",
+    "lugar": "Laureles",
+    "oficio": "pausas",
+    "titulo": "Un respiro",
+    "escena": "Maryi reúne al equipo para estirar y moverse.",
+    "antes": "Dos minutos de pausa pueden cambiar el turno.",
+    "despues": "Se les ve otra cara.",
+    "fallo": "Repitamos el ritmo sin prisa.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Descansa, hidrátate y estira."
+  },
+  {
+    "id": "dia-11",
+    "hora": "2:00 p. m.",
+    "lugar": "Manrique",
+    "oficio": "rescate",
+    "titulo": "Nadie atrás",
+    "escena": "Jhon recoge una bicicleta reportada lejos de su estación.",
+    "antes": "La bici vuelve mejor cuando vuelve segura.",
+    "despues": "Otra vez en su anclaje.",
+    "fallo": "No te apresures con la maniobra.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Asegura la bicicleta antes de moverla."
+  },
+  {
+    "id": "dia-12",
+    "hora": "3:00 p. m.",
+    "lugar": "Belén",
+    "oficio": "limpieza",
+    "titulo": "Como nuevo",
+    "escena": "La brigada limpia el habitáculo y prepara el área.",
+    "antes": "Un mostrador limpio da la bienvenida sin hablar.",
+    "despues": "Ahora sí, quedó impecable.",
+    "fallo": "Ese rincón también cuenta.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Deja el piso seguro y seco."
+  },
+  {
+    "id": "dia-13",
+    "hora": "6:15 p. m.",
+    "lugar": "Corredor UdeA–Hospital Infantil",
+    "oficio": "usuario",
+    "titulo": "La última luz",
+    "escena": "Una bicicleta eléctrica regresa antes del cierre de su corredor.",
+    "antes": "Hoy el reloj pide pedalear con cabeza.",
+    "despues": "La bici volvió a tiempo.",
+    "fallo": "Faltó planear el regreso.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Respeta los horarios específicos verificados."
+  },
+  {
+    "id": "dia-14",
+    "hora": "8:59 p. m.",
+    "lugar": "Floresta",
+    "oficio": "anfitrion",
+    "titulo": "El último préstamo",
+    "escena": "Santi acompaña a una persona en su última salida del turno.",
+    "antes": "La última bici merece el mismo cuidado que la primera.",
+    "despues": "La estación sigue ordenada.",
+    "fallo": "Antes de cerrar, revisa el inventario.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "No confundas última salida y última devolución."
+  },
+  {
+    "id": "dia-15",
+    "hora": "10:00 p. m.",
+    "lugar": "Cierre del sistema",
+    "oficio": "supervisor",
+    "titulo": "Llaves de regreso",
+    "escena": "Don Rubén reúne las tulas mientras los turnos se despiden.",
+    "antes": "Una estación cerrada deja un valle preparado.",
+    "despues": "Todo vuelve a su lugar.",
+    "fallo": "Quedó una llave por comprobar.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Confirma el cierre de cada equipo."
+  },
+  {
+    "id": "dia-16",
+    "hora": "Domingo",
+    "lugar": "Ciclovía del valle",
+    "oficio": "usuario",
+    "titulo": "Quince años rodando",
+    "escena": "El equipo se reúne en una ciclovía familiar para celebrar la movilidad compartida.",
+    "antes": "Lo que mueve al valle es la gente.",
+    "despues": "El siguiente viaje ya empieza.",
+    "fallo": "Mañana hay otra oportunidad.",
+    "npc": [
+      "Qué bonita se ve la ciudad a esta hora.",
+      "Gracias por respetar el paso.",
+      "Esa bici todavía tiene muchas historias."
+    ],
+    "consejo": "Respeta el espacio de cada persona."
+  }
+]

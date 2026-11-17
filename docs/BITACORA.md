@@ -327,3 +327,25 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 5. **`tools/todo-ia.js`:** `build.js` compila `dist/ENCICLA-TODO.md` con los anexos (historia actual, guía y bitácora).
 6. Descripción para compartir y gráfico de la tienda: “12 oficios”, en vez de “9 oficios, 27 turnos”.
 
+## 2026-11-17 · v1.1.0 · Guion de las IA, Un día del valle y mapa pulido
+
+1. **Entrega C-99 revisada** (`docs/AUDITORIA-C99.md`):
+   - 292 PNG reconstruidos con SHA-256 idéntico y archivados en `arte/entregas/2026-11-17-c99/`.
+   - Son bocetos generados con código y no superan el dibujo actual: no entran al juego.
+   - El guion sí entra, curado en `contenido/guion/`.
+2. **Un día del valle:** historia principal de 16 capítulos, de las tulas de las 4 a. m. al cierre de las 10 p. m., con turnos reales y el epílogo de los 15 años de EnCicla.
+3. **La ciudad habla:** los peatones dicen frases según la hora, la lluvia, la fiesta, la ciclovía y las estaciones.
+4. **Tutor y fiestas:** consejo en la ficha de cada turno y saludo de fiesta en el modo libre.
+5. **El Metro:**
+   - Rosalba en Niquía antes de las 4:30 a. m. (logro secreto) y sus frases en el Maquinista secreto.
+   - Cumpleaños del Metro el 30 de noviembre y enlace a *El Metro* en los créditos.
+6. **Logros nuevos:** 8 por oficio, más *Un día del valle* y *Antes del primer tren*.
+7. **Horario oficial:**
+   - Los domingos se presta hasta las 2:59 p. m. y se recibe hasta las 4.
+   - El Museo de Antioquia cierra a las 5:30 p. m. y el Área Metropolitana a las 7 p. m.
+   - Festivos siguen como domingo (regla del autor), aunque la página oficial dice que no hay servicio.
+8. **Mapa pulido:**
+   - Las calles anchas se adelgazan a su eje (60 % menos tramos); se acaban las planchas de asfalto con rayas sueltas.
+   - Las rayas siguen el eje de cada calle y las cebras atraviesan cada calle que llega al semáforo.
+   - En el modo pixel, el asfalto solo va donde pasa una calle.
+

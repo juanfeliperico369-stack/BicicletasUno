@@ -118,6 +118,7 @@ class MapMode extends Mode {
       this.score += Math.round(s.score / 2); Save.data.flags[metro ? 'metroEgg' : 'mazeEgg'] = 1;
       this.ride.stamp = { t: 2.4, title: metro ? '¡MAQUINISTA DEL METRO!' : '¡LABERINTO RESUELTO!', sub: metro ? 'Llevaste los trenes a tiempo por la línea A' : 'Moravia: de basurero a jardín', bg: metro ? PAL.cie : '#ffd84a' };
       Snd.sfx('star');
+      const g = metro && GUION.metro && (s.score > 0 ? GUION.metro.maquinistaGana : GUION.metro.maquinistaPierde); if (g && JE.ui) JE.ui.toast('🚇 ' + g.quien + ': «' + g.dice + '»');   // Rosalba, de El Metro
     });
   }
   onThanks() { this.score += 1; }

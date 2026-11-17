@@ -11,7 +11,10 @@ const jsFiles = fs.readdirSync(path.join(SRC, 'js')).filter(f => f.endsWith('.js
 let js = jsFiles.map(f => `/* ---- ${f} ---- */\n` + rd('js/' + f)).join('\n');
 // mapa real del Valle de Aburrá (tools/geo/build.py): casillas y relieve comprimidos (deflate) + líneas en JSON
 const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '${fs.readFileSync(path.join(SRC, 'data', 'valle.bin')).toString('base64')}';\n`;
-js = VALLE + js;
+// guion del juego (contenido/guion/*.json): historia "Un día del valle", frases de la ciudad, tutor, fiestas y Metro
+const GDIR = path.join(ROOT, 'contenido', 'guion');
+const GUION = fs.existsSync(GDIR) ? Object.fromEntries(fs.readdirSync(GDIR).filter(f => f.endsWith('.json')).sort().map(f => [f.slice(0, -5), JSON.parse(fs.readFileSync(path.join(GDIR, f), 'utf8'))])) : {};
+js = VALLE + `const GUION = ${JSON.stringify(GUION)};\n` + js;
 const version = (js.match(/version: '([^']+)'/) || [])[1] || '0.0.0';
 const b64 = f => fs.readFileSync(path.join(SRC, 'assets', f)).toString('base64');
 const fonts = `@font-face{font-family:"Titulos";font-weight:300 700;font-stretch:75% 125%;src:url(data:font/woff2;base64,${b64('titulos.woff2')}) format("woff2");font-display:swap}@font-face{font-family:"Cuerpo";font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}`;

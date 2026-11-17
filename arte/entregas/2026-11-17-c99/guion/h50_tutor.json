@@ -1,0 +1,67 @@
+{
+  "usuario": [
+    "Frena antes de la cebra.",
+    "Revisa frenos y sillín antes de salir.",
+    "Planea el regreso antes del cierre."
+  ],
+  "anfitrion": [
+    "Cuenta las bicis al abrir.",
+    "Confirma cada entrega.",
+    "Cierra con inventario completo."
+  ],
+  "mecanico": [
+    "Primero diagnostica.",
+    "Prueba frenos antes de liberar.",
+    "Guarda cada herramienta."
+  ],
+  "bodega": [
+    "Verifica cantidad y estado.",
+    "Agrupa piezas por tipo.",
+    "Revisa la salida del pedido."
+  ],
+  "apoyo": [
+    "Conoce las rutas de relevo.",
+    "Deja margen entre estaciones.",
+    "Anota cada inventario."
+  ],
+  "pausas": [
+    "Respira antes del ritmo.",
+    "No fuerces los estiramientos.",
+    "Agua y descanso también cuentan."
+  ],
+  "limpieza": [
+    "Señaliza el piso húmedo.",
+    "Escoge la herramienta adecuada.",
+    "Revisa los rincones."
+  ],
+  "tecnico": [
+    "Aísla la energía antes de abrir.",
+    "Verifica el LED final.",
+    "Prueba el equipo una vez más."
+  ],
+  "rescate": [
+    "Asegura la bici antes de moverla.",
+    "Evita maniobras riesgosas.",
+    "Registra la devolución."
+  ],
+  "balance": [
+    "Nunca invadas la ciclorruta.",
+    "Asegura la carga.",
+    "Respeta la ruta asignada."
+  ],
+  "monitoreo": [
+    "Verifica las señales.",
+    "No confundas vacía con cerrada.",
+    "Da instrucciones claras."
+  ],
+  "supervisor": [
+    "Revisa el equipo antes de salir.",
+    "Coordina relevos.",
+    "Escucha al personal."
+  ],
+  "libre": [
+    "Pedalea con casco.",
+    "Ve con luces de noche.",
+    "Tu ritmo también es parte del paseo."
+  ]
+}

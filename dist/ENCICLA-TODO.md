@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.0.6 · compilado el 2026-11-17.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v1.1.0 · compilado el 2026-11-17.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.0.6)
+## 2.3 Estado actual (v1.1.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-17 | Claude Code | documento creado (v1.0.6) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-17 | Claude Code | documento creado (v1.1.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1647,11 +1647,14 @@ src/js/79-interfaz.js avisos al frente y breves; carga del mapa grande por parte
 src/js/80-limpieza.js brigada de limpieza, accesos rápidos del inicio, creador al empezar y horario del sábado
 src/js/81-controles.js panel de controles: tipo, lado, tamaño e inclinar el celular
 src/js/82-prestamo.js préstamo EnCicla en el modo libre: renovar cada hora, strikes, suspensiones y reportes
+src/js/83-guion.js    guion: Un día del valle, frases de la ciudad, consejos del tutor, saludos de fiesta, huevos del Metro y logros
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
 src/data/             valle.bin + valle.json (mapa real; se regeneran con tools/geo/build.py)
 tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
+contenido/guion/      textos del juego en JSON; tools/build.js los incrusta como GUION (ver contenido/LEEME.md)
+arte/entregas/        entregas de arte de las IA archivadas tal cual (ver arte/LEEME.md y docs/AUDITORIA-C99.md)
 tools/todo-ia.js      compila dist/ENCICLA-TODO.md: docs/IA-ENCICLA.md + script de entregas + historia actual, guía y bitácora
 tools/armar_entrega.py arma las entregas de las IA (PDF maestro, MD con el código de las imágenes, ZIP) y las desarma
 docs/IA-ENCICLA.md    documento único para las IA de arte e historia (fuente; lo compila tools/todo-ia.js)
@@ -1745,6 +1748,24 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v1.1.0 · Guion C-99 y mapa pulido* (`83-guion.js`, `contenido/guion/`, `docs/AUDITORIA-C99.md`):
+- **Un día del valle** (`Dia`, `DIA`, `Save.data.dia`): 16 capítulos en orden, de las 4 a. m. al cierre.
+  - Cada capítulo juega un turno real con sus diálogos (`antes`, `despues`, `fallo`, `consejo`). El capítulo viaja en `Game.meta.dia`, también al repetir.
+  - El 16 es el epílogo de los 15 años: una escena y el logro *Un día del valle*.
+  - No depende del escalafón y aparece primero en la pantalla de Historia.
+- **La ciudad habla:** cada 7 a 14 segundos, un peatón cercano dice una frase del contexto (`Ciudad.ctx`): lluvia, fiesta, ciclovía, estación o la hora. Usa `Math.random` y no el azar de la partida, para no romper retos ni multijugador.
+- **Tutor y fiestas:** consejo del oficio en la ficha del turno; saludo de un personaje al entrar al modo libre en día de fiesta.
+- **El Metro:**
+  - Rosalba en Niquía de 4:00 a 4:29 a. m. (logro secreto *Antes del primer tren*) y sus frases al terminar el Maquinista secreto.
+  - Cumpleaños del Metro el 30 de noviembre y enlace a *El Metro* en los créditos.
+- **Horario especial** (`HORARIO_ESP` en `80-limpieza.js`): el Museo de Antioquia cierra a las 5:30 p. m. y el Área Metropolitana a las 7 p. m. `stOk` las cierra y el mapa las oscurece.
+- **Escenas** (`Cine.show`, `Cine.paseo`, `Cine.charla`): las tomas se arman con piezas reutilizables.
+- **Mapa:**
+  - `CityMap.vectorize` adelgaza las zonas anchas de calle (Zhang-Suen) antes de rastrear: 60 % menos tramos y sin planchas de asfalto.
+  - `CityMap.cov` es la huella de las calles: en pixel, el asfalto solo va bajo una calle y lo demás se ve como plaza.
+  - Las rayas siguen el eje de cada tramo.
+  - `CityMap.zebras`: una cebra por calle que llega a cada semáforo, perpendicular a ella.
+
 *v1.0.5 · Préstamo EnCicla en el modo libre* (`82-prestamo.js`, `Cuenta`, `Save.data.encicla`):
 - Con bici de EnCicla el reloj va más lento (`rate` 0,55: una hora ≈ 2 minutos), el préstamo se renueva cada hora con el botón **Renovar** cerca de una estación
   (solo mientras se presta) y se respeta el horario: al cierre la bici debía estar devuelta (sanción y fin de la sesión). Con bici propia el modo libre es de 24 horas (`rate` 0,9).
@@ -1817,7 +1838,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   Festivos de Colombia calculados (fijos, Ley Emiliani al lunes y Semana Santa con la Pascua), tipo de día (`semana`, `sabado`, `domingo`, `festivo`).
   **Horario según el día** (`Cal.service`: `open` primer préstamo, `lend` desde esa hora ya no se presta, `close` hasta esa hora se reciben bicis): de lunes a viernes se presta de 5:30 a. m. a 8:59 p. m.
   y se recibe hasta las 10 p. m. (dato del equipo). Sábado: se presta de 6:30 a. m. a 6:59 p. m. y se recibe hasta las 8 p. m.; anfitriones T1 6:00 a. m.–1:30 p. m. y T3 1:00–8:30 p. m. (7 h 30 min), supervisores una hora antes y media hora después
-  (`80-limpieza.js`: `SAB_H`, `horasDelDia`, y `ModeAnfitrionR.prototype.begin` corre las fases con `SAB_MAP`). Domingos y festivos: de 8 a. m. a 4 p. m., solo estaciones automáticas (los anfitriones descansan; `Cal.soloAuto`, `JE.soloAuto`, `stOk`):
+  (`80-limpieza.js`: `SAB_H`, `horasDelDia`, y `ModeAnfitrionR.prototype.begin` corre las fases con `SAB_MAP`). Domingos y festivos: se presta de 8 a. m. a 2:59 p. m. y se recibe hasta las 4 p. m. (página oficial: último préstamo 3 p. m.), solo estaciones automáticas (los anfitriones descansan; `Cal.soloAuto`, `JE.soloAuto`, `stOk`):
   el Usuario y el modo libre prestan y devuelven solo en automáticas, las manuales se ven cerradas en el mapa y la ficha del anfitrión avisa que se juega con el horario de entre semana.
   **Ciclovía:** domingos y festivos de 7 a. m. a 1 p. m. (`Cal.cicloviaNow`): ese día la novedad del turno pasa a ser Ciclovía sola.
 - **Festividades automáticas** (`FIESTAS`): Navidad y Alumbrados (1 dic–7 ene), Velitas (7–8 dic), Semana Santa, Día del Niño, de la Madre y del Padre, Independencia (19–20 jul),
@@ -1991,6 +2012,7 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 - Prueba de humo de la interfaz: portada, escalafón, briefing, juego, dedo, resultados, mejora, pestañas, modales, bot desde Ajustes y código de reto.
 - Rendimiento con CPU 4x lenta: mediana del cuadro < 40 ms.
 - Multijugador: dos páginas crean la sala, se conectan, arrancan la misma carrera y cada una ve al rival en tiempo real.
+- Guion (3i): capítulos válidos, ficha y resultado con diálogos, siguiente capítulo al aprobar, epílogo con logro, peatones que hablan, consejo, fiesta, Metro y horario especial.
 
 ### 7. Publicación web (GitHub Pages)
 
@@ -2351,6 +2373,28 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 4. **Huevos de pascua de *El Metro*:** personajes, frases, capítulos, logros, colores de líneas y fechas guardados, más 16 ideas y el objeto `METRO_EGG`.
 5. **`tools/todo-ia.js`:** `build.js` compila `dist/ENCICLA-TODO.md` con los anexos (historia actual, guía y bitácora).
 6. Descripción para compartir y gráfico de la tienda: “12 oficios”, en vez de “9 oficios, 27 turnos”.
+
+### 2026-11-17 · v1.1.0 · Guion de las IA, Un día del valle y mapa pulido
+
+1. **Entrega C-99 revisada** (`docs/AUDITORIA-C99.md`):
+   - 292 PNG reconstruidos con SHA-256 idéntico y archivados en `arte/entregas/2026-11-17-c99/`.
+   - Son bocetos generados con código y no superan el dibujo actual: no entran al juego.
+   - El guion sí entra, curado en `contenido/guion/`.
+2. **Un día del valle:** historia principal de 16 capítulos, de las tulas de las 4 a. m. al cierre de las 10 p. m., con turnos reales y el epílogo de los 15 años de EnCicla.
+3. **La ciudad habla:** los peatones dicen frases según la hora, la lluvia, la fiesta, la ciclovía y las estaciones.
+4. **Tutor y fiestas:** consejo en la ficha de cada turno y saludo de fiesta en el modo libre.
+5. **El Metro:**
+   - Rosalba en Niquía antes de las 4:30 a. m. (logro secreto) y sus frases en el Maquinista secreto.
+   - Cumpleaños del Metro el 30 de noviembre y enlace a *El Metro* en los créditos.
+6. **Logros nuevos:** 8 por oficio, más *Un día del valle* y *Antes del primer tren*.
+7. **Horario oficial:**
+   - Los domingos se presta hasta las 2:59 p. m. y se recibe hasta las 4.
+   - El Museo de Antioquia cierra a las 5:30 p. m. y el Área Metropolitana a las 7 p. m.
+   - Festivos siguen como domingo (regla del autor), aunque la página oficial dice que no hay servicio.
+8. **Mapa pulido:**
+   - Las calles anchas se adelgazan a su eje (60 % menos tramos); se acaban las planchas de asfalto con rayas sueltas.
+   - Las rayas siguen el eje de cada calle y las cebras atraviesan cada calle que llega al semáforo.
+   - En el modo pixel, el asfalto solo va donde pasa una calle.
 
 ---
 

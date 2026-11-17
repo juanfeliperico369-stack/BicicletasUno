@@ -1,0 +1,122 @@
+{
+  "dona_luz": {
+    "personaje": "Doña Luz",
+    "oficio": "usuario",
+    "saludo": "Mija, ¿cómo va todo?",
+    "muletilla": "mija",
+    "celebra": "Celebra cada pedalazo",
+    "corrige": "Advierte con cariño",
+    "consuela": "Respira, lo importante es llegar bien",
+    "frase": "Mi bicicleta y yo sabemos esperar el verde."
+  },
+  "santi": {
+    "personaje": "Santi",
+    "oficio": "anfitrion",
+    "saludo": "Parce, ¿cómo va todo?",
+    "muletilla": "parce",
+    "celebra": "Choca las palmas",
+    "corrige": "Recuerda el inventario",
+    "consuela": "Yo te muestro, sin afán",
+    "frase": "Una sonrisa también se presta."
+  },
+  "don_jairo": {
+    "personaje": "Don Jairo",
+    "oficio": "mecanico",
+    "saludo": "Ome, ¿cómo va todo?",
+    "muletilla": "ome",
+    "celebra": "Levanta la llave",
+    "corrige": "Pide diagnosticar primero",
+    "consuela": "Toda falla tiene arreglo",
+    "frase": "Toda bici avisa lo que le duele."
+  },
+  "yuli": {
+    "personaje": "Yuli",
+    "oficio": "bodega",
+    "saludo": "Listo, ¿cómo va todo?",
+    "muletilla": "listo",
+    "celebra": "Revisa la planilla",
+    "corrige": "Repite el conteo",
+    "consuela": "Lo repetimos y sale bien",
+    "frase": "Cada cosa en su sitio."
+  },
+  "kevin": {
+    "personaje": "Kevin",
+    "oficio": "apoyo",
+    "saludo": "De una, ¿cómo va todo?",
+    "muletilla": "de una",
+    "celebra": "Levanta los pulgares",
+    "corrige": "Habla de puntualidad",
+    "consuela": "Vamos por partes, parce",
+    "frase": "Cada relevo cuenta."
+  },
+  "maryi": {
+    "personaje": "Maryi",
+    "oficio": "pausas",
+    "saludo": "¡eso!, ¿cómo va todo?",
+    "muletilla": "¡eso!",
+    "celebra": "Aplaude al ritmo",
+    "corrige": "Pide hidratarse",
+    "consuela": "Respira y vuelve a empezar",
+    "frase": "Mueve el cuerpo y se despeja la mente."
+  },
+  "dona_marta": {
+    "personaje": "Doña Marta",
+    "oficio": "limpieza",
+    "saludo": "Mija, ¿cómo va todo?",
+    "muletilla": "mija",
+    "celebra": "Muestra el brillo",
+    "corrige": "Corrige con cuidado",
+    "consuela": "A la próxima sale impecable",
+    "frase": "Un espacio limpio recibe mejor a todos."
+  },
+  "paola": {
+    "personaje": "Ing. Paola",
+    "oficio": "tecnico",
+    "saludo": "Revisemos, ¿cómo va todo?",
+    "muletilla": "revisemos",
+    "celebra": "Señala el indicador",
+    "corrige": "Exige comprobar el cable",
+    "consuela": "Busquemos la falla paso a paso",
+    "frase": "Luz verde o nada."
+  },
+  "jhon": {
+    "personaje": "Jhon",
+    "oficio": "rescate",
+    "saludo": "Parce, ¿cómo va todo?",
+    "muletilla": "parce",
+    "celebra": "Asiente satisfecho",
+    "corrige": "Pide parar y asegurar",
+    "consuela": "Sin carreras, hay tiempo",
+    "frase": "Ninguna bici se queda atrás."
+  },
+  "wilson": {
+    "personaje": "Wilson",
+    "oficio": "balance",
+    "saludo": "Ome, ¿cómo va todo?",
+    "muletilla": "ome",
+    "celebra": "Da un toque al volante",
+    "corrige": "Recuerda la carga segura",
+    "consuela": "La siguiente ruta mejora",
+    "frase": "Por las vías; la ciclorruta, para las bicis."
+  },
+  "cata": {
+    "personaje": "Cata",
+    "oficio": "monitoreo",
+    "saludo": "A ver, ¿cómo va todo?",
+    "muletilla": "a ver",
+    "celebra": "Marca punto verde",
+    "corrige": "Contrasta datos y reportes",
+    "consuela": "Revisa el mapa conmigo",
+    "frase": "El mapa habla."
+  },
+  "don_ruben": {
+    "personaje": "Don Rubén",
+    "oficio": "supervisor",
+    "saludo": "Mijo, ¿cómo va todo?",
+    "muletilla": "mijo",
+    "celebra": "Sonríe con orgullo",
+    "corrige": "Pide pensar en el equipo",
+    "consuela": "Nadie nace aprendido",
+    "frase": "Se manda cuidando a la gente."
+  }
+}

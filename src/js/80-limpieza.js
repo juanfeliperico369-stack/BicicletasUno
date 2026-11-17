@@ -135,7 +135,9 @@ UI.avatar = function (first) {
 };
 
 /* ---------- domingos y festivos: solo estaciones automáticas (los anfitriones descansan) ---------- */
-const stOk = s => !(s.type === 'm' && JE.soloAuto);
+/* horario especial de algunas estaciones (página oficial de EnCicla): cierran antes que el sistema */
+const HORARIO_ESP = { botero: 17 * 60 + 30, amva: 19 * 60 };
+const stOk = s => { if (s.type === 'm' && JE.soloAuto) return false; const c = HORARIO_ESP[s.id], M = Game.mode; return !(c && M && !M.done && M.ride && M.clock >= c); };
 const _start80 = Game.start;
 Game.start = function () { JE.soloAuto = !JE.briefing && Cal.soloAuto(Cal.now()); return _start80.apply(this, arguments); };
 const _brief80b = UI.brief;

@@ -1,0 +1,67 @@
+{
+ "anonuevo": {
+  "rol": "usuario",
+  "frase": "Otro año para pedalear juntos.",
+  "mision": "Visita tres lugares sin prisa."
+ },
+ "semanasanta": {
+  "rol": "anfitrion",
+  "frase": "Hoy la ciudad camina a otro ritmo.",
+  "mision": "Respeta el paso en zona concurrida."
+ },
+ "nino": {
+  "rol": "pausas",
+  "frase": "Un juego en familia alegra el día.",
+  "mision": "Completa una ruta corta y segura."
+ },
+ "madre": {
+  "rol": "limpieza",
+  "frase": "Gracias por todos los cuidados.",
+  "mision": "Lleva una postal a una estación."
+ },
+ "padre": {
+  "rol": "balance",
+  "frase": "Un paseo juntos vale más que el afán.",
+  "mision": "Completa una ruta compartida."
+ },
+ "patria": {
+  "rol": "monitoreo",
+  "frase": "Hoy el valle se viste de fiesta.",
+  "mision": "Encuentra dos decoraciones."
+ },
+ "flores": {
+  "rol": "usuario",
+  "frase": "Mire ese guayacán, mijo.",
+  "mision": "Visita un jardín del valle."
+ },
+ "antioquia": {
+  "rol": "bodega",
+  "frase": "Qué bonito celebrar cuidando lo nuestro.",
+  "mision": "Ordena un pedido especial."
+ },
+ "libro": {
+  "rol": "anfitrion",
+  "frase": "Un libro también lleva de viaje.",
+  "mision": "Encuentra una postal cultural."
+ },
+ "amor": {
+  "rol": "apoyo",
+  "frase": "Un relevo a tiempo también es amistad.",
+  "mision": "Ayuda a un compañero."
+ },
+ "halloween": {
+  "rol": "pausas",
+  "frase": "Que los disfraces no tapen la visión.",
+  "mision": "Recorre un tramo seguro."
+ },
+ "velitas": {
+  "rol": "limpieza",
+  "frase": "Cada luz se cuida entre todos.",
+  "mision": "Recoge residuos sin riesgo."
+ },
+ "navidad": {
+  "rol": "supervisor",
+  "frase": "El valle encendido es de todos.",
+  "mision": "Completa un paseo nocturno con luces."
+ }
+}
