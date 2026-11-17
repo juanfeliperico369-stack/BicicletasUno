@@ -232,7 +232,8 @@ class Ride {
     const t = performance.now() / 1000;
     for (const s of this.map.stations) {
       if (!inV(s.x, s.y, 30)) continue;
-      const ss = this.sim ? this.sim.st[s.i] : null, bikes = ss ? ss.bikes : Math.round(s.cap * .55), x0 = s.tx * TS - ox, y0 = s.ty * TS - oy;
+      const ss = this.sim ? this.sim.st[s.i] : null, bikes = ss ? ss.bikes : Math.round(s.cap * .55), x0 = s.v ? -2 * TS : s.tx * TS - ox, y0 = s.v ? -TS : s.ty * TS - oy;
+      if (s.v) { b.save(); b.translate(s.x - ox, s.y - oy); b.rotate(Math.PI / 2); }   // estación de pie: el mismo dibujo, girado
       const W = 4 * TS, H = 2 * TS;
       prect(b, x0 + 3, y0 + 14, W - 16, 3, PAL.vd2); prect(b, x0 + 3, y0 + 14, W - 16, 1, PAL.vd1);
       const per = Math.ceil(s.cap / 2), sp = Math.min(5, (W - 18) / per);
@@ -243,6 +244,7 @@ class Ride {
       if (s.e) { const on = (this.mode.clock | 0) < E_HASTA; prect(b, x0 + W - 14, y0 + 1, 3, 4, on ? '#ffd84a' : '#8a8a8a'); prect(b, x0 + W - 13, y0 + 3, 1, 3, on ? '#ffd84a' : '#8a8a8a'); if (s.e === 'solo' && (this.mode.clock | 0) >= E_CIERRE) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, 8); } }
       if (ss && ss.broken) { if ((t * 3 | 0) % 2) { pline(b, x0 + 12, y0 + 4, x0 + 30, y0 + 28, PAL.cor); pline(b, x0 + 30, y0 + 4, x0 + 12, y0 + 28, PAL.cor); } }
       if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
+      if (s.v) b.restore();
     }
     // ruta GPS
     const ph = (t * 4) | 0;

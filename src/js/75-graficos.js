@@ -107,7 +107,7 @@ CityMap.zebras = function (x0, y0, w, h) {
         for (const e of [0, 1]) {
           const ex = e ? p[n - 2] : p[0], ey = e ? p[n - 1] : p[1]; if (Math.hypot(ex - L.x, ey - L.y) > 1.6 * TS) continue;
           const dx = (e ? p[n - 4] : p[2]) - ex, dy = (e ? p[n - 3] : p[3]) - ey, len = Math.hypot(dx, dy); if (len < 1.5 * TS) continue;
-          const ux = dx / len, uy = dy / len, d = Math.min(len * .45, hw + 7); L.zb.push({ x: ex + ux * d, y: ey + uy * d, ux, uy, hw });
+          const ux = dx / len, uy = dy / len, d = Math.min(len * .45, hw + 7), zx = ex + ux * d, zy = ey + uy * d; if (L.zb.some(z => Math.hypot(z.x - zx, z.y - zy) < hw * 2 + 4)) continue; L.zb.push({ x: zx, y: zy, ux, uy, hw });
         }
       }
     }
@@ -122,6 +122,7 @@ CityMap.build = function () { this.bridge(); this.vectorize(); _build75.call(thi
 /* ---------- suelo de la ciudad 3D ---------- */
 const GROUND = ['#5f9e46', '#3d7a3a', '#bfb7a6', '#c2beb4', '#c2beb4', '#c2beb4', '#c9c5bb', '#c9c5bb', '#3f86c8', '#5f9e46', '#d9d1bd', '#c2beb4', '#cfcabf', '#c9b78c', '#c2beb4', '#b5b0a6', '#c5b99f'];
 const ROADW = { [TT.ROAD]: .96, [TT.AVE]: 1.3, [TT.AUTO]: 1.5, [TT.BRIDGE]: 1.3 };
+const PARK_COL = ['#c0392b', '#ecf0f1', '#2c3e50', '#7f8c8d', '#f1c40f', '#2980b9', '#bdc3c7', '#8e44ad', '#16a085'], ROPA = ['#ff6b5a', '#56c7ff', '#ffc93c', '#ffffff', '#9bd341', '#b07cff'];
 const ROOF = ['#8a8d93', '#9a9893', '#7d8189', '#a59f95', '#8f9499', '#b1aca2'], TEJA = ['#c2623b', '#b55430', '#cf7448', '#a94b2b', '#c8693f'];
 const WALLS = [['#b5653f', '#9a5334'], ['#c0714a', '#a35d3b'], ['#a85a38', '#8d4a2d'], ['#cfc8b8', '#b0a999'], ['#d9d2c2', '#bab3a3'], ['#b9b4a8', '#9c978b'], ['#a9bccd', '#8ba0b3'], ['#c7d0d8', '#a7b1ba']];
 const TALL = [[6.2505, -75.5686, 80], [6.2086, -75.5695, 70], [6.2405, -75.5745, 45], [6.1715, -75.5860, 30], [6.1725, -75.6110, 30], [6.3370, -75.5580, 30]];
@@ -167,6 +168,13 @@ Object.assign(CityMap, {
       else if (v === TT.STEPS) { c.fillStyle = '#a99d84'; for (let k = 2; k < TS; k += 4) c.fillRect(X, Y + k, TS, .8); }
       else if (!wat(v) && v !== TT.LAND) { c.fillStyle = '#b3aea3'; c.fillRect(X, Y, TS, .5); c.fillRect(X, Y, .5, TS); c.fillRect(X + 5.3, Y, .4, TS); c.fillRect(X + 10.6, Y, .4, TS); c.fillRect(X, Y + 5.3, TS, .4); c.fillRect(X, Y + 10.6, TS, .4); }
     }
+    // parqueaderos: zonas anchas de asfalto que no son calle (cupos y carros parqueados)
+    const pk = (x, y) => { const v = g(x, y); return (v === TT.ROAD || v === TT.AVE || v === TT.AUTO) && this.cov && x >= 0 && y >= 0 && x < MW && y < MH && !this.cov[y * MW + x]; };
+    for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) {
+      if (!pk(x, y)) continue; let n = 0; for (const [dx, dy] of N8) if (pk(x + dx, y + dy)) n++; if (n < 5) continue;
+      const X = x * TS, Y = y * TS; c.fillStyle = '#8b8f97'; c.fillRect(X, Y, TS + .5, TS + .5); c.fillStyle = '#e9e7df';
+      for (let k = 0; k < 2; k++) { c.fillRect(X + k * 8 + .2, Y + 1.5, .45, 13); if (h2(x * 2 + k, y, 61) < .55) { const col = PARK_COL[(h2(x * 2 + k, y, 62) * PARK_COL.length) | 0]; c.fillStyle = 'rgba(8,14,30,.25)'; c.beginPath(); c.roundRect(X + k * 8 + 2.2, Y + 3.6, 5, 10, 1.6); c.fill(); c.fillStyle = col; c.beginPath(); c.roundRect(X + k * 8 + 1.6, Y + 3, 5, 10, 1.6); c.fill(); c.fillStyle = '#1f2f45'; c.fillRect(X + k * 8 + 2.2, Y + 4.4, 3.8, 2); c.fillRect(X + k * 8 + 2.2, Y + 10.6, 3.8, 1.3); c.fillStyle = '#e9e7df'; } }
+    }
     // relieve suave (luz del noroeste)
     const RS = CH * 2 + 2, rc = Art.mk(RS, RS, r => { for (let j = 0; j < RS; j++) for (let i = 0; i < RS; i++) { const tx = x0 - .5 + i / 2, ty = y0 - .5 + j / 2, gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile, f = clamp((gx + gy) * 1.1, -.3, .25); r.fillStyle = f > 0 ? 'rgba(255,250,230,' + (f * .5).toFixed(3) + ')' : 'rgba(10,20,40,' + (-f * .6).toFixed(3) + ')'; r.fillRect(i, j, 1, 1); } });
     c.imageSmoothingEnabled = true; c.drawImage(rc, 0, 0, RS, RS, px0 - TS * .75, py0 - TS * .75, RS * TS / 2, RS * TS / 2);
@@ -196,6 +204,24 @@ Object.assign(CityMap, {
     // ciclorrutas: carril verde con bordes y bicis pintadas
     run(q => q === 5, .52 * TS, '#e9e6dc'); run(q => q === 5, .42 * TS, '#2e9d55'); run(q => q === 5, .55, '#d8f0c8', [3, 4]);
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) if (g(x, y) === TT.CICLO && h2(x, y, 12) < .12) { const X = x * TS + TS / 2, Y = y * TS + TS / 2; c.strokeStyle = '#e6f5da'; c.lineWidth = .6; c.beginPath(); c.arc(X - 1.6, Y, 1.2, 0, TAU); c.moveTo(X + 2.8, Y); c.arc(X + 1.6, Y, 1.2, 0, TAU); c.stroke(); }
+    // mobiliario urbano: postes de luz a los lados de las calles; en las avenidas, árboles (algunos guayacanes)
+    const pie = (x, y) => { const tx = Math.floor(x / TS), ty = Math.floor(y / TS), v = g(tx, ty); return v === TT.WALK || v === TT.PLAZA || v === TT.GRASS || ((v === TT.ROAD || v === TT.AVE) && this.cov && !this.cov[ty * MW + tx]); };
+    for (const ch of CHS) {
+      if (!(ch.k >= 1 && ch.k <= 3)) continue; const p = ch.p, hw = CHW[ch.k] * TS / 2 + 3.2, step = ch.k === 2 ? 24 : 38; let d = 8 + h2(p[0] | 0, p[1] | 0, 70) * step, j = 0;
+      for (let i = 2, s0 = 0; i < p.length; i += 2) {
+        const ax = p[i - 2], ay = p[i - 1], dx = p[i] - ax, dy = p[i + 1] - ay, L = Math.hypot(dx, dy); if (L < 1) continue; const ux = dx / L, uy = dy / L;
+        for (; d < s0 + L; d += step, j++) {
+          const t = d - s0, sd = j % 2 ? 1 : -1, X = ax + ux * t - uy * hw * sd, Y = ay + uy * t + ux * hw * sd;
+          if (X < px0 - 6 || Y < py0 - 6 || X > px0 + S + 6 || Y > py0 + S + 6 || !pie(X, Y)) continue;
+          if (ch.k === 2 && j % 3) { const k = h2(X | 0, Y | 0, 71), col = k < .14 ? '#f2c230' : k < .22 ? '#e88ab8' : '#3f8a3f', r = 4.4; c.fillStyle = 'rgba(8,14,30,.28)'; c.beginPath(); c.arc(X + 1.6, Y + 1.8, r, 0, TAU); c.fill(); c.fillStyle = shade(col, -.18); c.beginPath(); c.arc(X, Y, r, 0, TAU); c.fill(); c.fillStyle = col; c.beginPath(); c.arc(X - .7, Y - .7, r * .76, 0, TAU); c.fill(); c.fillStyle = '#ffffff2e'; c.beginPath(); c.arc(X - 1.5, Y - 1.5, r * .36, 0, TAU); c.fill(); }
+          else { const lx = X + uy * sd * 3.4, ly = Y - ux * sd * 3.4; c.strokeStyle = 'rgba(8,14,30,.28)'; c.lineWidth = .9; c.beginPath(); c.moveTo(X + 1.4, Y + 1.4); c.lineTo(lx + 1.4, ly + 1.4); c.stroke(); c.strokeStyle = '#2f3540'; c.lineWidth = .7; c.beginPath(); c.moveTo(X, Y); c.lineTo(lx, ly); c.stroke(); c.fillStyle = '#2f3540'; c.beginPath(); c.arc(X, Y, 1.1, 0, TAU); c.fill(); c.fillStyle = '#fff4cf'; c.beginPath(); c.ellipse(lx, ly, 1.3, .8, Math.atan2(uy, ux), 0, TAU); c.fill(); }
+        }
+        s0 += L;
+      }
+    }
+    // bancas en las plazas
+    c.fillStyle = '#7a5a3a';
+    for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) if (g(x, y) === TT.PLAZA && h2(x, y, 72) < .07) { const X = x * TS + 4 + h2(x, y, 73) * 6, Y = y * TS + 5 + h2(x, y, 74) * 6; c.fillRect(X, Y, 5, 1.5); c.fillStyle = '#5c4229'; c.fillRect(X, Y + 1.5, 5, .5); c.fillStyle = '#7a5a3a'; }
     // sombras de los edificios (sol del noroeste)
     c.fillStyle = 'rgba(8,14,30,.26)';
     for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) for (const b of this.blocks(cx + i, cy + j)) { const d = 3 + b.z * 13; if (b.x + b.w + d < px0 || b.y + b.h + d < py0 || b.x > px0 + S || b.y > py0 + S) continue; c.beginPath(); c.moveTo(b.x + b.w, b.y); c.lineTo(b.x + b.w + d, b.y + d); c.lineTo(b.x + b.w + d, b.y + b.h + d); c.lineTo(b.x + d, b.y + b.h + d); c.lineTo(b.x, b.y + b.h); c.lineTo(b.x + b.w, b.y + b.h); c.closePath(); c.fill(); }
@@ -239,8 +265,22 @@ Ride.prototype.draw3D = function (c, ox, oy, vw, vh) {
       c.strokeStyle = p.top; c.strokeRect(rx0 + .8, ry0 + .8, rw - 1.6, rh - 1.6);
       if (rw > 16 && rh > 16) { const k = b.k, ux = rx0 + rw * (.25 + k * .4), uy = ry0 + rh * (.3 + ((k * 7) % 1) * .35); c.fillStyle = p.top; if (k < .35) { c.fillRect(ux, uy, 5, 3.4); c.fillRect(ux + 6.5, uy, 3, 3.4); } else if (k < .6) { c.beginPath(); c.arc(ux, uy, 2.6, 0, TAU); c.fill(); } else if (k < .75 && b.z > .5) { c.strokeStyle = '#e8e6de'; c.beginPath(); c.arc(rx0 + rw / 2, ry0 + rh / 2, 5, 0, TAU); c.stroke(); c.fillStyle = '#e8e6de'; c.fillRect(rx0 + rw / 2 - 2, ry0 + rh / 2 - 2.5, .9, 5); c.fillRect(rx0 + rw / 2 + 1.1, ry0 + rh / 2 - 2.5, .9, 5); c.fillRect(rx0 + rw / 2 - 2, ry0 + rh / 2 - .45, 4, .9); } else if (k > .88) { c.fillStyle = '#6aa94f'; c.fillRect(rx0 + 3, ry0 + 3, rw - 6, rh - 6); } }
     }
+    techo(c, b, rx0, ry0, rx1, ry1);
   }
 };
+/* techos con vida: ropa tendida, tanques de agua y matas en las casas; paneles solares en algunas terrazas */
+function techo(c, b, x0, y0, x1, y1) {
+  const w = x1 - x0, h = y1 - y0; if (w < 9 || h < 9) return; const k = (b.k * 97.3) % 1;
+  if (b.house) {
+    if (k < .34) { const yy = y0 + h * (.28 + k * .5); c.strokeStyle = '#d8d3c4'; c.lineWidth = .35; c.beginPath(); c.moveTo(x0 + 2, yy); c.lineTo(x1 - 2, yy); c.stroke(); for (let x = x0 + 2.6, j = 0; x < x1 - 3; x += 2.6, j++) { c.fillStyle = ROPA[(j + ((k * 50) | 0)) % ROPA.length]; c.fillRect(x, yy, 1.4, 1.7); } }
+    else if (k < .6) { const tx = x0 + w * .72, ty = y0 + h * .34; c.fillStyle = '#1e2126'; c.beginPath(); c.arc(tx, ty, 1.9, 0, TAU); c.fill(); c.fillStyle = '#454b55'; c.beginPath(); c.arc(tx - .5, ty - .5, .8, 0, TAU); c.fill(); }
+    else if (k < .74) for (let j = 0; j < 3; j++) { c.fillStyle = j % 2 ? '#5e9a1e' : '#78b544'; c.beginPath(); c.arc(x0 + 2.6 + j * 2.7, y1 - 2.6, 1.2, 0, TAU); c.fill(); }
+  } else if (k > .72 && w > 18 && h > 14) {
+    const px = x0 + w * .12, py = y0 + h * .56, pw = w * .34, ph = h * .28; c.fillStyle = '#22365e'; c.fillRect(px, py, pw, ph); c.strokeStyle = '#5b7db0'; c.lineWidth = .3; c.beginPath();
+    for (let x = px + 2.2; x < px + pw; x += 2.2) { c.moveTo(x, py); c.lineTo(x, py + ph); } c.moveTo(px, py + ph / 2); c.lineTo(px + pw, py + ph / 2); c.stroke();
+  }
+  c.lineWidth = .5;
+}
 
 /* ---------- personajes y vehículos dibujados (ciudad 3D) ---------- */
 const SPR4 = 4;

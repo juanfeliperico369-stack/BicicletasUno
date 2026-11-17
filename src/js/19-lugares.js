@@ -76,12 +76,12 @@ const ESTACIONES = [
   ['bombona', 'Bomboná', 'Medellín', 6.2478, -75.5600, 'a', 'mix'], ['junin', 'Junín', 'Medellín', 6.2470, -75.5658, 'a', 'work', 'carabobo'], ['sanantonio', 'San Antonio', 'Medellín', 6.2465, -75.5705, 'm', 'work'],
   ['sanignacio', 'San Ignacio', 'Medellín', 6.2450, -75.5640, 'a', 'work'], ['cisneros', 'Plaza Cisneros', 'Medellín', 6.2465, -75.5730, 'a', 'work', 'amva'], ['plazamayor', 'Plaza Mayor', 'Medellín', 6.2433, -75.5768, 'a', 'work', 'amva'],
   ['ayacucho', 'Ayacucho', 'Medellín', 6.2458, -75.5580, 'm', 'res'], ['alpujarra', 'La Alpujarra', 'Medellín', 6.2425, -75.5735, 'a', 'work', 'amva'], ['sandiego', 'San Diego', 'Medellín', 6.2360, -75.5650, 'm', 'mix'],
-  ['parquesrio', 'Parques del Río', 'Medellín', 6.2400, -75.5790, 'a', 'mix', 'amva'], ['exposiciones', 'Exposiciones', 'Medellín', 6.2385, -75.5748, 'a', 'work', 'amva'], ['industriales', 'Industriales', 'Medellín', 6.2297, -75.5745, 'a', 'work', 'vegas'],
+  ['parquesrio', 'Parques del Río', 'Medellín', 6.2400, -75.5790, 'a', 'mix', 'amva'], ['exposiciones', 'Exposiciones', 'Medellín', 6.2385, -75.5748, 'a', 'work', 'amva'], ['industriales', 'Industriales', 'Medellín', 6.2305, -75.5744, 'a', 'work', 'vegas'],
   ['amva', 'Área Metropolitana', 'Medellín', 6.2405, -75.5705, 'a', 'work', 'amva'], ['sanjuan', 'Avenida San Juan', 'Medellín', 6.2445, -75.5800, 'a', 'mix', 'amva'],
   // Estadio, Laureles, Calasanz, San Javier
   ['carlose', 'Carlos E. Restrepo', 'Medellín', 6.2600, -75.5800, 'm', 'uni'], ['estadio', 'Estadio', 'Medellín', 6.2545, -75.5880, 'm', 'mix'], ['calasanz', 'Calasanz', 'Medellín', 6.2620, -75.6000, 'a', 'res', 'laureles'],
   ['upb', 'UPB', 'Medellín', 6.2440, -75.5895, 'm', 'uni'], ['unidad', 'Unidad Deportiva', 'Medellín', 6.2585, -75.5925, 'a', 'mix'], ['av80', 'Avenida 80', 'Medellín', 6.2470, -75.6000, 'a', 'mix', 'laureles'],
-  ['floresta', 'Floresta', 'Medellín', 6.2595, -75.5975, 'a', 'res', 'laureles'], ['sanjavier', 'San Javier', 'Medellín', 6.2555, -75.6125, 'm', 'res'], ['suramericana', 'Suramericana', 'Medellín', 6.2530, -75.5815, 'm', 'work'],
+  ['floresta', 'Floresta', 'Medellín', 6.2586, -75.5971, 'a', 'res', 'laureles'], ['sanjavier', 'San Javier', 'Medellín', 6.2555, -75.6125, 'm', 'res'], ['suramericana', 'Suramericana', 'Medellín', 6.2530, -75.5815, 'm', 'work'],
   ['laureles2', 'Segundo Parque de Laureles', 'Medellín', 6.2430, -75.5960, 'a', 'res', 'laureles'], ['laureles', 'Primer Parque de Laureles', 'Medellín', 6.2475, -75.5915, 'm', 'res'], ['av33', 'Avenida 33', 'Medellín', 6.2380, -75.5900, 'a', 'mix'],
   // Belén, Guayabal
   ['rosales', 'Rosales', 'Medellín', 6.2370, -75.6050, 'm', 'res'], ['belen', 'Parque de Belén', 'Medellín', 6.2310, -75.6040, 'a', 'res'], ['belen2', 'Belén Las Playas', 'Medellín', 6.2250, -75.5980, 'm', 'res'],

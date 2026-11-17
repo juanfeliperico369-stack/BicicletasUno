@@ -69,8 +69,9 @@ const CityMap = JE.map = {
     const ci = []; for (let i = 0; i < this.t.length; i++) if (this.t[i] === TT.CICLO) ci.push(i); this.cicloIdx = Int32Array.from(ci);
   },
   build() {
-    LANDMARKS.forEach((L, i) => this.paintLandmark(L, i));
+    // primero las estaciones, en su punto real; después los lugares, que se corren para no taparlas
     this.stations = ESTACIONES.map((s, i) => this.carveStation(s, i)).filter(Boolean); this.stations.forEach((s, i) => s.i = i);
+    LANDMARKS.forEach((L, i) => this.paintLandmark(L, i));
     this.buildLights(); this.buildLanes(); this.buildRail(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h + .5) * TS, name: 'Casa EnCicla' };
     this.poi = {}; for (const k in PUNTOS) { const [la, lo, n] = PUNTOS[k], p = geoP(la, lo), o = this.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), k !== 'campus'); this.poi[k] = { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, name: n }; }
@@ -90,7 +91,7 @@ const CityMap = JE.map = {
   /* ---------- lugares y estaciones ---------- */
   paintLandmark(L, i) {
     // corre el lugar unas casillas si tapa avenidas, autopistas, agua u otro lugar
-    const bad = v => v === TT.AVE || v === TT.AUTO || v === TT.WATER || v === TT.BRIDGE ? 6 : v === TT.ROAD ? 1 : 0;
+    const bad = v => v === TT.STATION ? 40 : v === TT.AVE || v === TT.AUTO || v === TT.WATER || v === TT.BRIDGE ? 6 : v === TT.ROAD ? 1 : 0;
     let best = null, bs = 1e9;
     for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) {
       let s = Math.abs(dx) + Math.abs(dy);
@@ -98,7 +99,7 @@ const CityMap = JE.map = {
       if (s < bs) { bs = s; best = { dx, dy }; }
     }
     L.x += best.dx; L.y += best.dy;
-    const keep = [TT.WATER, TT.CANAL, TT.AUTO, TT.AVE, TT.BRIDGE];
+    const keep = [TT.WATER, TT.CANAL, TT.AUTO, TT.AVE, TT.BRIDGE, TT.STATION];
     const base = { comuna13: TT.LAND, bibespana: TT.LAND, palacio: TT.PLAZA, catedral: TT.PLAZA, parquenorte: TT.GRASS, deporte: TT.GRASS, memoria: TT.GRASS, cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
     for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y))) continue; this.set(x, y, base); this.lid.set(this.idx(x, y), i); }
     const solid = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid.get(this.idx(L.x + xx, L.y + yy)) === i) this.set(L.x + xx, L.y + yy, TT.LAND); };
@@ -127,27 +128,29 @@ const CityMap = JE.map = {
   },
   /* la estación ocupa 4×2 casillas (80×40 m) en la acera o el lote más cercano a su lat/lon, con salida a una vía */
   carveStation(s, i) {
-    const [id, name, muni, lat, lon, type, kind, az] = s, g = geoT(lat, lon), tx = Math.round(g.x), ty = Math.round(g.y), ok = [TT.BLDG, TT.BRICK, TT.GRASS, TT.PLAZA, TT.WALK];
+    const [id, name, muni, lat, lon, type, kind, az] = s, g = geoT(lat, lon), tx = g.x, ty = g.y, ok = [TT.BLDG, TT.BRICK, TT.GRASS, TT.PLAZA, TT.WALK];
     const acc = v => v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD || v === TT.AVE;
     let best = null, bd = 1e9;
-    // primero cerca (±16 casillas), luego más lejos (±26) y, si el barrio está lleno de vías, sobre una calle menor
-    for (const [R, extra] of [[16, 0], [26, 0], [16, TT.ROAD]]) { if (best) break; if (extra) ok.push(extra);
-    for (let y = ty - R; y <= ty + R; y++) for (let x = tx - R; x <= tx + R; x++) {
-      const d = Math.abs(x + 2 - tx) + Math.abs(y + 1 - ty); if (d >= bd) continue;
-      let good = true;
-      for (let yy = y; yy < y + 2 && good; yy++) for (let xx = x; xx < x + 4; xx++) if (!ok.includes(this.get(xx, yy)) || this.lid.has(this.idx(xx, yy))) { good = false; break; }
-      for (let yy = y - 2; yy <= y + 3 && good; yy++) for (let xx = x - 2; xx <= x + 5; xx++) if (this.get(xx, yy) === TT.STATION) { good = false; break; }
+    // lo más cerca posible del punto real: acostada (4×2) o de pie (2×4), según quepa en la manzana.
+    // Puede montarse sobre pocas casillas de calle menor (con castigo); nunca sobre avenidas, autopistas, ciclorrutas ni agua.
+    for (const [R, maxR] of [[20, 2], [30, 8]]) { if (best) break;
+    for (const [w, h] of [[4, 2], [2, 4]]) for (let y = Math.round(ty) - R; y <= Math.round(ty) + R; y++) for (let x = Math.round(tx) - R; x <= Math.round(tx) + R; x++) {
+      const d0 = Math.hypot(x + w / 2 - tx, y + h / 2 - ty); if (d0 >= bd) continue;
+      let good = true, nr = 0;
+      for (let yy = y; yy < y + h && good; yy++) for (let xx = x; xx < x + w; xx++) { const v = this.get(xx, yy); if (v === TT.ROAD) nr++; else if (!ok.includes(v)) { good = false; break; } if (this.lid.has(this.idx(xx, yy))) { good = false; break; } }
+      const d = d0 + nr * 3.5; if (!good || nr > maxR || d >= bd) continue;
+      for (let yy = y - 2; yy <= y + h + 1 && good; yy++) for (let xx = x - 2; xx <= x + w + 1; xx++) if (this.get(xx, yy) === TT.STATION) { good = false; break; }
       if (!good) continue;
-      let a = false; for (let xx = x; xx < x + 4 && !a; xx++) if (acc(this.get(xx, y - 1)) || acc(this.get(xx, y + 2))) a = true;
-      for (let yy = y; yy < y + 2 && !a; yy++) if (acc(this.get(x - 1, yy)) || acc(this.get(x + 4, yy))) a = true;
+      let a = false; for (let xx = x; xx < x + w && !a; xx++) if (acc(this.get(xx, y - 1)) || acc(this.get(xx, y + h))) a = true;
+      for (let yy = y; yy < y + h && !a; yy++) if (acc(this.get(x - 1, yy)) || acc(this.get(x + w, yy))) a = true;
       if (!a) continue;
-      bd = d; best = { x, y };
+      bd = d; best = { x, y, w, h };
     } }
     if (!best) { (this.dropped || (this.dropped = [])).push(name); return null; }
-    for (let yy = best.y; yy < best.y + 2; yy++) for (let xx = best.x; xx < best.x + 4; xx++) this.set(xx, yy, TT.STATION);
+    for (let yy = best.y; yy < best.y + best.h; yy++) for (let xx = best.x; xx < best.x + best.w; xx++) this.set(xx, yy, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
     const zone = lat > 6.272 ? 'norte' : lat > 6.205 ? 'centro' : 'sur';
-    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E[id] || '', lat, lon, tx: best.x, ty: best.y, x: (best.x + 2) * TS, y: (best.y + 1) * TS };
+    return { i, id, name, muni, type, kind, cap, zone, az: az || null, e: CORREDOR_E[id] || '', lat, lon, v: best.h > best.w, tx: best.x, ty: best.y, x: (best.x + best.w / 2) * TS, y: (best.y + best.h / 2) * TS };
   },
   /* ---------- semáforos, carriles de carros, metro, tranvía, cables ---------- */
   buildLights() {
