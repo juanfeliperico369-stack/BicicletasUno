@@ -1762,7 +1762,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Casas en fila.** Los barrios residenciales son casas (ladrillo), salvo el centro, El Poblado, el comercio, la industria y los corredores de avenida (`nearAve`), con un 8 % de edificios sueltos.
   - Cada casilla son dos lotes de ~10 m con el frente hacia la calle, con teja, losa, tanques o ropa tendida.
   - Se dibujan en el suelo, sin costo por cuadro; las cajas 3D quedan para los edificios.
-- **Estaciones en su punto.** Se colocan antes que los lugares, acostadas (4×2) o de pie (2×4). Pueden montarse sobre hasta 2 casillas de calle menor, con castigo. Quedan típicamente a 44 m, el 90 % a menos de 101 m.
+- **Estaciones en su punto.** Se colocan antes que los lugares, acostadas (4×2) o de pie (2×4). Pueden montarse sobre hasta 2 casillas de calle menor, con castigo. Quedan típicamente a 46 m, el 90 % a menos de 101 m.
 - **Vida:** parqueaderos con carros, postes, árboles de avenida con guayacanes, bancas, palomas que vuelan al pasar, sombras de nubes y brillos en el río.
 - **Ni una gota:** misión diaria del modo libre: llevar un tinto a otra estación sin chocar. Si chocas, se riega y se recarga en cualquier estación; la entrega da un logro secreto.
 - **Corrección:** el avance de *Un día del valle* se guarda en `Save.data.diaValle`. `Save.data.dia` es de las misiones del modo libre; antes chocaban, y la migración es automática.
@@ -2427,7 +2427,7 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
    - Calles: sobre la vía, en el juego y en el mapa grande.
    - Barrios y veredas (672): al entrar a cada uno y en el mapa grande; las comunas también aparecen en el mapa grande.
 4. **Casas en fila:** los barrios son casas angostas frente a la calle, con teja, losa, tanques y ropa tendida. Los edificios quedan en el centro, El Poblado, el comercio, la industria y las avenidas.
-5. **Estaciones en su punto:** típicamente a 44 m de su coordenada (antes 73 m), y la más lejana a 195 m (antes 441 m). Floresta e Industriales tienen coordenadas de Overture.
+5. **Estaciones en su punto:** típicamente a 46 m de su coordenada (antes 73 m), y la más lejana a 195 m (antes 441 m). Floresta e Industriales tienen coordenadas de Overture.
 6. **Vida:** parqueaderos con carros, postes, árboles de avenida y guayacanes, bancas, palomas, nubes y brillos en el río.
 7. **Ni una gota:** misión del modo libre con logro secreto (de *El Metro*).
 8. **Corrección:** *Un día del valle* y las misiones diarias del modo libre usaban la misma clave de guardado. Ahora están separadas y el avance se migra solo.
