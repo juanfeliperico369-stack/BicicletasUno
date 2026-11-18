@@ -4,7 +4,7 @@
    ===================================================================== */
 const Bot = JE.bot = {
   async run(o = {}) {
-    const n = o.n || 27, err = o.err != null ? o.err : .08, dt = 1 / 30, maxT = o.maxT || 600;
+    const n = o.n || 27, err = o.err != null ? o.err : .08, dt = 1 / 30, maxT = o.maxT || 900;
     const rep = { games: [], errs0: JE.errors.length, t0: performance.now() }, backup = JSON.stringify(Save.data), wasHeadless = JE.headless;
     JE.headless = true; const roles = o.roles || ROLES.map(r => r.id).concat(['carrera']);
     for (let i = 0; i < n; i++) {

@@ -93,7 +93,7 @@ Mode.prototype.button = MG.prototype.button;
 /* ---------- base para modos en el mapa ---------- */
 class MapMode extends Mode {
   setupRide(o) { this.ride = new Ride(this, Object.assign({ traffic: this.mods.traffic }, o)); }
-  tm() { return this.timeMul * (this.ride ? TRAVEL : 1); }   // en el mapa, el reloj corre √MS más lento (ver stats_ en 30-ride.js)
+  tm() { return this.timeMul * (this.ride ? RELOJ : 1); }   // en el mapa, el reloj corre MS/VEL más lento (ver stats_ en 30-ride.js)
   tickClock(dt) { this.clock += this.rate * dt / this.tm(); }
   update(dt) {
     this.t += dt; this.tickClock(dt);
@@ -103,7 +103,7 @@ class MapMode extends Mode {
       else if (sh.on === 1 && this.t >= sh.at + sh.dur) { sh.on = 2; this.mods.rain = false; JE.ui && JE.ui.toast('🌤️ Escampó. ¡A rodar!'); }
     }
     if (this.updSub(dt)) return;
-    this.ride.update(dt, this.botDir || Input.dir());
+    this.ride.update(dt, this.botDir || this.ride.girarDir(Input.dir()));   // el joystick va según la pantalla (cámara girada)
     this.tick(dt);
   }
   tick() { }
@@ -487,7 +487,7 @@ class ModeMonitoreo extends Mode {
   say(m) { this.radio.unshift({ m, t: this.clock }); if (this.radio.length > 3) this.radio.length = 3; }
   go(t, x, y) { t.path = [{ x, y: t.y }, { x, y }]; }
   update(dt) {
-    this.t += dt; const dm = this.rate * dt / (this.ride ? TRAVEL : 1); this.clock += dm; this.sim.step(dm, this.clock);
+    this.t += dt; const dm = this.rate * dt / (this.ride ? RELOJ : 1); this.clock += dm; this.sim.step(dm, this.clock);
     const dp = this.base, spd = 60 * WK * dm * (this.tSpd || 1) * (this.has('camion') ? 1.15 : 1);
     for (const t of this.trucks) {
       if (t.path) {

@@ -56,7 +56,7 @@ const _rt71 = Ride.prototype.renderTop;
 Ride.prototype.renderTop = function (V) {
   _rt71.call(this, V); const T = Tutor; if (!T.on || !T.trail || T.trail.length < 14 || this.p.veh === 'truck' || this.mode !== Game.mode || this.mode.sub) return;
   const q = T.trail[T.trail.length - 14], side = q.a + Math.PI / 2, off = 7 * WK, c = V.ctx, k = V.s * V.dpr, C = T.C, uni = T.role !== 'usuario';
-  c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.imageSmoothingEnabled = false; c.translate(q.x - Math.cos(side) * off - this.cxf, q.y - Math.sin(side) * off - this.cyf); c.rotate(q.a + Math.PI / 2);
+  c.save(); this.mundo(c); c.imageSmoothingEnabled = false; c.translate(q.x - Math.cos(side) * off - this.cxf, q.y - Math.sin(side) * off - this.cyf); c.rotate(q.a + Math.PI / 2);
   const sp = Art.riderTop(uni ? '#0e2d55' : C[5], '#ffffff', C[2], PAL.vd); blit(c, sp); c.restore();
 };
 const _start71 = Game.start;

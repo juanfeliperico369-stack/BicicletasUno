@@ -57,7 +57,7 @@ class ModeLibreRed extends ModeUsuario {
     if (this.comp.k === 'paseo') return; const me = this.myId(), m = Math.max(0, Math.ceil(this.left)), tm = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
     const sc = this.comp.k === 'lleva' ? [Save.data.profile.name + ' ' + Math.round(this.itT) + ' s'].concat(this.peers.map(o => o.name + ' ' + o.sc + ' s')) : ['Tú ' + this.sc].concat(this.peers.map(o => o.name + ' ' + o.sc));
     V.text('⏱ ' + tm + ' · ' + sc.join(' · '), 10, V.h - 20, { size: 13, color: this.itId === me ? PAL.cor : PAL.vd1, bg: '#0a2342dd', pad: 4, body: true });
-    if (this.comp.k === 'lleva') for (const o of this.peers) if (o.it) { const s = V.s, x = (o.x - this.ride.cxf) * s, y = (o.y - this.ride.cyf) * s - 26; if (x > 0 && x < V.w && y > 0 && y < V.h) V.text('🔴 LA LLEVA', x, y, { size: 11, align: 'center', color: '#fff', bg: PAL.cor, pad: 3 }); }
+    if (this.comp.k === 'lleva') for (const o of this.peers) if (o.it) { const q = this.ride.w2s(o.x, o.y), x = q.x, y = q.y - 26; if (x > 0 && x < V.w && y > 0 && y < V.h) V.text('🔴 LA LLEVA', x, y, { size: 11, align: 'center', color: '#fff', bg: PAL.cor, pad: 3 }); }
   }
   info() { const i = super.info(); if (this.comp.k !== 'paseo') i.chips = [{ t: COMP[this.comp.k].name }]; return i; }
   end() { if (this.net && !this.done) Net.onmsg = m => UI.netLobbyMsg(m); super.end(); }

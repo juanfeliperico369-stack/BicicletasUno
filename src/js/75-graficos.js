@@ -294,8 +294,9 @@ Object.assign(CityMap, {
     capa(v => v === TT.BRICK, '#a99f91');
     const verdeZ = /Poblado|Laureles/.test(this.comunaAt(px0 + S / 2, py0 + S / 2)) || /Envigado/.test(this.muniAt(px0 + S / 2, py0 + S / 2));   // desde el aire, El Poblado, Laureles y Envigado son casi bosque entre los edificios
     capa(v => v === TT.BLDG, verdeZ ? '#8fb072' : '#9fa2a7');   // allí, entre las torres hay jardines de las unidades
-    capa(v => v === TT.WATER, '#87a872', .3);
-    capa(v => v === TT.WATER, '#3f86c8');
+    const agua = this.decks && this.decks.length ? v => v === TT.WATER || v === TT.BRIDGE : v => v === TT.WATER;   // con los puentes en alto, el río sigue por debajo
+    capa(agua, '#87a872', .3);
+    capa(agua, '#3f86c8');
     // textura del pasto y del monte: puntos, no cuadros
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) { const v = g(x, y); if (v !== TT.GRASS && v !== TT.MOUNT) continue; c.fillStyle = v === TT.MOUNT ? '#356d34' : '#78b65c'; c.beginPath(); for (let k = 0; k < 3; k++) { const X = x * TS + 2 + h2(x, y, 30 + k) * 12, Y = y * TS + 2 + h2(x, y, 40 + k) * 12; c.moveTo(X + .9, Y); c.arc(X, Y, .9, 0, TAU); } c.fill(); }
     // relieve suave (luz del noroeste)
@@ -418,9 +419,14 @@ Object.assign(CityMap, {
     for (const L of this.mp || []) { path(L, .34 * TS, L.col + 'b0'); path(L, .06 * TS, '#ffffffaa'); }
     for (const L of this.mp || []) for (const st of L.st) { const p = this.at(L, st.s); if (!near(p.x, p.y, 50)) continue; tramo(L, st.s - 30, st.s + 30, 13, 'rgba(8,14,30,.3)', 1.5, 2); tramo(L, st.s - 30, st.s + 30, 12, '#eef0f3'); tramo(L, st.s - 30, st.s + 30, 3.2, L.col); }
     const SL = 21 * MS * 1.55, SW = 11 * MS * .9;
+    this.altSuelo(c, px0, py0, S);   // sombras y pilares de lo que va en alto (76-altura.js)
     for (const L of [this.lineA, this.lineB]) {
-      path(L, 13, 'rgba(8,14,30,.3)', 4, 5); path(L, 13, '#8d939c'); path(L, 10.5, '#d3d6db'); path(L, 4.6, '#9aa0a8'); path(L, 3.4, '#d3d6db');
-      for (const st of L.st) { const p = this.at(L, st.s); if (!near(p.x, p.y, SL + 20)) continue; const s0 = Math.max(0, st.s - SL), s1 = Math.min(L.len, st.s + SL), col = L === this.lineA ? '#1C5C9C' : '#E38835';
+      if (L.alto && L.alto.length) {   // solo los tramos a nivel del suelo; el viaducto va en alto (draw3D)
+        const rg = this.altRango(L, px0, py0, S, 40); let s = 0;
+        const seg = []; for (const a of L.alto) { if (a.s0 > s) seg.push([s, a.s0]); s = a.s1; } if (s < L.len) seg.push([s, L.len]);
+        for (const [a0, b0] of seg) { if (!rg) break; const a = Math.max(a0, rg[0]), b = Math.min(b0, rg[1]); if (b - a < 1) continue; tramo(L, a, b, 13, 'rgba(8,14,30,.3)', 4, 5); tramo(L, a, b, 13, '#8d939c'); tramo(L, a, b, 10.5, '#d3d6db'); tramo(L, a, b, 4.6, '#9aa0a8'); tramo(L, a, b, 3.4, '#d3d6db'); }
+      } else { path(L, 13, 'rgba(8,14,30,.3)', 4, 5); path(L, 13, '#8d939c'); path(L, 10.5, '#d3d6db'); path(L, 4.6, '#9aa0a8'); path(L, 3.4, '#d3d6db'); }
+      for (const st of L.st) { if (st.alto) continue; const p = this.at(L, st.s); if (!near(p.x, p.y, SL + 20)) continue; const s0 = Math.max(0, st.s - SL), s1 = Math.min(L.len, st.s + SL), col = L === this.lineA ? '#1C5C9C' : '#E38835';
         tramo(L, s0, s1, SW * 2, 'rgba(8,14,30,.3)', 3, 4); tramo(L, s0, s1, SW * 2, col); tramo(L, s0, s1, SW * 2 - 6.8, '#eef0f3'); costillas(L, s0, s1, SW - 4, '#c3c8cf'); }
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
@@ -436,14 +442,16 @@ function hull8(P, d) {
 }
 /* edificios con volumen: cada lote de edificio se levanta con perspectiva desde el jugador (lo lejano primero), girado con su calle */
 Ride.prototype.draw3D = function (c, ox, oy, vw, vh) {
-  if (GFX() !== '3d') return; const M = this.map, P = this.p, px = P.x - ox, py = P.y - oy, K = .36, S = CH * TS, nb = Math.round(Art.night(this.min) * 3), L = [], mg = 70;
+  if (GFX() !== '3d') return; const M = this.map, E = this.ojo(), px = E.x - ox, py = E.y - oy, K = E.K, S = CH * TS, nb = Math.round(Art.night(this.min) * 3), L = [], mg = 70;   // perspectiva desde el ojo de la cámara (sobre el jugador, o corrido si está inclinada)
   for (let cy = Math.floor((oy - mg) / S); cy <= Math.floor((oy + vh + mg) / S); cy++) for (let cx = Math.floor((ox - mg) / S); cx <= Math.floor((ox + vw + mg) / S); cx++) {
     if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue;
     for (const b of M.lotes(cx, cy).ed) { const x = b.x - ox, y = b.y - oy, m2 = b.z > .6 ? mg + 200 : mg; if (x > vw + m2 || y > vh + m2 || x < -m2 || y < -m2) continue; if (b.gx != null) { const gx = b.gx - ox - px, gy = b.gy - oy - py; b.dd = gx * gx + gy * gy + (2 - b.z); } else b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* las partes de un lugar van juntas: primero las bajas, luego las torres */
+    const AP = M.altG && M.altG.get(cx + ',' + cy); if (AP) for (const b of AP) { const x = b.x - ox, y = b.y - oy; if (x > vw + mg + 40 || y > vh + mg + 40 || x < -mg - 40 || y < -mg - 40) continue; b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* lo que va en alto: viaducto del metro, estaciones elevadas y puentes (76-altura.js) */
     const ST = M.sitTrozo(cx, cy); if (ST) for (const b of ST.e) { if (b.oculto || (b.fl < 3 && !b.P) || Math.floor(b.x / S) !== cx || Math.floor(b.y / S) !== cy) continue; const x = b.x - ox, y = b.y - oy, m2 = ((b.zt || b.z) > .6 ? mg + 200 : mg) + (b.bb[2] - b.bb[0]) / 2; if (x > vw + m2 || y > vh + m2 || x < -m2 || y < -m2) continue; b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* edificios reales de los sitios (22-sitios.js) */
   }
   L.sort((a, b) => b.dd - a.dd); c.lineWidth = .5; const bx = [0, 0, 0, 0], by = [0, 0, 0, 0], rx = [0, 0, 0, 0], ry = [0, 0, 0, 0];
   for (const b of L) {
+    if (b.alto) { this.altoPieza(c, b, ox, oy, px, py, K, nb); continue; }
     const p = b.pal[nb] || (b.pal[nb] = { roof: mixHex(b.roof, '#0b1430', nb * .17), wa: mixHex(b.wa, '#0b1430', nb * .17), wb: mixHex(b.wb, '#0b1430', nb * .17), ln: nb >= 2 ? '#ffd97a' : shade(b.wb, -.22), top: mixHex(shade(b.roof, .16), '#0b1430', nb * .17) });
     if (b.sitio) { sitEdif3D(c, b, ox, oy, px, py, K, p, nb); continue; }   // con su forma real
     const f = 1 + K * b.z, Q = b.pts, nf = b.nf || Math.max(1, Math.round(b.z * 9));

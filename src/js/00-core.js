@@ -199,7 +199,7 @@ const Input = JE.input = {
     if (k.ArrowUp || k.KeyW) y -= 1; if (k.ArrowDown || k.KeyS) y += 1;
     if (x || y) { const l = Math.hypot(x, y); return { x: x / l, y: y / l, m: 1 }; }
     const j = this.joy;
-    if (j.on) { const dx = j.x - j.ox, dy = j.y - j.oy, l = Math.hypot(dx, dy); if (l > 7) return { x: dx / l, y: dy / l, m: clamp((l - 7) / 42, .25, 1) }; }
+    if (j.on) { const dx = j.x - j.ox, dy = j.y - j.oy, l = Math.hypot(dx, dy); if (l > 9) return { x: dx / l, y: dy / l, m: .18 + .82 * Math.pow(clamp((l - 9) / 37, 0, 1), 1.4) }; }   // zona muerta de 9 px y curva suave: poco dedo, poca velocidad; el borde del aro (46 px) es la punta
     return { x: 0, y: 0, m: 0 };
   }
 };
@@ -209,7 +209,7 @@ window.addEventListener('blur', () => { Input.keys = {}; Input.joy.on = false; }
 
 /* ---------- vista: búfer pixelado + capa nítida para textos ---------- */
 const View = JE.view = {
-  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150, subX: 0, subY: 0, top: 52,
+  cv: null, ctx: null, buf: null, b: null, w: 320, h: 480, dpr: 1, s: 2, vw: 160, vh: 240, kind: 'map', dw: 200, dh: 150, subX: 0, subY: 0, top: 52, zf: 1, rot: 0, rotOn: false, giro: false, gw: 0,
   init() {
     this.cv = $('#cv'); this.ctx = this.cv.getContext('2d');
     this.buf = document.createElement('canvas'); this.b = this.buf.getContext('2d');
@@ -225,19 +225,23 @@ const View = JE.view = {
   },
   setMode(kind, dw, dh) { this.kind = kind; this.dw = dw || 200; this.dh = dh || 150; this.apply(); },
   apply() {
-    let s;
-    if (this.kind === 'map') { const d3 = !!Save.data && Save.data.settings.gfx !== 'pixel' && Save.data.settings.vista !== 'pano'; s = Math.round(Math.min(this.w, this.h) / (d3 ? 128 : 185)); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / (d3 ? 330 : 460))); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 1, 8); }   // casillas de 16 px: se ve ~12 casillas (240 m) de ancho en el celular
+    let s; this.s0 = null;
+    if (this.kind === 'map') { const d3 = !!Save.data && Save.data.settings.gfx !== 'pixel' && Save.data.settings.vista !== 'pano'; s = Math.round(Math.min(this.w, this.h) / (d3 ? 128 : 185)); if (this.w >= 700) s = Math.min(s, Math.floor(this.w / (d3 ? 330 : 460))); s = clamp(s + (Save.data ? Save.data.settings.zoom | 0 : 0), 1, 8); this.s0 = s; if (d3 && this.zf && this.zf !== 1) s = clamp(s * this.zf, .8, 9); }   // casillas de 16 px: se ve ~12 casillas (240 m) de ancho en el celular · zf: zoom del pellizco (solo en la ciudad 3D; en pixel va por pasos enteros)
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
     const G = JE.game && JE.game.mode, q = this.q = this.kind === 'map' && G && G.ride && Save.data && Save.data.settings.gfx !== 'pixel' ? clamp(Math.round(s * this.dpr / 1.5), 2, 4) : 1;   // mapa dibujado: búfer a mayor resolución
-    if (this.buf.width !== (this.vw + 1) * q || this.buf.height !== (this.vh + 1) * q) { this.buf.width = (this.vw + 1) * q; this.buf.height = (this.vh + 1) * q; }
+    this.giro = !!(this.kind === 'map' && this.rotOn); this.gw = this.giro ? Math.ceil(Math.hypot(this.vw, this.vh)) + 2 : 0;   // cámara girada: el suelo se dibuja en un cuadrado que cubre la vista en cualquier ángulo
+    const bw = (this.giro ? this.gw : this.vw) + 1, bh = (this.giro ? this.gw : this.vh) + 1;
+    if (this.buf.width !== bw * q || this.buf.height !== bh * q) { this.buf.width = bw * q; this.buf.height = bh * q; }
     this.b.setTransform(1, 0, 0, 1, 0, 0);   // +1: corrimiento por fracción de pixel
     this.b.imageSmoothingEnabled = false;
   },
   present() {
     const c = this.ctx; c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = (this.q || 1) > 1;
-    const k = this.s * this.dpr; c.drawImage(this.buf, -this.subX * k, -this.subY * k, (this.vw + 1) * k, (this.vh + 1) * k);
+    const k = this.s * this.dpr;
+    if (this.giro) { const G = this.gw; c.translate(this.vw / 2 * k, this.vh / 2 * k); c.rotate(-this.rot); c.drawImage(this.buf, (-G / 2 - this.subX) * k, (-G / 2 - this.subY) * k, (G + 1) * k, (G + 1) * k); }   // el suelo, girado alrededor del centro de la vista
+    else c.drawImage(this.buf, -this.subX * k, -this.subY * k, (this.vw + 1) * k, (this.vh + 1) * k);
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   },
   /* texto nítido en coordenadas CSS */

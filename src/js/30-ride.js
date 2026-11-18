@@ -48,7 +48,7 @@ class StationSim {
 class Ride {
   constructor(mode, o) {
     this.mode = mode; this.map = JE.map; this.sim = o.sim || null; this.rng = mode.rng;
-    const s = o.start; this.p = { x: s.x, y: s.y, a: o.ang != null ? o.ang : -Math.PI / 2, v: 0, veh: o.veh || 'bike', stun: 0, load: o.load || 0, cap: o.cap || 20 };
+    const s = o.start; this.p = { x: s.x, y: s.y, a: o.ang != null ? o.ang : -Math.PI / 2, v: 0, w: 0, veh: o.veh || 'bike', stun: 0, load: o.load || 0, cap: o.cap || 20, lvl: 0 };
     this.cam = { x: s.x, y: s.y }; this.cars = []; this.markers = []; this.target = null; this.fx = []; this.leaves = []; this.drops = [];
     this.traffic = o.traffic != null ? o.traffic : 1; this.zone = o.zone || null;
     this.stats = { dist: 0, ciclo: 0, crashes: 0, bells: 0, reds: 0 }; this.cicT = 0; this.offC = 0; this.cicLv = 0; this.lastLight = -1; this.stamp = null; this.opps = []; this.shake = 0; this.gps = []; this.gpsT = 0; this.big = false; this.spawnT = 0; this.honkT = 0;
@@ -58,8 +58,9 @@ class Ride {
     this.initLife();
     this.mmRect = null; this.sl = 0; this.over = 0; this.cxf = s.x; this.cyf = s.y; this.joyDraw = null; this.ox = 0; this.oy = 0;
   }
-  /* con el mapa de 10 m la ciudad mide el doble en px: se anda √2 más rápido y el reloj de los oficios corre √2 más lento, así cada viaje cuesta los mismos minutos de juego */
-  stats_() { const v = this.p.veh, f = TRAVEL; return v === 'truck' ? { max: 50 * WK * f, acc: 55 * WK * f, dec: 95 * WK * f, turn: 2.7, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK * f, acc: 160 * WK * f, dec: 220 * WK * f, turn: 9, r: 2 } : { max: 60 * WK * f, acc: 120 * WK * f, dec: 150 * WK * f, turn: 5.6, r: 2.5 }; }
+  /* conducción con peso (v1.7): velocidad punta VEL (el reloj de los oficios corre MS/VEL más lento, así cada viaje cuesta los mismos minutos de juego),
+     arranque gradual (acc), frenada (brk) y rodada libre al soltar (coast), en px/s²; giro limitado por la velocidad: w0 rad/s parado y w1 a toda marcha, con inercia tw s */
+  stats_() { const v = this.p.veh, f = VEL; return v === 'truck' ? { max: 50 * WK * f, acc: 24 * WK * f, brk: 62 * WK * f, coast: 22 * WK * f, w0: 2.4, w1: 1.2, tw: .2, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK * f, acc: 90 * WK * f, brk: 170 * WK * f, coast: 120 * WK * f, w0: 7.5, w1: 6, tw: .05, r: 2 } : { max: 60 * WK * f, acc: 30 * WK * f, brk: 72 * WK * f, coast: 40 * WK * f, w0: 5, w1: 2.7, tw: .09, r: 2.5 }; }
   solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }
@@ -92,21 +93,26 @@ class Ride {
     const sl = this.sl = this.map.slope(P.x, P.y, P.a), eb = P.veh === 'bike' && !!(M.ebike || this.ebike);
     if (M.speedMul) mult *= M.speedMul(this);
     mult *= P.veh === 'truck' ? clamp(1 - .9 * sl, .7, 1.12) : P.veh === 'walk' ? clamp(1 - 1.1 * sl, .6, 1.15) : eb && sl > 0 ? 1 : clamp(1 - 2.2 * sl, .5, 1.32);
+    const kw = 1 - Math.exp(-dt / S.tw);
     if (dir.m > 0) {
-      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), turn = S.turn * (rain ? .8 : 1) * (P.v < 10 * WK ? 1.7 : 1);
-      P.a += clamp(da, -turn * dt, turn * dt);
-      const tv = S.max * mult * dir.m * (.3 + .7 * Math.max(0, Math.cos(da))), acc = tv > P.v ? S.acc : S.dec;
-      P.v += clamp(tv - P.v, -acc * dt, acc * dt);
-    } else P.v = Math.max(0, P.v - S.dec * dt * (rain ? .55 : 1));
+      // giro con peso: la velocidad de giro deseada sigue al joystick, limitada por la velocidad (a toda marcha se abre la curva) y con inercia
+      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - P.v / S.max, 0, 1)) * (rain ? .85 : 1);
+      P.w += (clamp(da * 6.5, -wm, wm) - P.w) * kw;
+      // arranque gradual hasta la velocidad pedida; si el joystick apunta lejos del rumbo, se frena para girar
+      const tv = S.max * mult * dir.m * (.3 + .7 * Math.max(0, Math.cos(da)));
+      if (tv > P.v) P.v = Math.min(tv, P.v + Math.min(S.acc, (tv - P.v) * 2) * dt);
+      else P.v = Math.max(tv, P.v - Math.min(S.brk * (rain ? .7 : 1), (P.v - tv) * 3.5 + 6) * dt);
+    } else { P.w *= 1 - kw; P.v = Math.max(0, P.v - (S.coast * (rain ? .6 : 1) + P.v * .35) * dt); }   // al soltar: rueda y se detiene sola
+    P.a += P.w * dt;
     const st = P.v * dt, nx = P.x + Math.cos(P.a) * st, ny = P.y + Math.sin(P.a) * st;
     if (!this.blocked(nx, ny, S.r)) { P.x = nx; P.y = ny; }
     else if (st > 0) {
       let moved = false; // asistencia de esquinas: prueba ángulos cercanos
       for (const da of [.35, -.35, .7, -.7, 1.1, -1.1]) {
         const ax = P.x + Math.cos(P.a + da) * st, ay = P.y + Math.sin(P.a + da) * st;
-        if (!this.blocked(ax, ay, S.r)) { P.x = ax; P.y = ay; P.a += da * .25; P.v *= .9; moved = true; break; }
+        if (!this.blocked(ax, ay, S.r)) { P.x = ax; P.y = ay; P.a += da * Math.min(1, dt * 7.5); P.v *= Math.exp(-3.2 * dt); P.w *= .5; moved = true; break; }
       }
-      if (!moved) { if (!this.blocked(nx, P.y, S.r)) { P.x = nx; P.v *= .9; } else if (!this.blocked(P.x, ny, S.r)) { P.y = ny; P.v *= .9; } else P.v *= .25; }
+      if (!moved) { const rz = Math.exp(-3.2 * dt); if (!this.blocked(nx, P.y, S.r)) { P.x = nx; P.v *= rz; } else if (!this.blocked(P.x, ny, S.r)) { P.y = ny; P.v *= rz; } else { P.v *= Math.exp(-40 * dt); P.w = 0; } }
     }
     P.x = clamp(P.x, 4, MW * TS - 4); P.y = clamp(P.y, 4, MH * TS - 4);
     // bajada fuerte a toda velocidad: hay que soltar un poco o la bici se desboca
@@ -144,11 +150,16 @@ class Ride {
     for (const f of this.fx) { f.t -= dt; if (f.k === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= .9; f.vy *= .9; } else f.y -= 14 * dt; }
     this.fx = this.fx.filter(f => f.t > 0);
     if (rain && !JE.headless) { while (this.drops.length < 70) this.drops.push({ x: this.rng.f() * 400, y: this.rng.f() * 400, s: 160 + this.rng.f() * 80 }); for (const d of this.drops) { d.y += d.s * dt; d.x -= d.s * .2 * dt; if (d.y > 400) { d.y -= 400; d.x = this.rng.f() * 400; } if (d.x < 0) d.x += 400; } }
-    // cámara con anticipación
-    const la = P.veh === 'truck' ? .55 : .4, tx = P.x + Math.cos(P.a) * P.v * la, ty = P.y + Math.sin(P.a) * P.v * la, k = 1 - Math.exp(-5 * dt);
-    this.cam.x += (tx - this.cam.x) * k; this.cam.y += (ty - this.cam.y) * k; this.shake = Math.max(0, this.shake - dt);
+    // cámara centrada: poca anticipación (a lo sumo 1/6 de la vista) y suave
+    this.camara(dt); this.shake = Math.max(0, this.shake - dt);
     // GPS
     this.gpsT -= dt; if (this.gpsT <= 0) { this.gpsT = .35; this.calcGps(); }
+  }
+  /* la cámara sigue al jugador casi centrada (anticipa a lo sumo 1/6 de la vista); en modo cámara libre se queda donde la dejaste */
+  camara(dt) {
+    const P = this.p, C = this.cam, L = this.libre; if (L && L.on) return;
+    const la = P.veh === 'truck' ? .3 : .22, cap = Math.min(View.vw, View.vh) / 6, ax = Math.cos(P.a) * P.v * la, ay = Math.sin(P.a) * P.v * la, l = Math.hypot(ax, ay), q = l > cap ? cap / l : 1, k = 1 - Math.exp(-4.2 * dt);
+    C.x += (P.x + ax * q - C.x) * k; C.y += (P.y + ay * q - C.y) * k;
   }
   calcGps() {
     this.gps = []; const T = this.way || this.target; if (!T) return;
@@ -216,9 +227,12 @@ class Ride {
   /* ---- dibujo en el búfer pixelado: suelo y cosas quietas. La cámara es continua: el búfer se corre por fracciones de pixel ---- */
   render(V, min) {
     const b = V.b, P = this.p, sk = this.shake > 0; b.setTransform(V.q || 1, 0, 0, V.q || 1, 0, 0);
-    const cxf = clamp(this.cam.x - V.vw / 2, -40, MW * TS - V.vw + 40) + (sk ? (this.rng.f() - .5) * 4 : 0), cyf = clamp(this.cam.y - V.vh / 2, -40, MH * TS - V.vh + 40) + (sk ? (this.rng.f() - .5) * 4 : 0);
+    // centro de la vista y origen del dibujo; con la cámara girada el suelo se dibuja en un cuadrado de lado G que la cubre en cualquier ángulo
+    const G = V.giro ? V.gw : 0, hw = G ? G / 2 : V.vw / 2, hh = G ? G / 2 : V.vh / 2;
+    const ccx = clamp(this.cam.x, V.vw / 2 - 40, MW * TS - V.vw / 2 + 40) + (sk ? (this.rng.f() - .5) * 4 : 0), ccy = clamp(this.cam.y, V.vh / 2 - 40, MH * TS - V.vh / 2 + 40) + (sk ? (this.rng.f() - .5) * 4 : 0);
+    const cxf = ccx - hw, cyf = ccy - hh; this.ccx = ccx; this.ccy = ccy; this.piv = { x: V.vw / 2, y: V.vh / 2, G };
     const ox = Math.floor(cxf), oy = Math.floor(cyf); this.ox = ox; this.oy = oy; this.cxf = cxf; this.cyf = cyf; V.subX = cxf - ox; V.subY = cyf - oy; this.min = min;
-    const S = CH * TS, BW = V.vw + 1, BH = V.vh + 1;
+    const S = CH * TS, BW = (G || V.vw) + 1, BH = (G || V.vh) + 1;
     b.fillStyle = '#2f6b3a'; b.fillRect(0, 0, BW, BH);
     let made = 0;
     for (let cy = Math.floor(oy / S); cy <= Math.floor((oy + BH) / S); cy++) for (let cx = Math.floor(ox / S); cx <= Math.floor((ox + BW) / S); cx++) {
@@ -279,53 +293,86 @@ class Ride {
   }
   /* ---- capa de objetos que se mueven: se dibujan a resolución de pantalla (giran suave, sin temblar) ---- */
   renderTop(V) {
-    const c = V.ctx, k = V.s * V.dpr, ox = this.cxf, oy = this.cyf, P = this.p, vw = V.vw + 2, vh = V.vh + 2;
+    const G = V.giro ? V.gw : 0, sw = V.vw, sh = V.vh; if (G) { V.vw = V.vh = G; }   // girada: las capas recortan contra el cuadrado que cubre la vista
+    try { this.renderTop0(V, sw, sh); } finally { V.vw = sw; V.vh = sh; }
+  }
+  renderTop0(V, sw, sh) {
+    const c = V.ctx, k = V.s * V.dpr, ox = this.cxf, oy = this.cyf, P = this.p, vw = V.vw + 2, vh = V.vh + 2, d3 = GFX() === '3d';
     const inV = (x, y, m = 20) => x > ox - m && x < ox + vw + m && y > oy - m && y < oy + vh + m;
     const spr = (img, x, y, a, sh) => { c.save(); c.translate(x - ox, y - oy); c.rotate(a + Math.PI / 2); blit(c, img, sh); c.restore(); };
-    c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.imageSmoothingEnabled = false;
+    c.save(); this.mundo(c); c.imageSmoothingEnabled = false;
     this.drawGround(c, ox, oy, inV);
-    for (const cr of this.cars) if (inV(cr.x, cr.y)) spr(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, '#0004');
+    for (const cr of this.cars) if (!cr.arriba && inV(cr.x, cr.y)) spr(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, '#0004');
     for (const o of this.opps) if (inV(o.x, o.y)) { c.globalAlpha = .9; spr(Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]), o.x, o.y, o.a); c.globalAlpha = 1; }
+    const sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : P.veh === 'walk' ? Art.walker((this.stepT | 0) % 2) : Art.rider(this.mode.shirt), abajo = !d3 || !(P.lvl > 0);
+    // en la ciudad 3D el jugador va debajo de lo que está en alto (viaducto, estaciones, puentes); en un puente va encima
+    if (d3) this.drawTrenesSuelo(c, ox, oy, inV, spr);   // trenes a nivel del suelo (los del viaducto van con su pieza en draw3D)
+    if (abajo) spr(sp, P.x, P.y, P.a, '#0005');
     this.draw3D(c, ox, oy, vw, vh);
-    const pr = Save.data.profile, sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : P.veh === 'walk' ? Art.walker((this.stepT | 0) % 2) : Art.rider(this.mode.shirt);
-    spr(sp, P.x, P.y, P.a, '#0005');
-    // trenes del metro sobre el viaducto
-    const tc = Art.trainCar();
-    if (this.metroOn()) for (const tr of this.trains) for (let j = -1; j <= 1; j++) { const s = tr.s + j * 17; if (s < 0 || s > tr.L.len) continue; const q = this.map.at(tr.L, s); if (inV(q.x, q.y)) spr(tc, q.x, q.y, q.a); }
+    if (d3) this.drawArriba(c, ox, oy, inV, spr, sp);
+    else { const tc = Art.trainCar(); if (this.metroOn()) for (const tr of this.trains) for (let j = -1; j <= 1; j++) { const s = tr.s + j * 17; if (s < 0 || s > tr.L.len) continue; const q = this.map.at(tr.L, s); if (inV(q.x, q.y)) spr(tc, q.x, q.y, q.a); } }   // pixel: trenes sobre el viaducto plano
+    if (d3 && abajo) { c.globalAlpha = .42; spr(sp, P.x, P.y, P.a); c.globalAlpha = 1; }   // si algo lo tapa (viaducto, puente, edificio con la cámara inclinada), se ve su silueta
     this.drawSky(c, ox, oy);
     for (const f of this.fx) if (f.k === 'p') { c.fillStyle = f.col; c.fillRect(f.x - ox, f.y - oy, 1, 1); }
     c.restore();
     // pantalla completa: lluvia, noche y luces
-    c.save(); c.setTransform(k, 0, 0, k, 0, 0);
-    if (this.mode.mods.rain) { c.fillStyle = '#cfe8ff88'; for (const d of this.drops) c.fillRect(d.x * vw / 400, d.y * vh / 400, .6, 3); c.fillStyle = '#0a234222'; c.fillRect(0, 0, vw, vh); }
-    const n = Art.night(this.min); if (n > 0) { c.fillStyle = 'rgba(8,18,52,' + (n * .5).toFixed(3) + ')'; c.fillRect(0, 0, vw, vh); }
-    this.drawGlow(c, ox, oy, inV, n);
+    c.save(); c.setTransform(k, 0, 0, k, 0, 0); const fw = sw + 2, fh = sh + 2;
+    if (this.mode.mods.rain) { c.fillStyle = '#cfe8ff88'; for (const d of this.drops) c.fillRect(d.x * fw / 400, d.y * fh / 400, .6, 3); c.fillStyle = '#0a234222'; c.fillRect(0, 0, fw, fh); }
+    const n = Art.night(this.min); if (n > 0) { c.fillStyle = 'rgba(8,18,52,' + (n * .5).toFixed(3) + ')'; c.fillRect(0, 0, fw, fh); }
+    this.mundo(c); this.drawGlow(c, ox, oy, inV, n);
     c.restore();
+  }
+  /* transformación del mundo en la capa nítida: escala y, si la cámara está girada, giro alrededor del centro de la vista */
+  mundo(c) {
+    const V = View, k = V.s * V.dpr, q = this.piv; c.setTransform(k, 0, 0, k, 0, 0);
+    if (V.giro && q && q.G) { c.translate(q.x, q.y); c.rotate(-V.rot); c.translate(-q.G / 2, -q.G / 2); }
+  }
+  /* de un punto del mundo a la pantalla (px CSS), con el giro de la cámara */
+  w2s(x, y) {
+    const V = View, s = V.s, q = this.piv;
+    if (!(V.giro && q && q.G)) return { x: (x - this.cxf) * s, y: (y - this.cyf) * s };
+    const dx = x - this.cxf - q.G / 2, dy = y - this.cyf - q.G / 2, c = Math.cos(V.rot), n = Math.sin(V.rot);
+    return { x: (q.x + dx * c + dy * n) * s, y: (q.y - dx * n + dy * c) * s };
+  }
+  /* de la pantalla al mundo (px CSS → px del mundo) */
+  s2w(X, Y) {
+    const V = View, s = V.s, q = this.piv; if (!(V.giro && q && q.G)) return { x: X / s + this.cxf, y: Y / s + this.cyf };
+    const ex = X / s - q.x, ey = Y / s - q.y, c = Math.cos(V.rot), n = Math.sin(V.rot);
+    return { x: this.cxf + q.G / 2 + ex * c - ey * n, y: this.cyf + q.G / 2 + ex * n + ey * c };
+  }
+  /* el joystick y las flechas van según la pantalla: con la cámara girada se giran al mundo */
+  girarDir(d) { const r = View.giro ? View.rot : 0; if (!r || !d || !d.m) return d; const c = Math.cos(r), n = Math.sin(r); return { x: d.x * c - d.y * n, y: d.x * n + d.y * c, m: d.m }; }
+  /* punto de vista de la perspectiva (el "nadir" de la cámara): sobre el jugador, o sobre el centro en la cámara libre; con la cámara inclinada se corre hacia abajo de la pantalla */
+  ojo() {
+    const L = this.libre, b = L && L.on ? this.cam : this.p, t = panoOn(this) ? 0 : (this.til || 0);
+    if (t < .005) return { x: b.x, y: b.y, K: .36 };
+    const K = .36 * (1 - .3 * t), D = 43.2 * Math.tan(t * .96) / K, r = View.giro ? View.rot : 0;   // t = 1: unos 55° desde la vertical
+    return { x: b.x - Math.sin(r) * D, y: b.y + Math.cos(r) * D, K };
   }
   /* ---- capa nítida: etiquetas, flecha, minimapa, joystick ---- */
   hud(V, opts = {}) {
     const c = V.ctx, s = V.s, ox = this.cxf, oy = this.cyf, P = this.p;
     { const w = Math.round(Math.min(84, V.w * .21)); this.mmRect = opts.noMini ? null : { x: V.w - w - 10, y: (View.hudB || 50) + 8, w, h: Math.round(w * 1.55) }; }
-    const sx = x => (x - ox) * s, sy = y => (y - oy) * s;
+    const sx = x => (x - ox) * s, sy = y => (y - oy) * s, W = (x, y) => this.w2s(x, y);   // W: con el giro de la cámara (sx/sy solo valen sin giro)
     const used = this.lblR = [], top = View.top || 60, mm = this.mmRect, bot = V.h - 70 - (this.mode.coachB || 0);
     const room = (x, y, w, h) => { if (y - h < top || y > bot || x - w / 2 < 4 || x + w / 2 > V.w - 4) return false; if (mm && x + w / 2 > mm.x - 8 && y - h < mm.y + mm.h + 20) return false; for (const r of used) if (Math.abs(r.x - x) < (r.w + w) / 2 + 3 && Math.abs(r.y - y) < (r.h + h) / 2 + 2) return false; used.push({ x, y, w, h }); return true; };
     this.lblRoom = room;
     const lab = [];
-    for (const st of this.map.stations) { const x = sx(st.x), y = sy(st.y) - 16 * WK * s / 2; if (x > -60 && x < V.w + 60 && y > 40 && y < V.h) lab.push({ t: st.name, x, y, d: dist(st.x, st.y, P.x, P.y), st: 1 }); }
-    for (const L of LANDMARKS) { if (L.secret) continue; const x = sx((L.x + L.w / 2) * TS), y = sy((L.y + L.h / 2) * TS); if (x > -80 && x < V.w + 80 && y > 40 && y < V.h) lab.push({ t: L.name, x, y, d: dist((L.x + L.w / 2) * TS, (L.y + L.h / 2) * TS, P.x, P.y) }); }
+    for (const st of this.map.stations) { const q = W(st.x, st.y), x = q.x, y = q.y - 16 * WK * s / 2; if (x > -60 && x < V.w + 60 && y > 40 && y < V.h) lab.push({ t: st.name, x, y, d: dist(st.x, st.y, P.x, P.y), st: 1 }); }
+    for (const L of LANDMARKS) { if (L.secret) continue; const q = W((L.x + L.w / 2) * TS, (L.y + L.h / 2) * TS), x = q.x, y = q.y; if (x > -80 && x < V.w + 80 && y > 40 && y < V.h) lab.push({ t: L.name, x, y, d: dist((L.x + L.w / 2) * TS, (L.y + L.h / 2) * TS, P.x, P.y) }); }
     lab.sort((a, b) => a.d - b.d);
     for (const l of lab.slice(0, 10)) { const sz = l.st ? 11 : 12, w = l.t.length * sz * .52 + 8; if (!room(l.x, l.y, w, sz + 6)) continue; V.text(l.t, l.x, l.y, l.st ? { size: sz, align: 'center', bg: '#0a2342dd', color: '#c4ec7c', pad: 3 } : { size: sz, align: 'center', stroke: '#0a2342', sw: 4, color: '#fff' }); }
-    for (const o of this.opps) { const x = sx(o.x), y = sy(o.y) - 14; if (x > 0 && x < V.w && y > 0 && y < V.h && room(x, y, o.name.length * 6 + 6, 16)) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
+    for (const o of this.opps) { const q = W(o.x, o.y), x = q.x, y = q.y - 14; if (x > 0 && x < V.w && y > 0 && y < V.h && room(x, y, o.name.length * 6 + 6, 16)) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
     if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .38); c.rotate(-.08); const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
-    this.hudLife(V, sx, sy);
+    this.hudLife(V, sx, sy, W);
     // subida / bajada: aviso sobre el ciclista
-    const pct = Math.round(this.sl * 100); if (Math.abs(pct) >= 3 && !this.big) { const up = pct > 0, eb = up && this.ebike && P.veh === 'bike'; V.text((up ? '▲ SUBIDA ' : '▼ BAJADA ') + Math.abs(pct) + ' %' + (eb ? ' ⚡' : ''), sx(P.x), sy(P.y) - 34, { size: 12, align: 'center', color: up ? '#0a2342' : '#fff', bg: up ? '#f4efe1' : (this.over > 1 ? '#c0392b' : '#e0533f'), pad: 3, border: '#0a2342' }); }
-    for (const f of this.fx) if (f.k === 't') V.text(f.txt, sx(f.x), sy(f.y), { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col });
-    for (const m of this.markers) if (m.label && m.num) { const x = sx(m.x), y = sy(m.y); if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(String(m.num), x, y + 5, { size: 14, align: 'center', stroke: '#0a2342', sw: 4, color: m.col || PAL.amb }); }
+    const pct = Math.round(this.sl * 100); if (Math.abs(pct) >= 3 && !this.big) { const up = pct > 0, eb = up && this.ebike && P.veh === 'bike'; V.text((up ? '▲ SUBIDA ' : '▼ BAJADA ') + Math.abs(pct) + ' %' + (eb ? ' ⚡' : ''), W(P.x, P.y).x, W(P.x, P.y).y - 34, { size: 12, align: 'center', color: up ? '#0a2342' : '#fff', bg: up ? '#f4efe1' : (this.over > 1 ? '#c0392b' : '#e0533f'), pad: 3, border: '#0a2342' }); }
+    for (const f of this.fx) if (f.k === 't') { const q = W(f.x, f.y); V.text(f.txt, q.x, q.y, { size: 16, align: 'center', stroke: '#0a2342', sw: 4, color: f.col }); }
+    for (const m of this.markers) if (m.label && m.num) { const q = W(m.x, m.y), x = q.x, y = q.y; if (x > 0 && x < V.w && y > 0 && y < V.h) V.text(String(m.num), x, y + 5, { size: 14, align: 'center', stroke: '#0a2342', sw: 4, color: m.col || PAL.amb }); }
     // flecha al objetivo
     const T = this.way || this.target;
     if (T) {
-      const tx = sx(T.x), ty = sy(T.y), d = dist(P.x, P.y, T.x, T.y) * M_PER_PX, L = 30, Rr = V.w - 30 - (V.w > 600 ? 0 : 0), Tt = Math.min(160, V.h * .3), B = V.h - 110;
+      const tq = W(T.x, T.y), tx = tq.x, ty = tq.y, d = dist(P.x, P.y, T.x, T.y) * M_PER_PX, L = 30, Rr = V.w - 30 - (V.w > 600 ? 0 : 0), Tt = Math.min(160, V.h * .3), B = V.h - 110;
       if (tx < L || tx > Rr || ty < 60 || ty > V.h - 70) {
         const cx = (L + Rr) / 2, cy = (Tt + B) / 2, dx = tx - cx, dy = ty - cy, a = Math.atan2(dy, dx);
         const k = Math.min(dx > 0 ? (Rr - cx) / dx : dx < 0 ? (L - cx) / dx : 1e9, dy > 0 ? (B - cy) / dy : dy < 0 ? (Tt - cy) / dy : 1e9);

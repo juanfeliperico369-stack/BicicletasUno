@@ -248,7 +248,7 @@ const _rt72 = Ride.prototype.renderTop;
 Ride.prototype.renderTop = function (V) {
   _rt72.call(this, V); const M = this.mode; if (!M.carry || M.sub || this.p.veh !== 'bike') return;
   const c = V.ctx, k = V.s * V.dpr, P = this.p, a = P.a, ox = this.cxf, oy = this.cyf, off = 5 * WK, side = a + Math.PI / 2;
-  c.save(); c.setTransform(k, 0, 0, k, 0, 0); c.imageSmoothingEnabled = false; c.translate(P.x + Math.cos(side) * off - ox, P.y + Math.sin(side) * off - oy); c.rotate(a + Math.PI / 2 + M.th * .5);
+  c.save(); this.mundo(c); c.imageSmoothingEnabled = false; c.translate(P.x + Math.cos(side) * off - ox, P.y + Math.sin(side) * off - oy); c.rotate(a + Math.PI / 2 + M.th * .5);
   blit(c, Art.bikeTop()); c.restore();
 };
 

@@ -14,7 +14,9 @@ const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '
 // guion del juego (contenido/guion/*.json): historia "Un día del valle", frases de la ciudad, tutor, fiestas y Metro
 const GDIR = path.join(ROOT, 'contenido', 'guion');
 const GUION = fs.existsSync(GDIR) ? Object.fromEntries(fs.readdirSync(GDIR).filter(f => f.endsWith('.json')).sort().map(f => [f.slice(0, -5), JSON.parse(fs.readFileSync(path.join(GDIR, f), 'utf8'))])) : {};
-js = VALLE + `const GUION = ${JSON.stringify(GUION)};\n` + js;
+// lo que va en alto (tools/geo/alturas.py): tramos del metro en viaducto y puentes de las vías
+const ALT = fs.existsSync(path.join(SRC, 'data', 'alturas.json')) ? rd('data/alturas.json') : 'null';
+js = VALLE + `const GUION = ${JSON.stringify(GUION)};\nconst ALTURAS = ${ALT};\n` + js;
 const version = (js.match(/version: '([^']+)'/) || [])[1] || '0.0.0';
 const b64 = f => fs.readFileSync(path.join(SRC, 'assets', f)).toString('base64');
 const fonts = `@font-face{font-family:"Titulos";font-weight:300 700;font-stretch:75% 125%;src:url(data:font/woff2;base64,${b64('titulos.woff2')}) format("woff2");font-display:swap}@font-face{font-family:"Cuerpo";font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}`;

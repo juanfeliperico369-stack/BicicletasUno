@@ -20,7 +20,7 @@ const Tilt = JE.tilt = {
     this.start(); return Promise.resolve(true);
   },
   calib() { this.y0 = this.ok ? this.y : null; },
-  dir() { if (!this.ok) return null; const dx = clamp(this.x / 22, -1, 1), dy = clamp((this.y - (this.y0 == null ? this.y : this.y0)) / 22, -1, 1), l = Math.hypot(dx, dy); if (l < .18) return { x: 0, y: 0, m: 0 }; return { x: dx / l, y: dy / l, m: clamp((l - .18) / .6, .25, 1) }; }
+  dir() { if (!this.ok) return null; const dx = clamp(this.x / 22, -1, 1), dy = clamp((this.y - (this.y0 == null ? this.y : this.y0)) / 22, -1, 1), l = Math.hypot(dx, dy); if (l < .18) return { x: 0, y: 0, m: 0 }; return { x: dx / l, y: dy / l, m: .18 + .82 * Math.pow(clamp((l - .18) / .6, 0, 1), 1.4) }; }
 };
 const _dir81 = Input.dir;
 Input.dir = function () { const d = _dir81.call(this); if (this.botDir || d.m) return d; if (Ctrl.kind() === 'inclinar') { const t = Tilt.dir(); if (t) return t; } return d; };
