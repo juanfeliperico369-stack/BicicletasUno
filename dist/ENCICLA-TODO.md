@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.6.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v1.7.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.6.0)
+## 2.3 Estado actual (v1.7.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-18 | Claude Code | documento creado (v1.6.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-18 | Claude Code | documento creado (v1.7.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1621,6 +1621,10 @@ src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 nivel
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
 src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas, edificios con su forma real y partes de los emblemáticos
 src/js/87-placas.js   placas de lo poco conocido (16 datos en su lugar real, álbum y logros)
+src/js/76-altura.js   lo que va en alto: metro en viaducto, estaciones elevadas, puentes (cortados del suelo), nivel del jugador y Metroplús sobre sus avenidas
+src/js/88-camara.js   cámara (pellizco, giro, inclinación, ángulos, cámara libre), velocidad elegible y calidad automática
+src/js/89-paseo.js    paseo guiado del modo libre: la bici va sola por los lugares con postal y la cámara cambia de plano
+tools/geo/alturas.py  tramos del metro en viaducto y puentes con su nivel (Overture) -> src/data/alturas.json
 tools/auditoria-mapa.js mide el mapa que se juega (río, agua, escaleras, estaciones, sitios, CSP): docs/AUDITORIA-MAPA.md
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
 src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
@@ -1755,6 +1759,51 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.7.0 · Alturas, cámara, manejo con peso, velocidad y paseo* (`tools/geo/alturas.py`, `src/data/alturas.json`, `76-altura.js`, `88-camara.js`, `89-paseo.js`, `30-ride.js`, `00-core.js`):
+- **Datos:**
+  - `fetch.py` baja `puentes.parquet` (vías con `road_flags`/`level_rules`) y `rail_niveles.parquet` (rieles con `rail_flags`);
+  - `alturas.py` escribe en `alturas.json` los tramos del metro en viaducto (puntas, en casillas ×8) y los puentes (tipo de vía, nivel, largo y trazo);
+  - `build.js` lo mete como `ALTURAS`.
+- **En el juego (`CityMap.alturas`):**
+  - Los tramos del metro se proyectan sobre `lineA`/`lineB` (`L.alto`, `L.zAt(s)`, con rampas salvo donde la línea termina en el viaducto).
+  - Las estaciones de un tramo alto llevan `st.alto` y `st.z`.
+  - Cada puente se empareja con la vía del dibujo (`chProj`) y se corta de ella (`chCorta`/`chNueva`), así el suelo ya no lo pinta.
+  - Lo elevado se parte en piezas de 36 px (`altPieza`) que entran en `draw3D` ordenadas con los edificios y se dibujan con `altoPieza`: pilares, costados que miran a la cámara, losa, rieles o barandas, trenes recortados a la losa y la caja de la estación.
+  - En el suelo (`altSuelo`) quedan las sombras y las bases de los pilares.
+  - El agua de la capa del río incluye las casillas de puente.
+- **Nivel del jugador (`Ride.nivel`):**
+  - `P.lvl = 1` si entró por un extremo del puente, alineado con él, o si va sobre el río; si no, va por debajo;
+  - el jugador de abajo se dibuja antes que `draw3D`, con su silueta encima;
+  - el de arriba, y los carros del puente (`nivelCarros`), se dibujan en `drawArriba` con su altura;
+  - la cuadrícula no cambia: el bot, el GPS y la física siguen igual.
+- **Metroplús (`CityMap.mpAjusta`):**
+  - el trazado se lleva al eje de su vía (en doble calzada, al punto medio entre las dos, si van en el mismo sentido);
+  - cada estación busca, a ±42 px de su punto real, el tramo más recto y con más calzada (`st.x`, `st.y`);
+  - las cifras quedan en `JE.map.mpInfo`.
+- **Cámara (`Cam`):**
+  - `Save.data.settings.cam = {z, t, r, sigue}`;
+  - `View.zf` es el zoom continuo (solo en 3D);
+  - `View.rotOn`/`View.rot` giran la vista:
+    - el búfer del suelo es un cuadrado de lado `gw` (la diagonal) y `present` lo gira;
+    - `Ride.mundo(c)` pone la transformación del mundo en la capa nítida;
+    - `w2s`/`s2w` convierten entre mundo y pantalla;
+    - `girarDir` gira el joystick al mundo.
+  - **Inclinación (`Ride.ojo`):**
+    - corre el punto de vista de la perspectiva `D = 43,2·tan(t·0,96)/K` hacia abajo de la pantalla, con `K = 0,36·(1 − 0,3t)`;
+    - las paredes que miran a la cámara y el orden de dibujo salen de ese punto.
+  - **Gestos:**
+    - dos dedos: zoom y giro juntos, o inclinación si suben o bajan juntos;
+    - en cámara libre, un dedo mueve la cámara;
+    - ratón: rueda y botón derecho.
+  - **Calidad automática (`Calidad`):** baja `View.calidad` de 1 a 0,8 o 0,6 si la mediana de 2 s pasa de 30 ms, y la sube tras tres ventanas bajo 18 ms.
+- **Manejo (`stats_`):**
+  - `max`, `acc`, `brk`, `coast` en px/s²; `w0`/`w1` son la velocidad de giro parado y a toda marcha, y `tw` la inercia del giro;
+  - `VEL = 1` y `RELOJ = MS / VEL`;
+  - la velocidad elegida (`settings.vel`, `velMul(M)`) multiplica la punta y divide el reloj; en carrera y en red, 1.
+- **Paseo (`Paseo`):**
+  - usa `botDrive()` con una parada frente a cada lugar (`nearestOpen`) y salta al siguiente si en 25 s no se acerca;
+  - cambia de plano cada 9 s y devuelve la cámara del jugador al terminar.
 
 *v1.6.0 · Emblemáticos y auditoría de El Metro* (`tools/geo/sitios.py`, `22-sitios.js`, `20-map.js`, `87-placas.js`, `tools/auditoria-mapa.js`):
 - **Partes (`SIT3`/`SIT4`):** prismas entre los pisos `z0` y `z1`, con su anillo de abajo `B` y, si los muros se inclinan, el de arriba `T` (mismos vértices; no se quitan puntos repetidos, para que una aguja pueda converger en un punto).
@@ -2128,6 +2177,8 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 - En CI: `.github/workflows/android.yml` (ejecución manual o etiquetas `v*`). Sube el APK como artefacto y lo adjunta al *release*.
 - Dentro de la app, exportar abre un cuadro para copiar el respaldo (el WebView no descarga blobs) y compartir abre WhatsApp.
 - Pendiente para Play Store: firmar un AAB de release con keystore propio, versión 1.0, ficha y política de privacidad.
+
+- Antes de compilar una versión, borra `app/android/app/build/outputs/apk/debug/app-debug.apk`. El empaquetado incremental de Gradle reutiliza el archivo y deja huecos: en la v1.6.0 la APK pasó de 7,1 a 10,3 MB con el mismo contenido.
 
 ### 9. Pendientes / ideas (feedback del usuario)
 
@@ -2631,6 +2682,76 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 - comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
+
+### 2026-11-18 · v1.7.0 · Un mundo con alturas, una cámara libre y un manejo con peso
+
+Pedido del autor: «dimensiona más el mapa y el mundo, para hacer bien los puentes y las estaciones del metro (el personaje cruza por encima); recoloca las estaciones del Metroplús; agrega mover la cámara a voluntad, pellizcar para acercar y alejar y cambiar el ángulo; optimiza; y mejora los controles: hay una sensibilidad abismal, debe ser más centrado, con peso de realismo». Después: «que siempre se pueda elegir la velocidad» y «complementa con El Metro 1.2.0».
+
+1. **Lo que va en alto** (`tools/geo/alturas.py` → `src/data/alturas.json`; en el juego, `76-altura.js`). Se toman de Overture/OpenStreetMap los tramos marcados como puente (`is_bridge`) y su nivel (`level`):
+   - **Metro en viaducto:**
+     - la línea A va elevada de Universidad a Exposiciones (6,9 km con el tramo de Niquía y los puentes del sur);
+     - la línea B, de San Antonio a Floresta (4,4 km), y en San Antonio pasa por encima de la A;
+     - 13 estaciones elevadas, con su caja de vidrio, el techo con las franjas del color de la línea y sus columnas;
+     - el viaducto tiene losa, costados, rieles, pilares y su sombra en el suelo;
+     - los trenes van por encima y se meten bajo el techo de las estaciones.
+   - **1.435 puentes de las vías**: 43 sobre el agua, 450 peatonales y ciclopuentes, y pasos elevados (44 en segundo nivel y uno en tercero).
+     - Cada puente se corta del dibujo del suelo y se levanta con el mismo trazo de su calle; el río y las quebradas siguen por debajo.
+     - Llevan barandas, pilares y sombra, y una rampa en cada extremo.
+   - **La bici pasa por debajo**, con su silueta visible, y los carros de abajo también. A un puente se sube por uno de sus extremos (o yendo sobre el río); los carros del puente van por encima. Sobre el río, la baranda no deja caer.
+   - **El Metrocable**, a unos 25 m, con cables, torres y cabinas en perspectiva y su sombra.
+2. **Metroplús sobre sus avenidas:**
+   - cada punto del trazado se lleva al eje de su vía, y en las avenidas de doble calzada al separador;
+   - cada estación se corre lo justo para quedar en un tramo recto y alineada con su carril;
+   - el trazado sobre la calzada pasó del 91–93 % al 98–100 %, y las estaciones sobre la calzada de 43 a 48 de 55.
+3. **Cámara (88-camara.js):**
+   - pellizcar acerca y aleja, en continuo en la ciudad 3D y por pasos en pixel;
+   - girar con dos dedos gira la ciudad, y los textos siguen derechos;
+   - subir o bajar los dos dedos inclina la cámara;
+   - ángulos rápidos con 🎥: desde arriba, inclinada, baja y detrás de la bici, que gira con el rumbo;
+   - 🧭 vuelve al norte; 📷 es la cámara libre: un dedo mueve la cámara por la ciudad y ⌖ vuelve a la bici;
+   - en computador: rueda del ratón, botón derecho y las teclas + − Z X R F T C N;
+   - **cómo se dibuja:**
+     - la inclinación corre el punto de fuga de la perspectiva hacia abajo de la pantalla, así los edificios se ven de lado;
+     - con la cámara girada, el suelo se dibuja en un cuadrado que la cubre en cualquier ángulo;
+     - el joystick va según la pantalla.
+4. **Manejo con peso (30-ride.js):**
+   - la punta de la bici bajó un 29 %: llega al 90 % en unos 2 s y frena en menos de un segundo;
+   - al soltar, rueda y se detiene en 1,2 s;
+   - el giro se limita según la velocidad (a toda marcha se abre la curva) y tiene inercia;
+   - el joystick tiene zona muerta y una curva suave, así poco dedo es poca velocidad;
+   - la cámara va casi centrada: anticipa a lo sumo un sexto de la vista;
+   - el reloj de los oficios se ajusta, así cada viaje cuesta los mismos minutos de juego.
+5. **Velocidad elegible siempre:**
+   - tranquila, normal, rápida o muy rápida (×0,8 a ×1,5), con el botón 🚲 del juego, en la pausa, en Más o con la tecla G;
+   - el reloj se ajusta a la velocidad elegida;
+   - en las carreras y en red todos van a la normal.
+6. **Paseo guiado** (89-paseo.js), tomado del «modo paseo» de El Metro 1.2.0. En el modo libre, «🧭 Paseo» lleva la bici sola de un lugar con postal al siguiente:
+   - respeta semáforos y carros;
+   - la cámara cambia de plano;
+   - en cada parada la cámara le da la vuelta al lugar y se cuenta su historia;
+   - tocar el control devuelve el manejo;
+   - logro «Guía del valle».
+
+   Va con la idea del autor: jugable, contemplativo y divertido, y que sirva de guía para quien visita la ciudad.
+7. **Optimización:**
+   - calidad automática: si los cuadros pasan de 30 ms, la resolución baja un paso, y sube cuando sobra;
+   - con CPU 4× lenta y pantalla de doble densidad, en el centro (lo más denso del mapa) se pasó de 50 a 33 ms por cuadro;
+   - con la cámara girada, de 83 a 33 ms.
+
+**Qué se probó:**
+- todas las pruebas (`tests/run.js`), con una sección nueva para la v1.7:
+  - el manejo;
+  - la velocidad;
+  - el pellizco, el giro, la inclinación y la cámara libre, con eventos de dedo reales;
+  - el viaducto y la bici sobre el puente del río;
+  - el Metroplús y el paseo;
+- 54 partidas del bot sin errores (el límite de tiempo por partida subió de 600 a 900 s porque el reloj ahora corre más lento en el mapa);
+- la auditoría del mapa (`node tools/auditoria-mapa.js`) con las cifras nuevas;
+- capturas del viaducto, de las estaciones elevadas, de los puentes y de la cámara en sus ángulos.
+
+**Qué falta:**
+- Los pasos elevados siguen conectados con la vía de abajo en la cuadrícula: el GPS podría indicar un giro que en la realidad no existe. Arreglarlo pide una cuadrícula de dos niveles.
+- Los deprimidos (túneles) todavía no se dibujan.
 
 ### 2026-11-18 · v1.6.0 · Los emblemáticos tal cual y la auditoría de El Metro
 
