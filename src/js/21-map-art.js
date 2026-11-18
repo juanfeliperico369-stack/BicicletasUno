@@ -8,6 +8,7 @@ CityMap.landmarkCanvas = function (i) {
       const R = (a, b, w, h, col) => prect(c, a, b, w, h, col), cx = W >> 1, cy = H >> 1;
       const trees = (n, seed, area) => { for (let k = 0; k < n; k++) { const tx = area[0] + h2(k, seed) * area[2], ty = area[1] + h2(k, seed + 1) * area[3], g = h2(k, seed + 2); pdisc(c, tx + 1, ty + 1, 3, '#0003'); pdisc(c, tx, ty, 3, g < .15 ? '#f2c230' : g < .25 ? '#e88ab8' : '#3f8a3f'); pdisc(c, tx - 1, ty - 1, 1, '#5fae4f'); } };
       const roofHouse = (x, y, w, h, col) => { R(x, y, w, h, col); R(x, y + h - 1, w, 1, shade(col, -.3)); R(x + w - 1, y, 1, h, shade(col, -.25)); R(x, y, w, 1, shade(col, .2)); };
+      if (L.sdx || L.sdy) c.translate((L.sdx || 0) * 8, (L.sdy || 0) * 8);   // el cuerpo del lugar se corrió para no tapar una calle: el dibujo lo sigue
       switch (L.k) {
         case 'iglesia': case 'lleras': {
           if (L.k === 'iglesia') { const ix = cx - 16, iy = 8; roofHouse(ix, iy, 32, 32, '#b85a36'); R(ix + 12, iy - 2, 8, 36, '#c9683f'); R(ix, iy + 10, 32, 8, '#c9683f'); roofHouse(ix + 10, iy + 30, 12, 8, '#efe9dc'); R(ix + 14, iy + 32, 4, 4, '#9aa7b8'); }

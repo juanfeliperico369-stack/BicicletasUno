@@ -119,12 +119,12 @@ const CityMap = JE.map = {
     const keep = [TT.WATER, TT.CANAL, TT.AUTO, TT.AVE, TT.BRIDGE, TT.STATION, TT.ROAD];   // las calles que cruzan un lugar siguen siendo calle: un lugar nunca corta la red
     const base = { comuna13: TT.LAND, bibespana: TT.LAND, palacio: TT.PLAZA, catedral: TT.PLAZA, parquenorte: TT.GRASS, deporte: TT.GRASS, memoria: TT.GRASS, cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
     for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y))) continue; this.set(x, y, base); this.lid.set(this.idx(x, y), i); }
-    L.solids = []; const solid = (x, y, w, h) => { L.solids.push([L.x + x, L.y + y, w, h]); for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid.get(this.idx(L.x + xx, L.y + yy)) === i) this.set(L.x + xx, L.y + yy, TT.LAND); };   // los cuerpos construidos del lugar (en 3D se levantan como edificios)
-    const W = L.w, H = L.h;
+    // los cuerpos construidos del lugar (en 3D se levantan como edificios); se corren dentro del lugar si así no tapan calles
+    const W = L.w, H = L.h, RS = [], solid = (x, y, w, h) => RS.push([x, y, w, h]);
     switch (L.k) {
       case 'iglesia': solid((W >> 1) - 2, 1, 4, 4); break;
       case 'terminal': solid(1, 1, W - 2, 3); break;
-      case 'campus': solid(1, 1, 3, 3); solid(W - 4, 1, 3, 3); solid(1, H - 4, 3, 3); solid(W - 4, H - 4, 3, 3); break;
+      case 'campus': if (H >= 8) { solid(1, 1, 3, 3); solid(W - 4, 1, 3, 3); solid(1, H - 4, 3, 3); solid(W - 4, H - 4, 3, 3); } else { solid(1, 1, 3, H - 2); solid(W - 4, 1, 3, H - 2); } break;
       case 'botanico': solid(3, 2, 5, 4); break;
       case 'explora': solid(1, 1, 3, 3); solid(5, 1, 3, 2); solid(5, 4, 3, 2); break;
       case 'botero': solid(0, 0, W, 2); break;
@@ -137,6 +137,23 @@ const CityMap = JE.map = {
       case 'depot': solid(0, 0, W, 2); break;
       case 'deporte': solid(7, 1, 4, 3); break;   // el coliseo
     }
+    let sdx = 0, sdy = 0;
+    if (RS.length && L.k !== 'depot') {   // la calle que cruza el lugar sigue siendo calle: el cuerpo busca dónde no la tapa (10 por casilla tapada, 1 por casilla corrida)
+      const tapa = (dx, dy) => { let n = 0; for (const [x, y, w, h] of RS) for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid.get(this.idx(L.x + xx + dx, L.y + yy + dy)) !== i) n++; return n; };
+      const bx0 = Math.min(...RS.map(r => r[0])), by0 = Math.min(...RS.map(r => r[1])), bx1 = Math.max(...RS.map(r => r[0] + r[2])), by1 = Math.max(...RS.map(r => r[1] + r[3]));
+      let bs = tapa(0, 0) * 10; if (bs >= 30) for (let dy = -by0; dy <= H - by1; dy++) for (let dx = -bx0; dx <= W - bx1; dx++) { const sc = tapa(dx, dy) * 10 + Math.abs(dx) + Math.abs(dy); if (sc < bs) { bs = sc; sdx = dx; sdy = dy; } }
+    }
+    const tapada = (x, y) => this.lid.get(this.idx(x, y)) !== i;
+    L.sdx = sdx; L.sdy = sdy; L.solids = RS.map(([x, y, w, h]) => {   // y si aún tapa, se recortan los bordes que caen en la calle (sin bajar de 2 casillas)
+      let X0 = L.x + x + sdx, Y0 = L.y + y + sdy, X1 = X0 + w, Y1 = Y0 + h;
+      for (let guard = 0; guard < 8 && L.k !== 'depot'; guard++) {
+        const fila = yy => { let n = 0; for (let xx = X0; xx < X1; xx++) if (tapada(xx, yy)) n++; return n; }, col = xx => { let n = 0; for (let yy = Y0; yy < Y1; yy++) if (tapada(xx, yy)) n++; return n; };
+        const e = [[fila(Y0), 0], [fila(Y1 - 1), 1], [col(X0), 2], [col(X1 - 1), 3]].filter(([n, k]) => n > 0 && (k < 2 ? Y1 - Y0 > 2 : X1 - X0 > 2)).sort((a, b) => b[0] - a[0]);
+        if (!e.length) break; const k = e[0][1]; if (k === 0) Y0++; else if (k === 1) Y1--; else if (k === 2) X0++; else X1--;
+      }
+      return [X0, Y0, X1 - X0, Y1 - Y0];
+    });
+    for (const [x0, y0, w, h] of L.solids) for (let yy = y0; yy < y0 + h; yy++) for (let xx = x0; xx < x0 + w; xx++) if (this.lid.get(this.idx(xx, yy)) === i) this.set(xx, yy, TT.LAND);
     // perímetro transitable y salida a la calle
     for (let y = L.y - 1; y <= L.y + L.h; y++) for (let x = L.x - 1; x <= L.x + L.w; x++) {
       if (y >= L.y && y < L.y + L.h && x >= L.x && x < L.x + L.w) continue;

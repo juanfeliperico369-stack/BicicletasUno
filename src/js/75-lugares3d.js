@@ -19,6 +19,7 @@ const LMC = {
 const ARB = ['#3f8a3f', '#4a9444', '#357a38', '#5a9e48', '#3f8a3f', '#468f40', '#4a9444', '#3a8240', '#f2c230', '#e88ab8'];
 const MURAL = [['#ff6b5a', '#e0503f'], ['#56c7ff', '#3aa5dc'], ['#ffd84a', '#e5b92a'], ['#b07cff', '#8f5ee0'], ['#9bd341', '#7db52a'], ['#ff8fc7', '#e46fa8']];
 const BUSES = ['#e9eef3', '#2e9d55', '#e7b531', '#d8432f', '#3a7bd5'];
+const LM_TIERRA = new Set(['bibespana', 'comuna13', 'cerro', 'coltejer', 'aeropuerto']);   // lugares de tierra: todo el lugar es sólido menos las calles que lo cruzan
 
 /* un cuerpo rectangular en casillas relativas al lugar, girado a radianes alrededor de su centro */
 function lmQuad(L, tx, ty, tw, th, a) {
@@ -68,17 +69,21 @@ Object.assign(CityMap, {
       };
       const [sx, sy, sw, sh] = S[0] || [1, 1, W - 2, H - 2];
       switch (L.k) {
-        case 'iglesia':   // nave y crucero a dos aguas, torre con aguja al frente (mira al parque)
-          E(sx + 1.15, sy + .15, 1.7, 3.05, .3, LMC.igl, 'dos', { nf: 1 });
-          E(sx + .2, sy + .95, 3.6, 1.1, .29, LMC.igl, 'dos', { nf: 1 });
-          E(sx + 1.45, sy + 2.95, 1.1, 1, .64, LMC.tor, 'aguja', { nf: 1, zA: .3, tip: '#f2c230' });
+        case 'iglesia': {   // nave y crucero a dos aguas, torre con aguja al frente: mira a su parque (el lado con más espacio)
+          const sur = H - (sy + sh) >= sy, fx = sw / 4, fy = sh / 4, my = (y, h) => sur ? sy + y * fy : sy + sh - (y + h) * fy;   // medidas para 4×4 casillas, a la escala del cuerpo que quedó
+          E(sx + 1.15 * fx, my(.15, 3.05), 1.7 * fx, 3.05 * fy, .3, LMC.igl, 'dos', { nf: 1 });
+          E(sx + .2 * fx, my(.95, 1.1), 3.6 * fx, 1.1 * fy, .29, LMC.igl, 'dos', { nf: 1 });
+          E(sx + 1.45 * fx, my(2.95, 1), 1.1 * fx, fy, .64, LMC.tor, 'aguja', { nf: 1, zA: .3, tip: '#f2c230' });
           break;
-        case 'catedral':
-          E(sx + 2, sy + .15, 2, 4.1, .44, LMC.lad, 'dos', { nf: 1 });
-          E(sx + .15, sy + 1, 5.7, 1.5, .42, LMC.lad, 'dos', { nf: 1 });
-          E(sx + 2.4, sy + 3.9, 1.2, 1, .9, LMC.lad, 'aguja', { nf: 1, zA: .38, tip: '#f2c230' });
+        }
+        case 'catedral': {
+          const sur = H - (sy + sh) >= sy, fx = sw / 6, fy = sh / 5, my = (y, h) => sur ? sy + y * fy : sy + sh - (y + h) * fy;   // medidas para 6×5 casillas, a escala
+          E(sx + 2 * fx, my(.15, 4.1), 2 * fx, 4.1 * fy, .44, LMC.lad, 'dos', { nf: 1 });
+          E(sx + .15 * fx, my(1, 1.5), 5.7 * fx, 1.5 * fy, .42, LMC.lad, 'dos', { nf: 1 });
+          E(sx + 2.4 * fx, my(3.9, 1), 1.2 * fx, fy, .9, LMC.lad, 'aguja', { nf: 1, zA: .38, tip: '#f2c230' });
           break;
-        case 'terminal': E(sx + .1, sy + .1, sw - .2, 1.55, .2, LMC.ter, 'claraboya', { nf: 1 }); break;
+        }
+        case 'terminal': E(sx + .1, sy + .1, sw - .2, sh >= 2.6 ? 1.55 : sh - .2, .2, LMC.ter, 'claraboya', { nf: 1 }); break;   // con 3 casillas de fondo, los buses parquean adentro
         case 'campus': S.forEach(([x, y, w, h], k) => E(x + .2, y + .2, w - .4, h - .4, .24 + .12 * h2(i, k, 61), LMC.cam[i % 2], 'claustro', { nf: 3 })); break;
         case 'botanico': E(sx + .15, sy + .15, sw - .3, sh - .3, .2, LMC.orq, 'flores', { nf: 1 }); break;
         case 'explora': S.forEach(([x, y, w, h], k) => E(x + .1, y + .1, w - .2, h - .2, k ? .27 : .36, k === 1 ? LMC.exp2 : LMC.exp, 'plano', { nf: 1 })); break;
@@ -108,9 +113,27 @@ Object.assign(CityMap, {
           break;
         }
       }
+      if (LM_TIERRA.has(L.k)) {   // cerros y laderas: las calles que los cruzan siguen ahí; cada cuerpo se corre hasta 1 casilla para no taparlas, o no va
+        if (L.k === 'cerro' || L.k === 'coltejer') { if (this.lmAjusta(ed) > .25) ed.length = 0; }
+        else for (let k = ed.length - 1; k >= 0; k--) if (this.lmAjusta([ed[k]]) > .25) ed.splice(k, 1);
+      }
+      for (let k = casas.length - 1; k >= 0; k--) if (this.lmPisa(casas[k]) > .04) casas.splice(k, 1);
       return { x0: L.x * TS - 40, y0: L.y * TS - 40, x1: (L.x + W) * TS + 40, y1: (L.y + H) * TS + 40, ed, casas };
     });
     return this._lmP;
+  },
+  /* fracción de un cuerpo que pisa calle, ciclorruta, agua o estación */
+  lmPisa(q) {
+    let m = 0, n = 0;
+    for (let a = -q.w / 2 + 2; a < q.w / 2; a += 3) for (let d = -q.d / 2 + 2; d < q.d / 2; d += 3) { n++; const v = this.get(Math.floor((q.x + q.ux * a + q.nx * d) / TS), Math.floor((q.y + q.uy * a + q.ny * d) / TS)); if (v === TT.ROAD || v === TT.AVE || v === TT.AUTO || v === TT.BRIDGE || v === TT.WATER || v === TT.STATION || v === TT.CICLO) m++; }
+    return m / Math.max(1, n);
+  },
+  /* corre juntos los cuerpos P (hasta 16 px) a donde menos calle pisen; devuelve lo que aún pisan */
+  lmAjusta(P) {
+    if (!P.length) return 0; const mueve = (dx, dy) => { for (const q of P) { q.x += dx; q.y += dy; for (let k = 0; k < 8; k += 2) { q.pts[k] += dx; q.pts[k + 1] += dy; } } }, mide = () => P.reduce((t, q) => t + this.lmPisa(q), 0) / P.length;
+    let bp = mide(), bx = 0, by = 0; if (bp <= .02) return bp;
+    for (let oy = -16; oy <= 16; oy += 4) for (let ox = -16; ox <= 16; ox += 4) { if (!ox && !oy) continue; mueve(ox, oy); const v = mide() + Math.hypot(ox, oy) * .002; mueve(-ox, -oy); if (v < bp) { bp = v; bx = ox; by = oy; } }
+    mueve(bx, by); return bp;
   },
   /* suelo vectorial de cada lugar: fase 0 va bajo las casas (prados, caminos, agua, canchas, estadio, cerros);
      fase 1 va encima (árboles, esculturas, postes, buses, aviones, la rueda de Chicago, las cruces) */
@@ -143,16 +166,21 @@ Object.assign(CityMap, {
     const enCerro = (rmin, n, seed) => bosque(n, seed, (a, b) => { const an = a * TAU, rd = R * (rmin + (1 - rmin) * Math.sqrt(b)) * .94; return [cx + Math.cos(an) * rd, cy + Math.sin(an) * rd]; });
     const espiral = (vueltas, r0) => { const P = []; for (let t = 0; t <= 1.0001; t += .02) { const a = t * TAU * vueltas + 1.1, r = R * (.97 - t * (.97 - r0)); P.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } trazo(P, .3, '#d9c9a0'); };
     switch (L.k) {
-      case 'iglesia':
-        if (fase === 0) rr(sx + .85, sy + sh - .15, 2.3, .75, .25, '#cfc6b0');
-        parque(.35, sy + sh + .7, W - .7, H - sy - sh - 1, 11, 10);
-        if (fase === 1) arboleda(4, 13, .3, .3, W - .3, sy + sh + .4);
+      case 'iglesia': {   // el parque va del lado con más espacio; la iglesia mira hacia él
+        const sur = H - (sy + sh) >= sy;
+        if (fase === 0) rr(sx + .85, sur ? sy + sh - .15 : sy - .6, 2.3, .75, .25, '#cfc6b0');
+        if (sur) parque(.35, sy + sh + .7, W - .7, H - sy - sh - 1, 11, 10); else parque(.35, .3, W - .7, sy - 1, 11, 10);
+        if (fase === 1) arboleda(4, 13, .3, sur ? .3 : sy - .4, W - .3, sur ? sy + sh + .4 : H - .3);
         break;
-      case 'catedral':
-        if (fase === 0) { rr(sx + 1.6, sy + sh - .15, 2.8, .7, .25, '#cfc6b0'); fuente(cx, H - .95, .55); enlosado(0, sy + sh + .55, W, H - sy - sh - .55, 1); }
-        else arboleda(12, 21, .3, .3, W - .3, H - .3, [[cx - .8, H - 1.8, 1.6, 1.6]]);
+      }
+      case 'catedral': {
+        const sur = H - (sy + sh) >= sy, fy = sur ? sy + sh + .55 : 0, fh = sur ? H - sy - sh - .55 : sy - .55;
+        if (fase === 0) { rr(sx + 1.6, sur ? sy + sh - .15 : sy - .55, 2.8, .7, .25, '#cfc6b0'); if (fh > .4) enlosado(0, fy, W, fh, 1); if (fh > 1.4) fuente(cx, fy + fh / 2, Math.min(.55, fh * .3)); }
+        else arboleda(12, 21, .3, .3, W - .3, H - .3, [[cx - .8, fy + fh / 2 - .8, 1.6, 1.6]]);
         break;
+      }
       case 'terminal':
+        if (sh < 2.6) break;
         if (fase === 0) { c.strokeStyle = '#eceae2'; c.lineWidth = .6; c.beginPath(); for (let x = sx + .4; x < sx + sw - .4; x += .95) { c.moveTo(X(x), Y(sy + 1.8)); c.lineTo(X(x + .5), Y(sy + 2.9)); } c.stroke(); }
         else for (let x = sx + .4, k = 0; x + .95 < sx + sw - .3; x += .95, k++) { if (h2(i, k, 23) < .25) continue; const bx = X(x + .72), by = Y(sy + 2.35), a = Math.atan2(1.1, .5), l = 1.15 * T, w = .42 * T; c.save(); c.translate(bx, by); c.rotate(a); c.fillStyle = 'rgba(8,14,30,.25)'; c.beginPath(); c.roundRect(-l / 2 + 2, -w / 2 + 1, l, w, 1.5); c.fill(); const col = BUSES[(h2(i, k, 24) * BUSES.length) | 0]; c.fillStyle = col; c.beginPath(); c.roundRect(-l / 2, -w / 2, l, w, 1.5); c.fill(); c.fillStyle = shade(col, .16); c.fillRect(-l / 2 + 2.2, -w / 2 + 1.1, l - 5.5, w - 2.2); c.fillStyle = '#1f2f45'; c.fillRect(l / 2 - 2.4, -w / 2 + .8, 1.5, w - 1.6); c.restore(); }
         break;
@@ -204,29 +232,33 @@ Object.assign(CityMap, {
       case 'coltejer':
         if (fase === 0) { rr(.1, .1, W - .2, H - .2, .45, '#ddd3bd'); enlosado(.1, .1, W - .2, H - .2, .6); }
         break;
-      case 'teatro':
-        if (fase === 0) rr(.4, sy + sh + .2, W - .8, H - sy - sh - .4, .4, '#78b65c'); else arboleda(5, 61, .3, .3, W - .3, H - .3);
+      case 'teatro': case 'mamm': {   // el prado del lado con más espacio
+        const sur = H - (sy + sh) >= sy;
+        if (fase === 0) { if (sur) rr(.4, sy + sh + .3, W - .8, H - sy - sh - .6, .5, '#78b65c'); else rr(.4, .3, W - .8, sy - .6, .5, '#78b65c'); }
+        else arboleda(L.k === 'mamm' ? 8 : 5, L.k === 'mamm' ? 71 : 61, .3, .3, W - .3, H - .3);
         break;
-      case 'mamm':
-        if (fase === 0) rr(.4, sy + sh + .35, W - .8, H - sy - sh - .7, .55, '#78b65c'); else arboleda(8, 71, .3, .3, W - .3, H - .3);
-        break;
+      }
       case 'palacio':
         if (fase === 0) enlosado(0, 0, W, H, .7); else arboleda(3, 81, .3, sy + sh + .2, W - .3, H - .3);
         break;
-      case 'memoria':
-        if (fase === 0) { rr(.3, sy + sh + .3, W - .6, H - sy - sh - .55, .55, '#78b65c'); rr(sx + sw + .3, .4, W - sx - sw - .6, H - .8, .3, '#ddd3b8'); }
-        else arboleda(8, 91, .3, sy + sh + .3, W - .3, H - .3);
+      case 'memoria': {
+        const sur = H - (sy + sh) >= sy, der = W - (sx + sw) >= sx;
+        if (fase === 0) { if (sur) rr(.3, sy + sh + .3, W - .6, H - sy - sh - .55, .55, '#78b65c'); else rr(.3, .25, W - .6, sy - .55, .55, '#78b65c'); if (der) rr(sx + sw + .3, .4, W - sx - sw - .6, H - .8, .3, '#ddd3b8'); else rr(.3, .4, sx - .6, H - .8, .3, '#ddd3b8'); }
+        else arboleda(8, 91, .3, sur ? sy + sh + .3 : .3, W - .3, sur ? H - .3 : sy - .3);
         break;
+      }
       case 'depot':
         if (fase === 0) { rr(.3, sy + sh + .3, W - .6, H - sy - sh - .55, .3, '#bdb8ae'); c.strokeStyle = '#eceae2'; c.lineWidth = .6; c.beginPath(); for (let x = 1; x < W - .5; x += 1.6) { c.moveTo(X(x), Y(sy + sh + .5)); c.lineTo(X(x), Y(Math.min(H - .4, sy + sh + 2.2))); } c.stroke(); }
         break;
-      case 'deporte':
+      case 'deporte': {   // la cancha al lado del coliseo; la piscina y la pista en la otra fila (la pista bajo o sobre el coliseo)
+        const der = sx + sw / 2 > W / 2, arr = sy + sh / 2 < H / 2, cA = der ? .6 : W - 5.6, cB = der ? W - 4.85 : .6, fA = arr ? .6 : H - 3.6, fB = arr ? H - 3.3 : .5;
         if (fase === 0) {
-          canchaP(c, X(.75), Y(.75), 5 * T, 3.25 * T);
-          rr(1.1, 5, 4.5, 2.7, .3, '#dfe7ec'); rr(1.3, 5.2, 4.1, 2.3, .2, '#45a8dc'); for (let k = 1; k < 6; k++) trazo([[1.45, 5.2 + k * .38], [5.25, 5.2 + k * .38]], .04, '#ffffff', [3, 3]);
-          rr(6.7, 4.8, 4.5, 3, .35, '#c9573f'); c.strokeStyle = '#f4f4f4'; c.lineWidth = .6; c.strokeRect(X(7.1), Y(5.2), 3.7 * T, 2.2 * T); trazo([[8.95, 5.2], [8.95, 7.4]], .04, '#f4f4f4');
-        } else arboleda(9, 111, .2, .2, W - .2, H - .2, [[.6, .6, 5.3, 3.5], [1.1, 4.9, 4.6, 3], [6.6, 4.7, 4.7, 3.4]]);
+          canchaP(c, X(cA), Y(fA), 5 * T, 3 * T);
+          rr(cA + .35, fB, 4.5, 2.7, .3, '#dfe7ec'); rr(cA + .55, fB + .2, 4.1, 2.3, .2, '#45a8dc'); for (let k = 1; k < 6; k++) trazo([[cA + .7, fB + .2 + k * .38], [cA + 4.5, fB + .2 + k * .38]], .04, '#ffffff', [3, 3]);
+          rr(cB, fB - .2, 4.5, 3, .35, '#c9573f'); c.strokeStyle = '#f4f4f4'; c.lineWidth = .6; c.strokeRect(X(cB + .4), Y(fB + .2), 3.7 * T, 2.2 * T); trazo([[cB + 2.25, fB + .2], [cB + 2.25, fB + 2.4]], .04, '#f4f4f4');
+        } else arboleda(9, 111, .2, .2, W - .2, H - .2, [[cA, fA, 5, 3], [cA + .35, fB, 4.5, 2.7], [cB, fB - .2, 4.5, 3]]);
         break;
+      }
       case 'parquenorte': {
         const P = []; for (let k = 0; k <= 72; k++) { const a = k / 72 * TAU; P.push([7.5 + Math.cos(a) * 1.85 + Math.sin(a * 3) * .28, 4 + Math.sin(a) * 3 + Math.cos(a * 2) * .3]); }
         if (fase === 0) {   // montaña rusa en alto: sombra, soportes y rieles amarillos
