@@ -81,14 +81,22 @@ const CityMap = JE.map = {
       if (!vr || vr.length < VM.viasB) vr = inflateRaw(v8, VM.viasB);
       this.vias = this.parseVias(vr);
     }
+    // sitios reales: universidades, colegios, alcaldías, hospitales, iglesias… con sus edificios reales (22-sitios.js)
+    if (typeof SITIOS_BIN === 'string' && SITIOS_BIN && typeof SITIOS_META === 'object' && SITIOS_META) {
+      const sb = atob(SITIOS_BIN), s8 = new Uint8Array(sb.length); for (let i = 0; i < sb.length; i++) s8[i] = sb.charCodeAt(i); let sr = null;
+      if (window.DecompressionStream) { try { sr = new Uint8Array(await new Response(new Blob([s8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); } catch (e) { sr = null; } }
+      if (!sr || sr.length < SITIOS_META.raw) sr = inflateRaw(s8, SITIOS_META.raw);
+      try { this.sit = this.parseSitios(sr); } catch (e) { this.sit = null; console.warn('sitios', e); }
+    }
     this.lid = new Map();
     this.build();
     const ci = []; for (let i = 0; i < this.t.length; i++) if (this.t[i] === TT.CICLO) ci.push(i); this.cicloIdx = Int32Array.from(ci);
   },
   build() {
     // primero las estaciones, en su punto real; después los lugares, que se corren para no taparlas
+    this.rasterSitios(); this.sitLugares();   // los sitios reales entran primero a la cuadrícula
     this.stations = ESTACIONES.map((s, i) => this.carveStation(s, i)).filter(Boolean); this.stations.forEach((s, i) => s.i = i);
-    LANDMARKS.forEach((L, i) => this.paintLandmark(L, i));
+    LANDMARKS.forEach((L, i) => this.paintLandmark(L, i)); this.sitOcultar();
     this.buildLights(); this.buildLanes(); this.buildRail(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h + .5) * TS, name: 'Casa EnCicla' };
     this.poi = {}; for (const k in PUNTOS) { const [la, lo, n] = PUNTOS[k], p = geoP(la, lo), o = this.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), k !== 'campus'); this.poi[k] = { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, name: n }; }
@@ -107,6 +115,7 @@ const CityMap = JE.map = {
   district(x, y) { const c = this.comunaAt(x * TS, y * TS); return /Candelaria/.test(c) ? 'centro' : /Poblado/.test(c) ? 'poblado' : /Laureles|América/.test(c) ? 'laureles' : 'barrio'; },
   /* ---------- lugares y estaciones ---------- */
   paintLandmark(L, i) {
+    if (L.real) { L.solids = []; L.sdx = L.sdy = 0; return; }   // sus edificios reales ya están en la cuadrícula (22-sitios.js)
     // corre el lugar unas casillas si tapa avenidas, autopistas, agua u otro lugar
     const bad = v => v === TT.STATION ? 40 : v === TT.AVE || v === TT.AUTO || v === TT.WATER || v === TT.BRIDGE ? 6 / MS : v === TT.ROAD ? 1 / (MS * MS * 2) : 0;
     let best = null, bs = 1e9;
@@ -187,7 +196,7 @@ const CityMap = JE.map = {
     for (const [ox, oy, od] of OFF) { if (od > R + 3) break; if (od - 3 > bd) break; for (const [w, h] of [[4, 2], [2, 4]]) { const x = Math.round(tx - w / 2) + ox, y = Math.round(ty - h / 2) + oy;
       const d0 = Math.hypot(x + w / 2 - tx, y + h / 2 - ty); if (d0 >= bd) continue;
       let good = true, nr = 0;
-      for (let yy = y; yy < y + h && good; yy++) for (let xx = x; xx < x + w; xx++) { const v = this.get(xx, yy); if (v === TT.ROAD) nr++; else if (!ok.includes(v)) { good = false; break; } if (this.lid.has(this.idx(xx, yy))) { good = false; break; } }
+      for (let yy = y; yy < y + h && good; yy++) for (let xx = x; xx < x + w; xx++) { const v = this.get(xx, yy); if (v === TT.ROAD) nr++; else if (!ok.includes(v) || (this.sitB && this.sitB.has(yy * MW + xx))) { good = false; break; } if (this.lid.has(this.idx(xx, yy))) { good = false; break; } }
       const d = d0 + nr * 3.5; if (!good || nr > maxR || d >= bd) continue;
       for (let yy = y - 2; yy <= y + h + 1 && good; yy++) for (let xx = x - 2; xx <= x + w + 1; xx++) if (this.get(xx, yy) === TT.STATION) { good = false; break; }
       if (!good) continue;
@@ -353,7 +362,7 @@ const CityMap = JE.map = {
       const nx = -z.uy, ny = z.ux;
       for (let k = -z.hw + 1.5; k <= z.hw - 1.5; k += 3) for (let t = -3; t <= 3; t++) for (const w of [0, .9]) { const x = z.x + nx * (k + w) + z.ux * t - px0, y = z.y + ny * (k + w) + z.uy * t - py0; if (x >= 0 && y >= 0 && x < S && y < S) prect(c, Math.floor(x), Math.floor(y), 1, 1, '#e9e7df'); }
     }
-    c.imageSmoothingEnabled = false; LANDMARKS.forEach((L, i) => { if (L.x + L.w < x0 || L.x > x0 + CH || L.y + L.h < y0 || L.y > y0 + CH) return; c.drawImage(this.landmarkCanvas(i), (L.x - x0) * TS, (L.y - y0) * TS, L.w * TS, L.h * TS); });
+    c.imageSmoothingEnabled = false; LANDMARKS.forEach((L, i) => { if (L.real || L.x + L.w < x0 || L.x > x0 + CH || L.y + L.h < y0 || L.y > y0 + CH) return; c.drawImage(this.landmarkCanvas(i), (L.x - x0) * TS, (L.y - y0) * TS, L.w * TS, L.h * TS); });
     // árboles
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) {
       const v = this.get(x, y), r = h2(x, y, 5); let rad = 0;

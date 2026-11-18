@@ -52,6 +52,7 @@ Object.assign(CityMap, {
   lmPartes() {
     if (this._lmP) return this._lmP;
     this._lmP = LANDMARKS.map((L, i) => {
+      if (L.real) return { x0: 0, y0: 0, x1: -1, y1: -1, ed: [], casas: [] };   // con su forma real (22-sitios.js)
       const W = L.w, H = L.h, S = (L.solids || []).map(([x, y, w, h]) => [x - L.x, y - L.y, w, h]), ed = [], casas = [], gx = (L.x + W / 2) * TS, gy = (L.y + H / 2) * TS;
       const E = (tx, ty, tw, th, z, col, t, o) => { const b = Object.assign(lmQuad(L, tx, ty, tw, th, o && o.a), { B: true, lm: i, z, roof: col[0], wa: col[1], wb: col[2], k: .7, t, pal: [], gx, gy }, o || {}); ed.push(b); return b; };
       const C = (tx, ty, tw, th, a, z, roof, wa, wb, k) => casas.push(Object.assign(lmQuad(L, tx, ty, tw, th, a), { B: false, lm: i, z, roof, wa, wb, k }));
@@ -138,6 +139,7 @@ Object.assign(CityMap, {
   /* suelo vectorial de cada lugar: fase 0 va bajo las casas (prados, caminos, agua, canchas, estadio, cerros);
      fase 1 va encima (árboles, esculturas, postes, buses, aviones, la rueda de Chicago, las cruces) */
   lugar3(c, L, i, fase) {
+    if (L.real) return;
     const T = TS, W = L.w, H = L.h, X = t => (L.x + t) * T, Y = t => (L.y + t) * T, S = (L.solids || []).map(([x, y, w, h]) => [x - L.x, y - L.y, w, h]), cx = W / 2, cy = H / 2;
     const [sx, sy, sw, sh] = S[0] || [1, 1, W - 2, H - 2];
     const rr = (tx, ty, tw, th, r, col) => { if (tw <= 0 || th <= 0) return; c.fillStyle = col; c.beginPath(); c.roundRect(X(tx), Y(ty), tw * T, th * T, Math.min(r, tw / 2, th / 2) * T); c.fill(); };

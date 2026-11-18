@@ -10,7 +10,7 @@ const rd = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 const jsFiles = fs.readdirSync(path.join(SRC, 'js')).filter(f => f.endsWith('.js')).sort();
 let js = jsFiles.map(f => `/* ---- ${f} ---- */\n` + rd('js/' + f)).join('\n');
 // mapa real del Valle de Aburrá (tools/geo/build.py): casillas y relieve comprimidos (deflate) + líneas en JSON
-const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '${fs.readFileSync(path.join(SRC, 'data', 'valle.bin')).toString('base64')}';\nconst VIAS_BIN = '${fs.existsSync(path.join(SRC, 'data', 'vias.bin')) ? fs.readFileSync(path.join(SRC, 'data', 'vias.bin')).toString('base64') : ''}';\n`;
+const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '${fs.readFileSync(path.join(SRC, 'data', 'valle.bin')).toString('base64')}';\nconst VIAS_BIN = '${fs.existsSync(path.join(SRC, 'data', 'vias.bin')) ? fs.readFileSync(path.join(SRC, 'data', 'vias.bin')).toString('base64') : ''}';\nconst SITIOS_META = ${fs.existsSync(path.join(SRC, 'data', 'sitios.json')) ? rd('data/sitios.json') : 'null'};\nconst SITIOS_BIN = '${fs.existsSync(path.join(SRC, 'data', 'sitios.bin')) ? fs.readFileSync(path.join(SRC, 'data', 'sitios.bin')).toString('base64') : ''}';\n`;
 // guion del juego (contenido/guion/*.json): historia "Un día del valle", frases de la ciudad, tutor, fiestas y Metro
 const GDIR = path.join(ROOT, 'contenido', 'guion');
 const GUION = fs.existsSync(GDIR) ? Object.fromEntries(fs.readdirSync(GDIR).filter(f => f.endsWith('.json')).sort().map(f => [f.slice(0, -5), JSON.parse(fs.readFileSync(path.join(GDIR, f), 'utf8'))])) : {};
