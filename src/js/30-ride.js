@@ -202,7 +202,9 @@ class Ride {
     this.float('¡Cuidado!', PAL.cor); this.burst(P.x, P.y, '#ffffff', 6);
     if (this.mode.onCrash) this.mode.onCrash();
   }
+  metroOn() { const M = this.mode; if (M.clock == null) return true; const m = ((M.clock | 0) % 1440 + 1440) % 1440, h = Cal.metro(M.fecha || Cal.now()); return m >= h.abre && m < h.cierra; }   // fuera de horario los trenes duermen
   updTrains(dt) {
+    if (!this.metroOn()) return;
     for (const t of this.trains) {
       if (t.wait > 0) { t.wait -= dt; continue; }
       const prev = t.s; t.s += 70 * WK * t.dir * dt;
@@ -249,6 +251,7 @@ class Ride {
       if (ss && !ss.open) { b.fillStyle = '#0a234299'; b.fillRect(x0, y0, W, H); }
       if (s.v) b.restore();
     }
+    if (this.mode.free && JE.placas) JE.placas.dibujar(b, ox, oy, inV);   // placas de lo poco conocido
     // ruta GPS
     const ph = (t * 4) | 0;
     const gc = (this.way || this.target || {}).col || PAL.amb;
@@ -288,7 +291,7 @@ class Ride {
     spr(sp, P.x, P.y, P.a, '#0005');
     // trenes del metro sobre el viaducto
     const tc = Art.trainCar();
-    for (const tr of this.trains) for (let j = -1; j <= 1; j++) { const s = tr.s + j * 17; if (s < 0 || s > tr.L.len) continue; const q = this.map.at(tr.L, s); if (inV(q.x, q.y)) spr(tc, q.x, q.y, q.a); }
+    if (this.metroOn()) for (const tr of this.trains) for (let j = -1; j <= 1; j++) { const s = tr.s + j * 17; if (s < 0 || s > tr.L.len) continue; const q = this.map.at(tr.L, s); if (inV(q.x, q.y)) spr(tc, q.x, q.y, q.a); }
     this.drawSky(c, ox, oy);
     for (const f of this.fx) if (f.k === 'p') { c.fillStyle = f.col; c.fillRect(f.x - ox, f.y - oy, 1, 1); }
     c.restore();

@@ -36,6 +36,7 @@ window.addEventListener('error', e => { JE.errors.push(String(e.message || e.err
 window.addEventListener('unhandledrejection', e => { JE.errors.push('promesa: ' + String(e.reason)); });
 
 /* ---------- guardado (localStorage + exportar/importar) ---------- */
+const sinProto = (k, v) => (k === '__proto__' || k === 'constructor' || k === 'prototype') ? undefined : v;   // JSON sin llaves que alteren los prototipos
 const SAVE_KEY = 'juegaencicla.v1';
 const Save = JE.save = {
   data: null, mem: null,
@@ -48,7 +49,7 @@ const Save = JE.save = {
     };
   },
   merge(d, s) {
-    for (const k in s) {
+    for (const k in s) { if (k === '__proto__' || k === 'constructor' || k === 'prototype' || !Object.prototype.hasOwnProperty.call(s, k)) continue;
       if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) this.merge(d[k], s[k]);
       else d[k] = s[k];
     }
@@ -57,7 +58,7 @@ const Save = JE.save = {
   load() {
     let raw = null;
     try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { raw = this.mem; }
-    try { this.data = raw ? this.merge(this.def(), JSON.parse(raw)) : this.def(); } catch (e) { this.data = this.def(); }
+    try { this.data = raw ? this.merge(this.def(), JSON.parse(raw, sinProto)) : this.def(); } catch (e) { this.data = this.def(); }
     return this.data;
   },
   save() {
@@ -67,7 +68,7 @@ const Save = JE.save = {
   valid(o) { return o && typeof o === 'object' && o.v === 1 && Array.isArray(o.history) && o.profile && typeof o.xp === 'number'; },
   exportText() { return JSON.stringify({ app: 'Juega EnCicla', version: JE.version, exported: new Date().toISOString(), save: this.data }, null, 1); },
   importText(txt) {
-    const o = JSON.parse(txt); const s = o && o.save ? o.save : o;
+    const o = JSON.parse(txt, sinProto); const s = o && o.save ? o.save : o;
     if (!this.valid(s)) throw new Error('Archivo no válido');
     this.data = this.merge(this.def(), s); this.save(); return true;
   },

@@ -125,7 +125,7 @@ class MapMode extends Mode {
   onThanks() { this.score += 1; }
   /* mano guía: arrastrar hacia la ruta mientras no se haya movido */
   hint(V) {
-    if (this.sub || !this.ride || this.ride.stats.dist > 60 || this.ride.big) return null;
+    if (this.sub || !this.ride || this.ride.stats.dist > 6 || this.ride.big || (this.t || 0) > 6) return null;   // se cierra sola con el primer movimiento
     const R = this.ride, g = R.gps[1] || R.gps[0] || R.target; if (!g) return null;
     const dx = g.x - R.p.x, dy = g.y - R.p.y, l = Math.hypot(dx, dy) || 1;
     return { x: V.w / 2 - dx / l * 30, y: V.h * .62 - dy / l * 30, dx: dx / l * 80, dy: dy / l * 80, drag: true, txt: 'Arrastra' };

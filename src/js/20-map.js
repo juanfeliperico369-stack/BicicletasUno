@@ -97,10 +97,46 @@ const CityMap = JE.map = {
     this.rasterSitios(); this.sitLugares();   // los sitios reales entran primero a la cuadrícula
     this.stations = ESTACIONES.map((s, i) => this.carveStation(s, i)).filter(Boolean); this.stations.forEach((s, i) => s.i = i);
     LANDMARKS.forEach((L, i) => this.paintLandmark(L, i)); this.sitOcultar();
-    this.buildLights(); this.buildLanes(); this.buildRail(); this.buildMini();
+    this.buildLights(); this.buildLanes(); this.buildRail(); this.rioCorrido(); this.limpiaManchones(); this.buildMini();
     const dp = LM.depot; this.depot = { x: (dp.x + dp.w / 2) * TS, y: (dp.y + dp.h + .5) * TS, name: 'Casa EnCicla' };
     this.poi = {}; for (const k in PUNTOS) { const [la, lo, n] = PUNTOS[k], p = geoP(la, lo), o = this.nearestOpen(Math.floor(p.x / TS), Math.floor(p.y / TS), k !== 'campus'); this.poi[k] = { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, name: n }; }
     this.poi.casa = Object.assign({}, this.depot, { name: PUNTOS.casa[2] });
+  },
+  /* el río, de Caldas a Barbosa, siempre baja y nunca se corta (auditoría de El Metro, «medir siempre igual»):
+     - sus casillas de orilla que no son agua pasan a agua (o a puente si son vía);
+     - el relieve se «quema» a lo largo del cauce: regresión isotónica decreciente sobre el perfil, y las cuatro esquinas
+       del relieve de cada punto quedan a esa altura como máximo (el modelo de terreno mide copas y puentes, no el agua) */
+  rioCorrido() {
+    const R = this.river; if (!R || !R.pts || R.pts.length < 2) return; const P = R.pts, E = this.E, W = VM.eW, Hh = VM.eH, t = this.t, smp = [];
+    for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i], L = Math.hypot(b.x - a.x, b.y - a.y) || 1; for (let s2 = 0; s2 < L; s2 += TS / 2) smp.push([a.x + (b.x - a.x) * s2 / L, a.y + (b.y - a.y) * s2 / L]); }
+    let fix = 0; const rs = this.rioSet = new Set();
+    const junto = k => { for (const d of [1, -1, MW, -MW, MW + 1, MW - 1, -MW + 1, -MW - 1]) { const v = t[k + d]; if (v === TT.WATER || v === TT.BRIDGE) return true; } return false; };
+    for (const [x, y] of smp) { const k = Math.floor(y / TS) * MW + Math.floor(x / TS), v = t[k]; rs.add(k); if (v === TT.WATER || v === TT.BRIDGE || v === TT.CANAL || !junto(k)) continue; t[k] = (v === TT.ROAD || v === TT.AVE || v === TT.AUTO) ? TT.BRIDGE : TT.WATER; fix++; }   // solo se cierran los huecos junto al agua (no se pinta agua entre casas)
+    const sube = this.elev(smp[0][0], smp[0][1]) < this.elev(smp[smp.length - 1][0], smp[smp.length - 1][1]); if (sube) smp.reverse();   // de lo alto a lo bajo
+    for (let pase = 0; pase < 10; pase++) {
+      const v = smp.map(([x, y]) => this.elev(x, y)), f = [], w = [];   // pool adjacent violators (decreciente)
+      for (const z of v) { f.push(z); w.push(1); while (f.length > 1 && f[f.length - 1] > f[f.length - 2]) { const z2 = f.pop(), w2 = w.pop(); f[f.length - 1] = (f[f.length - 1] * w[w.length - 1] + z2 * w2) / (w[w.length - 1] + w2); w[w.length - 1] += w2; } }
+      const fit = []; f.forEach((z, i) => { for (let k = 0; k < w[i]; k++) fit.push(z); });
+      let cambio = 0;
+      smp.forEach(([x, y], i) => { const gx = clamp(x / TS / ES, 0, W - 1.001), gy = clamp(y / TS / ES, 0, Hh - 1.001), i0 = gx | 0, j0 = gy | 0; for (const k of [j0 * W + i0, j0 * W + i0 + 1, (j0 + 1) * W + i0, (j0 + 1) * W + i0 + 1]) if (E[k] > fit[i] + .5) { E[k] = Math.floor(fit[i]); cambio++; } });
+      if (!cambio) break;
+    }
+    this.rioFix = fix;
+  },
+  /* manchones de agua de 1 a 4 casillas en plena ciudad (restos de polígonos chicos): pasan a lo que los rodea; los de parques y monte quedan (son lagos) */
+  limpiaManchones() {
+    const t = this.t, W = MW, H = MH, vis = new Uint8Array(W * H), D4 = [1, -1, W, -W]; let n = 0;
+    for (let i = W; i < W * (H - 1); i++) {
+      if (t[i] !== TT.WATER || vis[i]) continue; const comp = [i]; vis[i] = 1;
+      for (let q = 0; q < comp.length && comp.length <= 4; q++) for (const d of D4) { const j = comp[q] + d; if (!vis[j] && t[j] === TT.WATER) { vis[j] = 1; comp.push(j); } }
+      if (comp.length > 4 || comp.some(k => this.rioSet && this.rioSet.has(k))) continue;   // el cauce del río no se toca
+      const cnt = new Map(); let verde = false;
+      for (const k of comp) for (const d of [1, -1, W, -W, W + 1, W - 1, -W + 1, -W - 1]) { const v = t[k + d]; if (v === TT.WATER) continue; if (v === TT.GRASS || v === TT.MOUNT || v === TT.PLAZA || v === TT.LAND || v === TT.CANAL || v === TT.BRIDGE) verde = true; cnt.set(v, (cnt.get(v) || 0) + 1); }
+      if (verde || !cnt.size || this.lid.has(comp[0])) continue;
+      let best = TT.BRICK, bn = 0; for (const [v, c] of cnt) if (c > bn && v !== TT.STATION && v !== TT.BRIDGE) { bn = c; best = v; }
+      for (const k of comp) t[k] = best; n++;
+    }
+    this.manchFix = n;
   },
   /* ---------- relieve ---------- */
   elevT(tx, ty) { // en casillas (float) -> metros
@@ -127,7 +163,8 @@ const CityMap = JE.map = {
     L.x += best.dx; L.y += best.dy;
     const keep = [TT.WATER, TT.CANAL, TT.AUTO, TT.AVE, TT.BRIDGE, TT.STATION, TT.ROAD];   // las calles que cruzan un lugar siguen siendo calle: un lugar nunca corta la red
     const base = { comuna13: TT.LAND, bibespana: TT.LAND, palacio: TT.PLAZA, catedral: TT.PLAZA, parquenorte: TT.GRASS, deporte: TT.GRASS, memoria: TT.GRASS, cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
-    for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y))) continue; this.set(x, y, base); this.lid.set(this.idx(x, y), i); }
+    const SE = this.sitBE, X0 = L.x * TS, Y0 = L.y * TS, X1 = (L.x + L.w) * TS, Y1 = (L.y + L.h) * TS, fuera = k => { const bi = SE && SE.get(k); if (bi == null) return false; const b = this.sit.E[bi]; return !(b.x > X0 && b.x < X1 && b.y > Y0 && b.y < Y1); };
+    for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y)) || fuera(this.idx(x, y))) continue; this.set(x, y, base); this.lid.set(this.idx(x, y), i); }   // un edificio real que se sigue viendo conserva sus casillas
     // los cuerpos construidos del lugar (en 3D se levantan como edificios); se corren dentro del lugar si así no tapan calles
     const W = L.w, H = L.h, RS = [], solid = (x, y, w, h) => RS.push([x, y, w, h]);
     switch (L.k) {
@@ -136,7 +173,7 @@ const CityMap = JE.map = {
       case 'campus': if (H >= 8) { solid(1, 1, 3, 3); solid(W - 4, 1, 3, 3); solid(1, H - 4, 3, 3); solid(W - 4, H - 4, 3, 3); } else { solid(1, 1, 3, H - 2); solid(W - 4, 1, 3, H - 2); } break;
       case 'botanico': solid(3, 2, 5, 4); break;
       case 'explora': solid(1, 1, 3, 3); solid(5, 1, 3, 2); solid(5, 4, 3, 2); break;
-      case 'botero': solid(0, 0, W, 2); break;
+      case 'botero': if (!this.sit) solid(0, 0, W, 2); break;   // con los sitios reales, el Museo de Antioquia es el edificio real de al lado
       case 'teatro': solid(1, 1, 5, 4); break;
       case 'mamm': solid(1, 1, 5, 3); break;
       case 'palacio': solid(1, 1, W - 2, 4); break;

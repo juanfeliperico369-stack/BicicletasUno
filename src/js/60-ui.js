@@ -408,7 +408,7 @@ const Game = JE.game = {
     }
     this.layout(ride);
     const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
-    if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn" data-i="${i}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
+    if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn${x.label.length > 8 ? ' l9' : x.label.length > 6 ? ' l7' : ''}" data-i="${i}" aria-label="${esc(x.label)}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); this.layout(true); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
   },
   /* lo que siente la música: velocidad, racha, pendiente, noche y apuro */
   moodOf(M) {
@@ -429,6 +429,7 @@ const Game = JE.game = {
     View.hudB = hb; View.top = Math.max(hb, Math.round(g.bottom)) + 6;
     const tt = Math.max(View.top, mmB) + 8 + 'px'; document.documentElement.style.setProperty('--toastTop', tt);
     const ctrl = ride && Ctrl.pad() && Ctrl.side() === 'der'; document.body.classList.toggle('ctrlR', ctrl);
+    const ab = $('#actBar'); if (ab && ab.childElementCount) { const r = ab.getBoundingClientRect(), mh = Math.max(84, Math.round(r.bottom - (ride ? mmB : hb) - 10)) + 'px'; if (ab.style.maxHeight !== mh) ab.style.maxHeight = mh; }   // los botones no tapan el minimapa: si no caben, segunda columna
   },
   pause() {
     if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene

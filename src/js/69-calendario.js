@@ -52,6 +52,7 @@ const Cal = JE.cal = {
   /* open: primer préstamo · lend: desde esa hora ya no se presta (la última es un minuto antes) · close: hasta esa hora se reciben bicis */
   service(d) { const t = this.dayType(d), s = t === 'semana' ? { open: 330, lend: 1260, close: 1320 } : t === 'sabado' ? { open: 390, lend: 1140, close: 1200 } : { open: 480, lend: 900, close: 960 }; return s; },
   /* domingos y festivos: los anfitriones descansan, solo prestan y reciben las estaciones automáticas */
+  metro(d) { const t = this.dayType(d); return t === 'domingo' || t === 'festivo' ? { abre: 300, cierra: 1320 } : { abre: 270, cierra: 1380 }; },   // horario del Metro de Medellín
   soloAuto(d) { const t = this.dayType(d || this.now()); return t === 'domingo' || t === 'festivo'; },
   open(d) { const s = this.service(d), m = this.min(d); return m >= s.open && m < s.lend; },
   /* ciclovía de Medellín: domingos y festivos de 7:00 a. m. a 1:00 p. m. */

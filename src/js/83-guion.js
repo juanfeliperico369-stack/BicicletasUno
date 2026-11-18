@@ -118,7 +118,7 @@ ModeUsuarioR.prototype.libreInit = function (now) {
 const _tick83 = ModeUsuarioR.prototype.tick;
 ModeUsuarioR.prototype.tick = function (dt) {
   _tick83.call(this, dt); if (!this.free || this.done || this.trenOk || !GUION.metro) return;
-  const m = ((this.clock % 1440) + 1440) % 1440; if (m < 240 || m >= 270) return;   // de 4:00 a 4:29 a. m.
+  const m = ((this.clock % 1440) + 1440) % 1440; if (m < 240 || m >= Cal.metro(this.fecha || Cal.now()).abre) return;   // desde las 4:00 hasta el primer tren (4:30; 5:00 domingos y festivos)
   const st = Dia.niquia || (Dia.niquia = (JE.map.metroA || []).find(s => /niqu/i.test(s.name || ''))), P = this.ride.p;
   if (!st || dist(st.px, st.py, P.x, P.y) > 40 * WK) return;
   this.trenOk = true; Save.data.flags.primerTren = 1; const nw = Logros.check(), g = GUION.metro.primerTren; Save.save();
@@ -146,7 +146,7 @@ LOGROS.push(
   { id: 'ojo', name: 'Ojo clínico', desc: 'Aprueba 3 turnos de Técnico', icon: 'tecnico', test: S => aprobados(S, 'tecnico') >= 3 },
   { id: 'brigada', name: 'Brigada del valle', desc: 'Aprueba 3 turnos de Rescate', icon: 'rescate', test: S => aprobados(S, 'rescate') >= 3 },
   { id: 'mapavivo', name: 'Mapa vivo', desc: 'Aprueba 3 turnos de Monitoreo', icon: 'monitoreo', test: S => aprobados(S, 'monitoreo') >= 3 },
-  { id: 'primertren', name: 'Antes del primer tren', desc: 'Encuentra a Rosalba en Niquía antes de las 4:30 a. m.', icon: 'monitoreo', secret: true, test: S => !!S.flags.primerTren }
+  { id: 'primertren', name: 'Antes del primer tren', desc: 'Encuentra a Rosalba en Niquía antes del primer tren (4:30 a. m.; 5:00 los domingos y festivos)', icon: 'monitoreo', secret: true, test: S => !!S.flags.primerTren }
 );
 
 /* ---------- Ni una gota (de El Metro): lleva un tinto en la canasta de una estación a otra sin chocar ---------- */

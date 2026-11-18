@@ -22,7 +22,7 @@ const Net = JE.net = {
     peer.ch = ch;
     ch.onopen = () => { peer.open = true; if (this.role === 'host') this.rawSend(peer, { t: 'id', id: peer.id }); this.setStatus('open'); };
     ch.onclose = () => { peer.open = false; this.setStatus(this.openCount() ? 'open' : 'closed'); if (this.onmsg) this.onmsg({ t: 'bye', from: this.role === 'host' ? peer.id : 0 }); };
-    ch.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (er) { return; } if (!m || typeof m !== 'object') return; this.recv(peer, m); };
+    ch.onmessage = e => { let m; try { m = JSON.parse(e.data, sinProto); } catch (er) { return; } if (!m || typeof m !== 'object') return; this.recv(peer, m); };
   },
   recv(peer, m) {
     if (this.role === 'host') { m.from = peer.id; for (const q of this.peers) if (q !== peer && q.open) this.rawSend(q, m); }
@@ -66,9 +66,9 @@ const Net = JE.net = {
       if (!window.DecompressionStream) throw new Error('Tu navegador no puede leer este código');
       const rd = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader(), parts = []; let n = 0;
       for (;;) { const { done, value } = await rd.read(); if (done) break; n += value.length; if (n > 65536) { try { rd.cancel(); } catch (e) { } throw new Error('Código demasiado grande'); } parts.push(value); }
-      const all = new Uint8Array(n); let o = 0; for (const q of parts) { all.set(q, o); o += q.length; } return JSON.parse(new TextDecoder().decode(all));
+      const all = new Uint8Array(n); let o = 0; for (const q of parts) { all.set(q, o); o += q.length; } return JSON.parse(new TextDecoder().decode(all), sinProto);
     }
-    if (v === 'JE0') return JSON.parse(new TextDecoder().decode(bytes));
+    if (v === 'JE0') return JSON.parse(new TextDecoder().decode(bytes), sinProto);
     throw new Error('Código no válido');
   },
   reset() { for (const p of this.peers) { try { if (p.ch) p.ch.close(); } catch (e) { } try { if (p.pc) p.pc.close(); } catch (e) { } } this.peers = []; this.pending = null; this.role = null; this.myId = 0; this.status = 'off'; }

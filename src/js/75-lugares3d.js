@@ -88,7 +88,7 @@ Object.assign(CityMap, {
         case 'campus': S.forEach(([x, y, w, h], k) => E(x + .2, y + .2, w - .4, h - .4, .24 + .12 * h2(i, k, 61), LMC.cam[i % 2], 'claustro', { nf: 3 })); break;
         case 'botanico': E(sx + .15, sy + .15, sw - .3, sh - .3, .2, LMC.orq, 'flores', { nf: 1 }); break;
         case 'explora': S.forEach(([x, y, w, h], k) => E(x + .1, y + .1, w - .2, h - .2, k ? .27 : .36, k === 1 ? LMC.exp2 : LMC.exp, 'plano', { nf: 1 })); break;
-        case 'botero': E(sx + .2, sy + .15, sw - .4, sh - .3, .3, LMC.mus, 'claustro', { nf: 2, patio: '#d8ccb0' }); break;   // Museo de Antioquia, con su patio
+        case 'botero': if (!this.sit) E(sx + .2, sy + .15, sw - .4, sh - .3, .3, LMC.mus, 'claustro', { nf: 2, patio: '#d8ccb0' }); break;   // Museo de Antioquia (si no está el real), con su patio
         case 'coltejer': E(.25, .6, W - .5, H - 1.2, .12, LMC.pod, 'plano', { nf: 1 }); E(W / 2 - 1.25, 1.4, 2.5, H - 2.8, 1.55, LMC.col, 'aguja', { zA: .5 }); break;
         case 'teatro': E(sx + .15, sy + .15, sw - .3, sh - .3, .3, LMC.tea, 'cuatro', { nf: 1 }); break;
         case 'mamm': E(sx + .1, sy + .15, sw * .64, sh - .3, .26, LMC.lad, 'dientes', { nf: 1 }); E(sx + sw * .7, sy + .3, sw * .28, sh - .6, .42, LMC.vid, 'plano', { nf: 3 }); break;
@@ -141,7 +141,7 @@ Object.assign(CityMap, {
   lugar3(c, L, i, fase) {
     if (L.real) return;
     const T = TS, W = L.w, H = L.h, X = t => (L.x + t) * T, Y = t => (L.y + t) * T, S = (L.solids || []).map(([x, y, w, h]) => [x - L.x, y - L.y, w, h]), cx = W / 2, cy = H / 2;
-    const [sx, sy, sw, sh] = S[0] || [1, 1, W - 2, H - 2];
+    const [sx, sy, sw, sh] = S[0] || (L.k === 'botero' ? [0, 0, W, 0] : [1, 1, W - 2, H - 2]);
     const rr = (tx, ty, tw, th, r, col) => { if (tw <= 0 || th <= 0) return; c.fillStyle = col; c.beginPath(); c.roundRect(X(tx), Y(ty), tw * T, th * T, Math.min(r, tw / 2, th / 2) * T); c.fill(); };
     const el = (tx, ty, rx, ry, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(X(tx), Y(ty), rx * T, ry * T, 0, 0, TAU); c.fill(); };
     const trazo = (P, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w * T; c.setLineDash(dash || []); c.beginPath(); P.forEach(([x, y], k) => k ? c.lineTo(X(x), Y(y)) : c.moveTo(X(x), Y(y))); c.stroke(); c.setLineDash([]); };
