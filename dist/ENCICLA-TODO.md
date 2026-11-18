@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.7.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v1.7.1 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.7.0)
+## 2.3 Estado actual (v1.7.1)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-18 | Claude Code | documento creado (v1.7.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-18 | Claude Code | documento creado (v1.7.1) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1621,9 +1621,11 @@ src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 nivel
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
 src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas, edificios con su forma real y partes de los emblemáticos
 src/js/87-placas.js   placas de lo poco conocido (16 datos en su lugar real, álbum y logros)
+src/js/74-sistema.js  el sistema metro con los diseños de El Metro (trenes, tranvía, Metroplús con sus buses, Metrocable y estaciones) y los andenes reales del Metroplús
 src/js/76-altura.js   lo que va en alto: metro en viaducto, estaciones elevadas, puentes (cortados del suelo), nivel del jugador y Metroplús sobre sus avenidas
 src/js/88-camara.js   cámara (pellizco, giro, inclinación, ángulos, cámara libre), velocidad elegible y calidad automática
 src/js/89-paseo.js    paseo guiado del modo libre: la bici va sola por los lugares con postal y la cámara cambia de plano
+tools/geo/metroplus_elmetro.py corredores y andenes reales del Metroplús tomados de El Metro (metrozero) -> src/data/metroplus.json
 tools/geo/alturas.py  tramos del metro en viaducto y puentes con su nivel (Overture) -> src/data/alturas.json
 tools/auditoria-mapa.js mide el mapa que se juega (río, agua, escaleras, estaciones, sitios, CSP): docs/AUDITORIA-MAPA.md
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
@@ -1759,6 +1761,33 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.7.1 · El sistema metro como en El Metro y la guía discreta* (`74-sistema.js`, `76-altura.js`, `35-life.js`, `75-graficos.js`, `30-ride.js`, `tools/geo/metroplus_elmetro.py`, `src/data/metroplus.json`):
+- **`SisSpr`:**
+  - `veh(g, kind, L, W, col, o)` es el `Spr.veh` de El Metro (metro, tranvía, `brt` y cable), en px, mirando a +x;
+  - `img()` lo guarda en caché a 4× y `dib()` lo dibuja girado y escalado (la altura en perspectiva).
+- **Medidas (`SIS`)**, en metros y con `PXM = 1,6` px por metro:
+  - metro: vagón de 22 × 3, 3 vagones y andén de 110;
+  - tranvía: 19,5 × 3, 2 coches y andén de 50;
+  - Metroplús: bus de 18 × 2,5 y andén de 30;
+  - cable: a 14 m, torres cada 260 m y cabinas cada 60 m.
+- **Dibujo:**
+  - `altMetro` hace el viaducto y las estaciones;
+  - `altHall` arma el edificio de acceso sin las calles que pasan por debajo;
+  - `sisBanda`/`sisMuro` son franjas y muros a lo largo de una polilínea, con altura;
+  - `altVagones`/`altTrenes` ponen los trenes por su vía, recortados a cada pieza del viaducto;
+  - en el suelo (sección 7 de `drawGround3`) van el tranvía y el Metroplús;
+  - `drawSky` dibuja el Metrocable;
+  - `updBrt` y `drawGround` mueven y dibujan los buses articulados.
+- **Metroplús real (`CityMap.mpReal`, antes de `mpAjusta`):**
+  - corredores de las Líneas 1 y 2 y andenes de El Metro (metros del mapa del valle × 1,6);
+  - el corredor de OSM (`P.osm`) no se ajusta a la vía del dibujo;
+  - la estación se corre a lo sumo 12 px de su andén real.
+- **Guía (`render` y `hud` en 30-ride.js):**
+  - flechitas cada 13 px sobre la ruta suavizada (`chaikin`), con opacidad que baja con la distancia (hasta 230 px);
+  - baliza tenue en los marcadores;
+  - flecha fuera de pantalla al 85 %;
+  - `Ride.giro()` da el próximo giro de más de 40° a menos de 200 m, o la llegada a menos de 60 m.
 
 *v1.7.0 · Alturas, cámara, manejo con peso, velocidad y paseo* (`tools/geo/alturas.py`, `src/data/alturas.json`, `76-altura.js`, `88-camara.js`, `89-paseo.js`, `30-ride.js`, `00-core.js`):
 - **Datos:**
@@ -2682,6 +2711,48 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 - comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
+
+### 2026-11-18 · v1.7.1 · El sistema metro como en El Metro y una guía discreta
+
+Pedido del autor: «cambia el diseño del guiador, o el indicador de ubicación o camino: hazlo menos visible y más intuitivo; y haz los diseños de todo el sistema metro iguales al videojuego que se está haciendo (El Metro), del que tienes el repositorio y el HTML».
+
+1. **El sistema metro con el dibujo de El Metro** (`74-sistema.js`, tomado de `21-sprites.js`, `35-ciudad.js` y `11-puentes.js` de metrozero, rama de su v1.3). Las medidas van en metros, como allá, a la escala de Juega EnCicla (1 m = 1,6 px):
+   - **Trenes:**
+     - 3 vagones de 22 m, blancos con la franja del color de su línea, ventanas, techo con equipos y luces adelante y atrás;
+     - cada sentido va por su vía;
+     - paran centrados en el andén y al dar la vuelta no saltan.
+   - **Viaducto:**
+     - tablero de concreto cálido de 10 m con su canto oscuro, durmientes y cuatro rieles;
+     - columnas cada 30 m.
+   - **Estaciones elevadas:**
+     - dos andenes laterales con su línea amarilla;
+     - la cubierta metálica a 4,2 m con nervios, postes y el borde del color de la línea;
+     - abajo, el edificio de acceso, que se corta donde una calle pasa por debajo.
+   - **Tranvía de Ayacucho:**
+     - lecho con cuatro rieles y el riel guía al centro;
+     - dos coches de 19,5 m con su pantógrafo y la franja verde;
+     - paradas con andén a cada lado.
+   - **Metroplús:**
+     - carril exclusivo con sardinel, asfalto, el color de la línea y la línea blanca;
+     - andén con la franja de la línea;
+     - **buses articulados nuevos** (12) que van por su carril, paran en cada andén y esperan si el ciclista está delante;
+     - las Líneas 1 y 2 van por su corredor real (relaciones de OpenStreetMap), con cada estación en su andén real (`tools/geo/metroplus_elmetro.py`, datos de metrozero).
+   - **Metrocable:**
+     - cable doble a 14 m;
+     - torres cada ~260 m con su brazo y sombra;
+     - cabinas del color de la línea cada 60 m;
+     - estaciones de 28 × 18 m giradas con su cable, con la polea y las franjas de la línea.
+   - **Nombres de las estaciones:** como en El Metro, un punto con el color de la línea y el nombre con halo (metro, Metroplús, tranvía y cable).
+2. **La guía del camino, discreta e intuitiva:**
+   - la línea gruesa amarilla se cambió por flechitas blancas en el piso que señalan hacia dónde seguir, avanzan despacio y se desvanecen a unos 140 m;
+   - el destino es una baliza tenue (zona apenas sombreada, un aro fino y una onda);
+   - la flecha del destino fuera de la pantalla es más pequeña y translúcida;
+   - un aviso pequeño abajo al centro anuncia el próximo giro (↰ / ↱ y los metros) o la llegada (◎) cuando están cerca.
+
+**Qué se probó:**
+- todas las pruebas, con una sección nueva (3l) para los diseños de El Metro y la guía;
+- 54 partidas del bot sin errores;
+- capturas de la estación Prado con su tren, de San Antonio, del viaducto, del tranvía, del Metrocable K, de los buses del Metroplús y de la guía.
 
 ### 2026-11-18 · v1.7.0 · Un mundo con alturas, una cámara libre y un manejo con peso
 
