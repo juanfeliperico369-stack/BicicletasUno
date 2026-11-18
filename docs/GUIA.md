@@ -546,6 +546,8 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 - Dentro de la app, exportar abre un cuadro para copiar el respaldo (el WebView no descarga blobs) y compartir abre WhatsApp.
 - Pendiente para Play Store: firmar un AAB de release con keystore propio, versión 1.0, ficha y política de privacidad.
 
+- Antes de compilar una versión, borra `app/android/app/build/outputs/apk/debug/app-debug.apk`. El empaquetado incremental de Gradle reutiliza el archivo y deja huecos: en la v1.6.0 la APK pasó de 7,1 a 10,3 MB con el mismo contenido.
+
 ## 9. Pendientes / ideas (feedback del usuario)
 
 - **Arte e historia hechos por IA:** `docs/IA-ENCICLA.md` reparte los encargos (G: Gemini, C: ChatGPT, H: Guionista). Cada IA entrega un documento con todo su trabajo en tres versiones (PDF maestro, MD con el código de las imágenes y ZIP). Al llegar: desarmar, revisar, reducir a pixel art, atlas de menos de 4 MB e integración con respaldo al dibujo actual (parte 13 del documento).
