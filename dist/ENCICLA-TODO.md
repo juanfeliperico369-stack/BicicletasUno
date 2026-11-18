@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.2.0 · compilado el 2026-11-17.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v1.3.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.2.0)
+## 2.3 Estado actual (v1.3.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-17 | Claude Code | documento creado (v1.2.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-18 | Claude Code | documento creado (v1.3.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1650,8 +1650,8 @@ src/js/82-prestamo.js préstamo EnCicla en el modo libre: renovar cada hora, str
 src/js/84-mapa-vivo.js barrio/comuna al entrar, palomas, nubes y brillos del agua; centros de comunas y barrios para el mapa grande
 src/js/83-guion.js    guion: Un día del valle, frases de la ciudad, consejos del tutor, saludos de fiesta, huevos del Metro y logros
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
-src/data/             valle.bin + valle.json (casillas, relieve, municipios, comunas y barrios) y vias.bin (cada vía como vector, con su nombre); se regeneran con tools/geo/build.py
-tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
+src/data/             valle.bin + valle.json (casillas de 10 m, relieve, municipios, comunas, barrios, alturas y lotes) y vias.bin (cada vía como vector, con su nombre, nomenclatura y ancho); se regeneran con tools/geo/build.py
+tools/geo/            fetch.py (OpenStreetMap vía Overture, huellas de edificios y relieve), oficial.py (capas oficiales de Medellín, Itagüí, Envigado y Sabaneta), lineas.json (Metroplús y cables, de El Metro) y build.py (cuadrícula del mapa)
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
 contenido/guion/      textos del juego en JSON; tools/build.js los incrusta como GUION (ver contenido/LEEME.md)
@@ -1671,7 +1671,8 @@ Objeto global de depuración: `window.JE` (`JE.map`, `JE.game`, `JE.ui`, `JE.bot
 ```bash
 node tools/build.js            # construye dist/
 node tools/assets.js           # íconos + compartir.png (necesita dist/juega-encicla.html)
-python3 tools/geo/fetch.py && python3 tools/geo/build.py   # rehace el mapa (duckdb, numpy, pillow, shapely)
+python3 tools/geo/fetch.py && python3 tools/geo/oficial.py && python3 tools/geo/build.py   # rehace el mapa de 10 m (duckdb, numpy, pillow, shapely; ~1 min)
+TILE=20 OUT=carpeta python3 tools/geo/build.py   # el mismo mapa en casillas de 20 m (el que usa El Metro)
 node tools/todo-ia.js          # solo el documento para IA (build.js ya lo genera)
 python3 tools/armar_entrega.py desarmar <entrega.md> <carpeta>   # reconstruye las imágenes de una entrega
 node tests/run.js --n=100      # pruebas; --shots guarda capturas en tests/out/
@@ -1705,7 +1706,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - `tools/geo/fetch.py` baja datos abiertos: calles, ciclorrutas, Metro, tranvía, ríos, quebradas, parques y municipios de **Overture Maps**
   (datos de OpenStreetMap, licencia ODbL) con DuckDB, y el relieve de **Terrain Tiles** (AWS Open Data, SRTM). Caché en `tools/geo/cache/` (no se sube).
   Para el bucket público hay que correrlo sin credenciales AWS: `env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 tools/geo/fetch.py`.
-- `tools/geo/build.py` hace la cuadrícula: **1 casilla = 20 m**, 2158×2461 casillas (lon −75,70…−75,31, lat 6,46…6,015), fila 0 = norte.
+- `tools/geo/build.py` hace la cuadrícula: **1 casilla = 10 m** desde v1.3.0 (antes 20 m), 4316×4921 casillas (lon −75,70…−75,31, lat 6,46…6,015), fila 0 = norte. Ver *v1.3.0* más abajo.
   - Rasteriza vías por clase y ancho (autopista, avenida, calle, ciclorruta al lado de la vía, andén, escaleras), agua con puentes, parques, zonas urbanas,
     potreros y monte; adelgaza las calles (número de Yokoi, 4 subcampos) para que no queden bloques de asfalto; fuera de los 10 municipios todo es montaña.
   - Saca líneas en JSON: carriles de carros (troncales, primarias y secundarias encadenadas), 758 semáforos (cruces de vías principales),
@@ -1749,6 +1750,14 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.3.0 · Mapa de 10 m con datos oficiales* (`tools/geo/oficial.py`, `tools/geo/build.py`, `20-map.js`, `75-graficos.js`, `85-direcciones.js`, `86-maqueta.js`):
+- **Casillas de 10 m.** `TILE` y `S = 20 / TILE` escalan radios y ventanas en `build.py`; en el juego, `MS = 20 / VM.tile` escala las búsquedas en casillas (estaciones, lugares, rutas, minimapa, etiquetas del mapa grande). Lo que se mide en px (velocidades, radios de marcas) no cambia: la ciudad mide el doble en px y las cuadras se recorren como cuadras.
+- **Relleno de manzanas:** huella de edificio → casa (ladrillo) o edificio según pisos, área y zona; dentro de la manzana oficial, el hueco es la casa vecina o patio; fuera, andén o espacio público. Si una zona no tiene huellas, se usa la regla antigua.
+- **Formato v3:** `valle.bin` = casillas + relieve + municipios + comunas + barrios (u16) + pisos (u8) + área de lotes (u8, ×4 m²), en celdas de 8 casillas. `vias.bin` por vía: tipo, nombre, nomenclatura oficial, ancho (medios metros) y puntos en cuartos de casilla (`VM.vq`).
+- **Estaciones:** búsqueda en espiral desde el punto real y BFS con memoria (`_cn`: 1 conectado, 2 encerrado).
+- **Dirección y misión «¿Dónde queda?»:** `CityMap.calleAt` y `CityMap.esquina` (cruce de una «Calle» y una «Carrera» con nomenclatura oficial). La marca aparece a los 75 s.
+- **Maqueta 2:1** (de El Metro): `JE.maqueta.render` dibuja por columnas con búfer de altura; el mapa grande la guarda en caché y baja la resolución si un dibujo pasa de 70 ms.
 
 *v1.2.0 · Mapa reconocible, como en un mapa real* (`tools/geo/build.py`, `src/data/vias.bin`, `75-graficos.js`, `84-mapa-vivo.js`):
 - **Calles exactas.** `build.py` exporta cada vía de OpenStreetMap como vector (`vias.bin`), y el juego las dibuja desde ahí en vez de rastrearlas en la cuadrícula.
@@ -1931,7 +1940,7 @@ Las pistas están en "¿Sabías que?" y hay 4 logros secretos.
 - **Ritmo** (Ajustes): tranquilo (+40 % de tiempo y +35 % de paciencia), normal o arcade.
 - **Reto del día:** la semilla es la fecha. **Código de reto** `N-T-SEMILLA36`: multijugador asíncrono sin servidor.
 
-**Escalas del mundo:** 1 casilla = 20 m reales (mapa real). Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
+**Escalas del mundo:** 1 casilla = 10 m reales desde v1.3.0 (antes 20 m; `MS = 20 / VM.tile` escala las búsquedas que miden distancias reales). Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
 Cada modo tiene su propia velocidad de reloj (minutos de juego por segundo real), por ejemplo Usuario 1,2 y Monitoreo ~4,5.
 El préstamo dura máximo 60 min de juego.
 
@@ -2431,6 +2440,34 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 6. **Vida:** parqueaderos con carros, postes, árboles de avenida y guayacanes, bancas, palomas, nubes y brillos en el río.
 7. **Ni una gota:** misión del modo libre con logro secreto (de *El Metro*).
 8. **Corrección:** *Un día del valle* y las misiones diarias del modo libre usaban la misma clave de guardado. Ahora están separadas y el avance se migra solo.
+
+### 2026-11-18 · v1.3.0 · La revolución del mapa: Medellín a 10 m con datos oficiales
+
+Pedido del autor: «acepto el mapa más grande, mejóralo todo», y traer a EnCicla lo mejor de *El Metro* (fragmentos, huevos de pascua y mejoras de su auditoría).
+
+1. **Mapa de 10 m** (antes 20 m): 4.316 × 4.921 casillas. Una calle de barrio mide una casilla, como en la realidad, y las manzanas ya no se las comen las vías.
+   - **Huellas de edificios reales** (693 mil de Overture: OSM, Microsoft y Google): casas de ladrillo y edificios donde están; las torres de El Poblado y del centro con la altura de su zona.
+   - **Datos oficiales de Medellín** (Catastro, datos abiertos): manzanas (lo que queda fuera de ellas es andén o espacio público), malla vial con nomenclatura y ancho, jerarquía vial, espacio público y lotes.
+   - **Barrios oficiales** de Medellín, Itagüí, Envigado y Sabaneta (504 polígonos); en el resto del valle, el barrio más cercano.
+   - **Autopistas y avenidas con nombre:** del 17 % al 95 %. Un tramo sin nombre hereda el del vecino que sigue en la misma dirección.
+   - **Río:** continuo de Caldas a Barbosa y siempre bajando. El cauce se «quema» en el relieve con una regresión isotónica (33 tramos subían).
+   - **Escaleras sueltas** quitadas, quebradas de una casilla (la mitad de agua pintada que antes) y **Metroplús** (líneas 1, 2 y O) por sus avenidas reales.
+2. **Motor:**
+   - Formato v3: cada vía trae su nomenclatura oficial y su ancho.
+   - Las estaciones se buscan en espiral desde su punto real, con memoria de conectividad. La carga bajó de 26 s (primer intento) a 1,6 s.
+   - Estaciones a 16 m de su coordenada (mediana; antes 46 m), p90 41 m y máximo 148 m. Todas alcanzables en bici y en camión.
+3. **Dibujo:** cada calle con su ancho real, separador con pasto en las avenidas anchas, casas divididas por el área de los lotes catastrales, estaciones del metro de ~130 m y parques y plazas con su nombre.
+4. **De *El Metro*:**
+   - Metroplús y los colores oficiales de los cables.
+   - **Maqueta 2:1** en el mapa grande (botón ⬢): el valle en 3D isométrico con relieve, edificios con su altura, giro de 90° y pellizco.
+   - **Direcciones paisas:** la calle por la que vas siempre a la vista, y la misión «¿Dónde queda?» del modo libre (un domicilio a «Calle X con Carrera Y» sin marca: las calles crecen hacia el norte y las carreras hacia el occidente).
+   - Secretos de **Gardel** (estación de Metroplús en Manrique) y **Arví** (subir en bici hasta el cable L), con 4 logros nuevos.
+   - **Avisos anunciados** a lectores de pantalla (región `aria-live`), **tope de 64 KB** al leer invitaciones y caché de trozos menor en celulares con poca memoria.
+5. **Créditos de datos:** el mapa cita a OpenStreetMap (ODbL), Overture y la Subsecretaría de Catastro de Medellín, como piden sus licencias.
+
+**Qué se probó:** todas las pruebas (`tests/run.js`), 54 partidas del bot sin errores, rendimiento con CPU 4× lenta (mediana de 16,7 ms por cuadro), multijugador con 3 dispositivos, maqueta en 41 ms y alcanzabilidad de las 133 estaciones con radios a escala del mapa nuevo.
+
+**Qué falta:** física contra las manzanas reales en el modo pixel, alturas por edificio (no por zona) y las placas de «lo poco conocido».
 
 ---
 

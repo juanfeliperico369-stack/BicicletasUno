@@ -67,8 +67,8 @@ src/js/82-prestamo.js préstamo EnCicla en el modo libre: renovar cada hora, str
 src/js/84-mapa-vivo.js barrio/comuna al entrar, palomas, nubes y brillos del agua; centros de comunas y barrios para el mapa grande
 src/js/83-guion.js    guion: Un día del valle, frases de la ciudad, consejos del tutor, saludos de fiesta, huevos del Metro y logros
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
-src/data/             valle.bin + valle.json (casillas, relieve, municipios, comunas y barrios) y vias.bin (cada vía como vector, con su nombre); se regeneran con tools/geo/build.py
-tools/geo/            fetch.py (datos abiertos) y build.py (cuadrícula del mapa)
+src/data/             valle.bin + valle.json (casillas de 10 m, relieve, municipios, comunas, barrios, alturas y lotes) y vias.bin (cada vía como vector, con su nombre, nomenclatura y ancho); se regeneran con tools/geo/build.py
+tools/geo/            fetch.py (OpenStreetMap vía Overture, huellas de edificios y relieve), oficial.py (capas oficiales de Medellín, Itagüí, Envigado y Sabaneta), lineas.json (Metroplús y cables, de El Metro) y build.py (cuadrícula del mapa)
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
 contenido/guion/      textos del juego en JSON; tools/build.js los incrusta como GUION (ver contenido/LEEME.md)
@@ -88,7 +88,8 @@ Objeto global de depuración: `window.JE` (`JE.map`, `JE.game`, `JE.ui`, `JE.bot
 ```bash
 node tools/build.js            # construye dist/
 node tools/assets.js           # íconos + compartir.png (necesita dist/juega-encicla.html)
-python3 tools/geo/fetch.py && python3 tools/geo/build.py   # rehace el mapa (duckdb, numpy, pillow, shapely)
+python3 tools/geo/fetch.py && python3 tools/geo/oficial.py && python3 tools/geo/build.py   # rehace el mapa de 10 m (duckdb, numpy, pillow, shapely; ~1 min)
+TILE=20 OUT=carpeta python3 tools/geo/build.py   # el mismo mapa en casillas de 20 m (el que usa El Metro)
 node tools/todo-ia.js          # solo el documento para IA (build.js ya lo genera)
 python3 tools/armar_entrega.py desarmar <entrega.md> <carpeta>   # reconstruye las imágenes de una entrega
 node tests/run.js --n=100      # pruebas; --shots guarda capturas en tests/out/
@@ -122,7 +123,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - `tools/geo/fetch.py` baja datos abiertos: calles, ciclorrutas, Metro, tranvía, ríos, quebradas, parques y municipios de **Overture Maps**
   (datos de OpenStreetMap, licencia ODbL) con DuckDB, y el relieve de **Terrain Tiles** (AWS Open Data, SRTM). Caché en `tools/geo/cache/` (no se sube).
   Para el bucket público hay que correrlo sin credenciales AWS: `env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 tools/geo/fetch.py`.
-- `tools/geo/build.py` hace la cuadrícula: **1 casilla = 20 m**, 2158×2461 casillas (lon −75,70…−75,31, lat 6,46…6,015), fila 0 = norte.
+- `tools/geo/build.py` hace la cuadrícula: **1 casilla = 10 m** desde v1.3.0 (antes 20 m), 4316×4921 casillas (lon −75,70…−75,31, lat 6,46…6,015), fila 0 = norte. Ver *v1.3.0* más abajo.
   - Rasteriza vías por clase y ancho (autopista, avenida, calle, ciclorruta al lado de la vía, andén, escaleras), agua con puentes, parques, zonas urbanas,
     potreros y monte; adelgaza las calles (número de Yokoi, 4 subcampos) para que no queden bloques de asfalto; fuera de los 10 municipios todo es montaña.
   - Saca líneas en JSON: carriles de carros (troncales, primarias y secundarias encadenadas), 758 semáforos (cruces de vías principales),
@@ -166,6 +167,14 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.3.0 · Mapa de 10 m con datos oficiales* (`tools/geo/oficial.py`, `tools/geo/build.py`, `20-map.js`, `75-graficos.js`, `85-direcciones.js`, `86-maqueta.js`):
+- **Casillas de 10 m.** `TILE` y `S = 20 / TILE` escalan radios y ventanas en `build.py`; en el juego, `MS = 20 / VM.tile` escala las búsquedas en casillas (estaciones, lugares, rutas, minimapa, etiquetas del mapa grande). Lo que se mide en px (velocidades, radios de marcas) no cambia: la ciudad mide el doble en px y las cuadras se recorren como cuadras.
+- **Relleno de manzanas:** huella de edificio → casa (ladrillo) o edificio según pisos, área y zona; dentro de la manzana oficial, el hueco es la casa vecina o patio; fuera, andén o espacio público. Si una zona no tiene huellas, se usa la regla antigua.
+- **Formato v3:** `valle.bin` = casillas + relieve + municipios + comunas + barrios (u16) + pisos (u8) + área de lotes (u8, ×4 m²), en celdas de 8 casillas. `vias.bin` por vía: tipo, nombre, nomenclatura oficial, ancho (medios metros) y puntos en cuartos de casilla (`VM.vq`).
+- **Estaciones:** búsqueda en espiral desde el punto real y BFS con memoria (`_cn`: 1 conectado, 2 encerrado).
+- **Dirección y misión «¿Dónde queda?»:** `CityMap.calleAt` y `CityMap.esquina` (cruce de una «Calle» y una «Carrera» con nomenclatura oficial). La marca aparece a los 75 s.
+- **Maqueta 2:1** (de El Metro): `JE.maqueta.render` dibuja por columnas con búfer de altura; el mapa grande la guarda en caché y baja la resolución si un dibujo pasa de 70 ms.
 
 *v1.2.0 · Mapa reconocible, como en un mapa real* (`tools/geo/build.py`, `src/data/vias.bin`, `75-graficos.js`, `84-mapa-vivo.js`):
 - **Calles exactas.** `build.py` exporta cada vía de OpenStreetMap como vector (`vias.bin`), y el juego las dibuja desde ahí en vez de rastrearlas en la cuadrícula.
@@ -348,7 +357,7 @@ Las pistas están en "¿Sabías que?" y hay 4 logros secretos.
 - **Ritmo** (Ajustes): tranquilo (+40 % de tiempo y +35 % de paciencia), normal o arcade.
 - **Reto del día:** la semilla es la fecha. **Código de reto** `N-T-SEMILLA36`: multijugador asíncrono sin servidor.
 
-**Escalas del mundo:** 1 casilla = 20 m reales (mapa real). Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
+**Escalas del mundo:** 1 casilla = 10 m reales desde v1.3.0 (antes 20 m; `MS = 20 / VM.tile` escala las búsquedas que miden distancias reales). Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
 Cada modo tiene su propia velocidad de reloj (minutos de juego por segundo real), por ejemplo Usuario 1,2 y Monitoreo ~4,5.
 El préstamo dura máximo 60 min de juego.
 

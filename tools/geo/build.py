@@ -17,7 +17,7 @@ from shapely import wkt as WKT
 from shapely.geometry import LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection, shape
 from shapely.strtree import STRtree
 
-HERE = os.path.dirname(os.path.abspath(__file__)); CACHE = os.path.join(HERE, 'cache'); OUT = os.path.join(HERE, '..', '..', 'src', 'data')
+HERE = os.path.dirname(os.path.abspath(__file__)); CACHE = os.path.join(HERE, 'cache'); OUT = os.environ.get('OUT') or os.path.join(HERE, '..', '..', 'src', 'data')   # OUT=carpeta: otra salida (p. ej. el mapa de 20 m para El Metro)
 OFI = os.path.join(CACHE, 'oficial')
 LON0, LON1, LATN, LATS = -75.70, -75.31, 6.46, 6.015
 TILE = float(os.environ.get('TILE', '10'))
@@ -646,9 +646,9 @@ for nm, x, y, cat, A in parques:
     seen.add(k); pq.append([nm, int(round(x * 4)), int(round(y * 4)), cat])
 meta = {'v': 3, 'vq': VQ, 'hg': 1, 'lt': 1, 'barrios': barrios, 'calles': calles, 'vias': len(VIAS), 'viasB': len(vb), 'W': MW, 'H': MH, 'tile': TILE, 'lon0': LON0, 'latN': LATN, 'kx': KX, 'ky': KY, 'es': ES, 'eW': EW, 'eH': EH, 'mW': mu8.shape[1], 'mH': mu8.shape[0],
         'munis': MUNIS, 'comunas': comunas, 'lanes': lanes, 'lights': [[int(round(x * 4)), int(round(y * 4))] for x, y in lights], 'metro': metro, 'mp': mp, 'river': river, 'parques': pq[:700],
-        'src': 'Datos del mapa: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps Foundation; Alcaldía de Medellín (Subsecretaría de Catastro, datos abiertos); barrios de Itagüí, Envigado y Sabaneta. Relieve: Terrain Tiles (AWS Open Data, SRTM/NASA).'}
+        'src': 'Datos del mapa: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps Foundation, con huellas de edificios de Overture (OSM, Microsoft y Google). Fuente: Portal de Datos Abiertos, Subsecretaría de Catastro del Municipio de Medellín (manzanas, malla vial, barrios, espacio público y lotes; www.medellin.gov.co/geomedellin); barrios de Itagüí, Envigado y Sabaneta (sus oficinas de planeación). Relieve: Terrain Tiles (AWS Open Data, SRTM/NASA).'}
 open(os.path.join(OUT, 'valle.json'), 'w').write(json.dumps(meta, ensure_ascii=False, separators=(',', ':')))
 print('valle.bin', len(data) // 1024, 'KB (sin comprimir', len(blob) // 1024, 'KB) · valle.json', os.path.getsize(os.path.join(OUT, 'valle.json')) // 1024, 'KB')
 # vista previa para revisar a ojo
 pal = np.array([[79, 143, 69], [36, 80, 44], [138, 74, 48], [86, 101, 124], [43, 50, 64], [56, 66, 87], [125, 134, 150], [155, 211, 65], [61, 140, 176], [119, 119, 119], [207, 196, 166], [56, 66, 87], [255, 255, 255], [200, 200, 200], [20, 20, 28], [86, 199, 255], [160, 120, 90]], np.uint8)
-Image.fromarray(pal[code]).save(os.path.join(CACHE, 'preview.png'))
+Image.fromarray(pal[code]).save(os.path.join(OUT if os.environ.get('OUT') else CACHE, 'preview.png'))
