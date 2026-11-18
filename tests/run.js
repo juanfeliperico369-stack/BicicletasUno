@@ -49,6 +49,13 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     m.ride.p.veh = 'bike'; out.sinBici = !JE.rev.viajar(m, b, a);
     m.ride.p.veh = 'walk'; m.clock = 23.5 * 60; out.cerrado = !JE.rev.viajar(m, b, a);
     out.transbordo = JE.rev.minutos(b, c); Save.data = JSON.parse(bak); Save.save();
+    // metro y tranvía sin casas bajo su trazado; trenes guardados de noche
+    const M = JE.map, casa = v => v === TT.BRICK || v === TT.BLDG; let sob = 0, tot = 0; for (const P of [M.lineA, M.lineB, M.tram]) for (let s = 0; s <= P.len; s += 6) { const q = M.at(P, s); tot++; if (casa(M.get(Math.floor(q.x / TS), Math.floor(q.y / TS)))) sob++; }
+    out.corredor = sob === 0 && M.corredorRiel > 0;
+    const R0 = { mode: { fecha: F(2026, 11, 23, 23, 40), clock: 23 * 60 + 40 }, trains: [{ L: M.lineA, s: 100, dir: 1, wait: 0 }] }; Ride.prototype.updTrains.call(R0, 1); const noche = R0.metroCerrado && R0.trains[0].s === 100;
+    R0.mode.clock = 9 * 60; Ride.prototype.updTrains.call(R0, 1); out.trenes = noche && !R0.metroCerrado && R0.trains[0].s !== 100;
+    // alto contraste en Más
+    UI.renderMas(); const sw = document.querySelector('#tab-mas [data-sw="contraste"]'); out.contraste = !!sw; if (sw) { sw.click(); out.contraste = document.body.classList.contains('contraste'); sw.click(); out.contraste = out.contraste && !document.body.classList.contains('contraste'); }
     return out; });
   ok(rv.limpio, 'importar un guardado con __proto__ no contamina el juego' + (rv.err ? ' (' + rv.err + ')' : ''));
   ok(rv.csp, 'la página trae política de seguridad de contenido (CSP)');
@@ -56,6 +63,9 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(rv.placas === 30 && rv.placasEn === 30, rv.placas + ' placas de lo poco conocido, ' + rv.placasEn + ' en estaciones del mapa (' + rv.est + ' estaciones de metro y tranvía)');
   ok(rv.libre, 'el monte y los potreros se andan (despacio); edificios y agua frenan');
   ok(rv.viaje && rv.sinBici && rv.cerrado, 'Metro + bici: viaja a pie en horario, no con la bici de EnCicla ni de noche');
+  ok(rv.corredor, 'metro y tranvía sin casas bajo su trazado (A, B y T)');
+  ok(rv.trenes, 'trenes con el horario del Metro: de noche quedan guardados y de día andan');
+  ok(rv.contraste, 'opción de alto contraste en Más (se enciende y se apaga)');
   ok(rv.transbordo >= 10 && rv.transbordo <= 45, 'viaje con transbordo en San Antonio: ' + rv.transbordo + ' min (Poblado → Estadio)');
   console.log('2) Bot: ' + N + ' partidas simuladas');
   const rep = await p.evaluate(async n => { const r = await JE.bot.run({ n, render: true }); return { okAll: r.okAll, txt: JE.bot.format(r), by: JE.bot.summary(r), ms: r.ms }; }, N);
@@ -326,6 +336,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(+perf.usuario.med < 40, 'mapa fluido en CPU lenta (mediana < 40 ms)');
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   ok(!errs.length, 'sin errores de consola al final ' + errs.slice(0, 3).join(' | '));
+  const claves = await p.evaluate(() => ({ mal: Save.revisarClaves(), n: Object.keys(Save.data).length, reg: Object.keys(Save.CLAVES).length }));
+  ok(!claves.mal.length, 'claves del guardado registradas y con su tipo (' + claves.n + ' en uso de ' + claves.reg + ' registradas) ' + claves.mal.join(', '));
   await b.close();
 
   console.log('5) Multijugador: sala WebRTC con 3 dispositivos (anfitrión + 2 invitados, reenvío en estrella)');

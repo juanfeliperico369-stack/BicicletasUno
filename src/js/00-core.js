@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '2.0.0', errors: [], headless: false };
+const JE = window.JE = { version: '2.0.1', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -50,6 +50,13 @@ const Save = JE.save = {
   /* datos guardados o importados: solo texto, números, sí/no, listas y objetos simples; nunca __proto__, constructor ni prototype
      (un archivo con "__proto__" podía contaminar los objetos de todo el juego al mezclarse) */
   BAD: new Set(['__proto__', 'constructor', 'prototype']),
+  /* registro de claves del guardado: cada módulo que guarda algo nuevo lo declara aquí con su tipo y su dueño.
+     Las pruebas fallan si aparece una clave sin registrar o con otro tipo (así no se repite el choque de dia/diaValle). */
+  CLAVES: { v: ['number', 'núcleo'], created: ['number', 'núcleo'], profile: ['objeto', 'personaje'], spent: ['number', 'tienda'], owned: ['lista', 'tienda'], xp: ['number', 'escalafón'],
+    stars: ['objeto', 'escalafón'], best: ['objeto', 'escalafón'], history: ['lista', 'partidas'], postales: ['lista', 'álbum'], perks: ['lista', 'mejoras'], streak: ['number', 'racha'],
+    bestStreak: ['number', 'racha'], logros: ['lista', 'logros'], flags: ['objeto', 'secretos'], settings: ['objeto', 'ajustes'], stats: ['objeto', 'estadísticas'],
+    dia: ['objeto', 'misiones del modo libre'], diaValle: ['lista', 'historia Un día del valle'], fotos: ['lista', 'fotos del modo libre'], encicla: ['objeto', 'préstamo y reportes'], placas: ['lista', 'placas del Metro (2.0)'] },
+  revisarClaves() { const tipo = v => Array.isArray(v) ? 'lista' : v === null ? 'nulo' : typeof v === 'object' ? 'objeto' : typeof v, mal = []; for (const k of Object.keys(this.data || {})) { const c = this.CLAVES[k]; if (!c) mal.push(k + ' (sin registrar)'); else if (c[0] !== tipo(this.data[k])) mal.push(k + ' (' + tipo(this.data[k]) + ', se esperaba ' + c[0] + ')'); } return mal; },
   sanitize(v, depth = 0) {
     if (v === null || typeof v === 'boolean' || typeof v === 'string') return typeof v === 'string' ? v.slice(0, 20000) : v;
     if (typeof v === 'number') return isFinite(v) ? v : 0;

@@ -351,3 +351,10 @@ body.big .turnos button{font-size:18px}
 .dia-c.next{border-color:var(--vd)}.dia-c.ok i{color:var(--vd1);font-style:normal}.dia-c.next i{color:var(--vd);font-style:normal}.dia-c.lock{opacity:.45}
 .tip{margin:8px 0 0;font-size:13px;opacity:.85}.hist-b .tip{margin-top:6px;font-weight:700;opacity:.8}
 
+/* alto contraste (Más > Alto contraste): textos y bordes marcados y el mapa del juego con más contraste */
+body.contraste #cv{filter:contrast(1.25) saturate(1.15)}
+body.contraste .chip,body.contraste .btn,body.contraste .sw,body.contraste .seg button,body.contraste .paper,body.contraste #toast{outline:3px solid #000;outline-offset:0}
+body.contraste .m,body.contraste small,body.contraste .pag{color:inherit!important;opacity:1!important}
+body.contraste #toast{background:#fff200;color:#000;font-weight:800}
+body.contraste #modal{background:#000000e6}
+body.contraste .paper{background:#fff;color:#000}

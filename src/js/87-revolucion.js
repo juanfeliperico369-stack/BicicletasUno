@@ -79,3 +79,35 @@ UI.renderRuta = function () {
   x.innerHTML = `🚇 Metro hoy de ${esc(Cal.hora(h.open))} a ${esc(Cal.hora(h.close))}${Cal.metroOpen(now) ? '' : ' · ahora cerrado'} · 🪧 Placas: ${n}/${PLACAS.length}<br>💡 <b>Lo poco conocido:</b> ${esc(p[0])}. ${esc(p[1])}`;
   d.appendChild(x);
 };
+/* trenes con el horario real: de noche (Metro cerrado) se quedan en el patio, ni se mueven ni se ven */
+const _updT87 = Ride.prototype.updTrains;
+Ride.prototype.updTrains = function (dt) {
+  const M = this.mode, d = (M && M.fecha) || Cal.now(), m = M && M.clock != null ? ((M.clock % 1440) + 1440) % 1440 : Cal.min(d);
+  this.metroCerrado = !Cal.metroOpen(d, m); if (this.metroCerrado) return; _updT87.call(this, dt);
+};
+const _render87 = Ride.prototype.render;
+Ride.prototype.render = function (V, min) {
+  if (!this.metroCerrado) return _render87.call(this, V, min);
+  const t = this.trains; this.trains = []; try { return _render87.call(this, V, min); } finally { this.trains = t; }
+};
+/* alto contraste: opción en Más, junto a «Letra grande»; se aplica al arrancar */
+const _init87 = UI.init; UI.init = function () { _init87.call(this); document.body.classList.toggle('contraste', !!(Save.data && Save.data.settings.contraste)); };
+const _mas87 = UI.renderMas;
+UI.renderMas = function () {
+  _mas87.call(this); const S = Save.data.settings, big = document.querySelector('#tab-mas [data-sw="big"]'); if (!big || document.querySelector('#tab-mas [data-sw="contraste"]')) return;
+  const o = document.createElement('div'); o.className = 'opt'; o.innerHTML = `<span>Alto contraste<br><small class="m">Textos y bordes marcados, mapa más nítido</small></span><button class="sw ${S.contraste ? 'on' : ''}" data-sw="contraste" aria-label="Alto contraste"></button>`;
+  big.closest('.opt').after(o); const b = o.querySelector('button');
+  b.onclick = () => { S.contraste = !S.contraste; Save.save(); b.classList.toggle('on', S.contraste); document.body.classList.toggle('contraste', S.contraste); Snd.sfx('tap'); };
+};
+/* el viaducto del metro y el tranvía no pasan sobre casas: bajo su trazado, las casas o edificios pasan a andén
+   (se mide con tools/auditoria-mapa.js; antes A 7,8 %, B 5,9 % y T 7 % del trazado iban sobre casas) */
+const _rail87 = CityMap.buildRail;
+CityMap.buildRail = function () {
+  _rail87.call(this); const casa = v => v === TT.BRICK || v === TT.BLDG; let n = 0;
+  for (const [P, r] of [[this.lineA, 7], [this.lineB, 7], [this.tram, 5]]) {
+    if (!P) continue; const paso = 4 / M_PER_PX, R = r / M_PER_PX;
+    for (let s = 0; s <= P.len; s += paso) { const q = this.at(P, s), tx0 = Math.floor((q.x - R) / TS), tx1 = Math.floor((q.x + R) / TS), ty0 = Math.floor((q.y - R) / TS), ty1 = Math.floor((q.y + R) / TS);
+      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) if (Math.hypot((tx + .5) * TS - q.x, (ty + .5) * TS - q.y) <= R + TS / 2 && casa(this.get(tx, ty))) { this.set(tx, ty, TT.WALK); n++; } }
+  }
+  this.corredorRiel = n;
+};

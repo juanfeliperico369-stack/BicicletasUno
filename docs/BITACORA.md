@@ -432,3 +432,22 @@ Pedido del autor: «crea la nueva revolución del videojuego de EnCicla y déjal
 **Qué se probó:** `node tests/run.js --n=100` con la sección nueva **1d** (guardado con `__proto__`, CSP, horario del Metro, placas, juego libre, viaje Metro + bici a pie, con bici y de noche, y transbordo): 100 partidas del bot sin errores, humo de interfaz, rendimiento con CPU 4× lenta (mediana de 16,7 ms) y multijugador con 3 dispositivos.
 
 **Qué falta:** la red EnCicla oficial con número y anclajes de cada estación (pendiente de la lista del autor), y publicar cuando el autor lo decida.
+
+## 2026-11-18 · v2.0.1 · Cierre de la revolución (rama `revolucion-v2`, sin publicar)
+
+1. **Trenes con el horario real:** de noche, con el Metro cerrado, los trenes quedan guardados (ni se mueven ni se ven); vuelven a las 4:30 a. m. (5 a. m. domingos y festivos).
+2. **Metro y tranvía sin casas debajo:** bajo el viaducto de las líneas A y B y bajo el tranvía, las casas o edificios del mapa pasan a andén (`CityMap.buildRail`). Antes, el 7,8 % de la A, el 5,9 % de la B y el 7 % del tranvía iban sobre casas; ahora, 0 %.
+3. **Alto contraste** en Más (junto a «Letra grande»): textos y bordes marcados, avisos en amarillo y el mapa con más contraste.
+4. **Registro de claves del guardado** (`Save.CLAVES`, con tipo y dueño): las pruebas fallan si aparece una clave sin registrar o con otro tipo, para que no se repita el choque de `dia` y `diaValle`.
+5. **Medición del mapa:** `node tools/auditoria-mapa.js` (igual que la de El Metro). Resultado de hoy:
+   - 133 estaciones EnCicla a 16 m de su punto (mediana; p90 41 m), ninguna sobre una casa;
+   - río continuo de Caldas a Barbosa (40,5 km dentro del mapa), con el trazado siempre a menos de 10 m del agua; el relieve aún sube en 50 tramos de 100 m (máx. 3,8 m): falta quemar el cauce como en El Metro;
+   - metro y tranvía sobre casas: 0 %;
+   - escaleras: 37 sueltas de 10.048 casillas;
+   - calles con nombre: Medellín 85 %, Itagüí 84 %, Sabaneta 66 %, Caldas 58 %, La Estrella 55 %, Bello 54 %, Envigado 54 %, Barbosa 40 %, Copacabana 36 %, Girardota 27 %;
+   - casas con barrio: Medellín e Itagüí 100 %, Girardota 99 %, Barbosa 97 %, La Estrella 86 %, Caldas 84 %, Sabaneta 67 %, Bello y Copacabana 59 %, Envigado 58 %.
+6. Revisado en celulares de 360 y 412 px: los botones (incluido **Metro**) no tapan el minimapa ni cortan texto.
+
+**Qué se probó:** `node tests/run.js --n=100`: ✓ todas las pruebas, incluidas las nuevas de la sección 1d (trenes de noche, alto contraste, corredor sin casas) y la de claves del guardado (21 en uso, todas registradas). APK de depuración 2.0.1 (versionCode 20001).
+
+**Qué falta:** quemar el cauce del río en el relieve; la lista oficial de estaciones EnCicla; publicar cuando el autor lo decida.
