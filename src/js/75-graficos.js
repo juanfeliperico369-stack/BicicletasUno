@@ -266,6 +266,8 @@ Object.assign(CityMap, {
     // volumen y colores de cada casa (1 a 3 pisos)
     const casas = [];
     for (const q of all) { if (q.B) continue; const r = q.k; q.z = .045 + ((h2(q.id, q.i, 57) * 3) | 0) * .025; q.roof = r < .55 ? TEJA[(r * 9 | 0) % TEJA.length] : r < .88 ? LOSA[(r * 13 | 0) % LOSA.length] : PINTA[(r * 17 | 0) % PINTA.length]; const wi = r < .6 ? (r * 31 | 0) % 3 : 3 + (r * 37 | 0) % 3; q.wa = WALLS[wi][0]; q.wb = WALLS[wi][1]; if (q.x >= X0 && q.x < X0 + S && q.y >= Y0 && q.y < Y0 + S) casas.push(q); }
+    // lugares emblemáticos: sus cuerpos con volumen (edificios) y sus casas de ladera (Comuna 13, Santo Domingo, Pueblito Paisa)
+    for (const P of this.lmPartes()) { if (P.x1 < X0 || P.x0 > X0 + S || P.y1 < Y0 || P.y0 > Y0 + S) continue; for (const q of P.ed) { all.push(q); if (q.x >= X0 && q.x < X0 + S && q.y >= Y0 && q.y < Y0 + S) ed.push(q); } for (const q of P.casas) all.push(q); }
     R = { all, ed, casas }; C0.set(key, R); if (C0.size > 64) C0.delete(C0.keys().next().value);
     return R;
   },
@@ -315,6 +317,9 @@ Object.assign(CityMap, {
     // ciclorrutas: carril verde con bordes y bicis pintadas
     run(q => q === 5, .52 * TS, '#e9e6dc'); run(q => q === 5, .42 * TS, '#2e9d55'); run(q => q === 5, .55, '#d8f0c8', [3, 4]);
     for (const ch of CHS) { if (ch.k !== 5) continue; const len = chainLen(ch.p); for (let s = 20 + h2(ch.p[0] | 0, ch.p[1] | 0, 12) * 40; s < len - 8; s += 70) { const a = this.chPt(ch, s), b = this.chPt(ch, s + 2); if (a.x < px0 - 4 || a.y < py0 - 4 || a.x > px0 + S + 4 || a.y > py0 + S + 4) continue; const an = Math.atan2(b.y - a.y, b.x - a.x); c.save(); c.translate(a.x, a.y); c.rotate(an); c.strokeStyle = '#e6f5da'; c.lineWidth = .6; c.beginPath(); c.arc(-1.6, 0, 1.2, 0, TAU); c.moveTo(2.8, 0); c.arc(1.6, 0, 1.2, 0, TAU); c.stroke(); c.restore(); } }
+    // lugares emblemáticos: su suelo vectorial (prados, caminos, agua, canchas, el estadio, los cerros)
+    const LMV = []; LANDMARKS.forEach((L, i) => { if (!(L.x + L.w < x0 - 3 || L.x > x0 + CH + 3 || L.y + L.h < y0 - 3 || L.y > y0 + CH + 3)) LMV.push(i); });
+    for (const i of LMV) this.lugar3(c, LANDMARKS[i], i, 0);
     // 5) lotes: sombras, casas con su techo y base de los edificios (el volumen de los edificios va en draw3D)
     const LT = this.lotes(cx, cy), poly = (P, dx, dy) => { c.moveTo(P[0] + dx, P[1] + dy); c.lineTo(P[2] + dx, P[3] + dy); c.lineTo(P[4] + dx, P[5] + dy); c.lineTo(P[6] + dx, P[7] + dy); c.closePath(); };
     c.fillStyle = 'rgba(8,14,30,.24)'; c.beginPath(); for (const L of LT.all) if (!L.B) poly(L.pts, 1.2, 1.5); c.fill();
@@ -366,10 +371,9 @@ Object.assign(CityMap, {
     }
     // bancas en las plazas
     c.fillStyle = '#7a5a3a';
-    for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) if (g(x, y) === TT.PLAZA && h2(x, y, 72) < .07) { const X = x * TS + 4 + h2(x, y, 73) * 6, Y = y * TS + 5 + h2(x, y, 74) * 6; c.fillRect(X, Y, 5, 1.5); c.fillStyle = '#5c4229'; c.fillRect(X, Y + 1.5, 5, .5); c.fillStyle = '#7a5a3a'; }
+    for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) if (g(x, y) === TT.PLAZA && h2(x, y, 72) < .07 && !this.lid.has(this.idx(x, y))) { const X = x * TS + 4 + h2(x, y, 73) * 6, Y = y * TS + 5 + h2(x, y, 74) * 6; c.fillRect(X, Y, 5, 1.5); c.fillStyle = '#5c4229'; c.fillRect(X, Y + 1.5, 5, .5); c.fillStyle = '#7a5a3a'; }
     // lugares emblemáticos
-    c.imageSmoothingEnabled = false; LANDMARKS.forEach((L, i) => { if (L.x + L.w < x0 || L.x > x0 + CH || L.y + L.h < y0 || L.y > y0 + CH) return; c.drawImage(this.landmarkCanvas(i), L.x * TS, L.y * TS, L.w * TS, L.h * TS); });
-    c.imageSmoothingEnabled = true;
+    for (const i of LMV) this.lugar3(c, LANDMARKS[i], i, 1);   // árboles, esculturas, postes, buses, aviones, la rueda de Chicago, las cruces
     // árboles con sombra (en parques, monte y andenes anchos)
     for (let y = y0 - 1; y <= y0 + CH; y++) for (let x = x0 - 1; x <= x0 + CH; x++) {
       const v = g(x, y), r = h2(x, y, 5); let rad = 0;
@@ -409,23 +413,23 @@ Ride.prototype.draw3D = function (c, ox, oy, vw, vh) {
   if (GFX() !== '3d') return; const M = this.map, P = this.p, px = P.x - ox, py = P.y - oy, K = .36, S = CH * TS, nb = Math.round(Art.night(this.min) * 3), L = [], mg = 70;
   for (let cy = Math.floor((oy - mg) / S); cy <= Math.floor((oy + vh + mg) / S); cy++) for (let cx = Math.floor((ox - mg) / S); cx <= Math.floor((ox + vw + mg) / S); cx++) {
     if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue;
-    for (const b of M.lotes(cx, cy).ed) { const x = b.x - ox, y = b.y - oy; if (x > vw + mg || y > vh + mg || x < -mg || y < -mg) continue; b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }
+    for (const b of M.lotes(cx, cy).ed) { const x = b.x - ox, y = b.y - oy, m2 = b.z > .6 ? mg + 200 : mg; if (x > vw + m2 || y > vh + m2 || x < -m2 || y < -m2) continue; if (b.gx != null) { const gx = b.gx - ox - px, gy = b.gy - oy - py; b.dd = gx * gx + gy * gy + (2 - b.z); } else b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* las partes de un lugar van juntas: primero las bajas, luego las torres */
   }
   L.sort((a, b) => b.dd - a.dd); c.lineWidth = .5; const bx = [0, 0, 0, 0], by = [0, 0, 0, 0], rx = [0, 0, 0, 0], ry = [0, 0, 0, 0];
   for (const b of L) {
     const p = b.pal[nb] || (b.pal[nb] = { roof: mixHex(b.roof, '#0b1430', nb * .17), wa: mixHex(b.wa, '#0b1430', nb * .17), wb: mixHex(b.wb, '#0b1430', nb * .17), ln: nb >= 2 ? '#ffd97a' : shade(b.wb, -.22), top: mixHex(shade(b.roof, .16), '#0b1430', nb * .17) });
-    const f = 1 + K * b.z, Q = b.pts, nf = Math.max(1, Math.round(b.z * 9));
+    const f = 1 + K * b.z, Q = b.pts, nf = b.nf || Math.max(1, Math.round(b.z * 9));
     for (let i = 0; i < 4; i++) { const x = Q[i * 2] - ox, y = Q[i * 2 + 1] - oy; bx[i] = x; by[i] = y; rx[i] = px + (x - px) * f; ry[i] = py + (y - py) * f; }
     const mx = (bx[0] + bx[2]) / 2, my = (by[0] + by[2]) / 2;
     for (let i = 0; i < 4; i++) {
       const j = (i + 1) & 3, ex = (bx[i] + bx[j]) / 2, ey = (by[i] + by[j]) / 2, nx = ex - mx, ny = ey - my;
       if (nx * (px - ex) + ny * (py - ey) <= 0) continue;   // esa pared mira hacia el otro lado
       c.fillStyle = Math.abs(nx) > Math.abs(ny) ? p.wb : p.wa; c.beginPath(); c.moveTo(bx[i], by[i]); c.lineTo(bx[j], by[j]); c.lineTo(rx[j], ry[j]); c.lineTo(rx[i], ry[i]); c.closePath(); c.fill();
-      if (nf > 1) { c.strokeStyle = p.ln; if (nb >= 2) c.setLineDash([1.2, 2.2]); c.beginPath(); for (let k = 1; k < nf; k++) { const t = k / nf; c.moveTo(bx[i] + (rx[i] - bx[i]) * t, by[i] + (ry[i] - by[i]) * t); c.lineTo(bx[j] + (rx[j] - bx[j]) * t, by[j] + (ry[j] - by[j]) * t); } c.stroke(); if (nb >= 2) c.setLineDash([]); }
+      if (nf > 1) { c.strokeStyle = b.lnc ? (p.lnc || (p.lnc = mixHex(b.lnc, '#0b1430', nb * .17))) : p.ln; if (nb >= 2) c.setLineDash([1.2, 2.2]); c.beginPath(); for (let k = 1; k < nf; k++) { const t = k / nf; c.moveTo(bx[i] + (rx[i] - bx[i]) * t, by[i] + (ry[i] - by[i]) * t); c.lineTo(bx[j] + (rx[j] - bx[j]) * t, by[j] + (ry[j] - by[j]) * t); } c.stroke(); if (nb >= 2) c.setLineDash([]); }
     }
     c.fillStyle = p.roof; c.beginPath(); c.moveTo(rx[0], ry[0]); c.lineTo(rx[1], ry[1]); c.lineTo(rx[2], ry[2]); c.lineTo(rx[3], ry[3]); c.closePath(); c.fill();
-    const cxr = (rx[0] + rx[2]) / 2, cyr = (ry[0] + ry[2]) / 2; c.strokeStyle = p.top; c.beginPath(); for (let i = 0; i < 4; i++) { const x = cxr + (rx[i] - cxr) * .84, y = cyr + (ry[i] - cyr) * .84; i ? c.lineTo(x, y) : c.moveTo(x, y); } c.closePath(); c.stroke();
-    techoL(c, b, rx, ry, p);
+    const cxr = (rx[0] + rx[2]) / 2, cyr = (ry[0] + ry[2]) / 2; if (!(b.t === 'dos' || b.t === 'cuatro' || b.t === 'aguja')) { c.strokeStyle = p.top; c.beginPath(); for (let i = 0; i < 4; i++) { const x = cxr + (rx[i] - cxr) * .84, y = cyr + (ry[i] - cyr) * .84; i ? c.lineTo(x, y) : c.moveTo(x, y); } c.closePath(); c.stroke(); }
+    if (b.t) techoLM(c, b, rx, ry, p, nb, px, py, f, K); else techoL(c, b, rx, ry, p);
   }
 };
 /* techos de los edificios, en el sentido del lote: aires, tanques, helipuerto, jardín o paneles */
@@ -457,7 +461,8 @@ for (const [name, fn] of Object.entries({
     if (kind === 'taxi') rrect(x, w / 2 - 1, h * .46, 2, 1, .4, '#1d1f24');
   }),
   truckTop: (base, a) => vsprite('tt' + a.join(), base, (x, w, h) => { const [load = 0, cap = 14] = a; rrect(x, .4, .4, w - .8, h * .26, 1.4, '#e9eef3'); rrect(x, 1, .9, w - 2, h * .09, .6, '#1f2f45'); rrect(x, .2, h * .3, w - .4, h * .68, .8, PAL.vd); const n = Math.min(8, Math.round(8 * load / Math.max(1, cap))); for (let i = 0; i < n; i++) line(x, 1.2, h * .34 + i * h * .075, w - 1.2, h * .34 + i * h * .075, .7, '#1b1f27'); }),
-  walker: (base, a) => vsprite('wk' + a.join() + Save.data.profile.shirt + Save.data.profile.skin, base, (x, w, h) => { const P = Save.data.profile, f = a[0] | 0; ell(x, w / 2 - .9, h / 2 + (f ? 1.4 : -1.4), .6, 1, '#2a3550'); ell(x, w / 2 + .9, h / 2 + (f ? -1.4 : 1.4), .6, 1, '#2a3550'); ell(x, w / 2, h / 2, w * .42, h * .2, SHIRTS[P.shirt] || PAL.vd); ell(x, w / 2, h / 2, w * .22, w * .22, PELO[P.hairCol | 0] || '#2a1a10'); })
+  walker: (base, a) => vsprite('wk' + a.join() + Save.data.profile.shirt + Save.data.profile.skin, base, (x, w, h) => { const P = Save.data.profile, f = a[0] | 0; ell(x, w / 2 - .9, h / 2 + (f ? 1.4 : -1.4), .6, 1, '#2a3550'); ell(x, w / 2 + .9, h / 2 + (f ? -1.4 : 1.4), .6, 1, '#2a3550'); ell(x, w / 2, h / 2, w * .42, h * .2, SHIRTS[P.shirt] || PAL.vd); ell(x, w / 2, h / 2, w * .22, w * .22, PELO[P.hairCol | 0] || '#2a1a10'); }),
+  trainCar: (base) => vsprite('tc', base, (x, w, h) => { rrect(x, .15, .15, w - .3, h - .3, 1.8, '#e6e9ee'); rrect(x, .9, 1.4, w - 1.8, h - 2.8, 1.1, '#c9cfd8'); for (let i = 0; i < 3; i++) rrect(x, w / 2 - 1.2, 3 + i * 4, 2.4, 2, .6, '#8e98a6'); rrect(x, .15, .15, w - .3, 1.2, .6, PAL.vd); rrect(x, .15, h - 1.35, w - .3, 1.2, .6, PAL.vd); x.fillStyle = '#ffffff66'; x.fillRect(.6, 1.6, .5, h - 3.2); })
 })) { const orig = Art[name]; Art[name] = function (...a) { const base = orig.apply(this, a); return GFX() === '3d' && !base.sc ? fn(base, a) : base; }; }
 
 /* ---------- vista panorámica de plataformas ---------- */

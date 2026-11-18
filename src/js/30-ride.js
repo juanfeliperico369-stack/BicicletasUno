@@ -236,6 +236,7 @@ class Ride {
       if (!inV(s.x, s.y, 30)) continue;
       const ss = this.sim ? this.sim.st[s.i] : null, bikes = ss ? ss.bikes : Math.round(s.cap * .55), x0 = s.v ? -2 * TS : s.tx * TS - ox, y0 = s.v ? -TS : s.ty * TS - oy;
       if (s.v) { b.save(); b.translate(s.x - ox, s.y - oy); b.rotate(Math.PI / 2); }   // estación de pie: el mismo dibujo, girado
+      if (GFX() === '3d') { estacion3(b, s, x0, y0, bikes, t, ss, !stOk(s), s.e ? [(this.mode.clock | 0) < E_HASTA, s.e === 'solo' && (this.mode.clock | 0) >= E_CIERRE] : null); if (s.v) b.restore(); continue; }   // dibujo suave en la ciudad 3D
       const W = 4 * TS, H = 2 * TS;
       prect(b, x0 + 3, y0 + 14, W - 16, 3, PAL.vd2); prect(b, x0 + 3, y0 + 14, W - 16, 1, PAL.vd1);
       const per = Math.ceil(s.cap / 2), sp = Math.min(5, (W - 18) / per);
@@ -250,21 +251,26 @@ class Ride {
     }
     // ruta GPS
     const ph = (t * 4) | 0;
-    const gc = (this.way || this.target || {}).col || PAL.amb; this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 3, g.y - oy - 3, 6, 6, '#0a2342'); prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, c); });
+    const gc = (this.way || this.target || {}).col || PAL.amb;
+    if (GFX() === '3d' && this.gps.length > 1) {   // en 3D: una línea suave (sin escalones) con hormigas que avanzan
+      const G = chaikin([{ x: this.p.x, y: this.p.y }].concat(this.gps), 3); b.lineCap = 'round'; b.lineJoin = 'round'; b.beginPath(); G.forEach((g, i) => i ? b.lineTo(g.x - ox, g.y - oy) : b.moveTo(g.x - ox, g.y - oy));
+      b.strokeStyle = '#0a234299'; b.lineWidth = 4.2; b.stroke(); b.strokeStyle = gc; b.lineWidth = 2.6; b.stroke(); b.strokeStyle = '#ffffff'; b.lineWidth = 1.1; b.setLineDash([2, 7]); b.lineDashOffset = -t * 18; b.stroke(); b.setLineDash([]); b.lineDashOffset = 0;
+    } else this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 3, g.y - oy - 3, 6, 6, '#0a2342'); prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, c); });
     // marcadores (aros que laten)
     for (const m of this.markers) {
       if (!inV(m.x, m.y, 40)) continue; const pr = m.r * .7 + Math.sin(t * 5) * 2, col = m.col || PAL.amb;
+      if (GFX() === '3d') { const ring = (r, w, cl) => { b.strokeStyle = cl; b.lineWidth = w; b.beginPath(); b.arc(m.x - ox, m.y - oy, Math.max(1, r), 0, TAU); b.stroke(); }; ring(pr + 1, 2.4, '#0a234288'); ring(pr, 1.4, col); if (m === this.target) ring(pr * .6, 1.2, '#fff'); continue; }   // aros suaves en 3D
       pring(b, m.x - ox, m.y - oy, Math.round(pr), col); pring(b, m.x - ox, m.y - oy, Math.round(pr) + 1, '#0a234288'); if (m === this.target) pring(b, m.x - ox, m.y - oy, Math.round(pr * .6), '#fff');
     }
     // hojas
     for (const l of this.leaves) if (!l.got && inV(l.x, l.y)) { const bob = Math.sin(t * 4 + l.x) * 1; b.drawImage(Art.icon('hoja'), 0, 0, 16, 16, Math.round(l.x - ox - 5), Math.round(l.y - oy - 5 + bob), 10, 10); }
     // ciclovía: conos en las avenidas cerradas a los carros
-    if (this.mode.mods.ciclovia) for (const ln of this.map.lanesNear(this.cam.x, this.cam.y)) { if (!ln.cv || ln.dir < 0) continue; for (let s = 0; s < ln.len; s += 40 * WK) { const q = this.map.at(ln, s); if (!inV(q.x, q.y)) continue; prect(b, q.x - ox - 1, q.y - oy, 3, 3, '#ff8a3d'); prect(b, q.x - ox, q.y - oy - 1, 1, 1, '#ffffff'); } }
+    if (this.mode.mods.ciclovia) for (const ln of this.map.lanesNear(this.cam.x, this.cam.y)) { if (!ln.cv || ln.dir < 0) continue; for (let s = 0; s < ln.len; s += 40 * WK) { const q = this.map.at(ln, s); if (!inV(q.x, q.y)) continue; if (GFX() === '3d') { b.fillStyle = '#ff8a3d'; b.beginPath(); b.moveTo(q.x - ox - 1.8, q.y - oy + 1.6); b.lineTo(q.x - ox + 1.8, q.y - oy + 1.6); b.lineTo(q.x - ox, q.y - oy - 2.2); b.closePath(); b.fill(); b.fillStyle = '#ffffff'; b.fillRect(q.x - ox - .9, q.y - oy - .3, 1.8, .7); continue; } prect(b, q.x - ox - 1, q.y - oy, 3, 3, '#ff8a3d'); prect(b, q.x - ox, q.y - oy - 1, 1, 1, '#ffffff'); } }
     // semáforos
     const LC = CB() ? { g: '#35b8ff', a: '#ffc93c', r: '#ff3fa4' } : { g: '#4cff6a', a: '#ffc93c', r: '#ff4b3a' };
     for (const L of this.map.lights) {
       if (!inV(L.x, L.y, 30)) continue; const s = this.map.lightState(L, this.mode.t);
-      const lamp = (x, y, k) => { prect(b, x - ox, y - oy, 4, 4, '#11151d'); prect(b, x - ox + 1, y - oy + 1, 2, 2, LC[k]); };
+      const lamp = GFX() === '3d' ? (x, y, k) => { b.fillStyle = '#11151d'; b.beginPath(); b.roundRect(x - ox - .2, y - oy - .2, 4.4, 4.4, 1.4); b.fill(); b.fillStyle = LC[k]; b.beginPath(); b.arc(x - ox + 2, y - oy + 2, 1.25, 0, TAU); b.fill(); } : (x, y, k) => { prect(b, x - ox, y - oy, 4, 4, '#11151d'); prect(b, x - ox + 1, y - oy + 1, 2, 2, LC[k]); };   /* en 3D: caja redondeada y luz redonda */
       lamp(L.x0 - 3, L.y0 - 3, s[0]); lamp(L.x1, L.y1, s[0]); lamp(L.x1, L.y0 - 3, s[1]); lamp(L.x0 - 3, L.y1, s[1]);
     }
   }

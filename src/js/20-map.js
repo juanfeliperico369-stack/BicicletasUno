@@ -135,6 +135,7 @@ const CityMap = JE.map = {
       case 'parquenorte': solid(1, 1, 4, 4); break;
       case 'memoria': solid(1, 1, 5, 3); break;
       case 'depot': solid(0, 0, W, 2); break;
+      case 'deporte': solid(7, 1, 4, 3); break;   // el coliseo
     }
     // perímetro transitable y salida a la calle
     for (let y = L.y - 1; y <= L.y + L.h; y++) for (let x = L.x - 1; x <= L.x + L.w; x++) {

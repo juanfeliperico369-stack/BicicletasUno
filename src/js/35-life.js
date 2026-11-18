@@ -76,11 +76,14 @@ Ride.prototype.drawGround = function (b, ox, oy, inV) {
   for (let k = -1; k <= 1; k++) {
     const q = this.map.at(T, clamp(tr.s + k * 14 * WK, 0, T.len)); if (!inV(q.x, q.y)) continue;
     b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a); b.scale(WK, WK);
+    if (GFX() === '3d') { const R = (x, y, w, h, r, col) => { b.fillStyle = col; b.beginPath(); b.roundRect(x, y, w, h, r); b.fill(); }; R(-6, -2, 13, 6, 2, '#0004'); R(-7, -3, 13, 6, 2, '#f1f4f7'); R(-6, -2.4, 11, 1, .5, '#1d2c44'); R(-6, 1.4, 11, 1, .5, '#1d2c44'); R(-7, -3, 13, 1.1, .5, PAL.cie); if (k === tr.dir) { b.fillStyle = '#fff3a0'; b.beginPath(); b.arc(tr.dir > 0 ? 5.6 : -6.6, 0, .9, 0, TAU); b.fill(); } b.restore(); continue; }   // en 3D, sin esquinas
     b.fillStyle = '#0004'; b.fillRect(-6, -2, 13, 6); b.fillStyle = '#f1f4f7'; b.fillRect(-7, -3, 13, 6); b.fillStyle = '#1d2c44'; b.fillRect(-7, -2, 13, 1); b.fillRect(-7, 1, 13, 1); b.fillStyle = PAL.cie; b.fillRect(-7, -3, 13, 1);
     if (k === tr.dir) { b.fillStyle = '#fff3a0'; b.fillRect(tr.dir > 0 ? 6 : -8, -1, 1, 2); }
     b.restore();
   }
-  for (const q of this.peds) { if (!inV(q.x, q.y, 6)) continue; const bob = (q.ph * 4 | 0) % 2, x = Math.round(q.x - ox), y = Math.round(q.y - oy); prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.sil) { prect(b, x - 3, y + 1, 7, 4, '#7a5230'); prect(b, x - 3, y + 1, 2, 2, '#ff8fc7'); prect(b, x - 1, y + 1, 2, 2, '#ffd84a'); prect(b, x + 1, y + 1, 2, 2, '#ff6b5a'); prect(b, x - 2, y + 3, 2, 1, '#b07cff'); prect(b, x + 1, y + 3, 2, 1, '#fff'); } if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
+  const suave = GFX() === '3d';
+  for (const q of this.peds) { if (!inV(q.x, q.y, 6)) continue; const bob = (q.ph * 4 | 0) % 2, x = Math.round(q.x - ox), y = Math.round(q.y - oy);
+    if (suave) { const fx = q.x - ox, fy = q.y - oy, bb = Math.sin(q.ph * 6) * .35; b.fillStyle = '#0a14262e'; b.beginPath(); b.ellipse(fx + .6, fy + 1.4, 1.9, 1, 0, 0, TAU); b.fill(); b.fillStyle = q.col; b.beginPath(); b.ellipse(fx, fy + bb, 1.7, 1.25, 0, 0, TAU); b.fill(); b.fillStyle = q.skin; b.beginPath(); b.arc(fx, fy - 1 + bb, .95, 0, TAU); b.fill(); if (q.sil) { b.fillStyle = '#7a5230'; b.beginPath(); b.roundRect(fx - 3.2, fy + .8, 6.4, 3.6, 1.2); b.fill(); ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#ffffff'].forEach((cl, j) => { b.fillStyle = cl; b.beginPath(); b.arc(fx - 2.2 + j * 1.1, fy + 1.6 + (j % 2) * 1.3, .85, 0, TAU); b.fill(); }); } if (q.hit > 0) { b.fillStyle = PAL.amb; b.beginPath(); b.arc(fx + .5, fy - 4, .7, 0, TAU); b.fill(); } continue; } prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.sil) { prect(b, x - 3, y + 1, 7, 4, '#7a5230'); prect(b, x - 3, y + 1, 2, 2, '#ff8fc7'); prect(b, x - 1, y + 1, 2, 2, '#ffd84a'); prect(b, x + 1, y + 1, 2, 2, '#ff6b5a'); prect(b, x - 2, y + 3, 2, 1, '#b07cff'); prect(b, x + 1, y + 3, 2, 1, '#fff'); } if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
 };
 Ride.prototype.drawSky = function (b, ox, oy) {
   const t = this.mode.t, vw = View.vw + 2, vh = View.vh + 2;
@@ -88,10 +91,11 @@ Ride.prototype.drawSky = function (b, ox, oy) {
     if (Math.max(cb.ax, cb.bx) < ox - 10 || Math.min(cb.ax, cb.bx) > ox + vw + 10 || Math.max(cb.ay, cb.by) < oy - 10 || Math.min(cb.ay, cb.by) > oy + vh + 10) continue;
     const ux = (cb.bx - cb.ax) / cb.len, uy = (cb.by - cb.ay) / cb.len, nx = -uy * 1.6, ny = ux * 1.6;
     b.strokeStyle = '#2b2f38cc'; b.lineWidth = .35; b.beginPath(); b.moveTo(cb.ax - ox + nx, cb.ay - oy + ny); b.lineTo(cb.bx - ox + nx, cb.by - oy + ny); b.moveTo(cb.ax - ox - nx, cb.ay - oy - ny); b.lineTo(cb.bx - ox - nx, cb.by - oy - ny); b.stroke();
-    for (let s = 40; s < cb.len - 20; s += 56) { const x = cb.ax + ux * s - ox, y = cb.ay + uy * s - oy; b.fillStyle = '#0004'; b.fillRect(x + 1, y + 2, 3, 3); b.fillStyle = '#8d97a5'; b.fillRect(x - 1, y - 1, 3, 4); }
-    for (const f of cb.st) { const x = cb.ax + ux * cb.len * f - ox, y = cb.ay + uy * cb.len * f - oy; b.fillStyle = '#0004'; b.fillRect(x - 4, y - 3, 10, 8); b.fillStyle = '#dfe5ec'; b.fillRect(x - 5, y - 4, 10, 8); b.fillStyle = cb.col; b.fillRect(x - 5, y - 4, 10, 2); }
+    const S3 = GFX() === '3d', RR = (x, y, w, h, r, col) => { b.fillStyle = col; if (S3) { b.beginPath(); b.roundRect(x, y, w, h, r); b.fill(); } else b.fillRect(x, y, w, h); };
+    for (let s = 40; s < cb.len - 20; s += 56) { const x = cb.ax + ux * s - ox, y = cb.ay + uy * s - oy; RR(x + 1, y + 2, 3, 3, 1.2, '#0004'); RR(x - 1, y - 1, 3, 4, 1, '#8d97a5'); }
+    for (const f of cb.st) { const x = cb.ax + ux * cb.len * f - ox, y = cb.ay + uy * cb.len * f - oy; RR(x - 4, y - 3, 10, 8, 2.5, '#0004'); RR(x - 5, y - 4, 10, 8, 2.5, '#dfe5ec'); RR(x - 5, y - 4, 10, 2.4, 1.2, cb.col); }
     const n = Math.max(1, Math.floor(cb.len / 30));
-    for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; for (const [q, d] of [[s, 1], [s2, -1]]) { const x = cb.ax + ux * q - ox + nx * d, y = cb.ay + uy * q - oy + ny * d; b.fillStyle = '#0003'; b.fillRect(x - .5, y + 1, 3, 3); b.fillStyle = cb.col; b.fillRect(x - 1.5, y - 1.5, 3, 3); b.fillStyle = '#1d2c44'; b.fillRect(x - .5, y - .5, 1, 1); } }
+    for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; for (const [q, d] of [[s, 1], [s2, -1]]) { const x = cb.ax + ux * q - ox + nx * d, y = cb.ay + uy * q - oy + ny * d; RR(x - .5, y + 1, 3, 3, 1, '#0003'); RR(x - 1.5, y - 1.5, 3, 3, 1, cb.col); RR(x - .7, y - .7, 1.4, 1.2, .4, '#1d2c44'); } }
   }
 };
 const ALUM = ['#ff5a5a', '#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7', '#ffffff'];
