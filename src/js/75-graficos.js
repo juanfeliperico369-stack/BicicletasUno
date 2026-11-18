@@ -135,6 +135,7 @@ const PARK_COL = ['#c0392b', '#ecf0f1', '#2c3e50', '#7f8c8d', '#f1c40f', '#2980b
 const ROOF = ['#8a8d93', '#9a9893', '#7d8189', '#a59f95', '#8f9499', '#b1aca2'], TEJA = ['#c2623b', '#b55430', '#cf7448', '#a94b2b', '#c8693f'];
 const WALLS = [['#b5653f', '#9a5334'], ['#c0714a', '#a35d3b'], ['#a85a38', '#8d4a2d'], ['#cfc8b8', '#b0a999'], ['#d9d2c2', '#bab3a3'], ['#b9b4a8', '#9c978b'], ['#a9bccd', '#8ba0b3'], ['#c7d0d8', '#a7b1ba']];
 const TALL = [[6.2505, -75.5686, 80], [6.2086, -75.5695, 70], [6.2405, -75.5745, 45], [6.1715, -75.5860, 30], [6.1725, -75.6110, 30], [6.3370, -75.5580, 30]];
+const SOMBRA = new Map(), sombra18 = col => SOMBRA.get(col) || (SOMBRA.set(col, shade(col, -.18)), SOMBRA.get(col));   // tono oscuro de cada color de árbol, calculado una vez
 const mixHex = (a, b, f) => { const p = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)], A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * f).toString(16).padStart(2, '0')).join(''); };
 Object.assign(CityMap, {
   chunks2: new Map(), lotC: new Map(),
@@ -171,9 +172,12 @@ Object.assign(CityMap, {
     const N2 = N * 2 - 1, u = this._mu || (this._mu = new Float32Array(N2 * N2));
     for (let J = 0; J < N2; J++) for (let I = 0; I < N2; I++) { const i = I >> 1, j = J >> 1, fx = (I & 1) * .5, fy = (J & 1) * .5, i1 = Math.min(N - 1, i + 1), j1 = Math.min(N - 1, j + 1); u[J * N2 + I] = (g[j * N + i] * (1 - fx) + g[j * N + i1] * fx) * (1 - fy) + (g[j1 * N + i] * (1 - fx) + g[j1 * N + i1] * fx) * fy; }
     const T = thr || .5, ox = (x0 - M + .5) * TS, oy = (y0 - M + .5) * TS, k = TS / 2, cs = [0, 0, 0, 0];
-    c.beginPath();
-    for (let J = 0; J < N2 - 1; J++) for (let I = 0; I < N2 - 1; I++) {
-      const a = u[J * N2 + I], b = u[J * N2 + I + 1], d = u[(J + 1) * N2 + I], e = u[(J + 1) * N2 + I + 1];
+    c.beginPath(); let run = -1;
+    const tira = (J, I0, I1) => { const X0 = ox + I0 * k, X1 = ox + I1 * k, Y0 = oy + J * k, Y1 = Y0 + k; c.moveTo(X0, Y0); c.lineTo(X1, Y0); c.lineTo(X1, Y1); c.lineTo(X0, Y1); c.closePath(); };   // celdas llenas seguidas: un rectángulo (menos trazos, mismo dibujo)
+    for (let J = 0; J < N2 - 1; J++, run = -1) for (let I = 0; I < N2 - 1; I++) {
+      const a = u[J * N2 + I], b = u[J * N2 + I + 1], d = u[(J + 1) * N2 + I], e = u[(J + 1) * N2 + I + 1], lleno = a >= T && b >= T && d >= T && e >= T;
+      if (lleno) { if (run < 0) run = I; if (I === N2 - 2) { tira(J, run, I + 1); run = -1; } continue; }
+      if (run >= 0) { tira(J, run, I); run = -1; }
       if (a < T && b < T && d < T && e < T) continue;
       cs[0] = a; cs[1] = b; cs[2] = e; cs[3] = d; let first = true;
       for (let q = 0; q < 4; q++) {
@@ -225,15 +229,18 @@ Object.assign(CityMap, {
     }
     // sin traslapes: un lote se descarta si pisa a otro de mayor prioridad (fila, tipo de calle, calle, lado, número)
     const live = cand.filter(q => !q.dead).sort((a, b) => { for (let k = 0; k < 5; k++) if (a.pr[k] !== b.pr[k]) return a.pr[k] - b.pr[k]; return 0; });
-    const G = new Map(), CE = 32, keys = q => { const r = (q.w + q.d) / 2 + 1, out = []; for (let gy = Math.floor((q.y - r) / CE); gy <= Math.floor((q.y + r) / CE); gy++) for (let gx = Math.floor((q.x - r) / CE); gx <= Math.floor((q.x + r) / CE); gx++) out.push(gx + ',' + gy); return out; };
-    const cruza = (A, B) => { for (const [ax, ay] of [[A.ux, A.uy], [A.nx, A.ny], [B.ux, B.uy], [B.nx, B.ny]]) { const dc = Math.abs((B.x - A.x) * ax + (B.y - A.y) * ay), ra = Math.abs(A.w / 2 * (A.ux * ax + A.uy * ay)) + Math.abs(A.d / 2 * (A.nx * ax + A.ny * ay)), rb = Math.abs(B.w / 2 * (B.ux * ax + B.uy * ay)) + Math.abs(B.d / 2 * (B.nx * ax + B.ny * ay)); if (dc >= ra + rb - .8) return false; } return true; };
+    const G = new Map(), CE = 32, KX = 65536;   // celdas de 32 px con clave numérica (rápido en celulares)
+    const proy = (Q, ax, ay) => Math.abs(Q.w / 2 * (Q.ux * ax + Q.uy * ay)) + Math.abs(Q.d / 2 * (Q.nx * ax + Q.ny * ay)), sep = (A, B, ax, ay) => Math.abs((B.x - A.x) * ax + (B.y - A.y) * ay) >= proy(A, ax, ay) + proy(B, ax, ay) - .8;
+    const cruza = (A, B) => { const dx = B.x - A.x, dy = B.y - A.y, rr = (A.w + A.d + B.w + B.d) / 2; if (dx * dx + dy * dy > rr * rr) return false; return !(sep(A, B, A.ux, A.uy) || sep(A, B, A.nx, A.ny) || sep(A, B, B.ux, B.uy) || sep(A, B, B.nx, B.ny)); };   // ejes separadores (SAT), sin crear arreglos
     // corredores del metro, del tranvía y del Metroplús: ningún lote los pisa (el viaducto y los rieles van sobre la calle)
-    const TR = this._trG || (this._trG = (() => { const G2 = new Map(), C = 64, add = (L, r) => { const P = L.pts; for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i], sg = [a.x, a.y, b.x, b.y, r]; for (let gy = Math.floor((Math.min(a.y, b.y) - 24) / C); gy <= Math.floor((Math.max(a.y, b.y) + 24) / C); gy++) for (let gx = Math.floor((Math.min(a.x, b.x) - 24) / C); gx <= Math.floor((Math.max(a.x, b.x) + 24) / C); gx++) { const k = gx + ',' + gy; (G2.get(k) || G2.set(k, []).get(k)).push(sg); } } }; add(this.lineA, 9); add(this.lineB, 9); add(this.tram, 7); for (const m of this.mp || []) add(m, 5); return G2; })());
-    const choca = q => { const R = Math.hypot(q.w, q.d) / 2; for (const [ax, ay, bx, by, r] of TR.get(Math.floor(q.x / 64) + ',' + Math.floor(q.y / 64)) || []) { const dx = bx - ax, dy = by - ay, t = clamp(((q.x - ax) * dx + (q.y - ay) * dy) / (dx * dx + dy * dy || 1), 0, 1); if (Math.hypot(ax + dx * t - q.x, ay + dy * t - q.y) < R * .8 + r) return true; } return false; };
+    const TR = this._trG || (this._trG = (() => { const G2 = new Map(), C = 64, add = (L, r) => { const P = L.pts; for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i], sg = [a.x, a.y, b.x, b.y, r]; for (let gy = Math.floor((Math.min(a.y, b.y) - 24) / C); gy <= Math.floor((Math.max(a.y, b.y) + 24) / C); gy++) for (let gx = Math.floor((Math.min(a.x, b.x) - 24) / C); gx <= Math.floor((Math.max(a.x, b.x) + 24) / C); gx++) { const k = gx * 65536 + gy; (G2.get(k) || G2.set(k, []).get(k)).push(sg); } } }; add(this.lineA, 9); add(this.lineB, 9); add(this.tram, 7); for (const m of this.mp || []) add(m, 5); return G2; })());
+    const choca = q => { const L = TR.get(Math.floor(q.x / 64) * KX + Math.floor(q.y / 64)); if (!L) return false; const R = Math.hypot(q.w, q.d) / 2 * .8; for (const sg of L) { const ax = sg[0], ay = sg[1], dx = sg[2] - ax, dy = sg[3] - ay, t = clamp(((q.x - ax) * dx + (q.y - ay) * dy) / (dx * dx + dy * dy || 1), 0, 1); if (Math.hypot(ax + dx * t - q.x, ay + dy * t - q.y) < R + sg[4]) return true; } return false; };
     const all = [], ed = [];
     for (const q of live) {
-      if (choca(q)) continue; const ks = keys(q); let hit = false; for (const k of ks) { const L = G.get(k); if (L) for (const o of L) if (cruza(q, o)) { hit = true; break; } if (hit) break; }
-      for (const k of ks) (G.get(k) || G.set(k, []).get(k)).push(q); if (hit) continue;
+      if (choca(q)) continue; const rq = (q.w + q.d) / 2 + 1, gx0 = Math.floor((q.x - rq) / CE), gx1 = Math.floor((q.x + rq) / CE), gy0 = Math.floor((q.y - rq) / CE), gy1 = Math.floor((q.y + rq) / CE); let hit = false;
+      for (let gy = gy0; gy <= gy1 && !hit; gy++) for (let gx = gx0; gx <= gx1 && !hit; gx++) { const L = G.get(gx * KX + gy); if (L) for (const o of L) if (cruza(q, o)) { hit = true; break; } }
+      for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) { const k = gx * KX + gy, L = G.get(k); if (L) L.push(q); else G.set(k, [q]); }
+      if (hit) continue;
       const hw = q.w / 2 - (q.B ? .9 : 0), hd = q.d / 2 - (q.B ? .9 : 0);
       q.pts = [q.x - q.ux * hw - q.nx * hd, q.y - q.uy * hw - q.ny * hd, q.x + q.ux * hw - q.nx * hd, q.y + q.uy * hw - q.ny * hd, q.x + q.ux * hw + q.nx * hd, q.y + q.uy * hw + q.ny * hd, q.x - q.ux * hw + q.nx * hd, q.y - q.uy * hw + q.ny * hd];
       let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9; for (let k = 0; k < 8; k += 2) { bx0 = Math.min(bx0, q.pts[k]); bx1 = Math.max(bx1, q.pts[k]); by0 = Math.min(by0, q.pts[k + 1]); by1 = Math.max(by1, q.pts[k + 1]); }
@@ -248,17 +255,17 @@ Object.assign(CityMap, {
       if (bx1 > X0 - 2 && bx0 < X0 + S + 2 && by1 > Y0 - 2 && by0 < Y0 + S + 2) all.push(q);
     }
     // casas del interior de la manzana: en cada casilla de ladrillo que no cubre un lote, una casa girada con la calle más cercana
-    const dentro = (x, y) => { for (const k of [Math.floor(x / CE) + ',' + Math.floor(y / CE)]) for (const o of G.get(k) || []) { if (o.pts === undefined) continue; const dx = x - o.x, dy = y - o.y; if (Math.abs(dx * o.ux + dy * o.uy) < o.w / 2 + 2 && Math.abs(dx * o.nx + dy * o.ny) < o.d / 2 + 2) return true; } return false; };
-    const tx0 = cx * CH - 1, ty0 = cy * CH - 1, GX0 = X0 - 48, GY0 = Y0 - 48, GN = Math.ceil((S + 96) / 8), gd = new Float32Array(GN * GN).fill(48), gu = new Float32Array(GN * GN), gv = new Float32Array(GN * GN);
-    for (const ch of this.chainsNear(X0 - 48, Y0 - 48, S + 96, S + 96)) { if (RANK[ch.k] == null) continue; const p = ch.p;   // rejilla de 8 px: dirección de la calle más cercana
-      for (let i = 2; i < p.length; i += 2) { const ax = p[i - 2], ay = p[i - 1], dx = p[i] - ax, dy = p[i + 1] - ay, L = Math.hypot(dx, dy); if (L < .1) continue; const ux0 = dx / L, uy0 = dy / L;
-        if (Math.max(ax, p[i]) < GX0 - 32 || Math.min(ax, p[i]) > GX0 + GN * 8 + 32 || Math.max(ay, p[i + 1]) < GY0 - 32 || Math.min(ay, p[i + 1]) > GY0 + GN * 8 + 32) continue;   // tramo lejos del trozo
-        for (let t = 0; t <= L; t += 4) { const sx = ax + ux0 * t, sy = ay + uy0 * t, ci = Math.floor((sx - GX0) / 8), cj = Math.floor((sy - GY0) / 8); if (ci < -4 || cj < -4 || ci > GN + 3 || cj > GN + 3) continue;
-          for (let jj = cj - 4; jj <= cj + 4; jj++) for (let ii = ci - 4; ii <= ci + 4; ii++) { if (ii < 0 || jj < 0 || ii >= GN || jj >= GN) continue; const k = jj * GN + ii, d = Math.hypot(GX0 + ii * 8 + 4 - sx, GY0 + jj * 8 + 4 - sy); if (d < gd[k]) { gd[k] = d; gu[k] = ux0; gv[k] = uy0; } } } } }
+    const dentro = (x, y) => { for (const o of G.get(Math.floor(x / CE) * KX + Math.floor(y / CE)) || []) { if (o.pts === undefined) continue; const dx = x - o.x, dy = y - o.y; if (Math.abs(dx * o.ux + dy * o.uy) < o.w / 2 + 2 && Math.abs(dx * o.nx + dy * o.ny) < o.d / 2 + 2) return true; } return false; };
+    const tx0 = cx * CH - 1, ty0 = cy * CH - 1, SG = new Map(), SC = 32;   // tramos de calle por celda de 32 px: cada casa del interior toma la dirección de la calle más cercana (a menos de 48 px)
+    for (const ch of this.chainsNear(X0 - 48, Y0 - 48, S + 96, S + 96)) { if (RANK[ch.k] == null) continue; const p = ch.p;
+      for (let i = 2; i < p.length; i += 2) { const ax = p[i - 2], ay = p[i - 1], bx = p[i], by = p[i + 1]; if ((bx - ax) * (bx - ax) + (by - ay) * (by - ay) < .01) continue;
+        const x0 = Math.max(Math.min(ax, bx), X0 - 96), x1 = Math.min(Math.max(ax, bx), X0 + S + 96), y0 = Math.max(Math.min(ay, by), Y0 - 96), y1 = Math.min(Math.max(ay, by), Y0 + S + 96); if (x0 > x1 || y0 > y1) continue;
+        const sg = [ax, ay, bx, by]; for (let gy = Math.floor(y0 / SC); gy <= Math.floor(y1 / SC); gy++) for (let gx = Math.floor(x0 / SC); gx <= Math.floor(x1 / SC); gx++) { const k = gx * KX + gy, L = SG.get(k); if (L) L.push(sg); else SG.set(k, [sg]); } } }
+    const rumbo = (x, y) => { let bd = 48, ux = 1, uy = 0; for (let gy = Math.floor((y - 48) / SC); gy <= Math.floor((y + 48) / SC); gy++) for (let gx = Math.floor((x - 48) / SC); gx <= Math.floor((x + 48) / SC); gx++) { const L = SG.get(gx * KX + gy); if (L) for (const sg of L) { const ax = sg[0], ay = sg[1], dx = sg[2] - ax, dy = sg[3] - ay, L2 = dx * dx + dy * dy, t = clamp(((x - ax) * dx + (y - ay) * dy) / L2, 0, 1), d = Math.hypot(ax + dx * t - x, ay + dy * t - y); if (d < bd) { bd = d; const l = Math.sqrt(L2); ux = dx / l; uy = dy / l; } } } return [ux, uy]; };
     for (let ty = ty0; ty <= ty0 + CH + 1; ty++) for (let tx = tx0; tx <= tx0 + CH + 1; tx++) {
       if (this.get(tx, ty) !== TT.BRICK || this.lid.has(this.idx(tx, ty)) || h2(tx, ty, 51) < .08) continue;
       const x = (tx + .5) * TS + (h2(tx, ty, 52) - .5) * 3, y = (ty + .5) * TS + (h2(tx, ty, 53) - .5) * 3; if (dentro(x, y) || choca({ x, y, w: 12, d: 12 })) continue;
-      const gk = clamp(Math.floor((y - GY0) / 8), 0, GN - 1) * GN + clamp(Math.floor((x - GX0) / 8), 0, GN - 1); let ux = 1, uy = 0; if (gd[gk] < 48) { ux = gu[gk]; uy = gv[gk]; }
+      const [ux, uy] = rumbo(x, y);
       const q = { x, y, ux, uy, nx: -uy, ny: ux, w: 11 + h2(tx, ty, 54) * 2, d: 11 + h2(tx, ty, 55) * 2, B: false, int: true, id: tx, i: ty, r: 9, sd: 1 }, hw = q.w / 2, hd = q.d / 2;
       q.pts = [x - ux * hw + uy * hd, y - uy * hw - ux * hd, x + ux * hw + uy * hd, y + uy * hw - ux * hd, x + ux * hw - uy * hd, y + uy * hw + ux * hd, x - ux * hw - uy * hd, y - uy * hw + ux * hd];
       q.k = h2(tx, ty, 56); all.push(q);
@@ -289,8 +296,8 @@ Object.assign(CityMap, {
     // textura del pasto y del monte: puntos, no cuadros
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) { const v = g(x, y); if (v !== TT.GRASS && v !== TT.MOUNT) continue; c.fillStyle = v === TT.MOUNT ? '#356d34' : '#78b65c'; c.beginPath(); for (let k = 0; k < 3; k++) { const X = x * TS + 2 + h2(x, y, 30 + k) * 12, Y = y * TS + 2 + h2(x, y, 40 + k) * 12; c.moveTo(X + .9, Y); c.arc(X, Y, .9, 0, TAU); } c.fill(); }
     // relieve suave (luz del noroeste)
-    const RS = CH * 2 + 2, rc = Art.mk(RS, RS, r => { for (let j = 0; j < RS; j++) for (let i = 0; i < RS; i++) { const tx = x0 - .5 + i / 2, ty = y0 - .5 + j / 2, gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile, f = clamp((gx + gy) * 1.1, -.3, .25); r.fillStyle = f > 0 ? 'rgba(255,250,230,' + (f * .5).toFixed(3) + ')' : 'rgba(10,20,40,' + (-f * .6).toFixed(3) + ')'; r.fillRect(i, j, 1, 1); } });
-    c.imageSmoothingEnabled = true; c.drawImage(rc, 0, 0, RS, RS, px0 - TS * .75, py0 - TS * .75, RS * TS / 2, RS * TS / 2);
+    const RS = CH + 3, rc = Art.mk(RS, RS, r => { const im = r.createImageData(RS, RS), D = im.data; for (let j = 0; j < RS; j++) for (let i = 0; i < RS; i++) { const tx = x0 - 1 + i, ty = y0 - 1 + j, gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile, f = clamp((gx + gy) * 1.1, -.3, .25), o = (j * RS + i) * 4; if (f > 0) { D[o] = 255; D[o + 1] = 250; D[o + 2] = 230; D[o + 3] = f * 127.5; } else { D[o] = 10; D[o + 1] = 20; D[o + 2] = 40; D[o + 3] = -f * 153; } } r.putImageData(im, 0, 0); });
+    c.imageSmoothingEnabled = true; c.drawImage(rc, 0, 0, RS, RS, px0 - TS * 1.5, py0 - TS * 1.5, RS * TS, RS * TS);   // una muestra por casilla: el relieve es suave (datos de 80 m) y el suavizado lo estira
     const CHS = this.chainsNear(px0 - 2 * TS, py0 - 2 * TS, S + 4 * TS, S + 4 * TS);
     const run = (f, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash || []); c.beginPath(); for (const ch of CHS) { if (!f(ch.k)) continue; const p = ch.p; c.moveTo(p[0], p[1]); if (p.length === 2) c.lineTo(p[0] + .01, p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); } c.stroke(); c.setLineDash([]); };
     // 2) quebradas: un hilo de agua por su trazo real, dentro de su retiro verde
@@ -379,7 +386,7 @@ Object.assign(CityMap, {
       const v = g(x, y), r = h2(x, y, 5); let rad = 0;
       if (v === TT.GRASS && r < .3 && !this.lid.has(this.idx(x, y))) rad = .36 + (r < .1 ? .14 : 0); else if (v === TT.WALK && r < .14) rad = .26; else if (v === TT.MOUNT && r < .6) rad = .42 + r * .3;
       if (!rad) continue; const X = x * TS + TS * (.3 + h2(x, y, 7) * .4), Y = y * TS + TS * (.3 + h2(x, y, 8) * .4), k = h2(x, y, 6), col = k < .05 ? '#f2c230' : k < .09 ? '#e88ab8' : v === TT.MOUNT ? '#2f6a33' : '#3f8a3f', R = rad * TS;
-      c.fillStyle = 'rgba(8,14,30,.28)'; c.beginPath(); c.arc(X + R * .35, Y + R * .4, R, 0, TAU); c.fill(); c.fillStyle = shade(col, -.18); c.beginPath(); c.arc(X, Y, R, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(8,14,30,.28)'; c.beginPath(); c.arc(X + R * .35, Y + R * .4, R, 0, TAU); c.fill(); c.fillStyle = sombra18(col); c.beginPath(); c.arc(X, Y, R, 0, TAU); c.fill();
       c.fillStyle = col; c.beginPath(); c.arc(X - R * .15, Y - R * .15, R * .78, 0, TAU); c.fill(); c.fillStyle = k < .09 ? '#fff3a088' : '#ffffff2e'; c.beginPath(); c.arc(X - R * .35, Y - R * .35, R * .38, 0, TAU); c.fill();
     }
     // 7) tranvía, Metroplús y metro: los andenes van A LO LARGO del trazo (siguen sus curvas), y los rieles mueren en ellos

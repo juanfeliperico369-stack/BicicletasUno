@@ -120,6 +120,13 @@ Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
     b.drawImage(g, x * TS + TS / 2 - ox - 20, y * TS + TS / 2 - oy - 20, 40, 40);
   }
   for (const c of this.cars) if (inV(c.x, c.y)) b.drawImage(g, c.x + Math.cos(c.ang) * 9 - ox - 6, c.y + Math.sin(c.ang) * 9 - oy - 6, 12, 12);
+  // lugares que se encienden de noche: los postes del Parque de las Luces, el estadio, los atrios de las iglesias y los parques
+  if (GFX() === '3d') for (const L of LANDMARKS) {
+    const X = t => (L.x + t) * TS - ox, Y = t => (L.y + t) * TS - oy; if (!inV((L.x + L.w / 2) * TS, (L.y + L.h / 2) * TS, Math.max(L.w, L.h) * TS)) continue;
+    if (L.k === 'luces') { for (let ty = .55; ty < L.h - .2; ty += .85) for (let tx = .55; tx < L.w - .2; tx += .85) b.drawImage(g, X(tx) - 8, Y(ty) - 17, 16, 16); }
+    else if (L.k === 'estadio') b.drawImage(g, X(L.w * .05), Y(L.h * .05), L.w * TS * .9, L.h * TS * .9);
+    else if (L.k === 'iglesia' || L.k === 'catedral' || L.k === 'lleras' || L.k === 'parquenorte') b.drawImage(g, X(L.w / 2) - 34, Y(L.h * .64) - 34, 68, 68);
+  }
   b.restore();
 };
 Ride.prototype.hudLife = function (V, sx, sy) {
