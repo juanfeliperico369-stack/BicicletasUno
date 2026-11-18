@@ -411,3 +411,33 @@ Pedido del autor: «toma todo lo que aprendiste, compleméntalo y crea la nueva 
    - Con eso el bot vuelve a lo de v1.2.0: Balance 4/4, Técnico 4/4, Rescate 4/4, Supervisor 4/4 y Apoyo 3/4.
 
 **Qué se probó:** todas las pruebas de EnCicla. Estaciones a 16 m de su punto (mediana) y todas alcanzables.
+
+## 2026-11-18 · v1.4.0 · Ciudad suave: curvas, no cubos
+
+Pedido del autor: «organiza bien las estructuras, suaviza los diseños… los rieles se salen de la estación… nada de escalones, debe ser una ciudad jugable, estilo GTA Chinatown Wars, deben haber curvas, no cubos, todo debe estar perfecto».
+
+1. **Suelo sin casillas a la vista:**
+   - pasto, monte, plazas, parqueaderos, manzanas y agua salen de contornos vectoriales suavizados: bordes curvos, nítidos a cualquier zoom y sin costuras entre trozos;
+   - andenes y sardineles siguen cada calle y las esquinas quedan redondas;
+   - las quebradas son un hilo de agua por su trazo real, dentro de su retiro verde.
+2. **Estructuras ordenadas con su calle:**
+   - casas y edificios en lotes a lo largo de cada calle, girados con ella (también en las curvas), en hasta 3 filas; el frente sale de los lotes catastrales de la zona;
+   - sin traslapes y con el mismo resultado en cada trozo; las casas del interior de la manzana miran a la calle más cercana;
+   - ninguna casa pisa los corredores del metro, del tranvía ni del Metroplús;
+   - casas con volumen (techo según sus pisos y fachadas) y edificios en perspectiva con aires, tanques, helipuertos, jardines o paneles en el techo.
+3. **Los rieles no se salen:** las estaciones del metro, el tranvía y el Metroplús se dibujan a lo largo de su línea (siguen las curvas) y los rieles terminan en los andenes.
+4. **Lugares emblemáticos sin cubos** (`75-lugares3d.js`, nuevo):
+   - **edificios con techo propio:** iglesias en cruz a dos aguas con torre y aguja, la catedral de ladrillo, el Coltejer con su aguja, el teatro a cuatro aguas, el Palacio de la Cultura ajedrezado con cúpula, las tres rocas de la Biblioteca España, el orquideorama con sus flores de madera, Explora, el MAMM y Fabricato en dientes de sierra, Casa EnCicla con sus franjas, campus con claustro, terminales con claraboyas y buses, el coliseo con cúpula;
+   - **suelo con curvas:** el estadio en tazón con su cancha y la cubierta de occidental; cerros con curvas de nivel, bosque y camino en espiral (El Volador, Nutibara con el Pueblito Paisa, Tres Cruces con sus cruces, Quitasol, el nacimiento del río); el jardín de flores de Moravia; parques con prados y fuente; Pies Descalzos con arena, agua y bambú; Plaza Botero con sus esculturas; Parque Norte con rueda de Chicago y montaña rusa; la Unidad Deportiva con cancha, piscina y pista; el Olaya Herrera con pista y aviones; la Comuna 13 con sus escaleras eléctricas naranja y murales;
+   - **de noche** brillan los postes del Parque de las Luces, el estadio, los atrios y los parques.
+   - En modo pixel y en las postales siguen los dibujos de siempre.
+5. **Los lugares ya no tapan calles:** en el mapa de 10 m muchas calles reales cruzan los lugares, y 59 cuerpos quedaban encima de una. Ahora el cuerpo se corre dentro de su lugar o se recortan sus bordes, la iglesia mira hacia su parque y la física sigue al dibujo en los dos modos: quedan 3 con algo de calle debajo (Casa EnCicla no se mueve).
+6. **Todo con el mismo trazo suave:**
+   - las estaciones EnCicla son una plataforma redondeada con anclajes y bicis a su tamaño (antes salían 4 veces más grandes y caían a la calle);
+   - la ruta del GPS es una línea curva y ya no cuadritos en escalera;
+   - también los aros de destino, semáforos, conos, peatones, tranvía, metro y Metrocable.
+7. **Más liviano:** armar un trozo cuesta mucho menos (lotes con celdas de clave numérica y sin arreglos temporales; contornos en franjas; relieve con `ImageData`). Con CPU 4× lenta: Comuna 13 de ~160 a ~100 ms, Ciudad Universitaria de 55 a 22 ms, aeropuerto de 64 a 15 ms.
+
+**Qué se probó:** todas las pruebas (`tests/run.js`), 54 partidas del bot sin errores, rendimiento con CPU 4× lenta (mediana de 16,7 ms por cuadro), 133 estaciones y 45 lugares alcanzables, capturas de los 45 lugares de día y varios de noche, y modo pixel intacto.
+
+**Qué falta:** la física en 3D sigue la cuadrícula de 10 m (los lotes son dibujo), alturas por edificio y tejados variados por barrio.

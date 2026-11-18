@@ -1,7 +1,7 @@
 {
- "version": "1.3.1",
- "hash": "30392d3f",
- "cache": "juega-encicla-v1.3.1-30392d3f",
+ "version": "1.4.0",
+ "hash": "1a717b33",
+ "cache": "juega-encicla-v1.4.0-1a717b33",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -30,6 +30,7 @@
   "72-qr.js",
   "73-musica.js",
   "75-graficos.js",
+  "75-lugares3d.js",
   "76-red-libre.js",
   "77-piloto.js",
   "78-ciudad-viva.js",
@@ -46,8 +47,8 @@
   "99-boot.js"
  ],
  "bytes": {
-  "single": 4462567,
-  "web": 4463591,
-  "js": 4283143
+  "single": 4514570,
+  "web": 4515594,
+  "js": 4335146
  }
 }

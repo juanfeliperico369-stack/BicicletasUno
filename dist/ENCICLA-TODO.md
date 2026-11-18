@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.3.1 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v1.4.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.3.1)
+## 2.3 Estado actual (v1.4.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-18 | Claude Code | documento creado (v1.3.1) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-18 | Claude Code | documento creado (v1.4.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1639,7 +1639,8 @@ src/js/69-libre.js    modo libre con vida propia: perfil, misiones del día, MGR
 src/js/71-tutor.js    tutorial opcional con un compañero del oficio
 src/js/72-oficios2.js Pausas Activas, Rescate y los minijuegos nuevos del técnico
 src/js/73-musica.js   música por estilos (jazz, lo-fi, soft rock, electrónica)
-src/js/75-graficos.js gráficos pixel, híbrido y 2D; vista panorámica de plataformas
+src/js/75-graficos.js gráficos pixel y ciudad 3D suave (suelo vectorial, lotes con su calle, edificios con volumen); vista panorámica de plataformas
+src/js/75-lugares3d.js lugares emblemáticos en 3D (cuerpos con techo propio y suelo vectorial), estación EnCicla suave
 src/js/76-red-libre.js mundo libre en red y competencias personalizadas
 src/js/77-piloto.js   daltonismo, retos con QR, escenas de la historia y Bluetooth
 src/js/78-ciudad-viva.js NPC con rutas por toda la ciudad y mapa grande interactivo con destino
@@ -1752,6 +1753,16 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v1.4.0 · Ciudad suave: curvas, no cubos* (`75-graficos.js`, `75-lugares3d.js`, `20-map.js`, `30-ride.js`, `35-life.js`, `tools/geo/build.py`):
+- **Suelo:** `CityMap.contorno` saca cada capa (monte, pasto, plaza, parqueadero, manzana, edificio, orilla, agua) como contorno vectorial: cuadrícula con 2 casillas de margen → suavizado [1 2 1] dos veces → media casilla (bilineal) → marching squares en una sola ruta; las celdas llenas seguidas salen como un rectángulo. El relieve va en `ImageData`, una muestra por casilla.
+- **Calles (`drawGround3`):** andén y sardinel como trazos a lo largo de cada cadena (`SWK` por tipo), asfalto por grupos de ancho, bordes, separadores, líneas y cebras. Las quebradas (tipo 9 de `vias.bin`) son un hilo de agua en su retiro verde.
+- **Lotes (`CityMap.lotes`, caché `lotC` de 64 trozos):** frente según los lotes catastrales (`LT`), hasta 3 filas por lado, prioridad fija `[fila, tipo de calle, calle, lado, número]` y descarte por traslape (SAT en celdas de 32 px con clave numérica): todos los trozos llegan al mismo resultado. Ningún lote pisa los corredores del metro, del tranvía ni del Metroplús (`_trG`); `build.py` también los despeja de casas. Las casas del interior toman la dirección del tramo de calle más cercano (`rumbo`, tramos por celda de 32 px, a menos de 48 px).
+- **Volumen:** casas con techo levantado según sus pisos y fachadas al sur, dibujadas en el suelo (sin costo por cuadro); edificios extruidos por cuadro en `draw3D` (pared solo si mira a la cámara, líneas de piso, techos de `techoL`).
+- **Lugares (`75-lugares3d.js`):** `lmPartes()` arma, una vez, los cuerpos de cada lugar (`ed`, con techo propio `t`: `dos`, `cuatro`, `aguja`, `cupula`, `claustro`, `claraboya`, `flores`, `dientes`, `ajedrez`, `encicla`, `roca`, `focos`, `escalera`, `jardin`) y sus casas (`casas`); `lugar3(c, L, i, fase)` dibuja el suelo (fase 0, bajo las calles) y lo de encima (fase 1: árboles, esculturas, postes, buses, aviones, rueda de Chicago, cruces). `draw3D` ordena las partes de un lugar juntas y de las bajas a las altas. En modo pixel siguen los dibujos de `21-map-art.js`.
+- **Cuerpos que no tapan calles (`paintLandmark`):** el grupo de cuerpos sólidos se corre dentro del lugar (10 por casilla de calle tapada, 1 por casilla corrida) y, si aún tapa, se recortan los bordes que caen en la calle (mínimo 2 casillas); `L.sdx`, `L.sdy` corren también el dibujo pixel. En los lugares de tierra (`LM_TIERRA`) cada cuerpo se corre hasta 16 px o no va, y las casas sobre una calle no van.
+- **Todo suave en 3D:** estación EnCicla (`estacion3`: plataforma, anclajes y bicis a su tamaño; antes salían ×4), ruta GPS (línea con Chaikin y hormigas), aros de destino, semáforos, conos de ciclovía, peatones, tranvía, metro (`Art.trainCar` dibujado) y Metrocable. De noche brillan los postes del Parque de las Luces, el estadio, los atrios y los parques.
+- **Regla aprendida:** en código compacto de una línea nunca va un comentario `//` en la mitad (se come el resto de la línea); se usa `/* */`.
+
 *v1.3.0 · Mapa de 10 m con datos oficiales* (`tools/geo/oficial.py`, `tools/geo/build.py`, `20-map.js`, `75-graficos.js`, `85-direcciones.js`, `86-maqueta.js`):
 - **Casillas de 10 m.** `TILE` y `S = 20 / TILE` escalan radios y ventanas en `build.py`; en el juego, `MS = 20 / VM.tile` escala las búsquedas en casillas (estaciones, lugares, rutas, minimapa, etiquetas del mapa grande). Lo que se mide en px (velocidades, radios de marcas) no cambia: la ciudad mide el doble en px y las cuadras se recorren como cuadras.
 - **Relleno de manzanas:** huella de edificio → casa (ladrillo) o edificio según pisos, área y zona; dentro de la manzana oficial, el hueco es la casa vecina o patio; fuera, andén o espacio público. Si una zona no tiene huellas, se usa la regla antigua.
@@ -1854,7 +1865,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   y electrónica (bombo a negras, bajo filtrado, pad con compresión lateral, arpegios). Automático: lo-fi en menús y paseos de día, jazz de noche, soft rock en los turnos,
   electrónica en carreras, ciclovía, competencias y pausas activas. Se elige en Más > Estilo musical. Siguen el mood y las notas interactivas; las capas de temporada van encima.
 - **Gráficos** (`75-graficos.js`, Más > Gráficos): Pixel; Híbrido (mapa dibujado vectorial a mayor resolución con personajes en pixel); Dibujado 2D (también personajes y vehículos dibujados).
-  El búfer del mapa usa `View.q` > 1 y los bloques dibujados se guardan en `CityMap.chunks2`. Los sprites se dibujan con `blit()` (respeta `img.sc`). Los lugares emblemáticos siguen en pixel art.
+  El búfer del mapa usa `View.q` > 1 y los bloques dibujados se guardan en `CityMap.chunks2`. Los sprites se dibujan con `blit()` (respeta `img.sc`). Desde v1.4.0 la ciudad 3D es toda vectorial, también los lugares emblemáticos (ver *v1.4.0*); el modo pixel conserva su arte.
 - **Vista panorámica de plataformas** (Más > Vista del mapa, botón en la pausa o tecla V): de lado, con el perfil real de elevación de la vía, ciudad alrededor con paralaje,
   carros y estaciones al pasar. La bici sigue la ruta sola; tú pedaleas (→), frenas (←) y saltas (↑, espacio o botón Saltar) huecos, conos y charcos. El minimapa sigue arriba.
 - **Mundo libre en red** (`76-red-libre.js`, `ModeLibreRed`, rol `libre`): en «Jugar con amigos» se elige la conexión (misma red o zona Wi-Fi sin internet, `Net.lan`, o por internet con STUN)
@@ -2028,7 +2039,8 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
   `pointer(type, vx, vy, cx, cy)` y `bot(err)`. El bot llama a las acciones directamente, sin clics.
 - `View`: búfer de baja resolución escalado ×s (pixel perfecto) más una capa nítida para textos (`View.text`).
   En el mapa la escala depende del lado menor de la pantalla y del zoom. En los minijuegos el diseño base es de 200×150.
-- El mapa se dibuja en bloques de 32×32 baldosas (caché LRU de 30) y se precalienta un bloque vecino por cuadro.
+- El mapa se dibuja en bloques de 16×16 casillas (`CH`); en 3D la caché `chunks2` guarda 10–14 bloques según la memoria del equipo. Se arma a lo sumo un bloque nuevo por cuadro y se precalienta uno vecino en la dirección de avance.
+- En código compacto de una línea no se usa `//` en la mitad de la línea: se usa `/* */`.
 - Para añadir un modo: clase en `50-modes.js`, entrada en `ROLES` y `MODE_CLASS`, metas con `this.goal(texto, obligatoria, ok(), progreso())`
   y un método `bot()`.
 - Todo texto del jugador va en español. Usa símbolos simples (★ ✓ ✗ ⏱ 🚚 📻) que se ven en todos los equipos.
@@ -2488,6 +2500,36 @@ Pedido del autor: «toma todo lo que aprendiste, compleméntalo y crea la nueva 
    - Con eso el bot vuelve a lo de v1.2.0: Balance 4/4, Técnico 4/4, Rescate 4/4, Supervisor 4/4 y Apoyo 3/4.
 
 **Qué se probó:** todas las pruebas de EnCicla. Estaciones a 16 m de su punto (mediana) y todas alcanzables.
+
+### 2026-11-18 · v1.4.0 · Ciudad suave: curvas, no cubos
+
+Pedido del autor: «organiza bien las estructuras, suaviza los diseños… los rieles se salen de la estación… nada de escalones, debe ser una ciudad jugable, estilo GTA Chinatown Wars, deben haber curvas, no cubos, todo debe estar perfecto».
+
+1. **Suelo sin casillas a la vista:**
+   - pasto, monte, plazas, parqueaderos, manzanas y agua salen de contornos vectoriales suavizados: bordes curvos, nítidos a cualquier zoom y sin costuras entre trozos;
+   - andenes y sardineles siguen cada calle y las esquinas quedan redondas;
+   - las quebradas son un hilo de agua por su trazo real, dentro de su retiro verde.
+2. **Estructuras ordenadas con su calle:**
+   - casas y edificios en lotes a lo largo de cada calle, girados con ella (también en las curvas), en hasta 3 filas; el frente sale de los lotes catastrales de la zona;
+   - sin traslapes y con el mismo resultado en cada trozo; las casas del interior de la manzana miran a la calle más cercana;
+   - ninguna casa pisa los corredores del metro, del tranvía ni del Metroplús;
+   - casas con volumen (techo según sus pisos y fachadas) y edificios en perspectiva con aires, tanques, helipuertos, jardines o paneles en el techo.
+3. **Los rieles no se salen:** las estaciones del metro, el tranvía y el Metroplús se dibujan a lo largo de su línea (siguen las curvas) y los rieles terminan en los andenes.
+4. **Lugares emblemáticos sin cubos** (`75-lugares3d.js`, nuevo):
+   - **edificios con techo propio:** iglesias en cruz a dos aguas con torre y aguja, la catedral de ladrillo, el Coltejer con su aguja, el teatro a cuatro aguas, el Palacio de la Cultura ajedrezado con cúpula, las tres rocas de la Biblioteca España, el orquideorama con sus flores de madera, Explora, el MAMM y Fabricato en dientes de sierra, Casa EnCicla con sus franjas, campus con claustro, terminales con claraboyas y buses, el coliseo con cúpula;
+   - **suelo con curvas:** el estadio en tazón con su cancha y la cubierta de occidental; cerros con curvas de nivel, bosque y camino en espiral (El Volador, Nutibara con el Pueblito Paisa, Tres Cruces con sus cruces, Quitasol, el nacimiento del río); el jardín de flores de Moravia; parques con prados y fuente; Pies Descalzos con arena, agua y bambú; Plaza Botero con sus esculturas; Parque Norte con rueda de Chicago y montaña rusa; la Unidad Deportiva con cancha, piscina y pista; el Olaya Herrera con pista y aviones; la Comuna 13 con sus escaleras eléctricas naranja y murales;
+   - **de noche** brillan los postes del Parque de las Luces, el estadio, los atrios y los parques.
+   - En modo pixel y en las postales siguen los dibujos de siempre.
+5. **Los lugares ya no tapan calles:** en el mapa de 10 m muchas calles reales cruzan los lugares, y 59 cuerpos quedaban encima de una. Ahora el cuerpo se corre dentro de su lugar o se recortan sus bordes, la iglesia mira hacia su parque y la física sigue al dibujo en los dos modos: quedan 3 con algo de calle debajo (Casa EnCicla no se mueve).
+6. **Todo con el mismo trazo suave:**
+   - las estaciones EnCicla son una plataforma redondeada con anclajes y bicis a su tamaño (antes salían 4 veces más grandes y caían a la calle);
+   - la ruta del GPS es una línea curva y ya no cuadritos en escalera;
+   - también los aros de destino, semáforos, conos, peatones, tranvía, metro y Metrocable.
+7. **Más liviano:** armar un trozo cuesta mucho menos (lotes con celdas de clave numérica y sin arreglos temporales; contornos en franjas; relieve con `ImageData`). Con CPU 4× lenta: Comuna 13 de ~160 a ~100 ms, Ciudad Universitaria de 55 a 22 ms, aeropuerto de 64 a 15 ms.
+
+**Qué se probó:** todas las pruebas (`tests/run.js`), 54 partidas del bot sin errores, rendimiento con CPU 4× lenta (mediana de 16,7 ms por cuadro), 133 estaciones y 45 lugares alcanzables, capturas de los 45 lugares de día y varios de noche, y modo pixel intacto.
+
+**Qué falta:** la física en 3D sigue la cuadrícula de 10 m (los lotes son dibujo), alturas por edificio y tejados variados por barrio.
 
 ---
 
