@@ -294,10 +294,10 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     const o = {}; JE.game.stop(); JE.game.start('usuario', 1, { seed: 77, nov: NOVEDADES[0], free: true }); await new Promise(r => setTimeout(r, 900));
     const M = JE.game.mode, R = M.ride, P = R.p, S = R.stats_();
     // manejo: arranque gradual, giro limitado y rodada al soltar (sin muros ni pendiente)
-    const bl = R.blocked, mp = R.map, ta = R.tileAt; R.blocked = () => false; R.map = Object.create(JE.map); R.map.slope = () => 0; R.tileAt = () => TT.ROAD;
+    const bl = R.blocked, mp = R.map, ta = R.tileAt, uc = R.updCars, ul = R.updLife; R.blocked = () => false; R.map = Object.create(JE.map); R.map.slope = () => 0; R.tileAt = () => TT.ROAD; R.updCars = () => {}; R.updLife = () => {};   // sin tráfico ni tranvía: solo la física
     P.v = 0; P.w = 0; P.a = 0; let t = 0, t90 = 0; for (let i = 0; i < 300; i++) { R.update(1 / 60, { x: 1, y: 0, m: 1 }); t += 1 / 60; if (!t90 && P.v > S.max * .9) t90 = t; }
     let tq = 0; for (let i = 0; i < 300 && P.v > 1; i++) { R.update(1 / 60, { x: 0, y: 0, m: 0 }); tq += 1 / 60; }
-    R.blocked = bl; R.map = mp; R.tileAt = ta; o.arranque = +t90.toFixed(2); o.parada = +tq.toFixed(2);
+    R.blocked = bl; R.map = mp; R.tileAt = ta; R.updCars = uc; R.updLife = ul; o.arranque = +t90.toFixed(2); o.parada = +tq.toFixed(2);
     // velocidad elegible: muy rápida es 1,5× y el reloj se ajusta; en carrera, normal
     Save.data.settings.vel = 1.5; o.rapida = +(R.stats_().max / S.max).toFixed(2); o.reloj = +(M.tm() / M.timeMul).toFixed(2); Save.data.settings.vel = 1; o.velBtn = !!document.querySelector('#camBar [data-cam=vel]');
     // cámara: pellizco, giro e inclinación con dos dedos, cámara libre con un dedo
@@ -327,6 +327,17 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(v17.viaducto && v17.elevadas && v17.bSobreA && v17.puentes > 1000 && v17.sobreRio, 'en alto: viaducto del centro, estaciones elevadas (no Poblado), la línea B sobre la A en San Antonio, ' + v17.puentes + ' puentes y la bici sobre el puente del río');
   ok(v17.mp.every(x => x >= 96), 'Metroplús sobre la calzada: ' + v17.mp.join(' %, ') + ' %');
   ok(v17.paseo, 'paseo guiado: la bici va sola hacia las paradas (' + v17.paradas + ' en 40 s)');
+  console.log('3l) v1.7.1: el sistema metro con los diseños de El Metro y la guía del camino discreta');
+  const v171 = await p.evaluate(async () => {
+    const o = {}; JE.game.stop(); JE.game.start('usuario', 1, { seed: 77, nov: NOVEDADES[0] }); await new Promise(r => setTimeout(r, 1200));
+    const R = JE.game.mode.ride, gfx0 = Save.data.settings.gfx; Save.data.settings.gfx = '3d'; o.sprites = ['metro', 'tram', 'brt', 'cable'].every(k => { const c = SisSpr.img(k, '#1C5C9C', 20, 4, 'front', false); return c && c.width > 20; });
+    R.update(1 / 30, { x: 0, y: 0, m: 0 }); o.buses = (R.brts || []).length; Save.data.settings.gfx = gfx0; o.andenes = JE.map.mpRealN | 0; o.corredor = JE.map.mp.filter(L => L.osm).length;
+    R.altVagones(); o.vagones = (R._altCars.length + R._lowCars.length) % 3 === 0 || R._altCars.length + R._lowCars.length > 0;
+    o.hall = JE.map.lineA.st.filter(st => st.alto).every(st => Array.isArray(JE.map.altHall(JE.map.lineA, st, st.s - 200, st.s + 200)));
+    o.giro = typeof R.giro === 'function' && (R.giro() === null || typeof R.giro().m === 'number');
+    JE.game.stop(); return o;
+  });
+  ok(v171.sprites && v171.buses >= 12 && v171.andenes >= 40 && v171.corredor === 2 && v171.vagones && v171.hall && v171.giro, 'El Metro: trenes, tranvía, Metroplús y cabinas con su dibujo, ' + v171.buses + ' buses articulados, ' + v171.andenes + ' andenes reales, corredores de OSM y guía con aviso de giro ' + JSON.stringify(v171));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

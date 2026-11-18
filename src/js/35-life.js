@@ -73,10 +73,12 @@ Ride.prototype.bellPeds = function () {
 };
 Ride.prototype.drawGround = function (b, ox, oy, inV) {
   const tr = this.trm; if (!tr) return; const T = this.map.tram;
-  for (let k = -1; k <= 1; k++) {
+  if (GFX() === '3d') {   // como en El Metro: dos coches de 19,5 m con la franja verde del tranvía y su pantógrafo
+    const cl = SIS.tram.carL * PXM, nt = Art.night(this.min) > .5;
+    for (let i = 0; i < 2; i++) { const s = tr.s + (i ? -1 : 1) * tr.dir * (cl + PXM) / 2, q = this.map.at(T, clamp(s, 0, T.len)); if (!inV(q.x, q.y, 40)) continue; SisSpr.dib(b, 'tram', SIS.tram.col, cl, SIS.tram.W * PXM, q.x - ox, q.y - oy, q.a + (tr.dir < 0 ? Math.PI : 0), 1, i ? 'back' : 'front', nt); }
+  } else for (let k = -1; k <= 1; k++) {
     const q = this.map.at(T, clamp(tr.s + k * 14 * WK, 0, T.len)); if (!inV(q.x, q.y)) continue;
     b.save(); b.translate(q.x - ox, q.y - oy); b.rotate(q.a); b.scale(WK, WK);
-    if (GFX() === '3d') { const R = (x, y, w, h, r, col) => { b.fillStyle = col; b.beginPath(); b.roundRect(x, y, w, h, r); b.fill(); }; R(-6, -2, 13, 6, 2, '#0004'); R(-7, -3, 13, 6, 2, '#f1f4f7'); R(-6, -2.4, 11, 1, .5, '#1d2c44'); R(-6, 1.4, 11, 1, .5, '#1d2c44'); R(-7, -3, 13, 1.1, .5, PAL.cie); if (k === tr.dir) { b.fillStyle = '#fff3a0'; b.beginPath(); b.arc(tr.dir > 0 ? 5.6 : -6.6, 0, .9, 0, TAU); b.fill(); } b.restore(); continue; }   // en 3D, sin esquinas
     b.fillStyle = '#0004'; b.fillRect(-6, -2, 13, 6); b.fillStyle = '#f1f4f7'; b.fillRect(-7, -3, 13, 6); b.fillStyle = '#1d2c44'; b.fillRect(-7, -2, 13, 1); b.fillRect(-7, 1, 13, 1); b.fillStyle = PAL.cie; b.fillRect(-7, -3, 13, 1);
     if (k === tr.dir) { b.fillStyle = '#fff3a0'; b.fillRect(tr.dir > 0 ? 6 : -8, -1, 1, 2); }
     b.restore();
@@ -86,27 +88,37 @@ Ride.prototype.drawGround = function (b, ox, oy, inV) {
     if (suave) { const fx = q.x - ox, fy = q.y - oy, bb = Math.sin(q.ph * 6) * .35; b.fillStyle = '#0a14262e'; b.beginPath(); b.ellipse(fx + .6, fy + 1.4, 1.9, 1, 0, 0, TAU); b.fill(); b.fillStyle = q.col; b.beginPath(); b.ellipse(fx, fy + bb, 1.7, 1.25, 0, 0, TAU); b.fill(); b.fillStyle = q.skin; b.beginPath(); b.arc(fx, fy - 1 + bb, .95, 0, TAU); b.fill(); if (q.sil) { b.fillStyle = '#7a5230'; b.beginPath(); b.roundRect(fx - 3.2, fy + .8, 6.4, 3.6, 1.2); b.fill(); ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#ffffff'].forEach((cl, j) => { b.fillStyle = cl; b.beginPath(); b.arc(fx - 2.2 + j * 1.1, fy + 1.6 + (j % 2) * 1.3, .85, 0, TAU); b.fill(); }); } if (q.hit > 0) { b.fillStyle = PAL.amb; b.beginPath(); b.arc(fx + .5, fy - 4, .7, 0, TAU); b.fill(); } continue; } prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.sil) { prect(b, x - 3, y + 1, 7, 4, '#7a5230'); prect(b, x - 3, y + 1, 2, 2, '#ff8fc7'); prect(b, x - 1, y + 1, 2, 2, '#ffd84a'); prect(b, x + 1, y + 1, 2, 2, '#ff6b5a'); prect(b, x - 2, y + 3, 2, 1, '#b07cff'); prect(b, x + 1, y + 3, 2, 1, '#fff'); } if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
 };
 Ride.prototype.drawSky = function (b, ox, oy) {
-  const t = this.mode.t, vw = View.vw + 2, vh = View.vh + 2, S3 = GFX() === '3d';
-  // en la ciudad 3D el Metrocable va en alto (~25 m): cables, torres y cabinas con perspectiva, y su sombra en el suelo
-  const E = S3 ? this.ojo() : null, ex = E ? E.x - ox : 0, ey = E ? E.y - oy : 0, K = E ? E.K : 0, ZC = .9;
+  const t = this.mode.t, vw = View.vw + 2, vh = View.vh + 2, S3 = GFX() === '3d', m = PXM;
+  // como en El Metro: cable doble a 14 m, torres cada ~260 m con su brazo, cabinas del color de la línea y estaciones con su polea; en la ciudad 3D, con perspectiva y sombra
+  const E = S3 ? this.ojo() : null, ex = E ? E.x - ox : 0, ey = E ? E.y - oy : 0, K = E ? E.K : 0, ZC = S3 ? SIS.cable.z / 27 : 0, nt = Art.night(this.min) > .5;
   const PR = (x, y, z) => { if (!S3) return [x, y]; const f = 1 + K * z; return [ex + (x - ex) * f, ey + (y - ey) * f]; };
-  const RR = (x, y, w, h, r, col) => { b.fillStyle = col; if (S3) { b.beginPath(); b.roundRect(x, y, w, h, r); b.fill(); } else b.fillRect(x, y, w, h); };
+  const ests = new Map();
   for (const cb of this.map.cables) {
-    const m = S3 ? 70 : 10; if (Math.max(cb.ax, cb.bx) < ox - m || Math.min(cb.ax, cb.bx) > ox + vw + m || Math.max(cb.ay, cb.by) < oy - m || Math.min(cb.ay, cb.by) > oy + vh + m) continue;
-    const ux = (cb.bx - cb.ax) / cb.len, uy = (cb.by - cb.ay) / cb.len, nx = -uy * 1.6, ny = ux * 1.6, ax = cb.ax - ox, ay = cb.ay - oy, bx = cb.bx - ox, by = cb.by - oy, d = S3 ? 3 + ZC * 13 : 0;
-    if (S3) {   // sombra del cable y de las torres
-      b.strokeStyle = 'rgba(8,14,30,.16)'; b.lineWidth = .5; b.beginPath(); for (const sd of [1, -1]) { b.moveTo(ax + nx * sd + d, ay + ny * sd + d); b.lineTo(bx + nx * sd + d, by + ny * sd + d); } b.stroke();
-      b.strokeStyle = '#8d97a5'; b.lineWidth = 1.3; b.beginPath();
-      for (let s = 40; s < cb.len - 20; s += 56) { const x = ax + ux * s, y = ay + uy * s, q = PR(x, y, ZC - .03); RR(x - 1.2, y - 1.2, 2.4, 2.4, .8, '#6f7784'); b.moveTo(x, y); b.lineTo(q[0], q[1]); }
-      b.stroke();
-      for (let s = 40; s < cb.len - 20; s += 56) { const q = PR(ax + ux * s, ay + uy * s, ZC - .03); b.strokeStyle = '#8d97a5'; b.lineWidth = .8; b.beginPath(); b.moveTo(q[0] - nx * 1.3, q[1] - ny * 1.3); b.lineTo(q[0] + nx * 1.3, q[1] + ny * 1.3); b.stroke(); }
-    } else for (let s = 40; s < cb.len - 20; s += 56) { const x = ax + ux * s, y = ay + uy * s; RR(x + 1, y + 2, 3, 3, 1.2, '#0004'); RR(x - 1, y - 1, 3, 4, 1, '#8d97a5'); }
-    b.strokeStyle = '#2b2f38cc'; b.lineWidth = .35; b.beginPath();
+    const mg = 80; if (Math.max(cb.ax, cb.bx) < ox - mg || Math.min(cb.ax, cb.bx) > ox + vw + mg || Math.max(cb.ay, cb.by) < oy - mg || Math.min(cb.ay, cb.by) > oy + vh + mg) continue;
+    const ux = (cb.bx - cb.ax) / cb.len, uy = (cb.by - cb.ay) / cb.len, nx = -uy * 1.5 * m, ny = ux * 1.5 * m, ax = cb.ax - ox, ay = cb.ay - oy, bx = cb.bx - ox, by = cb.by - oy, d = S3 ? 3 + ZC * 13 : 2;
+    ests.set(Math.round(cb.ax) + ',' + Math.round(cb.ay), { x: ax, y: ay, a: Math.atan2(uy, ux), col: cb.col }); ests.set(Math.round(cb.bx) + ',' + Math.round(cb.by), { x: bx, y: by, a: Math.atan2(uy, ux), col: cb.col });
+    // torres: poste del piso al cable, con su brazo, y su sombra
+    const n = Math.max(0, Math.round(cb.len / (SIS.cable.torre * m)) - 1);
+    for (let k = 1; k <= n; k++) {
+      const f = k / (n + 1), x = ax + (bx - ax) * f, y = ay + (by - ay) * f, q = PR(x, y, ZC);
+      b.lineCap = 'butt'; b.strokeStyle = 'rgba(0,0,0,.25)'; b.lineWidth = 1.6 * m; b.beginPath(); b.moveTo(x, y); b.lineTo(x + d, y + d * .62); b.stroke();
+      if (S3) { b.strokeStyle = '#7c8188'; b.lineWidth = 1.6 * m; b.beginPath(); b.moveTo(x, y); b.lineTo(q[0], q[1]); b.stroke(); }
+      b.strokeStyle = '#5b5f66'; b.lineWidth = Math.max(.6, .5 * m); b.beginPath(); b.moveTo(q[0] - nx * 1.3, q[1] - ny * 1.3); b.lineTo(q[0] + nx * 1.3, q[1] + ny * 1.3); b.stroke(); b.lineCap = 'round';
+      if (!S3) { b.fillStyle = '#8f949a'; b.fillRect(x - 1.5 * m, y - 1.5 * m, 3 * m, 3 * m); }
+    }
+    if (S3) { b.strokeStyle = 'rgba(0,0,0,.18)'; b.lineWidth = Math.max(.5, .3 * m); b.beginPath(); b.moveTo(ax + d, ay + d * .62); b.lineTo(bx + d, by + d * .62); b.stroke(); }   // sombra del cable
+    b.strokeStyle = 'rgba(20,20,20,.8)'; b.lineWidth = Math.max(.5, .3 * m); b.beginPath();
     for (const sd of [1, -1]) { const p0 = PR(ax + nx * sd, ay + ny * sd, ZC), p1 = PR(bx + nx * sd, by + ny * sd, ZC); b.moveTo(p0[0], p0[1]); b.lineTo(p1[0], p1[1]); }
     b.stroke();
-    for (const f of cb.st) { const x = ax + ux * cb.len * f, y = ay + uy * cb.len * f, q = PR(x, y, S3 ? .3 : 0); RR(x - 4 + (S3 ? 3 : 1), y - 3 + (S3 ? 3 : 1), 10, 8, 2.5, '#0004'); RR(q[0] - 5, q[1] - 4, 10, 8, 2.5, '#dfe5ec'); RR(q[0] - 5, q[1] - 4, 10, 2.4, 1.2, cb.col); }
-    const n = Math.max(1, Math.floor(cb.len / 30));
-    for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; for (const [q, sd] of [[s, 1], [s2, -1]]) { const x = ax + ux * q + nx * sd, y = ay + uy * q + ny * sd, c = PR(x, y, ZC - .06); RR(x - .5 + d * .9, y + 1 + d * .9, 3, 3, 1, '#0003'); RR(c[0] - 1.5, c[1] - 1.5, 3, 3, 1, cb.col); RR(c[0] - .7, c[1] - .7, 1.4, 1.2, .4, '#1d2c44'); } }
+    // cabinas cada 60 m, a 5 m/s, cada sentido por su cable
+    const sep = SIS.cable.sep * m, nc = Math.max(1, Math.floor(cb.len / sep)), cL = SIS.cable.L * m, cW = SIS.cable.W * m, an = Math.atan2(uy, ux);
+    for (let k = 0; k < nc; k++) { const s = (k * sep + t * 5 * m) % cb.len; for (const [q, sd] of [[s, 1], [cb.len - s, -1]]) { const x = ax + ux * q + nx * sd, y = ay + uy * q + ny * sd, c2 = PR(x, y, ZC - .04); b.fillStyle = 'rgba(0,0,0,.22)'; b.fillRect(x + d - cL / 2, y + d * .62 - cW / 2, cL, cW); SisSpr.dib(b, 'cable', cb.col, cL, cW, c2[0], c2[1], an, S3 ? 1 + K * (ZC - .04) : 1, null, nt); } }
+  }
+  // estaciones: caja girada con su cable (28 × 18 m), base, volumen y techo con la polea y las franjas de la línea
+  for (const e of ests.values()) {
+    if (e.x < -60 || e.y < -60 || e.x > vw + 60 || e.y > vh + 60) continue; const up = S3 ? .12 : 0, q = PR(e.x, e.y, up);
+    b.save(); b.translate(e.x, e.y); b.rotate(e.a); b.fillStyle = 'rgba(0,0,0,.3)'; b.fillRect(-14 * m + 2.5 * m, -9 * m + 3.5 * m, 28 * m, 18 * m); b.fillStyle = '#b9b2a4'; b.fillRect(-14 * m, -9 * m, 28 * m, 18 * m); b.restore();
+    b.save(); b.translate(q[0], q[1]); b.rotate(e.a); if (S3) b.scale(1 + K * up, 1 + K * up); b.fillStyle = '#e4ddcc'; b.fillRect(-14 * m, -9 * m, 28 * m, 18 * m); b.fillStyle = '#5b5f66'; b.fillRect(-9 * m, -2.2 * m, 18 * m, 4.4 * m); b.fillStyle = e.col; b.fillRect(-14 * m, -9 * m, 28 * m, 2 * m); b.fillRect(-14 * m, 7 * m, 28 * m, 2 * m); b.strokeStyle = '#141414'; b.lineWidth = .6; b.strokeRect(-14 * m, -9 * m, 28 * m, 18 * m); b.restore();
   }
 };
 const ALUM = ['#ff5a5a', '#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7', '#ffffff'];
@@ -142,7 +154,11 @@ Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
 };
 Ride.prototype.hudLife = function (V, sx, sy, W) {
   W = W || ((x, y) => ({ x: sx(x), y: sy(y) }));
-  for (const cb of this.map.cables) { if (!cb.name) continue; const q = W(cb.bx, cb.by), x = q.x, y = q.y - 12; if (x > 20 && x < V.w - 20 && y > 50 && y < V.h - 20 && (!this.lblRoom || this.lblRoom(x, y, cb.name.length * 6 + 8, 16))) V.text(cb.name, x, y, { size: 11, align: 'center', color: '#fff', bg: cb.col, pad: 3 }); }
-  for (const L of this.map.mp || []) for (const s of L.st) { const q = W(s.x != null ? s.x : s.px, s.y != null ? s.y : s.py), x = q.x, y = q.y - 18; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 64, 14))) V.text('Metroplús · ' + s.name, x, y, { size: 10, align: 'center', color: '#fff', bg: L.col, pad: 2 }); }
-  const T = this.map.tram; for (const s of T.st) { const q = W(s.px, s.py), x = q.x, y = q.y - 24; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 50, 14))) V.text('Tranvía · ' + s.name, x, y, { size: 10, align: 'center', color: PAL.az, bg: PAL.cie, pad: 2 }); }
+  // estaciones del metro como en El Metro: punto blanco con borde y el nombre con halo (las del metro, del tranvía y del cable)
+  const c = V.ctx, sel = (x, y, t, col) => { if (x < 0 || x > V.w || y < 50 || y > V.h - 20 || (this.lblRoom && !this.lblRoom(x + t.length * 3.2 + 6, y - 6, t.length * 6.4 + 10, 15))) return; c.fillStyle = '#fff'; c.strokeStyle = col || '#141414'; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 4, 0, TAU); c.fill(); c.stroke(); V.text(t, x + 7, y - 5, { size: 11, color: '#141414', stroke: 'rgba(253,251,245,.92)', sw: 3, body: true }); };
+  if (GFX() === '3d') for (const L of [this.map.lineA, this.map.lineB]) for (const st of L.st) { const p = this.map.at(L, st.s), q = W(p.x, p.y); sel(q.x, q.y, 'Metro · ' + st.name, L.col); }
+  const vistos = new Set();
+  for (const cb of this.map.cables) for (const [x0, y0, nm] of [[cb.ax, cb.ay, cb.sn && cb.sn[0]], [cb.bx, cb.by, cb.sn && cb.sn[1]]]) { if (!nm || vistos.has(nm)) continue; vistos.add(nm); const q = W(x0, y0); sel(q.x, q.y, 'Metrocable · ' + nm, cb.col); }
+  for (const L of this.map.mp || []) for (const s of L.st) { const p = this.map.at(L, s.s), q = W(p.x, p.y); sel(q.x, q.y, 'Metroplús · ' + s.name, L.col); }
+  const T = this.map.tram; for (const s of T.st) { const p = this.map.at(T, s.s), q = W(p.x, p.y); sel(q.x, q.y, 'Tranvía · ' + s.name, SIS.tram.col); }
 };

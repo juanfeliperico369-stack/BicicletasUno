@@ -38,9 +38,11 @@ src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 nivel
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
 src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas, edificios con su forma real y partes de los emblemáticos
 src/js/87-placas.js   placas de lo poco conocido (16 datos en su lugar real, álbum y logros)
+src/js/74-sistema.js  el sistema metro con los diseños de El Metro (trenes, tranvía, Metroplús con sus buses, Metrocable y estaciones) y los andenes reales del Metroplús
 src/js/76-altura.js   lo que va en alto: metro en viaducto, estaciones elevadas, puentes (cortados del suelo), nivel del jugador y Metroplús sobre sus avenidas
 src/js/88-camara.js   cámara (pellizco, giro, inclinación, ángulos, cámara libre), velocidad elegible y calidad automática
 src/js/89-paseo.js    paseo guiado del modo libre: la bici va sola por los lugares con postal y la cámara cambia de plano
+tools/geo/metroplus_elmetro.py corredores y andenes reales del Metroplús tomados de El Metro (metrozero) -> src/data/metroplus.json
 tools/geo/alturas.py  tramos del metro en viaducto y puentes con su nivel (Overture) -> src/data/alturas.json
 tools/auditoria-mapa.js mide el mapa que se juega (río, agua, escaleras, estaciones, sitios, CSP): docs/AUDITORIA-MAPA.md
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
@@ -176,6 +178,33 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.7.1 · El sistema metro como en El Metro y la guía discreta* (`74-sistema.js`, `76-altura.js`, `35-life.js`, `75-graficos.js`, `30-ride.js`, `tools/geo/metroplus_elmetro.py`, `src/data/metroplus.json`):
+- **`SisSpr`:**
+  - `veh(g, kind, L, W, col, o)` es el `Spr.veh` de El Metro (metro, tranvía, `brt` y cable), en px, mirando a +x;
+  - `img()` lo guarda en caché a 4× y `dib()` lo dibuja girado y escalado (la altura en perspectiva).
+- **Medidas (`SIS`)**, en metros y con `PXM = 1,6` px por metro:
+  - metro: vagón de 22 × 3, 3 vagones y andén de 110;
+  - tranvía: 19,5 × 3, 2 coches y andén de 50;
+  - Metroplús: bus de 18 × 2,5 y andén de 30;
+  - cable: a 14 m, torres cada 260 m y cabinas cada 60 m.
+- **Dibujo:**
+  - `altMetro` hace el viaducto y las estaciones;
+  - `altHall` arma el edificio de acceso sin las calles que pasan por debajo;
+  - `sisBanda`/`sisMuro` son franjas y muros a lo largo de una polilínea, con altura;
+  - `altVagones`/`altTrenes` ponen los trenes por su vía, recortados a cada pieza del viaducto;
+  - en el suelo (sección 7 de `drawGround3`) van el tranvía y el Metroplús;
+  - `drawSky` dibuja el Metrocable;
+  - `updBrt` y `drawGround` mueven y dibujan los buses articulados.
+- **Metroplús real (`CityMap.mpReal`, antes de `mpAjusta`):**
+  - corredores de las Líneas 1 y 2 y andenes de El Metro (metros del mapa del valle × 1,6);
+  - el corredor de OSM (`P.osm`) no se ajusta a la vía del dibujo;
+  - la estación se corre a lo sumo 12 px de su andén real.
+- **Guía (`render` y `hud` en 30-ride.js):**
+  - flechitas cada 13 px sobre la ruta suavizada (`chaikin`), con opacidad que baja con la distancia (hasta 230 px);
+  - baliza tenue en los marcadores;
+  - flecha fuera de pantalla al 85 %;
+  - `Ride.giro()` da el próximo giro de más de 40° a menos de 200 m, o la llegada a menos de 60 m.
 
 *v1.7.0 · Alturas, cámara, manejo con peso, velocidad y paseo* (`tools/geo/alturas.py`, `src/data/alturas.json`, `76-altura.js`, `88-camara.js`, `89-paseo.js`, `30-ride.js`, `00-core.js`):
 - **Datos:**

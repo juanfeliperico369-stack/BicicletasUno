@@ -5,7 +5,7 @@
    extremos (si se llega por un lado, se pasa por debajo). En el suelo quedan su sombra y sus pilares.
    ===================================================================== */
 const ALT = { mA: .4, mB: .5, techo: .27, grosor: .075, pz: 36, paso: 6 };
-const ALT_SL = 21 * MS * 1.55, ALT_SW = 11 * MS * .9;   // medio largo y medio ancho de una estación del metro (como en el dibujo plano)
+const ALT_SL = 55 * (TS / (VM.tile || 10)), ALT_SW = 9.2 * (TS / (VM.tile || 10));   // medio largo (andén de 110 m) y medio ancho (cubierta a 9 m del eje) de una estación del metro, como en El Metro
 const altSuave = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
 const ALT_KV = { 1: [1, 4], 4: [1, 4], 2: [2, 3], 3: [2, 3], 5: [5], 6: [6, 8] };   // tipos de vía del dibujo que puede ser cada puente
 
@@ -33,9 +33,10 @@ Object.assign(CityMap, {
         const cs = [...cuts].filter(s => s >= a.s0 && s <= a.s1).sort((x, y) => x - y);
         for (let i = 0; i + 1 < cs.length; i++) {
           const s0 = cs[i], s1 = cs[i + 1]; if (s1 - s0 < .5) continue;
-          const pc = this.altPieza('m', L, s0, s1, 6.5, L.zAt); pc.L = L; pc.col = col;
+          const pc = this.altPieza('m', L, s0, s1, 5 * PXM, L.zAt); pc.L = L; pc.col = col;   // tablero de 10 m, como en El Metro
           const st = L.st.find(st => st.alto && s0 >= Math.max(a.s0, st.s - ALT_SL) - .1 && s1 <= Math.min(a.s1, st.s + ALT_SL) + .1); if (st) { pc.est = st; pc.ini = Math.abs(s0 - Math.max(a.s0, st.s - ALT_SL)) < .2; pc.fin = Math.abs(s1 - Math.min(a.s1, st.s + ALT_SL)) < .2; }
-          for (let s = Math.ceil(s0 / 48) * 48; s < s1; s += 48) { if (st) continue; const k = Math.round((s - s0) / (s1 - s0) * (pc.n - 1)); if (pc.Z[k] > .12) pc.pil.push(k); }
+          for (let s = Math.ceil(s0 / (30 * PXM)) * 30 * PXM; s < s1; s += 30 * PXM) { const k = Math.round((s - s0) / (s1 - s0) * (pc.n - 1)); if (pc.Z[k] > .12) pc.pil.push(k); }   // columnas cada 30 m
+          if (st) pc.hall = this.altHall(L, st, s0, s1);   // edificio de acceso bajo el viaducto, sin tapar la calle
           meter(this.altG, CK(pc.x, pc.y), pc);
         }
       }
@@ -69,6 +70,15 @@ Object.assign(CityMap, {
       }
     }
     this.altInfo = { metroA: (this.lineA && this.lineA.alto || []).length, metroB: (this.lineB && this.lineB.alto || []).length, puentes: this.decks.length, cortados: this.decks.filter(d => d.P).length };
+  },
+  /* el edificio de acceso de una estación (de 22 m adentro de cada punta del andén), partido donde una calle pasa por debajo; el trozo de la pieza [s0, s1] */
+  altHall(L, st, s0, s1) {
+    if (!st.hall) {
+      const a0 = st.s - ALT_SL + 22 * PXM, a1 = st.s + ALT_SL - 22 * PXM, road = v => v === TT.ROAD || v === TT.AVE || v === TT.AUTO || v === TT.BRIDGE || v === TT.CICLO, H = []; let ini = null;
+      for (let s = a0; s <= a1 + .1; s += 4) { const q = this.at(L, Math.min(s, a1)); let calle = false; for (const o of [-6, 0, 6]) { const p = this.at(L, Math.min(s, a1), o); if (road(this.get(Math.floor(p.x / TS), Math.floor(p.y / TS)))) calle = true; } if (!calle && ini == null) ini = s; if ((calle || s >= a1) && ini != null) { if (Math.min(s, a1) - ini > 8) H.push([ini, Math.min(s, a1)]); ini = null; } }
+      st.hall = H;
+    }
+    const out = []; for (const [a, b] of st.hall) { const x = Math.max(a, s0), y = Math.min(b, s1); if (y - x > .5) out.push({ a: x, b: y, ini: a >= s0 - .01 && a <= s1, fin: b >= s0 && b <= s1 + .01 }); } return out;
   },
   /* una pieza de algo elevado: muestras del eje cada ~6 px con su normal y su altura */
   altPieza(t, P, s0, s1, hw, zAt) {
@@ -134,7 +144,7 @@ Object.assign(CityMap, {
     for (const P of this.mp || []) {
       const antes = P.st.map(st => cubre(P, st.s, 30, 6)), pts = [];
       let prev = null;
-      for (let s = 0; s <= P.len; s += 6) {
+      for (let s = 0; s <= (P.osm ? -1 : P.len); s += 6) {   // el corredor de OSM (P.osm) ya va por su carril: no se mueve
         const q = this.at(P, s), ux = Math.cos(q.a), uy = Math.sin(q.a); let L = null, R = null, best = null;
         for (const ch of this.chainsNear(q.x - 28, q.y - 28, 56, 56)) {
           if (!(ch.k >= 1 && ch.k <= 4) || ch.p.length < 4) continue;
@@ -149,13 +159,13 @@ Object.assign(CityMap, {
         else if (best) { x = best.x; y = best.y; prev = best.ch; }
         pts.push({ x, y });
       }
-      if (pts.length < 3) continue;
+      if (pts.length >= 3) {
       const sm = pts.map((p, i) => i === 0 || i === pts.length - 1 ? p : { x: (pts[i - 1].x + p.x * 2 + pts[i + 1].x) / 4, y: (pts[i - 1].y + p.y * 2 + pts[i + 1].y) / 4 });
-      const N = this.poly(sm); P.pts = N.pts; P.cum = N.cum; P.len = N.len;
+      const N = this.poly(sm); P.pts = N.pts; P.cum = N.cum; P.len = N.len; }
       // cada estación, en el tramo recto más cercano a su punto real y sobre la calzada
       P.st.forEach((st, i) => {
-        const s0 = this.project(P, st.px, st.py).s; let bs = s0, bk = -1e9;
-        for (let ds = -42; ds <= 42; ds += 6) {
+        const s0 = this.project(P, st.px, st.py).s, W = P.osm ? 12 : 42; let bs = s0, bk = -1e9;   // con el andén real (OSM), apenas se corre
+        for (let ds = -W; ds <= W; ds += 6) {
           const s = clamp(s0 + ds, 30, P.len - 30), a = this.at(P, s - 28), b = this.at(P, s + 28), giro = Math.abs(angDiff(a.a, b.a)), k = cubre(P, s, 30, 6) * 2 - giro * 2.2 - Math.abs(ds) / 120;
           if (k > bk) { bk = k; bs = s; }
         }
@@ -167,7 +177,7 @@ Object.assign(CityMap, {
   }
 });
 const _build76 = CityMap.build;
-CityMap.build = function () { _build76.call(this); try { this.mpAjusta(); } catch (e) { console.warn('metroplus', e); } try { this.alturas(); } catch (e) { console.warn('alturas', e); this.altG = null; this.decks = []; this.deckG = new Map(); } };
+CityMap.build = function () { _build76.call(this); try { if (this.mpReal) this.mpReal(); this.mpAjusta(); } catch (e) { console.warn('metroplus', e); } try { this.alturas(); } catch (e) { console.warn('alturas', e); this.altG = null; this.decks = []; this.deckG = new Map(); } };
 
 /* ---------- dibujo de una pieza elevada (en draw3D, ordenada con los edificios) ---------- */
 const ALT_COL = { m: { top: '#d3d6db', borde: '#8d939c', lado: '#bfc4cb', bajo: '#9aa0a8', riel: '#8e949c', pilar: '#a3a8b0' }, p: { top: '#565a62', borde: '#cfcabf', lado: '#b8b3a7', bajo: '#9a958a', riel: '#e8c64a', pilar: '#aaa59a' }, pe: { top: '#d8d2c4', borde: '#f2efe8', lado: '#aaa59a', bajo: '#8f8a7f', riel: '#c7bfac', pilar: '#a8a399' }, ci: { top: '#2e9d55', borde: '#f2efe8', lado: '#aaa59a', bajo: '#8f8a7f', riel: '#d8f0c8', pilar: '#a8a399' } };
@@ -177,6 +187,7 @@ Ride.prototype.altoPieza = function (c, b, ox, oy, px, py, K, nb) {
   const n = b.n, X = b.X, Y = b.Y, NX = b.NX, NY = b.NY, Z = b.Z, D = b.D, kind = b.t === 'm' ? 'm' : D.k === 5 ? 'ci' : D.pe ? 'pe' : 'p', C = altPal(kind, nb), th = b.t === 'm' ? ALT.grosor : .05;
   const PX = (x, y, z) => { const f = 1 + K * z; return px + (x - ox - px) * f; }, PY = (x, y, z) => { const f = 1 + K * z; return py + (y - oy - py) * f; };
   let hw = b.hw;
+  if (b.t === 'm') return this.altMetro(c, b, ox, oy, px, py, K, nb, PX, PY);
   // 1) pilares: del suelo a la losa
   if (b.pil.length) { c.strokeStyle = C.pilar; c.lineWidth = b.t === 'm' ? 3.4 : D.pe ? 1.4 : 2.4; c.lineCap = 'butt'; c.beginPath(); for (const i of b.pil) { const zb = Math.max(0, Z[i] - th); c.moveTo(X[i] - ox, Y[i] - oy); c.lineTo(PX(X[i], Y[i], zb), PY(X[i], Y[i], zb)); } c.stroke(); c.lineCap = 'round'; }
   // 2) los costados de la losa que miran a la cámara
@@ -195,52 +206,83 @@ Ride.prototype.altoPieza = function (c, b, ox, oy, px, py, K, nb) {
   const losa = (w, z, col) => { c.fillStyle = col; c.beginPath(); for (let i = 0; i < n; i++) { const x = X[i] + NX[i] * w, y = Y[i] + NY[i] * w, zz = z(i); c[i ? 'lineTo' : 'moveTo'](PX(x, y, zz), PY(x, y, zz)); } for (let i = n - 1; i >= 0; i--) { const x = X[i] - NX[i] * w, y = Y[i] - NY[i] * w, zz = z(i); c.lineTo(PX(x, y, zz), PY(x, y, zz)); } c.closePath(); c.fill(); };
   const linea = (off, z, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w; if (dash) { c.setLineDash(dash); c.lineDashOffset = b.s0 * (1 + K * Z[n >> 1]); } c.beginPath(); for (let i = 0; i < n; i++) { const x = X[i] + NX[i] * off, y = Y[i] + NY[i] * off, zz = z(i); c[i ? 'lineTo' : 'moveTo'](PX(x, y, zz), PY(x, y, zz)); } c.stroke(); if (dash) { c.setLineDash([]); c.lineDashOffset = 0; } };
   losa(hw, zTop, C.top);
-  if (b.t === 'm') { const zr = i => Z[i] + .004; for (const o of [-3.6, -1.6, 1.6, 3.6]) linea(o, zr, .55, C.riel); linea(hw - .5, zr, .9, C.borde); linea(-hw + .5, zr, .9, C.borde); this.altTrenes(c, b, ox, oy, px, py, K, PX, PY); }
+  if (b.t === 'm') return;   // el metro va antes, con el diseño de El Metro (altMetro)
   else {
     const zr = i => Z[i] + .004, zb = i => Z[i] + .035;
     if (!D.pe && hw > 7) linea(0, zr, .8, D.k === 3 ? '#f2f0e8' : C.riel, D.k === 3 ? [9, 6] : [8, 6]);
     linea(hw - .6, zb, 1.1, C.borde); linea(-hw + .6, zb, 1.1, C.borde);   // barandas
   }
-  // 4) estación elevada: caja sobre la plataforma con su techo y las franjas del color de la línea
-  const st = b.est; if (!st) return;
-  const zs = st.z, zb0 = Math.max(0, zs - .16), zt = zs + ALT.techo, W = ALT_SW;
-  const z0 = () => zb0, z1 = () => zt;
-  c.strokeStyle = C.pilar; c.lineWidth = 2.6; c.beginPath(); for (let i = 0; i < n; i += 4) for (const sd of [-1, 1]) { const x = X[i] + NX[i] * (W - 2) * sd, y = Y[i] + NY[i] * (W - 2) * sd; c.moveTo(x - ox, y - oy); c.lineTo(PX(x, y, zb0), PY(x, y, zb0)); } c.stroke();
-  const cv = mixHex(b.col, '#0b1430', nb * .17), vid = mixHex('#7d9bb5', '#0b1430', nb * .17);
-  lado(1, z0, z1, W, vid); lado(-1, z0, z1, W, vid);
-  // franja de color abajo del vidrio
-  lado(1, z0, i => zb0 + .06, W, cv); lado(-1, z0, i => zb0 + .06, W, cv);
-  // tapas de los extremos
-  for (const [i, fin] of [[0, false], [n - 1, true]]) {
-    if (!(fin ? b.fin : b.ini)) continue; const sg = fin ? 1 : -1, tx = (X[n - 1] - X[0]) * sg, ty = (Y[n - 1] - Y[0]) * sg, ex = X[i] - ox, ey = Y[i] - oy;
-    if (tx * (px - ex) + ty * (py - ey) <= 0) continue;
-    const ax = X[i] + NX[i] * W, ay = Y[i] + NY[i] * W, bx = X[i] - NX[i] * W, by = Y[i] - NY[i] * W; c.fillStyle = vid; c.beginPath(); c.moveTo(PX(ax, ay, zb0), PY(ax, ay, zb0)); c.lineTo(PX(bx, by, zb0), PY(bx, by, zb0)); c.lineTo(PX(bx, by, zt), PY(bx, by, zt)); c.lineTo(PX(ax, ay, zt), PY(ax, ay, zt)); c.closePath(); c.fill();
-  }
-  losa(W, z1, mixHex('#e9ecef', '#0b1430', nb * .17));
-  linea(W - 2.2, z1, 3.2, cv); linea(-W + 2.2, z1, 3.2, cv);
-  c.strokeStyle = mixHex('#c3c8cf', '#0b1430', nb * .17); c.lineWidth = .9; c.beginPath();
-  for (let i = 1; i < n - 1; i += 2) { const a = [X[i] + NX[i] * (W - 4), Y[i] + NY[i] * (W - 4)], d = [X[i] - NX[i] * (W - 4), Y[i] - NY[i] * (W - 4)]; c.moveTo(PX(a[0], a[1], zt), PY(a[0], a[1], zt)); c.lineTo(PX(d[0], d[1], zt), PY(d[0], d[1], zt)); }
-  c.stroke();
 };
-/* trenes sobre esta pieza del viaducto: recortados a la losa para que no asomen en la pieza vecina */
+/* el viaducto y sus estaciones con el diseño de El Metro (35-ciudad.js de metrozero): columnas cada 30 m, tablero de concreto
+   con su canto, durmientes y cuatro rieles; en las estaciones, el edificio de acceso abajo (la calle pasa libre), dos andenes
+   laterales con su línea amarilla y la cubierta metálica con el borde del color de la línea */
+Ride.prototype.altMetro = function (c, b, ox, oy, px, py, K, nb, PX, PY) {
+  const n = b.n, X = b.X, Y = b.Y, NX = b.NX, NY = b.NY, Z = b.Z, M = this.map, L = b.L, st = b.est, hw = b.hw, sh = col => nb ? mixHex(col, '#0b1430', nb * .17) : col, th = 1.6 / 27;
+  const lado = (sd, z0f, z1f, w, col) => { c.fillStyle = col; for (let i = 0; i + 1 < n; i++) { const ax = X[i] + NX[i] * w * sd, ay = Y[i] + NY[i] * w * sd, bx = X[i + 1] + NX[i + 1] * w * sd, by = Y[i + 1] + NY[i + 1] * w * sd, mx = (ax + bx) / 2 - ox, my = (ay + by) / 2 - oy; if ((NX[i] * sd) * (px - mx) + (NY[i] * sd) * (py - my) <= 0) continue; const za0 = z0f(i), za1 = z1f(i), zb0 = z0f(i + 1), zb1 = z1f(i + 1); if (za1 - za0 < .004 && zb1 - zb0 < .004) continue; c.beginPath(); c.moveTo(PX(ax, ay, za0), PY(ax, ay, za0)); c.lineTo(PX(bx, by, zb0), PY(bx, by, zb0)); c.lineTo(PX(bx, by, zb1), PY(bx, by, zb1)); c.lineTo(PX(ax, ay, za1), PY(ax, ay, za1)); c.closePath(); c.fill(); } };
+  const losa = (w, z, col) => { c.fillStyle = col; c.beginPath(); for (let i = 0; i < n; i++) { const x = X[i] + NX[i] * w, y = Y[i] + NY[i] * w, zz = z(i); c[i ? 'lineTo' : 'moveTo'](PX(x, y, zz), PY(x, y, zz)); } for (let i = n - 1; i >= 0; i--) { const x = X[i] - NX[i] * w, y = Y[i] - NY[i] * w, zz = z(i); c.lineTo(PX(x, y, zz), PY(x, y, zz)); } c.closePath(); c.fill(); };
+  const linea = (off, z, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w; if (dash) { c.setLineDash(dash); c.lineDashOffset = b.s0; } c.beginPath(); for (let i = 0; i < n; i++) { const x = X[i] + NX[i] * off, y = Y[i] + NY[i] * off, zz = z(i); c[i ? 'lineTo' : 'moveTo'](PX(x, y, zz), PY(x, y, zz)); } c.stroke(); if (dash) { c.setLineDash([]); c.lineDashOffset = 0; } };
+  const zTop = i => Z[i], zBot = i => Math.max(0, Z[i] - th), zr = i => Z[i] + .003;
+  // 0) edificio de acceso bajo la estación: muros claros, techo y franja del color de la línea (asoma a los lados del tablero)
+  if (st && b.hall && b.hall.length) {
+    const zt = 5 / 27, W = 11 * PXM;
+    for (const h of b.hall) {
+      c.fillStyle = sh('#cfc6b3'); sisMuro(c, M, L, h.a, h.b, W, 0, zt, ox, oy, px, py, PX, PY); sisMuro(c, M, L, h.a, h.b, -W, 0, zt, ox, oy, px, py, PX, PY);
+      for (const [s1, on] of [[h.a, h.ini], [h.b, h.fin]]) { if (!on) continue; const q = M.at(L, s1), tx = Math.cos(q.a) * (s1 === h.a ? -1 : 1), ty = Math.sin(q.a) * (s1 === h.a ? -1 : 1); if (tx * (px - (q.x - ox)) + ty * (py - (q.y - oy)) <= 0) continue; const A = M.at(L, s1, -W), B = M.at(L, s1, W); c.beginPath(); c.moveTo(PX(A.x, A.y, 0), PY(A.x, A.y, 0)); c.lineTo(PX(B.x, B.y, 0), PY(B.x, B.y, 0)); c.lineTo(PX(B.x, B.y, zt), PY(B.x, B.y, zt)); c.lineTo(PX(A.x, A.y, zt), PY(A.x, A.y, zt)); c.closePath(); c.fill(); }
+      sisBanda(c, M, L, h.a, h.b, -W, W, zt, PX, PY); c.fillStyle = sh('#e6dfcf'); c.fill(); c.strokeStyle = 'rgba(40,36,30,.5)'; c.lineWidth = .35; c.stroke();
+      c.fillStyle = sh(L.col); sisBanda(c, M, L, h.a, h.b, -W, -W + PXM, zt, PX, PY); c.fill(); sisBanda(c, M, L, h.a, h.b, W - PXM, W, zt, PX, PY); c.fill();
+    }
+  }
+  // 1) columnas: del piso al tablero, con su luz
+  if (b.pil.length) {
+    c.lineCap = 'butt'; c.strokeStyle = sh('#857f75'); c.lineWidth = 2.4 * PXM; c.beginPath(); for (const i of b.pil) { const zb = Math.max(0, Z[i] - th); c.moveTo(X[i] - ox, Y[i] - oy); c.lineTo(PX(X[i], Y[i], zb), PY(X[i], Y[i], zb)); } c.stroke();
+    c.strokeStyle = sh('#aaa398'); c.lineWidth = .8 * PXM; c.beginPath(); for (const i of b.pil) { const zb = Math.max(0, Z[i] - th), dx = -NX[i] * .6 * PXM, dy = -NY[i] * .6 * PXM; c.moveTo(X[i] - ox + dx, Y[i] - oy + dy); c.lineTo(PX(X[i], Y[i], zb) + dx, PY(X[i], Y[i], zb) + dy); } c.stroke(); c.lineCap = 'round';
+  }
+  // 2) canto del tablero y tablero: borde oscuro de 10 m y superficie de concreto de 8,6 m
+  lado(1, zBot, zTop, hw, sh('#6f685e')); lado(-1, zBot, zTop, hw, sh('#6f685e'));
+  losa(hw, zTop, sh('#4f4b45')); losa(4.3 * PXM, zTop, sh('#9a9185'));
+  // 3) durmientes y dos vías (cuatro rieles)
+  for (const o of [-2, 2]) linea(o * PXM, zr, 2.6 * PXM, sh('#7d756a'), [.35 * PXM, .55 * PXM]);
+  for (const o of [-2.72, -1.28, 1.28, 2.72]) linea(o * PXM, zr, .42, '#2b2a28');
+  // 4) los trenes que van por esta pieza
+  this.altTrenes(c, b, ox, oy, px, py, K, PX, PY);
+  // 5) estación: dos andenes laterales y su cubierta metálica a 4,2 m
+  if (!st) return;
+  const zs = st.z, zc = zs + 4.2 / 27, a0 = b.ini ? b.s0 + 6 * PXM : b.s0, a1 = b.fin ? b.s1 - 6 * PXM : b.s1;
+  for (const sd of [-1, 1]) {
+    c.fillStyle = sh('#bdb5a5'); sisMuro(c, M, L, b.s0, b.s1, sd * 8.6 * PXM, zs - th, zs, ox, oy, px, py, PX, PY);   // canto del andén
+    sisBanda(c, M, L, b.s0, b.s1, sd * 4.1 * PXM, sd * 8.6 * PXM, zs, PX, PY); c.fillStyle = sh('#ece6d6'); c.fill(); c.strokeStyle = 'rgba(40,36,30,.55)'; c.lineWidth = .4; c.stroke();
+    sisBanda(c, M, L, b.s0, b.s1, sd * 4.1 * PXM, sd * 4.55 * PXM, zs + .001, PX, PY); c.fillStyle = '#f2c400'; c.fill();
+    if (a1 - a0 < 1) continue;
+    sisBanda(c, M, L, a0, a1, sd * 4.6 * PXM, sd * 8.6 * PXM, zs + .002, PX, PY); c.fillStyle = 'rgba(30,30,30,.16)'; c.fill();   // sombra de la cubierta en el andén
+    c.strokeStyle = sh('#8d939c'); c.lineWidth = .5; c.beginPath(); for (let t = a0 + 4 * PXM; t < a1; t += 12 * PXM) { const q = M.at(L, t, sd * 8.4 * PXM); c.moveTo(PX(q.x, q.y, zs), PY(q.x, q.y, zs)); c.lineTo(PX(q.x, q.y, zc), PY(q.x, q.y, zc)); } c.stroke();   // postes
+    sisBanda(c, M, L, a0, a1, sd * 5 * PXM, sd * 9 * PXM, zc, PX, PY); c.fillStyle = sh('#dde1e4'); c.fill(); c.strokeStyle = 'rgba(60,66,74,.6)'; c.lineWidth = .35; c.stroke();
+    sisBanda(c, M, L, a0, a1, sd * 8.3 * PXM, sd * 9 * PXM, zc + .001, PX, PY); c.fillStyle = sh(L.col); c.fill();
+    c.strokeStyle = 'rgba(120,126,134,.55)'; c.lineWidth = .3; c.beginPath(); for (let t = a0 + 4 * PXM; t < a1 - 2 * PXM; t += 6 * PXM) { const A = M.at(L, t, sd * 5 * PXM), B = M.at(L, t, sd * 8.3 * PXM); c.moveTo(PX(A.x, A.y, zc), PY(A.x, A.y, zc)); c.lineTo(PX(B.x, B.y, zc), PY(B.x, B.y, zc)); } c.stroke();
+  }
+};
+/* trenes sobre esta pieza del viaducto, con el dibujo de El Metro: recortados a la losa para que no asomen en la pieza vecina */
 Ride.prototype.altTrenes = function (c, b, ox, oy, px, py, K, PX, PY) {
-  const cars = this._altCars; if (!cars || !cars.length) return; let any = false;
-  for (const q of cars) if (q.L === b.L && q.s > b.s0 - 10 && q.s < b.s1 + 10) { any = true; break; }
-  if (!any) return; const n = b.n, X = b.X, Y = b.Y, NX = b.NX, NY = b.NY, Z = b.Z, w = b.hw + 2;
+  const cars = this._altCars; if (!cars || !cars.length) return; const cl = SIS.metro.carL * PXM; let any = false;
+  for (const q of cars) if (q.L === b.L && q.s > b.s0 - cl && q.s < b.s1 + cl) { any = true; break; }
+  if (!any) return; const n = b.n, X = b.X, Y = b.Y, NX = b.NX, NY = b.NY, Z = b.Z, w = b.hw + 1, night = Art.night(this.min) > .5;
   c.save(); c.beginPath();
   for (let i = 0; i < n; i++) { const x = X[i] + NX[i] * w, y = Y[i] + NY[i] * w; c[i ? 'lineTo' : 'moveTo'](PX(x, y, Z[i]), PY(x, y, Z[i])); }
   for (let i = n - 1; i >= 0; i--) { const x = X[i] - NX[i] * w, y = Y[i] - NY[i] * w; c.lineTo(PX(x, y, Z[i]), PY(x, y, Z[i])); }
-  c.closePath(); c.clip(); const tc = Art.trainCar();
-  for (const q of cars) { if (q.L !== b.L || q.s < b.s0 - 10 || q.s > b.s1 + 10) continue; const z = q.z + .05, f = 1 + K * z; c.save(); c.translate(px + (q.x - ox - px) * f, py + (q.y - oy - py) * f); c.rotate(q.a + Math.PI / 2); c.scale(f, f); blit(c, tc); c.restore(); }
+  c.closePath(); c.clip();
+  for (const q of cars) { if (q.L !== b.L || q.s < b.s0 - cl || q.s > b.s1 + cl) continue; const z = q.z + .03, f = 1 + K * z; SisSpr.dib(c, 'metro', q.L.col, cl, SIS.metro.W * PXM, px + (q.x - ox - px) * f, py + (q.y - oy - py) * f, q.a, f, q.end, night); }
   c.restore();
 };
-/* los vagones de este cuadro: en el viaducto (se dibujan con su pieza) o a nivel del suelo */
+/* los vagones de este cuadro (3 de 22 m, cada sentido por su vía): en el viaducto (van con su pieza) o a nivel del suelo */
 Ride.prototype.altVagones = function () {
   const out = this._altCars = [], low = this._lowCars = []; if (!this.metroOn()) return;
-  for (const tr of this.trains) for (let j = -1; j <= 1; j++) { const s = tr.s + j * 17; if (s < 0 || s > tr.L.len) continue; const q = this.map.at(tr.L, s), z = tr.L.zAt ? tr.L.zAt(s) : 0, o = { L: tr.L, s, x: q.x, y: q.y, a: q.a, z }; (z > .015 ? out : low).push(o); }
+  const cl = SIS.metro.carL * PXM, gp = PXM, nC = SIS.metro.n;
+  for (const tr of this.trains) for (let i = 0; i < nC; i++) {
+    const s = tr.s - tr.dir * (i * (cl + gp) + cl / 2); if (s < 0 || s > tr.L.len) continue;
+    const q = this.map.at(tr.L, s, tr.dir * 2 * PXM), z = tr.L.zAt ? tr.L.zAt(s) : 0, o = { L: tr.L, s, x: q.x, y: q.y, a: q.a + (tr.dir < 0 ? Math.PI : 0), z, end: i === 0 ? 'front' : i === nC - 1 ? 'back' : 'mid' }; (z > .015 ? out : low).push(o);
+  }
 };
-/* trenes a nivel del suelo: antes que el jugador */
-Ride.prototype.drawTrenesSuelo = function (c, ox, oy, inV, spr) { this.altVagones(); const tc = Art.trainCar(); for (const q of this._lowCars) if (inV(q.x, q.y)) spr(tc, q.x, q.y, q.a); };
+/* trenes a nivel del suelo (antes que el jugador); en pixel clásico se queda el dibujo de siempre */
+Ride.prototype.drawTrenesSuelo = function (c, ox, oy, inV, spr) { this.altVagones(); const cl = SIS.metro.carL * PXM, night = Art.night(this.min) > .5; for (const q of this._lowCars) if (inV(q.x, q.y, 30)) { c.fillStyle = 'rgba(0,0,0,.22)'; SisSpr.dib(c, 'metro', q.L.col, cl, SIS.metro.W * PXM, q.x - ox, q.y - oy, q.a, 1, q.end, night); } };
 /* encima de todo: el jugador cuando va por un puente y los carros que van por los puentes */
 Ride.prototype.drawArriba = function (c, ox, oy, inV, spr, sp) {
   const P = this.p, E = this.ojo(), px = E.x - ox, py = E.y - oy, K = E.K;

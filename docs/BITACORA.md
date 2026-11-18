@@ -486,6 +486,48 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 2026-11-18 · v1.7.1 · El sistema metro como en El Metro y una guía discreta
+
+Pedido del autor: «cambia el diseño del guiador, o el indicador de ubicación o camino: hazlo menos visible y más intuitivo; y haz los diseños de todo el sistema metro iguales al videojuego que se está haciendo (El Metro), del que tienes el repositorio y el HTML».
+
+1. **El sistema metro con el dibujo de El Metro** (`74-sistema.js`, tomado de `21-sprites.js`, `35-ciudad.js` y `11-puentes.js` de metrozero, rama de su v1.3). Las medidas van en metros, como allá, a la escala de Juega EnCicla (1 m = 1,6 px):
+   - **Trenes:**
+     - 3 vagones de 22 m, blancos con la franja del color de su línea, ventanas, techo con equipos y luces adelante y atrás;
+     - cada sentido va por su vía;
+     - paran centrados en el andén y al dar la vuelta no saltan.
+   - **Viaducto:**
+     - tablero de concreto cálido de 10 m con su canto oscuro, durmientes y cuatro rieles;
+     - columnas cada 30 m.
+   - **Estaciones elevadas:**
+     - dos andenes laterales con su línea amarilla;
+     - la cubierta metálica a 4,2 m con nervios, postes y el borde del color de la línea;
+     - abajo, el edificio de acceso, que se corta donde una calle pasa por debajo.
+   - **Tranvía de Ayacucho:**
+     - lecho con cuatro rieles y el riel guía al centro;
+     - dos coches de 19,5 m con su pantógrafo y la franja verde;
+     - paradas con andén a cada lado.
+   - **Metroplús:**
+     - carril exclusivo con sardinel, asfalto, el color de la línea y la línea blanca;
+     - andén con la franja de la línea;
+     - **buses articulados nuevos** (12) que van por su carril, paran en cada andén y esperan si el ciclista está delante;
+     - las Líneas 1 y 2 van por su corredor real (relaciones de OpenStreetMap), con cada estación en su andén real (`tools/geo/metroplus_elmetro.py`, datos de metrozero).
+   - **Metrocable:**
+     - cable doble a 14 m;
+     - torres cada ~260 m con su brazo y sombra;
+     - cabinas del color de la línea cada 60 m;
+     - estaciones de 28 × 18 m giradas con su cable, con la polea y las franjas de la línea.
+   - **Nombres de las estaciones:** como en El Metro, un punto con el color de la línea y el nombre con halo (metro, Metroplús, tranvía y cable).
+2. **La guía del camino, discreta e intuitiva:**
+   - la línea gruesa amarilla se cambió por flechitas blancas en el piso que señalan hacia dónde seguir, avanzan despacio y se desvanecen a unos 140 m;
+   - el destino es una baliza tenue (zona apenas sombreada, un aro fino y una onda);
+   - la flecha del destino fuera de la pantalla es más pequeña y translúcida;
+   - un aviso pequeño abajo al centro anuncia el próximo giro (↰ / ↱ y los metros) o la llegada (◎) cuando están cerca.
+
+**Qué se probó:**
+- todas las pruebas, con una sección nueva (3l) para los diseños de El Metro y la guía;
+- 54 partidas del bot sin errores;
+- capturas de la estación Prado con su tren, de San Antonio, del viaducto, del tranvía, del Metrocable K, de los buses del Metroplús y de la guía.
+
 ## 2026-11-18 · v1.7.0 · Un mundo con alturas, una cámara libre y un manejo con peso
 
 Pedido del autor: «dimensiona más el mapa y el mundo, para hacer bien los puentes y las estaciones del metro (el personaje cruza por encima); recoloca las estaciones del Metroplús; agrega mover la cámara a voluntad, pellizcar para acercar y alejar y cambiar el ángulo; optimiza; y mejora los controles: hay una sensibilidad abismal, debe ser más centrado, con peso de realismo». Después: «que siempre se pueda elegir la velocidad» y «complementa con El Metro 1.2.0».

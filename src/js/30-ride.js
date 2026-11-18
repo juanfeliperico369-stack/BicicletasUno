@@ -155,6 +155,14 @@ class Ride {
     // GPS
     this.gpsT -= dt; if (this.gpsT <= 0) { this.gpsT = .35; this.calcGps(); }
   }
+  /* el próximo giro de la ruta GPS: {k: -1 izquierda, 1 derecha, 'llega' cerca del destino, m: metros}, o null si sigue derecho */
+  giro() {
+    const G = [{ x: this.p.x, y: this.p.y }].concat(this.gps), T = this.way || this.target; if (G.length < 4) return null;
+    const dT = T ? dist(this.p.x, this.p.y, T.x, T.y) * M_PER_PX : 1e9; if (dT < 60) return { k: 'llega', m: Math.max(5, Math.round(dT / 5) * 5) };
+    const a0 = Math.atan2(G[2].y - G[0].y, G[2].x - G[0].x); let acc = dist(G[0].x, G[0].y, G[1].x, G[1].y);
+    for (let i = 2; i + 1 < G.length; i++) { const a = Math.atan2(G[i + 1].y - G[i - 1].y, G[i + 1].x - G[i - 1].x), da = angDiff(a0, a); acc += dist(G[i - 1].x, G[i - 1].y, G[i].x, G[i].y); const mm = acc * M_PER_PX; if (mm > 200) return null; if (Math.abs(da) > .7) return { k: da > 0 ? 1 : -1, m: Math.max(5, Math.round(mm / 5) * 5) }; }
+    return null;
+  }
   /* la cámara sigue al jugador casi centrada (anticipa a lo sumo 1/6 de la vista); en modo cámara libre se queda donde la dejaste */
   camara(dt) {
     const P = this.p, C = this.cam, L = this.libre; if (L && L.on) return;
@@ -218,9 +226,9 @@ class Ride {
     if (!this.metroOn()) return;
     for (const t of this.trains) {
       if (t.wait > 0) { t.wait -= dt; continue; }
-      const prev = t.s; t.s += 70 * WK * t.dir * dt;
-      for (const st of t.L.st) if ((prev - st.s) * (t.s - st.s) < 0) { t.wait = 1.4; t.s = st.s; }
-      if (t.s > t.L.len) { t.s = t.L.len; t.dir = -1; t.wait = 2; } if (t.s < 0) { t.s = 0; t.dir = 1; t.wait = 2; }
+      const prev = t.s, half = typeof SIS !== 'undefined' ? SIS.metro.n * (SIS.metro.carL + 1) * PXM / 2 : 0; t.s += 70 * WK * t.dir * dt;   // el tren (3 vagones de El Metro) para centrado en el andén
+      for (const st of t.L.st) { const sp = st.s + t.dir * half; if ((prev - sp) * (t.s - sp) < 0) { t.wait = 1.4; t.s = sp; } }
+      if (t.s > t.L.len) { t.s = Math.max(0, t.L.len - half * 2); t.dir = -1; t.wait = 2; } if (t.s < 0) { t.s = Math.min(t.L.len, half * 2); t.dir = 1; t.wait = 2; }   // al dar la vuelta, el frente pasa a la otra punta sin saltar
     }
   }
 
@@ -269,14 +277,28 @@ class Ride {
     // ruta GPS
     const ph = (t * 4) | 0;
     const gc = (this.way || this.target || {}).col || PAL.amb;
-    if (GFX() === '3d' && this.gps.length > 1) {   // en 3D: una línea suave (sin escalones) con hormigas que avanzan
-      const G = chaikin([{ x: this.p.x, y: this.p.y }].concat(this.gps), 3); b.lineCap = 'round'; b.lineJoin = 'round'; b.beginPath(); G.forEach((g, i) => i ? b.lineTo(g.x - ox, g.y - oy) : b.moveTo(g.x - ox, g.y - oy));
-      b.strokeStyle = '#0a234299'; b.lineWidth = 4.2; b.stroke(); b.strokeStyle = gc; b.lineWidth = 2.6; b.stroke(); b.strokeStyle = '#ffffff'; b.lineWidth = 1.1; b.setLineDash([2, 7]); b.lineDashOffset = -t * 18; b.stroke(); b.setLineDash([]); b.lineDashOffset = 0;
-    } else this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; prect(b, g.x - ox - 3, g.y - oy - 3, 6, 6, '#0a2342'); prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, c); });
+    if (GFX() === '3d' && this.gps.length > 1) {   // en 3D: flechitas suaves en el piso que señalan hacia dónde seguir; se desvanecen con la distancia (v1.7.1)
+      const G = chaikin([{ x: this.p.x, y: this.p.y }].concat(this.gps), 3), step = 13, maxD = 230, fl = (t * 14) % step; let acc = 0, d = 10 + step - fl;
+      b.lineCap = 'round'; b.lineJoin = 'round';
+      const flecha = (x, y, a, al) => { const ca = Math.cos(a), sa = Math.sin(a), P = (u, v) => [x - ox + u * ca - v * sa, y - oy + u * sa + v * ca], A = P(-2.2, -2.6), B = P(1.6, 0), C = P(-2.2, 2.6);
+        b.globalAlpha = al * .5; b.strokeStyle = '#0a2342'; b.lineWidth = 2.6; b.beginPath(); b.moveTo(A[0], A[1]); b.lineTo(B[0], B[1]); b.lineTo(C[0], C[1]); b.stroke();
+        b.globalAlpha = al; b.strokeStyle = '#ffffff'; b.lineWidth = 1.25; b.stroke(); };
+      for (let k = 1; k < G.length && d < maxD; k++) {
+        const a0 = G[k - 1], a1 = G[k], L = Math.hypot(a1.x - a0.x, a1.y - a0.y); if (L < .01) continue; const an = Math.atan2(a1.y - a0.y, a1.x - a0.x);
+        while (d < acc + L && d < maxD) { const u = (d - acc) / L, x = a0.x + (a1.x - a0.x) * u, y = a0.y + (a1.y - a0.y) * u; if (inV(x, y, 6)) flecha(x, y, an, clamp(1 - d / maxD, 0, 1) * clamp((d - 6) / 18, 0, 1) * .85); d += step; }
+        acc += L;
+      }
+      b.globalAlpha = 1;
+    } else this.gps.forEach((g, i) => { if (!inV(g.x, g.y)) return; const c = (i + ph) % 3 === 0 ? '#ffffff' : gc; b.globalAlpha = .75; prect(b, g.x - ox - 2, g.y - oy - 2, 4, 4, '#0a2342'); prect(b, g.x - ox - 1, g.y - oy - 1, 2, 2, c); b.globalAlpha = 1; });   // pixel: puntos pequeños
     // marcadores (aros que laten)
     for (const m of this.markers) {
       if (!inV(m.x, m.y, 40)) continue; const pr = m.r * .7 + Math.sin(t * 5) * 2, col = m.col || PAL.amb;
-      if (GFX() === '3d') { const ring = (r, w, cl) => { b.strokeStyle = cl; b.lineWidth = w; b.beginPath(); b.arc(m.x - ox, m.y - oy, Math.max(1, r), 0, TAU); b.stroke(); }; ring(pr + 1, 2.4, '#0a234288'); ring(pr, 1.4, col); if (m === this.target) ring(pr * .6, 1.2, '#fff'); continue; }   // aros suaves en 3D
+      if (GFX() === '3d') {   // baliza tenue: zona apenas sombreada, un aro fino y, en el destino, un punto con una onda que se abre
+        const x = m.x - ox, y = m.y - oy, r0 = m.r * .62; b.globalAlpha = .13; b.fillStyle = col; b.beginPath(); b.arc(x, y, r0, 0, TAU); b.fill();
+        b.globalAlpha = .55; b.strokeStyle = col; b.lineWidth = .8; b.beginPath(); b.arc(x, y, r0 + Math.sin(t * 2.4) * .8, 0, TAU); b.stroke();
+        if (m === this.target) { const w = (t * .8) % 1; b.globalAlpha = .5 * (1 - w); b.lineWidth = .9; b.beginPath(); b.arc(x, y, 2 + w * r0 * .8, 0, TAU); b.stroke(); b.globalAlpha = .9; b.fillStyle = '#ffffff'; b.beginPath(); b.arc(x, y, 1.9, 0, TAU); b.fill(); b.strokeStyle = col; b.lineWidth = .9; b.stroke(); }
+        b.globalAlpha = 1; continue;
+      }
       pring(b, m.x - ox, m.y - oy, Math.round(pr), col); pring(b, m.x - ox, m.y - oy, Math.round(pr) + 1, '#0a234288'); if (m === this.target) pring(b, m.x - ox, m.y - oy, Math.round(pr * .6), '#fff');
     }
     // hojas
@@ -377,10 +399,12 @@ class Ride {
         const cx = (L + Rr) / 2, cy = (Tt + B) / 2, dx = tx - cx, dy = ty - cy, a = Math.atan2(dy, dx);
         const k = Math.min(dx > 0 ? (Rr - cx) / dx : dx < 0 ? (L - cx) / dx : 1e9, dy > 0 ? (B - cy) / dy : dy < 0 ? (Tt - cy) / dy : 1e9);
         const ax = cx + dx * k, ay = cy + dy * k;
-        c.save(); c.translate(ax, ay); c.rotate(a); c.scale(1.35, 1.35); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 3; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -11); c.lineTo(-3, 0); c.lineTo(-8, 11); c.closePath(); c.stroke(); c.fill(); c.restore();
-        V.text(d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d / 10) * 10 + ' m', ax - Math.cos(a) * 26, ay - Math.sin(a) * 26 + 5, { size: 13, align: 'center', bg: '#0a2342ee', color: '#fff', pad: 3 });
+        c.save(); c.globalAlpha = .82; c.translate(ax, ay); c.rotate(a); c.scale(.85, .85); c.fillStyle = T.col || PAL.amb; c.strokeStyle = '#0a2342'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(14, 0); c.lineTo(-7, -9); c.lineTo(-2.5, 0); c.lineTo(-7, 9); c.closePath(); c.stroke(); c.fill(); c.restore();
+        V.text(d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d / 10) * 10 + ' m', ax - Math.cos(a) * 21, ay - Math.sin(a) * 21 + 4, { size: 11, align: 'center', color: '#fff', stroke: '#0a2342', sw: 3 });
       }
     }
+    // próximo giro: un aviso pequeño y translúcido, abajo al centro (solo si hay un giro cerca)
+    if (T && !this.big && this.gps.length > 3) { const g = this.giro(); if (g) { const tx2 = V.w / 2, ty2 = V.h - 118, txt = g.k === 'llega' ? '◎ ' + g.m + ' m' : (g.k < 0 ? '↰ ' : '↱ ') + g.m + ' m'; c.save(); c.globalAlpha = .78; V.text(txt, tx2, ty2, { size: 13, align: 'center', color: '#fff', bg: '#0a2342bb', pad: 4, body: true }); c.restore(); } }
     // minimapa
     if (!opts.noMini) {
       // radar: ventana del mapa alrededor del jugador (el valle completo se ve tocándolo)
