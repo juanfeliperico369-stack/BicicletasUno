@@ -60,7 +60,7 @@ class Ride {
   }
   /* conducción con peso (v1.7): velocidad punta VEL (el reloj de los oficios corre MS/VEL más lento, así cada viaje cuesta los mismos minutos de juego),
      arranque gradual (acc), frenada (brk) y rodada libre al soltar (coast), en px/s²; giro limitado por la velocidad: w0 rad/s parado y w1 a toda marcha, con inercia tw s */
-  stats_() { const v = this.p.veh, f = VEL; return v === 'truck' ? { max: 50 * WK * f, acc: 24 * WK * f, brk: 62 * WK * f, coast: 22 * WK * f, w0: 2.4, w1: 1.2, tw: .2, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK * f, acc: 90 * WK * f, brk: 170 * WK * f, coast: 120 * WK * f, w0: 7.5, w1: 6, tw: .05, r: 2 } : { max: 60 * WK * f, acc: 30 * WK * f, brk: 72 * WK * f, coast: 40 * WK * f, w0: 5, w1: 2.7, tw: .09, r: 2.5 }; }
+  stats_() { const v = this.p.veh, f = VEL * velMul(this.mode); return v === 'truck' ? { max: 50 * WK * f, acc: 24 * WK * f, brk: 62 * WK * f, coast: 22 * WK * f, w0: 2.4, w1: 1.2, tw: .2, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK * f, acc: 90 * WK * f, brk: 170 * WK * f, coast: 120 * WK * f, w0: 7.5, w1: 6, tw: .05, r: 2 } : { max: 60 * WK * f, acc: 30 * WK * f, brk: 72 * WK * f, coast: 40 * WK * f, w0: 5, w1: 2.7, tw: .09, r: 2.5 }; }
   solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }

@@ -43,6 +43,10 @@ const file = path.resolve(args.find((a, i) => !a.startsWith('--') && (jI < 0 || 
     out.estaciones = { encicla: M.stations.length, descartadas: (M.dropped || []).length, metroA: (M.metroA || []).length };
     const D = M.sit; out.lugares = { total: LANDMARKS.length, conFormaReal: LANDMARKS.filter(L => L.real).length };
     if (D) out.sitios = { sitios: D.S.length, edificios: D.E.length, emblematicos: D.E.filter(e => e.P).length, partes: D.E.reduce((a, e) => a + (e.P ? e.P.length : 0), 0), canchas: D.C.length, pistas: D.P.length, piscinas: D.W.length, ocultos: D.E.filter(e => e.oculto).length };
+    // v1.7: Metroplús sobre la calzada y lo que va en alto
+    const road = v => v === T.ROAD || v === T.AVE || v === T.AUTO || v === T.BRIDGE;
+    if (M.mp) { const lin = M.mp.map(L => { let n2 = 0, k = 0; for (let s = 0; s < L.len; s += 6) { const q = M.at(L, s); n2++; if (road(M.get(Math.floor(q.x / TS), Math.floor(q.y / TS)))) k++; } return Math.round(100 * k / n2); }); out.metroplus = { trazadoSobreVia: lin, estaciones: (M.mpInfo || []).length, estacionesSobreCalzada: (M.mpInfo || []).filter(i => i.ahora >= 95).length }; }
+    if (M.lineA && M.lineA.alto) out.alto = { viaductoA_km: +(M.lineA.alto.reduce((a, r) => a + r.s1 - r.s0, 0) * M_PER_PX / 1000).toFixed(1), viaductoB_km: +((M.lineB.alto || []).reduce((a, r) => a + r.s1 - r.s0, 0) * M_PER_PX / 1000).toFixed(1), estacionesElevadas: M.lineA.st.filter(s => s.alto).length + M.lineB.st.filter(s => s.alto).length, puentes: (M.decks || []).length, puentesSobreAgua: (M.decks || []).filter(d => d.agua).length, peatonales: (M.decks || []).filter(d => d.pe).length };
     out.version = JE.version;
     return out;
   });
@@ -54,6 +58,8 @@ const file = path.resolve(args.find((a, i) => !a.startsWith('--') && (jI < 0 || 
     ['Estaciones EnCicla en el mapa', r.estaciones.encicla + (r.estaciones.descartadas ? ' (' + r.estaciones.descartadas + ' sin lugar)' : '')], ['Lugares con postal con su forma real', r.lugares.conFormaReal + ' de ' + r.lugares.total],
     ['Sitios reales · edificios · emblemáticos', r.sitios ? r.sitios.sitios + ' · ' + r.sitios.edificios + ' · ' + r.sitios.emblematicos + ' (' + r.sitios.partes + ' partes)' : '—'],
     ['Canchas · pistas · piscinas', r.sitios ? r.sitios.canchas + ' · ' + r.sitios.pistas + ' · ' + r.sitios.piscinas : '—'],
+    ['Metroplús: trazado sobre la calzada (L1 · L2 · O)', r.metroplus ? r.metroplus.trazadoSobreVia.join(' % · ') + ' %' : '—'], ['Metroplús: estaciones sobre la calzada', r.metroplus ? r.metroplus.estacionesSobreCalzada + ' de ' + r.metroplus.estaciones : '—'],
+    ['Metro en viaducto (A · B)', r.alto ? r.alto.viaductoA_km + ' km · ' + r.alto.viaductoB_km + ' km, ' + r.alto.estacionesElevadas + ' estaciones elevadas' : '—'], ['Puentes en alto (sobre agua · peatonales)', r.alto ? r.alto.puentes + ' (' + r.alto.puentesSobreAgua + ' · ' + r.alto.peatonales + ')' : '—'],
     ['Content-Security-Policy · sin referrer', (r.seguridad.csp ? 'sí' : 'no') + ' · ' + (r.seguridad.referrer ? 'sí' : 'no')], ['Tamaño del HTML', r.seguridad.tamanoMB + ' MB']];
   console.log('| Medida | Valor |\n|---|---|\n' + filas.map(([a, v]) => '| ' + a + ' | ' + v + ' |').join('\n'));
   if (outJ) fs.writeFileSync(outJ, JSON.stringify(r, null, 1));

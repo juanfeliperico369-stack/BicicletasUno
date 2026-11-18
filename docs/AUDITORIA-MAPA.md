@@ -1,6 +1,6 @@
 # Auditoría del mapa de Juega EnCicla (medir siempre igual)
 
-**Fecha:** 18‑nov‑2026 · **Versión:** 1.6.0.
+**Fecha:** 18‑nov‑2026 · **Versiones:** 1.6.0 y 1.7.0.
 
 Responde a la [auditoría que hizo El Metro de Juega EnCicla v1.2.0](#de-donde-sale), punto por punto. Las cifras salen de una herramienta nueva que mide el mapa que de verdad se juega (`JE.map`), no los datos de origen.
 
@@ -18,6 +18,15 @@ node tools/auditoria-mapa.js [dist/juega-encicla.html] [--json salida.json]
 | Estaciones EnCicla en el mapa | 133 | 133 | **133** |
 | Lugares con postal con su forma real | — | 19 | **24 de 45** |
 | Content‑Security‑Policy | no | no | **sí, y sin *referrer*** |
+
+**v1.7.0** (misma herramienta):
+
+| Medida | v1.6.0 | **v1.7.0** |
+|---|---|---|
+| Metroplús: trazado sobre la calzada (L1 · L2 · O) | 93 % · 92 % · 91 % | **99 % · 98 % · 100 %** |
+| Metroplús: estaciones sobre la calzada | 43 de 55 | **48 de 55** |
+| Metro en viaducto (A · B) | dibujado en el suelo | **6,9 km · 4,4 km, 13 estaciones elevadas** |
+| Puentes en alto (sobre agua · peatonales) | — | **1.435 (43 · 450)** |
 
 ## Qué se arregló de cada hallazgo
 **Mapa**

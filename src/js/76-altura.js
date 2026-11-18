@@ -123,8 +123,51 @@ Object.assign(CityMap, {
     }
   }
 });
+/* ---------- Metroplús sobre el eje real de sus avenidas (v1.7) ----------
+   El trazado viene de la red de El Metro y está suavizado: en las curvas cortaba esquinas y algunas estaciones quedaban fuera de la calzada.
+   Cada punto se lleva al eje de la vía del dibujo más cercana (en las avenidas de doble calzada, al separador entre las dos),
+   y cada estación se corre lo justo para quedar en un tramo recto, alineada con su carril. */
+Object.assign(CityMap, {
+  mpAjusta() {
+    const road = v => v === TT.ROAD || v === TT.AVE || v === TT.AUTO || v === TT.BRIDGE, info = [];
+    const cubre = (P, s, half, lat) => { let m = 0, k = 0; for (let ds = -half; ds <= half; ds += 4) for (let dl = -lat; dl <= lat; dl += 3) { const q = this.at(P, s + ds, dl); m++; if (road(this.get(Math.floor(q.x / TS), Math.floor(q.y / TS)))) k++; } return k / m; };
+    for (const P of this.mp || []) {
+      const antes = P.st.map(st => cubre(P, st.s, 30, 6)), pts = [];
+      let prev = null;
+      for (let s = 0; s <= P.len; s += 6) {
+        const q = this.at(P, s), ux = Math.cos(q.a), uy = Math.sin(q.a); let L = null, R = null, best = null;
+        for (const ch of this.chainsNear(q.x - 28, q.y - 28, 56, 56)) {
+          if (!(ch.k >= 1 && ch.k <= 4) || ch.p.length < 4) continue;
+          const pr = this.chProj(ch, q.x, q.y); if (pr.d > 26) continue;
+          const a = this.chPt(ch, Math.max(0, pr.s - 3)), b = this.chPt(ch, pr.s + 3), al = Math.abs(((b.x - a.x) * ux + (b.y - a.y) * uy) / (Math.hypot(b.x - a.x, b.y - a.y) || 1)); if (al < .8) continue;   // solo vías que van en el mismo sentido (no las que cruzan)
+          const c = this.chPt(ch, pr.s), sd = (c.x - q.x) * -uy + (c.y - q.y) * ux, cand = { x: c.x, y: c.y, d: pr.d + (ch === prev ? -4 : 0) + (ch.k === 1 ? 5 : 0), ch };
+          if (sd < 0) { if (!L || cand.d < L.d) L = cand; } else if (!R || cand.d < R.d) R = cand;
+          if (!best || cand.d < best.d) best = cand;
+        }
+        let x = q.x, y = q.y;
+        if (L && R && L.ch.k === R.ch.k && L.ch.k >= 2 && L.d < 20 && R.d < 20 && dist(L.x, L.y, R.x, R.y) < 34) { x = (L.x + R.x) / 2; y = (L.y + R.y) / 2; prev = null; }   // doble calzada: el carril va por el separador
+        else if (best) { x = best.x; y = best.y; prev = best.ch; }
+        pts.push({ x, y });
+      }
+      if (pts.length < 3) continue;
+      const sm = pts.map((p, i) => i === 0 || i === pts.length - 1 ? p : { x: (pts[i - 1].x + p.x * 2 + pts[i + 1].x) / 4, y: (pts[i - 1].y + p.y * 2 + pts[i + 1].y) / 4 });
+      const N = this.poly(sm); P.pts = N.pts; P.cum = N.cum; P.len = N.len;
+      // cada estación, en el tramo recto más cercano a su punto real y sobre la calzada
+      P.st.forEach((st, i) => {
+        const s0 = this.project(P, st.px, st.py).s; let bs = s0, bk = -1e9;
+        for (let ds = -42; ds <= 42; ds += 6) {
+          const s = clamp(s0 + ds, 30, P.len - 30), a = this.at(P, s - 28), b = this.at(P, s + 28), giro = Math.abs(angDiff(a.a, b.a)), k = cubre(P, s, 30, 6) * 2 - giro * 2.2 - Math.abs(ds) / 120;
+          if (k > bk) { bk = k; bs = s; }
+        }
+        st.s = bs; const q = this.at(P, bs); st.x = q.x; st.y = q.y;
+        info.push({ l: P.name || P.id, st: st.name, antes: Math.round(antes[i] * 100), ahora: Math.round(cubre(P, bs, 30, 6) * 100), corr: Math.round(Math.abs(bs - s0)) });
+      });
+    }
+    this.mpInfo = info;
+  }
+});
 const _build76 = CityMap.build;
-CityMap.build = function () { _build76.call(this); try { this.alturas(); } catch (e) { console.warn('alturas', e); this.altG = null; this.decks = []; this.deckG = new Map(); } };
+CityMap.build = function () { _build76.call(this); try { this.mpAjusta(); } catch (e) { console.warn('metroplus', e); } try { this.alturas(); } catch (e) { console.warn('alturas', e); this.altG = null; this.decks = []; this.deckG = new Map(); } };
 
 /* ---------- dibujo de una pieza elevada (en draw3D, ordenada con los edificios) ---------- */
 const ALT_COL = { m: { top: '#d3d6db', borde: '#8d939c', lado: '#bfc4cb', bajo: '#9aa0a8', riel: '#8e949c', pilar: '#a3a8b0' }, p: { top: '#565a62', borde: '#cfcabf', lado: '#b8b3a7', bajo: '#9a958a', riel: '#e8c64a', pilar: '#aaa59a' }, pe: { top: '#d8d2c4', borde: '#f2efe8', lado: '#aaa59a', bajo: '#8f8a7f', riel: '#c7bfac', pilar: '#a8a399' }, ci: { top: '#2e9d55', borde: '#f2efe8', lado: '#aaa59a', bajo: '#8f8a7f', riel: '#d8f0c8', pilar: '#a8a399' } };

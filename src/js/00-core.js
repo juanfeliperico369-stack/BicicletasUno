@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '1.6.0', errors: [], headless: false };
+const JE = window.JE = { version: '1.7.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -219,7 +219,7 @@ const View = JE.view = {
   resize() {
     const r = this.cv.getBoundingClientRect();
     this.w = Math.max(160, Math.round(r.width) || innerWidth); this.h = Math.max(160, Math.round(r.height) || innerHeight);
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2) * (this.calidad || 1));   // calidad: la baja sola si el equipo no da abasto (88-camara.js)
     this.cv.width = Math.round(this.w * this.dpr); this.cv.height = Math.round(this.h * this.dpr);
     this.apply();
   },
@@ -230,7 +230,7 @@ const View = JE.view = {
     else if (this.kind === 'fit') s = Math.min(this.w / this.dw, this.h / this.dh);
     else { s = Math.max(1, Math.round(Math.min(this.w / this.dw, this.h / this.dh))); while (s > 1 && (this.w / s < 170 || this.h / s < 120)) s--; }
     this.s = s; this.vw = Math.ceil(this.w / s); this.vh = Math.ceil(this.h / s);
-    const G = JE.game && JE.game.mode, q = this.q = this.kind === 'map' && G && G.ride && Save.data && Save.data.settings.gfx !== 'pixel' ? clamp(Math.round(s * this.dpr / 1.5), 2, 4) : 1;   // mapa dibujado: búfer a mayor resolución
+    const G = JE.game && JE.game.mode, d3m = this.kind === 'map' && G && G.ride && Save.data && Save.data.settings.gfx !== 'pixel', q = this.q = d3m ? clamp(Math.round(s * this.dpr / 1.5), 2, 4) : 1;   // mapa dibujado: búfer a mayor resolución
     this.giro = !!(this.kind === 'map' && this.rotOn); this.gw = this.giro ? Math.ceil(Math.hypot(this.vw, this.vh)) + 2 : 0;   // cámara girada: el suelo se dibuja en un cuadrado que cubre la vista en cualquier ángulo
     const bw = (this.giro ? this.gw : this.vw) + 1, bh = (this.giro ? this.gw : this.vh) + 1;
     if (this.buf.width !== bw * q || this.buf.height !== bh * q) { this.buf.width = bw * q; this.buf.height = bh * q; }

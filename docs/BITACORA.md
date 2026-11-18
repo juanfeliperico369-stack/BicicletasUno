@@ -486,6 +486,76 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 2026-11-18 · v1.7.0 · Un mundo con alturas, una cámara libre y un manejo con peso
+
+Pedido del autor: «dimensiona más el mapa y el mundo, para hacer bien los puentes y las estaciones del metro (el personaje cruza por encima); recoloca las estaciones del Metroplús; agrega mover la cámara a voluntad, pellizcar para acercar y alejar y cambiar el ángulo; optimiza; y mejora los controles: hay una sensibilidad abismal, debe ser más centrado, con peso de realismo». Después: «que siempre se pueda elegir la velocidad» y «complementa con El Metro 1.2.0».
+
+1. **Lo que va en alto** (`tools/geo/alturas.py` → `src/data/alturas.json`; en el juego, `76-altura.js`). Se toman de Overture/OpenStreetMap los tramos marcados como puente (`is_bridge`) y su nivel (`level`):
+   - **Metro en viaducto:**
+     - la línea A va elevada de Universidad a Exposiciones (6,9 km con el tramo de Niquía y los puentes del sur);
+     - la línea B, de San Antonio a Floresta (4,4 km), y en San Antonio pasa por encima de la A;
+     - 13 estaciones elevadas, con su caja de vidrio, el techo con las franjas del color de la línea y sus columnas;
+     - el viaducto tiene losa, costados, rieles, pilares y su sombra en el suelo;
+     - los trenes van por encima y se meten bajo el techo de las estaciones.
+   - **1.435 puentes de las vías**: 43 sobre el agua, 450 peatonales y ciclopuentes, y pasos elevados (44 en segundo nivel y uno en tercero).
+     - Cada puente se corta del dibujo del suelo y se levanta con el mismo trazo de su calle; el río y las quebradas siguen por debajo.
+     - Llevan barandas, pilares y sombra, y una rampa en cada extremo.
+   - **La bici pasa por debajo**, con su silueta visible, y los carros de abajo también. A un puente se sube por uno de sus extremos (o yendo sobre el río); los carros del puente van por encima. Sobre el río, la baranda no deja caer.
+   - **El Metrocable**, a unos 25 m, con cables, torres y cabinas en perspectiva y su sombra.
+2. **Metroplús sobre sus avenidas:**
+   - cada punto del trazado se lleva al eje de su vía, y en las avenidas de doble calzada al separador;
+   - cada estación se corre lo justo para quedar en un tramo recto y alineada con su carril;
+   - el trazado sobre la calzada pasó del 91–93 % al 98–100 %, y las estaciones sobre la calzada de 43 a 48 de 55.
+3. **Cámara (88-camara.js):**
+   - pellizcar acerca y aleja, en continuo en la ciudad 3D y por pasos en pixel;
+   - girar con dos dedos gira la ciudad, y los textos siguen derechos;
+   - subir o bajar los dos dedos inclina la cámara;
+   - ángulos rápidos con 🎥: desde arriba, inclinada, baja y detrás de la bici, que gira con el rumbo;
+   - 🧭 vuelve al norte; 📷 es la cámara libre: un dedo mueve la cámara por la ciudad y ⌖ vuelve a la bici;
+   - en computador: rueda del ratón, botón derecho y las teclas + − Z X R F T C N;
+   - **cómo se dibuja:**
+     - la inclinación corre el punto de fuga de la perspectiva hacia abajo de la pantalla, así los edificios se ven de lado;
+     - con la cámara girada, el suelo se dibuja en un cuadrado que la cubre en cualquier ángulo;
+     - el joystick va según la pantalla.
+4. **Manejo con peso (30-ride.js):**
+   - la punta de la bici bajó un 29 %: llega al 90 % en unos 2 s y frena en menos de un segundo;
+   - al soltar, rueda y se detiene en 1,2 s;
+   - el giro se limita según la velocidad (a toda marcha se abre la curva) y tiene inercia;
+   - el joystick tiene zona muerta y una curva suave, así poco dedo es poca velocidad;
+   - la cámara va casi centrada: anticipa a lo sumo un sexto de la vista;
+   - el reloj de los oficios se ajusta, así cada viaje cuesta los mismos minutos de juego.
+5. **Velocidad elegible siempre:**
+   - tranquila, normal, rápida o muy rápida (×0,8 a ×1,5), con el botón 🚲 del juego, en la pausa, en Más o con la tecla G;
+   - el reloj se ajusta a la velocidad elegida;
+   - en las carreras y en red todos van a la normal.
+6. **Paseo guiado** (89-paseo.js), tomado del «modo paseo» de El Metro 1.2.0. En el modo libre, «🧭 Paseo» lleva la bici sola de un lugar con postal al siguiente:
+   - respeta semáforos y carros;
+   - la cámara cambia de plano;
+   - en cada parada la cámara le da la vuelta al lugar y se cuenta su historia;
+   - tocar el control devuelve el manejo;
+   - logro «Guía del valle».
+
+   Va con la idea del autor: jugable, contemplativo y divertido, y que sirva de guía para quien visita la ciudad.
+7. **Optimización:**
+   - calidad automática: si los cuadros pasan de 30 ms, la resolución baja un paso, y sube cuando sobra;
+   - con CPU 4× lenta y pantalla de doble densidad, en el centro (lo más denso del mapa) se pasó de 50 a 33 ms por cuadro;
+   - con la cámara girada, de 83 a 33 ms.
+
+**Qué se probó:**
+- todas las pruebas (`tests/run.js`), con una sección nueva para la v1.7:
+  - el manejo;
+  - la velocidad;
+  - el pellizco, el giro, la inclinación y la cámara libre, con eventos de dedo reales;
+  - el viaducto y la bici sobre el puente del río;
+  - el Metroplús y el paseo;
+- 54 partidas del bot sin errores (el límite de tiempo por partida subió de 600 a 900 s porque el reloj ahora corre más lento en el mapa);
+- la auditoría del mapa (`node tools/auditoria-mapa.js`) con las cifras nuevas;
+- capturas del viaducto, de las estaciones elevadas, de los puentes y de la cámara en sus ángulos.
+
+**Qué falta:**
+- Los pasos elevados siguen conectados con la vía de abajo en la cuadrícula: el GPS podría indicar un giro que en la realidad no existe. Arreglarlo pide una cuadrícula de dos niveles.
+- Los deprimidos (túneles) todavía no se dibujan.
+
 ## 2026-11-18 · v1.6.0 · Los emblemáticos tal cual y la auditoría de El Metro
 
 Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los edificios más emblemáticos… y te dejo la auditoría de la otra IA».

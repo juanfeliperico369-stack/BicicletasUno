@@ -22,6 +22,9 @@ const LM = {}; LANDMARKS.forEach(l => LM[l.id] = l);
 const PUBLIC_LM = () => LANDMARKS.filter(l => l.id !== 'depot' && !l.secret);
 const CICLOVIA_AV = ['Avenida 80', 'Carrera 43A', 'Avenida El Poblado', 'Avenida Las Vegas'];
 const M_PER_PX = VM.tile / TS;
+/* velocidad elegida por el jugador (Más, pausa o el botón del juego): 0,8 a 1,5; en carreras y en red, la normal para todos */
+const VELS = [[.8, 'Tranquila', '🐢'], [1, 'Normal', '🚲'], [1.25, 'Rápida', '🐇'], [1.5, 'Muy rápida', '⚡']];
+const velMul = M => { if (M && (M.net || M.id === 'carrera' || (M.meta && M.meta.net))) return 1; const v = Save.data && +Save.data.settings.vel; return v >= .8 && v <= 1.5 ? v : 1; };
 
 /* inflate (deflate crudo) para navegadores sin DecompressionStream */
 function inflateRaw(src, size) {

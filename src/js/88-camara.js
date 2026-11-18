@@ -26,6 +26,12 @@ const Cam = JE.cam = {
   inclinar(dt) { const C = this.cfg(); if (!this.d3()) return; C.t = clamp((C.t || 0) + dt, 0, 1); },
   angulo() { const C = this.cfg(); let i = CAM_ANG.findIndex(a => Math.abs(a.t - (C.t || 0)) < .04 && a.sigue === (C.sigue | 0)); i = (i + 1) % CAM_ANG.length; const A = CAM_ANG[i]; C.t = A.t; C.sigue = A.sigue; if (!A.sigue && A.id === 'arriba') C.r = 0; Save.save(); return A; },
   norte() { const C = this.cfg(); C.r = 0; C.sigue = 0; Save.save(); },
+  /* la velocidad de la bici, siempre a la mano: tranquila, normal, rápida o muy rápida */
+  velocidad(M) {
+    if (M && (M.net || M.id === 'carrera')) { JE.ui && JE.ui.toast('🏁 En las carreras y en red todos van a la misma velocidad'); return; }
+    const S = Save.data.settings, i = VELS.findIndex(v => v[0] === velMul(M)), V = VELS[(i + 1) % VELS.length]; S.vel = V[0]; Save.save();
+    JE.ui && JE.ui.toast(V[2] + ' Velocidad ' + V[1].toLowerCase() + (V[0] > 1 ? ': el día también pasa más rápido' : V[0] < 1 ? ': todo con calma' : ''));
+  },
   libre(R, on) {
     R = R || this.ride(); if (!R) return; const L = R.libre || (R.libre = { on: false });
     L.on = on == null ? !L.on : !!on; Input.joy.on = false; Snd.sfx('tap');   // al salir, la cámara vuelve sola a la bici (camara() en 30-ride.js)
@@ -73,7 +79,7 @@ const Cam = JE.cam = {
       else if (c === 'KeyZ') this.girar(-Math.PI / 12); else if (c === 'KeyX') this.girar(Math.PI / 12);
       else if (c === 'KeyR') this.inclinar(.12); else if (c === 'KeyF') this.inclinar(-.12);
       else if (c === 'KeyT') { const A = this.angulo(); JE.ui && JE.ui.toast('🎥 ' + A.n); }
-      else if (c === 'KeyC') this.libre(R); else if (c === 'KeyN') this.norte(); else return;
+      else if (c === 'KeyC') this.libre(R); else if (c === 'KeyN') this.norte(); else if (c === 'KeyG') this.velocidad(Game.mode); else return;
       this.guardaT();
     });
   },
@@ -92,17 +98,22 @@ const Cam = JE.cam = {
   /* ---- botones: ángulo, norte y cámara libre (a la izquierda, a media altura) ---- */
   barra(M) {
     let bar = $('#camBar'); const R = M && M.ride && !M.sub && M.view && M.view.kind === 'map' ? M.ride : null, d3 = this.d3();
-    if (!R || !d3 || R.big || panoOn(R) || M.carry) { if (bar && !bar.hidden) bar.hidden = true; return; }   // con la bici en la mano, los botones de equilibrio van a los lados
+    if (!R || R.big || panoOn(R) || M.carry) { if (bar && !bar.hidden) bar.hidden = true; return; }   // con la bici en la mano, los botones de equilibrio van a los lados
     if (!bar) {
-      bar = document.createElement('div'); bar.id = 'camBar'; bar.innerHTML = '<button data-cam="ang" aria-label="Ángulo de la cámara">🎥</button><button data-cam="norte" aria-label="Mirar al norte" hidden><span>⬆</span></button><button data-cam="libre" aria-label="Cámara libre">📷</button>';
+      bar = document.createElement('div'); bar.id = 'camBar'; bar.innerHTML = '<button data-cam="vel" aria-label="Velocidad">🚲</button><button data-cam="ang" aria-label="Ángulo de la cámara">🎥</button><button data-cam="norte" aria-label="Mirar al norte" hidden><span>⬆</span></button><button data-cam="libre" aria-label="Cámara libre">📷</button>';
       $('#sGame').appendChild(bar);
       bar.addEventListener('pointerdown', e => e.stopPropagation());
       bar.onclick = e => { const b = e.target.closest('[data-cam]'); if (!b) return; const k = b.dataset.cam, RR = this.ride(); if (!RR) return; Snd.sfx('tap');
-        if (k === 'ang') { const A = this.angulo(); JE.ui && JE.ui.toast('🎥 ' + A.n + (A.sigue ? ': la cámara gira con tu rumbo' : '')); }
+        if (k === 'vel') this.velocidad(Game.mode);
+        else if (k === 'ang') { const A = this.angulo(); JE.ui && JE.ui.toast('🎥 ' + A.n + (A.sigue ? ': la cámara gira con tu rumbo' : '')); }
         else if (k === 'norte') this.norte(); else if (k === 'libre') this.libre(RR); };
     }
     if (bar.hidden) bar.hidden = false;
-    const n = bar.children[1], l = bar.children[2], C = this.cfg(), rot = Math.abs(R.rot || 0) > .05 || C.sigue;
+    const vb = bar.children[0], fija = !!(M.net || M.id === 'carrera'), V = VELS.find(v => v[0] === velMul(M)) || VELS[1], vt = fija ? '🚲' : V[2];
+    if (vb.textContent !== vt) { vb.textContent = vt; vb.setAttribute('aria-label', 'Velocidad: ' + V[1]); } if (vb.hidden !== fija) vb.hidden = fija;   // en carreras y en red, todos a la misma velocidad
+    for (const b of [bar.children[1], bar.children[3]]) if (b.hidden === d3) b.hidden = !d3;   // en pixel clásico no hay ángulos ni cámara libre
+    if (!d3) { if (!bar.children[2].hidden) bar.children[2].hidden = true; return; }
+    const n = bar.children[2], l = bar.children[3], C = this.cfg(), rot = Math.abs(R.rot || 0) > .05 || C.sigue;
     if (n.hidden === !!rot) n.hidden = !rot; if (rot) { const tr = 'rotate(' + (-(R.rot || 0)).toFixed(3) + 'rad)'; if (n.firstChild.style.transform !== tr) n.firstChild.style.transform = tr; }
     const lb = R.libre && R.libre.on ? '⌖' : '📷'; if (l.textContent !== lb) { l.textContent = lb; l.setAttribute('aria-label', R.libre && R.libre.on ? 'Volver a la bici' : 'Cámara libre'); l.classList.toggle('on', lb === '⌖'); }
   }
@@ -129,7 +140,29 @@ const _mas88 = UI.renderMas;
 UI.renderMas = function () {
   _mas88.call(this); const z = $('#tab-mas [data-zoom]'); if (!z) return; const row = z.closest('.opt'), C = Cam.cfg();
   const cur = CAM_ANG.find(a => Math.abs(a.t - (C.t || 0)) < .04 && a.sigue === (C.sigue | 0));
-  const d = document.createElement('div'); d.innerHTML = `<div class="opt"><span>Cámara<br><small class="m">Pellizca para acercar, gira con dos dedos y súbelos para inclinar (solo en la ciudad 3D)</small></span><div class="seg wrap">${CAM_ANG.map(a => `<button data-camang="${a.id}" class="${cur && cur.id === a.id ? 'on' : ''}">${a.n}</button>`).join('')}<button data-camang="reset">↺ Normal</button></div></div>`;
+  const vc = velMul(null), d = document.createElement('div'); d.innerHTML = `<div class="opt"><span>Velocidad de la bici<br><small class="m">También con el botón 🚲 en el juego (tecla G). El reloj se ajusta: cada viaje cuesta los mismos minutos</small></span><div class="seg wrap">${VELS.map(([v, n2, ic]) => `<button data-vel="${v}" class="${v === vc ? 'on' : ''}">${ic} ${n2}</button>`).join('')}</div></div><div class="opt"><span>Cámara<br><small class="m">Pellizca para acercar, gira con dos dedos y súbelos para inclinar (solo en la ciudad 3D)</small></span><div class="seg wrap">${CAM_ANG.map(a => `<button data-camang="${a.id}" class="${cur && cur.id === a.id ? 'on' : ''}">${a.n}</button>`).join('')}<button data-camang="reset">↺ Normal</button></div></div>`;
   while (d.firstChild) row.parentNode.insertBefore(d.lastChild, row.nextSibling);
+  $$('[data-vel]').forEach(b => b.onclick = () => { Save.data.settings.vel = +b.dataset.vel; Save.save(); Snd.sfx('tap'); this.renderMas(); });
   $$('[data-camang]').forEach(b => b.onclick = () => { const k = b.dataset.camang, C = Cam.cfg(); if (k === 'reset') Object.assign(C, { z: 1, t: 0, r: 0, sigue: 0 }); else { const A = CAM_ANG.find(a => a.id === k); C.t = A.t; C.sigue = A.sigue; if (A.id === 'arriba') C.r = 0; } Save.save(); Snd.sfx('tap'); this.renderMas(); });
 };
+/* pausa: la velocidad también se cambia aquí */
+const _pause88 = Game.pause;
+Game.pause = function () {
+  _pause88.call(this); const go = $('#pGo'), M = this.mode; if (!go || !M || !M.ride || M.net || M.id === 'carrera') return;
+  const b = document.createElement('button'); b.className = 'btn'; b.id = 'pVel'; const lbl = () => { const V = VELS.find(v => v[0] === velMul(M)) || VELS[1]; b.textContent = V[2] + ' Velocidad: ' + V[1]; }; lbl(); go.after(b);
+  b.onclick = () => { const i = VELS.findIndex(v => v[0] === velMul(M)), V = VELS[(i + 1) % VELS.length]; Save.data.settings.vel = V[0]; Save.save(); Snd.sfx('tap'); lbl(); };
+};
+/* calidad automática: si en el mapa los cuadros tardan más de 30 ms (mediana de ~2 s), la resolución baja un paso; si sobra, sube */
+const Calidad = JE.calidad = {
+  T: [], last: 0, bien: 0,
+  cuadro(t) {
+    const dt = t - this.last; this.last = t; const M = Game.mode; if (!M || !M.ride || M.sub || Game.paused || JE.headless || !(dt > 0 && dt < 250)) return;
+    this.T.push(dt); if (this.T.length < 120) return; const T = this.T.sort((a, b) => a - b), med = T[60]; this.T = [];
+    const q = View.calidad || 1, base = Math.min(window.devicePixelRatio || 1, 2); if (base <= 1.01) return;
+    if (med > 30 && q > .6) { View.calidad = Math.round((q - .2) * 10) / 10; this.bien = 0; View.resize(); }
+    else if (med < 18 && q < 1) { if (++this.bien >= 3) { View.calidad = Math.round((q + .2) * 10) / 10; this.bien = 0; View.resize(); } }
+    else this.bien = 0;
+  }
+};
+const _loop88 = Game.loop;
+Game.loop = function (t) { Calidad.cuadro(t); return _loop88.call(this, t); };

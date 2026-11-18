@@ -26,6 +26,9 @@ q('barrios', f"SELECT subtype, names.primary AS name, ST_Y(geometry) AS lat, ST_
 q('buildings', f"SELECT subtype, class, height, num_floors, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
 # para los sitios reales (tools/geo/sitios.py): edificios con nombre, clase, pisos y forma del techo; y los lugares (alcaldías)
 q('edificios', f"SELECT names.primary AS name, subtype, class, height, num_floors, min_height, roof_shape, roof_color, facade_color, roof_material, facade_material, has_parts, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
+# lo que va en alto (tools/geo/alturas.py): puentes de las vías y tramos del metro con road_flags/rail_flags (is_bridge) y level_rules
+q('puentes', f"SELECT id, class, subclass, names.primary AS name, to_json(road_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='road' AND {inside} AND (road_flags IS NOT NULL OR level_rules IS NOT NULL)")
+q('rail_niveles', f"SELECT id, class, names.primary AS name, to_json(rail_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='rail' AND {inside}")
 q('lugares_poi', f"SELECT names.primary AS name, basic_category AS cat, taxonomy.primary AS tax, ST_Y(geometry) lat, ST_X(geometry) lon, confidence FROM read_parquet('{REL}/theme=places/type=place/*', hive_partitioning=1) WHERE {inside}")
 # relieve
 Z = 13

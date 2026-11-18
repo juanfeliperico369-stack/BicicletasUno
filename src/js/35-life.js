@@ -86,16 +86,27 @@ Ride.prototype.drawGround = function (b, ox, oy, inV) {
     if (suave) { const fx = q.x - ox, fy = q.y - oy, bb = Math.sin(q.ph * 6) * .35; b.fillStyle = '#0a14262e'; b.beginPath(); b.ellipse(fx + .6, fy + 1.4, 1.9, 1, 0, 0, TAU); b.fill(); b.fillStyle = q.col; b.beginPath(); b.ellipse(fx, fy + bb, 1.7, 1.25, 0, 0, TAU); b.fill(); b.fillStyle = q.skin; b.beginPath(); b.arc(fx, fy - 1 + bb, .95, 0, TAU); b.fill(); if (q.sil) { b.fillStyle = '#7a5230'; b.beginPath(); b.roundRect(fx - 3.2, fy + .8, 6.4, 3.6, 1.2); b.fill(); ['#ff8fc7', '#ffd84a', '#ff6b5a', '#b07cff', '#ffffff'].forEach((cl, j) => { b.fillStyle = cl; b.beginPath(); b.arc(fx - 2.2 + j * 1.1, fy + 1.6 + (j % 2) * 1.3, .85, 0, TAU); b.fill(); }); } if (q.hit > 0) { b.fillStyle = PAL.amb; b.beginPath(); b.arc(fx + .5, fy - 4, .7, 0, TAU); b.fill(); } continue; } prect(b, x - 1, y - 1 + bob, 3, 2, q.col); prect(b, x - 1, y - 2, 2, 2, q.skin); if (q.sil) { prect(b, x - 3, y + 1, 7, 4, '#7a5230'); prect(b, x - 3, y + 1, 2, 2, '#ff8fc7'); prect(b, x - 1, y + 1, 2, 2, '#ffd84a'); prect(b, x + 1, y + 1, 2, 2, '#ff6b5a'); prect(b, x - 2, y + 3, 2, 1, '#b07cff'); prect(b, x + 1, y + 3, 2, 1, '#fff'); } if (q.hit > 0) prect(b, x, y - 5, 1, 2, PAL.amb); }
 };
 Ride.prototype.drawSky = function (b, ox, oy) {
-  const t = this.mode.t, vw = View.vw + 2, vh = View.vh + 2;
+  const t = this.mode.t, vw = View.vw + 2, vh = View.vh + 2, S3 = GFX() === '3d';
+  // en la ciudad 3D el Metrocable va en alto (~25 m): cables, torres y cabinas con perspectiva, y su sombra en el suelo
+  const E = S3 ? this.ojo() : null, ex = E ? E.x - ox : 0, ey = E ? E.y - oy : 0, K = E ? E.K : 0, ZC = .9;
+  const PR = (x, y, z) => { if (!S3) return [x, y]; const f = 1 + K * z; return [ex + (x - ex) * f, ey + (y - ey) * f]; };
+  const RR = (x, y, w, h, r, col) => { b.fillStyle = col; if (S3) { b.beginPath(); b.roundRect(x, y, w, h, r); b.fill(); } else b.fillRect(x, y, w, h); };
   for (const cb of this.map.cables) {
-    if (Math.max(cb.ax, cb.bx) < ox - 10 || Math.min(cb.ax, cb.bx) > ox + vw + 10 || Math.max(cb.ay, cb.by) < oy - 10 || Math.min(cb.ay, cb.by) > oy + vh + 10) continue;
-    const ux = (cb.bx - cb.ax) / cb.len, uy = (cb.by - cb.ay) / cb.len, nx = -uy * 1.6, ny = ux * 1.6;
-    b.strokeStyle = '#2b2f38cc'; b.lineWidth = .35; b.beginPath(); b.moveTo(cb.ax - ox + nx, cb.ay - oy + ny); b.lineTo(cb.bx - ox + nx, cb.by - oy + ny); b.moveTo(cb.ax - ox - nx, cb.ay - oy - ny); b.lineTo(cb.bx - ox - nx, cb.by - oy - ny); b.stroke();
-    const S3 = GFX() === '3d', RR = (x, y, w, h, r, col) => { b.fillStyle = col; if (S3) { b.beginPath(); b.roundRect(x, y, w, h, r); b.fill(); } else b.fillRect(x, y, w, h); };
-    for (let s = 40; s < cb.len - 20; s += 56) { const x = cb.ax + ux * s - ox, y = cb.ay + uy * s - oy; RR(x + 1, y + 2, 3, 3, 1.2, '#0004'); RR(x - 1, y - 1, 3, 4, 1, '#8d97a5'); }
-    for (const f of cb.st) { const x = cb.ax + ux * cb.len * f - ox, y = cb.ay + uy * cb.len * f - oy; RR(x - 4, y - 3, 10, 8, 2.5, '#0004'); RR(x - 5, y - 4, 10, 8, 2.5, '#dfe5ec'); RR(x - 5, y - 4, 10, 2.4, 1.2, cb.col); }
+    const m = S3 ? 70 : 10; if (Math.max(cb.ax, cb.bx) < ox - m || Math.min(cb.ax, cb.bx) > ox + vw + m || Math.max(cb.ay, cb.by) < oy - m || Math.min(cb.ay, cb.by) > oy + vh + m) continue;
+    const ux = (cb.bx - cb.ax) / cb.len, uy = (cb.by - cb.ay) / cb.len, nx = -uy * 1.6, ny = ux * 1.6, ax = cb.ax - ox, ay = cb.ay - oy, bx = cb.bx - ox, by = cb.by - oy, d = S3 ? 3 + ZC * 13 : 0;
+    if (S3) {   // sombra del cable y de las torres
+      b.strokeStyle = 'rgba(8,14,30,.16)'; b.lineWidth = .5; b.beginPath(); for (const sd of [1, -1]) { b.moveTo(ax + nx * sd + d, ay + ny * sd + d); b.lineTo(bx + nx * sd + d, by + ny * sd + d); } b.stroke();
+      b.strokeStyle = '#8d97a5'; b.lineWidth = 1.3; b.beginPath();
+      for (let s = 40; s < cb.len - 20; s += 56) { const x = ax + ux * s, y = ay + uy * s, q = PR(x, y, ZC - .03); RR(x - 1.2, y - 1.2, 2.4, 2.4, .8, '#6f7784'); b.moveTo(x, y); b.lineTo(q[0], q[1]); }
+      b.stroke();
+      for (let s = 40; s < cb.len - 20; s += 56) { const q = PR(ax + ux * s, ay + uy * s, ZC - .03); b.strokeStyle = '#8d97a5'; b.lineWidth = .8; b.beginPath(); b.moveTo(q[0] - nx * 1.3, q[1] - ny * 1.3); b.lineTo(q[0] + nx * 1.3, q[1] + ny * 1.3); b.stroke(); }
+    } else for (let s = 40; s < cb.len - 20; s += 56) { const x = ax + ux * s, y = ay + uy * s; RR(x + 1, y + 2, 3, 3, 1.2, '#0004'); RR(x - 1, y - 1, 3, 4, 1, '#8d97a5'); }
+    b.strokeStyle = '#2b2f38cc'; b.lineWidth = .35; b.beginPath();
+    for (const sd of [1, -1]) { const p0 = PR(ax + nx * sd, ay + ny * sd, ZC), p1 = PR(bx + nx * sd, by + ny * sd, ZC); b.moveTo(p0[0], p0[1]); b.lineTo(p1[0], p1[1]); }
+    b.stroke();
+    for (const f of cb.st) { const x = ax + ux * cb.len * f, y = ay + uy * cb.len * f, q = PR(x, y, S3 ? .3 : 0); RR(x - 4 + (S3 ? 3 : 1), y - 3 + (S3 ? 3 : 1), 10, 8, 2.5, '#0004'); RR(q[0] - 5, q[1] - 4, 10, 8, 2.5, '#dfe5ec'); RR(q[0] - 5, q[1] - 4, 10, 2.4, 1.2, cb.col); }
     const n = Math.max(1, Math.floor(cb.len / 30));
-    for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; for (const [q, d] of [[s, 1], [s2, -1]]) { const x = cb.ax + ux * q - ox + nx * d, y = cb.ay + uy * q - oy + ny * d; RR(x - .5, y + 1, 3, 3, 1, '#0003'); RR(x - 1.5, y - 1.5, 3, 3, 1, cb.col); RR(x - .7, y - .7, 1.4, 1.2, .4, '#1d2c44'); } }
+    for (let k = 0; k < n; k++) { const s = (k * 30 + t * 10) % cb.len, s2 = cb.len - s; for (const [q, sd] of [[s, 1], [s2, -1]]) { const x = ax + ux * q + nx * sd, y = ay + uy * q + ny * sd, c = PR(x, y, ZC - .06); RR(x - .5 + d * .9, y + 1 + d * .9, 3, 3, 1, '#0003'); RR(c[0] - 1.5, c[1] - 1.5, 3, 3, 1, cb.col); RR(c[0] - .7, c[1] - .7, 1.4, 1.2, .4, '#1d2c44'); } }
   }
 };
 const ALUM = ['#ff5a5a', '#ffd84a', '#56c7ff', '#9bd341', '#ff8fc7', '#ffffff'];
@@ -132,6 +143,6 @@ Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
 Ride.prototype.hudLife = function (V, sx, sy, W) {
   W = W || ((x, y) => ({ x: sx(x), y: sy(y) }));
   for (const cb of this.map.cables) { if (!cb.name) continue; const q = W(cb.bx, cb.by), x = q.x, y = q.y - 12; if (x > 20 && x < V.w - 20 && y > 50 && y < V.h - 20 && (!this.lblRoom || this.lblRoom(x, y, cb.name.length * 6 + 8, 16))) V.text(cb.name, x, y, { size: 11, align: 'center', color: '#fff', bg: cb.col, pad: 3 }); }
-  for (const L of this.map.mp || []) for (const s of L.st) { const q = W(s.px, s.py), x = q.x, y = q.y - 18; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 64, 14))) V.text('Metroplús · ' + s.name, x, y, { size: 10, align: 'center', color: '#fff', bg: L.col, pad: 2 }); }
+  for (const L of this.map.mp || []) for (const s of L.st) { const q = W(s.x != null ? s.x : s.px, s.y != null ? s.y : s.py), x = q.x, y = q.y - 18; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 64, 14))) V.text('Metroplús · ' + s.name, x, y, { size: 10, align: 'center', color: '#fff', bg: L.col, pad: 2 }); }
   const T = this.map.tram; for (const s of T.st) { const q = W(s.px, s.py), x = q.x, y = q.y - 24; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 50, 14))) V.text('Tranvía · ' + s.name, x, y, { size: 10, align: 'center', color: PAL.az, bg: PAL.cie, pad: 2 }); }
 };

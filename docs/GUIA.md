@@ -38,6 +38,10 @@ src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 nivel
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
 src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas, edificios con su forma real y partes de los emblemáticos
 src/js/87-placas.js   placas de lo poco conocido (16 datos en su lugar real, álbum y logros)
+src/js/76-altura.js   lo que va en alto: metro en viaducto, estaciones elevadas, puentes (cortados del suelo), nivel del jugador y Metroplús sobre sus avenidas
+src/js/88-camara.js   cámara (pellizco, giro, inclinación, ángulos, cámara libre), velocidad elegible y calidad automática
+src/js/89-paseo.js    paseo guiado del modo libre: la bici va sola por los lugares con postal y la cámara cambia de plano
+tools/geo/alturas.py  tramos del metro en viaducto y puentes con su nivel (Overture) -> src/data/alturas.json
 tools/auditoria-mapa.js mide el mapa que se juega (río, agua, escaleras, estaciones, sitios, CSP): docs/AUDITORIA-MAPA.md
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
 src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
@@ -172,6 +176,51 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.7.0 · Alturas, cámara, manejo con peso, velocidad y paseo* (`tools/geo/alturas.py`, `src/data/alturas.json`, `76-altura.js`, `88-camara.js`, `89-paseo.js`, `30-ride.js`, `00-core.js`):
+- **Datos:**
+  - `fetch.py` baja `puentes.parquet` (vías con `road_flags`/`level_rules`) y `rail_niveles.parquet` (rieles con `rail_flags`);
+  - `alturas.py` escribe en `alturas.json` los tramos del metro en viaducto (puntas, en casillas ×8) y los puentes (tipo de vía, nivel, largo y trazo);
+  - `build.js` lo mete como `ALTURAS`.
+- **En el juego (`CityMap.alturas`):**
+  - Los tramos del metro se proyectan sobre `lineA`/`lineB` (`L.alto`, `L.zAt(s)`, con rampas salvo donde la línea termina en el viaducto).
+  - Las estaciones de un tramo alto llevan `st.alto` y `st.z`.
+  - Cada puente se empareja con la vía del dibujo (`chProj`) y se corta de ella (`chCorta`/`chNueva`), así el suelo ya no lo pinta.
+  - Lo elevado se parte en piezas de 36 px (`altPieza`) que entran en `draw3D` ordenadas con los edificios y se dibujan con `altoPieza`: pilares, costados que miran a la cámara, losa, rieles o barandas, trenes recortados a la losa y la caja de la estación.
+  - En el suelo (`altSuelo`) quedan las sombras y las bases de los pilares.
+  - El agua de la capa del río incluye las casillas de puente.
+- **Nivel del jugador (`Ride.nivel`):**
+  - `P.lvl = 1` si entró por un extremo del puente, alineado con él, o si va sobre el río; si no, va por debajo;
+  - el jugador de abajo se dibuja antes que `draw3D`, con su silueta encima;
+  - el de arriba, y los carros del puente (`nivelCarros`), se dibujan en `drawArriba` con su altura;
+  - la cuadrícula no cambia: el bot, el GPS y la física siguen igual.
+- **Metroplús (`CityMap.mpAjusta`):**
+  - el trazado se lleva al eje de su vía (en doble calzada, al punto medio entre las dos, si van en el mismo sentido);
+  - cada estación busca, a ±42 px de su punto real, el tramo más recto y con más calzada (`st.x`, `st.y`);
+  - las cifras quedan en `JE.map.mpInfo`.
+- **Cámara (`Cam`):**
+  - `Save.data.settings.cam = {z, t, r, sigue}`;
+  - `View.zf` es el zoom continuo (solo en 3D);
+  - `View.rotOn`/`View.rot` giran la vista:
+    - el búfer del suelo es un cuadrado de lado `gw` (la diagonal) y `present` lo gira;
+    - `Ride.mundo(c)` pone la transformación del mundo en la capa nítida;
+    - `w2s`/`s2w` convierten entre mundo y pantalla;
+    - `girarDir` gira el joystick al mundo.
+  - **Inclinación (`Ride.ojo`):**
+    - corre el punto de vista de la perspectiva `D = 43,2·tan(t·0,96)/K` hacia abajo de la pantalla, con `K = 0,36·(1 − 0,3t)`;
+    - las paredes que miran a la cámara y el orden de dibujo salen de ese punto.
+  - **Gestos:**
+    - dos dedos: zoom y giro juntos, o inclinación si suben o bajan juntos;
+    - en cámara libre, un dedo mueve la cámara;
+    - ratón: rueda y botón derecho.
+  - **Calidad automática (`Calidad`):** baja `View.calidad` de 1 a 0,8 o 0,6 si la mediana de 2 s pasa de 30 ms, y la sube tras tres ventanas bajo 18 ms.
+- **Manejo (`stats_`):**
+  - `max`, `acc`, `brk`, `coast` en px/s²; `w0`/`w1` son la velocidad de giro parado y a toda marcha, y `tw` la inercia del giro;
+  - `VEL = 1` y `RELOJ = MS / VEL`;
+  - la velocidad elegida (`settings.vel`, `velMul(M)`) multiplica la punta y divide el reloj; en carrera y en red, 1.
+- **Paseo (`Paseo`):**
+  - usa `botDrive()` con una parada frente a cada lugar (`nearestOpen`) y salta al siguiente si en 25 s no se acerca;
+  - cambia de plano cada 9 s y devuelve la cámara del jugador al terminar.
 
 *v1.6.0 · Emblemáticos y auditoría de El Metro* (`tools/geo/sitios.py`, `22-sitios.js`, `20-map.js`, `87-placas.js`, `tools/auditoria-mapa.js`):
 - **Partes (`SIT3`/`SIT4`):** prismas entre los pisos `z0` y `z1`, con su anillo de abajo `B` y, si los muros se inclinan, el de arriba `T` (mismos vértices; no se quitan puntos repetidos, para que una aguja pueda converger en un punto).

@@ -365,7 +365,7 @@ const Game = JE.game = {
     this.paused = false; this.last = performance.now(); cancelAnimationFrame(this.raf); Snd.theme = ['monitoreo', 'supervisor', 'tecnico'].includes(roleId) ? 1 : 0; Snd.music(true);
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
-  applyView() { const a = this.mode.sub || this.mode, v = a.view || { kind: 'map' }, k = v.kind + v.dw + v.dh; if (this._vk !== k) { this._vk = k; View.setMode(v.kind, v.dw, v.dh); } },
+  applyView() { const a = this.mode.sub || this.mode, v = a.view || { kind: 'map' }, S = Save.data.settings, k = v.kind + v.dw + v.dh + (S.gfx || '') + (S.vista || ''); if (this._vk !== k) { this._vk = k; View.setMode(v.kind, v.dw, v.dh); } },
   loop(t) {
     if (!this.mode) return;
     const dt = Math.min(.05, Math.max(0, (t - this.last) / 1000)); this.last = t;

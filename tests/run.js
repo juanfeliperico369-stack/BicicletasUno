@@ -289,6 +289,44 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(!!mj.barrio && /Laureles-Estadio/.test(mj.zona) && mj.casas, 'barrio en Floresta (' + mj.barrio + ' · ' + mj.zona + ') y casas y edificios en lotes girados con su calle ' + mj.nCasas + '/' + mj.nEdif);
   ok(mj.migra && mj.juntas && mj.hist, 'Un día del valle y las misiones del modo libre guardan aparte: migración y pantalla de Historia sin fallas');
   ok(mj.tinto && mj.rego && mj.recarga && mj.gota, 'Ni una gota: chocar riega el tinto, se recarga en una estación y la entrega da el logro secreto ' + JSON.stringify(mj));
+  console.log('3k) v1.7: manejo con peso, velocidad elegible, cámara (pellizco, giro, inclinación, libre), lo que va en alto, Metroplús y paseo guiado');
+  const v17 = await p.evaluate(async () => {
+    const o = {}; JE.game.stop(); JE.game.start('usuario', 1, { seed: 77, nov: NOVEDADES[0], free: true }); await new Promise(r => setTimeout(r, 900));
+    const M = JE.game.mode, R = M.ride, P = R.p, S = R.stats_();
+    // manejo: arranque gradual, giro limitado y rodada al soltar (sin muros ni pendiente)
+    const bl = R.blocked, mp = R.map, ta = R.tileAt; R.blocked = () => false; R.map = Object.create(JE.map); R.map.slope = () => 0; R.tileAt = () => TT.ROAD;
+    P.v = 0; P.w = 0; P.a = 0; let t = 0, t90 = 0; for (let i = 0; i < 300; i++) { R.update(1 / 60, { x: 1, y: 0, m: 1 }); t += 1 / 60; if (!t90 && P.v > S.max * .9) t90 = t; }
+    let tq = 0; for (let i = 0; i < 300 && P.v > 1; i++) { R.update(1 / 60, { x: 0, y: 0, m: 0 }); tq += 1 / 60; }
+    R.blocked = bl; R.map = mp; R.tileAt = ta; o.arranque = +t90.toFixed(2); o.parada = +tq.toFixed(2);
+    // velocidad elegible: muy rápida es 1,5× y el reloj se ajusta; en carrera, normal
+    Save.data.settings.vel = 1.5; o.rapida = +(R.stats_().max / S.max).toFixed(2); o.reloj = +(M.tm() / M.timeMul).toFixed(2); Save.data.settings.vel = 1; o.velBtn = !!document.querySelector('#camBar [data-cam=vel]');
+    // cámara: pellizco, giro e inclinación con dos dedos, cámara libre con un dedo
+    const cv = document.querySelector('#cv'), rc = cv.getBoundingClientRect(), ev = (ty, id, x, y, pr) => cv.dispatchEvent(new PointerEvent(ty, { pointerId: id, pointerType: 'touch', isPrimary: pr, clientX: rc.left + x, clientY: rc.top + y, bubbles: true, cancelable: true }));
+    const C = Cam.cfg(); Object.assign(C, { z: 1, t: 0, r: 0, sigue: 0 });
+    ev('pointerdown', 91, 150, 400, true); ev('pointerdown', 92, 240, 400, false); for (let k = 1; k <= 6; k++) { ev('pointermove', 91, 150 - k * 8, 400, true); ev('pointermove', 92, 240 + k * 8, 400, false); } ev('pointerup', 92, 0, 0, false); ev('pointerup', 91, 0, 0, true); o.zoom = +C.z.toFixed(2);
+    ev('pointerdown', 93, 150, 400, true); ev('pointerdown', 94, 240, 400, false); for (let k = 1; k <= 6; k++) { const a = k * .09; ev('pointermove', 93, 195 - Math.cos(a) * 45, 400 - Math.sin(a) * 45, true); ev('pointermove', 94, 195 + Math.cos(a) * 45, 400 + Math.sin(a) * 45, false); } ev('pointerup', 94, 0, 0, false); ev('pointerup', 93, 0, 0, true); o.giro = +C.r.toFixed(2);
+    C.t = 0; ev('pointerdown', 95, 150, 500, true); ev('pointerdown', 96, 240, 500, false); for (let k = 1; k <= 6; k++) { ev('pointermove', 95, 150, 500 - k * 12, true); ev('pointermove', 96, 240, 500 - k * 12, false); } ev('pointerup', 96, 0, 0, false); ev('pointerup', 95, 0, 0, true); o.incl = +C.t.toFixed(2);
+    await new Promise(r => setTimeout(r, 400)); const W = R.w2s(P.x, P.y), Wb = R.s2w(W.x, W.y); o.giroVista = View.giro; o.idaVuelta = Math.round(Math.hypot(Wb.x - P.x, Wb.y - P.y) * 100) / 100;
+    Cam.libre(R, true); const cx0 = R.cam.x; ev('pointerdown', 97, 200, 400, true); for (let k = 1; k <= 4; k++) ev('pointermove', 97, 200 - k * 20, 400, true); ev('pointerup', 97, 0, 0, true); o.libre = Math.round(R.cam.x - cx0) > 5 && !Input.joy.on; Cam.libre(R, false);
+    Object.assign(C, { z: 1, t: 0, r: 0, sigue: 0 }); await new Promise(r => setTimeout(r, 300));
+    // lo que va en alto: viaducto del centro, estaciones elevadas, la B sobre la A en San Antonio, puentes y nivel del jugador
+    const A = JE.map.lineA, B = JE.map.lineB, st = (L, n) => L.st.find(x => x.name === n) || {};
+    o.viaducto = A.alto.some(a => a.s1 - a.s0 > 7000); o.elevadas = ['Prado', 'Parque Berrío', 'San Antonio', 'Alpujarra'].every(n => st(A, n).alto) && !st(A, 'Poblado').alto; o.bSobreA = st(B, 'San Antonio').z > st(A, 'San Antonio').z;
+    o.puentes = JE.map.decks.length; const d = JE.map.decks.find(x => x.agua && x.len > 60 && !x.pe);
+    if (d) { const q = JE.map.at(d.P, d.len / 2); P.x = q.x; P.y = q.y; P.a = q.a; P.v = 0; P.deck = null; R.update(1 / 60, { x: 0, y: 0, m: 0 }); o.sobreRio = P.lvl === 1 && P.z > .1; }
+    // Metroplús: el trazado va sobre la calzada
+    const road = v => v === TT.ROAD || v === TT.AVE || v === TT.AUTO || v === TT.BRIDGE; o.mp = JE.map.mp.map(L => { let n = 0, k = 0; for (let s2 = 0; s2 < L.len; s2 += 8) { const q = JE.map.at(L, s2); n++; if (road(JE.map.get(Math.floor(q.x / TS), Math.floor(q.y / TS)))) k++; } return Math.round(100 * k / n); });
+    // paseo guiado: arranca, pone parada y la bici avanza sola
+    const g = geoP(6.2503, -75.5683), nn = JE.map.nearestOpen(Math.floor(g.x / TS), Math.floor(g.y / TS), false); P.x = nn.x * TS + 8; P.y = nn.y * TS + 8; P.deck = null; M.energy = 100;
+    JE.game.paused = true; Paseo.iniciar(M); const x0 = P.x, y0 = P.y; for (let i = 0; i < 30 * 40; i++) { M.update(1 / 30); M.energy = 100; } o.paseo = Paseo.on(M) && dist(P.x, P.y, x0, y0) > 100; o.paradas = M.paseo.n; Paseo.parar(M); JE.game.paused = false;
+    JE.game.stop(); return o;
+  });
+  ok(v17.arranque > 1.4 && v17.arranque < 3 && v17.parada > .8 && v17.parada < 2.5, 'manejo con peso: 90 % de la punta en ' + v17.arranque + ' s y se detiene sola en ' + v17.parada + ' s');
+  ok(v17.rapida === 1.5 && v17.reloj === 1.33 && v17.velBtn, 'velocidad elegible: «muy rápida» ×' + v17.rapida + ', el reloj se ajusta (' + v17.reloj + ') y el botón 🚲 está en el juego');
+  ok(v17.zoom > 1.2 && v17.giro !== 0 && v17.incl > .3 && v17.giroVista && v17.idaVuelta < .05 && v17.libre, 'cámara: pellizco (zoom ' + v17.zoom + '), giro (' + v17.giro + ' rad), inclinación (' + v17.incl + '), giro de la vista ida y vuelta y cámara libre con un dedo');
+  ok(v17.viaducto && v17.elevadas && v17.bSobreA && v17.puentes > 1000 && v17.sobreRio, 'en alto: viaducto del centro, estaciones elevadas (no Poblado), la línea B sobre la A en San Antonio, ' + v17.puentes + ' puentes y la bici sobre el puente del río');
+  ok(v17.mp.every(x => x >= 96), 'Metroplús sobre la calzada: ' + v17.mp.join(' %, ') + ' %');
+  ok(v17.paseo, 'paseo guiado: la bici va sola hacia las paradas (' + v17.paradas + ' en 40 s)');
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};
