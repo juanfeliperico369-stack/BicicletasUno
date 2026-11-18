@@ -7,7 +7,9 @@ const VM = VALLE_META, MW = VM.W, MH = VM.H, TS = 16, CH = 16, SC = 1.35, ES = V
 const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16 };
 const SOLID = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0];
 const TRUCK_OK = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0];
-const SURF = [.55, 0, 0, 0, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9, .42];
+const SURF = [.55, .36, 0, 0, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, .45, .92, .9, .42];
+/* lo que frena al jugador: edificios y agua. El monte y los potreros se andan (despacio): nada de paredes invisibles en los bordes de la ciudad */
+const SOLID_J = SOLID.map((v, i) => i === 1 || i === 13 ? 0 : v);
 const PATHC = [6, 0, 0, 0, 3, 3, 4, 2, 0, 0, 3, 3, 3, 0, 6, 3, 8];
 const MINI_COL = ['#4f8f45', '#24502c', '#8a4a30', '#56657c', '#2b3240', '#384257', '#7d8696', '#9bd341', '#3d8cb0', '#5f7f8a', '#cfc4a6', '#384257', '#ffffff', '#c8c8c8', '#14141c', '#56c7ff', '#9a8a70'];
 /* lat/lon -> casillas (float) y -> px del mundo */

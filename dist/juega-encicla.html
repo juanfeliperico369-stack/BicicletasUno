@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' ws: wss:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0a2342"><meta name="color-scheme" content="dark">
 <title>Juega EnCicla</title>
@@ -412,7 +413,7 @@ const GUION = {"ciudad":{"manana":["El valle ya despierta.","Buen día, vecino."
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '1.3.1', errors: [], headless: false };
+const JE = window.JE = { version: '2.0.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -457,8 +458,19 @@ const Save = JE.save = {
       stats: { km: 0, trips: 0, served: 0, fixed: 0, sorted: 0, plays: 0, leaves: 0, bells: 0 }
     };
   },
+  /* datos guardados o importados: solo texto, números, sí/no, listas y objetos simples; nunca __proto__, constructor ni prototype
+     (un archivo con "__proto__" podía contaminar los objetos de todo el juego al mezclarse) */
+  BAD: new Set(['__proto__', 'constructor', 'prototype']),
+  sanitize(v, depth = 0) {
+    if (v === null || typeof v === 'boolean' || typeof v === 'string') return typeof v === 'string' ? v.slice(0, 20000) : v;
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    if (depth > 12 || typeof v !== 'object') return undefined;
+    if (Array.isArray(v)) return v.slice(0, 5000).map(x => this.sanitize(x, depth + 1)).filter(x => x !== undefined);
+    const o = {}; for (const k of Object.keys(v)) { if (this.BAD.has(k)) continue; const x = this.sanitize(v[k], depth + 1); if (x !== undefined) o[k] = x; } return o;
+  },
   merge(d, s) {
-    for (const k in s) {
+    for (const k of Object.keys(s || {})) {
+      if (this.BAD.has(k)) continue;
       if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) this.merge(d[k], s[k]);
       else d[k] = s[k];
     }
@@ -467,7 +479,7 @@ const Save = JE.save = {
   load() {
     let raw = null;
     try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { raw = this.mem; }
-    try { this.data = raw ? this.merge(this.def(), JSON.parse(raw)) : this.def(); } catch (e) { this.data = this.def(); }
+    try { this.data = raw ? this.merge(this.def(), this.sanitize(JSON.parse(raw))) : this.def(); } catch (e) { this.data = this.def(); }
     return this.data;
   },
   save() {
@@ -477,7 +489,8 @@ const Save = JE.save = {
   valid(o) { return o && typeof o === 'object' && o.v === 1 && Array.isArray(o.history) && o.profile && typeof o.xp === 'number'; },
   exportText() { return JSON.stringify({ app: 'Juega EnCicla', version: JE.version, exported: new Date().toISOString(), save: this.data }, null, 1); },
   importText(txt) {
-    const o = JSON.parse(txt); const s = o && o.save ? o.save : o;
+    if (typeof txt !== 'string' || txt.length > 2e6) throw new Error('Archivo no válido');
+    const o = this.sanitize(JSON.parse(txt)), s = o && o.save ? o.save : o;
     if (!this.valid(s)) throw new Error('Archivo no válido');
     this.data = this.merge(this.def(), s); this.save(); return true;
   },
@@ -1086,7 +1099,9 @@ const VM = VALLE_META, MW = VM.W, MH = VM.H, TS = 16, CH = 16, SC = 1.35, ES = V
 const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16 };
 const SOLID = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0];
 const TRUCK_OK = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0];
-const SURF = [.55, 0, 0, 0, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9, .42];
+const SURF = [.55, .36, 0, 0, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, .45, .92, .9, .42];
+/* lo que frena al jugador: edificios y agua. El monte y los potreros se andan (despacio): nada de paredes invisibles en los bordes de la ciudad */
+const SOLID_J = SOLID.map((v, i) => i === 1 || i === 13 ? 0 : v);
 const PATHC = [6, 0, 0, 0, 3, 3, 4, 2, 0, 0, 3, 3, 3, 0, 6, 3, 8];
 const MINI_COL = ['#4f8f45', '#24502c', '#8a4a30', '#56657c', '#2b3240', '#384257', '#7d8696', '#9bd341', '#3d8cb0', '#5f7f8a', '#cfc4a6', '#384257', '#ffffff', '#c8c8c8', '#14141c', '#56c7ff', '#9a8a70'];
 /* lat/lon -> casillas (float) y -> px del mundo */
@@ -1713,7 +1728,7 @@ class Ride {
   }
   /* con el mapa de 10 m la ciudad mide el doble en px: se anda √2 más rápido y el reloj de los oficios corre √2 más lento, así cada viaje cuesta los mismos minutos de juego */
   stats_() { const v = this.p.veh, f = TRAVEL; return v === 'truck' ? { max: 50 * WK * f, acc: 55 * WK * f, dec: 95 * WK * f, turn: 2.7, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK * f, acc: 160 * WK * f, dec: 220 * WK * f, turn: 9, r: 2 } : { max: 60 * WK * f, acc: 120 * WK * f, dec: 150 * WK * f, turn: 5.6, r: 2.5 }; }
-  solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
+  solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID_J[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }
   setVeh(v) {
@@ -5529,7 +5544,7 @@ Art.walker = function (f) {
   });
   this.cache.set(k, c); return c;
 };
-const WSURF = [.85, 0, 0, 0, .95, .95, 1, 1, 0, 0, 1, .95, 1, 0, .9, 1, .85];   // caminando
+const WSURF = [.85, .55, 0, 0, .95, .95, 1, 1, 0, 0, 1, .95, 1, .65, .9, 1, .85];   // caminando
 /* ---------- tráfico más variado y ciclistas en las ciclorrutas ---------- */
 const _updCars = Ride.prototype.updCars;
 Ride.prototype.updCars = function (dt) {
@@ -8732,6 +8747,89 @@ MapView.draw = function (V, ready) {
   B(w - 58, top + 156, 48, 44, '◎', () => { cam.x = R.p.x * M_PER_PX; cam.y = R.p.y * M_PER_PX; }); B(w - 58, top + 208, 48, 44, '▦', () => { this.iso = false; this.cx = cam.x / M_PER_PX; this.cy = cam.y / M_PER_PX; this.clampC(); }, '#5e9a1eee'); B(w - 58, top + 260, 48, 44, '⟳', () => { Maqueta.rot = (Maqueta.rot + 1) % 4; this.isoKey = ''; });
 };
 MapView.isoBtn = function (V, x, y, t) { const c = V.ctx; c.fillStyle = '#5e9a1eee'; c.beginPath(); c.roundRect(x, y, 48, 44, 12); c.fill(); c.strokeStyle = '#ffffff55'; c.lineWidth = 1.5; c.stroke(); V.text(t, x + 24, y + 28, { size: 17, align: 'center', color: '#fff' }); };
+
+/* ---- 87-revolucion.js ---- */
+/* =====================================================================
+   REVOLUCIÓN 2.0: el Metro y la bici, juntos
+   · Horario real del Metro (lunes a sábado 4:30 a. m.–11 p. m.; domingos y festivos 5 a. m.–10 p. m.).
+   · Metro + bici: a pie, junto a una estación del Metro o del tranvía, se toma el Metro a otra estación
+     (las bicis de EnCicla no entran al Metro: hay que devolverla antes) y se sigue en bici al llegar.
+   · Placas de lo poco conocido: 30 datos curiosos, uno por estación del Metro y del tranvía (datos de El Metro,
+     con sus fuentes en docs/FUENTES.md del repositorio MetroZero). Se encuentran al pasar junto a la estación.
+   · «Hoy» con el horario del Metro, el dato curioso del día y las placas encontradas.
+   ===================================================================== */
+const PLACAS = [["Niquía","Terminal norte de la Línea A, en Bello, el segundo municipio más poblado del Valle de Aburrá."],["Bello","El municipio honra al humanista Andrés Bello; allí nació el presidente Marco Fidel Suárez."],["Acevedo","Es la estación donde la Línea A se encuentra con dos Metrocables: la Línea K y la Línea P."],["Tricentenario","El barrio se construyó para los Juegos Centroamericanos y del Caribe de 1978 y su nombre celebra los 300 años de Medellín."],["Caribe","Junto a ella está la Terminal del Norte, y de aquí parte la Línea O de Metroplús por la Avenida 80."],["Universidad","Cerca están el Jardín Botánico, el Parque Explora, el Planetario y la Ciudad Universitaria de la U. de A."],["Hospital","Debe su nombre al cercano Hospital San Vicente Fundación, uno de los grandes hospitales del país."],["Prado","El barrio Prado conserva casonas de los años 1920 y 1930, como el curioso Palacio Egipcio."],["Parque Berrío","El parque honra a Pedro Justo Berrío, gobernador de Antioquia; a pasos está la Plaza Botero."],["San Antonio","Es la única estación donde se cruzan las Líneas A y B; además, aquí empieza el tranvía de Ayacucho."],["Alpujarra","Sirve al Centro Administrativo La Alpujarra, sede de la Alcaldía de Medellín y de la Gobernación."],["Exposiciones","Junto a ella están el centro de convenciones Plaza Mayor y el Teatro Metropolitano."],["Industriales","Desde octubre de 2014 conecta con la estación Industriales de Metroplús."],["Poblado","En El Poblado se fundó en 1616 el poblado de San Lorenzo de Aburrá, semilla de Medellín."],["Aguacatala","Será la terminal sur de la futura Línea E, el Metro de la 80."],["Ayurá","Comparte nombre con la quebrada La Ayurá, que atraviesa Envigado hasta el río Medellín."],["Envigado","Envigado es la tierra del escritor Fernando González; su casa, Otraparte, hoy es museo."],["Itagüí","A Itagüí se le conoce como la 'ciudad industrial de Colombia' por sus muchas fábricas."],["Sabaneta","Sabaneta, con unos 15 km², es el municipio más pequeño de Colombia en extensión."],["La Estrella","Es terminal sur de la Línea A desde 2012; de aquí saldría el futuro Metrocable a San Antonio de Prado."],["Cisneros","Honra a Francisco Javier Cisneros, ingeniero del Ferrocarril de Antioquia; cerca está el Parque de las Luces."],["Suramericana","Está en la comuna Laureles-Estadio, a pocas cuadras de la Unidad Deportiva Atanasio Girardot."],["Estadio","Está junto al estadio Atanasio Girardot, casa de Atlético Nacional y del Independiente Medellín."],["Floresta","Aquí se integran la Línea B y la Línea O; también será parada del futuro Metro de la 80."],["San Javier","Puerta de la Comuna 13: aquí empieza el Metrocable J y muy cerca están las escaleras eléctricas."],["Bicentenario","El Parque Bicentenario se creó para celebrar los 200 años de la independencia (1810-2010)."],["Buenos Aires","Por la calle Ayacucho, camino a Buenos Aires, ya circulaba el antiguo tranvía de Medellín."],["Miraflores","Aquí el tranvía se conecta con el Metrocable M, que sube hasta Trece de Noviembre."],["Alejandro Echavarría","Su nombre recuerda al industrial Alejandro Echavarría Isaza, fundador de la textilera Coltejer."],["Oriente","Terminal del tranvía de Ayacucho y punto de partida del Metrocable H hacia Villa Sierra."]];
+/* horario del Metro de Medellín (minutos desde la medianoche) */
+Cal.metro = function (d) { const t = this.dayType(d); return t === 'domingo' || t === 'festivo' ? { open: 300, close: 1320 } : { open: 270, close: 1380 }; };
+Cal.metroOpen = function (d, m) { const h = this.metro(d), x = m == null ? this.min(d) : m; return x >= h.open && x < h.close; };
+const Rev = JE.rev = {
+  R_PLACA: 60 / M_PER_PX, R_METRO: 70 / M_PER_PX,
+  /* estaciones del Metro (A y B) y del tranvía con su línea y su posición sobre ella */
+  estaciones() {
+    if (this._st) return this._st; const M = JE.map, out = [];
+    for (const [id, P, vel] of [['A', M.lineA, 37], ['B', M.lineB, 37], ['T', M.tram, 20]]) if (P && P.st) for (const s of P.st) out.push({ id, name: s.name, x: s.px, y: s.py, s: s.s, vel });
+    return (this._st = out);
+  },
+  cerca(x, y, r) { let best = null, bd = r; for (const s of this.estaciones()) { const d = dist(s.x, s.y, x, y); if (d < bd) { bd = d; best = s; } } return best; },
+  /* minutos de viaje: por la línea a su velocidad media, más el transbordo en San Antonio si cambia de línea */
+  minutos(a, b) {
+    const tramo = (p, q) => Math.abs(p.s - q.s) * M_PER_PX / 1000 / p.vel * 60, est = this.estaciones();
+    if (a.id === b.id) return Math.max(2, Math.round(tramo(a, b) + 1));
+    const sa = est.find(s => s.id === a.id && /san antonio/i.test(s.name)), sb = est.find(s => s.id === b.id && /san antonio/i.test(s.name));
+    return sa && sb ? Math.round(tramo(a, sa) + tramo(sb, b) + 5) : 30;
+  },
+  dato(d) { const k = Cal.key(d || Cal.now()); let h = 0; for (const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PLACAS[h % PLACAS.length]; },
+  /* viajar en el Metro desde la estación a de la partida m hasta la estación b */
+  viajar(m, a, b) {
+    const R = m.ride, P = R.p, S = Save.data; if (!a || !b || a === b) return false;
+    if (P.veh !== 'walk') { if (JE.ui) JE.ui.toast('🚲 Las bicis de EnCicla no entran al Metro: devuélvela en una estación y sube a pie'); Snd.sfx('bad'); return false; }
+    const hoy = m.fecha || Cal.now(); if (!Cal.metroOpen(hoy, m.clock)) { const h = Cal.metro(hoy); if (JE.ui) JE.ui.toast('🚇 El Metro está cerrado: abre a las ' + Cal.hora(h.open) + ' y cierra a las ' + Cal.hora(h.close)); Snd.sfx('bad'); return false; }
+    const min = this.minutos(a, b); P.x = b.x; P.y = b.y; if (R.blocked(P.x, P.y, 2.5)) { const n = JE.map.nearestOpen(Math.floor(P.x / TS), Math.floor(P.y / TS), false); P.x = n.x * TS + TS / 2; P.y = n.y * TS + TS / 2; }
+    R.cam.x = P.x; R.cam.y = P.y; P.v = 0; if (m.clock != null) m.clock += min; if (m.energy != null) m.energy = Math.min(100, m.energy + min);   // en el tren se descansa
+    S.flags.metroViaje = (S.flags.metroViaje | 0) + 1; S.stats.metro = (S.stats.metro | 0) + 1; Save.save(); m._mb = { x: P.x, y: P.y };
+    Snd.sfx('win'); if (JE.ui) JE.ui.toast('🚇 Viajaste en el Metro de ' + a.name + ' a ' + b.name + ' (' + min + ' min). Presta una bici aquí y sigue el camino');
+    return true;
+  },
+  elegir(m, a) {
+    const est = this.estaciones().filter(s => s !== a), por = id => est.filter(s => s.id === id), hoy = m.fecha || Cal.now(), h = Cal.metro(hoy);
+    const btn = s => `<button class="chip" data-st="${esc(s.id + '|' + s.name)}">${esc(s.name)} · ${this.minutos(a, s)} min</button>`;
+    JE.ui.modal(`<h2>🚇 Metro desde ${esc(a.name)}</h2><p class="m">Las bicis de EnCicla no entran al Metro: se devuelve la bici, se viaja y se presta otra al llegar. Horario de hoy: ${esc(Cal.hora(h.open))} a ${esc(Cal.hora(h.close))}.</p>
+      ${[['A', 'Línea A'], ['B', 'Línea B'], ['T', 'Tranvía de Ayacucho']].map(([id, n]) => `<div class="pag">${n}</div><div class="zonas">${por(id).map(btn).join('')}</div>`).join('')}<div class="col"><button class="btn gh" id="mClose">Cerrar</button></div>`,
+      () => document.querySelectorAll('[data-st]').forEach(el => el.onclick = () => { const [id, n] = el.dataset.st.split('|'), d = est.find(s => s.id === id && s.name === n); JE.ui.closeModal(); this.viajar(m, a, d); }));
+  },
+  /* placas: se encuentran al pasar junto a la estación */
+  placa(m) {
+    const P = m.ride.p, s = this.cerca(P.x, P.y, this.R_PLACA); if (!s) return; const S = Save.data, L = S.placas || (S.placas = []); if (L.includes(s.name)) return;
+    const pl = PLACAS.find(p => p[0] === s.name); if (!pl) return; L.push(s.name); S.stats.placas = L.length; Save.save(); Snd.sfx('star');
+    if (JE.ui) JE.ui.toast('🪧 Placa ' + L.length + '/' + PLACAS.length + ' · ' + pl[0] + ': ' + pl[1]); this.logros();
+  },
+  logros() { const n = Logros.check(); if (n.length) Save.save(); for (const l of n) if (JE.ui) JE.ui.toast('🏅 Logro: ' + l.name); }
+};
+LOGROS.push(
+  { id: 'metrobici', name: 'Metro + bici', desc: 'Devuelve la bici, viaja en el Metro y sigue pedaleando al llegar', icon: 'monitoreo', test: S => !!S.flags.metroBici },
+  { id: 'placas10', name: 'Lo poco conocido', desc: 'Encuentra 10 placas en las estaciones del Metro', icon: 'pin', test: S => (S.placas || []).length >= 10 },
+  { id: 'placasTodas', name: 'Guía del Metro', desc: 'Encuentra las 30 placas de las estaciones del Metro y del tranvía', icon: 'pin', test: S => (S.placas || []).length >= PLACAS.length }
+);
+/* en el modo libre: botón del Metro junto a una estación, placas y el logro Metro + bici */
+const _act87 = ModeUsuarioR.prototype.actions;
+ModeUsuarioR.prototype.actions = function () {
+  const a = _act87.call(this); if (!this.free || this.sub || this.sitting) return a; const P = this.ride.p, s = Rev.cerca(P.x, P.y, Rev.R_METRO);
+  if (s && P.v < 8) a.push({ id: 'metro', icon: 'monitoreo', label: 'Metro', fn: () => Rev.elegir(this, s) });
+  return a;
+};
+const _tick87 = ModeUsuarioR.prototype.tick;
+ModeUsuarioR.prototype.tick = function (dt) {
+  _tick87.call(this, dt); if (!this.free) return; if ((this._pl = (this._pl || 0) + dt) > .5) { this._pl = 0; Rev.placa(this); }
+  const P = this.ride.p; if (this._mb && P.veh === 'bike' && dist(P.x, P.y, this._mb.x, this._mb.y) > 300 / M_PER_PX) { this._mb = null; Save.data.flags.metroBici = 1; Save.save(); Rev.logros(); }
+};
+/* «Hoy»: horario del Metro, el dato poco conocido del día y las placas encontradas */
+const _ruta87 = UI.renderRuta;
+UI.renderRuta = function () {
+  _ruta87.call(this); const d = document.querySelector('#tab-ruta .hoy'); if (!d) return; const now = Cal.now(), h = Cal.metro(now), p = Rev.dato(now), n = (Save.data.placas || []).length;
+  const x = document.createElement('div'); x.className = 'hf';
+  x.innerHTML = `🚇 Metro hoy de ${esc(Cal.hora(h.open))} a ${esc(Cal.hora(h.close))}${Cal.metroOpen(now) ? '' : ' · ahora cerrado'} · 🪧 Placas: ${n}/${PLACAS.length}<br>💡 <b>Lo poco conocido:</b> ${esc(p[0])}. ${esc(p[1])}`;
+  d.appendChild(x);
+};
 
 /* ---- 90-bot.js ---- */
 /* =====================================================================

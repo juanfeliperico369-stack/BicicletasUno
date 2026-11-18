@@ -1,7 +1,7 @@
 {
- "version": "1.3.1",
- "hash": "cead4eff",
- "cache": "juega-encicla-v1.3.1-cead4eff",
+ "version": "2.0.0",
+ "hash": "68e1e3c5",
+ "cache": "juega-encicla-v2.0.0-68e1e3c5",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -41,13 +41,14 @@
   "84-mapa-vivo.js",
   "85-direcciones.js",
   "86-maqueta.js",
+  "87-revolucion.js",
   "90-bot.js",
   "95-promo.js",
   "99-boot.js"
  ],
  "bytes": {
-  "single": 4336592,
-  "web": 4337616,
-  "js": 4157168
+  "single": 4349059,
+  "web": 4350083,
+  "js": 4169284
  }
 }

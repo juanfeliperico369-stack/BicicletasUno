@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.3.1 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v2.0.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.3.1)
+## 2.3 Estado actual (v2.0.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-18 | Claude Code | documento creado (v1.3.1) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-18 | Claude Code | documento creado (v2.0.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2488,6 +2488,27 @@ Pedido del autor: «toma todo lo que aprendiste, compleméntalo y crea la nueva 
    - Con eso el bot vuelve a lo de v1.2.0: Balance 4/4, Técnico 4/4, Rescate 4/4, Supervisor 4/4 y Apoyo 3/4.
 
 **Qué se probó:** todas las pruebas de EnCicla. Estaciones a 16 m de su punto (mediana) y todas alcanzables.
+
+### 2026-11-18 · v2.0.0 · El Metro y la bici, juntos (rama `revolucion-v2`, sin publicar)
+
+Pedido del autor: «crea la nueva revolución del videojuego de EnCicla y déjalo absolutamente profesional». Va en una rama aparte, sin tocar `main`, `gh-pages` ni la rama de desarrollo de la otra IA.
+
+1. **Seguridad:**
+   - el guardado se sanea al cargar y al importar: solo texto, números, sí/no, listas y objetos simples, y nunca las claves `__proto__`, `constructor` ni `prototype`. Antes, un archivo importado con `"__proto__"` podía contaminar los objetos de todo el juego al mezclarse (`Save.merge` recorría con `for…in`);
+   - la página trae política de seguridad de contenido (CSP), igual que *El Metro*.
+2. **Juego libre por todo el mapa:** el monte y los potreros (`MOUNT`, `LAND`) ya no son paredes invisibles: se andan en bici o a pie, más despacio (`SOLID_J`, `SURF` y `WSURF`). Solo frenan los edificios y el agua.
+3. **Metro + bici** (`src/js/87-revolucion.js`):
+   - a pie junto a una estación del Metro o del tranvía aparece el botón **Metro**: se elige la estación de llegada (líneas A, B y tranvía de Ayacucho) y se viaja con el tiempo real del recorrido (transbordo en San Antonio);
+   - las bicis de EnCicla no entran al Metro: hay que devolverla antes; de noche el Metro está cerrado;
+   - **horario real del Metro:** lunes a sábado de 4:30 a. m. a 11 p. m.; domingos y festivos de 5 a. m. a 10 p. m. (`Cal.metro`, `Cal.metroOpen`);
+   - logro **Metro + bici** al seguir pedaleando 300 m después de llegar.
+4. **Placas de lo poco conocido:** 30 datos curiosos, uno por estación del Metro y del tranvía (tomados de *El Metro*, con sus fuentes en el `docs/FUENTES.md` de MetroZero). Se encuentran al pasar junto a la estación; logros **Lo poco conocido** (10) y **Guía del Metro** (30).
+5. **Hoy:** el resumen del día suma el horario del Metro, si está abierto, las placas encontradas y el dato poco conocido del día.
+6. **Tienda:** los textos de Play Store ya no dicen «revista».
+
+**Qué se probó:** `node tests/run.js --n=100` con la sección nueva **1d** (guardado con `__proto__`, CSP, horario del Metro, placas, juego libre, viaje Metro + bici a pie, con bici y de noche, y transbordo): 100 partidas del bot sin errores, humo de interfaz, rendimiento con CPU 4× lenta (mediana de 16,7 ms) y multijugador con 3 dispositivos.
+
+**Qué falta:** la red EnCicla oficial con número y anclajes de cada estación (pendiente de la lista del autor), y publicar cuando el autor lo decida.
 
 ---
 

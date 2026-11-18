@@ -22,7 +22,7 @@ Art.walker = function (f) {
   });
   this.cache.set(k, c); return c;
 };
-const WSURF = [.85, 0, 0, 0, .95, .95, 1, 1, 0, 0, 1, .95, 1, 0, .9, 1, .85];   // caminando
+const WSURF = [.85, .55, 0, 0, .95, .95, 1, 1, 0, 0, 1, .95, 1, .65, .9, 1, .85];   // caminando
 /* ---------- tráfico más variado y ciclistas en las ciclorrutas ---------- */
 const _updCars = Ride.prototype.updCars;
 Ride.prototype.updCars = function (dt) {

@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '1.3.1', errors: [], headless: false };
+const JE = window.JE = { version: '2.0.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -47,8 +47,19 @@ const Save = JE.save = {
       stats: { km: 0, trips: 0, served: 0, fixed: 0, sorted: 0, plays: 0, leaves: 0, bells: 0 }
     };
   },
+  /* datos guardados o importados: solo texto, números, sí/no, listas y objetos simples; nunca __proto__, constructor ni prototype
+     (un archivo con "__proto__" podía contaminar los objetos de todo el juego al mezclarse) */
+  BAD: new Set(['__proto__', 'constructor', 'prototype']),
+  sanitize(v, depth = 0) {
+    if (v === null || typeof v === 'boolean' || typeof v === 'string') return typeof v === 'string' ? v.slice(0, 20000) : v;
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    if (depth > 12 || typeof v !== 'object') return undefined;
+    if (Array.isArray(v)) return v.slice(0, 5000).map(x => this.sanitize(x, depth + 1)).filter(x => x !== undefined);
+    const o = {}; for (const k of Object.keys(v)) { if (this.BAD.has(k)) continue; const x = this.sanitize(v[k], depth + 1); if (x !== undefined) o[k] = x; } return o;
+  },
   merge(d, s) {
-    for (const k in s) {
+    for (const k of Object.keys(s || {})) {
+      if (this.BAD.has(k)) continue;
       if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) this.merge(d[k], s[k]);
       else d[k] = s[k];
     }
@@ -57,7 +68,7 @@ const Save = JE.save = {
   load() {
     let raw = null;
     try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { raw = this.mem; }
-    try { this.data = raw ? this.merge(this.def(), JSON.parse(raw)) : this.def(); } catch (e) { this.data = this.def(); }
+    try { this.data = raw ? this.merge(this.def(), this.sanitize(JSON.parse(raw))) : this.def(); } catch (e) { this.data = this.def(); }
     return this.data;
   },
   save() {
@@ -67,7 +78,8 @@ const Save = JE.save = {
   valid(o) { return o && typeof o === 'object' && o.v === 1 && Array.isArray(o.history) && o.profile && typeof o.xp === 'number'; },
   exportText() { return JSON.stringify({ app: 'Juega EnCicla', version: JE.version, exported: new Date().toISOString(), save: this.data }, null, 1); },
   importText(txt) {
-    const o = JSON.parse(txt); const s = o && o.save ? o.save : o;
+    if (typeof txt !== 'string' || txt.length > 2e6) throw new Error('Archivo no válido');
+    const o = this.sanitize(JSON.parse(txt)), s = o && o.save ? o.save : o;
     if (!this.valid(s)) throw new Error('Archivo no válido');
     this.data = this.merge(this.def(), s); this.save(); return true;
   },

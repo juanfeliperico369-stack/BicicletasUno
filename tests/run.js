@@ -30,6 +30,33 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   for (const g of mgs) console.log('     ' + g.n.padEnd(11) + (g.done ? ' terminado' : ' NO TERMINÓ') + ' en ' + g.t + ' s · pts ' + g.score + ' · errores ' + g.err + (g.extra ? ' · ' + g.extra : ''));
   ok(mgs.every(g => g.done && isFinite(g.score)), 'los 6 minijuegos nuevos se completan con el bot');
 
+  console.log('1d) Revolución 2.0: seguridad, Metro + bici, placas y juego libre');
+  const rv = await p.evaluate(() => {
+    const out = {}, bak = JSON.stringify(Save.data);
+    // un archivo con __proto__ no contamina los objetos del juego ni cambia el prototipo del guardado
+    try { Save.importText('{"save":{"v":1,"history":[],"profile":{"name":"x","__proto__":{"malo":1}},"xp":1,"__proto__":{"contaminado":1},"constructor":{"prototype":{"y":1}}}}'); } catch (e) { out.err = e.message; }
+    out.limpio = ({}).contaminado === undefined && ({}).malo === undefined && ({}).y === undefined && Object.getPrototypeOf(Save.data) === Object.prototype && Object.getPrototypeOf(Save.data.profile) === Object.prototype;
+    Save.data = JSON.parse(bak); Save.save();
+    out.csp = !!document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+    const F = (y, mo, d, h, mi) => new Date(y, mo - 1, d, h, mi || 0);
+    out.metro = Cal.metroOpen(F(2026, 11, 23, 4, 45)) && !Cal.metroOpen(F(2026, 11, 22, 4, 45)) && !Cal.metroOpen(F(2026, 11, 22, 22, 30)) && Cal.metroOpen(F(2026, 11, 21, 22, 30)) && !Cal.metroOpen(F(2026, 1, 12, 4, 45)) && !Cal.metroOpen(F(2026, 11, 23, 23, 30));
+    const est = JE.rev.estaciones(); out.est = est.length; out.placas = PLACAS.length; out.placasEn = PLACAS.filter(p => est.some(s => s.name === p[0])).length;
+    out.libre = SOLID_J[TT.MOUNT] === 0 && SOLID_J[TT.LAND] === 0 && SOLID_J[TT.BLDG] === 1 && SOLID_J[TT.WATER] === 1 && SURF[TT.MOUNT] > 0;
+    // viaje en el Metro desde San Antonio a Poblado, a pie y en horario
+    const a = est.find(s => s.id === 'A' && s.name === 'San Antonio'), b = est.find(s => s.id === 'A' && s.name === 'Poblado'), c = est.find(s => s.id === 'B' && s.name === 'Estadio');
+    const m = { ride: { p: { x: a.x, y: a.y, v: 0, veh: 'walk' }, cam: { x: 0, y: 0 }, blocked: () => false }, fecha: F(2026, 11, 23, 10), clock: 600, energy: 50 };
+    out.viaje = JE.rev.viajar(m, a, b) && dist(m.ride.p.x, m.ride.p.y, b.x, b.y) < 1 && m.clock > 605 && m.clock < 625;
+    m.ride.p.veh = 'bike'; out.sinBici = !JE.rev.viajar(m, b, a);
+    m.ride.p.veh = 'walk'; m.clock = 23.5 * 60; out.cerrado = !JE.rev.viajar(m, b, a);
+    out.transbordo = JE.rev.minutos(b, c); Save.data = JSON.parse(bak); Save.save();
+    return out; });
+  ok(rv.limpio, 'importar un guardado con __proto__ no contamina el juego' + (rv.err ? ' (' + rv.err + ')' : ''));
+  ok(rv.csp, 'la página trae política de seguridad de contenido (CSP)');
+  ok(rv.metro, 'horario real del Metro: 4:30 a. m.–11 p. m. entre semana; 5 a. m.–10 p. m. domingos y festivos');
+  ok(rv.placas === 30 && rv.placasEn === 30, rv.placas + ' placas de lo poco conocido, ' + rv.placasEn + ' en estaciones del mapa (' + rv.est + ' estaciones de metro y tranvía)');
+  ok(rv.libre, 'el monte y los potreros se andan (despacio); edificios y agua frenan');
+  ok(rv.viaje && rv.sinBici && rv.cerrado, 'Metro + bici: viaja a pie en horario, no con la bici de EnCicla ni de noche');
+  ok(rv.transbordo >= 10 && rv.transbordo <= 45, 'viaje con transbordo en San Antonio: ' + rv.transbordo + ' min (Poblado → Estadio)');
   console.log('2) Bot: ' + N + ' partidas simuladas');
   const rep = await p.evaluate(async n => { const r = await JE.bot.run({ n, render: true }); return { okAll: r.okAll, txt: JE.bot.format(r), by: JE.bot.summary(r), ms: r.ms }; }, N);
   console.log(rep.txt.split('\n').map(l => '     ' + l).join('\n'));

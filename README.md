@@ -1,7 +1,7 @@
 # Juega EnCicla
 
 Videojuego arcade **offline** sobre el sistema de bicicletas públicas **EnCicla** (Valle de Aburrá).
-Recorre el camino del Usuario al Supervisor: 9 oficios y 27 turnos, en pixel art con estilo de revista.
+Recorre el camino del Usuario al Supervisor: 9 oficios y 27 turnos, en pixel art. Desde la 2.0, con el Metro: devuelve la bici, viaja y sigue pedaleando.
 
 - **Jugar en la web:** https://juanfeliperico369-stack.github.io/BicicletasUno/
 - **Archivo único sin internet:** `dist/juega-encicla.html` (ábrelo en cualquier navegador)

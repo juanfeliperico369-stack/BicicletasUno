@@ -60,7 +60,7 @@ class Ride {
   }
   /* con el mapa de 10 m la ciudad mide el doble en px: se anda √2 más rápido y el reloj de los oficios corre √2 más lento, así cada viaje cuesta los mismos minutos de juego */
   stats_() { const v = this.p.veh, f = TRAVEL; return v === 'truck' ? { max: 50 * WK * f, acc: 55 * WK * f, dec: 95 * WK * f, turn: 2.7, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK * f, acc: 160 * WK * f, dec: 220 * WK * f, turn: 9, r: 2 } : { max: 60 * WK * f, acc: 120 * WK * f, dec: 150 * WK * f, turn: 5.6, r: 2.5 }; }
-  solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
+  solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID_J[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }
   setVeh(v) {
