@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.4.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v1.5.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.4.0)
+## 2.3 Estado actual (v1.5.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-18 | Claude Code | documento creado (v1.4.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-18 | Claude Code | documento creado (v1.5.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1619,6 +1619,7 @@ src/js/45-mg2.js      minijuegos v0.4 inspirados en Infinity Games y Railways: M
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
+src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas y edificios con su forma real
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
 src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
 src/js/57-equipo.js   Turno en equipo (cooperativo en red): ModeCoopMon (anfitrión, Monitoreo) y ModeCoopDriver (invitados, camión)
@@ -1752,6 +1753,38 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.5.0 · Medellín desde el aire: sitios reales* (`tools/geo/sitios.py`, `src/data/sitios.bin` y `sitios.json`, `22-sitios.js`, `docs/MEDELLIN-DESDE-EL-AIRE.md`):
+- **Datos:**
+  - `fetch.py` baja `edificios.parquet` (nombre, clase, pisos y forma de techo de Overture) y `lugares_poi.parquet` (lugares; de ahí salen las alcaldías).
+  - `sitios.py` arma:
+    - las áreas (land_use: universidad, colegio, hospital, templo y estadio) con los edificios cuyo centro cae adentro;
+    - los edificios sueltos importantes (por nombre o clase);
+    - todas las canchas (rectángulo mínimo y tipo por tamaño), pistas, piscinas y plazas.
+  - Escribe `sitios.bin` (deflate) en unidades de 1/8 de casilla; cada anillo es `n, x0, y0` y luego `dx, dy` (i16).
+  - Los techos de teja y de dos aguas llevan su polígono de cumbreras, precalculado con un `buffer` negativo (con patios).
+  - Los estilos se curan por nombre en `CURADO`, mirando las fotos aéreas.
+- **Carga y física (`CityMap.parseSitios`, `rasterSitios`), antes de colocar estaciones y lugares:**
+  - dentro de un área, lo construido de relleno (ladrillo, edificio y, en campus, plaza o andén) pasa a prado (campus y estadios) o a plaza (los demás);
+  - las plazas reales vuelven a plaza;
+  - cada edificio real es `BLDG` (`sitB`) y lleva un andén alrededor en los campus;
+  - `sitT` (casilla → sitio) evita que los lotes de relleno y las casas del interior se monten encima, y duplica los árboles;
+  - `sitG` indexa por trozo los sitios, edificios, canchas, pistas y piscinas;
+  - `carveStation` no pone estaciones sobre `sitB`.
+- **Lugares con postal (`sitLugares`, `SIT_NOMBRE`):**
+  - si el edificio o sitio real con ese nombre está a menos de 600 m, el lugar se ubica sobre él y pasa a `L.real`, sin dibujo a mano ni sólidos;
+  - las iglesias de pueblo pasan a reales si hay un templo real a menos de 250 m;
+  - `sitOcultar` esconde lo real bajo los lugares que siguen dibujados a mano.
+- **Dibujo:**
+  - `sitSuelo` pinta las canchas, pistas y piscinas, bajo las calles;
+  - los edificios de 1 o 2 pisos van con el suelo (`sitEdifSuelo`, como las casas);
+  - los de 3 o más van en `draw3D` (`sitEdif3D`): paredes que miran a la cámara (de la más lejana a la más cercana), techo par-impar con patios y faldones de teja con su luz;
+  - techos especiales: helipuerto, aguja, cúpula y ajedrez;
+  - `sitNombres` pone el nombre de los sitios grandes.
+- **Ambiente:**
+  - en ladera (pendiente del trozo > 10 %), más plancha y ladrillo, y hasta 4 pisos;
+  - en El Poblado, Envigado, Sabaneta e Itagüí, torres de ladrillo;
+  - en El Poblado, Laureles y Envigado (`verdeZ`), jardines entre las torres y más árboles.
 
 *v1.4.0 · Ciudad suave: curvas, no cubos* (`75-graficos.js`, `75-lugares3d.js`, `20-map.js`, `30-ride.js`, `35-life.js`, `tools/geo/build.py`):
 - **Suelo:** `CityMap.contorno` saca cada capa (monte, pasto, plaza, parqueadero, manzana, edificio, orilla, agua) como contorno vectorial: cuadrícula con 2 casillas de margen → suavizado [1 2 1] dos veces → media casilla (bilineal) → marching squares en una sola ruta; las celdas llenas seguidas salen como un rectángulo. El relieve va en `ImageData`, una muestra por casilla.
@@ -2530,6 +2563,50 @@ Pedido del autor: «organiza bien las estructuras, suaviza los diseños… los r
 **Qué se probó:** todas las pruebas (`tests/run.js`), 54 partidas del bot sin errores, rendimiento con CPU 4× lenta (mediana de 16,7 ms por cuadro), 133 estaciones y 45 lugares alcanzables, capturas de los 45 lugares de día y varios de noche, y modo pixel intacto.
 
 **Qué falta:** la física en 3D sigue la cuadrícula de 10 m (los lotes son dibujo), alturas por edificio y tejados variados por barrio.
+
+### 2026-11-18 · v1.5.0 · Medellín desde el aire: los lugares importantes tal cual
+
+Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… y haz los lugares importantes tal cual a las imágenes (las universidades, escuelas, alcaldía y demás)».
+
+1. **Investigación aérea** (`docs/MEDELLIN-DESDE-EL-AIRE.md`): se revisaron fotogramas de 12 videos de dron, imagen satelital de 9 lugares y lecturas sobre el paisaje del valle.
+   - **Medellín desde arriba:** ladrillo naranja en casi todo; laderas de ladrillo a la vista y plancha gris; El Poblado como un bosque con torres de ladrillo; un centro gris y denso; campus que son islas verdes.
+   - **Detalles del valle:** canchas sintéticas en cada barrio, piscinas y tanques negros en las azoteas.
+2. **Sitios reales** (`tools/geo/sitios.py` → `src/data/sitios.bin`, 166 KB; en el juego, `22-sitios.js`):
+   - **Qué entra:** 1.195 sitios con 5.188 edificios con su forma real (también con patio) y su altura. Son universidades, colegios, hospitales, templos, estadios, alcaldías (por los lugares de Overture), Gobernación, iglesias, bibliotecas, coliseos y terminales.
+   - **Suelo:** todas las canchas del valle con sus líneas (1.346), 34 pistas atléticas y 882 piscinas.
+   - **Techos según el lugar:**
+     - teja a cuatro aguas con faldones y cumbreras, también alrededor de los patios;
+     - dos aguas en las iglesias;
+     - helipuerto en las torres de La Alpujarra y en los hospitales grandes;
+     - la aguja del Coltejer, cúpula en el Planetario y ajedrez en el Palacio de la Cultura.
+   - **Colores de cada campus**, elegidos mirando las fotos:
+     - UdeA: teja con patio;
+     - Nacional: claro;
+     - UPB, EAFIT y U. de Medellín: ladrillo;
+     - La Alpujarra: concreto;
+     - EPM: vidrio;
+     - Explora: rojo;
+     - Biblioteca España: oscuro.
+   - **Física:** dentro de cada campus, lo construido de relleno pasa a prado, con andén alrededor de cada bloque y las plazas reales. Los edificios reales son sólidos en los dos modos, y ninguna estación se monta sobre ellos.
+   - **Nombres en el mapa** para universidades, alcaldías, hospitales, coliseos, bibliotecas y terminales grandes.
+3. **Lugares con postal en su sitio:** cada uno se busca por el nombre de su edificio o sitio real y se ubica sobre él.
+   - El Coltejer estaba a unos 180 m y el Palacio de la Cultura a unos 220 m.
+   - 19 pasan a su forma real (UdeA, Nacional, EAFIT, Catedral, Coltejer, Palacio de la Cultura, Terminal del Norte, Biblioteca España, Explora, MAMM, Casa de la Memoria y 8 iglesias de pueblo).
+   - Los que siguen dibujados a mano (estadio, cerros, parques) esconden lo real que cae debajo, para que nada salga dos veces.
+4. **Ambiente según la vista aérea:**
+   - azoteas de baldosa naranja en los edificios de ladrillo;
+   - laderas con más plancha gris, ladrillo a la vista y casas de hasta 4 pisos;
+   - torres de ladrillo en El Poblado, Envigado, Sabaneta e Itagüí;
+   - jardines y arboledas entre las torres de El Poblado, Laureles y Envigado, y el doble de árboles en los campus.
+5. **Pantallas grandes:** la caché de trozos crece con lo que cabe en pantalla (antes, con el zoom alejado se quedaban trozos sin suelo).
+
+**Qué se probó:**
+- todas las pruebas (`tests/run.js`) y 54 partidas del bot sin errores;
+- rendimiento con CPU 4× lenta: mediana de 16,7 ms por cuadro;
+- 133 estaciones y 45 lugares alcanzables;
+- comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
+
+**Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
 ---
 

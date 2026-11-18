@@ -36,6 +36,7 @@ src/js/45-mg2.js      minijuegos v0.4 inspirados en Infinity Games y Railways: M
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
+src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas y edificios con su forma real
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
 src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
 src/js/57-equipo.js   Turno en equipo (cooperativo en red): ModeCoopMon (anfitrión, Monitoreo) y ModeCoopDriver (invitados, camión)
@@ -169,6 +170,38 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.5.0 · Medellín desde el aire: sitios reales* (`tools/geo/sitios.py`, `src/data/sitios.bin` y `sitios.json`, `22-sitios.js`, `docs/MEDELLIN-DESDE-EL-AIRE.md`):
+- **Datos:**
+  - `fetch.py` baja `edificios.parquet` (nombre, clase, pisos y forma de techo de Overture) y `lugares_poi.parquet` (lugares; de ahí salen las alcaldías).
+  - `sitios.py` arma:
+    - las áreas (land_use: universidad, colegio, hospital, templo y estadio) con los edificios cuyo centro cae adentro;
+    - los edificios sueltos importantes (por nombre o clase);
+    - todas las canchas (rectángulo mínimo y tipo por tamaño), pistas, piscinas y plazas.
+  - Escribe `sitios.bin` (deflate) en unidades de 1/8 de casilla; cada anillo es `n, x0, y0` y luego `dx, dy` (i16).
+  - Los techos de teja y de dos aguas llevan su polígono de cumbreras, precalculado con un `buffer` negativo (con patios).
+  - Los estilos se curan por nombre en `CURADO`, mirando las fotos aéreas.
+- **Carga y física (`CityMap.parseSitios`, `rasterSitios`), antes de colocar estaciones y lugares:**
+  - dentro de un área, lo construido de relleno (ladrillo, edificio y, en campus, plaza o andén) pasa a prado (campus y estadios) o a plaza (los demás);
+  - las plazas reales vuelven a plaza;
+  - cada edificio real es `BLDG` (`sitB`) y lleva un andén alrededor en los campus;
+  - `sitT` (casilla → sitio) evita que los lotes de relleno y las casas del interior se monten encima, y duplica los árboles;
+  - `sitG` indexa por trozo los sitios, edificios, canchas, pistas y piscinas;
+  - `carveStation` no pone estaciones sobre `sitB`.
+- **Lugares con postal (`sitLugares`, `SIT_NOMBRE`):**
+  - si el edificio o sitio real con ese nombre está a menos de 600 m, el lugar se ubica sobre él y pasa a `L.real`, sin dibujo a mano ni sólidos;
+  - las iglesias de pueblo pasan a reales si hay un templo real a menos de 250 m;
+  - `sitOcultar` esconde lo real bajo los lugares que siguen dibujados a mano.
+- **Dibujo:**
+  - `sitSuelo` pinta las canchas, pistas y piscinas, bajo las calles;
+  - los edificios de 1 o 2 pisos van con el suelo (`sitEdifSuelo`, como las casas);
+  - los de 3 o más van en `draw3D` (`sitEdif3D`): paredes que miran a la cámara (de la más lejana a la más cercana), techo par-impar con patios y faldones de teja con su luz;
+  - techos especiales: helipuerto, aguja, cúpula y ajedrez;
+  - `sitNombres` pone el nombre de los sitios grandes.
+- **Ambiente:**
+  - en ladera (pendiente del trozo > 10 %), más plancha y ladrillo, y hasta 4 pisos;
+  - en El Poblado, Envigado, Sabaneta e Itagüí, torres de ladrillo;
+  - en El Poblado, Laureles y Envigado (`verdeZ`), jardines entre las torres y más árboles.
 
 *v1.4.0 · Ciudad suave: curvas, no cubos* (`75-graficos.js`, `75-lugares3d.js`, `20-map.js`, `30-ride.js`, `35-life.js`, `tools/geo/build.py`):
 - **Suelo:** `CityMap.contorno` saca cada capa (monte, pasto, plaza, parqueadero, manzana, edificio, orilla, agua) como contorno vectorial: cuadrícula con 2 casillas de margen → suavizado [1 2 1] dos veces → media casilla (bilineal) → marching squares en una sola ruta; las celdas llenas seguidas salen como un rectángulo. El relieve va en `ImageData`, una muestra por casilla.

@@ -441,3 +441,47 @@ Pedido del autor: «organiza bien las estructuras, suaviza los diseños… los r
 **Qué se probó:** todas las pruebas (`tests/run.js`), 54 partidas del bot sin errores, rendimiento con CPU 4× lenta (mediana de 16,7 ms por cuadro), 133 estaciones y 45 lugares alcanzables, capturas de los 45 lugares de día y varios de noche, y modo pixel intacto.
 
 **Qué falta:** la física en 3D sigue la cuadrícula de 10 m (los lotes son dibujo), alturas por edificio y tejados variados por barrio.
+
+## 2026-11-18 · v1.5.0 · Medellín desde el aire: los lugares importantes tal cual
+
+Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… y haz los lugares importantes tal cual a las imágenes (las universidades, escuelas, alcaldía y demás)».
+
+1. **Investigación aérea** (`docs/MEDELLIN-DESDE-EL-AIRE.md`): se revisaron fotogramas de 12 videos de dron, imagen satelital de 9 lugares y lecturas sobre el paisaje del valle.
+   - **Medellín desde arriba:** ladrillo naranja en casi todo; laderas de ladrillo a la vista y plancha gris; El Poblado como un bosque con torres de ladrillo; un centro gris y denso; campus que son islas verdes.
+   - **Detalles del valle:** canchas sintéticas en cada barrio, piscinas y tanques negros en las azoteas.
+2. **Sitios reales** (`tools/geo/sitios.py` → `src/data/sitios.bin`, 166 KB; en el juego, `22-sitios.js`):
+   - **Qué entra:** 1.195 sitios con 5.188 edificios con su forma real (también con patio) y su altura. Son universidades, colegios, hospitales, templos, estadios, alcaldías (por los lugares de Overture), Gobernación, iglesias, bibliotecas, coliseos y terminales.
+   - **Suelo:** todas las canchas del valle con sus líneas (1.346), 34 pistas atléticas y 882 piscinas.
+   - **Techos según el lugar:**
+     - teja a cuatro aguas con faldones y cumbreras, también alrededor de los patios;
+     - dos aguas en las iglesias;
+     - helipuerto en las torres de La Alpujarra y en los hospitales grandes;
+     - la aguja del Coltejer, cúpula en el Planetario y ajedrez en el Palacio de la Cultura.
+   - **Colores de cada campus**, elegidos mirando las fotos:
+     - UdeA: teja con patio;
+     - Nacional: claro;
+     - UPB, EAFIT y U. de Medellín: ladrillo;
+     - La Alpujarra: concreto;
+     - EPM: vidrio;
+     - Explora: rojo;
+     - Biblioteca España: oscuro.
+   - **Física:** dentro de cada campus, lo construido de relleno pasa a prado, con andén alrededor de cada bloque y las plazas reales. Los edificios reales son sólidos en los dos modos, y ninguna estación se monta sobre ellos.
+   - **Nombres en el mapa** para universidades, alcaldías, hospitales, coliseos, bibliotecas y terminales grandes.
+3. **Lugares con postal en su sitio:** cada uno se busca por el nombre de su edificio o sitio real y se ubica sobre él.
+   - El Coltejer estaba a unos 180 m y el Palacio de la Cultura a unos 220 m.
+   - 19 pasan a su forma real (UdeA, Nacional, EAFIT, Catedral, Coltejer, Palacio de la Cultura, Terminal del Norte, Biblioteca España, Explora, MAMM, Casa de la Memoria y 8 iglesias de pueblo).
+   - Los que siguen dibujados a mano (estadio, cerros, parques) esconden lo real que cae debajo, para que nada salga dos veces.
+4. **Ambiente según la vista aérea:**
+   - azoteas de baldosa naranja en los edificios de ladrillo;
+   - laderas con más plancha gris, ladrillo a la vista y casas de hasta 4 pisos;
+   - torres de ladrillo en El Poblado, Envigado, Sabaneta e Itagüí;
+   - jardines y arboledas entre las torres de El Poblado, Laureles y Envigado, y el doble de árboles en los campus.
+5. **Pantallas grandes:** la caché de trozos crece con lo que cabe en pantalla (antes, con el zoom alejado se quedaban trozos sin suelo).
+
+**Qué se probó:**
+- todas las pruebas (`tests/run.js`) y 54 partidas del bot sin errores;
+- rendimiento con CPU 4× lenta: mediana de 16,7 ms por cuadro;
+- 133 estaciones y 45 lugares alcanzables;
+- comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
+
+**Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
