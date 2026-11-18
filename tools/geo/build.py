@@ -560,6 +560,13 @@ tp, ti = follow(TRAM, rail['tram'], corridor=10 * S, paso=1.2)   # el tranvía s
 tg = LineString(tp).simplify(.2 * S)
 metro['T'] = {'p': [int(round(v * 4)) for p in tg.coords for v in p], 'st': [[TRAM[i][0], int(round(tp[ti[i]][0] * 4)), int(round(tp[ti[i]][1] * 4))] for i in range(len(TRAM))]}
 river = [int(round(v * 4)) for p in RV.simplify(.8 * S).coords for v in p]
+# corredores del metro y del tranvía: bajo el viaducto y por donde va el tranvía no hay casas (es andén o calle)
+ncor = 0
+for k, r in (('A', .5), ('B', .5), ('T', .75)):
+    p = metro[k]['p']; pts = np.array([(p[i] / 4, p[i + 1] / 4) for i in range(0, len(p) - 1, 2)])
+    cc = line_cells(pts, r); ok = (cc[:, 0] >= 0) & (cc[:, 1] >= 0) & (cc[:, 0] < MW) & (cc[:, 1] < MH); cc = cc[ok]
+    v = code[cc[:, 1], cc[:, 0]]; m = np.isin(v, [BRICK, BLDG]); code[cc[m, 1], cc[m, 0]] = WALK; ncor += int(m.sum())
+print('corredores del metro y del tranvía: casillas de casa que pasan a andén', ncor)
 
 # ---------------- Metroplús: de estación a estación por las avenidas reales (datos de líneas: tools/geo/lineas.json, de El Metro) ----------------
 import heapq
@@ -607,6 +614,9 @@ for L in LJ:
 print('Metroplús', [(l['id'], len(l['st']), len(l['p']) // 2) for l in mp])
 
 # ---------------- vías como vectores (para dibujar cada calle como es) ----------------
+for name, g in streams:   # quebradas (tipo 9): un hilo de agua con su retiro verde, por su trazo real
+    pts = tcoords(g.coords)
+    if len(pts) >= 2: vias.append((9, name or '', '', 3, pts))
 from shapely.ops import linemerge
 grp = {}
 for k, name, nom, wd, pts in vias: grp.setdefault((k, name, nom), []).append((LineString(pts), wd))
@@ -627,7 +637,7 @@ for k, name, nom, wd, q in VIAS:   # v3: tipo, nombre, nomenclatura oficial, anc
     vb += struct.pack('<BHHBH', k, cidx.get(name, 0), cidx.get(nom, 0), int(min(255, round(wd * 2))), len(q)); vb += np.concatenate([q[:1], np.diff(q, axis=0)]).astype('<i2').tobytes()
 comp = zlib.compressobj(9, zlib.DEFLATED, -15); vdata = comp.compress(bytes(vb)) + comp.flush()
 open(os.path.join(OUT, 'vias.bin'), 'wb').write(vdata)
-named = {k: [0, 0] for k in range(1, 9)}
+named = {k: [0, 0] for k in range(1, 10)}
 for k, name, nom, wd, q in VIAS: named[k][0] += 1; named[k][1] += 1 if name else 0
 print('vías', len(VIAS), 'líneas ·', sum(len(q) for *_, q in VIAS), 'puntos ·', len(calles), 'nombres · vias.bin', len(vdata) // 1024, 'KB · con nombre por tipo', {k: f'{v[1]}/{v[0]}' for k, v in named.items() if v[0]})
 

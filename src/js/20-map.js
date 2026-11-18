@@ -14,6 +14,8 @@ const MINI_COL = ['#4f8f45', '#24502c', '#8a4a30', '#56657c', '#2b3240', '#38425
 const geoT = (lat, lon) => ({ x: (lon - VM.lon0) * VM.kx, y: (VM.latN - lat) * VM.ky });
 const geoP = (lat, lon) => { const t = geoT(lat, lon); return { x: t.x * TS, y: t.y * TS }; };
 const q4 = a => { const r = []; for (let i = 0; i < a.length; i += 2) r.push({ x: a[i] / 4 * TS, y: a[i + 1] / 4 * TS }); return r; };   // líneas del JSON (casillas ×4) -> px
+/* curvas en vez de esquinas: suavizado de Chaikin (cada pasada recorta cada esquina a 1/4 y 3/4 del tramo) */
+const chaikin = (P, n = 2) => { for (let k = 0; k < n; k++) { if (P.length < 3) return P; const Q = [P[0]]; for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1]; Q.push({ x: a.x * .75 + b.x * .25, y: a.y * .75 + b.y * .25 }, { x: a.x * .25 + b.x * .75, y: a.y * .25 + b.y * .75 }); } Q.push(P[P.length - 1]); P = Q; } return P; };
 /* lugares con postal (de 19-lugares.js), en casillas */
 const LANDMARKS = LUGARES.map(([id, name, muni, lat, lon, w, h, k, fact, secret]) => { const t = geoT(lat, lon); return { id, name, muni, lat, lon, x: Math.round(t.x - w / 2), y: Math.round(t.y - h / 2), w, h, k, fact, secret: !!secret }; });
 const LM = {}; LANDMARKS.forEach(l => LM[l.id] = l);
@@ -114,10 +116,10 @@ const CityMap = JE.map = {
       if (s < bs) { bs = s; best = { dx, dy }; }
     }
     L.x += best.dx; L.y += best.dy;
-    const keep = [TT.WATER, TT.CANAL, TT.AUTO, TT.AVE, TT.BRIDGE, TT.STATION];
+    const keep = [TT.WATER, TT.CANAL, TT.AUTO, TT.AVE, TT.BRIDGE, TT.STATION, TT.ROAD];   // las calles que cruzan un lugar siguen siendo calle: un lugar nunca corta la red
     const base = { comuna13: TT.LAND, bibespana: TT.LAND, palacio: TT.PLAZA, catedral: TT.PLAZA, parquenorte: TT.GRASS, deporte: TT.GRASS, memoria: TT.GRASS, cruces: TT.LAND, iglesia: TT.PLAZA, terminal: TT.PLAZA, volador: TT.LAND, campus: TT.GRASS, moravia: TT.LAND, botanico: TT.GRASS, explora: TT.PLAZA, estadio: TT.LAND, botero: TT.PLAZA, coltejer: TT.LAND, teatro: TT.PLAZA, lleras: TT.PLAZA, pies: TT.PLAZA, luces: TT.PLAZA, depot: TT.DEPOT, cerro: TT.LAND, mamm: TT.GRASS, aeropuerto: TT.LAND }[L.k];
     for (let y = L.y; y < L.y + L.h; y++) for (let x = L.x; x < L.x + L.w; x++) { if (keep.includes(this.get(x, y))) continue; this.set(x, y, base); this.lid.set(this.idx(x, y), i); }
-    const solid = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid.get(this.idx(L.x + xx, L.y + yy)) === i) this.set(L.x + xx, L.y + yy, TT.LAND); };
+    L.solids = []; const solid = (x, y, w, h) => { L.solids.push([L.x + x, L.y + y, w, h]); for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (this.lid.get(this.idx(L.x + xx, L.y + yy)) === i) this.set(L.x + xx, L.y + yy, TT.LAND); };   // los cuerpos construidos del lugar (en 3D se levantan como edificios)
     const W = L.w, H = L.h;
     switch (L.k) {
       case 'iglesia': solid((W >> 1) - 2, 1, 4, 4); break;
@@ -148,6 +150,14 @@ const CityMap = JE.map = {
     let best = null, bd = 1e9;
     // ¿la calle de acceso es parte de la red? BFS corto con memoria: lo que ya se sabe conectado (1) o encerrado (2) no se vuelve a recorrer
     const CN = this._cn || (this._cn = new Uint8Array(MW * MH)), LIM = 600 * MS;
+    // lo mismo para el camión: la calle cercana debe ser parte de la red vial principal, la misma a la que sale Casa EnCicla
+    const CT = this._ct || (this._ct = (() => {
+      const m = new Uint8Array(MW * MH), d = LM.depot, cx0 = Math.round(d.x + d.w / 2), cy0 = Math.round(d.y + d.h / 2); let seed = -1;
+      for (let r = 0; r < 160 && seed < 0; r++) for (let dy = -r; dy <= r && seed < 0; dy++) for (let dx = -r; dx <= r; dx++) if ((Math.abs(dx) === r || Math.abs(dy) === r) && (this.get(cx0 + dx, cy0 + dy) === TT.AVE || this.get(cx0 + dx, cy0 + dy) === TT.AUTO)) { seed = (cy0 + dy) * MW + cx0 + dx; break; }   // la avenida o autopista más cercana a Casa EnCicla
+      if (seed < 0) return null; const q = [seed]; m[seed] = 1;
+      for (let i = 0; i < q.length; i++) { const k = q[i], x = k % MW, y = (k / MW) | 0; for (let e = 0; e < 4; e++) { const nx = x + (e === 0 ? 1 : e === 1 ? -1 : 0), ny = y + (e === 2 ? 1 : e === 3 ? -1 : 0); if (nx < 0 || ny < 0 || nx >= MW || ny >= MH) continue; const n = ny * MW + nx; if (m[n] || !TRUCK_OK[this.t[n]]) continue; m[n] = 1; q.push(n); } }
+      return m; })());
+    const camion = (sx, sy) => !CT || CT[sy * MW + sx] === 1;
     const conecta = (sx, sy) => { const k0 = sy * MW + sx; if (CN[k0]) return CN[k0] === 1; const seen = [k0], set = new Set(seen); let ok = false;
       for (let i = 0; i < seen.length && !ok; i++) { const k = seen[i], qx = k % MW, qy = (k / MW) | 0, v = this.t[k]; if (v === TT.AVE || v === TT.AUTO || CN[k] === 1 || set.size >= LIM) { ok = CN[k] !== 2; break; }
         for (let d = 0; d < 4; d++) { const nx = qx + (d === 0 ? 1 : d === 1 ? -1 : 0), ny = qy + (d === 2 ? 1 : d === 3 ? -1 : 0); if (nx < 0 || ny < 0 || nx >= MW || ny >= MH) continue; const n = ny * MW + nx; if (set.has(n) || SOLID[this.t[n]]) continue; set.add(n); seen.push(n); } }
@@ -169,7 +179,7 @@ const CityMap = JE.map = {
       else for (let yy = y + 1; yy <= y + 3; yy++) { if (!lo && acc(this.get(x + w, yy))) lo = [x + w, yy]; if (!hi && acc(this.get(x - 1, yy))) hi = [x - 1, yy]; }
       if (lo && !conecta(lo[0], lo[1])) lo = null; if (!lo && hi && !conecta(hi[0], hi[1])) hi = null;   // la calle de acceso debe ser parte de la red, no un retazo suelto
       if (!lo && !hi) continue;
-      let tr = false; const cx = Math.floor(x + w / 2), cy = Math.floor(y + h / 2), tw = Math.round(5 * MS); for (let yy = cy - tw; yy <= cy + tw && !tr; yy++) for (let xx = cx - tw; xx <= cx + tw; xx++) if (TRUCK_OK[this.get(xx, yy)]) { tr = true; break; }
+      let tr = false; const cx = Math.floor(x + w / 2), cy = Math.floor(y + h / 2), tw = Math.round(5 * MS) - 1; /* una casilla de holgura: el centro se corre 1 px hacia la calle */ for (let yy = cy - tw; yy <= cy + tw && !tr; yy++) for (let xx = cx - tw; xx <= cx + tw; xx++) if (TRUCK_OK[this.get(xx, yy)] && !(xx >= x && xx < x + w && yy >= y && yy < y + h) && camion(xx, yy)) { tr = true; break; }   // (no cuenta la calle que la propia estación tapa)   // una calle del camión que sí está conectada a la red
       if (!tr) continue;
       bd = d; best = { x, y, w, h, up: !lo };
     } } }
@@ -210,7 +220,7 @@ const CityMap = JE.map = {
     const G = 64, cells = this.laneGrid = new Map(), SPD = { t: 46 * WK, p: 36 * WK, s: 30 * WK };
     const add = (ln) => { this.lanes.push(ln); const seen = new Set(); for (const p of ln.pts) { const k = Math.floor(p.x / TS / G) + ',' + Math.floor(p.y / TS / G); if (seen.has(k)) continue; seen.add(k); (cells.get(k) || cells.set(k, []).get(k)).push(ln); } };
     for (const l of VM.lanes) {
-      const P = this.poly(q4(l.p)), base = { pts: P.pts, cum: P.cum, len: P.len, spd: SPD[l.c] || 30 * WK, name: l.n, cv: CICLOVIA_AV.includes(l.n), cls: l.c };
+      const P = this.poly(chaikin(q4(l.p), 2)), base = { pts: P.pts, cum: P.cum, len: P.len, spd: SPD[l.c] || 30 * WK, name: l.n, cv: CICLOVIA_AV.includes(l.n), cls: l.c };
       if (l.o) add(Object.assign({ dir: 1, off: 0 }, base)); else { add(Object.assign({ dir: 1, off: 3 * WK }, base)); add(Object.assign({ dir: -1, off: -3 * WK }, base)); }
     }
     // semáforos sobre cada carril
@@ -223,11 +233,11 @@ const CityMap = JE.map = {
   lightsNear(ln) { if (!this._lg) { this._lg = new Map(); for (const g of this.lights) { const k = Math.floor(g.x / TS / 64) + ',' + Math.floor(g.y / TS / 64); (this._lg.get(k) || this._lg.set(k, []).get(k)).push(g); } } const r = new Set(); for (const p of ln.pts) { const L = this._lg.get(Math.floor(p.x / TS / 64) + ',' + Math.floor(p.y / TS / 64)); if (L) L.forEach(g => r.add(g)); } return r; },
   lanesNear(x, y) { const G = 64 * TS, r = []; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const L = this.laneGrid.get((Math.floor(x / G) + i) + ',' + (Math.floor(y / G) + j)); if (L) r.push(...L); } return r; },
   buildRail() {
-    const mk = (k) => { const m = VM.metro[k], P = this.poly(q4(m.p)); P.st = m.st.map(([name, a, b]) => { const x = a / 4 * TS, y = b / 4 * TS, pr = this.project(P, x, y); return { name, px: x, py: y, s: pr.s }; }); return P; };
+    const mk = (k) => { const m = VM.metro[k], P = this.poly(chaikin(q4(m.p), 3)); P.st = m.st.map(([name, a, b]) => { const x = a / 4 * TS, y = b / 4 * TS, pr = this.project(P, x, y); return { name, px: x, py: y, s: pr.s }; }); return P; };
     this.lineA = mk('A'); this.lineB = mk('B'); this.tram = mk('T');
     this.metroA = this.lineA.st; this.metroB = this.lineB.st;
     // Metroplús (líneas 1, 2 y O): por su carril, de estación a estación por las avenidas reales
-    this.mp = (VM.mp || []).map(l => { const P = this.poly(q4(l.p)); P.id = l.id; P.name = l.n; P.col = l.c; P.st = l.st.map(([name, a, b]) => { const x = a / 4 * TS, y = b / 4 * TS; return { name, px: x, py: y, s: this.project(P, x, y).s }; }); return P; });
+    this.mp = (VM.mp || []).map(l => { const P = this.poly(chaikin(q4(l.p), 2)); P.id = l.id; P.name = l.n; P.col = l.c; P.st = l.st.map(([name, a, b]) => { const x = a / 4 * TS, y = b / 4 * TS; return { name, px: x, py: y, s: this.project(P, x, y).s }; }); return P; });
     this.river = this.poly(q4(VM.river));
     this.cables = [];
     for (const [name, col, st] of CABLES) for (let i = 0; i < st.length - 1; i++) {

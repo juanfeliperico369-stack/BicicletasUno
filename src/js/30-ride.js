@@ -221,9 +221,10 @@ class Ride {
     let made = 0;
     for (let cy = Math.floor(oy / S); cy <= Math.floor((oy + BH) / S); cy++) for (let cx = Math.floor(ox / S); cx <= Math.floor((ox + BW) / S); cx++) {
       if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue;
-      if (!this.map.hasG(cx, cy)) made++;
+      if (!this.map.hasG(cx, cy)) { if (made && this.dibujado) { b.fillStyle = '#cfc9bc'; b.fillRect(cx * S - ox, cy * S - oy, S, S); made++; continue; } made++; }   // a lo sumo un trozo nuevo por cuadro (sin tirones); el resto llega en los cuadros siguientes
       b.drawImage(this.map.chunkG(cx, cy), cx * S - ox, cy * S - oy, S, S);
     }
+    this.dibujado = true;
     if (!made) { // precalienta un bloque vecino en la dirección de avance
       const cx = Math.floor(P.x / S) + Math.round(Math.cos(P.a) * 1.4), cy = Math.floor(P.y / S) + Math.round(Math.sin(P.a) * 1.4);
       if (cx >= 0 && cy >= 0 && cx * CH < MW && cy * CH < MH && !this.map.hasG(cx, cy)) this.map.chunkG(cx, cy);

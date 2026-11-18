@@ -275,7 +275,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     UI.toast = m => { T.push(m); }; JE.headless = true;
     out.vias = (M.vias || []).length; out.nombres = M.chains.filter(c => c.n && c.k <= 4).length;
     const fl = M.stations.find(s => s.id === 'floresta'); out.barrio = M.barrioAt(fl.x, fl.y); out.zona = M.zonaAt(fl.x, fl.y).sub;
-    out.casas = M.blocks(Math.floor(fl.x / TS / CH), Math.floor(fl.y / TS / CH)).every(b => !b.house);
+    { const L = M.lotes(Math.floor(fl.x / TS / CH), Math.floor(fl.y / TS / CH)); out.casas = L.casas.length > 20 && L.ed.every(b => b.B && b.z > 0) && L.all.every(q => q.pts && q.pts.length === 8 && Math.abs(Math.hypot(q.ux, q.uy) - 1) < 1e-6); out.nCasas = L.casas.length; out.nEdif = L.ed.length; }   // casas y edificios en lotes girados con su calle
     Save.data.dia = ['dia-01']; delete Save.data.diaValle; out.migra = Dia.count() === 1 && Array.isArray(Save.data.diaValle) && !Array.isArray(Save.data.dia);
     JE.fecha = '2026-11-12T10:00'; JE.game.start('usuario', 1, { seed: 6, nov: NOVEDADES[0], free: true, bici: 'propia' }); const G = JE.game.mode;
     out.juntas = Dia.count() === 1 && !!Save.data.dia && Array.isArray(Save.data.dia.done); UI.historia(); out.hist = document.querySelectorAll('#mBody .dia-c').length === 16; UI.closeModal();
@@ -286,7 +286,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     return out;
   });
   ok(mj.vias > 30000 && mj.nombres > 5000, 'calles exactas de OpenStreetMap: ' + mj.vias + ' vías, ' + mj.nombres + ' tramos con nombre');
-  ok(!!mj.barrio && /Laureles-Estadio/.test(mj.zona) && mj.casas, 'barrio en Floresta (' + mj.barrio + ' · ' + mj.zona + ') y casas en fila dibujadas en el suelo');
+  ok(!!mj.barrio && /Laureles-Estadio/.test(mj.zona) && mj.casas, 'barrio en Floresta (' + mj.barrio + ' · ' + mj.zona + ') y casas y edificios en lotes girados con su calle ' + mj.nCasas + '/' + mj.nEdif);
   ok(mj.migra && mj.juntas && mj.hist, 'Un día del valle y las misiones del modo libre guardan aparte: migración y pantalla de Historia sin fallas');
   ok(mj.tinto && mj.rego && mj.recarga && mj.gota, 'Ni una gota: chocar riega el tinto, se recarga en una estación y la entrega da el logro secreto ' + JSON.stringify(mj));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
