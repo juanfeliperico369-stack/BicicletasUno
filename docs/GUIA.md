@@ -90,6 +90,7 @@ node tools/build.js            # construye dist/
 node tools/assets.js           # íconos + compartir.png (necesita dist/juega-encicla.html)
 python3 tools/geo/fetch.py && python3 tools/geo/oficial.py && python3 tools/geo/build.py   # rehace el mapa de 10 m (duckdb, numpy, pillow, shapely; ~1 min)
 TILE=20 OUT=carpeta python3 tools/geo/build.py   # el mismo mapa en casillas de 20 m (el que usa El Metro)
+# El Metro: python3 tools/mapa_valle.py carpeta landuse.parquet && ENCICLA_MAPA=carpeta python3 tools/ciudad_datos.py tools/geo/cache/oficial (en su repositorio)
 node tools/todo-ia.js          # solo el documento para IA (build.js ya lo genera)
 python3 tools/armar_entrega.py desarmar <entrega.md> <carpeta>   # reconstruye las imágenes de una entrega
 node tests/run.js --n=100      # pruebas; --shots guarda capturas en tests/out/
@@ -357,7 +358,7 @@ Las pistas están en "¿Sabías que?" y hay 4 logros secretos.
 - **Ritmo** (Ajustes): tranquilo (+40 % de tiempo y +35 % de paciencia), normal o arcade.
 - **Reto del día:** la semilla es la fecha. **Código de reto** `N-T-SEMILLA36`: multijugador asíncrono sin servidor.
 
-**Escalas del mundo:** 1 casilla = 10 m reales desde v1.3.0 (antes 20 m; `MS = 20 / VM.tile` escala las búsquedas que miden distancias reales). Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
+**Escalas del mundo:** 1 casilla = 10 m reales desde v1.3.0 (antes 20 m; `MS = 20 / VM.tile` escala las búsquedas que miden distancias reales). Desde v1.3.1 las velocidades se multiplican por `TRAVEL = √MS` y el reloj de los oficios en el mapa se divide por lo mismo (`Mode.tm()`), para que un viaje cueste los mismos minutos de juego que en el mapa de 20 m. Bici 60 px/s (×1,3 en ciclorruta, ×0,62 en acera, ×0,55 en pasto). Camión 50 px/s, solo por vías.
 Cada modo tiene su propia velocidad de reloj (minutos de juego por segundo real), por ejemplo Usuario 1,2 y Monitoreo ~4,5.
 El préstamo dura máximo 60 min de juego.
 

@@ -336,6 +336,47 @@ code[core & isway] = BRIDGE
 code[WAT & ~isway & (code != BRIDGE)] = WATER
 del core, isway
 
+# ---------------- curso del río Medellín de Caldas a Barbosa (como lo mide la auditoría de El Metro) ----------------
+# A* que prefiere el agua, con puntos de paso junto a la línea A; lo que el curso cruza y no es agua pasa a puente (si es vía) o a agua.
+import heapq
+def _cerca_agua(x, y, R):
+    best, bd = None, 1e9
+    for j in range(max(0, int(y) - R), min(MH, int(y) + R + 1)):
+        row = code[j, max(0, int(x) - R):min(MW, int(x) + R + 1)]
+        for i in np.nonzero(row == WATER)[0]:
+            ii = i + max(0, int(x) - R); d = (ii - x) ** 2 + (j - y) ** 2
+            if d < bd: bd, best = d, (ii, j)
+    return best
+def _astar(a, b):
+    m = int(40 * S); x0, y0 = max(0, min(a[0], b[0]) - m), max(0, min(a[1], b[1]) - m); x1, y1 = min(MW - 1, max(a[0], b[0]) + m), min(MH - 1, max(a[1], b[1]) + m)
+    W_, H_ = x1 - x0 + 1, y1 - y0 + 1; sub = code[y0:y1 + 1, x0:x1 + 1]
+    cost = np.full(sub.shape, 40.0); cost[np.isin(sub, [WATER, BRIDGE])] = 1; cost[sub == CANAL] = 2.5; cost[np.isin(sub, [ROAD, AVE, AUTO, WALK, CICLO, STEPS])] = 20; cost = cost.ravel()
+    s0, t0 = (a[1] - y0) * W_ + a[0] - x0, (b[1] - y0) * W_ + b[0] - x0; tx, ty = b[0] - x0, b[1] - y0
+    D = np.full(W_ * H_, np.inf); D[s0] = 0; prev = np.full(W_ * H_, -1, np.int64); h = [(0.0, s0)]
+    while h:
+        _, u = heapq.heappop(h)
+        if u == t0: break
+        ux, uy = u % W_, u // W_; du = D[u]
+        for v in (u - 1 if ux > 0 else -1, u + 1 if ux < W_ - 1 else -1, u - W_ if uy > 0 else -1, u + W_ if uy < H_ - 1 else -1):
+            if v < 0: continue
+            nd = du + cost[v]
+            if nd < D[v]: D[v] = nd; prev[v] = u; heapq.heappush(h, (nd + math.hypot(v % W_ - tx, v // W_ - ty), v))
+    out, u = [], t0
+    while u != -1: out.append((u % W_ + x0, u // W_ + y0)); u = prev[u]
+    return out[::-1]
+_pasos = [_cerca_agua(*T(-75.636, 6.0905), int(80 * S))]
+for _n in ('La Estrella', 'Itagüí', 'Industriales', 'Caribe', 'Niquía'):
+    _la, _lo = next((la, lo) for k, st in (('A', [('La Estrella', 6.1540, -75.6265), ('Itagüí', 6.1630, -75.6066), ('Industriales', 6.2302, -75.5755), ('Caribe', 6.2775, -75.5697), ('Niquía', 6.3377, -75.5440)]),) for (nm, la, lo) in st if nm == _n)
+    _pasos.append(_cerca_agua(*T(_lo, _la), int(40 * S)))
+_bw = np.argwhere((code == WATER) & (MUNI == 10)); _pasos.append((int(_bw[_bw[:, 0].argmin()][1]), int(_bw[_bw[:, 0].argmin()][0])) if len(_bw) else None)
+CURSO = []
+for _a, _b in zip(_pasos[:-1], _pasos[1:]):
+    if _a and _b: CURSO += _astar(_a, _b)[1 if CURSO else 0:]
+_cv = np.array(CURSO); _v = code[_cv[:, 1], _cv[:, 0]]; _isw = np.isin(_v, [ROAD, AVE, AUTO, WALK, CICLO, STEPS]); _oth = ~_isw & ~np.isin(_v, [WATER, BRIDGE, CANAL])
+code[_cv[_isw, 1], _cv[_isw, 0]] = BRIDGE; code[_cv[_oth, 1], _cv[_oth, 0]] = WATER; code[_cv[np.isin(_v, [CANAL]), 1], _cv[np.isin(_v, [CANAL]), 0]] = WATER
+WAT[_cv[:, 1], _cv[:, 0]] = True
+print('curso del río:', len(CURSO), 'casillas de Caldas a Barbosa · cortes cerrados:', int(_isw.sum()), 'puentes y', int(_oth.sum()), 'de agua')
+
 # ---------------- relieve ----------------
 Z = 13; tiles = {}
 for f in os.listdir(os.path.join(CACHE, 'dem')):
@@ -391,16 +432,19 @@ def pav(y):   # regresión isotónica no creciente (pool adjacent violators)
     out = []
     for x, k in zip(v, n): out += [x] * k
     return np.array(out)
-L = RV.length; ss = np.arange(0, L, ES / 2); pp = np.array([RV.interpolate(s).coords[0] for s in ss])
+CL_ = LineString([(x + .5, y + .5) for x, y in CURSO]) if len(CURSO) > 1 else RV; L = CL_.length; ss = np.arange(0, L, ES / 2); pp = np.array([CL_.interpolate(s).coords[0] for s in ss])
 ex = pp[:, 0] / ES; ey = pp[:, 1] / ES; i0 = np.clip(ex.astype(int), 0, EW - 2); j0 = np.clip(ey.astype(int), 0, EH - 2); fx = ex - i0; fy = ey - j0
 prof = E[j0, i0] * (1 - fx) * (1 - fy) + E[j0, i0 + 1] * fx * (1 - fy) + E[j0 + 1, i0] * (1 - fx) * fy + E[j0 + 1, i0 + 1] * fx * fy
 iso = pav(prof); ups = int((np.diff(prof[::5]) > 3).sum())
-burn = 0
-for (x, y), z in zip(pp, iso):   # baja las muestras del relieve a menos de 60 m del cauce hasta la curva que siempre baja
+burn = 0; _near = {}
+for (x, y), z in zip(pp, iso):   # cada muestra del relieve a menos de 120 m del cauce toma la altura de la muestra del cauce más cercana (curva que siempre baja)
     ci, cj = x / ES, y / ES
     for j in range(int(cj) - 1, int(cj) + 3):
         for i in range(int(ci) - 1, int(ci) + 3):
-            if 0 <= i < EW and 0 <= j < EH and math.hypot(i - ci, j - cj) * ES * TILE < 60 and E[j, i] > z: E[j, i] = z; burn += 1
+            dd = math.hypot(i - ci, j - cj) * ES * TILE
+            if 0 <= i < EW and 0 <= j < EH and dd < 120 and dd < _near.get((i, j), (1e9, 0))[0]: _near[(i, j)] = (dd, z)
+for (i, j), (dd, z) in _near.items():
+    if E[j, i] > z: E[j, i] = z; burn += 1
 print('río: perfil', int(prof[0]), '->', int(prof[-1]), 'm · tramos de 200 m que subían más de 3 m', ups, '· muestras quemadas', burn, '· máxima corrección', int((prof - iso).max()), 'm')
 E = np.round(E).astype(np.int16)
 print('relieve', int(E.min()), '..', int(E.max()), 'm')
@@ -436,8 +480,8 @@ code[(code == BLDG) & ~fp & ~covered & ~COMM & ~POB & (rnd < .92)] = BRICK   # s
 big = np.isin(code, [AVE, AUTO]); nb = n4(big)
 code[nb & np.isin(code, [BLDG, BRICK, GRASS]) & ~fp] = WALK
 # escaleras sueltas (sin otra escalera ni camino al lado) que solo ensucian el dibujo
-st = code == STEPS; stn = box(st, 1) - 1; wn = box(np.isin(code, [ROAD, AVE, WALK, PLAZA, CICLO]), 1)
-loose = st & (stn == 0) & (wn == 0); code[loose] = GRASS; print('escaleras sueltas quitadas', int(loose.sum()))
+st = code == STEPS; _s = st.astype(np.int8); stn = np.zeros_like(_s); stn[1:] += _s[:-1]; stn[:-1] += _s[1:]; stn[:, 1:] += _s[:, :-1]; stn[:, :-1] += _s[:, 1:]; wn = box(np.isin(code, [ROAD, AVE, WALK, PLAZA, CICLO]), 1)   # suelta = sin otra escalera en sus 4 vecinos
+loose = st & (stn == 0); code[loose & (wn == 0)] = GRASS; code[loose & (wn > 0)] = WALK; print('escaleras sueltas: a camino', int((loose & (wn > 0)).sum()), '· quitadas', int((loose & (wn == 0)).sum()))   # una escalera de una sola casilla es un paso peatonal
 # río continuo: a lo largo del cauce del Río Medellín no hay cortes (lo que lo cruza es puente)
 rc = line_cells(np.array(rv), .55 * S); ok = (rc[:, 0] >= 0) & (rc[:, 1] >= 0) & (rc[:, 0] < MW) & (rc[:, 1] < MH); rc = rc[ok]
 v = code[rc[:, 1], rc[:, 0]]; isw = np.isin(v, [ROAD, AVE, AUTO, WALK, CICLO, STEPS])
@@ -489,7 +533,7 @@ def dense(lines):
             n = max(1, int(math.hypot(x1 - x0, y1 - y0) / (1.5 * S))); t = np.linspace(0, 1, n + 1)
             pts.append(np.stack([x0 + (x1 - x0) * t, y0 + (y1 - y0) * t], 1))
     return np.concatenate(pts)
-def follow(stops, lines, corridor=12):
+def follow(stops, lines, corridor=12, paso=6):
     """polilínea que sigue la vía real entre paradas consecutivas"""
     R = dense(lines); st = [np.array(T(lon, lat)) for _, lat, lon in stops]
     st = [R[np.argmin(((R - s) ** 2).sum(1))] for s in st]          # paradas pegadas a la vía
@@ -499,7 +543,7 @@ def follow(stops, lines, corridor=12):
         m = (t > 0) & (t < 1) & (((R - q) ** 2).sum(1) < corridor ** 2); seg = R[m][np.argsort(t[m])]
         idx.append(len(path)); path.append(tuple(a))
         if len(seg):   # promedio por tramos para ignorar la doble vía
-            tt = np.sort(t[m]); bins = np.linspace(0, 1, max(2, int(math.sqrt(L2) / (6 * S))) + 1)
+            tt = np.sort(t[m]); bins = np.linspace(0, 1, max(2, int(math.sqrt(L2) / (paso * S))) + 1)
             for b0, b1 in zip(bins[:-1], bins[1:]):
                 mm = (tt >= b0) & (tt < b1)
                 if mm.sum(): path.append(tuple(seg[mm].mean(0)))
@@ -512,7 +556,7 @@ for k, stops in METRO.items():
     metro[k] = {'p': [int(round(v * 4)) for p in pts for v in p], 'st': [[stops[i][0], int(round(path[idx[i]][0] * 4)), int(round(path[idx[i]][1] * 4))] for i in range(len(stops))]}
 TRAM = [('San Antonio', 6.2470, -75.5698), ('San José', 6.2470, -75.5658), ('Pabellón del Agua', 6.2459, -75.5620), ('Bicentenario', 6.2445, -75.5585), ('Buenos Aires', 6.2410, -75.5560),
         ('Miraflores', 6.2400, -75.5520), ('Loyola', 6.2393, -75.5478), ('Alejandro Echavarría', 6.2357, -75.5420), ('Oriente', 6.2350, -75.5385)]
-tp, ti = follow(TRAM, rail['tram'], corridor=10 * S)
+tp, ti = follow(TRAM, rail['tram'], corridor=10 * S, paso=1.2)   # el tranvía sigue cada curva de Ayacucho
 tg = LineString(tp).simplify(.2 * S)
 metro['T'] = {'p': [int(round(v * 4)) for p in tg.coords for v in p], 'st': [[TRAM[i][0], int(round(tp[ti[i]][0] * 4)), int(round(tp[ti[i]][1] * 4))] for i in range(len(TRAM))]}
 river = [int(round(v * 4)) for p in RV.simplify(.8 * S).coords for v in p]
@@ -611,7 +655,7 @@ best = np.full((H8, W8), 1e9); ba8 = np.zeros((H8, W8), np.uint16)
 ofm = {mi for _, mi, _ in bpolys}
 for n, px, py, w in bpts:
     d = np.hypot(bx - px, by - py) * w; m = d < best; best[m] = d[m]; ba8[m] = bid[n]
-ba8[(best > 12 * S) | (M8 == 0) | np.isin(M8, list(ofm))] = 0
+ba8[(best > 12 * S) | (M8 == 0)] = 0   # los polígonos oficiales mandan donde existen; el punto más cercano llena los huecos
 bimg = Image.new('I', (W8, H8), 0); d = ImageDraw.Draw(bimg)
 for n, mi, gs in bpolys:
     for g in gs:

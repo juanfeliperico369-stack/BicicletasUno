@@ -88,7 +88,7 @@ class ShiftMode extends MapMode {
     if (ph.spawnT <= 0 && ph.tasks.filter(t => !t.done && t.dyn).length < (ph.maxDyn || 4)) { ph.spawnT = ph.every * this.timeMul * this.rng.range(.7, 1.3); const t = ph.spawn(ph); if (t) { t.dyn = true; this.addTask(t, ph); if (JE.ui && this.t > 2) JE.ui.toast('📻 ' + (t.say || t.label)); this.retarget(); } }
   }
   tick(dt) {
-    if (this.sim) this.sim.step(this.rate * dt / this.timeMul, this.clock);
+    if (this.sim) this.sim.step(this.rate * dt / this.tm(), this.clock);
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
     const ph = this.phase; if (!ph || ph.mg) return;
     if (ph.tick) ph.tick(dt, ph);

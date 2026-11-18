@@ -392,3 +392,22 @@ Pedido del autor: «acepto el mapa más grande, mejóralo todo», y traer a EnCi
 **Qué se probó:** todas las pruebas (`tests/run.js`), 54 partidas del bot sin errores, rendimiento con CPU 4× lenta (mediana de 16,7 ms por cuadro), multijugador con 3 dispositivos, maqueta en 41 ms y alcanzabilidad de las 133 estaciones con radios a escala del mapa nuevo.
 
 **Qué falta:** física contra las manzanas reales en el modo pixel, alturas por edificio (no por zona) y las placas de «lo poco conocido».
+
+## 2026-11-18 · v1.3.1 · Un mapa para los dos juegos
+
+Pedido del autor: «toma todo lo que aprendiste, compleméntalo y crea la nueva revolución del videojuego del Metro».
+
+1. **La tubería de mapas sirve a los dos juegos:**
+   - `TILE=20 OUT=carpeta python3 tools/geo/build.py` hace el mismo mapa en casillas de 20 m para *El Metro*;
+   - allá lo convierten `tools/mapa_valle.py` y `tools/ciudad_datos.py`.
+   - Así, *El Metro 1.0.0* cumple 9 de los 12 pasos de su hoja de ruta del mapa (ver `docs/REVOLUCION-METRO-Y-ENCICLA.md`).
+2. **Río completo:** el curso del río se traza de Caldas a Barbosa con A* (como lo mide la auditoría de El Metro). Lo que el curso cruza pasa a puente o agua, y el relieve se quema a lo largo de todo el cauce. En 20 m: 0 cortes (antes 69) y subidas de 7 m como máximo (antes 27).
+3. **Escaleras:** una escalera de una sola casilla pasa a paso peatonal (en 20 m: 4 sueltas, antes 332).
+4. **Barrios:** los polígonos oficiales mandan donde existen, y el barrio con nombre más cercano llena los huecos (Envigado y Sabaneta ya no quedan con zonas vacías).
+5. **Tranvía:** sigue cada curva de Ayacucho (la línea pasa de 17 a 40 puntos en 20 m).
+6. **Equilibrio del mapa de 10 m:**
+   - Como la ciudad mide el doble en px, el bot de las pruebas aprobaba la mitad en los oficios de recorrer el valle (Apoyo 1/4, Balance 1/4, Técnico 1/4).
+   - Ahora se anda √2 más rápido y el reloj de los oficios corre √2 más lento (`TRAVEL = √MS`), así cada viaje cuesta los mismos minutos de juego que antes.
+   - Con eso el bot vuelve a lo de v1.2.0: Balance 4/4, Técnico 4/4, Rescate 4/4, Supervisor 4/4 y Apoyo 3/4.
+
+**Qué se probó:** todas las pruebas de EnCicla. Estaciones a 16 m de su punto (mediana) y todas alcanzables.

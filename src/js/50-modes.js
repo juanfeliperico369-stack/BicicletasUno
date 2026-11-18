@@ -93,7 +93,8 @@ Mode.prototype.button = MG.prototype.button;
 /* ---------- base para modos en el mapa ---------- */
 class MapMode extends Mode {
   setupRide(o) { this.ride = new Ride(this, Object.assign({ traffic: this.mods.traffic }, o)); }
-  tickClock(dt) { this.clock += this.rate * dt / this.timeMul; }
+  tm() { return this.timeMul * (this.ride ? TRAVEL : 1); }   // en el mapa, el reloj corre √MS más lento (ver stats_ en 30-ride.js)
+  tickClock(dt) { this.clock += this.rate * dt / this.tm(); }
   update(dt) {
     this.t += dt; this.tickClock(dt);
     const sh = this.shower;
@@ -387,7 +388,7 @@ class ModeTecnico extends MapMode {
     });
   }
   tick(dt) {
-    this.sim.step(this.rate * dt / this.timeMul, this.clock);
+    this.sim.step(this.rate * dt / this.tm(), this.clock);
     const up = this.zs.filter(s => !s.broken).length / this.zs.length; this.opSum += up * dt; this.opT += dt;
     this.breakT -= dt; if (this.breakT <= 0) { this.breakT = this.breakEvery * this.rng.range(.7, 1.3); this.breakOne(); }
     if (this.clock >= this.endClock) this.end();
@@ -445,7 +446,7 @@ class ModeBalance extends MapMode {
     Snd.sfx('truck'); this.ride.float('Carga: ' + P.load + ' bicis', PAL.cie); this.retarget();
   }
   tick(dt) {
-    this.sim.step(this.rate * dt / this.timeMul, this.clock);
+    this.sim.step(this.rate * dt / this.tm(), this.clock);
     for (const o of this.orders.slice()) if (this.clock > o.due + 60) this.finishOrder(o, false);
     this.ordT -= dt; if ((this.orders.length < this.maxOrd && this.ordT <= 0) || !this.orders.length) { this.ordT = 8; this.newOrder(); }
     if (this.clock >= this.endClock) this.end();
@@ -486,7 +487,7 @@ class ModeMonitoreo extends Mode {
   say(m) { this.radio.unshift({ m, t: this.clock }); if (this.radio.length > 3) this.radio.length = 3; }
   go(t, x, y) { t.path = [{ x, y: t.y }, { x, y }]; }
   update(dt) {
-    this.t += dt; const dm = this.rate * dt; this.clock += dm; this.sim.step(dm, this.clock);
+    this.t += dt; const dm = this.rate * dt / (this.ride ? TRAVEL : 1); this.clock += dm; this.sim.step(dm, this.clock);
     const dp = this.base, spd = 60 * WK * dm * (this.tSpd || 1) * (this.has('camion') ? 1.15 : 1);
     for (const t of this.trucks) {
       if (t.path) {
@@ -625,7 +626,7 @@ class ModeSupervisor extends MapMode {
   }
   atDepot() { this.inDepot = true; if (this.cierreM && !this.cierre && !this.sub) this.runSub(new MGApertura(this, { cierre: true, clock0: this.clock }), mg => { this.cierre = this.clock <= this.endClock; this.score += 40 + mg.score; this.ride.removeMarker(this.cierreM); this.cierreM = null; this.endT = 1; }); }
   tick(dt) {
-    this.sim.step(this.rate * dt / this.timeMul, this.clock);
+    this.sim.step(this.rate * dt / this.tm(), this.clock);
     if (this.phase === 'staff') { this.clock = 300; this.coach = ''; return; }
     for (const s of this.sim.st) if (s.lateOpen && this.clock > 420) { s.open = true; s.lateOpen = false; }
     if (this.endT != null) { this.endT -= dt; if (this.endT <= 0) this.end(); return; }
