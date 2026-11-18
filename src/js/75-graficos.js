@@ -292,7 +292,8 @@ Object.assign(CityMap, {
     capa(v => v === TT.PLAZA, '#ddd3bd');
     capa((v, x, y) => { if (!pk(x, y)) return false; let n = 0; for (const [dx, dy] of N8) if (pk(x + dx, y + dy)) n++; return n >= 5; }, '#8e929a');
     capa(v => v === TT.BRICK, '#a99f91');
-    capa(v => v === TT.BLDG, '#9fa2a7');
+    const verdeZ = /Poblado|Laureles/.test(this.comunaAt(px0 + S / 2, py0 + S / 2)) || /Envigado/.test(this.muniAt(px0 + S / 2, py0 + S / 2));   // desde el aire, El Poblado, Laureles y Envigado son casi bosque entre los edificios
+    capa(v => v === TT.BLDG, verdeZ ? '#8fb072' : '#9fa2a7');   // allí, entre las torres hay jardines de las unidades
     capa(v => v === TT.WATER, '#87a872', .3);
     capa(v => v === TT.WATER, '#3f86c8');
     // textura del pasto y del monte: puntos, no cuadros
@@ -393,11 +394,15 @@ Object.assign(CityMap, {
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) if (g(x, y) === TT.PLAZA && h2(x, y, 72) < .07 && !this.lid.has(this.idx(x, y))) { const X = x * TS + 4 + h2(x, y, 73) * 6, Y = y * TS + 5 + h2(x, y, 74) * 6; c.fillRect(X, Y, 5, 1.5); c.fillStyle = '#5c4229'; c.fillRect(X, Y + 1.5, 5, .5); c.fillStyle = '#7a5a3a'; }
     // lugares emblemáticos
     for (const i of LMV) this.lugar3(c, LANDMARKS[i], i, 1);   // árboles, esculturas, postes, buses, aviones, la rueda de Chicago, las cruces
+    const cub = new Set(); if (verdeZ) for (const L of LT.all) { const P = L.pts; cub.add(this.idx(Math.floor(L.x / TS), Math.floor(L.y / TS))); for (let k = 0; k < 8; k += 2) cub.add(this.idx(Math.floor(P[k] / TS), Math.floor(P[k + 1] / TS))); }   // casillas con lote (ahí no van árboles)
     // árboles con sombra (en parques, monte y andenes anchos)
     for (let y = y0 - 1; y <= y0 + CH; y++) for (let x = x0 - 1; x <= x0 + CH; x++) {
       const v = g(x, y), r = h2(x, y, 5); let rad = 0;
-      const ens = this.sitT && this.sitT.has(this.idx(x, y));   // los campus son muy arborizados (así se ven desde el aire)
-      if (v === TT.GRASS && r < (ens ? .5 : .3) && !this.lid.has(this.idx(x, y))) rad = .36 + (r < .1 ? .14 : 0); else if (v === TT.WALK && r < .14) rad = .26; else if (v === TT.MOUNT && r < .6) rad = .42 + r * .3;
+      const ens = this.sitT && this.sitT.has(this.idx(x, y));   // los campus son muy arborizados (así se ven desde el aire), y El Poblado y Laureles son casi bosque entre los edificios
+      if (v === TT.GRASS && r < (ens || verdeZ ? .5 : .3) && !this.lid.has(this.idx(x, y))) rad = .36 + (r < .1 ? .14 : 0);
+      else if (verdeZ && v === TT.WALK && r < .32) rad = .3 + r * .4;
+      else if (pk(x, y) && r < (verdeZ ? .3 : .1)) rad = .3 + r * .3;   // arboledas sobre los parqueaderos y las entradas de las unidades
+      else if (verdeZ && v === TT.BLDG && r < .34 && !cub.has(this.idx(x, y))) rad = .38 + r * .5;   // jardines entre las torres else if (v === TT.WALK && r < .14) rad = .26; else if (v === TT.MOUNT && r < .6) rad = .42 + r * .3;
       if (!rad) continue; const X = x * TS + TS * (.3 + h2(x, y, 7) * .4), Y = y * TS + TS * (.3 + h2(x, y, 8) * .4), k = h2(x, y, 6), col = k < .05 ? '#f2c230' : k < .09 ? '#e88ab8' : v === TT.MOUNT ? '#2f6a33' : '#3f8a3f', R = rad * TS; if (this.sitG && !this.sitLibre(cx, cy, X, Y)) continue;
       c.fillStyle = 'rgba(8,14,30,.28)'; c.beginPath(); c.arc(X + R * .35, Y + R * .4, R, 0, TAU); c.fill(); c.fillStyle = sombra18(col); c.beginPath(); c.arc(X, Y, R, 0, TAU); c.fill();
       c.fillStyle = col; c.beginPath(); c.arc(X - R * .15, Y - R * .15, R * .78, 0, TAU); c.fill(); c.fillStyle = k < .09 ? '#fff3a088' : '#ffffff2e'; c.beginPath(); c.arc(X - R * .35, Y - R * .35, R * .38, 0, TAU); c.fill();

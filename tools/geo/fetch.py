@@ -24,6 +24,9 @@ q('landuse', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geome
 q('div', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=divisions/type=division_area/*', hive_partitioning=1) WHERE {inside} AND country='CO'")
 q('barrios', f"SELECT subtype, names.primary AS name, ST_Y(geometry) AS lat, ST_X(geometry) AS lon FROM read_parquet('{REL}/theme=divisions/type=division/*', hive_partitioning=1) WHERE {inside} AND country='CO' AND subtype IN ('neighborhood','locality')")
 q('buildings', f"SELECT subtype, class, height, num_floors, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
+# para los sitios reales (tools/geo/sitios.py): edificios con nombre, clase, pisos y forma del techo; y los lugares (alcaldías)
+q('edificios', f"SELECT names.primary AS name, subtype, class, height, num_floors, min_height, roof_shape, roof_color, facade_color, roof_material, facade_material, has_parts, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
+q('lugares_poi', f"SELECT names.primary AS name, basic_category AS cat, taxonomy.primary AS tax, ST_Y(geometry) lat, ST_X(geometry) lon, confidence FROM read_parquet('{REL}/theme=places/type=place/*', hive_partitioning=1) WHERE {inside}")
 # relieve
 Z = 13
 tx = lambda lon: int((lon + 180) / 360 * 2 ** Z)
