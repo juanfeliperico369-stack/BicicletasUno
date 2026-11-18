@@ -485,3 +485,49 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 - comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
+
+## 2026-11-18 · v1.6.0 · Los emblemáticos tal cual y la auditoría de El Metro
+
+Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los edificios más emblemáticos… y te dejo la auditoría de la otra IA».
+
+1. **Edificios emblemáticos con su forma** (`tools/geo/sitios.py` → partes en `src/data/sitios.bin`, SIT4; en el juego, `22-sitios.js`). Cada uno se miró en el satélite a 30 cm por píxel y se contrastó con fuentes:
+   - **Coltejer:** 36 pisos, con su remate que se angosta como una aguja.
+   - **Edificio EPM:** 14 pisos en terrazas de vidrio con techos verdes.
+   - **Biblioteca EPM:** volumen de piedra que se abre hacia arriba, sobre la Plaza de Cisneros.
+   - **Catedral Metropolitana:** ladrillo, con sus dos torres de 51,8 m en la fachada sobre el Parque de Bolívar.
+   - **La Candelaria:** dos torres con cúpulas de teja, mirando al Parque Berrío.
+   - **San Ignacio:** dos torres, y su claustro de teja.
+   - **Sagrado Corazón:** una torre con aguja alta.
+   - **Palacio de la Cultura:** muros ajedrezados en negro y verde grisáceo, con su cúpula de hierro.
+   - **Teatro Metropolitano:** planos de ladrillo inclinados, la torre del escenario y su plaza de ladrillo.
+   - **Museo de Antioquia, Palacio Nacional, edificios Carré y Vásquez y la estación del Ferrocarril:** muros art decó.
+   - **La Alpujarra:** 13 pisos con helipuerto.
+   - **Biblioteca España:** las tres «rocas» de pizarra, inclinadas.
+   - **153 iglesias más** con su torre en la fachada que mira a su parque.
+   - Las partes son prismas con base elevada y muros que se pueden inclinar. Cada muro se ve solo si la cámara queda de su lado.
+2. **Lugares que faltaban, en su sitio real:**
+   - el Teatro Metropolitano, a unos 270 m de donde estaba;
+   - el Museo de Antioquia;
+   - el Hospital Marco Fidel Suárez, a 1,4 km;
+   - la Terminal del Sur;
+   - las iglesias principales de Itagüí, a 300 m, y Copacabana, a 400 m.
+
+   Ahora hay 24 lugares con postal con su forma real. Plaza Botero sigue dibujada, con sus esculturas, junto al museo real. Un lugar dibujado a mano ya no le abre huecos a un edificio real que se sigue viendo.
+3. **La auditoría de El Metro** (detalle en `docs/AUDITORIA-MAPA.md`):
+   - **Río:** su perfil se quema al cargar el mapa (regresión isotónica) y se cierran sus huecos junto al agua: de 19 tramos que subían (hasta 22 m) a 1 (3 m), y de 5 cortes a 1.
+   - **Quebradas cubiertas:** se ven como una línea tenue sobre la calzada (la Santa Elena bajo La Playa).
+   - **Patios de trenes:** el patio‑taller del Metro en Bello, los talleres del Ferrocarril de Antioquia, el patio del Metro de la 80 y el del tranvía, con sus naves y su patio de rieles.
+   - **Seguridad:** Content‑Security‑Policy, sin *referrer* y guardado y mensajes de red sin `__proto__`.
+   - **Interfaz a 412 px:** los botones no tapan el minimapa, los textos caben en el círculo y la mano de ayuda se cierra con el primer movimiento.
+   - **Horario real del Metro:** fuera de servicio los trenes no corren, y «Antes del primer tren» usa las 5:00 los domingos y festivos.
+   - **Placas de lo poco conocido:** 16 datos en su lugar real, en el álbum, con 2 logros.
+   - **Medir siempre igual:** `node tools/auditoria-mapa.js`.
+
+**Qué se probó:**
+- todas las pruebas (`tests/run.js`), con la CSP puesta, y 54 partidas del bot sin errores;
+- rendimiento con CPU 4× lenta: mediana de 16,7 ms por cuadro;
+- 133 estaciones y 45 lugares alcanzables;
+- la herramienta de auditoría antes y después;
+- capturas de los emblemáticos y de la interfaz a 412 × 915 y 412 × 640.
+
+**Qué falta:** huellas reales para toda la ciudad. Antes hay que ajustar el ancho de las calles de ladera a las casas reales; si no, las casas quedarían sobre la calle.

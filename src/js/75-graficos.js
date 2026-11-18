@@ -399,7 +399,7 @@ Object.assign(CityMap, {
     // árboles con sombra (en parques, monte y andenes anchos)
     for (let y = y0 - 1; y <= y0 + CH; y++) for (let x = x0 - 1; x <= x0 + CH; x++) {
       const v = g(x, y), r = h2(x, y, 5); let rad = 0;
-      const ens = this.sitT && this.sitT.has(this.idx(x, y));   // los campus son muy arborizados (así se ven desde el aire), y El Poblado y Laureles son casi bosque entre los edificios
+      const si = this.sitT ? this.sitT.get(this.idx(x, y)) : undefined, ens = si !== undefined; if (ens && this.sit.S[si] && this.sit.S[si].k === 'trans') continue;   // en los patios de trenes no hay árboles   // los campus son muy arborizados (así se ven desde el aire), y El Poblado y Laureles son casi bosque entre los edificios
       if (v === TT.GRASS && r < (ens || verdeZ ? .5 : .3) && !this.lid.has(this.idx(x, y))) rad = .36 + (r < .1 ? .14 : 0);
       else if (verdeZ && v === TT.WALK && r < .32) rad = .3 + r * .4;
       else if (pk(x, y) && r < (verdeZ ? .3 : .1)) rad = .3 + r * .3;   // arboledas sobre los parqueaderos y las entradas de las unidades

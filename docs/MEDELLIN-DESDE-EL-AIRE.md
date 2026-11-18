@@ -1,6 +1,6 @@
 # Medellín desde el aire
 
-**Fecha:** 18‑nov‑2026 · **Versión del juego:** 1.5.0.
+**Fecha:** 18‑nov‑2026 · **Versiones del juego:** 1.5.0 y 1.6.0.
 
 **Pedido del autor:** «investiga a Medellín desde contenido audiovisual aéreo, mira las tomas desde arriba para que entiendas su topografía, la forma de los edificios y las casas, el ambiente… y haz los lugares importantes tal cual a las imágenes (las universidades, escuelas, alcaldía y demás)».
 
@@ -55,12 +55,22 @@
 | Azoteas | Las de los edificios de ladrillo, de baldosa naranja. |
 | Nombres | Las universidades, alcaldías, hospitales, coliseos, bibliotecas y terminales grandes llevan su nombre en el mapa. |
 
-## 4. Lo que no trae el dato (y queda para después)
-- **Sin forma real todavía:**
-  - lugares que no aparecen con su nombre en los datos: Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur;
-  - lugares sin templo real cerca: las iglesias de Itagüí y Copacabana.
+## 3b. v1.6.0: los emblemáticos, de cerca
+Con el satélite a 30 cm por píxel y fuentes de prensa y arquitectura se modelaron los edificios más emblemáticos:
+- **Coltejer:** 36 pisos, con el remate que se angosta como una aguja.
+- **Edificio EPM:** 14 pisos en terrazas con techos verdes desde 2013.
+- **Biblioteca EPM:** volumen de piedra con la fachada de vidrio inclinada sobre la Plaza de Cisneros.
+- **Catedral Metropolitana:** dos torres de 51,8 m en la fachada sobre el Parque de Bolívar.
+- **La Candelaria:** dos torres con cúpulas de teja, mirando al Parque Berrío.
+- **Palacio de la Cultura:** ajedrezado en negro y verde grisáceo, con su cúpula de hierro belga.
+- **Teatro Metropolitano:** planos de ladrillo inclinados por la acústica, y su plaza de ladrillo.
+- **Museo de Antioquia:** art decó de 1937, con teja alrededor de sus patios.
+- **Biblioteca España:** tres «rocas» de pizarra con techo claro.
 
-  Por eso siguen dibujados a mano.
+Además, 153 iglesias tienen su torre en la fachada que mira a su parque. Fuentes: [Metrocuadrado](https://www.metrocuadrado.com/noticias/actualidad/conozca-6-edificios-emblematicos-del-pais-2858), [Alcaldía de Medellín sobre el Coltejer](https://www.medellin.gov.co/es/sala-de-prensa/noticias/el-edificio-coltejer-la-aguja-que-acaricia-las-nubes-de-medellin/), [Skyscraper Center: Edificio EPM](https://www.skyscrapercenter.com/building/edificio-empresas-publicas-de-medellin/20140), [Sempergreen: techos verdes de EPM](https://www.sempergreen.com/de/referenzen/burogebaude), [ArqA: Biblioteca EPM](https://arqa.com/editorial/medellin-r/biblioteca-epm), [Semana: la Catedral](https://www.semana.com/turismo/articulo/asi-es-la-basilica-colombiana-reconocida-como-la-mas-grande-del-mundo-en-su-estilo/202624/), [Frommer's: Parque Berrío](https://www.frommers.com/destinations/medellin/attractions/parque-berro), [El Colombiano: el Palacio de la Cultura](https://www.elcolombiano.com/historico/apenas_un_cuarto_de_historia-PFEC_130807), [EcuRed: Teatro Metropolitano](https://www.ecured.cu/Teatro_Metropolitano_(Medell%C3%ADn)) y [El Colombiano: el Museo de Antioquia](https://www.elcolombiano.com/medellin/historia-del-museo-de-antioquia-de-centro-del-poder-a-sede-cultural-AF37457135).
+
+## 4. Lo que no trae el dato (y queda para después)
+- **Resuelto en la v1.6.0:** el Teatro Metropolitano, el Museo de Antioquia, el Hospital Marco Fidel Suárez y la Terminal del Sur, que no aparecían con su nombre en los datos, se ubicaron por su coordenada mirada en el satélite. También se ubicaron las iglesias de Itagüí y Copacabana, que estaban corridas 300 y 400 m.
 - **Colores:** los datos casi no traen colores de techo ni de fachada (12 de 693.553), así que se eligieron por lugar mirando las fotos.
 - **Alturas:** salen de los pisos cuando el dato los trae; si no, de la clase y el tamaño del edificio.
 - **El resto de la ciudad** sigue con los lotes ordenados a lo largo de cada calle (v1.4.0). Pasar todo el valle a huellas reales costaría unos 6 MB más de descarga.

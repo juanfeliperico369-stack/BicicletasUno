@@ -32,7 +32,7 @@ const Placas = JE.placas = {
     for (const q of this.lista()) {
       if (V[q.id] || Math.abs(q.x - P.x) > r || Math.abs(q.y - P.y) > r || dist(q.x, q.y, P.x, P.y) > r) continue;
       V[q.id] = Cal.key(M.fecha || Cal.now()); const nw = Logros.check(); Save.save(); Snd.sfx('star');
-      M.ride.stamp = { t: 3.2, title: 'PLACA · ' + q.t.toUpperCase(), sub: Object.keys(V).length + ' de ' + PLACAS.length + ' placas', bg: PAL.az };
+      M.ride.stamp = { t: 3.2, title: 'PLACA ' + Object.keys(V).length + '/' + PLACAS.length, sub: q.t, bg: PAL.az };
       if (JE.ui) { JE.ui.toast('📜 ' + q.t + ': ' + q.txt); if (nw.length) JE.ui.toast('🏅 Logro: ' + nw.map(l => l.name).join(', ')); }
       break;
     }

@@ -36,7 +36,9 @@ src/js/45-mg2.js      minijuegos v0.4 inspirados en Infinity Games y Railways: M
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
-src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas y edificios con su forma real
+src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas, edificios con su forma real y partes de los emblemáticos
+src/js/87-placas.js   placas de lo poco conocido (16 datos en su lugar real, álbum y logros)
+tools/auditoria-mapa.js mide el mapa que se juega (río, agua, escaleras, estaciones, sitios, CSP): docs/AUDITORIA-MAPA.md
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
 src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
 src/js/57-equipo.js   Turno en equipo (cooperativo en red): ModeCoopMon (anfitrión, Monitoreo) y ModeCoopDriver (invitados, camión)
@@ -170,6 +172,28 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.6.0 · Emblemáticos y auditoría de El Metro* (`tools/geo/sitios.py`, `22-sitios.js`, `20-map.js`, `87-placas.js`, `tools/auditoria-mapa.js`):
+- **Partes (`SIT3`/`SIT4`):** prismas entre los pisos `z0` y `z1`, con su anillo de abajo `B` y, si los muros se inclinan, el de arriba `T` (mismos vértices; no se quitan puntos repetidos, para que una aguja pueda converger en un punto).
+  - Se calculan con shapely: `ejes()` (rectángulo mínimo), `escala()`, `caja()` y `adentro()` (*buffer* negativo).
+  - Las recetas van por nombre (`emb(rx, fn)`); `torres()` pone una o dos torres en el extremo que mira al parque más grande y cercano (`frente()`).
+  - Los suelos (plaza de ladrillo y patio de rieles con su ángulo) van en su propia sección.
+- **Dibujo (`sitEdif3D`):** el cuerpo (si `fl > 0`), y luego las partes de abajo hacia arriba (`sitParte3D`).
+  - Un muro se ve si la cámara, a la altura `1/K`, queda del lado de su normal 3D.
+  - Techos: `jardin`, `cupula` y borde.
+  - Ajedrezado de muros con `sitCuadros` (interpolación bilineal).
+- **Lugares:**
+  - `PUNTOS` en `sitios.py` nombra las huellas que no tienen nombre en los datos (por su coordenada mirada en el satélite);
+  - `SIT_NOMBRE` ubica cada lugar sobre su edificio real;
+  - `paintLandmark` respeta las casillas de un edificio real cuyo centro queda fuera del lugar (`sitBE`).
+- **Río y agua (`rioCorrido`, `limpiaManchones`):**
+  - regresión isotónica decreciente sobre el perfil del cauce, quemada en las cuatro esquinas del relieve de cada punto;
+  - los huecos junto al agua pasan a agua o puente;
+  - los manchones de 1 a 4 casillas en plena ciudad pasan a lo que los rodea.
+- **Otros:**
+  - `Cal.metro(d)` da el horario del Metro y `Ride.metroOn()` detiene los trenes fuera de servicio;
+  - CSP y `referrer` en `src/index.html`;
+  - `sinProto` en todo `JSON.parse` de datos externos.
 
 *v1.5.0 · Medellín desde el aire: sitios reales* (`tools/geo/sitios.py`, `src/data/sitios.bin` y `sitios.json`, `22-sitios.js`, `docs/MEDELLIN-DESDE-EL-AIRE.md`):
 - **Datos:**

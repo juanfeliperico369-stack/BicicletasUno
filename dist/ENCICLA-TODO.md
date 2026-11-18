@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.5.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v1.6.0 · compilado el 2026-11-18.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.5.0)
+## 2.3 Estado actual (v1.6.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-18 | Claude Code | documento creado (v1.5.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-18 | Claude Code | documento creado (v1.6.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1619,7 +1619,9 @@ src/js/45-mg2.js      minijuegos v0.4 inspirados en Infinity Games y Railways: M
 src/js/50-modes.js    ROLES (9 oficios), PERKS, NOVEDADES, Mode/MapMode/ModeSub y las 9 clases de modo
 src/js/55-carrera.js  Carrera de postales (multijugador): contra un bot (3 niveles) o en red
 src/js/21-map-art.js  dibujos pixel de los lugares con postal
-src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas y edificios con su forma real
+src/js/22-sitios.js   sitios reales (universidades, colegios, alcaldías, hospitales, iglesias…): carga, cuadrícula, canchas, piscinas, edificios con su forma real y partes de los emblemáticos
+src/js/87-placas.js   placas de lo poco conocido (16 datos en su lugar real, álbum y logros)
+tools/auditoria-mapa.js mide el mapa que se juega (río, agua, escaleras, estaciones, sitios, CSP): docs/AUDITORIA-MAPA.md
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
 src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
 src/js/57-equipo.js   Turno en equipo (cooperativo en red): ModeCoopMon (anfitrión, Monitoreo) y ModeCoopDriver (invitados, camión)
@@ -1753,6 +1755,28 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v1.6.0 · Emblemáticos y auditoría de El Metro* (`tools/geo/sitios.py`, `22-sitios.js`, `20-map.js`, `87-placas.js`, `tools/auditoria-mapa.js`):
+- **Partes (`SIT3`/`SIT4`):** prismas entre los pisos `z0` y `z1`, con su anillo de abajo `B` y, si los muros se inclinan, el de arriba `T` (mismos vértices; no se quitan puntos repetidos, para que una aguja pueda converger en un punto).
+  - Se calculan con shapely: `ejes()` (rectángulo mínimo), `escala()`, `caja()` y `adentro()` (*buffer* negativo).
+  - Las recetas van por nombre (`emb(rx, fn)`); `torres()` pone una o dos torres en el extremo que mira al parque más grande y cercano (`frente()`).
+  - Los suelos (plaza de ladrillo y patio de rieles con su ángulo) van en su propia sección.
+- **Dibujo (`sitEdif3D`):** el cuerpo (si `fl > 0`), y luego las partes de abajo hacia arriba (`sitParte3D`).
+  - Un muro se ve si la cámara, a la altura `1/K`, queda del lado de su normal 3D.
+  - Techos: `jardin`, `cupula` y borde.
+  - Ajedrezado de muros con `sitCuadros` (interpolación bilineal).
+- **Lugares:**
+  - `PUNTOS` en `sitios.py` nombra las huellas que no tienen nombre en los datos (por su coordenada mirada en el satélite);
+  - `SIT_NOMBRE` ubica cada lugar sobre su edificio real;
+  - `paintLandmark` respeta las casillas de un edificio real cuyo centro queda fuera del lugar (`sitBE`).
+- **Río y agua (`rioCorrido`, `limpiaManchones`):**
+  - regresión isotónica decreciente sobre el perfil del cauce, quemada en las cuatro esquinas del relieve de cada punto;
+  - los huecos junto al agua pasan a agua o puente;
+  - los manchones de 1 a 4 casillas en plena ciudad pasan a lo que los rodea.
+- **Otros:**
+  - `Cal.metro(d)` da el horario del Metro y `Ride.metroOn()` detiene los trenes fuera de servicio;
+  - CSP y `referrer` en `src/index.html`;
+  - `sinProto` en todo `JSON.parse` de datos externos.
 
 *v1.5.0 · Medellín desde el aire: sitios reales* (`tools/geo/sitios.py`, `src/data/sitios.bin` y `sitios.json`, `22-sitios.js`, `docs/MEDELLIN-DESDE-EL-AIRE.md`):
 - **Datos:**
@@ -2607,6 +2631,52 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 - comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
+
+### 2026-11-18 · v1.6.0 · Los emblemáticos tal cual y la auditoría de El Metro
+
+Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los edificios más emblemáticos… y te dejo la auditoría de la otra IA».
+
+1. **Edificios emblemáticos con su forma** (`tools/geo/sitios.py` → partes en `src/data/sitios.bin`, SIT4; en el juego, `22-sitios.js`). Cada uno se miró en el satélite a 30 cm por píxel y se contrastó con fuentes:
+   - **Coltejer:** 36 pisos, con su remate que se angosta como una aguja.
+   - **Edificio EPM:** 14 pisos en terrazas de vidrio con techos verdes.
+   - **Biblioteca EPM:** volumen de piedra que se abre hacia arriba, sobre la Plaza de Cisneros.
+   - **Catedral Metropolitana:** ladrillo, con sus dos torres de 51,8 m en la fachada sobre el Parque de Bolívar.
+   - **La Candelaria:** dos torres con cúpulas de teja, mirando al Parque Berrío.
+   - **San Ignacio:** dos torres, y su claustro de teja.
+   - **Sagrado Corazón:** una torre con aguja alta.
+   - **Palacio de la Cultura:** muros ajedrezados en negro y verde grisáceo, con su cúpula de hierro.
+   - **Teatro Metropolitano:** planos de ladrillo inclinados, la torre del escenario y su plaza de ladrillo.
+   - **Museo de Antioquia, Palacio Nacional, edificios Carré y Vásquez y la estación del Ferrocarril:** muros art decó.
+   - **La Alpujarra:** 13 pisos con helipuerto.
+   - **Biblioteca España:** las tres «rocas» de pizarra, inclinadas.
+   - **153 iglesias más** con su torre en la fachada que mira a su parque.
+   - Las partes son prismas con base elevada y muros que se pueden inclinar. Cada muro se ve solo si la cámara queda de su lado.
+2. **Lugares que faltaban, en su sitio real:**
+   - el Teatro Metropolitano, a unos 270 m de donde estaba;
+   - el Museo de Antioquia;
+   - el Hospital Marco Fidel Suárez, a 1,4 km;
+   - la Terminal del Sur;
+   - las iglesias principales de Itagüí, a 300 m, y Copacabana, a 400 m.
+
+   Ahora hay 24 lugares con postal con su forma real. Plaza Botero sigue dibujada, con sus esculturas, junto al museo real. Un lugar dibujado a mano ya no le abre huecos a un edificio real que se sigue viendo.
+3. **La auditoría de El Metro** (detalle en `docs/AUDITORIA-MAPA.md`):
+   - **Río:** su perfil se quema al cargar el mapa (regresión isotónica) y se cierran sus huecos junto al agua: de 19 tramos que subían (hasta 22 m) a 1 (3 m), y de 5 cortes a 1.
+   - **Quebradas cubiertas:** se ven como una línea tenue sobre la calzada (la Santa Elena bajo La Playa).
+   - **Patios de trenes:** el patio‑taller del Metro en Bello, los talleres del Ferrocarril de Antioquia, el patio del Metro de la 80 y el del tranvía, con sus naves y su patio de rieles.
+   - **Seguridad:** Content‑Security‑Policy, sin *referrer* y guardado y mensajes de red sin `__proto__`.
+   - **Interfaz a 412 px:** los botones no tapan el minimapa, los textos caben en el círculo y la mano de ayuda se cierra con el primer movimiento.
+   - **Horario real del Metro:** fuera de servicio los trenes no corren, y «Antes del primer tren» usa las 5:00 los domingos y festivos.
+   - **Placas de lo poco conocido:** 16 datos en su lugar real, en el álbum, con 2 logros.
+   - **Medir siempre igual:** `node tools/auditoria-mapa.js`.
+
+**Qué se probó:**
+- todas las pruebas (`tests/run.js`), con la CSP puesta, y 54 partidas del bot sin errores;
+- rendimiento con CPU 4× lenta: mediana de 16,7 ms por cuadro;
+- 133 estaciones y 45 lugares alcanzables;
+- la herramienta de auditoría antes y después;
+- capturas de los emblemáticos y de la interfaz a 412 × 915 y 412 × 640.
+
+**Qué falta:** huellas reales para toda la ciudad. Antes hay que ajustar el ancho de las calles de ladera a las casas reales; si no, las casas quedarían sobre la calle.
 
 ---
 
