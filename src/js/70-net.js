@@ -62,7 +62,12 @@ const Net = JE.net = {
   async unpack(code) {
     code = String(code || '').replace(/\s+/g, ''); const i = code.indexOf('JE'); if (i < 0) throw new Error('Código no válido'); code = code.slice(i);
     const v = code.slice(0, 3), body = code.slice(4), bytes = b64u.dec(body);
-    if (v === 'JE1') { if (!window.DecompressionStream) throw new Error('Tu navegador no puede leer este código'); const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')); return JSON.parse(await new Response(ds).text()); }
+    if (v === 'JE1') {   // se descomprime con tope de 64 KB: un código malicioso no puede inflarse a decenas de MB
+      if (!window.DecompressionStream) throw new Error('Tu navegador no puede leer este código');
+      const rd = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader(), parts = []; let n = 0;
+      for (;;) { const { done, value } = await rd.read(); if (done) break; n += value.length; if (n > 65536) { try { rd.cancel(); } catch (e) { } throw new Error('Código demasiado grande'); } parts.push(value); }
+      const all = new Uint8Array(n); let o = 0; for (const q of parts) { all.set(q, o); o += q.length; } return JSON.parse(new TextDecoder().decode(all));
+    }
     if (v === 'JE0') return JSON.parse(new TextDecoder().decode(bytes));
     throw new Error('Código no válido');
   },

@@ -120,5 +120,6 @@ Ride.prototype.drawGlow = function (b, ox, oy, inV, n) {
 };
 Ride.prototype.hudLife = function (V, sx, sy) {
   for (const cb of this.map.cables) { if (!cb.name) continue; const x = sx(cb.bx), y = sy(cb.by) - 12; if (x > 20 && x < V.w - 20 && y > 50 && y < V.h - 20 && (!this.lblRoom || this.lblRoom(x, y, cb.name.length * 6 + 8, 16))) V.text(cb.name, x, y, { size: 11, align: 'center', color: '#fff', bg: cb.col, pad: 3 }); }
+  for (const L of this.map.mp || []) for (const s of L.st) { const x = sx(s.px), y = sy(s.py) - 18; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 64, 14))) V.text('Metroplús · ' + s.name, x, y, { size: 10, align: 'center', color: '#fff', bg: L.col, pad: 2 }); }
   const T = this.map.tram; for (const s of T.st) { const x = sx(s.px), y = sy(s.py) - 24; if (x > 0 && x < V.w && y > 50 && y < V.h && (!this.lblRoom || this.lblRoom(x, y, s.name.length * 5.5 + 50, 14))) V.text('Tranvía · ' + s.name, x, y, { size: 10, align: 'center', color: PAL.az, bg: PAL.cie, pad: 2 }); }
 };

@@ -126,12 +126,12 @@ const PUNTOS = {
   pandequeso: [6.1748, -75.5960, 'Puente Pandequeso (Estación Envigado)'], suramericana: [6.2532, -75.5826, 'Estación Suramericana'],
   campus: [6.2618, -75.5770, 'Campus de la Universidad Nacional'], taller: [6.2306, -75.6004, 'Taller y bodega EnCicla']
 };
-/* Metrocables: [nombre, color, [lat, lon, estación]...] (posiciones aproximadas) */
+/* Metrocables: [nombre, color oficial, [lat, lon, estación]...] (posiciones y colores de El Metro, src/data/red.js) */
 const CABLES = [
-  ['Metrocable K', '#f2a900', [[6.3000, -75.5583, 'Acevedo'], [6.2958, -75.5520, 'Andalucía'], [6.2952, -75.5482, 'Popular'], [6.2942, -75.5425, 'Santo Domingo']]],
-  ['Metrocable L · Arví', '#7cb342', [[6.2942, -75.5425, 'Santo Domingo'], [6.2826, -75.5030, 'Parque Arví']]],
-  ['Metrocable P', '#d14b9a', [[6.3000, -75.5583, 'Acevedo'], [6.3048, -75.5658, 'SENA'], [6.3072, -75.5762, 'Doce de Octubre'], [6.3090, -75.5852, 'El Progreso']]],
-  ['Metrocable J', '#e8641f', [[6.2566, -75.6136, 'San Javier'], [6.2655, -75.6152, 'Juan XXIII'], [6.2755, -75.6143, 'Vallejuelos'], [6.2810, -75.6151, 'La Aurora']]],
-  ['Metrocable H', '#7a5cc4', [[6.2350, -75.5385, 'Oriente'], [6.2318, -75.5338, 'Las Torres'], [6.2290, -75.5290, 'Villa Sierra']]],
-  ['Metrocable M', '#00a3a0', [[6.2400, -75.5520, 'Miraflores'], [6.2445, -75.5455, 'El Pinal'], [6.2485, -75.5390, 'Trece de Noviembre']]]
+  ['Metrocable K', '#B8CF40', [[6.30032, -75.55841, 'Acevedo'], [6.29633, -75.55182, 'Andalucía'], [6.29515, -75.54810, 'Popular'], [6.29313, -75.54162, 'Santo Domingo Savio']]],
+  ['Metrocable L · Arví', '#8E612A', [[6.29313, -75.54162, 'Santo Domingo Savio'], [6.28150, -75.50296, 'Arví']]],
+  ['Metrocable P', '#EC343A', [[6.30032, -75.55841, 'Acevedo'], [6.30184, -75.56740, 'SENA'], [6.30424, -75.57601, 'Doce de Octubre'], [6.30592, -75.58209, 'El Progreso']]],
+  ['Metrocable J', '#F6C538', [[6.25675, -75.61342, 'San Javier'], [6.26565, -75.61364, 'Juan XXIII'], [6.27534, -75.61397, 'Vallejuelos'], [6.28113, -75.61418, 'La Aurora']]],
+  ['Metrocable H', '#EB318E', [[6.23334, -75.53997, 'Oriente'], [6.23667, -75.53640, 'Las Torres'], [6.23489, -75.52874, 'Villa Sierra']]],
+  ['Metrocable M', '#743D90', [[6.24172, -75.54906, 'Miraflores'], [6.24531, -75.54448, 'El Pinal'], [6.24760, -75.54145, 'Trece de Noviembre']]]
 ];

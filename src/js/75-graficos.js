@@ -44,7 +44,10 @@ CityMap.bridge = function () {
   this.bridged = { roads: r, ciclo: c, cut };
 };
 /* ---------- calles como líneas: la red se rastrea y se simplifica a tramos rectos (sin escalones) ---------- */
-const CHW = { 1: .96, 2: 1.3, 3: 1.5, 4: 1.1, 5: .42, 6: .7, 7: .55, 8: .3 };   // 1 calle, 4 carrera, 2 avenida, 3 autopista, 5 ciclorruta, 6 peatonal, 7 escalas, 8 sendero
+const CHW = { 1: .96, 2: 1.3, 3: 1.5, 4: 1.1, 5: .42, 6: .7, 7: .55, 8: .3 };
+/* ancho dibujado de cada tramo (px): con el mapa de 10 m sale del dato real (malla vial oficial o ancho típico de su clase), dentro de unos límites jugables */
+const WLIM = { 1: [.62, 1.25], 4: [.75, 1.5], 2: [1.05, 2.4], 3: [1.05, 1.8], 5: [.36, .5], 6: [.5, 1], 7: [.45, .7], 8: [.25, .4] };
+const chW = (k, m) => Math.round((VM.tile >= 20 || !m || !WLIM[k] ? CHW[k] || 1 : clamp(m / VM.tile, WLIM[k][0], WLIM[k][1])) * 20) / 20 * TS;   // 1 calle, 4 carrera, 2 avenida, 3 autopista, 5 ciclorruta, 6 peatonal, 7 escalas, 8 sendero
 CityMap.vectorize = function () {
   const W = MW, H = MH, N = W * H, t = this.t, chains = this.chains = [], kindOf = v => v === TT.ROAD ? 1 : v === TT.AVE || v === TT.BRIDGE ? 2 : v === TT.AUTO ? 3 : v === TT.CICLO ? 5 : 0;
   const rdp = (P, eps) => {   // Ramer-Douglas-Peucker iterativo sobre [x0,y0,x1,y1,...]
@@ -77,7 +80,7 @@ CityMap.vectorize = function () {
     const nb = (i, f) => { const x = i % W, y = (i / W) | 0; for (let k = 0; k < 8; k++) { const dx = N8[k][0], dy = N8[k][1], nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const j = ny * W + nx; if (!m[j]) continue; if (dx && dy && (m[y * W + nx] || m[ny * W + x])) continue; f(j); } };
     const deg = new Uint8Array(N); for (let i = 0; i < N; i++) if (m[i]) { let d = 0; nb(i, () => d++); deg[i] = d; }
     const seen = new Uint8Array(N), pair = new Set();
-    const emit = ids => { const P = [], cnt = {}; for (const i of ids) { P.push((i % W) + .5, ((i / W) | 0) + .5); const k = kindOf(t[i]); cnt[k] = (cnt[k] | 0) + 1; } let k = 0, best = -1; for (const q in cnt) if (cnt[q] > best && +q) { best = cnt[q]; k = +q; } const S = rdp(P, eps).map(v => v * TS); chains.push({ k, p: S, j0: deg[ids[0]] > 2, j1: deg[ids[ids.length - 1]] > 2 }); };
+    const emit = ids => { const P = [], cnt = {}; for (const i of ids) { P.push((i % W) + .5, ((i / W) | 0) + .5); const k = kindOf(t[i]); cnt[k] = (cnt[k] | 0) + 1; } let k = 0, best = -1; for (const q in cnt) if (cnt[q] > best && +q) { best = cnt[q]; k = +q; } const S = rdp(P, eps).map(v => v * TS); chains.push({ k, p: S, w: chW(k), j0: deg[ids[0]] > 2, j1: deg[ids[ids.length - 1]] > 2 }); };
     const walk = (a, b) => { const ids = [a]; let prev = a, cur = b; for (;;) { ids.push(cur); if (deg[cur] !== 2 || seen[cur]) break; seen[cur] = 1; let nx = -1; nb(cur, j => { if (j !== prev && nx < 0) nx = j; }); if (nx < 0 || nx === a) { if (nx === a) ids.push(a); break; } prev = cur; cur = nx; } return ids; };
     for (let i = 0; i < N; i++) { if (!m[i] || deg[i] === 2) continue; if (!deg[i]) { emit([i]); continue; } nb(i, j => { if (deg[j] === 2) { if (seen[j]) return; } else { const key = i < j ? i * N + j : j * N + i; if (pair.has(key)) return; pair.add(key); } emit(walk(i, j)); }); }
     for (let i = 0; i < N; i++) if (m[i] && deg[i] === 2 && !seen[i]) { let j0 = -1; nb(i, j => { if (j0 < 0) j0 = j; }); seen[i] = 1; emit(walk(i, j0)); }
@@ -85,13 +88,13 @@ CityMap.vectorize = function () {
   if (this.vias) {   // calles exactas de los datos: cada vía con su forma y su nombre
     const ends = new Map(), key = (x, y) => Math.round(x) + ',' + Math.round(y);
     for (const v of this.vias) if (v.k <= 4) { const p = v.p, n = p.length; for (const q of [key(p[0], p[1]), key(p[n - 2], p[n - 1])]) ends.set(q, (ends.get(q) || 0) + 1); }
-    for (const v of this.vias) { const p = v.p, n = p.length; chains.push({ k: v.k, p, n: v.n, j0: v.k <= 4 && ends.get(key(p[0], p[1])) > 1, j1: v.k <= 4 && ends.get(key(p[n - 2], p[n - 1])) > 1 }); }
+    for (const v of this.vias) { const p = v.p, n = p.length; chains.push({ k: v.k, p, n: v.n, nom: v.nom, w: chW(v.k, v.w), j0: v.k <= 4 && ends.get(key(p[0], p[1])) > 1, j1: v.k <= 4 && ends.get(key(p[n - 2], p[n - 1])) > 1 }); }
   } else trace(isRoad, .95, true);
-  trace(v => v === TT.CICLO, .95);
+  if (!(this.vias && VM.v >= 3)) trace(v => v === TT.CICLO, .95);   // v3: las ciclorrutas ya vienen como vectores
   // la física sigue a la línea: las casillas bajo cada tramo recto pasan a ser vía
   const soft = [TT.GRASS, TT.BRICK, TT.BLDG, TT.WALK, TT.PLAZA, TT.STEPS], code = { 1: TT.ROAD, 2: TT.AVE, 3: TT.AUTO, 4: TT.ROAD, 5: TT.CICLO };
   const cov = this.cov = new Uint8Array(N);
-  for (const ch of chains) { const p = ch.p, r = ch.k === 5 ? .3 : CHW[ch.k] * .42, rp = !this.vias || ch.k === 5 ? r : ch.k === 1 || ch.k === 4 ? 0 : .3, v = code[ch.k]; if (!v) continue;   // con vías exactas, la física solo toma el eje (la cuadrícula ya trae la calle)
+  for (const ch of chains) { const p = ch.p, r = ch.k === 5 ? .3 : ch.w / TS * .42, rp = !this.vias || ch.k === 5 ? r : ch.k === 1 || ch.k === 4 ? 0 : .3, v = code[ch.k]; if (!v) continue;   // con vías exactas, la física solo toma el eje (la cuadrícula ya trae la calle)
     for (let i = 0; i + 3 < p.length; i += 2) { const ax = p[i] / TS, ay = p[i + 1] / TS, bx = p[i + 2] / TS, by = p[i + 3] / TS, L = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(L / .25));
       for (let s = 0; s <= n; s++) { const x = ax + (bx - ax) * s / n, y = ay + (by - ay) * s / n; for (let yy = Math.floor(y - r); yy <= Math.floor(y + r); yy++) for (let xx = Math.floor(x - r); xx <= Math.floor(x + r); xx++) { if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const q = yy * W + xx, cur = t[q]; if (v !== TT.CICLO) cov[q] = 1; if (xx < Math.floor(x - rp) || xx > Math.floor(x + rp) || yy < Math.floor(y - rp) || yy > Math.floor(y + rp)) continue; if (soft.includes(cur) && (v !== TT.CICLO || cur !== TT.BLDG && cur !== TT.BRICK)) t[q] = v; } } } }
   // índice espacial por celdas de 32 casillas
@@ -108,7 +111,7 @@ CityMap.zebras = function (x0, y0, w, h) {
     if (!L.zb) {
       L.zb = [];
       for (const ch of this.chainsNear(L.x - 2 * TS, L.y - 2 * TS, 4 * TS, 4 * TS)) {
-        if (!(ch.k >= 1 && ch.k <= 4) || ch.p.length < 4) continue; const p = ch.p, hw = CHW[ch.k] * TS / 2; let bd = 1.4 * TS, bi = -1, bt = 0;
+        if (!(ch.k >= 1 && ch.k <= 4) || ch.p.length < 4) continue; const p = ch.p, hw = ch.w / 2; let bd = 1.4 * TS, bi = -1, bt = 0;
         for (let i = 2; i < p.length; i += 2) { const ax = p[i - 2], ay = p[i - 1], dx = p[i] - ax, dy = p[i + 1] - ay, t = clamp(((L.x - ax) * dx + (L.y - ay) * dy) / (dx * dx + dy * dy || 1), 0, 1), d = Math.hypot(ax + dx * t - L.x, ay + dy * t - L.y); if (d < bd) { bd = d; bi = i; bt = t; } }
         if (bi < 0) continue; const ax = p[bi - 2], ay = p[bi - 1], dx = p[bi] - ax, dy = p[bi + 1] - ay, len = Math.hypot(dx, dy); if (len < 1) continue;
         const ux = dx / len, uy = dy / len, cx = ax + dx * bt, cy = ay + dy * bt;
@@ -141,13 +144,13 @@ Object.assign(CityMap, {
     const q = this.cq(), k = cx + ',' + cy + ':' + q; let c = this.chunks2.get(k);
     if (c) { this.chunks2.delete(k); this.chunks2.set(k, c); return c; }
     c = Art.mk(CH * TS * q, CH * TS * q, x => this.drawGround3(x, cx, cy, q));
-    this.chunks2.set(k, c); if (this.chunks2.size > 14) this.chunks2.delete(this.chunks2.keys().next().value);
+    this.chunks2.set(k, c); if (this.chunks2.size > (navigator.deviceMemory && navigator.deviceMemory <= 2 ? 10 : 14)) this.chunks2.delete(this.chunks2.keys().next().value);
     return c;
   },
   /* bloques con volumen de un sector: rectángulos de edificios (por manzana) y de casas */
   blocks(cx, cy) {
     const key = cx + ',' + cy; let L = this.blk.get(key); if (L) return L; L = [];
-    if (!this.tallT) this.tallT = TALL.map(([la, lo, r]) => { const g = geoT(la, lo); return [g.x, g.y, r]; });
+    if (!this.tallT) this.tallT = TALL.map(([la, lo, r]) => { const g = geoT(la, lo); return [g.x, g.y, r * MS]; });
     const x0 = cx * CH, y0 = cy * CH, used = new Uint8Array(CH * CH), free = (i, j, v) => !used[j * CH + i] && this.get(x0 + i, y0 + j) === v && !this.lid.has(this.idx(x0 + i, y0 + j));
     for (let j = 0; j < CH; j++) for (let i = 0; i < CH; i++) {
       const x = x0 + i, y = y0 + j, v = this.get(x, y); if (v !== TT.BLDG || !free(i, j, v)) continue;   // las casas (ladrillo) van en el suelo, en fila
@@ -156,7 +159,8 @@ Object.assign(CityMap, {
       let h = 1; grow: while (j + h < my) { for (let k = 0; k < w; k++) if (!free(i + k, j + h, v)) break grow; h++; }
       for (let b = 0; b < h; b++) for (let a = 0; a < w; a++) used[(j + b) * CH + i + a] = 1;
       const r = h2(Math.floor(x / cell), Math.floor(y / cell), 21), r2 = h2(x, y, 22); let boost = 0; for (const [tx, ty, rad] of this.tallT) boost = Math.max(boost, clamp(1.5 - Math.hypot(x - tx, y - ty) / rad, 0, 1));
-      const house = v === TT.BRICK, z = house ? .07 + .05 * r : .13 + .26 * r + .6 * r * r * boost, wi = house ? 3 + ((r2 * 2) | 0) : z > .62 ? 6 + ((r2 * 2) | 0) : (r2 * 6) | 0, m = 3;
+      const fl = this.hg ? this.hg[clamp(Math.floor(y / 8), 0, VM.mH - 1) * VM.mW + clamp(Math.floor(x / 8), 0, VM.mW - 1)] : 0;   // pisos del edificio más alto de la zona (huellas reales)
+      const house = v === TT.BRICK, z = house ? .07 + .05 * r : fl ? clamp(.05 + Math.max(2, fl * (.55 + .45 * r)) * .03, .1, 1.15) : .13 + .26 * r + .6 * r * r * boost, wi = house ? 3 + ((r2 * 2) | 0) : z > .62 ? 6 + ((r2 * 2) | 0) : (r2 * 6) | 0, m = 3;
       L.push({ x: x * TS + m, y: y * TS + m, w: w * TS - 2 * m, h: h * TS - 2 * m, z, house, k: r2, roof: house ? TEJA[(r * TEJA.length) | 0] : ROOF[(r2 * ROOF.length) | 0], wa: WALLS[wi][0], wb: WALLS[wi][1], pal: [] });
     }
     this.blk.set(key, L); if (this.blk.size > 60) this.blk.delete(this.blk.keys().next().value);
@@ -180,16 +184,17 @@ Object.assign(CityMap, {
       const X = x * TS, Y = y * TS; c.fillStyle = '#8b8f97'; c.fillRect(X, Y, TS + .5, TS + .5); c.fillStyle = '#e9e7df';
       for (let k = 0; k < 2; k++) { c.fillRect(X + k * 8 + .2, Y + 1.5, .45, 13); if (h2(x * 2 + k, y, 61) < .55) { const col = PARK_COL[(h2(x * 2 + k, y, 62) * PARK_COL.length) | 0]; c.fillStyle = 'rgba(8,14,30,.25)'; c.beginPath(); c.roundRect(X + k * 8 + 2.2, Y + 3.6, 5, 10, 1.6); c.fill(); c.fillStyle = col; c.beginPath(); c.roundRect(X + k * 8 + 1.6, Y + 3, 5, 10, 1.6); c.fill(); c.fillStyle = '#1f2f45'; c.fillRect(X + k * 8 + 2.2, Y + 4.4, 3.8, 2); c.fillRect(X + k * 8 + 2.2, Y + 10.6, 3.8, 1.3); c.fillStyle = '#e9e7df'; } }
     }
-    // casas en fila: dos lotes angostos (~10 m) por casilla, con el frente hacia la calle; patios y casas de fondo adentro
+    // casas en fila: lotes angostos con el frente hacia la calle (cuántos por casilla sale del área de los lotes catastrales); patios y casas de fondo adentro
+    const nLot = (x, y) => { if (VM.tile >= 20) return 2; const a = this.lt ? this.lt[clamp(Math.floor(y / 8), 0, VM.mH - 1) * VM.mW + clamp(Math.floor(x / 8), 0, VM.mW - 1)] * 4 : 0, n = VM.tile / Math.sqrt((a || 100) / 2); return n >= 1.75 ? 2 : n >= 1.2 ? (h2(x, y, 95) < (n - 1.2) * 1.8 ? 2 : 1) : 1; };
     const frente = v => v === TT.ROAD || v === TT.AVE || v === TT.AUTO || v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.STEPS || v === TT.BRIDGE || v === TT.STATION || v === TT.GRASS;
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) {
       if (g(x, y) !== TT.BRICK || this.lid.has(this.idx(x, y))) continue;
       const X = x * TS, Y = y * TS; let sd = frente(g(x, y - 1)) ? 0 : frente(g(x, y + 1)) ? 2 : frente(g(x - 1, y)) ? 3 : frente(g(x + 1, y)) ? 1 : -1;
       if (sd < 0) { const r0 = h2(x, y, 91); if (r0 < .3) { c.fillStyle = '#5e9b48'; c.fillRect(X + 1, Y + 1, TS - 2, TS - 2); if (r0 < .15) { c.fillStyle = '#3f8a3f'; c.beginPath(); c.arc(X + 8, Y + 8, 4.5, 0, TAU); c.fill(); } continue; } sd = r0 < .65 ? 0 : 3; }
-      const hor = sd === 0 || sd === 2, dep = 13;
-      for (let k = 0; k < 2; k++) {
+      const hor = sd === 0 || sd === 2, dep = 13, nl = nLot(x, y), ls = TS / nl;
+      for (let k = 0; k < nl; k++) {
         const r = h2(x * 2 + k, y, 93), col = r < .55 ? TEJA[(r * 9 | 0) % TEJA.length] : r < .88 ? LOSA[(r * 13 | 0) % LOSA.length] : PINTA[(r * 17 | 0) % PINTA.length];
-        const a = hor ? X + k * 8 : sd === 3 ? X + .6 : X + TS - .6 - dep, b = hor ? (sd === 0 ? Y + .6 : Y + TS - .6 - dep) : Y + k * 8, w = hor ? 8 : dep, h = hor ? dep : 8;
+        const a = hor ? X + k * ls : sd === 3 ? X + .6 : X + TS - .6 - dep, b = hor ? (sd === 0 ? Y + .6 : Y + TS - .6 - dep) : Y + k * ls, w = hor ? ls : dep, h = hor ? dep : ls;
         c.fillStyle = 'rgba(8,14,30,.24)'; c.fillRect(a + 1, b + 1.2, w, h);
         c.fillStyle = col; c.fillRect(a, b, w - .35, h - .35);
         if (r < .55) { c.fillStyle = shade(col, -.16); if (hor) c.fillRect(a, b + h / 2 - .3, w - .35, .6); else c.fillRect(a + w / 2 - .3, b, .6, h - .35); }   // cumbrera de la teja
@@ -218,11 +223,15 @@ Object.assign(CityMap, {
     run(q => q === 6, (CHW[6] + .14) * TS, '#b3ab98'); run(q => q === 6, CHW[6] * TS, '#e6dfcd');
     run(q => q === 7, CHW[7] * TS, '#cbc1ab'); run(q => q === 7, CHW[7] * TS * .9, '#a99d84', [.8, 1.5]);
     run(q => q === 8, CHW[8] * TS, '#d6c9a8', [3, 2.5]);
-    for (const k of [1, 4, 2, 3]) run(q => q === k, (CHW[k] + .2) * TS, '#8e8a80');
-    for (const k of [1, 4, 2, 3]) run(q => q === k, CHW[k] * TS, k === 3 ? '#4a4e56' : k === 2 ? '#50545c' : '#565a62');
-    run(WIDE, (CHW[2] - .14) * TS, '#d9d6cc'); run(WIDE, (CHW[2] - .22) * TS, '#50545c'); run(q => q === 3, (CHW[3] - .16) * TS, '#e8c64a'); run(q => q === 3, (CHW[3] - .24) * TS, '#4a4e56');
-    run(q => q === 1, .7, '#e6e4dc', [5, 7]); run(q => q === 4, .75, '#eceae2', [6, 6]); run(q => q === 2, .8, '#e8c64a', [8, 6]); run(q => q === 3, .8, '#f2f0e8', [9, 6]);
-    for (const ch of CHS) { if (!RD(ch.k)) continue; const p = ch.p, w = CHW[ch.k] * TS / 2 - .5; c.fillStyle = ch.k === 3 ? '#4a4e56' : ch.k === 2 ? '#50545c' : '#565a62'; if (ch.j0) { c.beginPath(); c.arc(p[0], p[1], w, 0, TAU); c.fill(); } if (ch.j1) { c.beginPath(); c.arc(p[p.length - 2], p[p.length - 1], w, 0, TAU); c.fill(); } }
+    // cada calle con su ancho: se dibujan por grupos (clase y ancho) para no repetir trazos
+    const GW = new Map(); for (const ch of CHS) if (RD(ch.k)) { const key = ch.k * 1e4 + Math.round(ch.w * 10); (GW.get(key) || GW.set(key, []).get(key)).push(ch); }
+    const KO = { 1: 0, 4: 1, 2: 2, 3: 3 }, GK = [...GW.keys()].sort((a, b) => KO[(a / 1e4) | 0] - KO[(b / 1e4) | 0] || a - b), ASF = { 1: '#565a62', 4: '#565a62', 2: '#50545c', 3: '#4a4e56' };
+    const runL = (L, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash || []); c.beginPath(); for (const ch of L) { const p = ch.p; c.moveTo(p[0], p[1]); if (p.length === 2) c.lineTo(p[0] + .01, p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); } c.stroke(); c.setLineDash([]); };
+    for (const key of GK) runL(GW.get(key), (key % 1e4) / 10 + .2 * TS, '#8e8a80');
+    for (const key of GK) runL(GW.get(key), (key % 1e4) / 10, ASF[(key / 1e4) | 0]);
+    for (const key of GK) { const k = (key / 1e4) | 0, w = (key % 1e4) / 10, L = GW.get(key); if (k < 2 || k > 3) continue; runL(L, w - .14 * TS, k === 3 ? '#e8c64a' : '#d9d6cc'); runL(L, w - .22 * TS, ASF[k]); if (k === 2 && w >= 1.7 * TS) { runL(L, .22 * TS, '#cfcabf'); runL(L, .13 * TS, '#5f9e46'); } }   // bordes; las avenidas anchas llevan separador con pasto
+    for (const key of GK) { const k = (key / 1e4) | 0, w = (key % 1e4) / 10, L = GW.get(key); if (k === 1) runL(L, .7, '#e6e4dc', [5, 7]); else if (k === 4) runL(L, .75, '#eceae2', [6, 6]); else if (k === 2 && w < 1.7 * TS) runL(L, .8, '#e8c64a', [8, 6]); else if (k === 3) runL(L, .8, '#f2f0e8', [9, 6]); }
+    for (const ch of CHS) { if (!RD(ch.k)) continue; const p = ch.p, w = ch.w / 2 - .5; c.fillStyle = ch.k === 3 ? '#4a4e56' : ch.k === 2 ? '#50545c' : '#565a62'; if (ch.j0) { c.beginPath(); c.arc(p[0], p[1], w, 0, TAU); c.fill(); } if (ch.j1) { c.beginPath(); c.arc(p[p.length - 2], p[p.length - 1], w, 0, TAU); c.fill(); } }
     // cebras en los cruces con semáforo: de lado a lado de cada calle que llega, perpendiculares a ella
     c.strokeStyle = '#eceae2'; c.lineWidth = 1.6; c.lineCap = 'butt'; c.beginPath();
     for (const z of this.zebras(px0 - 40, py0 - 40, S + 80, S + 80)) { const nx = -z.uy, ny = z.ux; for (let k = -z.hw + 1.5; k <= z.hw - 1.5; k += 3) { const x = z.x + nx * k, y = z.y + ny * k; c.moveTo(x - z.ux * 3, y - z.uy * 3); c.lineTo(x + z.ux * 3, y + z.uy * 3); } }
@@ -246,10 +255,14 @@ Object.assign(CityMap, {
         s0 += L;
       }
     }
+    // parques y plazas con su nombre (espacio público oficial de Medellín y parques con nombre del resto del valle)
+    if (VM.parques) { if (!this._pq) { this._pq = new Map(); for (const [n, a, b, k] of VM.parques) { const x = a / 4 * TS, y = b / 4 * TS, key = Math.floor(x / S) + ',' + Math.floor(y / S); (this._pq.get(key) || this._pq.set(key, []).get(key)).push([n, x, y, k]); } }
+      c.font = 'italic 700 6.6px Cuerpo, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      for (const [n, x, y, k] of this._pq.get(cx + ',' + cy) || []) { const tw = c.measureText(n).width; if (x - tw / 2 < px0 + 2 || x + tw / 2 > px0 + S - 2) continue; c.lineWidth = 2; c.strokeStyle = 'rgba(246,244,236,.92)'; c.strokeText(n, x, y); c.fillStyle = k === 2 ? '#6b5326' : '#2f6b2a'; c.fillText(n, x, y); } }
     // mobiliario urbano: postes de luz a los lados de las calles; en las avenidas, árboles (algunos guayacanes)
     const pie = (x, y) => { const tx = Math.floor(x / TS), ty = Math.floor(y / TS), v = g(tx, ty); return v === TT.WALK || v === TT.PLAZA || v === TT.GRASS || ((v === TT.ROAD || v === TT.AVE) && this.cov && !this.cov[ty * MW + tx]); };
     for (const ch of CHS) {
-      if (!(ch.k >= 1 && ch.k <= 4)) continue; const p = ch.p, hw = CHW[ch.k] * TS / 2 + 3.2, step = ch.k === 2 ? 24 : 38; let d = 8 + h2(p[0] | 0, p[1] | 0, 70) * step, j = 0;
+      if (!(ch.k >= 1 && ch.k <= 4)) continue; const p = ch.p, hw = ch.w / 2 + 3.2, step = ch.k === 2 ? 24 : 38; let d = 8 + h2(p[0] | 0, p[1] | 0, 70) * step, j = 0;
       for (let i = 2, s0 = 0; i < p.length; i += 2) {
         const ax = p[i - 2], ay = p[i - 1], dx = p[i] - ax, dy = p[i + 1] - ay, L = Math.hypot(dx, dy); if (L < 1) continue; const ux = dx / L, uy = dy / L;
         for (; d < s0 + L; d += step, j++) {
@@ -280,7 +293,14 @@ Object.assign(CityMap, {
     // tranvía y viaductos del metro
     const path = (L, w, col, dx = 0, dy = 0) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); L.pts.forEach((p, i) => i ? c.lineTo(p.x + dx, p.y + dy) : c.moveTo(p.x + dx, p.y + dy)); c.stroke(); };
     path(this.tram, 6, '#77767a'); path(this.tram, 3.4, '#cfd3d8'); path(this.tram, 1.6, '#77767a');
-    for (const L of [this.lineA, this.lineB]) { path(L, 13, 'rgba(8,14,30,.3)', 4, 5); path(L, 13, '#8d939c'); path(L, 10.5, '#d3d6db'); path(L, 4.6, '#9aa0a8'); path(L, 3.4, '#d3d6db'); for (const st of L.st) { const p = this.at(L, st.s); c.save(); c.translate(p.x, p.y); c.rotate(p.a); c.fillStyle = 'rgba(8,14,30,.3)'; c.fillRect(-18, -8, 44, 24); c.fillStyle = '#eef0f3'; c.beginPath(); c.roundRect(-21, -11, 42, 22, 4); c.fill(); c.fillStyle = PAL.vd; c.fillRect(-21, -11, 42, 3); c.restore(); } }
+    // Metroplús: carril exclusivo pintado en la avenida y estaciones en el separador
+    const near = (x, y, m) => x > px0 - m && y > py0 - m && x < px0 + S + m && y < py0 + S + m;
+    for (const L of this.mp || []) { path(L, .34 * TS, L.col + 'b0'); path(L, .06 * TS, '#ffffffaa'); }
+    const dirAt = (L, s0) => { const a = this.at(L, s0 - 40), b = this.at(L, s0 + 40); return Math.atan2(b.y - a.y, b.x - a.x); };   // sentido de la vía alrededor de la estación (no el del tramo, que puede ser una esquina)
+    for (const L of this.mp || []) for (const st of L.st) { const p = this.at(L, st.s); if (!near(p.x, p.y, 60)) continue; c.save(); c.translate(p.x, p.y); c.rotate(dirAt(L, st.s)); c.fillStyle = 'rgba(8,14,30,.3)'; c.fillRect(-27, -4, 58, 12); c.fillStyle = '#eef0f3'; c.beginPath(); c.roundRect(-30, -6, 60, 12, 2.5); c.fill(); c.fillStyle = L.col; c.fillRect(-30, -6, 60, 3.4); c.fillStyle = '#9aa0a8'; c.fillRect(-26, 1.5, 52, 1.2); c.restore(); }
+    // viaductos del metro con estaciones a su tamaño (un andén de ~130 m)
+    const SL = 21 * MS * 1.55, SW = 11 * MS * .9;
+    for (const L of [this.lineA, this.lineB]) { path(L, 13, 'rgba(8,14,30,.3)', 4, 5); path(L, 13, '#8d939c'); path(L, 10.5, '#d3d6db'); path(L, 4.6, '#9aa0a8'); path(L, 3.4, '#d3d6db'); for (const st of L.st) { const p = this.at(L, st.s); if (!near(p.x, p.y, SL + 20)) continue; c.save(); c.translate(p.x, p.y); c.rotate(dirAt(L, st.s)); c.fillStyle = 'rgba(8,14,30,.3)'; c.fillRect(-SL + 3, -SW + 3, SL * 2 + 2, SW * 2 + 2); c.fillStyle = '#eef0f3'; c.beginPath(); c.roundRect(-SL, -SW, SL * 2, SW * 2, 5); c.fill(); c.fillStyle = L === this.lineA ? '#1C5C9C' : '#E38835'; c.fillRect(-SL, -SW, SL * 2, 3.4); c.fillRect(-SL, SW - 3.4, SL * 2, 3.4); c.fillStyle = '#c3c8cf'; for (let k = -SL + 10; k < SL - 6; k += 14) c.fillRect(k, -SW + 6, 1, SW * 2 - 12); c.restore(); } }
     c.setTransform(1, 0, 0, 1, 0, 0);
   }
 });

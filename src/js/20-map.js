@@ -1,9 +1,9 @@
 /* =====================================================================
    MAPA REAL DEL VALLE DE ABURRÁ (de Caldas a Barbosa)
-   Casillas de 20 m hechas con datos abiertos (tools/geo/build.py): calles, ciclorrutas, río, quebradas,
+   Casillas de 10 m hechas con datos abiertos (tools/geo/build.py): calles, ciclorrutas, río, quebradas,
    parques, municipios, Metro, tranvía y relieve. Fila 0 = norte. Ver docs/GUIA.md §4.
    ===================================================================== */
-const VM = VALLE_META, MW = VM.W, MH = VM.H, TS = 16, CH = 16, SC = 1.35, ES = VM.es, WK = TS / 8;   // WK: escala del mundo frente al diseño original de 8 px
+const VM = VALLE_META, MW = VM.W, MH = VM.H, TS = 16, CH = 16, SC = 1.35, ES = VM.es, WK = TS / 8, MS = 20 / (VM.tile || 20), VQ = VM.vq || 8;   // WK: escala del mundo frente al diseño original de 8 px · MS: casillas por cada casilla del mapa de 20 m (2 con casillas de 10 m)
 const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16 };
 const SOLID = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0];
 const TRUCK_OK = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0];
@@ -48,21 +48,21 @@ function inflateRaw(src, size) {
 }
 
 const CityMap = JE.map = {
-  t: null, lid: null, stations: [], depot: null, chunks: new Map(), lmCanvas: {}, mini: null, miniK: 2, flows: new Map(), lanes: [], lights: [], lightAt: new Map(), metroA: [], metroB: [], cables: [],
+  t: null, lid: null, stations: [], depot: null, chunks: new Map(), lmCanvas: {}, mini: null, miniK: 2 * MS, flows: new Map(), lanes: [], lights: [], lightAt: new Map(), metroA: [], metroB: [], cables: [],
   idx(x, y) { return y * MW + x; },
   get(x, y) { return (x < 0 || y < 0 || x >= MW || y >= MH) ? TT.MOUNT : this.t[y * MW + x]; },
   set(x, y, v) { if (x >= 0 && y >= 0 && x < MW && y < MH) this.t[y * MW + x] = v; },
   lightIdx(i) { const v = this.lightAt.get(i); return v == null ? -1 : v; },
-  /* vías: [n] y por línea k (tipo), nombre (0 = sin nombre), puntos (el primero absoluto, luego diferencias, en octavos de casilla) */
+  /* vías: [n] y por línea k (tipo), nombre (0 = sin nombre), [v3: nomenclatura oficial y ancho en medios metros], puntos (el primero absoluto, luego diferencias, en fracciones VQ de casilla) */
   parseVias(u8) {
-    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = dv.getUint32(0, true), L = new Array(n); let o = 4;
-    for (let i = 0; i < n; i++) { const k = dv.getUint8(o), nm = dv.getUint16(o + 1, true), np = dv.getUint16(o + 3, true); o += 5; const p = new Float32Array(np * 2); let x = 0, y = 0; for (let j = 0; j < np; j++) { x += dv.getInt16(o, true); y += dv.getInt16(o + 2, true); o += 4; p[j * 2] = x * TS / 8; p[j * 2 + 1] = y * TS / 8; } L[i] = { k, n: nm, p }; }
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = dv.getUint32(0, true), L = new Array(n), v3 = VM.v >= 3; let o = 4;
+    for (let i = 0; i < n; i++) { const k = dv.getUint8(o), nm = dv.getUint16(o + 1, true); let nom = 0, w = 0, np; if (v3) { nom = dv.getUint16(o + 3, true); w = dv.getUint8(o + 5) / 2; np = dv.getUint16(o + 6, true); o += 8; } else { np = dv.getUint16(o + 3, true); o += 5; } const p = new Float32Array(np * 2); let x = 0, y = 0; for (let j = 0; j < np; j++) { x += dv.getInt16(o, true); y += dv.getInt16(o + 2, true); o += 4; p[j * 2] = x * TS / VQ; p[j * 2 + 1] = y * TS / VQ; } L[i] = { k, n: nm, nom, w, p }; }
     return L;
   },
   /* ---------- carga ---------- */
   async load() {
     const bin = atob(VALLE_BIN), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    const nT = MW * MH, nE = VM.eW * VM.eH, nM = VM.mW * VM.mH, nB = VM.barrios ? nM * 2 : 0, size = nT + nE * 2 + nM * 2 + nB;
+    const nT = MW * MH, nE = VM.eW * VM.eH, nM = VM.mW * VM.mH, nB = VM.barrios ? nM * 2 : 0, nH = VM.hg ? nM : 0, nL = VM.lt ? nM : 0, size = nT + nE * 2 + nM * 2 + nB + nH + nL;
     let raw = null;
     if (window.DecompressionStream) { try { raw = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); } catch (e) { raw = null; } }
     if (!raw || raw.length < size) raw = inflateRaw(u8, size);
@@ -71,6 +71,7 @@ const CityMap = JE.map = {
     for (let j = 0; j < VM.eH; j++) { let a = 0; for (let i = 0; i < VM.eW; i++) { a += ed[j * VM.eW + i]; E[j * VM.eW + i] = a; } }
     this.mu = raw.slice(nT + nE * 2, nT + nE * 2 + nM); this.co = raw.slice(nT + nE * 2 + nM, nT + nE * 2 + nM * 2);
     if (nB) this.ba = new Uint16Array(raw.slice(nT + nE * 2 + nM * 2, nT + nE * 2 + nM * 2 + nB).buffer);
+    const o2 = nT + nE * 2 + nM * 2 + nB; if (nH) this.hg = raw.slice(o2, o2 + nH); if (nL) this.lt = raw.slice(o2 + nH, o2 + nH + nL);   // pisos del edificio más alto y área mediana de los lotes (×4 m²) por celda de 8 casillas
     // vías como vectores (cada calle con su forma y su nombre)
     if (typeof VIAS_BIN === 'string' && VIAS_BIN && VM.viasB) {
       const vb = atob(VIAS_BIN), v8 = new Uint8Array(vb.length); for (let i = 0; i < vb.length; i++) v8[i] = vb.charCodeAt(i); let vr = null;
@@ -105,9 +106,9 @@ const CityMap = JE.map = {
   /* ---------- lugares y estaciones ---------- */
   paintLandmark(L, i) {
     // corre el lugar unas casillas si tapa avenidas, autopistas, agua u otro lugar
-    const bad = v => v === TT.STATION ? 40 : v === TT.AVE || v === TT.AUTO || v === TT.WATER || v === TT.BRIDGE ? 6 : v === TT.ROAD ? 1 : 0;
+    const bad = v => v === TT.STATION ? 40 : v === TT.AVE || v === TT.AUTO || v === TT.WATER || v === TT.BRIDGE ? 6 / MS : v === TT.ROAD ? 1 / (MS * MS * 2) : 0;
     let best = null, bs = 1e9;
-    for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) {
+    const RL = Math.round(6 * MS); for (let dy = -RL; dy <= RL; dy++) for (let dx = -RL; dx <= RL; dx++) {
       let s = Math.abs(dx) + Math.abs(dy);
       for (let y = L.y + dy; y < L.y + dy + L.h && s < bs; y++) for (let x = L.x + dx; x < L.x + dx + L.w; x++) { s += bad(this.get(x, y)); if (this.lid.has(this.idx(x, y))) s += 50; }
       if (s < bs) { bs = s; best = { dx, dy }; }
@@ -145,11 +146,17 @@ const CityMap = JE.map = {
     const [id, name, muni, lat, lon, type, kind, az] = s, g = geoT(lat, lon), tx = g.x, ty = g.y, ok = [TT.BLDG, TT.BRICK, TT.GRASS, TT.PLAZA, TT.WALK];
     const acc = v => v === TT.WALK || v === TT.CICLO || v === TT.PLAZA || v === TT.ROAD || v === TT.AVE;
     let best = null, bd = 1e9;
-    const conecta = (sx, sy) => { const seen = new Set([sy * MW + sx]), q = [sx, sy]; for (let i = 0; i < q.length && seen.size < 600; i += 2) { const qx = q[i], qy = q[i + 1], v = this.get(qx, qy); if (v === TT.AVE || v === TT.AUTO) return true; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = qx + dx, ny = qy + dy, k = ny * MW + nx; if (seen.has(k) || SOLID[this.get(nx, ny)]) continue; seen.add(k); q.push(nx, ny); } } return seen.size >= 600; };
+    // ¿la calle de acceso es parte de la red? BFS corto con memoria: lo que ya se sabe conectado (1) o encerrado (2) no se vuelve a recorrer
+    const CN = this._cn || (this._cn = new Uint8Array(MW * MH)), LIM = 600 * MS;
+    const conecta = (sx, sy) => { const k0 = sy * MW + sx; if (CN[k0]) return CN[k0] === 1; const seen = [k0], set = new Set(seen); let ok = false;
+      for (let i = 0; i < seen.length && !ok; i++) { const k = seen[i], qx = k % MW, qy = (k / MW) | 0, v = this.t[k]; if (v === TT.AVE || v === TT.AUTO || CN[k] === 1 || set.size >= LIM) { ok = CN[k] !== 2; break; }
+        for (let d = 0; d < 4; d++) { const nx = qx + (d === 0 ? 1 : d === 1 ? -1 : 0), ny = qy + (d === 2 ? 1 : d === 3 ? -1 : 0); if (nx < 0 || ny < 0 || nx >= MW || ny >= MH) continue; const n = ny * MW + nx; if (set.has(n) || SOLID[this.t[n]]) continue; set.add(n); seen.push(n); } }
+      for (const k of seen) CN[k] = ok ? 1 : 2; return ok; };
     // lo más cerca posible del punto real: acostada (4×2) o de pie (2×4), según quepa en la manzana.
     // Puede montarse sobre pocas casillas de calle menor (con castigo); nunca sobre avenidas, autopistas, ciclorrutas ni agua.
-    for (const [R, maxR] of [[20, 2], [30, 8]]) { if (best) break;
-    for (const [w, h] of [[4, 2], [2, 4]]) for (let y = Math.round(ty) - R; y <= Math.round(ty) + R; y++) for (let x = Math.round(tx) - R; x <= Math.round(tx) + R; x++) {
+    const OFF = this._off || (this._off = (() => { const R = Math.round(30 * MS), o = []; for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) o.push([x, y, Math.hypot(x, y)]); return o.sort((p, q) => p[2] - q[2]); })());
+    for (const [R, maxR] of [[Math.round(20 * MS), 2], [Math.round(30 * MS), 8]]) { if (best) break;
+    for (const [ox, oy, od] of OFF) { if (od > R + 3) break; if (od - 3 > bd) break; for (const [w, h] of [[4, 2], [2, 4]]) { const x = Math.round(tx - w / 2) + ox, y = Math.round(ty - h / 2) + oy;
       const d0 = Math.hypot(x + w / 2 - tx, y + h / 2 - ty); if (d0 >= bd) continue;
       let good = true, nr = 0;
       for (let yy = y; yy < y + h && good; yy++) for (let xx = x; xx < x + w; xx++) { const v = this.get(xx, yy); if (v === TT.ROAD) nr++; else if (!ok.includes(v)) { good = false; break; } if (this.lid.has(this.idx(xx, yy))) { good = false; break; } }
@@ -162,10 +169,10 @@ const CityMap = JE.map = {
       else for (let yy = y + 1; yy <= y + 3; yy++) { if (!lo && acc(this.get(x + w, yy))) lo = [x + w, yy]; if (!hi && acc(this.get(x - 1, yy))) hi = [x - 1, yy]; }
       if (lo && !conecta(lo[0], lo[1])) lo = null; if (!lo && hi && !conecta(hi[0], hi[1])) hi = null;   // la calle de acceso debe ser parte de la red, no un retazo suelto
       if (!lo && !hi) continue;
-      let tr = false; const cx = Math.floor(x + w / 2), cy = Math.floor(y + h / 2); for (let yy = cy - 5; yy <= cy + 5 && !tr; yy++) for (let xx = cx - 5; xx <= cx + 5; xx++) if (TRUCK_OK[this.get(xx, yy)]) { tr = true; break; }
+      let tr = false; const cx = Math.floor(x + w / 2), cy = Math.floor(y + h / 2), tw = Math.round(5 * MS); for (let yy = cy - tw; yy <= cy + tw && !tr; yy++) for (let xx = cx - tw; xx <= cx + tw; xx++) if (TRUCK_OK[this.get(xx, yy)]) { tr = true; break; }
       if (!tr) continue;
       bd = d; best = { x, y, w, h, up: !lo };
-    } }
+    } } }
     if (!best) { (this.dropped || (this.dropped = [])).push(name); return null; }
     for (let yy = best.y; yy < best.y + best.h; yy++) for (let xx = best.x; xx < best.x + best.w; xx++) this.set(xx, yy, TT.STATION);
     const cap = type === 'm' ? 14 + Math.floor(h2(i, 3) * 3) * 2 : 10 + Math.floor(h2(i, 4) * 2) * 2;
@@ -219,6 +226,8 @@ const CityMap = JE.map = {
     const mk = (k) => { const m = VM.metro[k], P = this.poly(q4(m.p)); P.st = m.st.map(([name, a, b]) => { const x = a / 4 * TS, y = b / 4 * TS, pr = this.project(P, x, y); return { name, px: x, py: y, s: pr.s }; }); return P; };
     this.lineA = mk('A'); this.lineB = mk('B'); this.tram = mk('T');
     this.metroA = this.lineA.st; this.metroB = this.lineB.st;
+    // Metroplús (líneas 1, 2 y O): por su carril, de estación a estación por las avenidas reales
+    this.mp = (VM.mp || []).map(l => { const P = this.poly(q4(l.p)); P.id = l.id; P.name = l.n; P.col = l.c; P.st = l.st.map(([name, a, b]) => { const x = a / 4 * TS, y = b / 4 * TS; return { name, px: x, py: y, s: this.project(P, x, y).s }; }); return P; });
     this.river = this.poly(q4(VM.river));
     this.cables = [];
     for (const [name, col, st] of CABLES) for (let i = 0; i < st.length - 1; i++) {
@@ -239,7 +248,7 @@ const CityMap = JE.map = {
       }
       c.putImageData(img, 0, 0);
       const line = (P, col, wd) => { c.strokeStyle = col; c.lineWidth = wd; c.beginPath(); P.pts.forEach((p, i) => i ? c.lineTo(p.x / TS / K, p.y / TS / K) : c.moveTo(p.x / TS / K, p.y / TS / K)); c.stroke(); };
-      line(this.lineA, '#d6dde6', 1.5); line(this.lineB, '#d6dde6', 1.5); line(this.tram, PAL.cie, 1);
+      line(this.lineA, '#d6dde6', 1.5); line(this.lineB, '#d6dde6', 1.5); line(this.tram, PAL.cie, 1); for (const L of this.mp) line(L, L.col, 1);
       c.lineWidth = 1; for (const cb of this.cables) { c.strokeStyle = cb.col; c.beginPath(); c.moveTo(cb.ax / TS / K, cb.ay / TS / K); c.lineTo(cb.bx / TS / K, cb.by / TS / K); c.stroke(); }
     });
   },
@@ -253,7 +262,7 @@ const CityMap = JE.map = {
     // si ya hay un campo que cubre al que pregunta, se reutiliza
     const kb = tx + ',' + ty + (truck ? 't' : 'b');
     for (const [k, F] of this.flows) if (k.startsWith(kb + '|') && fx > F.x0 + 4 && fy > F.y0 + 4 && fx < F.x0 + F.w - 5 && fy < F.y0 + F.h - 5) { this.flows.delete(k); this.flows.set(k, F); return F; }
-    const m = full ? 1e5 : 90, x0 = clamp(Math.min(tx, fx) - m, 0, MW - 1), y0 = clamp(Math.min(ty, fy) - m, 0, MH - 1), x1 = clamp(Math.max(tx, fx) + m, 0, MW - 1), y1 = clamp(Math.max(ty, fy) + m, 0, MH - 1);
+    const m = full ? 1e5 : Math.round(90 * MS), x0 = clamp(Math.min(tx, fx) - m, 0, MW - 1), y0 = clamp(Math.min(ty, fy) - m, 0, MH - 1), x1 = clamp(Math.max(tx, fx) + m, 0, MW - 1), y1 = clamp(Math.max(ty, fy) + m, 0, MH - 1);
     const w = x1 - x0 + 1, h = y1 - y0 + 1, N = w * h, D = new Int32Array(N).fill(1e9), buckets = []; let cur = 0, maxB = 0;
     const cost = v => truck ? (TRUCK_OK[v] ? (v === TT.AUTO ? 2 : 3) : 0) : PATHC[v];
     const push = (i, d) => { (buckets[d] || (buckets[d] = [])).push(i); };
@@ -286,7 +295,7 @@ const CityMap = JE.map = {
   },
   nearestOpen(x, y, truck) {
     const ok = v => truck ? TRUCK_OK[v] : !SOLID[v];
-    for (let r = 0; r < 14; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if ((Math.abs(dx) === r || Math.abs(dy) === r) && ok(this.get(x + dx, y + dy))) return { x: x + dx, y: y + dy };
+    for (let r = 0; r < 14 * MS; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if ((Math.abs(dx) === r || Math.abs(dy) === r) && ok(this.get(x + dx, y + dy))) return { x: x + dx, y: y + dy };
     return { x, y };
   },
 
@@ -336,7 +345,7 @@ const CityMap = JE.map = {
         for (let k = -6; k <= 6; k++) prect(c, x + nx * k, y + ny * k, 1, 1, Math.abs(k) === 6 ? '#8d939c' : Math.abs(k) === 3 ? '#7d838c' : '#c9ccd1');
         if (s % 64 === 0) prect(c, x - 2, y - 2, 5, 5, '#00000044');
       }
-      for (const st of L.st) { const q = this.at(L, st.s); if (!inC(q)) continue; c.save(); c.translate(Math.round(q.x - px0), Math.round(q.y - py0)); c.rotate(Math.round(q.a / (Math.PI / 4)) * Math.PI / 4); prect(c, -20, -11, 40, 22, '#e8ebef'); prect(c, -20, -11, 40, 3, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -20, 8, 40, 3, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -16, -3, 32, 6, '#7d838c'); prect(c, -18, -8, 4, 4, '#f4f4f4'); prect(c, 14, 4, 4, 4, '#f4f4f4'); c.restore(); }
+      for (const st of L.st) { const q = this.at(L, st.s); if (!inC(q)) continue; c.save(); c.translate(Math.round(q.x - px0), Math.round(q.y - py0)); c.rotate(Math.round(q.a / (Math.PI / 4)) * Math.PI / 4); const sl = Math.round(20 * MS * 1.5), sw = Math.round(11 * MS * .85); prect(c, -sl, -sw, sl * 2, sw * 2, '#e8ebef'); prect(c, -sl, -sw, sl * 2, 3, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -sl, sw - 3, sl * 2, 3, L === this.lineA ? PAL.vd : PAL.cie); prect(c, -sl + 4, -3, sl * 2 - 8, 6, '#7d838c'); prect(c, -sl + 2, -sw + 3, 4, 4, '#f4f4f4'); prect(c, sl - 6, sw - 7, 4, 4, '#f4f4f4'); c.restore(); }
     }
     this.relief(c, x0, y0);
   },

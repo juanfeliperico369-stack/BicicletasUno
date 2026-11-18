@@ -338,6 +338,8 @@ const UI = JE.ui = {
   },
   toast(t) {
     const el = $('#toast'); if (!el || this.mute) return; const q = this._tq || (this._tq = []);
+    // lectores de pantalla: cada aviso se anuncia en una región viva (idea de la auditoría de El Metro)
+    const lv = this._live || (this._live = (() => { const d = document.createElement('div'); d.setAttribute('aria-live', 'polite'); d.setAttribute('role', 'status'); d.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap'; document.body.appendChild(d); return d; })()); lv.textContent = t;
     if (q.includes(t) || el.textContent === t && el.classList.contains('on')) return; q.push(t); if (q.length > 3) q.splice(0, q.length - 3);
     if (!this._tt) this.toastNext();
   },

@@ -326,7 +326,7 @@ class Ride {
     // minimapa
     if (!opts.noMini) {
       // radar: ventana del mapa alrededor del jugador (el valle completo se ve tocándolo)
-      const w = Math.round(Math.min(84, V.w * .21)), h = Math.round(w * 1.55), x = V.w - w - 10, y = (View.hudB || 50) + 8, WT = 160, HT = Math.round(WT * h / w), MK = this.map.miniK;
+      const w = Math.round(Math.min(84, V.w * .21)), h = Math.round(w * 1.55), x = V.w - w - 10, y = (View.hudB || 50) + 8, WT = 160 * MS, HT = Math.round(WT * h / w), MK = this.map.miniK;
       const t0x = clamp(P.x / TS - WT / 2, 0, MW - WT), t0y = clamp(P.y / TS - HT / 2, 0, MH - HT), k = w / (WT * TS), ox0 = t0x * TS, oy0 = t0y * TS;
       this.mmRect = { x, y, w, h };
       c.fillStyle = '#0a2342'; c.fillRect(x - 3, y - 3, w + 6, h + 6); c.imageSmoothingEnabled = false; c.drawImage(this.map.mini, t0x / MK, t0y / MK, WT / MK, HT / MK, x, y, w, h);
