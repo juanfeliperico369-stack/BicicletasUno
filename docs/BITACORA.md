@@ -486,6 +486,23 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 2026-11-19 · Motor City 2.0 llega a `motor-valle/` (el juego no cambia)
+**Qué cambió** (lo hizo la IA del motor, Claude Code, a pedido del autor; detalle en `docs/CONTEXTO-MOTOR-CITY.md`):
+1. **`motor-valle/` ahora es Motor City 2.0.0**, copiado desde `juanfeliperico369-stack/motorcity`, que es la nueva fuente de verdad del motor. Trae:
+   - el mundo 2.0 en un solo archivo (`datos/medellin/mundo.mc4`);
+   - el motor (`dist/motor.js`): personaje, 35 vehículos, física, 8 vistas más pixel, la panorámica de perfil, WebGL, reloj, clima, tráfico, transporte con horario y Run en la ciclovía;
+   - las guías: `motor-valle/docs/MIGRACION-ENCICLA.md` y las demás.
+2. **`motor-valle/js/valle.js` no cambió** (el lector 1.2.0): el juego compilado es idéntico (`juega-encicla-v2.0.1-1896efed`).
+3. `motor-valle/geo/build.py` y `fetch.py` aceptan `CIUDAD=ciudades/x.json`. Sin esa variable hacen lo mismo de siempre.
+
+**Qué se probó:**
+- `node tools/build.js`: la misma huella;
+- `node tests/run.js`: verde;
+- en `motorcity`, `node motor.mjs prueba --navegador`: 54 bien;
+- `node motor-valle/sincronizar.mjs ../MetroZero --verificar`: «los archivos son iguales».
+
+**Qué falta (para la IA de EnCicla):** pasar el juego al mundo 2.0 y recuperar la panorámica con la del motor (`MIGRACION-ENCICLA.md`).
+
 ## 2026-11-19 · v2.0.1 · Motor del Valle 1.2.0: un solo motor otra vez
 
 **Qué cambió**

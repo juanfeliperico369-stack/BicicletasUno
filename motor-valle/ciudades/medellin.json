@@ -1,0 +1,50 @@
+{
+  "id": "medellin",
+  "nombre": "Medellín y el Valle de Aburrá",
+  "pais": "Colombia",
+  "idioma": "es-CO",
+  "zona_horaria": "America/Bogota",
+  "ventana": { "lon0": -75.70, "latN": 6.46, "lon1": -75.31, "latS": 6.015, "lat_ref": 6.2375 },
+  "casilla_m": 10,
+  "celda_casillas": 8,
+  "relieve_casillas": 8,
+  "atribucion": [
+    "© colaboradores de OpenStreetMap (ODbL), vía Overture Maps Foundation; huellas de edificios de Overture (OSM, Microsoft ML Buildings y Google Open Buildings)",
+    "Capas oficiales de Medellín: Subsecretaría de Catastro (manzanas, lotes, 3D construcciones), malla vial y barrios (GeoMedellín); barrios de Itagüí, Envigado y Sabaneta",
+    "Relieve SRTM (NASA), vía AWS Terrain Tiles"
+  ],
+  "zonas": {
+    "_nota": "Reglas de estilo que salieron de mirar la ciudad desde arriba (dron, satélite y fotos; docs/MEDELLIN-DESDE-EL-AIRE.md de Juega EnCicla). Las imágenes solo se miraron: nunca se copian al juego.",
+    "ladera":   { "nombre": "Ladera",        "muros": ["#b4552f", "#c0633a", "#a54a2a", "#d07a4a", "#9c4426", "#e9e0d0"], "techos": ["#7d7f84", "#8e9095", "#a8a294", "#5e5f63"], "plancha": 0.7, "tanques": 0.45, "teja": 0.15, "arboles": 0.25, "densidad": 0.95, "pisos": [1, 4], "suelo": "#c9b8a0" },
+    "centro":   { "nombre": "Centro",        "muros": ["#c9b38a", "#b7a07a", "#9da3ad", "#c2774e", "#d8cfbf", "#8c939d"], "techos": ["#6f7177", "#8a6a55", "#9c9d9f"], "plancha": 0.6, "tanques": 0.2, "teja": 0.25, "arboles": 0.2, "densidad": 1.0, "pisos": [2, 12], "suelo": "#b9b2a6" },
+    "laureles": { "nombre": "Laureles",      "muros": ["#efe9dc", "#e6dccb", "#c46a40", "#d9cbb3", "#f4f0e6"], "techos": ["#b5542f", "#a8492a", "#c4643a"], "plancha": 0.2, "tanques": 0.1, "teja": 0.75, "arboles": 0.7, "densidad": 0.75, "pisos": [1, 6], "suelo": "#cdbfa5" },
+    "poblado":  { "nombre": "El Poblado",    "muros": ["#b25a36", "#a65230", "#c06b44", "#e2ddd2", "#8f4a2c"], "techos": ["#5f6166", "#7a7c80", "#b5542f"], "plancha": 0.4, "tanques": 0.1, "teja": 0.3, "arboles": 0.9, "densidad": 0.6, "pisos": [4, 30], "suelo": "#a8b48f" },
+    "mixto":    { "nombre": "Ciudad mixta",  "muros": ["#c25f37", "#d9cdb7", "#b4552f", "#e6dccb", "#a9b1bc"], "techos": ["#7d7f84", "#b5542f", "#9c9d9f"], "plancha": 0.45, "tanques": 0.3, "teja": 0.4, "arboles": 0.45, "densidad": 0.85, "pisos": [1, 8], "suelo": "#c4b79f" },
+    "pueblo":   { "nombre": "Pueblo",        "muros": ["#f2eee4", "#ece6d8", "#e8dfcc", "#c46a40"], "techos": ["#b5542f", "#a8492a", "#c8653b"], "plancha": 0.15, "tanques": 0.1, "teja": 0.85, "arboles": 0.6, "densidad": 0.55, "pisos": [1, 3], "suelo": "#c9bea6" },
+    "industria":{ "nombre": "Industria",     "muros": ["#a9b1bc", "#c3c9d1", "#8e98a6"], "techos": ["#9aa3ad", "#b8c0c8", "#7f8891"], "plancha": 1.0, "tanques": 0.05, "teja": 0.0, "arboles": 0.15, "densidad": 0.7, "pisos": [1, 3], "suelo": "#b4b0a6" },
+    "campus":   { "nombre": "Campus",        "muros": ["#c25f37", "#e6dccb", "#d9cdb7"], "techos": ["#7d7f84", "#b5542f"], "plancha": 0.5, "tanques": 0.05, "teja": 0.3, "arboles": 0.95, "densidad": 0.35, "pisos": [2, 6], "suelo": "#8fae6e" },
+    "rural":    { "nombre": "Rural",         "muros": ["#f2eee4", "#e8dfcc", "#c46a40"], "techos": ["#b5542f", "#7d7f84"], "plancha": 0.3, "tanques": 0.2, "teja": 0.6, "arboles": 1.0, "densidad": 0.15, "pisos": [1, 2], "suelo": "#6f9a52" }
+  },
+  "zona_por_comuna": [null, "ladera", "ladera", "ladera", "mixto", "mixto", "ladera", "mixto", "ladera", "ladera", "centro", "laureles", "laureles", "ladera", "poblado", "mixto", "laureles", "pueblo", "mixto", "pueblo", "pueblo", "pueblo"],
+  "zona_por_municipio": [null, "mixto", "mixto", "mixto", "poblado", "poblado", "mixto", "pueblo", "mixto", "pueblo", "pueblo"],
+  "transporte": {
+    "_nota": "Horario real del Metro de Medellín: lunes a sábado de 4:30 a. m. a 11 p. m.; domingos y festivos de 5 a. m. a 10 p. m. Las frecuencias son aproximadas (hora pico y valle).",
+    "servicio": { "habil": [270, 1380], "domingo": [300, 1320] },
+    "pico": [[360, 540], [1020, 1200]],
+    "clases": {
+      "metro":  { "vel_ms": 16.5, "parada_s": 22, "frec_pico_s": 210, "frec_valle_s": 390, "frec_domingo_s": 480, "largo_m": 120, "nivel_viaducto": 3 },
+      "tram":   { "vel_ms": 6.5,  "parada_s": 25, "frec_pico_s": 300, "frec_valle_s": 420, "frec_domingo_s": 540, "largo_m": 42 },
+      "cable":  { "vel_ms": 5.0,  "cabina_cada_s": 12, "altura_m": 28 },
+      "brt":    { "vel_ms": 9.0,  "parada_s": 18, "frec_pico_s": 240, "frec_valle_s": 420, "frec_domingo_s": 600, "largo_m": 18 },
+      "feeder": { "vel_ms": 7.5,  "parada_s": 15, "frec_pico_s": 480, "frec_valle_s": 720, "frec_domingo_s": 900, "largo_m": 11 }
+    }
+  },
+  "clima": {
+    "_nota": "Medellín: «la ciudad de la eterna primavera». Dos temporadas de lluvia (abril-mayo y octubre-noviembre) y aguaceros de la tarde.",
+    "temp_media_c": 22, "amplitud_c": 6,
+    "lluvia_mes": [0.25, 0.25, 0.4, 0.6, 0.65, 0.35, 0.25, 0.3, 0.45, 0.65, 0.6, 0.35],
+    "hora_lluvia": [14, 19]
+  },
+  "emblematicos": "datos/medellin/lugares.json",
+  "huevos": ["rosalba_primer_tren", "boleto_rosalba", "canasta_verde", "aguja_coltejer", "orquideorama", "tres_timbrazos", "ni_una_gota", "paginas_emsay"]
+}

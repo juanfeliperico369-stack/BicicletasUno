@@ -1,0 +1,44 @@
+:root { --fondo: #0b1020; --tinta: #f4f1e6; --neon: #39ffb3; --rosa: #ff2fb3; --oro: #ffc23a; --cristal: rgba(11, 16, 32, .72); --borde: rgba(255, 255, 255, .14); --verde: #7ab800; }
+[hidden] { display: none !important; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--fondo); color: var(--tinta); font: 14px/1.3 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none; }
+#cv { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; }
+#carga { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px; background: radial-gradient(circle at 50% 40%, #1b2550, #0b1020 70%); z-index: 9; }
+#carga .logo { font: 900 clamp(40px, 11vw, 96px)/1 system-ui, sans-serif; letter-spacing: .04em; }
+#carga .logo b { color: var(--neon); text-shadow: 0 0 22px rgba(57, 255, 179, .55); }
+#carga .sub { opacity: .75; }
+#carga .barra { width: min(320px, 70vw); height: 6px; background: #ffffff18; border-radius: 6px; overflow: hidden; margin: 8px auto 0; }
+#carga .barra i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--neon), var(--rosa)); transition: width .25s; }
+#cargaT { font-size: 13px; opacity: .7; min-height: 18px; }
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+#hud button, #menu { pointer-events: auto; }
+.chip { display: inline-block; padding: 6px 10px; border-radius: 999px; background: var(--cristal); border: 1px solid var(--borde); backdrop-filter: blur(6px); font-weight: 700; font-size: 13px; white-space: nowrap; }
+#arriba { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 10px; right: 84px; display: flex; flex-wrap: wrap; gap: 6px; }
+#arriba .lugar { max-width: 62vw; overflow: hidden; text-overflow: ellipsis; color: var(--oro); }
+#hCalle { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 40px); left: 12px; font-weight: 800; text-shadow: 0 1px 3px #000c; font-size: 13px; opacity: .92; }
+#hVel { position: absolute; left: 12px; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 18px); display: flex; align-items: baseline; gap: 4px; text-shadow: 0 2px 6px #000c; }
+#hVel b { font: 900 34px/1 system-ui, sans-serif; color: var(--neon); }
+#hVel span { margin-left: 8px; font-size: 18px; }
+#hAviso { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px; background: var(--cristal); border: 1px solid var(--borde); font-weight: 800; opacity: 0; transition: opacity .3s; text-align: center; max-width: 86vw; }
+#hAviso.on { opacity: 1; }
+#hCruce { position: absolute; bottom: 38%; left: 50%; transform: translateX(-50%); font-weight: 800; text-shadow: 0 1px 4px #000; }
+#botones { position: absolute; right: 8px; top: max(10px, env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 6px; }
+#botones button, #pad button { width: 58px; height: 52px; border-radius: 14px; border: 1px solid var(--borde); background: var(--cristal); color: var(--tinta); font-size: 20px; display: grid; place-items: center; line-height: 1; backdrop-filter: blur(6px); cursor: pointer; }
+#botones button span { display: block; font-size: 9.5px; font-weight: 700; opacity: .85; margin-top: 2px; }
+#botones button.on { border-color: var(--neon); box-shadow: 0 0 0 1px var(--neon) inset; }
+#pad { position: absolute; right: 12px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 18px); display: flex; gap: 10px; }
+#pad button { width: 66px; height: 66px; border-radius: 50%; font-size: 26px; }
+#bRun { position: absolute; left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 22px); transform: translateX(-50%); padding: 10px 26px; border-radius: 16px; border: 2px solid var(--neon); background: linear-gradient(180deg, #102a22, #0b1020); color: var(--neon); font: 900 22px/1 system-ui, sans-serif; letter-spacing: .12em; display: grid; justify-items: center; box-shadow: 0 0 18px rgba(57, 255, 179, .45); animation: late 1.4s infinite; cursor: pointer; }
+#bRun small { font-size: 9px; letter-spacing: .1em; opacity: .8; }
+@keyframes late { 50% { box-shadow: 0 0 30px rgba(57, 255, 179, .8); } }
+#menu { position: absolute; right: 74px; top: max(10px, env(safe-area-inset-top)); max-height: 78vh; overflow: auto; width: min(300px, 70vw); padding: 8px; border-radius: 14px; background: rgba(11, 16, 32, .9); border: 1px solid var(--borde); display: grid; gap: 4px; }
+#menu button { text-align: left; padding: 8px 10px; border-radius: 10px; border: 1px solid transparent; background: #ffffff0d; color: var(--tinta); font-size: 14px; cursor: pointer; }
+#menu button.on { border-color: var(--neon); }
+#menu button small { opacity: .6; }
+#menu h4 { margin: 4px 4px 2px; font-size: 12px; opacity: .7; text-transform: uppercase; letter-spacing: .08em; }
+#pie { position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); font-size: 9px; opacity: .55; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+#run { position: fixed; inset: 0; z-index: 5; background: #000; }
+#runCv { position: absolute; inset: 0; width: 100vw; height: 100vh; touch-action: none; }
+#runHud { position: absolute; inset: 0; pointer-events: none; }
+#runHud button { pointer-events: auto; }
+@media (max-width: 520px) { #hCalle { top: calc(max(10px, env(safe-area-inset-top)) + 78px); } #botones button { width: 50px; height: 46px; font-size: 18px; } #hVel b { font-size: 28px; } }

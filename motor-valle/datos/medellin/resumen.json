@@ -1,0 +1,116 @@
+{
+ "ciudad": "medellin",
+ "bytes": 6266476,
+ "sha1": "1f0e31d333d9",
+ "capas": {
+  "suelo": {
+   "kb": 1340,
+   "raw_kb": 20741,
+   "tipo": "u8",
+   "sha1": "12378251c847"
+  },
+  "relieve": {
+   "kb": 418,
+   "raw_kb": 652,
+   "tipo": "i16",
+   "sha1": "a75fc2812ba5"
+  },
+  "municipio": {
+   "kb": 4,
+   "raw_kb": 325,
+   "tipo": "u8",
+   "sha1": "5a8274de9393"
+  },
+  "comuna": {
+   "kb": 3,
+   "raw_kb": 325,
+   "tipo": "u8",
+   "sha1": "959dd3b4eb75"
+  },
+  "barrio": {
+   "kb": 20,
+   "raw_kb": 650,
+   "tipo": "u16",
+   "sha1": "d4cde838f0c3"
+  },
+  "pisos": {
+   "kb": 11,
+   "raw_kb": 325,
+   "tipo": "u8",
+   "sha1": "fea9fbb5cf5a"
+  },
+  "lotes": {
+   "kb": 13,
+   "raw_kb": 325,
+   "tipo": "u8",
+   "sha1": "71c82419eaad"
+  },
+  "nivel": {
+   "kb": 43,
+   "raw_kb": 20741,
+   "tipo": "i8",
+   "sha1": "8bdb740784d6"
+  },
+  "vias": {
+   "kb": 680,
+   "raw_kb": 1381,
+   "tipo": "bin",
+   "sha1": "44e0e5491ad3"
+  },
+  "sitios": {
+   "kb": 174,
+   "raw_kb": 338,
+   "tipo": "bin",
+   "sha1": "2b6046abe72c"
+  },
+  "edificios": {
+   "kb": 3224,
+   "raw_kb": 5161,
+   "tipo": "bin",
+   "sha1": "115070913ac9"
+  },
+  "info": {
+   "kb": 44,
+   "raw_kb": 156,
+   "tipo": "json",
+   "sha1": "bd994fa3ddc2"
+  },
+  "pasos": {
+   "kb": 43,
+   "raw_kb": 123,
+   "tipo": "json",
+   "sha1": "b58234923a7a"
+  },
+  "transporte": {
+   "kb": 54,
+   "raw_kb": 163,
+   "tipo": "json",
+   "sha1": "d0796330319b"
+  },
+  "lugares": {
+   "kb": 6,
+   "raw_kb": 20,
+   "tipo": "json",
+   "sha1": "49f0d3aedc1f"
+  },
+  "trafico": {
+   "kb": 41,
+   "raw_kb": 139,
+   "tipo": "json",
+   "sha1": "f2bf0ef337c2"
+  }
+ },
+ "cuentas": {
+  "casillas": 21239036,
+  "pasos": 2193,
+  "casillas_con_nivel": 24967,
+  "edificios": 639457,
+  "vias": 35746,
+  "lineas": 31,
+  "estaciones_encicla": 133,
+  "lugares": 45,
+  "hitos": 30,
+  "carriles": 754,
+  "semaforos": 649
+ }
+}

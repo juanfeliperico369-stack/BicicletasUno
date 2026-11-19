@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>Motor City · Mundo abierto del Valle</title>
+<meta name="description" content="Banco de pruebas del Motor City %VERSION%: el mundo abierto de Medellín y el Valle de Aburrá que comparten Juega EnCicla, El Metro y los juegos que vienen.">
+<style>/*CSS*/</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="carga"><div class="logo">MOTOR <b>CITY</b></div><div class="sub">Mundo abierto del Valle de Aburrá · v%VERSION%</div><div class="barra"><i id="cargaB"></i></div><div id="cargaT">Abriendo el mundo…</div></div>
+<div id="hud" hidden>
+  <div id="arriba"><span id="hHora" class="chip"></span><span id="hClima" class="chip"></span><span id="hLugar" class="chip lugar"></span></div>
+  <div id="hCalle"></div>
+  <div id="hVel"><b id="hV">0</b><small>km/h</small><span id="hVeh"></span></div>
+  <div id="hAviso"></div>
+  <div id="hCruce"></div>
+  <div id="botones">
+    <button id="bVista" title="Vista (V)">🗺️<span>Vista</span></button>
+    <button id="bPixel" title="Pixel (P)">👾<span>Pixel</span></button>
+    <button id="bVeh" title="Vehículo (B)">🚲<span>Vehículo</span></button>
+    <button id="bHora" title="Hora (H)">🕐<span>Hora</span></button>
+    <button id="bClima" title="Clima (C)">☁️<span>Clima</span></button>
+    <button id="bYo" title="Personaje (Y)">🧑<span>Yo</span></button>
+    <button id="bIr" title="Ir a un lugar (G)">📍<span>Ir</span></button>
+  </div>
+  <button id="bRun" hidden>RUN<small>ciclovía</small></button>
+  <div id="pad"><button id="bSalto">⤒</button><button id="bTurbo">⚡</button></div>
+  <div id="menu" hidden></div>
+  <div id="pie">© colaboradores de OpenStreetMap (ODbL) vía Overture Maps · capas oficiales de Medellín · relieve SRTM/NASA</div>
+</div>
+<div id="run" hidden><canvas id="runCv"></canvas><div id="runHud"></div></div>
+<script>/*MUNDO*/</script>
+<script>/*MOTOR*/</script>
+<script>/*RUN*/</script>
+<script>/*SANDBOX*/</script>
+</body>
+</html>

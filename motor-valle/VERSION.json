@@ -1,76 +1,10 @@
 {
- "version": "1.2.0",
+ "version": "2.0.0",
  "fecha": "2026-11-19",
- "fuente_de_verdad": "juanfeliperico369-stack/BicicletasUno (carpeta motor-valle/)",
+ "nombre": "Motor City · Motor del Valle 2.0",
+ "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
  "copias": [
+  "juanfeliperico369-stack/BicicletasUno (carpeta motor-valle/)",
   "juanfeliperico369-stack/MetroZero (carpeta motor-valle/)"
- ],
- "resoluciones": {
-  "encicla": 10,
-  "elmetro": 20
- },
- "origen": {
-  "lon0": -75.7,
-  "latN": 6.46,
-  "lon1": -75.31,
-  "latS": 6.015
- },
- "capas": {
-  "comunes": [
-   "suelo",
-   "relieve",
-   "municipios",
-   "comunas",
-   "barrios",
-   "pisos",
-   "lotes",
-   "red_sitva",
-   "metroplus",
-   "alturas",
-   "tuneles"
-  ],
-  "encicla": [
-   "vias.bin",
-   "sitios",
-   "ciclorrutas",
-   "estaciones_encicla"
-  ],
-  "elmetro": [
-   "valle.js",
-   "ciudad",
-   "vias.js",
-   "puentes",
-   "edificios",
-   "hitos",
-   "metroplus_andenes",
-   "rieles",
-   "rutas_calles",
-   "ajustes"
-  ]
- },
- "propuestas": [
-  "pasos: geo/pasos.py + js/red-niveles.mjs (niveles firmados; prueba: node tests/prueba-niveles.mjs en EnCicla)"
- ],
- "historial": [
-  {
-   "version": "1.0.0",
-   "fecha": "2026-11-18",
-   "que": "una tubería con dos resoluciones, exportador a El Metro, sincronizador y contrato"
-  },
-  {
-   "version": "1.1.0 · EnCicla (Gemini)",
-   "fecha": "2026-11-18",
-   "que": "túneles y deprimidos (geo/alturas.py), lector js/valle.js y catálogo capas/index.mjs"
-  },
-  {
-   "version": "1.1.0 · El Metro",
-   "fecha": "2026-11-19",
-   "que": "fachada MotorValle (MAP, VC, G3), huella de los datos de los dos juegos en «version» y capas propias (vías, rutas de calles, hitos) que siguen en su repositorio"
-  },
-  {
-   "version": "1.2.0",
-   "fecha": "2026-11-19",
-   "que": "une las dos 1.1.0 con la fuente de verdad en BicicletasUno; valle.js con las dos interfaces; sincronizar --verificar"
-  }
  ]
 }

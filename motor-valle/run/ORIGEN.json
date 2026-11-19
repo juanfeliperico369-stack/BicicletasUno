@@ -1,0 +1,29 @@
+{
+ "repositorio": "juanfeliperico369-stack/RunRunZero",
+ "commit": "5b2f85d",
+ "archivos": [
+  "src/engine.js",
+  "src/data.js",
+  "src/story.js",
+  "src/game.js",
+  "src/models.js",
+  "src/models2.js",
+  "src/render.js",
+  "src/audio.js"
+ ],
+ "parches": [
+  "engine: relieve real: uniformes",
+  "engine: relieve real: sombreador",
+  "engine: relieve real: subir las alturas",
+  "game: relieve real: HILL reemplazable",
+  "game: relieve real: enganche",
+  "game: esquinas reales: sin esquinas inventadas",
+  "game: esquinas reales: en los cruces del camino",
+  "game: esquinas reales: el mundo dobla",
+  "render: curvas reales",
+  "render: relieve real: alturas al sombreador",
+  "render: cielo del mundo",
+  "render: lluvia del mundo"
+ ],
+ "fecha": "2026-11-19"
+}

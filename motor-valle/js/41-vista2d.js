@@ -1,0 +1,131 @@
+/* =====================================================================
+   VISTA 2D ÚNICA · cenital, 3D oblicua y maqueta dimétrica 2:1 con una sola proyección:
+     pantalla = centro + Aplasta(k) · Gira(yaw) · (punto − cámara) · zoom  −  altura · zoom · hk
+   - cenital: k = 1, hk = 0 (los techos van en las losas) · oblicua: k = cos(incl), hk = sin(incl)
+   - maqueta 2:1: yaw en múltiplos de 90° + 45°, k = 0,5, hk = 0,82 (la proyección de la maqueta de El Metro)
+   El suelo sale de las losas; los edificios se levantan con su huella y su altura reales; puentes y viaducto
+   a su nivel; tráfico, transporte y gente encima. El pixel es la misma vista en un búfer pequeño (vistas.js).
+   ===================================================================== */
+const Vista2D = {
+  parametros(cam, modo) {
+    if (modo === 'cenital') return { yaw: cam.yaw, k: 1, hk: 0 };
+    if (modo === 'maqueta') { const q = Math.round((cam.yaw - Math.PI / 4) / (Math.PI / 2)); return { yaw: Math.PI / 4 + q * Math.PI / 2, k: .5, hk: .82 }; }
+    const p = clamp(cam.pitch, .15, 1.15); return { yaw: cam.yaw, k: Math.cos(p), hk: Math.sin(p) };
+  },
+  dibujar(g, W, H, E, op = {}) {
+    const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw);
+    /* matriz mundo → pantalla (sin altura) */
+    const a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 - b * C.x - d * C.y;
+    const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
+    const inv = (sx, sy) => { const det = a * d - b * c, X = sx - e, Y = sy - f; return [(d * X - c * Y) / det, (-b * X + a * Y) / det]; };
+    E._pr = pr; E._vista = { modo, P, W, H, z };
+    /* caja del mundo visible (con margen para lo alto) */
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [sx, sy] of [[0, -H * .6 * P.hk], [W, -H * .6 * P.hk], [0, H], [W, H]]) { const [wx, wy] = inv(sx, sy); x0 = Math.min(x0, wx); x1 = Math.max(x1, wx); y0 = Math.min(y0, wy); y1 = Math.max(y1, wy); }
+    E._caja = [x0, y0, x1, y1];
+    /* ---------- suelo ---------- */
+    const sinTechos = modo !== 'cenital', pixel = !!op.pixel, Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
+    let res = z * (op.dpr || 1); const RES = [.0625, .125, .25, .5, 1, 2, 3]; res = RES.find(r => r >= res * (pixel ? .9 : .8)) || 3; if (Ls === E.losasLejos) res = Math.min(res, .25);
+    g.save(); g.fillStyle = '#5e8c4a'; g.fillRect(0, 0, W, H); g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
+    const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
+    for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
+      let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), sinTechos);
+      if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, sinTechos); }   // mientras llega la buena, una borrosa
+      if (L) g.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
+    }
+    g.restore();
+    const noche0 = E.cielo ? E.cielo.noche : 0; if (noche0 > .02) { g.fillStyle = 'rgba(8,18,52,' + (noche0 * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
+    /* ---------- lo que se levanta: edificios, pasos elevados, vehículos y gente, en orden de profundidad ---------- */
+    const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f;
+    if (modo !== 'cenital') {
+      const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * (E.calidad ?? 1));
+      const lista = E.mundo.edificiosEn(x0, y0, x1, y1).filter(q => q.h >= minH); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
+      for (const q of lista) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q });
+      for (const q of E.mundo.sitios().E) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); }
+    }
+    for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
+    for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
+    for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
+    if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
+    for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
+    objs.sort((p, q) => p.y - q.y);
+    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H };
+    for (const o of objs) {
+      if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
+      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P);
+    }
+    /* cables del Metrocable: el cable entre torres por encima de todo */
+    if (E.cables) this.cables(dibCtx, E.cables);
+    /* etiquetas (estaciones, lugares) */
+    if (op.etiquetas !== false) this.etiquetas(dibCtx);
+    return faltan;
+  },
+  /* prisma con techo: muros que miran a la cámara, sombreados por la luz, y el techo */
+  prisma(D, P, z0, z1, muro, techo, ventanas) {
+    const { g, pr, z, noche } = D, n = P.length >> 1; if (n < 3) return; const B = [], T = [];
+    for (let i = 0; i < n; i++) { B.push(pr(P[2 * i], P[2 * i + 1], z0)); T.push(pr(P[2 * i], P[2 * i + 1], z1)); }
+    let area = 0; for (let i = 0; i < n; i++) { const j = (i + 1) % n; area += B[i][0] * B[j][1] - B[j][0] * B[i][1]; } const sg = area > 0 ? 1 : -1;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n, ex = B[j][0] - B[i][0], ey = B[j][1] - B[i][1], ny = ex * sg; if (ny <= 0) continue;   // el muro mira hacia abajo de la pantalla: se ve
+      const lz = clamp(.72 + .28 * (ey * sg / (Math.hypot(ex, ey) || 1)) * D.luzX + .1, .55, 1.05) - noche * .45;
+      g.fillStyle = tono(muro, lz - 1); g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
+      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) { for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u - (T[i][1] - B[i][1]) * -v; g.fillStyle = lit ? 'rgba(255,214,120,' + (.55 + noche * .4) + ')' : 'rgba(25,35,50,.32)'; g.fillRect(x, y, Math.max(1, ex / cols * .45), Math.max(1, z * 1.2)); } } }
+    }
+    g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();
+  },
+  edificio(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h > 7 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
+  sitio(D, q) {
+    const ES = ['#b8673f', '#eceae4', '#bdbcb6', '#5e7b97', '#ece3cd', '#efe8d8', '#d4d8dd', '#3a3f4a', '#b9714b', '#d8432f', '#d9d4c9', '#a86a4c', '#e9dab3', '#2a302d', '#3a3f4a', '#6a645c', '#a6573a', '#e3e6ea', '#4b5a55'], m = ES[q.est] || '#d9d4c9', t = q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : q.techo === 'cupula' ? '#56665f' : tono(m, -.12);
+    for (const R of q.R.slice(0, 1)) this.prisma(D, R, 0, q.partes ? q.partes[0].z0 || Math.min(q.h, 12) : q.h, m, t, 7);
+    if (q.partes) for (const p of q.partes) this.prisma(D, p.B, p.z0, p.z1, ES[p.est] || m, p.techo === 'aguja' ? '#e3e6ea' : tono(ES[p.est] || m, -.15), 0);
+  },
+  pasoElevado(D, q) {
+    const { g, pr, z } = D, h = q.nivel * NIVEL_M, p = q.p, n = p.length >> 1, L = q.ancho / 2, vi = q.tipo === 'viaducto', T = q.trazo || (q.trazo = new Trazo(p));
+    const rampa = vi ? 0 : Math.min(q.largo * .4, q.peatonal ? 9 : 22), alt = s => h * (vi ? 1 : suave(Math.min(s, q.largo - s) / rampa));
+    if (!D.cen) { g.fillStyle = vi ? '#9aa3ad' : '#a9a49a'; for (let s = 12; s < q.largo - 6; s += vi ? 30 : 24) { const c = T.at(s), [x, y] = pr(c.x, c.y, 0), [, y2] = pr(c.x, c.y, alt(s)); const w = Math.max(1, z * 1.4); g.fillRect(x - w / 2, y2, w, y - y2); } }
+    const izq = [], der = []; for (let s = 0; s <= q.largo; s += Math.max(2, 8 / Math.max(.3, z))) { const c = T.at(s), nx = -Math.sin(c.a), ny = Math.cos(c.a), hh = D.cen ? 0 : alt(s); izq.push(pr(c.x + nx * L, c.y + ny * L, hh)); der.push(pr(c.x - nx * L, c.y - ny * L, hh)); }
+    if (D.cen) { g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); izq.forEach(([x, y], i) => i ? g.lineTo(x + z * 2, y + z * 3) : g.moveTo(x + z * 2, y + z * 3)); der.slice().reverse().forEach(([x, y]) => g.lineTo(x + z * 2, y + z * 3)); g.fill(); }
+    if (!D.cen) { g.fillStyle = vi ? '#7f8891' : '#8e8a80'; g.beginPath(); der.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); der.slice().reverse().forEach(([x, y]) => g.lineTo(x, y + z * 1.1)); g.fill(); }
+    g.fillStyle = vi ? '#c9cfd8' : q.peatonal ? '#d8cfbd' : '#5a5f69'; g.beginPath(); izq.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); der.slice().reverse().forEach(([x, y]) => g.lineTo(x, y)); g.closePath(); g.fill();
+    if (vi) { g.strokeStyle = '#6f7177'; g.lineWidth = Math.max(.5, z * .25); for (const lado of [-1.3, 1.3]) { g.beginPath(); for (let s = 0; s <= q.largo; s += 6) { const c = T.at(s, lado), [x, y] = pr(c.x, c.y, h + .1); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } }
+    g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = Math.max(.4, z * .2); for (const B of [izq, der]) { g.beginPath(); B.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); }
+  },
+  vehiculo(D, v) {
+    const { g, pr, z, P, noche } = D;
+    if (v.clase === 'metro' || v.clase === 'tram') { const L = D.E.transporte && D.E.transporte.lineas.find(l => l.id === v.linea); if (L) { const n = v.clase === 'metro' ? 6 : 2, coche = v.largo / n; if (D.modo === 'cenital') Pincel.trenArriba(g, L.T, v.s, v.dir, n, coche, v.color, (x, y) => pr(x, y, v.z)); else for (let i = n - 1; i >= 0; i--) { const sc = v.s - v.dir * (i + .5) * coche, c = L.T.at(sc), ux = Math.cos(c.a) * coche * .48, uy = Math.sin(c.a) * coche * .48, nx = -Math.sin(c.a) * 1.5, ny = Math.cos(c.a) * 1.5; this.prisma(D, [c.x - ux + nx, c.y - uy + ny, c.x + ux + nx, c.y + uy + ny, c.x + ux - nx, c.y + uy - ny, c.x - ux - nx, c.y - uy - ny], v.z + .4, v.z + 3.6, '#e6e9ee', '#c9cfd8', 0); } return; } }
+    if (v.clase === 'cable') { const [x, y] = pr(v.x, v.y, v.z), s = Math.max(2, z * 2.2), sw = Math.sin((D.E.t || 0) * 1.3 + v.s * .1) * (D.E.clima ? D.E.clima.viento.v * .25 : .5); g.save(); g.translate(x, y); g.rotate(sw * .05); g.fillStyle = '#2d3138'; g.fillRect(-.15 * s, -1.2 * s, .3 * s, 1.2 * s); g.fillStyle = v.color || '#e38835'; g.fillRect(-s * .8, 0, s * 1.6, s * 1.3); g.fillStyle = 'rgba(200,225,240,.85)'; g.fillRect(-s * .6, s * .2, s * 1.2, s * .5); g.restore(); return; }
+    const T = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, L = v.largo || T.largo, Wd = v.ancho || T.ancho;
+    if (D.modo === 'cenital') { const [x, y] = pr(v.x, v.y, v.z || 0); g.save(); g.translate(x, y); g.rotate(v.a + P.yaw); g.scale(z, z); Pincel.vehiculoArriba(g, v.tipo, v.color, L, Wd, v.frena, noche > .4); g.restore(); return; }
+    const ux = Math.cos(v.a) * L / 2, uy = Math.sin(v.a) * L / 2, nx = -Math.sin(v.a) * Wd / 2, ny = Math.cos(v.a) * Wd / 2, h = v.tipo === 'buseta' || v.tipo === 'camion' ? 3 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.45;
+    this.prisma(D, [v.x - ux + nx, v.y - uy + ny, v.x + ux + nx, v.y + uy + ny, v.x + ux - nx, v.y + uy - ny, v.x - ux - nx, v.y - uy - ny], (v.z || 0) + .3, (v.z || 0) + h, v.color, tono(v.color, .12), 0);
+    if (noche > .4) { const [x, y] = D.pr(v.x + ux * 1.05, v.y + uy * 1.05, .8); g.fillStyle = 'rgba(255,240,190,.9)'; g.fillRect(x - 1, y - 1, 2.5, 2.5); }
+  },
+  peaton(D, p) {
+    const { g, pr, z, P } = D, A = p.aspecto || (p.aspecto = Personaje.azar(p.semilla || 1)), [x, y] = pr(p.x, p.y, 0);
+    if (z < .8) { g.fillStyle = A.cCamisa; g.fillRect(x - 1, y - 2, 2, 2); return; }
+    if (D.modo === 'cenital') { const J = Personaje.pose('camina', p.fase); J.fase = p.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, p.a + P.yaw); return; }
+    const J = Personaje.pose('camina', p.fase, { alto: A.alto }), dir = Math.cos(p.a + P.yaw) >= 0 ? 1 : -1; (MC.arte.f('personajeLado'))(g, J, A, x, y, z * P.hk, dir);
+  },
+  jugador(D, j) {
+    const { g, pr, z, P } = D, C = j.cuerpo, A = j.aspecto, V = C.veh, [x, y] = pr(C.x, C.y, C.zPaso + C.z), fn = MC.arte.f('jugador');
+    if (fn && fn(g, j, x, y, z, P, D) !== false) return;
+    g.fillStyle = 'rgba(0,0,0,.3)'; const [sx, sy] = pr(C.x, C.y, C.zPaso); g.beginPath(); g.ellipse(sx, sy, Math.max(2, z * .7), Math.max(1.2, z * .4 * P.k), 0, 0, TAU); g.fill();
+    if (D.modo === 'cenital') {
+      g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
+      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
+      g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw); return;
+    }
+    const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
+    const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
+    const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir);
+  },
+  cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
+  etiquetas(D) {
+    const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
+    const pon = (t, x, y, col) => { const [sx, sy] = pr(x, y, 8); if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) return; const w = g.measureText(t).width + 10; g.fillStyle = 'rgba(10,35,66,.82)'; g.fillRect(sx - w / 2, sy - 16, w, 18); g.fillStyle = col; g.fillText(t, sx, sy - 3); };
+    for (const l of E.transporte ? E.transporte.lineas : []) if (l.clase === 'metro' || l.clase === 'cable' || l.clase === 'tram') for (const s of l.est) { const q = l.T.at(s.s); pon(s.nombre, q.x, q.y, '#ffffff'); }
+    if (z > .9) for (const s of E.mundo.transporte.encicla) pon('🚲 ' + s.nombre, s.x, s.y, '#c4ec7c');
+    for (const L of E.mundo.lugares) if (!L.secreto) pon(L.nombre, L.x, L.y, '#ffd84a');
+  }
+};
+MC.Vista2D = Vista2D;

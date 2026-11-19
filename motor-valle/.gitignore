@@ -1,0 +1,8 @@
+# generados que no se suben (se rehacen con node motor.mjs construir / fuentes)
+dist/mundo-*.js
+dist/.sandbox.check.js
+geo/cache/
+salida/
+__pycache__/
+node_modules/
+.DS_Store

@@ -20,6 +20,8 @@ from shapely.strtree import STRtree
 HERE = os.path.dirname(os.path.abspath(__file__)); CACHE = os.path.join(HERE, 'cache'); OUT = os.environ.get('OUT') or os.path.join(HERE, '..', '..', 'src', 'data')   # OUT=carpeta: otra salida (p. ej. el mapa de 20 m para El Metro)
 OFI = os.path.join(CACHE, 'oficial')
 LON0, LON1, LATN, LATS = -75.70, -75.31, 6.46, 6.015
+if os.environ.get('CIUDAD'):   # Motor City 2.0: la ventana sale de ciudades/<id>.json (otra ciudad, la misma tubería)
+    _V = json.load(open(os.environ['CIUDAD'], encoding='utf8'))['ventana']; LON0, LON1, LATN, LATS = _V['lon0'], _V['lon1'], _V['latN'], _V['latS']
 TILE = float(os.environ.get('TILE', '10'))
 S = 20.0 / TILE                          # escala frente al mapa de 20 m: radios y ventanas en casillas se multiplican por S
 KX = 111320 * math.cos(math.radians((LATN + LATS) / 2)) / TILE
