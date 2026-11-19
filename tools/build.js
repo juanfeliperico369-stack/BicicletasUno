@@ -9,14 +9,14 @@ const URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
 const rd = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 const jsFiles = fs.readdirSync(path.join(SRC, 'js')).filter(f => f.endsWith('.js')).sort();
 let js = jsFiles.map(f => `/* ---- ${f} ---- */\n` + rd('js/' + f)).join('\n');
-// mapa real del Valle de Aburrá (tools/geo/build.py): casillas y relieve comprimidos (deflate) + líneas en JSON
+// mapa real del Valle de Aburrá (motor-valle/geo/build.py): casillas y relieve comprimidos (deflate) + líneas en JSON
 const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '${fs.readFileSync(path.join(SRC, 'data', 'valle.bin')).toString('base64')}';\nconst VIAS_BIN = '${fs.existsSync(path.join(SRC, 'data', 'vias.bin')) ? fs.readFileSync(path.join(SRC, 'data', 'vias.bin')).toString('base64') : ''}';\nconst SITIOS_META = ${fs.existsSync(path.join(SRC, 'data', 'sitios.json')) ? rd('data/sitios.json') : 'null'};\nconst SITIOS_BIN = '${fs.existsSync(path.join(SRC, 'data', 'sitios.bin')) ? fs.readFileSync(path.join(SRC, 'data', 'sitios.bin')).toString('base64') : ''}';\n`;
 // guion del juego (contenido/guion/*.json): historia "Un día del valle", frases de la ciudad, tutor, fiestas y Metro
 const GDIR = path.join(ROOT, 'contenido', 'guion');
 const GUION = fs.existsSync(GDIR) ? Object.fromEntries(fs.readdirSync(GDIR).filter(f => f.endsWith('.json')).sort().map(f => [f.slice(0, -5), JSON.parse(fs.readFileSync(path.join(GDIR, f), 'utf8'))])) : {};
-// lo que va en alto (tools/geo/alturas.py): tramos del metro en viaducto y puentes de las vías
+// lo que va en alto (motor-valle/geo/alturas.py): tramos del metro en viaducto y puentes de las vías
 const ALT = fs.existsSync(path.join(SRC, 'data', 'alturas.json')) ? rd('data/alturas.json') : 'null';
-// Metroplús como en El Metro (tools/geo/metroplus_elmetro.py): corredores de OSM de las Líneas 1 y 2 y andenes reales
+// Metroplús como en El Metro (motor-valle/geo/metroplus_elmetro.py): corredores de OSM de las Líneas 1 y 2 y andenes reales
 const MPR = fs.existsSync(path.join(SRC, 'data', 'metroplus.json')) ? rd('data/metroplus.json') : 'null';
 js = VALLE + `const GUION = ${JSON.stringify(GUION)};\nconst ALTURAS = ${ALT};\nconst MP_REAL = ${MPR};\n` + js;
 const version = (js.match(/version: '([^']+)'/) || [])[1] || '0.0.0';

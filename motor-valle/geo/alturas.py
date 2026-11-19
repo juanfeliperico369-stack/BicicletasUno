@@ -1,8 +1,8 @@
 """Lo que va en alto (v1.7): tramos del metro en viaducto y puentes de las vías, con su nivel.
    Fuente: Overture Maps (datos de OpenStreetMap, ODbL): segmentos con road_flags/rail_flags (is_bridge) y level_rules.
-   Entrada: tools/geo/cache/rail_niveles.parquet y puentes.parquet (los baja tools/geo/fetch.py) y src/data/valle.json (proyección).
+   Entrada: motor-valle/geo/cache/rail_niveles.parquet y puentes.parquet (los baja motor-valle/geo/fetch.py) y src/data/valle.json (proyección).
    Salida: src/data/alturas.json, que tools/build.js mete en el juego como ALTURAS.
-   Uso: python3 tools/geo/alturas.py
+   Uso: python3 motor-valle/geo/alturas.py
 """
 import duckdb, json, math, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..')

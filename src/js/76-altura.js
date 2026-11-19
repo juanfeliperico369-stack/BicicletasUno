@@ -1,6 +1,6 @@
 /* =====================================================================
    LO QUE VA EN ALTO (v1.7): el metro en viaducto con sus estaciones elevadas y los puentes de las vías,
-   cada uno a su altura (Overture / OpenStreetMap: is_bridge y level; tools/geo/alturas.py).
+   cada uno a su altura (Overture / OpenStreetMap: is_bridge y level; motor-valle/geo/alturas.py).
    En la ciudad 3D la bici pasa por DEBAJO del viaducto y de los puentes; a un puente se sube por sus
    extremos (si se llega por un lado, se pasa por debajo). En el suelo quedan su sombra y sus pilares.
    ===================================================================== */

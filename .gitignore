@@ -22,4 +22,8 @@ keystore.properties
 *.aab
 # APK que se publica junto a la página (lo coloca el desarrollador)
 landing/descargas/
-tools/geo/cache/
+motor-valle/geo/cache/
+
+# salidas de prueba del Motor del Valle
+motor-valle/salida/
+motor-valle/geo/__pycache__/

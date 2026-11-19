@@ -1,8 +1,8 @@
 """Construye el mapa real del Valle de Aburrá para Juega EnCicla (v3: casillas de 10 m).
-   Entrada: tools/geo/cache/ (fetch.py: OpenStreetMap vía Overture, huellas de edificios y relieve;
+   Entrada: motor-valle/geo/cache/ (fetch.py: OpenStreetMap vía Overture, huellas de edificios y relieve;
             oficial.py: capas oficiales de Medellín, Itagüí, Envigado y Sabaneta).
    Salida: src/data/valle.bin (casillas, relieve, municipios, comunas, barrios, alturas y lotes), src/data/vias.bin y src/data/valle.json.
-   Uso: python3 tools/geo/build.py      (TILE=20 python3 tools/geo/build.py rehace el mapa antiguo de 20 m)
+   Uso: python3 motor-valle/geo/build.py      (TILE=20 python3 motor-valle/geo/build.py rehace el mapa antiguo de 20 m)
    Necesita: pip install duckdb numpy pillow shapely
    Fila 0 = norte. Todo lo que queda fuera de los 10 municipios del Área Metropolitana es montaña.
    Datos: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; huellas de edificios de Overture Maps (OSM, Microsoft y Google, ODbL);
@@ -568,7 +568,7 @@ for k, r in (('A', .5), ('B', .5), ('T', .75)):
     v = code[cc[:, 1], cc[:, 0]]; m = np.isin(v, [BRICK, BLDG]); code[cc[m, 1], cc[m, 0]] = WALK; ncor += int(m.sum())
 print('corredores del metro y del tranvía: casillas de casa que pasan a andén', ncor)
 
-# ---------------- Metroplús: de estación a estación por las avenidas reales (datos de líneas: tools/geo/lineas.json, de El Metro) ----------------
+# ---------------- Metroplús: de estación a estación por las avenidas reales (datos de líneas: motor-valle/geo/lineas.json, de El Metro) ----------------
 import heapq
 LJ = json.load(open(os.path.join(HERE, 'lineas.json'), encoding='utf-8'))['lineas']
 def snap(x, y, kinds, R):

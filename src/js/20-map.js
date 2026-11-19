@@ -1,6 +1,6 @@
 /* =====================================================================
    MAPA REAL DEL VALLE DE ABURRÁ (de Caldas a Barbosa)
-   Casillas de 10 m hechas con datos abiertos (tools/geo/build.py): calles, ciclorrutas, río, quebradas,
+   Casillas de 10 m hechas con datos abiertos (motor-valle/geo/build.py): calles, ciclorrutas, río, quebradas,
    parques, municipios, Metro, tranvía y relieve. Fila 0 = norte. Ver docs/GUIA.md §4.
    ===================================================================== */
 const VM = VALLE_META, MW = VM.W, MH = VM.H, TS = 16, CH = 16, SC = 1.35, ES = VM.es, WK = TS / 8, MS = 20 / (VM.tile || 20), VQ = VM.vq || 8, TRAVEL = Math.sqrt(MS), VEL = 1, RELOJ = MS / VEL;   // WK: escala del mundo frente al diseño original de 8 px · MS: casillas por cada casilla del mapa de 20 m (2 con casillas de 10 m) · VEL: factor de velocidad de la bici (v1.7: 1, antes √MS) · RELOJ: el reloj de los oficios corre MS/VEL más lento en el mapa, así cada viaje cuesta los mismos minutos de juego

@@ -2,7 +2,7 @@
    y el centro del andén real de cada estación, tomados de El Metro (repo metrozero: src/data/metroplus.js y metroplus_andenes.js,
    generados allí por tools/metroplus_osm.py y tools/metroplus_andenes.py). © colaboradores de OpenStreetMap (ODbL).
    Las coordenadas vienen en metros del mapa del valle de El Metro (mismo lon0/latN): en Juega EnCicla, px = m × 1,6 (casillas de 10 m y 16 px).
-   Uso: python3 tools/geo/metroplus_elmetro.py RUTA_A_METROZERO   ->  src/data/metroplus.json
+   Uso: python3 motor-valle/geo/metroplus_elmetro.py RUTA_A_METROZERO   ->  src/data/metroplus.json
 """
 import json, os, sys
 src = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), '..', '..', '..', 'juanfeliperico369-stack', 'metrozero')

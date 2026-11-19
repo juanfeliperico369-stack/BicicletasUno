@@ -1,9 +1,9 @@
 """Descarga los datos abiertos del Valle de Aburrá para construir el mapa real del juego.
    - Calles, ciclorrutas, Metro, tranvía, ríos, quebradas, parques y municipios: Overture Maps (datos de OpenStreetMap, ODbL).
    - Relieve: Terrain Tiles de AWS Open Data (Mapzen, SRTM/NASA), formato terrarium, zoom 13.
-   Uso: python3 tools/geo/fetch.py   (necesita: pip install duckdb)   ->  tools/geo/cache/
+   Uso: python3 motor-valle/geo/fetch.py   (necesita: pip install duckdb)   ->  motor-valle/geo/cache/
    La primera vez tarda ~1 minuto. Para que DuckDB lea el bucket público sin credenciales:
-   env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 tools/geo/fetch.py
+   env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 motor-valle/geo/fetch.py
 """
 import duckdb, math, os, sys, time, urllib.request
 OUT = os.path.join(os.path.dirname(__file__), 'cache'); os.makedirs(OUT, exist_ok=True); os.makedirs(os.path.join(OUT, 'dem'), exist_ok=True)
@@ -24,9 +24,9 @@ q('landuse', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geome
 q('div', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=divisions/type=division_area/*', hive_partitioning=1) WHERE {inside} AND country='CO'")
 q('barrios', f"SELECT subtype, names.primary AS name, ST_Y(geometry) AS lat, ST_X(geometry) AS lon FROM read_parquet('{REL}/theme=divisions/type=division/*', hive_partitioning=1) WHERE {inside} AND country='CO' AND subtype IN ('neighborhood','locality')")
 q('buildings', f"SELECT subtype, class, height, num_floors, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
-# para los sitios reales (tools/geo/sitios.py): edificios con nombre, clase, pisos y forma del techo; y los lugares (alcaldías)
+# para los sitios reales (motor-valle/geo/sitios.py): edificios con nombre, clase, pisos y forma del techo; y los lugares (alcaldías)
 q('edificios', f"SELECT names.primary AS name, subtype, class, height, num_floors, min_height, roof_shape, roof_color, facade_color, roof_material, facade_material, has_parts, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
-# lo que va en alto (tools/geo/alturas.py): puentes de las vías y tramos del metro con road_flags/rail_flags (is_bridge) y level_rules
+# lo que va en alto (motor-valle/geo/alturas.py): puentes de las vías y tramos del metro con road_flags/rail_flags (is_bridge) y level_rules
 q('puentes', f"SELECT id, class, subclass, names.primary AS name, to_json(road_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='road' AND {inside} AND (road_flags IS NOT NULL OR level_rules IS NOT NULL)")
 q('rail_niveles', f"SELECT id, class, names.primary AS name, to_json(rail_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='rail' AND {inside}")
 q('lugares_poi', f"SELECT names.primary AS name, basic_category AS cat, taxonomy.primary AS tax, ST_Y(geometry) lat, ST_X(geometry) lon, confidence FROM read_parquet('{REL}/theme=places/type=place/*', hive_partitioning=1) WHERE {inside}")

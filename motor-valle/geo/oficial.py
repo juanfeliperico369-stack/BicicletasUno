@@ -1,5 +1,5 @@
-"""Descarga (una vez) las capas abiertas oficiales que usa tools/geo/build.py para el mapa de 10 m.
-   Uso: python3 tools/geo/oficial.py   ->  tools/geo/cache/oficial/*.json
+"""Descarga (una vez) las capas abiertas oficiales que usa motor-valle/geo/build.py para el mapa de 10 m.
+   Uso: python3 motor-valle/geo/oficial.py   ->  motor-valle/geo/cache/oficial/*.json
    Adaptado de El Metro (tools/ciudad_descarga.py, mismo autor). Fuentes (datos abiertos en ArcGIS Online, se citan en docs/GUIA.md):
    - Alcaldía de Medellín · Subsecretaría de Catastro: límite barrio-vereda catastral, manzanas, malla vial 2026
      (nomenclatura y ancho), jerarquía vial, inventario de espacio público y lotes (solo centroide y área).

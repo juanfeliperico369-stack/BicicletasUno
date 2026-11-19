@@ -1,7 +1,7 @@
 /* =====================================================================
    SITIOS REALES (v1.5): los lugares importantes del valle con la forma, la altura y el estilo de sus
    edificios reales — universidades, colegios, alcaldías, hospitales, iglesias, bibliotecas, coliseos,
-   terminales — y todas las canchas, pistas y piscinas. Datos: src/data/sitios.bin (tools/geo/sitios.py),
+   terminales — y todas las canchas, pistas y piscinas. Datos: src/data/sitios.bin (motor-valle/geo/sitios.py),
    de OpenStreetMap vía Overture (ODbL). Estilos elegidos mirando el valle desde arriba
    (satélite, fotos aéreas y videos de dron: docs/MEDELLIN-DESDE-EL-AIRE.md).
    - Física: dentro de cada sitio lo construido de relleno pasa a prado o plaza y cada edificio real es sólido.

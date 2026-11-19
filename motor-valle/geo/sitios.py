@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """SITIOS REALES del valle: los lugares importantes con la forma, la altura y el estilo de sus edificios reales.
 
-  python3 tools/geo/sitios.py        (después de fetch.py y build.py)
+  python3 motor-valle/geo/sitios.py        (después de fetch.py y build.py)
   -> src/data/sitios.bin (deflate) y src/data/sitios.json (nombres, tipos y tamaño)
 
 Qué junta (datos de OpenStreetMap vía Overture, ODbL):
@@ -20,7 +20,7 @@ from shapely.geometry import Polygon, MultiPolygon, Point
 from shapely.geometry.polygon import orient
 
 R = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
-C = os.path.join(R, 'tools', 'geo', 'cache'); D = os.path.join(R, 'src', 'data')
+C = os.path.join(R, 'motor-valle', 'geo', 'cache'); D = os.path.join(R, 'src', 'data')
 meta = json.load(open(os.path.join(D, 'valle.json'), encoding='utf-8'))
 LON0, LATN, KX, KY, MW, MH = meta['lon0'], meta['latN'], meta['kx'], meta['ky'], meta['W'], meta['H']
 U = 8                                   # unidades por casilla

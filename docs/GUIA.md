@@ -42,8 +42,8 @@ src/js/74-sistema.js  el sistema metro con los diseños de El Metro (trenes, tra
 src/js/76-altura.js   lo que va en alto: metro en viaducto, estaciones elevadas, puentes (cortados del suelo), nivel del jugador y Metroplús sobre sus avenidas
 src/js/88-camara.js   cámara (pellizco, giro, inclinación, ángulos, cámara libre), velocidad elegible y calidad automática
 src/js/89-paseo.js    paseo guiado del modo libre: la bici va sola por los lugares con postal y la cámara cambia de plano
-tools/geo/metroplus_elmetro.py corredores y andenes reales del Metroplús tomados de El Metro (metrozero) -> src/data/metroplus.json
-tools/geo/alturas.py  tramos del metro en viaducto y puentes con su nivel (Overture) -> src/data/alturas.json
+motor-valle/geo/metroplus_elmetro.py corredores y andenes reales del Metroplús tomados de El Metro (metrozero) -> src/data/metroplus.json
+motor-valle/geo/alturas.py  tramos del metro en viaducto y puentes con su nivel (Overture) -> src/data/alturas.json
 tools/auditoria-mapa.js mide el mapa que se juega (río, agua, escaleras, estaciones, sitios, CSP): docs/AUDITORIA-MAPA.md
 src/js/46-mg3.js      minijuegos de la operación real: Conteo, Tulas, Bodega en 4 pasos, Ensamble, Llamadas
 src/js/52-oficios.js  turnos reales por fases (ShiftMode) y los 9 oficios reales (reemplazan a los de 50-modes.js en MODE_CLASS)
@@ -77,8 +77,8 @@ src/js/82-prestamo.js préstamo EnCicla en el modo libre: renovar cada hora, str
 src/js/84-mapa-vivo.js barrio/comuna al entrar, palomas, nubes y brillos del agua; centros de comunas y barrios para el mapa grande
 src/js/83-guion.js    guion: Un día del valle, frases de la ciudad, consejos del tutor, saludos de fiesta, huevos del Metro y logros
 src/js/99-boot.js     arranque (carga el mapa de forma asíncrona) y registro del service worker
-src/data/             valle.bin + valle.json (casillas de 10 m, relieve, municipios, comunas, barrios, alturas y lotes) y vias.bin (cada vía como vector, con su nombre, nomenclatura y ancho); se regeneran con tools/geo/build.py
-tools/geo/            fetch.py (OpenStreetMap vía Overture, huellas de edificios y relieve), oficial.py (capas oficiales de Medellín, Itagüí, Envigado y Sabaneta), lineas.json (Metroplús y cables, de El Metro) y build.py (cuadrícula del mapa)
+src/data/             valle.bin + valle.json (casillas de 10 m, relieve, municipios, comunas, barrios, alturas y lotes) y vias.bin (cada vía como vector, con su nombre, nomenclatura y ancho); se regeneran con motor-valle/geo/build.py
+motor-valle/geo/            fetch.py (OpenStreetMap vía Overture, huellas de edificios y relieve), oficial.py (capas oficiales de Medellín, Itagüí, Envigado y Sabaneta), lineas.json (Metroplús y cables, de El Metro) y build.py (cuadrícula del mapa)
 tools/build.js        construye dist/juega-encicla.html (archivo único) y dist/web/ (PWA)
 tools/assets.js       genera los PNG (íconos, apple-touch-icon, favicon, compartir.png) con Playwright
 contenido/guion/      textos del juego en JSON; tools/build.js los incrusta como GUION (ver contenido/LEEME.md)
@@ -98,9 +98,9 @@ Objeto global de depuración: `window.JE` (`JE.map`, `JE.game`, `JE.ui`, `JE.bot
 ```bash
 node tools/build.js            # construye dist/
 node tools/assets.js           # íconos + compartir.png (necesita dist/juega-encicla.html)
-python3 tools/geo/fetch.py && python3 tools/geo/oficial.py && python3 tools/geo/build.py   # rehace el mapa de 10 m (duckdb, numpy, pillow, shapely; ~1 min)
-TILE=20 OUT=carpeta python3 tools/geo/build.py   # el mismo mapa en casillas de 20 m (el que usa El Metro)
-# El Metro: python3 tools/mapa_valle.py carpeta landuse.parquet && ENCICLA_MAPA=carpeta python3 tools/ciudad_datos.py tools/geo/cache/oficial (en su repositorio)
+python3 motor-valle/geo/fetch.py && python3 motor-valle/geo/oficial.py && python3 motor-valle/geo/build.py   # rehace el mapa de 10 m (duckdb, numpy, pillow, shapely; ~1 min)
+TILE=20 OUT=carpeta python3 motor-valle/geo/build.py   # el mismo mapa en casillas de 20 m (el que usa El Metro)
+# El Metro: python3 tools/mapa_valle.py carpeta landuse.parquet && ENCICLA_MAPA=carpeta python3 tools/ciudad_datos.py motor-valle/geo/cache/oficial (en su repositorio)
 node tools/todo-ia.js          # solo el documento para IA (build.js ya lo genera)
 python3 tools/armar_entrega.py desarmar <entrega.md> <carpeta>   # reconstruye las imágenes de una entrega
 node tests/run.js --n=100      # pruebas; --shots guarda capturas en tests/out/
@@ -130,11 +130,11 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 
 **v0.7 · EnCicla real (lo más importante para continuar):**
 
-*Mapa real del Valle de Aburrá* (`tools/geo/`, `src/data/`, `19-lugares.js`, `20-map.js`, `21-map-art.js`):
-- `tools/geo/fetch.py` baja datos abiertos: calles, ciclorrutas, Metro, tranvía, ríos, quebradas, parques y municipios de **Overture Maps**
-  (datos de OpenStreetMap, licencia ODbL) con DuckDB, y el relieve de **Terrain Tiles** (AWS Open Data, SRTM). Caché en `tools/geo/cache/` (no se sube).
-  Para el bucket público hay que correrlo sin credenciales AWS: `env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 tools/geo/fetch.py`.
-- `tools/geo/build.py` hace la cuadrícula: **1 casilla = 10 m** desde v1.3.0 (antes 20 m), 4316×4921 casillas (lon −75,70…−75,31, lat 6,46…6,015), fila 0 = norte. Ver *v1.3.0* más abajo.
+*Mapa real del Valle de Aburrá* (`motor-valle/geo/`, `src/data/`, `19-lugares.js`, `20-map.js`, `21-map-art.js`):
+- `motor-valle/geo/fetch.py` baja datos abiertos: calles, ciclorrutas, Metro, tranvía, ríos, quebradas, parques y municipios de **Overture Maps**
+  (datos de OpenStreetMap, licencia ODbL) con DuckDB, y el relieve de **Terrain Tiles** (AWS Open Data, SRTM). Caché en `motor-valle/geo/cache/` (no se sube).
+  Para el bucket público hay que correrlo sin credenciales AWS: `env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 motor-valle/geo/fetch.py`.
+- `motor-valle/geo/build.py` hace la cuadrícula: **1 casilla = 10 m** desde v1.3.0 (antes 20 m), 4316×4921 casillas (lon −75,70…−75,31, lat 6,46…6,015), fila 0 = norte. Ver *v1.3.0* más abajo.
   - Rasteriza vías por clase y ancho (autopista, avenida, calle, ciclorruta al lado de la vía, andén, escaleras), agua con puentes, parques, zonas urbanas,
     potreros y monte; adelgaza las calles (número de Yokoi, 4 subcampos) para que no queden bloques de asfalto; fuera de los 10 municipios todo es montaña.
   - Saca líneas en JSON: carriles de carros (troncales, primarias y secundarias encadenadas), 758 semáforos (cruces de vías principales),
@@ -179,7 +179,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
-*v1.7.1 · El sistema metro como en El Metro y la guía discreta* (`74-sistema.js`, `76-altura.js`, `35-life.js`, `75-graficos.js`, `30-ride.js`, `tools/geo/metroplus_elmetro.py`, `src/data/metroplus.json`):
+*v1.7.1 · El sistema metro como en El Metro y la guía discreta* (`74-sistema.js`, `76-altura.js`, `35-life.js`, `75-graficos.js`, `30-ride.js`, `motor-valle/geo/metroplus_elmetro.py`, `src/data/metroplus.json`):
 - **`SisSpr`:**
   - `veh(g, kind, L, W, col, o)` es el `Spr.veh` de El Metro (metro, tranvía, `brt` y cable), en px, mirando a +x;
   - `img()` lo guarda en caché a 4× y `dib()` lo dibuja girado y escalado (la altura en perspectiva).
@@ -206,7 +206,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   - flecha fuera de pantalla al 85 %;
   - `Ride.giro()` da el próximo giro de más de 40° a menos de 200 m, o la llegada a menos de 60 m.
 
-*v1.7.0 · Alturas, cámara, manejo con peso, velocidad y paseo* (`tools/geo/alturas.py`, `src/data/alturas.json`, `76-altura.js`, `88-camara.js`, `89-paseo.js`, `30-ride.js`, `00-core.js`):
+*v1.7.0 · Alturas, cámara, manejo con peso, velocidad y paseo* (`motor-valle/geo/alturas.py`, `src/data/alturas.json`, `76-altura.js`, `88-camara.js`, `89-paseo.js`, `30-ride.js`, `00-core.js`):
 - **Datos:**
   - `fetch.py` baja `puentes.parquet` (vías con `road_flags`/`level_rules`) y `rail_niveles.parquet` (rieles con `rail_flags`);
   - `alturas.py` escribe en `alturas.json` los tramos del metro en viaducto (puntas, en casillas ×8) y los puentes (tipo de vía, nivel, largo y trazo);
@@ -251,7 +251,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   - usa `botDrive()` con una parada frente a cada lugar (`nearestOpen`) y salta al siguiente si en 25 s no se acerca;
   - cambia de plano cada 9 s y devuelve la cámara del jugador al terminar.
 
-*v1.6.0 · Emblemáticos y auditoría de El Metro* (`tools/geo/sitios.py`, `22-sitios.js`, `20-map.js`, `87-placas.js`, `tools/auditoria-mapa.js`):
+*v1.6.0 · Emblemáticos y auditoría de El Metro* (`motor-valle/geo/sitios.py`, `22-sitios.js`, `20-map.js`, `87-placas.js`, `tools/auditoria-mapa.js`):
 - **Partes (`SIT3`/`SIT4`):** prismas entre los pisos `z0` y `z1`, con su anillo de abajo `B` y, si los muros se inclinan, el de arriba `T` (mismos vértices; no se quitan puntos repetidos, para que una aguja pueda converger en un punto).
   - Se calculan con shapely: `ejes()` (rectángulo mínimo), `escala()`, `caja()` y `adentro()` (*buffer* negativo).
   - Las recetas van por nombre (`emb(rx, fn)`); `torres()` pone una o dos torres en el extremo que mira al parque más grande y cercano (`frente()`).
@@ -273,7 +273,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   - CSP y `referrer` en `src/index.html`;
   - `sinProto` en todo `JSON.parse` de datos externos.
 
-*v1.5.0 · Medellín desde el aire: sitios reales* (`tools/geo/sitios.py`, `src/data/sitios.bin` y `sitios.json`, `22-sitios.js`, `docs/MEDELLIN-DESDE-EL-AIRE.md`):
+*v1.5.0 · Medellín desde el aire: sitios reales* (`motor-valle/geo/sitios.py`, `src/data/sitios.bin` y `sitios.json`, `22-sitios.js`, `docs/MEDELLIN-DESDE-EL-AIRE.md`):
 - **Datos:**
   - `fetch.py` baja `edificios.parquet` (nombre, clase, pisos y forma de techo de Overture) y `lugares_poi.parquet` (lugares; de ahí salen las alcaldías).
   - `sitios.py` arma:
@@ -305,7 +305,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   - en El Poblado, Envigado, Sabaneta e Itagüí, torres de ladrillo;
   - en El Poblado, Laureles y Envigado (`verdeZ`), jardines entre las torres y más árboles.
 
-*v1.4.0 · Ciudad suave: curvas, no cubos* (`75-graficos.js`, `75-lugares3d.js`, `20-map.js`, `30-ride.js`, `35-life.js`, `tools/geo/build.py`):
+*v1.4.0 · Ciudad suave: curvas, no cubos* (`75-graficos.js`, `75-lugares3d.js`, `20-map.js`, `30-ride.js`, `35-life.js`, `motor-valle/geo/build.py`):
 - **Suelo:** `CityMap.contorno` saca cada capa (monte, pasto, plaza, parqueadero, manzana, edificio, orilla, agua) como contorno vectorial: cuadrícula con 2 casillas de margen → suavizado [1 2 1] dos veces → media casilla (bilineal) → marching squares en una sola ruta; las celdas llenas seguidas salen como un rectángulo. El relieve va en `ImageData`, una muestra por casilla.
 - **Calles (`drawGround3`):** andén y sardinel como trazos a lo largo de cada cadena (`SWK` por tipo), asfalto por grupos de ancho, bordes, separadores, líneas y cebras. Las quebradas (tipo 9 de `vias.bin`) son un hilo de agua en su retiro verde.
 - **Lotes (`CityMap.lotes`, caché `lotC` de 64 trozos):** frente según los lotes catastrales (`LT`), hasta 3 filas por lado, prioridad fija `[fila, tipo de calle, calle, lado, número]` y descarte por traslape (SAT en celdas de 32 px con clave numérica): todos los trozos llegan al mismo resultado. Ningún lote pisa los corredores del metro, del tranvía ni del Metroplús (`_trG`); `build.py` también los despeja de casas. Las casas del interior toman la dirección del tramo de calle más cercano (`rumbo`, tramos por celda de 32 px, a menos de 48 px).
@@ -315,7 +315,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Todo suave en 3D:** estación EnCicla (`estacion3`: plataforma, anclajes y bicis a su tamaño; antes salían ×4), ruta GPS (línea con Chaikin y hormigas), aros de destino, semáforos, conos de ciclovía, peatones, tranvía, metro (`Art.trainCar` dibujado) y Metrocable. De noche brillan los postes del Parque de las Luces, el estadio, los atrios y los parques.
 - **Regla aprendida:** en código compacto de una línea nunca va un comentario `//` en la mitad (se come el resto de la línea); se usa `/* */`.
 
-*v1.3.0 · Mapa de 10 m con datos oficiales* (`tools/geo/oficial.py`, `tools/geo/build.py`, `20-map.js`, `75-graficos.js`, `85-direcciones.js`, `86-maqueta.js`):
+*v1.3.0 · Mapa de 10 m con datos oficiales* (`motor-valle/geo/oficial.py`, `motor-valle/geo/build.py`, `20-map.js`, `75-graficos.js`, `85-direcciones.js`, `86-maqueta.js`):
 - **Casillas de 10 m.** `TILE` y `S = 20 / TILE` escalan radios y ventanas en `build.py`; en el juego, `MS = 20 / VM.tile` escala las búsquedas en casillas (estaciones, lugares, rutas, minimapa, etiquetas del mapa grande). Lo que se mide en px (velocidades, radios de marcas) no cambia: la ciudad mide el doble en px y las cuadras se recorren como cuadras.
 - **Relleno de manzanas:** huella de edificio → casa (ladrillo) o edificio según pisos, área y zona; dentro de la manzana oficial, el hueco es la casa vecina o patio; fuera, andén o espacio público. Si una zona no tiene huellas, se usa la regla antigua.
 - **Formato v3:** `valle.bin` = casillas + relieve + municipios + comunas + barrios (u16) + pisos (u8) + área de lotes (u8, ×4 m²), en celdas de 8 casillas. `vias.bin` por vía: tipo, nombre, nomenclatura oficial, ancho (medios metros) y puntos en cuartos de casilla (`VM.vq`).
@@ -323,7 +323,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Dirección y misión «¿Dónde queda?»:** `CityMap.calleAt` y `CityMap.esquina` (cruce de una «Calle» y una «Carrera» con nomenclatura oficial). La marca aparece a los 75 s.
 - **Maqueta 2:1** (de El Metro): `JE.maqueta.render` dibuja por columnas con búfer de altura; el mapa grande la guarda en caché y baja la resolución si un dibujo pasa de 70 ms.
 
-*v1.2.0 · Mapa reconocible, como en un mapa real* (`tools/geo/build.py`, `src/data/vias.bin`, `75-graficos.js`, `84-mapa-vivo.js`):
+*v1.2.0 · Mapa reconocible, como en un mapa real* (`motor-valle/geo/build.py`, `src/data/vias.bin`, `75-graficos.js`, `84-mapa-vivo.js`):
 - **Calles exactas.** `build.py` exporta cada vía de OpenStreetMap como vector (`vias.bin`), y el juego las dibuja desde ahí en vez de rastrearlas en la cuadrícula.
   - Formato de cada vía: tipo, nombre y puntos cada 2,5 m. Las vías del mismo nombre se unen.
   - Tipos: 1 calle, 4 carrera, 2 avenida, 3 autopista, 6 peatonal, 7 escalas, 8 sendero. Hay 32.785 vías y 2.607 nombres.

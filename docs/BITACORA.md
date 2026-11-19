@@ -486,6 +486,21 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 2026-11-19 · Motor del Valle 1.0.0 · Un solo motor para el mapa de los dos juegos
+
+Pedido del autor: «que tengan un mapa igual para ambos: el motor que crea el mapa, unificado en un motor único; los módulos, mecánicas y trama van por aparte».
+
+- **`motor-valle/`** es la tubería de mapas que antes estaba en `tools/geo/`. Es la fuente de verdad del mapa para Juega EnCicla y El Metro.
+- **`motor.mjs`:**
+  - `encicla` genera casillas de 10 m;
+  - `elmetro RUTA` genera casillas de 20 m y escribe `src/data/valle.js` en el formato v3 de El Metro;
+  - `fuentes` descarga o actualiza las fuentes;
+  - `version` muestra la versión.
+- **`sincronizar.mjs`** copia el motor al otro repositorio, comparando versiones.
+- **`MOTOR.md`** es el contrato: coordenadas, formato binario, catálogo de capas, reglas y hoja de ruta F1–F4.
+- **Probado:** el mapa de 20 m que sale del motor coincide con el de El Metro 1.4: mismas 2.158 × 2.461 casillas y 99,99 % iguales.
+- En MetroZero quedó en la rama `motor-valle`, con su `valle.js` hecho por el motor.
+
 ## 2026-11-18 · v1.7.1 · El sistema metro como en El Metro y una guía discreta
 
 Pedido del autor: «cambia el diseño del guiador, o el indicador de ubicación o camino: hazlo menos visible y más intuitivo; y haz los diseños de todo el sistema metro iguales al videojuego que se está haciendo (El Metro), del que tienes el repositorio y el HTML».
