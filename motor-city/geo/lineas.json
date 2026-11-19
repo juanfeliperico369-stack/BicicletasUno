@@ -1,0 +1,786 @@
+{
+ "fuente": "El Metro · src/data/red.js (2026-11), mismo autor; fuentes de las líneas en su docs/FUENTES.md",
+ "lineas": [
+  {
+   "id": "A",
+   "nombre": "Línea A",
+   "tipo": "metro",
+   "color": "#1C5C9C",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Niquía",
+     6.33791,
+     -75.54394
+    ],
+    [
+     "Bello",
+     6.33031,
+     -75.55356
+    ],
+    [
+     "Madera",
+     6.31593,
+     -75.55537
+    ],
+    [
+     "Acevedo",
+     6.30024,
+     -75.5584
+    ],
+    [
+     "Tricentenario",
+     6.29034,
+     -75.56463
+    ],
+    [
+     "Caribe",
+     6.27736,
+     -75.56969
+    ],
+    [
+     "Universidad",
+     6.26954,
+     -75.56612
+    ],
+    [
+     "Hospital",
+     6.26343,
+     -75.56355
+    ],
+    [
+     "Prado",
+     6.25688,
+     -75.56612
+    ],
+    [
+     "Parque Berrío",
+     6.25028,
+     -75.56834
+    ],
+    [
+     "San Antonio",
+     6.24707,
+     -75.56978
+    ],
+    [
+     "Alpujarra",
+     6.24259,
+     -75.57154
+    ],
+    [
+     "Exposiciones",
+     6.23852,
+     -75.57317
+    ],
+    [
+     "Industriales",
+     6.23033,
+     -75.57557
+    ],
+    [
+     "Poblado",
+     6.21256,
+     -75.57801
+    ],
+    [
+     "Aguacatala",
+     6.19348,
+     -75.58194
+    ],
+    [
+     "Ayurá",
+     6.18643,
+     -75.58573
+    ],
+    [
+     "Envigado",
+     6.17444,
+     -75.5973
+    ],
+    [
+     "Itagüí",
+     6.163,
+     -75.60674
+    ],
+    [
+     "Sabaneta",
+     6.15731,
+     -75.61686
+    ],
+    [
+     "La Estrella",
+     6.15306,
+     -75.62581
+    ]
+   ]
+  },
+  {
+   "id": "B",
+   "nombre": "Línea B",
+   "tipo": "metro",
+   "color": "#E38835",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "San Antonio",
+     6.24707,
+     -75.56978
+    ],
+    [
+     "Cisneros",
+     6.24896,
+     -75.5748
+    ],
+    [
+     "Suramericana",
+     6.2529,
+     -75.58257
+    ],
+    [
+     "Estadio",
+     6.25331,
+     -75.58822
+    ],
+    [
+     "Floresta",
+     6.25869,
+     -75.59775
+    ],
+    [
+     "Santa Lucía",
+     6.25643,
+     -75.60611
+    ],
+    [
+     "San Javier",
+     6.25665,
+     -75.61356
+    ]
+   ]
+  },
+  {
+   "id": "T",
+   "nombre": "Tranvía de Ayacucho (T-A)",
+   "tipo": "tram",
+   "color": "#59AB42",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "San Antonio",
+     6.24698,
+     -75.56924
+    ],
+    [
+     "San José",
+     6.24743,
+     -75.56563
+    ],
+    [
+     "Pabellón del Agua",
+     6.24571,
+     -75.56224
+    ],
+    [
+     "Bicentenario",
+     6.24399,
+     -75.55885
+    ],
+    [
+     "Buenos Aires",
+     6.24214,
+     -75.55537
+    ],
+    [
+     "Miraflores",
+     6.24051,
+     -75.55207
+    ],
+    [
+     "Loyola",
+     6.24019,
+     -75.54701
+    ],
+    [
+     "Alejandro Echavarría",
+     6.23572,
+     -75.54195
+    ],
+    [
+     "Oriente",
+     6.23318,
+     -75.54014
+    ]
+   ]
+  },
+  {
+   "id": "H",
+   "nombre": "Línea H",
+   "tipo": "cable",
+   "color": "#EB318E",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Oriente",
+     6.23334,
+     -75.53997
+    ],
+    [
+     "Las Torres",
+     6.23667,
+     -75.5364
+    ],
+    [
+     "Villa Sierra",
+     6.23489,
+     -75.52874
+    ]
+   ]
+  },
+  {
+   "id": "J",
+   "nombre": "Línea J",
+   "tipo": "cable",
+   "color": "#F6C538",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "San Javier",
+     6.25675,
+     -75.61342
+    ],
+    [
+     "Juan XXIII",
+     6.26565,
+     -75.61364
+    ],
+    [
+     "Vallejuelos",
+     6.27534,
+     -75.61397
+    ],
+    [
+     "La Aurora",
+     6.28113,
+     -75.61418
+    ]
+   ]
+  },
+  {
+   "id": "K",
+   "nombre": "Línea K",
+   "tipo": "cable",
+   "color": "#B8CF40",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Acevedo",
+     6.30032,
+     -75.55841
+    ],
+    [
+     "Andalucía",
+     6.29633,
+     -75.55182
+    ],
+    [
+     "Popular",
+     6.29515,
+     -75.5481
+    ],
+    [
+     "Santo Domingo Savio",
+     6.29313,
+     -75.54162
+    ]
+   ]
+  },
+  {
+   "id": "L",
+   "nombre": "Línea L (Cable Arví)",
+   "tipo": "cable",
+   "color": "#8E612A",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Santo Domingo Savio",
+     6.29313,
+     -75.54162
+    ],
+    [
+     "Arví",
+     6.2815,
+     -75.50296
+    ]
+   ]
+  },
+  {
+   "id": "M",
+   "nombre": "Línea M",
+   "tipo": "cable",
+   "color": "#743D90",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Miraflores",
+     6.24172,
+     -75.54906
+    ],
+    [
+     "El Pinal",
+     6.24531,
+     -75.54448
+    ],
+    [
+     "Trece de Noviembre",
+     6.2476,
+     -75.54145
+    ]
+   ]
+  },
+  {
+   "id": "P",
+   "nombre": "Línea P (Cable Picacho)",
+   "tipo": "cable",
+   "color": "#EC343A",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Acevedo",
+     6.30032,
+     -75.55841
+    ],
+    [
+     "SENA",
+     6.30184,
+     -75.5674
+    ],
+    [
+     "Doce de Octubre",
+     6.30424,
+     -75.57601
+    ],
+    [
+     "El Progreso",
+     6.30592,
+     -75.58209
+    ]
+   ]
+  },
+  {
+   "id": "MP1",
+   "nombre": "Metroplús Línea 1",
+   "tipo": "brt",
+   "color": "#0E6F76",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Parque Aranjuez",
+     6.28518,
+     -75.55663
+    ],
+    [
+     "Berlín",
+     6.28288,
+     -75.55291
+    ],
+    [
+     "Las Esmeraldas",
+     6.27837,
+     -75.55314
+    ],
+    [
+     "Manrique",
+     6.27324,
+     -75.55405
+    ],
+    [
+     "Gardel",
+     6.26761,
+     -75.55502
+    ],
+    [
+     "Palos Verdes",
+     6.26205,
+     -75.55589
+    ],
+    [
+     "Hospital",
+     6.26391,
+     -75.56317
+    ],
+    [
+     "Ruta N - U. de A.",
+     6.26362,
+     -75.56768
+    ],
+    [
+     "Chagualo",
+     6.26073,
+     -75.56915
+    ],
+    [
+     "Minorista",
+     6.25613,
+     -75.57317
+    ],
+    [
+     "Cisneros",
+     6.25086,
+     -75.57506
+    ],
+    [
+     "Plaza Mayor",
+     6.24367,
+     -75.57535
+    ],
+    [
+     "Industriales",
+     6.23033,
+     -75.57655
+    ],
+    [
+     "Nutibara",
+     6.23178,
+     -75.58206
+    ],
+    [
+     "Fátima",
+     6.23166,
+     -75.58656
+    ],
+    [
+     "Rosales",
+     6.23157,
+     -75.59096
+    ],
+    [
+     "Parque Belén",
+     6.23137,
+     -75.59674
+    ],
+    [
+     "La Palma",
+     6.23114,
+     -75.60102
+    ],
+    [
+     "Los Alpes",
+     6.23106,
+     -75.60516
+    ],
+    [
+     "U. de M.",
+     6.23064,
+     -75.60915
+    ]
+   ]
+  },
+  {
+   "id": "MP2",
+   "nombre": "Metroplús Línea 2",
+   "tipo": "brt",
+   "color": "#65A9AC",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Parque Aranjuez",
+     6.28518,
+     -75.55663
+    ],
+    [
+     "Berlín",
+     6.28288,
+     -75.55291
+    ],
+    [
+     "Las Esmeraldas",
+     6.27837,
+     -75.55314
+    ],
+    [
+     "Manrique",
+     6.27324,
+     -75.55405
+    ],
+    [
+     "Gardel",
+     6.26761,
+     -75.55502
+    ],
+    [
+     "Palos Verdes",
+     6.26205,
+     -75.55589
+    ],
+    [
+     "Prado (Av. Oriental)",
+     6.25901,
+     -75.56044
+    ],
+    [
+     "Catedral",
+     6.25289,
+     -75.56256
+    ],
+    [
+     "La Playa",
+     6.24956,
+     -75.56449
+    ],
+    [
+     "San José",
+     6.24711,
+     -75.56614
+    ],
+    [
+     "Barrio Colón",
+     6.24061,
+     -75.56985
+    ],
+    [
+     "Perpetuo Socorro",
+     6.23399,
+     -75.5701
+    ],
+    [
+     "Barrio Colombia",
+     6.22872,
+     -75.56982
+    ],
+    [
+     "Industriales",
+     6.23034,
+     -75.57671
+    ],
+    [
+     "Nutibara",
+     6.23178,
+     -75.58206
+    ],
+    [
+     "Fátima",
+     6.23166,
+     -75.58656
+    ],
+    [
+     "Rosales",
+     6.23157,
+     -75.59096
+    ],
+    [
+     "Parque Belén",
+     6.23137,
+     -75.59674
+    ],
+    [
+     "La Palma",
+     6.23114,
+     -75.60102
+    ],
+    [
+     "Los Alpes",
+     6.23106,
+     -75.60516
+    ],
+    [
+     "U. de M.",
+     6.23064,
+     -75.60915
+    ]
+   ]
+  },
+  {
+   "id": "MPO",
+   "nombre": "Metroplús Línea O",
+   "tipo": "brt",
+   "color": "#00A99D",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Caribe",
+     6.27797,
+     -75.57027
+    ],
+    [
+     "Universal",
+     6.2761,
+     -75.57365
+    ],
+    [
+     "Córdoba",
+     6.27423,
+     -75.57816
+    ],
+    [
+     "Pilarica",
+     6.27364,
+     -75.58257
+    ],
+    [
+     "Ciudadela Universitaria",
+     6.27312,
+     -75.58737
+    ],
+    [
+     "Facultad de Minas",
+     6.27283,
+     -75.5935
+    ],
+    [
+     "Los Colores",
+     6.26999,
+     -75.59513
+    ],
+    [
+     "Calasanz",
+     6.2645,
+     -75.59637
+    ],
+    [
+     "Floresta",
+     6.25861,
+     -75.59779
+    ],
+    [
+     "Los Pinos",
+     6.255,
+     -75.59861
+    ],
+    [
+     "Laureles",
+     6.2461,
+     -75.60259
+    ],
+    [
+     "Santa Gema",
+     6.2396,
+     -75.60295
+    ],
+    [
+     "Villa de Aburrá",
+     6.23515,
+     -75.60225
+    ],
+    [
+     "La Palma",
+     6.23284,
+     -75.60225
+    ]
+   ]
+  },
+  {
+   "id": "ESC13",
+   "nombre": "Escaleras eléctricas Comuna 13",
+   "tipo": "escalator",
+   "color": "#5D6D7E",
+   "estado": "operativa",
+   "estaciones": [
+    [
+     "Las Independencias I (base)",
+     6.24872,
+     -75.62172
+    ],
+    [
+     "Las Independencias I (parte alta)",
+     6.24797,
+     -75.62212
+    ]
+   ]
+  },
+  {
+   "id": "F-80",
+   "nombre": "Línea E – Metro de la 80",
+   "tipo": "future",
+   "color": "#00B5E2",
+   "estado": "en obra",
+   "estaciones": [
+    [
+     "Caribe",
+     6.2777,
+     -75.5705
+    ],
+    [
+     "Córdoba",
+     6.27423,
+     -75.57816
+    ],
+    [
+     "Ciudadela Educativa",
+     6.2732,
+     -75.5874
+    ],
+    [
+     "San Germán",
+     6.273,
+     -75.592
+    ],
+    [
+     "Colombia",
+     6.2635,
+     -75.59665
+    ],
+    [
+     "Floresta",
+     6.2586,
+     -75.59778
+    ],
+    [
+     "Los Pinos",
+     6.255,
+     -75.59862
+    ],
+    [
+     "San Juan",
+     6.2506,
+     -75.60225
+    ],
+    [
+     "Villa de Aburrá",
+     6.2354,
+     -75.60225
+    ],
+    [
+     "La Palma",
+     6.232,
+     -75.60212
+    ],
+    [
+     "San Bernardo",
+     6.2256,
+     -75.59995
+    ],
+    [
+     "Loma de los Bernal",
+     6.219,
+     -75.59905
+    ],
+    [
+     "La Mota",
+     6.2125,
+     -75.59575
+    ],
+    [
+     "Cristo Rey",
+     6.2074,
+     -75.5892
+    ],
+    [
+     "Apolo",
+     6.2042,
+     -75.5864
+    ],
+    [
+     "Guayabal",
+     6.2015,
+     -75.5842
+    ],
+    [
+     "Aguacatala",
+     6.1944,
+     -75.583
+    ]
+   ]
+  }
+ ]
+}

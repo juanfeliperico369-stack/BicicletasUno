@@ -1,46 +1,29 @@
-# Motor City 2.0 en Juega EnCicla · qué cambió y qué sigue
+# Motor City 2.2 en Juega EnCicla · qué cambió y qué sigue
 
 **19‑nov‑2026 · lo hizo Claude (la IA del motor, Claude Code), a pedido del autor.** Esta nota es para la IA de Juega EnCicla.
+La fuente de verdad del motor es `juanfeliperico369-stack/motorcity`. Se juega en la web en <https://juanfeliperico369-stack.github.io/motorcity/>.
 
 ## Qué cambió en este repositorio
-**Solo la carpeta `motor-valle/`.** Ahí se copió el motor 2.0, sincronizado desde `juanfeliperico369-stack/motorcity`, que desde ahora es la **fuente de verdad** del motor.
+- **El motor 2.2 está ahora en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
+- **`motor-valle/` volvió exactamente a como estaba antes** de la sincronización 2.0, en el commit `dc9c301`. El juego no cambia, compila igual y sus pruebas siguen en verde.
+- Bórralo solo cuando termines de migrar a `motor-city/`.
+- Si algo del motor te falta o está mal, **no lo cambies en tu copia**:
+  1. pídelo con `node motor-city/motor.mjs reporte "título" --juego encicla` (queda en `motorcity/reportes/`);
+  2. o trabaja en `motorcity` siguiendo su `CONTRIBUIR.md`;
+  3. la IA del motor lo une, sube la versión y sincroniza.
 
-- **El juego no cambió:**
-  - `tools/build.js` sigue incluyendo `motor-valle/js/valle.js`, que es **idéntico** al de antes (el lector 1.2.0);
-  - el HTML compilado tiene la misma huella (`juega-encicla-v2.0.1-1896efed`);
-  - `node tests/run.js` sigue en verde.
-- **Archivos de `motor-valle/` que cambiaron:**
+## Qué trae Motor City 2.2 que te sirve
+| Pieza | Para qué en Juega EnCicla |
+|---|---|
+| `MC.Vistas`, con la vista **lateral** (casa de muñecas que gira de a 90°) y la **panorámica** | La panorámica de EnCicla y la vista lateral para recorrer la ciclorruta. |
+| **GPU virtual:** `MC.GPU`, `MC.ResDinamica` y `MC.Raster` (3D por software) | Que la 3D ande en celulares sin GPU buena. |
+| **Física de niveles por superficies** y cámara con resortes | Puentes, viaducto y deprimidos sin trampas; la cámara no atraviesa edificios. |
+| `MC.Manejo` | Curvas de respuesta, giro según la velocidad, asistencias y esquemas (un pulgar, tocar para ir, inclinar…). |
+| `MC.UI` | El centro libre, lo que no cambia se atenúa y un aviso a la vez. `MC.UI.verificar(ui)` lo prueba. |
+| `MC.Lugares` y `MC.Desgaste` | Talleres de bici para reparar y mejorar; las estaciones EnCicla como lugares jugables. |
+| `MC.Hogar` y `MC.Direccion` | La casa del jugador desde su dirección real, sin internet; se diseña con muebles. |
+| `MC.Historias`, `MC.Director` y `MC.Ocurrencias` | Cultura ciudadana (ciclorruta, peatón, casco y luces) con el pilar de conciencia. |
+| `MC.Sprites` | El arte del juego en atlas, con respaldo procedural. |
 
-  | Archivo | Cambio |
-  |---|---|
-  | `MOTOR.md` | Ahora es el contrato 2.0. |
-  | `VERSION.json` | 2.0.0; fuente de verdad: motorcity. |
-  | `motor.mjs` | Comandos nuevos: `mundo`, `construir`, `run`, `prueba` y `sincronizar`. Los de siempre siguen igual. |
-  | `sincronizar.mjs` | Ahora es un atajo a `herramientas/sincronizar.mjs`. |
-  | `geo/build.py`, `geo/fetch.py` | Aceptan `CIUDAD=ciudades/x.json` para otra ciudad. Sin esa variable hacen lo mismo de siempre. |
-- **Lo nuevo en `motor-valle/`:**
-
-  | Ruta | Qué es |
-  |---|---|
-  | `js/00-…` a `js/50-…` | El motor en fuente. |
-  | `dist/motor.js` | El motor listo para incluir. |
-  | `datos/medellin/mundo.mc4` | El mundo 2.0, que ya trae tus datos. |
-  | `ciudades/` | Las reglas de cada ciudad. |
-  | `run/` | Run Scooter importado. |
-  | `herramientas/`, `pruebas/`, `sandbox/` | Las herramientas, las pruebas y el banco de pruebas. |
-  | `docs/` | Incluye **`docs/MIGRACION-ENCICLA.md`**. |
-  | `README.md`, `CONTEXTO-IA.md`, `BITACORA.md` | Los documentos del motor. |
-
-## Qué sigue para ti (decídelo tú, paso a paso)
-Lee **`motor-valle/docs/MIGRACION-ENCICLA.md`**. En corto:
-1. Incluir `motor-valle/dist/motor.js` y el mundo 2.0. El MC4 puede reemplazar `valle.bin`, `vias.bin`, `sitios.*` y `alturas.json` para que el HTML no crezca.
-2. **Recuperar y mejorar tu panorámica de perfil** con `MC.Panoramica` y `MC.SeguirRuta`. Es lo que pidió el autor.
-   - Trae lo de El Metro: capas, laderas con luces, viaducto con trenes y Metrocable.
-   - Y lo nuevo: fila real de edificios, siluetas de los emblemáticos y cruces con nombre.
-   - Con tu piel: la bici verde con canasta.
-3. **Run en la ciclovía** con `MC.Run`: une o reemplaza tus dos carreras.
-4. Probar en un celular real y publicar la v3.0. Al publicar en `gh-pages`, conserva `/metro/`, y el APK debe usar `versionCode` > 20003.
-
-Para ver el motor andando, abre `motor-valle/dist/…` o el banco de pruebas de `motorcity`: `dist/motor-city.html`.
-
-**Si algo del mapa está mal, no lo corrijas aquí:** pídelo en `motorcity`. Se sube la versión y se sincroniza con `node herramientas/sincronizar.mjs ../BicicletasUno`.
+## Qué sigue para ti
+Tu plan completo está en **`motor-city/docs/PLAN-IAS.md`**, sección «3. IA de Juega EnCicla». La guía de migración es **`motor-city/docs/MIGRACION-ENCICLA.md`**. El manual es `motor-city/docs/MANUAL.md`.

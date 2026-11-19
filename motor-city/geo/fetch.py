@@ -1,0 +1,45 @@
+"""Descarga los datos abiertos del Valle de Aburrá para construir el mapa real del juego.
+   - Calles, ciclorrutas, Metro, tranvía, ríos, quebradas, parques y municipios: Overture Maps (datos de OpenStreetMap, ODbL).
+   - Relieve: Terrain Tiles de AWS Open Data (Mapzen, SRTM/NASA), formato terrarium, zoom 13.
+   Uso: python3 motor-valle/geo/fetch.py   (necesita: pip install duckdb)   ->  motor-valle/geo/cache/
+   La primera vez tarda ~1 minuto. Para que DuckDB lea el bucket público sin credenciales:
+   env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 motor-valle/geo/fetch.py
+"""
+import os
+import duckdb, math, os, sys, time, urllib.request
+OUT = os.path.join(os.path.dirname(__file__), 'cache'); os.makedirs(OUT, exist_ok=True); os.makedirs(os.path.join(OUT, 'dem'), exist_ok=True)
+REL = 's3://overturemaps-us-west-2/release/2026-10-21.0'
+BB = (-75.72, -75.28, 6.0, 6.50)   # lon0, lon1, lat0, lat1
+if os.environ.get('CIUDAD'):   # Motor City 2.0: la ventana de la ciudad (ciudades/<id>.json) con 0,02° de margen
+    import json as _json; _V = _json.load(open(os.environ['CIUDAD'], encoding='utf8'))['ventana']; BB = (_V['lon0'] - .02, _V['lon1'] + .02, _V['latS'] - .015, _V['latN'] + .04)
+c = duckdb.connect(); c.execute("INSTALL httpfs; LOAD httpfs; INSTALL spatial; LOAD spatial; SET s3_region='us-west-2'; CREATE SECRET anon (TYPE s3, KEY_ID '', SECRET '', REGION 'us-west-2'); SET http_timeout=120000;")
+inside = f"bbox.xmax > {BB[0]} AND bbox.xmin < {BB[1]} AND bbox.ymax > {BB[2]} AND bbox.ymin < {BB[3]}"
+def q(name, sql):
+    f = os.path.join(OUT, name + '.parquet')
+    if os.path.exists(f): print('ya está', name); return
+    t = time.time(); c.execute(f"COPY ({sql}) TO '{f}' (FORMAT PARQUET)")
+    print(name, c.execute(f"select count(*) from '{f}'").fetchone()[0], round(time.time() - t), 's'); sys.stdout.flush()
+seg = f"read_parquet('{REL}/theme=transportation/type=segment/*', hive_partitioning=1)"
+q('roads', f"SELECT id, class, subclass, names.primary AS name, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='road' AND {inside}")
+q('rail', f"SELECT id, class, subclass, names.primary AS name, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='rail' AND {inside}")
+q('water', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=base/type=water/*', hive_partitioning=1) WHERE {inside}")
+q('landuse', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=base/type=land_use/*', hive_partitioning=1) WHERE {inside}")
+q('div', f"SELECT id, subtype, class, names.primary AS name, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=divisions/type=division_area/*', hive_partitioning=1) WHERE {inside} AND country='CO'")
+q('barrios', f"SELECT subtype, names.primary AS name, ST_Y(geometry) AS lat, ST_X(geometry) AS lon FROM read_parquet('{REL}/theme=divisions/type=division/*', hive_partitioning=1) WHERE {inside} AND country='CO' AND subtype IN ('neighborhood','locality')")
+q('buildings', f"SELECT subtype, class, height, num_floors, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
+# para los sitios reales (motor-valle/geo/sitios.py): edificios con nombre, clase, pisos y forma del techo; y los lugares (alcaldías)
+q('edificios', f"SELECT names.primary AS name, subtype, class, height, num_floors, min_height, roof_shape, roof_color, facade_color, roof_material, facade_material, has_parts, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
+# lo que va en alto (motor-valle/geo/alturas.py): puentes de las vías y tramos del metro con road_flags/rail_flags (is_bridge) y level_rules
+q('puentes', f"SELECT id, class, subclass, names.primary AS name, to_json(road_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='road' AND {inside} AND (road_flags IS NOT NULL OR level_rules IS NOT NULL)")
+q('rail_niveles', f"SELECT id, class, names.primary AS name, to_json(rail_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='rail' AND {inside}")
+q('lugares_poi', f"SELECT names.primary AS name, basic_category AS cat, taxonomy.primary AS tax, ST_Y(geometry) lat, ST_X(geometry) lon, confidence FROM read_parquet('{REL}/theme=places/type=place/*', hive_partitioning=1) WHERE {inside}")
+# relieve
+Z = 13
+tx = lambda lon: int((lon + 180) / 360 * 2 ** Z)
+ty = lambda lat: int((1 - math.log(math.tan(math.radians(lat)) + 1 / math.cos(math.radians(lat))) / math.pi) / 2 * 2 ** Z)
+n = 0
+for x in range(tx(BB[0]), tx(BB[1]) + 1):
+    for y in range(ty(BB[3]), ty(BB[2]) + 1):
+        f = os.path.join(OUT, 'dem', f'{Z}_{x}_{y}.png')
+        if not os.path.exists(f): urllib.request.urlretrieve(f'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{Z}/{x}/{y}.png', f); n += 1
+print('relieve: tiles nuevos', n)

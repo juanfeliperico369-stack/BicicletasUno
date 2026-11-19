@@ -5,13 +5,10 @@
    La primera vez tarda ~1 minuto. Para que DuckDB lea el bucket público sin credenciales:
    env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY python3 motor-valle/geo/fetch.py
 """
-import os
 import duckdb, math, os, sys, time, urllib.request
 OUT = os.path.join(os.path.dirname(__file__), 'cache'); os.makedirs(OUT, exist_ok=True); os.makedirs(os.path.join(OUT, 'dem'), exist_ok=True)
 REL = 's3://overturemaps-us-west-2/release/2026-10-21.0'
 BB = (-75.72, -75.28, 6.0, 6.50)   # lon0, lon1, lat0, lat1
-if os.environ.get('CIUDAD'):   # Motor City 2.0: la ventana de la ciudad (ciudades/<id>.json) con 0,02° de margen
-    import json as _json; _V = _json.load(open(os.environ['CIUDAD'], encoding='utf8'))['ventana']; BB = (_V['lon0'] - .02, _V['lon1'] + .02, _V['latS'] - .015, _V['latN'] + .04)
 c = duckdb.connect(); c.execute("INSTALL httpfs; LOAD httpfs; INSTALL spatial; LOAD spatial; SET s3_region='us-west-2'; CREATE SECRET anon (TYPE s3, KEY_ID '', SECRET '', REGION 'us-west-2'); SET http_timeout=120000;")
 inside = f"bbox.xmax > {BB[0]} AND bbox.xmin < {BB[1]} AND bbox.ymax > {BB[2]} AND bbox.ymin < {BB[3]}"
 def q(name, sql):

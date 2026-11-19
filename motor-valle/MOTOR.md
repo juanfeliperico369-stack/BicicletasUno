@@ -1,176 +1,126 @@
-# Motor City · Motor del Valle 2.0 · el contrato
+# Motor del Valle · el motor único del mapa
 
-**Versión 2.0.0 · 19‑nov‑2026.** Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-valle/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`.
+**Versión 1.2.0 · 19‑nov‑2026.** (El historial de versiones está al final.)
 
-**Qué es.** El motor de mundo abierto único de Medellín y el Valle de Aburrá, y de cualquier otra ciudad que se le dé:
+**Qué es.** El motor del Valle crea el mapa del Valle de Aburrá que comparten **Juega EnCicla** y **El Metro**: es el mismo mapa, cada juego en su resolución.
 
-- **un solo mundo**, en un solo archivo de datos (MC4);
-- **un solo personaje** y **un registro de vehículos**;
-- **todas las vistas**: cenital, pixel, ciudad 3D, maqueta 2:1, panorámica de perfil, tercera y primera persona, dron y cine;
-- **las mismas reglas del mundo**: reloj, calendario, cielo, clima, tráfico, semáforos y transporte con horario;
-- **Run en la ciclovía**.
+Lo demás va por aparte, porque cada juego es una obra propia con su trama y sus diseños especiales: módulos de juego, funciones, mecánicas, estilo de dibujo, historia y Easter eggs.
 
-Cada juego conserva lo suyo y solo pone su piel: formas de juego, apartados, arte, trama y huevos de pascua.
+| | |
+|---|---|
+| Fuente de verdad | `juanfeliperico369-stack/BicicletasUno` → `motor-valle/` |
+| Copia | `juanfeliperico369-stack/MetroZero` → `motor-valle/` (igual, con `sincronizar.mjs`) |
+| Versión | `motor-valle/VERSION.json` |
 
-## 1. Reglas
-1. **El mundo solo se cambia aquí.** Una corrección del mapa (una calle, un puente, un edificio o una estación) va en `motorcity`: en `geo/`, en `herramientas/fusionar.mjs` o en `ciudades/<id>.json`. Luego se sube la versión y se sincroniza.
-2. **Cada cambio sube la versión** en `VERSION.json` (*semver*). Se copia a los juegos con `node herramientas/sincronizar.mjs ../BicicletasUno` (o `../MetroZero`). Con `--verificar` debe decir «los archivos son iguales».
-3. **Lo de cada juego no entra al motor:** su trama, sus modos, sus menús y su arte final. El motor ofrece *hooks* (sección 6) y datos. Si un dato sale de las mismas fuentes, puede vivir en el motor para que todos lo usen.
-4. **Un solo HTML por juego, sin internet ni librerías.** El motor es JavaScript puro con Canvas 2D y WebGL 1. Si falta WebGL, Canvas 2D es el respaldo.
-5. **No romper guardados:** con `MC.guardado.completar(guardado, porDefecto)`, los campos nuevos llevan su valor por defecto.
-6. **Fluido en un celular medio:** con la CPU 4× más lenta, la mediana del dibujo debe quedar por debajo de 40 ms (ver `node pruebas/prueba.mjs --navegador`). La calidad automática baja o sube el detalle.
-7. **Español de Colombia, para todo público, sin datos personales.**
-8. **Atribución siempre:**
-   - © colaboradores de OpenStreetMap (ODbL), vía Overture Maps;
-   - huellas de edificios de Overture (OSM, Microsoft y Google);
-   - capas oficiales de Medellín: Catastro, malla vial y barrios;
+## Reglas
+1. **El mapa solo se cambia aquí.**
+   - Los juegos no editan a mano los datos generados: `src/data/valle.*`, `vias.bin`, `sitios.*`, `alturas.json`, `metroplus.json` y, en El Metro, `src/data/valle.js`.
+   - Una corrección del mapa (una calle, un puente, un edificio, una estación) va en `motor-valle/`.
+2. **Cada cambio sube la versión** en `VERSION.json` y se copia al otro repositorio:
+   ```
+   node motor-valle/sincronizar.mjs ../MetroZero
+   ```
+   o al revés. Si el otro repositorio tiene una versión más nueva, el sincronizador no copia.
+3. **Lo propio de cada juego no entra al motor:** cómo se dibuja, la física, la trama, los modos y los Easter eggs. Los datos que solo usa un juego pueden vivir en el motor si salen de las mismas fuentes; así el otro juego también puede usarlos.
+4. **Atribución siempre:**
+   - © colaboradores de OpenStreetMap (ODbL), vía Overture Maps Foundation;
+   - capas oficiales de Medellín: Subsecretaría de Catastro, malla vial y barrios;
    - relieve SRTM (NASA, AWS Terrain Tiles).
-9. **Compatibilidad 1.x:** `js/valle.js` sigue siendo el lector 1.2.0 que incluye Juega EnCicla (sus pruebas exigen `Valle.version === '1.2.0'`). **No se edita.** Lo nuevo va en los fragmentos numerados.
 
-## 2. Comandos
+## Comandos
 | Comando | Qué hace |
 |---|---|
-| `node motor.mjs mundo` | **F1**: junta los datos de EnCicla (`../BicicletasUno`) y de El Metro (`../MetroZero`) en `datos/<ciudad>/mundo.mc4` y `resumen.json`. |
-| `node motor.mjs construir` | `dist/motor.js` (el motor), `dist/mundo-<ciudad>.js` (el mundo en base64) y `dist/motor-city.html` (el banco de pruebas jugable). |
-| `node motor.mjs run` | Vuelve a importar Run Scooter de `../RunRunZero` a `run/run-scooter.js`, con sus parches comprobados. |
-| `node motor.mjs prueba [--navegador]` | Las pruebas del motor: datos, consultas, redes, tiempo, transporte, tráfico, física y vehículos. Con `--navegador`, también las 8 vistas, Run y el rendimiento. |
-| `node motor.mjs sincronizar RUTA [--verificar]` | Copia el motor a `RUTA/motor-valle/`, o solo compara. |
-| `node motor.mjs fuentes \| encicla \| elmetro RUTA \| version` | La tubería 1.x de siempre (`geo/*.py`), que genera los datos que hoy leen los juegos. |
+| `node motor-valle/motor.mjs fuentes` | Descarga o actualiza las fuentes en `motor-valle/geo/cache/`: Overture/OSM, edificios, puentes y rieles con nivel, relieve y capas oficiales. Ocupa unos 190 MB y no se sube a git. |
+| `node motor-valle/motor.mjs encicla [RUTA_ELMETRO]` | Casillas de **10 m** → `src/data/` de Juega EnCicla: `valle.json`, `valle.bin`, `vias.bin`, `sitios.*`, `alturas.json` y, con la ruta de El Metro, `metroplus.json`. |
+| `node motor-valle/motor.mjs elmetro RUTA_ELMETRO` | Casillas de **20 m** → `RUTA_ELMETRO/src/data/valle.js`, en formato v3 de El Metro, con la misma tubería. |
+| `… --prueba` | Deja la salida en `motor-valle/salida/` sin tocar los juegos. |
+| `node motor-valle/motor.mjs version` | Versión y huella sha1 de cada archivo de datos de los dos juegos. |
+| `node motor-valle/sincronizar.mjs RUTA --verificar` | Solo compara las dos copias: la versión, la fuente de verdad y los archivos distintos. No copia nada. |
 
-## 3. Coordenadas
-- **Unidad:** metros del mapa, desde el origen de la ciudad (`lon0`, `latN`). `x` va hacia el oriente y `y` hacia el sur. La altura es la cota (m s. n. m.) más lo que se levanta.
-- **Casilla:** `tile` m (10 en el valle). Casilla de un punto: `x / tile`. Las capas de celda van cada 8 casillas (80 m).
-- **Grados:** `x = (lon − lon0) · kx` y `y = (latN − lat) · ky`, con `kx = 111320 · cos(lat_ref)` y `ky = 110574` m por grado.
-- **Juega EnCicla dibuja en px:** 1 m = 1,6 px. `MC.ValleCompat.desdeMundo(mundo, 16)` le da las consultas 1.x en px.
-- **El Metro dibuja en metros:** usa el mundo tal cual.
+Requiere Python 3 con `duckdb`, `numpy`, `shapely` y `pillow`, y Node 18 o más nuevo.
 
-## 4. El mundo 2.0 (contenedor MC4)
-```
-'MC4\0' · u32 largo de la cabecera · cabecera JSON · capas (cada una en deflate crudo)
-```
-La cabecera trae `W`, `H`, `tile`, `lon0`, `latN`, `kx`, `ky`, `atribucion` y `capas: { nombre: { o, n, raw, tipo, sha1, … } }`. El cargador las infla **cuando alguien las pide**.
+## Coordenadas (las mismas para los dos)
+- **Ventana:** lon −75,70 a −75,31; lat 6,46 (norte) a 6,015 (sur). De Caldas a Barbosa.
+- **Escalas:** `kx = 111320 · cos(6,2375°) / tile` y `ky = 110574 / tile` (casillas por grado).
+- **Casilla de un punto:** `x = (lon − lon0) · kx` y `y = (latN − lat) · ky`.
+- **Metros del mapa:** `casilla × tile`.
 
-| Capa | Tipo | Qué es | Origen |
-|---|---|---|---|
-| `suelo` | u8 W×H | Tipo de casilla `TT` (pasto, monte, ladrillo, edificio, calle, avenida, andén, ciclorruta, agua, quebrada, plaza, puente, estación, pista, autopista, patio, escalas) | EnCicla `valle.bin` |
-| `relieve` | i16 cada 80 m | Cota en metros (SRTM) | EnCicla |
-| `municipio`, `comuna`, `barrio`, `pisos`, `lotes` | por celda de 80 m | Divisiones oficiales, pisos del edificio más alto y lote mediano | EnCicla + capas oficiales |
-| `nivel` | i8 W×H | **Nivel firmado por casilla**: lo que pasa por encima (puente 1–2, viaducto 2–3) o por debajo (deprimido −1). 1 nivel = 4,5 m. | Puentes de El Metro + viaducto de EnCicla sobre los rieles reales |
-| `vias` | VIAS3 | 35.746 vías con su curva, su clase, su nombre, su nomenclatura y su ancho | EnCicla `vias.bin` |
-| `sitios` | SIT4 | 1.203 sitios y 5.314 edificios con su forma real (también con patio), y las partes de los emblemáticos (el Coltejer, la Biblioteca España…) | EnCicla `sitios.bin` |
-| `edificios` | ED1 (regiones de 640 m) | **Las 639.457 huellas**, con su forma, orientación, pisos y uso | El Metro `edificios.js` |
-| `pasos` | JSON | 2.193 puentes, deprimidos y tramos de viaducto como vectores: tipo, nivel, ancho, alto y si es peatonal | El Metro + EnCicla |
-| `transporte` | JSON | 31 líneas (metro, tranvía, cables, Metroplús, alimentadores y futuras) con estaciones, eje real (rieles y corredores), andenes y datos; 133 estaciones EnCicla | El Metro `red.js`, `rieles.js`, `metroplus*.js`, `rutas_calles.js` + EnCicla |
-| `lugares` | JSON | 45 lugares con postal (EnCicla) y 30 hitos con su huella y su altura (El Metro), enlazados | Los dos |
-| `trafico` | JSON | 754 carriles con su sentido y 649 semáforos | EnCicla |
-| `info` | JSON | Nombres (barrios, comunas, municipios, calles y sitios), el río, los parques y las líneas del dibujo de EnCicla | EnCicla |
-
-**Las reglas de estilo de la ciudad** van aparte, en `ciudades/<id>.json`:
-
-- la ventana, la casilla y la atribución;
-- las **zonas de estilo** (ladera, centro, Laureles, El Poblado, mixto, pueblo, industria, campus y rural), con muros, techos, plancha, tanques, teja, árboles, densidad y pisos;
-- la zona de cada comuna y de cada municipio;
-- el horario del transporte y el clima del lugar.
-
-## 5. El motor en el navegador (`dist/motor.js` → `MC`)
-Se incluye con un `<script>` (o pegado en el HTML único) **antes** del código del juego. Solo publica `MC`, y `Valle`/`MotorValle` si no existían.
-
-| Módulo | Archivo | Lo principal |
+| | Juega EnCicla | El Metro |
 |---|---|---|
-| Núcleo | `00-nucleo.js` | Utilidades (`clamp`, `h2`, `Azar`, colores); `MC.on/emit`; `MC.arte` (pieles); `MC.modulos`; `MC.huevos`; `MC.guardado` |
-| Mundo | `10-mundo.js` | `await MC.Mundo.cargar(b64, ciudad)`: `suelo`, `cota`, `pendiente`, `normal`, `nivel`, `solido`, `superficie`, `esCiclovia`, `municipio`, `comuna`, `barrio`, `zona`, `estilo`, `lugarTexto`, `vias`, `viaCercana`, `calle`, `edificiosRegion`, `edificiosEn`, `edificioEn`, `sitios`, `pasos`, `pasosEn`, `transporte`, `lugares`, `hitos`, `lugarCercano`, `estacionCercana`, `enciclaCercana`, `buscar`, `geoAMetros`, `metrosAGeo` |
-| Redes | `11-red.js` | `mundo.red('ciclo'\|'calles'\|'rueda'\|'peaton')`: grafo con nodos en los cruces; `cercana`, `opciones`, `continua`, `camino` (A\*), `componentes`. `MC.Trazo` (polilínea con `at`, `rumbo`, `curva` y `proyectar`). `MC.Recorrido` (camino sin fin que en cada cruce sigue la que continúa o la elegida). |
-| Tiempo | `20-tiempo.js` | `MC.Reloj` (minutos del día y velocidad), `MC.Calendario` (festivos de Colombia, Ley Emiliani y fiestas), `MC.Cielo.en(fecha, hora, clima)` (colores, sol, luna, día y noche), `MC.Clima` (el mismo para todos a la misma hora; `forzar`) |
-| Tráfico | `21-trafico.js` | `MC.Trafico`: carros, taxis amarillos, motos, busetas, camiones y ciclistas, con semáforos reales que nunca dan verde a las dos calles; peatones en los andenes |
-| Transporte | `22-transporte.js` | `MC.Transporte`: metro, tranvía, Metroplús, alimentadores y cables, con **horario real**, deterministas (`vehiculos(fecha, seg, caja)`, `proximo(línea, estación, …)`) |
-| Personaje | `30-personaje.js` | `MC.Personaje.aspecto()` y `azar()`; `pose(estado, fase, op)` (articulaciones en metros); dibujos de lado y cenital de la piel del motor |
-| Vehículos | `31-vehiculos.js` | `MC.Vehiculos.registrar(def)` (hereda de `de`), `get`, `de(juego)`, `suelo`, `loma`. 35 vehículos: a pie, bici EnCicla, eléctrica, BMX, montaña, ruta, patinete, scooter, monopatín, monociclo, skate, longboard, patines, quad, triciclo, jetpack, moto, carro, taxi, camión, buseta, deportivo, fórmula, óvalo, drift, todoterreno, avioneta, avión, lancha, surf, metro, tranvía, cable y Metroplús |
-| Física | `32-fisica.js` | `MC.Cuerpo`: suelo, pendiente real (las eléctricas no sufren), choques con lo sólido y con las huellas reales, puentes que se suben por sus extremos con baranda, deprimidos, saltos, vuelo y agua |
-| Controles | `33-controles.js` | `MC.Controles(elemento, { alGesto })`: teclado, joystick virtual, gestos (pellizco, giro e inclinación) y gamepad; `leer()` una vez por cuadro |
-| Cámara | `34-camara.js` | `MC.Camara`: la misma para todas las vistas; perfiles `primera`, `tercera`, `dron`, `cine` y `aerea`; `gesto`, `actualizar`, `aPantalla`, `aMundo` |
-| Dibujo | `40-dibujo.js` | `MC.Losas`: losas de 160 m en caché. Llevan suelo suave con el sombreado del relieve, vías en vectores, canchas, piscinas, árboles por zona y techos reales. Son **el mismo mapa en todas las vistas**. |
-| Vistas | `41`–`46` | `MC.Vistas(mundo)`: `usar(id)`, `siguiente()`, `pixel`, `dibujar(g, W, H, escena, dt)`, `calidad` (automática). Vistas: `cenital`, `ciudad3d`, `maqueta`, `pano`, `tercera`, `primera`, `dron` y `cine`. |
-| Seguir la ruta | `47-seguir.js` | `MC.SeguirRuta(mundo, cuerpo)`: el cuerpo va solo por la vía real (panorámica, Run y paseo). Tiene `paso`, `avanzar`, `girar(±1)` y `cruceProximo()`. |
-| Run | `50-run.js` | `MC.Run.puede(mundo, cuerpo)` y `MC.Run.entrar({ mundo, cuerpo, reloj, clima, aspecto, lienzo, capa, hud, alSalir })` |
+| Casilla | 10 m (4.316 × 4.921) | 20 m (2.158 × 2.461) |
+| Unidad de dibujo | 16 px por casilla (**1 m = 1,6 px**) | metros |
+| Conversión | `px = m × 1,6` | `m = px / 1,6` |
 
-**La escena** que reciben las vistas: `{ mundo, camara, reloj, clima, cielo, transporte, jugador: { cuerpo, aspecto }, vehiculos, trafico, peatones, cables, pano: { trazo, s, id }, extras: [{ x, y, dibujar }], t }`. El banco de pruebas (`sandbox/10-juego.js`) es el ejemplo completo de un juego sobre el motor, en unas 150 líneas.
+Los dos usan el mismo origen (`lon0`, `latN`). Por eso un dato en metros de El Metro (los andenes del Metroplús, por ejemplo) entra a EnCicla multiplicado por 1,6, y uno de EnCicla sale a El Metro dividido por 1,6.
 
-## 6. La piel de cada juego (hooks de arte)
-```js
-MC.arte.registrar('encicla', {
-  suelo: [...17 colores por TT], via: { asfalto, anden, ciclo, … },
-  personajeLado(g, pose, aspecto, x, y, pxPorMetro, dir) { … },   // panorámica, 3D oblicua y maqueta
-  personajeArriba(g, pose, aspecto, x, y, pxPorMetro, rumbo) { … }, // cenital
-  vehiculoLado(g, vehiculo, x, y, pxPorMetro, dir, cuerpo) { … },
-  jugador(g, j, x, y, z, P, D) { … return true },                  // reemplaza todo el dibujo del jugador en 2D
-  jugadorLado(g, j, x, y, esc, dir) { … return true }               // ídem en la panorámica
-}).usar('encicla');
-```
-- Lo que el juego no traiga lo dibuja el motor.
-- Los dibujos de lado reciben la **pose** del esqueleto único: un mismo personaje en todas las vistas, vestido por cada juego.
-- Las zonas de estilo (`ciudades/<id>.json`) mandan en los colores de muros y techos. Un juego puede sobrescribirlas al cargar la ciudad.
+## Formato binario v3
+Es `valle.bin` en EnCicla y `VALLE_BIN` en El Metro: deflate crudo y base64 en el HTML. Las capas van seguidas:
 
-## 7. Las vistas, una por una
-- **Cenital:** losas, objetos encima y techos con sombra. Se gira con dos dedos.
-- **Ciudad 3D:** la misma proyección inclinada. Los edificios se levantan con su huella y su altura reales, y tienen ventanas que se encienden de noche. Lleva puentes y viaducto con pilas, y vehículos con volumen.
-- **Maqueta 2:1:** dimétrica (giro de 45° más múltiplos de 90°, aplastado 0,5 y altura 0,82), como la maqueta de El Metro.
-- **Panorámica de perfil (cuidado especial).** Junta la de El Metro y la de EnCicla:
-  - cielo por hora, con el sol y la luna donde de verdad están;
-  - nubes, gallinazos, lluvia, niebla y rayos;
-  - cordillera, cerros y laderas con barrios que se encienden de noche (densidad tomada de lo construido de verdad);
-  - ciudad media y emblemáticos con su silueta (el Coltejer con su aguja);
-  - viaducto y trenes reales, y cables con sus cabinas balanceándose;
-  - fila de edificios del frente real, con su huella, su altura, su zona y sus ventanas;
-  - cruces con su nombre, árboles, faroles, estaciones EnCicla y del metro;
-  - tráfico y gente de perfil;
-  - el jugador en cualquier vehículo y un primer plano real.
+1. `W·H` bytes: tipo de casilla (`TT`).
+2. `eW·eH·2`: relieve en metros, `uint16`, una muestra cada `es` casillas (80 m).
+3. `mW·mH`: municipio.
+4. `mW·mH`: comuna.
+5. `mW·mH·2`: barrio, `uint16`. Está si hay `barrios`; en El Metro lo marca `ba: 1`.
+6. `mW·mH`: pisos del edificio más alto (`hg`).
+7. `mW·mH`: área mediana de los lotes ×4 m² (`lt`).
 
-  El fondo se mira por un eje suavizado, así que las esquinas no hacen saltar las montañas. Funciona con el celular vertical y acostado.
-- **Tercera y primera persona, dron y cine (WebGL):**
-  - relieve real, con malla de 20 m cerca y de 240 m para las montañas del valle;
-  - el suelo es la losa (texturas potencia de 2 con mipmaps y filtro anisótropo);
-  - edificios, sitios, emblemáticos por partes, puentes, viaducto y árboles;
-  - personaje con la misma pose, trenes, cabinas, tráfico y gente;
-  - luz del sol por hora, niebla por clima y detalle por distancia.
-- **Pixel:** cualquiera de las vistas, dibujada en un búfer de un tercio y agrandada sin suavizado.
-- **Transición:** fundido de 0,55 s en el mismo punto.
+Las capas 3 a 7 van por celda de 8 casillas.
 
-## 8. Run en la ciclovía
-- `run/run-scooter.js` es RunRunZero casi idéntico: motor WebGL, modelos, escena, reglas y audio. Lo arma `herramientas/importar-run.mjs`, con **12 parches con nombre y comprobados**:
-  - relieve real en el sombreador (64 alturas);
-  - curvas reales;
-  - esquinas en los cruces reales: al doblar, se dobla en el mundo;
-  - cielo y lluvia del mundo.
-- `MC.Run.entrar(...)`:
-  - solo en la ciclovía y con un vehículo que corra Run;
-  - sigue la ciclorruta real y, en cada cruce, la que continúa (si se acaba, la calle);
-  - las curvas fuertes giran la cámara;
-  - se puede parar, ir a pie o correr, y cambiar de vehículo;
-  - un metro del corredor son 0,5 m reales;
-  - al salir, el cuerpo queda en el punto real donde iba, a la misma hora y con el mismo clima.
-- Las metas y los retos de Run Scooter siguen andando: monedas, trucos, entregas, rivales y poderes.
+**Tipos de casilla (`TT`):**
 
-## 9. Reglas del mundo (F5)
-| Regla | Cómo funciona |
-|---|---|
-| **Reloj** | Un minuto de juego por segundo real (configurable). |
-| **Calendario** | Festivos de Colombia con la Ley Emiliani (Pascua calculada) y fiestas de la ciudad. |
-| **Cielo** | Colores por hora; sol y luna astronómicos para la latitud. |
-| **Clima** | Bloques de 3 h con azar fijo por fecha, según la probabilidad del mes y la hora (temporadas de lluvia y aguaceros de la tarde). Es igual para todos a la misma hora. |
-| **Transporte** | Lunes a sábado, de 4:30 a. m. a 11 p. m.; domingos y festivos, de 5 a. m. a 10 p. m. Frecuencias de hora pico y de valle; parada en cada estación. Las cabinas van cada 12 s. |
-| **Tráfico** | Agentes alrededor del jugador. Semáforos de 60 s con fase fija por cruce; frenan en amarillo y en rojo, y guardan distancia. |
-| **Huevos** | `MC.huevos.poner({ id, x, y, radio, hora, vehiculo, cond, juegos })`. El motor avisa con `MC.on('huevo')` una sola vez. |
+| Código | Tipo | Código | Tipo | Código | Tipo |
+|---|---|---|---|---|---|
+| 0 | GRASS | 6 | WALK | 12 | STATION |
+| 1 | MOUNT | 7 | CICLO | 13 | LAND |
+| 2 | BRICK | 8 | WATER | 14 | AUTO |
+| 3 | BLDG | 9 | CANAL | 15 | DEPOT |
+| 4 | ROAD | 10 | PLAZA | 16 | STEPS |
+| 5 | AVE | 11 | BRIDGE | | |
 
-## 10. Hoja de ruta (lo que sigue)
-- **2.1:** precalcular las redes en el MC4 (hoy `red('rueda')` tarda alrededor de 1 s al arrancar). Guardar el ancho y la nomenclatura de las ciclorrutas. Sumar `geo/pasos.py` (niveles firmados de Overture) y conectarlo al GPS de dos niveles.
-- **2.2:** sombras del sol en WebGL. Agua animada del río. Ventanas con textura. Árboles por especie. Atlas del arte que entreguen Gemini y ChatGPT (`MC.arte`).
-- **2.3:** Motor City (carreras), con la física de carro con derrape, motos, aviones y lanchas ya registrados (sección 5). Pistas de carrera sobre la red real y repeticiones.
-- **3.0:** otra ciudad completa con la receta de `docs/CIUDADES.md`.
+El `valle.json` (o `VALLE_META`) trae, entre otros, `barrios`, `munis`, `comunas`, `lanes`, `lights`, `metro` (A, B y T), `river`, `mp` y `parques`.
+
+## Capas: qué hay y quién las genera hoy
+| Capa | Generador | Juega EnCicla | El Metro | Estado |
+|---|---|---|---|---|
+| Base: casillas, relieve, municipios, comunas, barrios, pisos y lotes | `geo/build.py` | `valle.json` + `valle.bin` (10 m) | `valle.js` (20 m) | **Unificada** |
+| Calles con nombre (vectores) | `geo/build.py` | `vias.bin` | `vias.js` (`tools/vias_datos.mjs`) | Por unificar (F2) |
+| Sitios reales y emblemáticos | `geo/sitios.py` | `sitios.bin`/`sitios.json` | `edificios.js` (`tools/edificios_datos.py`, todas las huellas) | Por unificar (F2) |
+| Puentes y viaducto con nivel | `geo/alturas.py` | `alturas.json` | `puentes.js` (`tools/puentes_datos.py`) | Por unificar (F2) |
+| Red de transporte | `geo/lineas.json` (de `red.js` de El Metro) | `VM.metro`, `CABLES` | `red.js` | Mismo origen |
+| Metroplús: corredor y andenes reales | `tools/metroplus_osm.py` y `metroplus_andenes.py` (El Metro) → `geo/metroplus_elmetro.py` | `metroplus.json` | `metroplus.js`, `metroplus_andenes.js` | Mismo origen |
+| Ciudad oficial | `tools/ciudad_datos.py` (El Metro) | — | `ciudad.js` | Por unificar (F2) |
+| Lugares e hitos | `19-lugares.js` (EnCicla) | `LUGARES` | `hitos.js`, `lugares.js` | Por unificar (F3) |
+
+## Propuestas en estudio
+- **Pasos a distinto nivel** (entrega de ChatGPT, v2.0 de EnCicla):
+  - `geo/pasos.py` saca de Overture los túneles, los puentes y los pasos inferiores abiertos, con su nivel firmado.
+  - `js/red-niveles.mjs` arma una red por casilla y nivel: un cruce no conecta niveles distintos, salvo por una rampa.
+  - Su prueba es `node tests/prueba-niveles.mjs`.
+- Todavía no cambia la salida del motor. Para adoptarla hay que subir la versión.
+- **Las dos «1.1.0» ya están unidas en la 1.2.0** (ver el historial). Sus capas propias (`vias_datos.mjs`, `rutas_calles.mjs` e `hitos.js`) siguen en el repositorio de El Metro hasta mudarse a `capas/` (F2).
+
+## Hoja de ruta de la unificación
+- **F1 (hecho, v1.0.0):**
+  - una sola tubería con dos resoluciones;
+  - el exportador al formato de El Metro;
+  - el sincronizador;
+  - este contrato.
+- **F2:**
+  - El Metro hace su `valle.js` con `node motor-valle/motor.mjs elmetro .` y retira su copia de la tubería.
+  - Sus generadores de capas (vías, edificios, puentes, ciudad, rieles, Metroplús y rutas) se mudan a `motor-valle/capas/`, con salida para los dos juegos y la conversión de escala en un solo lugar.
+- **F3:** un solo cargador `motor-valle/js/valle.js` que los dos juegos incluyen.
+  - Decodifica el binario.
+  - Convierte coordenadas.
+  - Responde consultas: casilla, relieve, barrio, calle más cercana y estación más cercana.
+- **F4:** las mismas capas en los dos juegos (EnCicla con las huellas de edificios de El Metro; El Metro con sitios, alturas y Metroplús de EnCicla), y una auditoría del mapa que mide los dos con las mismas cifras (`tools/auditoria-mapa.js`).
+
+**Para trabajar al tiempo:** cada IA trabaja en su juego. Un cambio del mapa va en `motor-valle/` del repositorio de EnCicla (la fuente de verdad), sube la versión y se sincroniza al otro.
 
 ## Historial
 | Versión | Fecha | Qué cambió |
 |---|---|---|
-| 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
-| 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
-| 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
-| **2.0.0** | 19‑nov‑2026 | **Motor City.** La fuente de verdad pasa a `motorcity`.<br>• Mundo 2.0 en un solo archivo (MC4), con todas las huellas, sitios, pasos con nivel, transporte, lugares y tráfico.<br>• El motor en el navegador: personaje, vehículos, física, controles, cámara, 8 vistas más pixel, panorámica de perfil, WebGL, reglas del mundo y Run en la ciclovía.<br>• Banco de pruebas jugable y 54 pruebas.<br>• La tubería 1.x sigue igual (y ya lee cualquier ventana de ciudad). |
+| 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y este contrato. |
+| 1.1.0 · EnCicla (Gemini) | 18‑nov‑2026 | Túneles y deprimidos en `geo/alturas.py`, el lector `js/valle.js` y el catálogo `capas/index.mjs`. |
+| 1.1.0 · El Metro | 19‑nov‑2026 | La fachada `MotorValle` (MAP, VC, G3), la huella de los datos de los dos juegos en `version` y sus capas propias. Puso a MetroZero como fuente de verdad, al revés de lo acordado. |
+| **1.2.0** | 19‑nov‑2026 | **Une las dos 1.1.0**, con la fuente de verdad en BicicletasUno. `js/valle.js` trae el lector de EnCicla y la interfaz de El Metro: `Valle` y `MotorValle`, con `Valle.elmetro`. `version` mide los datos de los dos juegos. `sincronizar --verificar` compara las copias y avisa si una dice otra fuente de verdad. El catálogo suma las capas de El Metro y la propuesta de pasos. |
+

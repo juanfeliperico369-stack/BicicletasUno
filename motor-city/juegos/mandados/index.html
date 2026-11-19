@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>Mandados · Guatapé · Motor City</title>
+<meta name="description" content="Minijuego de prueba de Motor City %VERSION%: haz mandados por Guatapé, un pueblo real craqueado de datos abiertos.">
+<style>
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:#0b1020;color:#f4f1e6;font:14px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
+#cv{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none}
+#portada{position:fixed;inset:0;z-index:30;display:grid;place-content:center;gap:12px;text-align:center;padding:20px;background:radial-gradient(circle at 50% 35%,#1d3b5a,#0b1020 70%)}
+#portada h1{margin:0;font:900 clamp(40px,12vw,84px)/1 system-ui;letter-spacing:.02em}#portada h1 b{color:#39ffb3;text-shadow:0 0 20px rgba(57,255,179,.5)}
+#portada p{max-width:520px;margin:0 auto;opacity:.85}#portada .bts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#portada button{min-height:52px;padding:0 22px;border-radius:14px;border:2px solid #39ffb3;background:#102a22;color:#39ffb3;font:800 18px system-ui;cursor:pointer}
+#portada button.b2{border-color:#ffffff40;background:#0b1020;color:#fff;font-size:15px}
+#portada small{opacity:.6}#estado{min-height:18px;opacity:.75}
+#interior{position:fixed;inset:0;z-index:25;background:#141822}#interior canvas{width:100vw;height:100vh;display:block;touch-action:none}
+.hoja{position:fixed;left:50%;transform:translateX(-50%);z-index:40;width:min(460px,92vw);padding:16px;border-radius:16px;background:rgba(11,16,32,.94);border:1px solid #ffffff2a;box-shadow:0 10px 40px #0008}
+#casaForm{top:max(16px,env(safe-area-inset-top))}#casaForm h3{margin:0 0 6px;font-size:18px}#casaForm p{margin:4px 0 10px;opacity:.75;font-size:13px}
+#casaForm input[type=text]{width:100%;box-sizing:border-box;min-height:46px;padding:0 12px;border-radius:12px;border:1px solid #ffffff40;background:#0b1020;color:#fff;font:16px system-ui}
+#casaForm label{display:flex;gap:8px;align-items:center;margin:10px 0;font-size:13px;opacity:.85}
+.fila{display:flex;gap:8px;flex-wrap:wrap}.fila button{flex:1;min-height:46px;min-width:46px;border-radius:12px;border:1px solid #39ffb3;background:#102a22;color:#39ffb3;font:800 15px system-ui;cursor:pointer}.fila button.b2{border-color:#ffffff40;background:#0b1020;color:#fff}
+#barraCasa{bottom:max(14px,env(safe-area-inset-bottom));padding:10px}#barraCasa .fila button{font-size:13px;min-width:0}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="interior" hidden><canvas id="icv"></canvas></div>
+<div id="casaForm" class="hoja" hidden>
+  <h3>🏠 Tu casa en el juego</h3>
+  <p>Escribe tu dirección como en Colombia (por ejemplo, «Calle 31 # 28-15»). El juego busca la calle y el cruce en el mapa real y te da esa casa. <b>Tu dirección no sale de tu celular.</b></p>
+  <input id="casaTxt" type="text" placeholder="Calle 31 # 28-15" autocomplete="street-address" aria-label="Dirección">
+  <label><input id="casaRec" type="checkbox"> Recordar la dirección en este celular</label>
+  <div class="fila"><button id="casaOk">Buscar mi casa</button><button id="casaNo" class="b2">Cancelar</button></div>
+</div>
+<div id="barraCasa" class="hoja" hidden><div class="fila"><button id="bcEstilo">🎨 Estilo</button><button id="bcComprar">🛋️ Comprar</button><button id="bcGirar">↻ Girar</button><button id="bcQuitar">🗑️ Quitar</button><button id="bcSalir" class="b2">🚪 Salir</button></div></div>
+<div id="portada">
+  <h1>MANDA<b>DOS</b></h1>
+  <p>Guatapé es un pueblo real: sus calles, sus casas, el embalse y la Piedra del Peñol salen de datos abiertos, craqueados por el motor. Recoge y entrega mandados contra el reloj, cuida tu energía y tu agua, cambia de vehículo con lo que ganes y entra a las casas a entregar en la mano. Pon tu dirección y diseña tu casa; repara tu bici en los talleres, come en las tiendas y vive lo que te encuentres en el camino.</p>
+  <div class="bts"><button id="jugar">▶ Jugar en Guatapé</button><button id="generado" class="b2">🎲 Mundo nuevo (generado)</button></div>
+  <div id="estado">Cargando el mundo…</div>
+  <small>Motor City %VERSION% · © colaboradores de OpenStreetMap (ODbL) vía Overture Maps · relieve SRTM/NASA (AWS Terrain Tiles)</small>
+</div>
+<script>/*MUNDO*/</script>
+<script>/*MOTOR*/</script>
+<script>/*JUEGO*/</script>
+</body>
+</html>
