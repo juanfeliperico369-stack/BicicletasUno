@@ -61,10 +61,10 @@ const Terreno = {
     if (!M.dentro(x, y)) return { ok: false, f: 0, motivo: 'el borde del mundo' };
     if (cl === 'aire' && C.z > 3) return { ok: true, f: 1 };
     const ag = (tt === TT.WATER || tt === TT.CANAL) ? Terreno.aguaEn(M, x, y) : null;
-    if (cl === 'agua') { if (!ag) return { ok: false, f: 0, motivo: 'la lancha no anda en tierra' }; if (ag.prof < .6) return { ok: false, f: 0, motivo: 'muy pando para la lancha' }; return { ok: true, f: Math.max(.3, base || 1) }; }
+    if (cl === 'agua') { if (!ag) return { ok: false, f: 0, tierra: true, motivo: 'la lancha no anda en tierra' }; if (ag.prof < .6) return { ok: false, f: 0, motivo: 'muy pando para la lancha' }; return { ok: true, f: Math.max(.3, base || 1) }; }
     if (ag && !C.paso) {
       if (cl === 'pie') return ag.prof < .5 ? { ok: true, f: .55, vadea: true } : ag.prof < 1.15 ? { ok: true, f: .32, vadea: true } : { ok: true, f: .26, nada: true };
-      const lim = AGUA_MAX[cl] ?? 0; if (ag.prof > lim) return { ok: false, f: 0, motivo: ag.tipo === 'quebrada' ? 'la quebrada está muy honda para ' + (cl === 'rueda' ? 'la bici' : 'este vehículo') : 'el agua está muy honda (' + ag.prof.toFixed(1) + ' m)' };
+      const lim = AGUA_MAX[cl] ?? 0; if (ag.prof > lim) return { ok: false, f: 0, agua: true, motivo: ag.tipo === 'quebrada' ? 'la quebrada está muy honda para ' + (cl === 'rueda' ? 'la bici' : 'este vehículo') : 'el agua está muy honda (' + ag.prof.toFixed(1) + ' m)' };
       return { ok: true, f: .35, vadea: true };
     }
     if (base <= 0 && !(cl === 'auto' && tt === TT.MOUNT && (V.id === 'todoterreno' || V.offroad))) return { ok: false, f: 0, motivo: { 1: 'el monte es muy cerrado', 16: 'por las escalas no pasa', 17: 'se entierra en la arena', 18: 'no avanza en la nieve', 19: 'no pasa por la roca' }[tt] || 'por ahí no pasa' };
@@ -73,6 +73,10 @@ const Terreno = {
       if (s > lim * 1.35 || g > lim || -g > lim * 1.6) return { ok: false, f: 0, motivo: g < 0 ? 'es un barranco' : 'está muy empinado' }; }
     return { ok: true, f: Math.max(.12, base || .5) * (tt === TT.MOUNT && cl === 'auto' ? .55 : 1) };
   },
+  /* el punto más cercano (anillos cada 2 m hasta r) que cumple cond(x, y): para embarcar, desembarcar y salir del agua */
+  cerca(M, x, y, r, cond) { if (cond(x, y)) return { x, y, d: 0 }; for (let d = 2; d <= r; d += 2) { const n = Math.max(8, Math.round(d * 1.6)); for (let k = 0; k < n; k++) { const a = k / n * TAU, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d; if (M.dentro(px, py) && cond(px, py)) return { x: px, y: py, d }; } } return null; },
+  aguaHonda(M, x, y, r = 30, min = .8) { return Terreno.cerca(M, x, y, r, (a, b) => { const g = Terreno.aguaEn(M, a, b); return g && g.prof >= min; }); },
+  tierraFirme(M, x, y, r = 14) { return Terreno.cerca(M, x, y, r, (a, b) => { const t = M.suelo(a, b); return t !== TT.WATER && t !== TT.CANAL && t !== TT.BLDG && !M.edificioEn(a, b, .5) && Terreno.pendiente(M, a, b) < .8; }); },
   /* ---------- obstáculos: lo que ocupa espacio en el piso ---------- */
   _indiceSitios(M) {
     if (M._sitiosIdx) return M._sitiosIdx; const G = new Map(), C = 80, E = M.sitios().E || [];

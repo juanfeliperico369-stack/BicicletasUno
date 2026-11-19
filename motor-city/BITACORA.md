@@ -1,5 +1,25 @@
 # Bitácora de Motor City
 
+## 19‑nov‑2026 · 2.5.0 · Entrar al agua (Claude Code)
+**Pedido:** «Añade la capacidad de poder entrar en el agua».
+
+**Lo que pasaba:** en la 2.4 solo se entraba a pie. Mandados empieza en bici, así que el juego frenaba en la orilla.
+
+**Lo que se hizo:**
+1. **Bajarse en la orilla:** con un vehículo, al empujar 0,6 s hacia el agua honda (o con «🏊 Al agua»), uno se baja, el vehículo queda **parqueado en la orilla** y se entra al agua. Al volver: «Subirse».
+2. **Nadar y bucear:** «🤿 Bucear» (Z o Ctrl) baja hasta medio metro del fondo; «⬆️ Subir» (espacio) sube; quieto, se flota hacia arriba.
+3. **El aire:** dura ~35 s bajo el agua y se recupera arriba. Sin aire, la persona sube sola y no vuelve a bajar hasta tomar algo de aire.
+4. **Poses** de crol y de buceo, el agua tapando el cuerpo, burbujas y la pantalla azul con rayos de luz bajo el agua.
+5. **Lancha:** se alquila en el garaje si hay agua honda a menos de 30 m. Con «⚓ A tierra» uno se baja a la tierra firme más cercana y la lancha queda amarrada.
+6. **Ocurrencias:** ya no «arregla» al que bucea como si estuviera bajo el piso.
+
+**Probado** (117 pruebas):
+- la bici se queda en la orilla de Guatapé y se entra nadando;
+- se bucea con aire limitado y, sin aire, se sube aunque se siga oprimiendo «bajar»;
+- se sale del agua y se vuelve a la bici;
+- la lancha navega, desembarca y queda amarrada;
+- en Mandados, el botón «Al agua» aparece en la orilla y funciona.
+
 ## 19‑nov‑2026 · 2.4.0 · Montañas, rocas, agua y límites de paso (Claude Code)
 **Pedido del autor:** un sistema de montañas, rocas y tipos de terreno; agua en lagos, ríos, playa y mar; y límites de movimiento que no rompan la verosimilitud («el personaje pasa por encima de cosas que no debería»).
 

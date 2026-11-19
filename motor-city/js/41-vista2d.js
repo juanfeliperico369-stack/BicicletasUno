@@ -76,6 +76,7 @@ const Vista2D = {
     for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
     for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
     if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
+    const est = E.jugador && E.jugador.cuerpo && E.jugador.cuerpo.estacionado; if (est && est.x >= x0 - 20 && est.x <= x1 + 20 && est.y >= y0 - 20 && est.y <= y1 + 20) objs.push({ y: dy(est.x, est.y), t: 9, q: est });
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
     objs.sort((p, q) => p.y - q.y);
     /* rayos X: lo que queda delante del jugador y lo tapa se dibuja transparente */
@@ -84,7 +85,7 @@ const Vista2D = {
     for (const o of objs) {
       const rx = Jc && modo !== 'cenital' && (o.t === 0 || o.t === 4) && o.y > jKey && tapa(o.q); if (rx) g.globalAlpha = .28;
       if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
-      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces); else if (o.t === 8) Naturaleza.objeto(dibCtx, o.q);
+      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces); else if (o.t === 8) Naturaleza.objeto(dibCtx, o.q); else if (o.t === 9) this.estacionado(dibCtx, o.q);
       if (rx) g.globalAlpha = 1;
     }
     Sombras.luces(g, luces, noche);   // los charcos de luz de los postes, encima de todo (como luz que se suma)
@@ -158,14 +159,28 @@ const Vista2D = {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
       if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
       g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
-      if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } }
+      if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } if (C.buceando) { g.fillStyle = 'rgba(30,95,140,.55)'; g.beginPath(); g.arc(x, y, z * .9, 0, TAU); g.fill(); this.burbujas(g, x, y - z * .2, y + z * .4, z * 1.5, D.E.t || 0); } }
       return;
     }
     const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
     const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
     const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir);
     /* en el agua: el agua tapa las piernas (vadeando) o casi todo el cuerpo (nadando), con su onda */
-    if (C.nadando || C.vadeando) { const hA = C.nadando ? 1.25 : .55, [, ya] = pr(C.x, C.y, (C.zPaso || 0) + hA); g.fillStyle = 'rgba(52,120,160,.62)'; g.fillRect(x - esc * .75, ya, esc * 1.5, y - ya + 1); g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = Math.max(1, esc * .06); g.beginPath(); g.ellipse(x, ya, esc * (.6 + .15 * Math.sin((D.E.t || 0) * 3)), esc * .12, 0, 0, TAU); g.stroke(); }
+    if (C.nadando || C.vadeando) {
+      /* la superficie del agua tapa lo que está debajo: las piernas al vadear, el cuerpo al nadar y todo al bucear */
+      const sup = pr(C.x, C.y, (C.zPaso || 0) + (C.buceando ? 0 : C.nadando ? .58 : .55))[1], bajo = y + esc * (C.buceando ? .9 : .1), t = D.E.t || 0;
+      g.fillStyle = C.buceando ? 'rgba(30,95,140,.72)' : 'rgba(52,120,160,.62)'; g.fillRect(x - esc * 1.1, sup, esc * 2.2, Math.max(1, bajo - sup));
+      g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = Math.max(1, esc * .06); g.beginPath(); g.ellipse(x, sup, esc * (.7 + .15 * Math.sin(t * 3)), esc * .12, 0, 0, TAU); g.stroke();
+      if (C.buceando) this.burbujas(g, x, sup, y, esc, t);
+    }
+  },
+  /* burbujas que suben desde quien bucea hasta la superficie */
+  burbujas(g, x, ySup, yBase, esc, t) { g.fillStyle = 'rgba(235,248,255,.85)'; for (let i = 0; i < 6; i++) { const f = ((t * .7 + i / 6) % 1), yy = lerp(yBase, ySup, f), xx = x + Math.sin(t * 2 + i * 1.7) * esc * .2 + esc * .15; g.beginPath(); g.arc(xx, yy, Math.max(1, esc * (.05 + .03 * (i % 3))), 0, TAU); g.fill(); } },
+  /* el vehículo que quedó parqueado (en la orilla o amarrado en el agua) */
+  estacionado(D, e) {
+    const { g, pr, z, P, modo } = D, V = Vehiculos.get(e.veh), [x, y] = pr(e.x, e.y, 0);
+    if (modo === 'cenital') { g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
+    const vl = MC.arte.f('vehiculoLado'); Sombras.contacto(g, x, y, z * (V.largo || 1.6) * .5, z * .25, .25); if (vl) vl(g, V, x, y, Math.max(4, z * P.hk * 1.1), Math.cos(e.a + P.yaw) >= 0 ? 1 : -1, null);
   },
   cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
   etiquetas(D) {

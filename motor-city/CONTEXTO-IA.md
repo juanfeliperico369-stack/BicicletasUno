@@ -61,6 +61,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 | Repo abierto a las IAs de los juegos, con reportes | ✅ | `CONTRIBUIR.md`, `AGENTS.md`, `reportes/`, `node motor.mjs reporte` |
 | **2.3 · SimCity, Los Sims, Cities: Skylines y Townscaper** | ✅ | `39-sombras` (sol por hora), `27-mobiliario` (props y luces), fachadas WFC (`14-ondas`), `26-urbe` (ciudad y capas de datos), `86-necesidades` (objetos inteligentes), `61-sonido` (paisaje sonoro). Mandados con modo alcalde. |
 | **2.4 · Montañas, rocas, agua (lagos, ríos, playa, mar) y límites de paso** | ✅ | `15-terreno` (agua, pendiente, reglas de paso, obstáculos), `28-naturaleza`, lagos en `12-generador`, agua y roca en `40-dibujo`; `MC.Cuerpo` vadea, nada y dice por qué no pasa |
+| **2.5 · Entrar al agua** | ✅ | `MC.Cuerpo`: `bajarse`, `montar`, `_nadar` (buceo y aire), `embarcar` y `desembarcar`; poses `nada` y `bucea`; tono bajo el agua (`Vistas._bajoAgua`) |
 | **Un solo documento con todo** | ✅ | `docs/DOCUMENTO-UNICO.md` (contexto, código a usar y plan de cada IA) y `dist/MOTOR-CITY-TODO.md` (con anexos; `node motor.mjs documento`) |
 
 ## 4. Decisiones que no hay que deshacer sin motivo
@@ -98,7 +99,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 115 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 117 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»

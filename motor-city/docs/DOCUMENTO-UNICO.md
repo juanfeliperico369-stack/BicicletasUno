@@ -6,7 +6,7 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.4.0** · 19‑nov‑2026 |
+> | Versión | **Motor City 2.5.0** · 19‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
@@ -56,12 +56,13 @@
 | **2.1** | Craquear territorios; física, química y economía reales; mundos nuevos; biología; vehículos y animales; interfaz; música; mundo vivo; interiores; nombre solo «Motor City»; repo abierto a las IAs | `geo/territorio.py` (Guatapé en 20 s). `MC.Generador`. Ciencia, química y economía con pruebas. Clima global con estaciones y nieve. Seres (persona, genética, animales y criaturas). Taller de vehículos. IA y población con rutinas. Interiores. Música procedural y clásicos de dominio público. Interfaz y mecánicas. Minijuego **Mandados**. Plantillas, skills, `CONTRIBUIR.md` y reportes. 80 pruebas. |
 | **2.2** | Solución a la tarjeta gráfica; puentes y cámara; vistas de lado (FEZ, Little Nightmares, Monument Valley); sprites; interfaz con psicología; los mejores motores; historia con 3 pilares; ocurrencias; manual; optimización; controles; **casa del jugador por su dirección**; talleres y tiendas; No Man's Sky; proporciones | GPU virtual y 3D por software (`MC.Raster`). Física por superficies. Cámara con resortes. **Vista lateral.** `MC.Manejo` con 7 esquemas. `MC.Sprites`. `MC.Escala`. Interfaz por zonas. **Mi casa** (`MC.Direccion` + `MC.Hogar`, 8 estilos y 22 muebles). `MC.Lugares` y `MC.Desgaste`. `MC.Historias` con director. `MC.Ocurrencias`. `MC.Cosmos`. Web en GitHub Pages. 103 pruebas. |
 | **2.3** | Estudiar **SimCity, Los Sims, Cities: Skylines y Townscaper**: cómo crean entornos, ambientes, sombras y detalles de ciudad. Un **documento único** con todo y el código a usar | **Sombras del sol** por hora en todas las vistas. **Mobiliario urbano** y luces de noche. **Fachadas por reglas** (WFC). **`MC.Urbe`**: zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y **capas de datos**. **Objetos inteligentes** y necesidades (`MC.Habitante`). **`MC.Ondas`**, `MC.Autotile` y `MC.RejillaIrregular`. **`MC.Paisaje`** (sonido ambiente). Mandados con **modo alcalde** y casa habitada. 109 pruebas. Este documento. |
-| **2.4** (esta) | Montañas, rocas y tipos de terreno; agua en **lagos, ríos, playa y mar**; **límites de paso verosímiles** («el personaje pasa por encima de cosas que no debería») | **`MC.Terreno`**: agua por tipo y profundidad; material y pendiente; **reglas de paso** por vehículo con su motivo (vadear, nadar, barrancos, roca, monte, arena, nieve, borde del mundo); **obstáculos reales** (emblemáticos, árboles de las losas, postes, bancas, rocas, tráfico y gente). **`MC.Naturaleza`**: rocas, palmas, frailejones, arbustos y juncos. **Lagos** en los mundos generados (llenado por prioridad) y mar a nivel 0. **Agua y roca en las losas**: color por profundidad, espuma en la orilla y roca en las laderas empinadas. Brillos del agua. El personaje se ve vadeando o nadando. 115 pruebas. |
+| **2.4** | Montañas, rocas y tipos de terreno; agua en **lagos, ríos, playa y mar**; **límites de paso verosímiles** («el personaje pasa por encima de cosas que no debería») | **`MC.Terreno`**: agua por tipo y profundidad; material y pendiente; **reglas de paso** por vehículo con su motivo (vadear, nadar, barrancos, roca, monte, arena, nieve, borde del mundo); **obstáculos reales** (emblemáticos, árboles de las losas, postes, bancas, rocas, tráfico y gente). **`MC.Naturaleza`**: rocas, palmas, frailejones, arbustos y juncos. **Lagos** en los mundos generados (llenado por prioridad) y mar a nivel 0. **Agua y roca en las losas**: color por profundidad, espuma en la orilla y roca en las laderas empinadas. Brillos del agua. El personaje se ve vadeando o nadando. 115 pruebas. |
+| **2.5** (esta) | «Añade la capacidad de poder entrar en el agua» | **Entrar al agua de verdad:**<ul><li>con un vehículo, al empujar hacia el agua honda (o con «🏊 Al agua») uno se baja, el vehículo queda **parqueado en la orilla** y se entra nadando;</li><li>se **bucea** («🤿», o Z/Ctrl) con **aire limitado** (~35 s); sin aire se sube sola;</li><li>el cuerpo tiene pose de **nado** (crol) y de **buceo** (rana);</li><li>bajo el agua todo se tiñe de azul, con rayos de luz y burbujas;</li><li>se sale por la orilla y se **vuelve a subir** al vehículo;</li><li>**lancha**: embarcar en el agua honda más cercana y «⚓ A tierra» (queda amarrada).</li></ul>117 pruebas. |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **115 en verde** (`node motor.mjs prueba --navegador`): 109 en Node y 6 en Chromium. |
+| **Pruebas** | **117 en verde** (`node motor.mjs prueba --navegador`): 111 en Node y 6 en Chromium. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -212,7 +213,20 @@ MC.Terreno.paso(cuerpo, x, y);                         // { ok, f, vadea, nada, 
 cuerpo.nadando; cuerpo.vadeando; cuerpo.bloqueo;       // 'el agua está muy honda (2.3 m)', 'está muy empinado', 'un árbol'…
 cuerpo.obstaculos = () => trafico.map(v => ({ x: v.x, y: v.y, r: 1.1, motivo: 'un vehículo' }));   // lo que el juego quiera que estorbe
 MC.Naturaleza.en(M, x0, y0, x1, y1);                   // rocas, palmas, frailejones, arbustos y juncos (se dibujan y chocan solos)
+/* ENTRAR AL AGUA (2.5) */
+cuerpo.bajarse('agua');                                // se baja y deja el vehículo parqueado (cuerpo.estacionado); también solo al empujar 0,6 s hacia lo hondo
+cuerpo.actualizar(dt, { baja: true });                 // nadando: bucea (sube con { sube: true } o { salto: true }); quieto, flota hacia arriba
+cuerpo.buceando; cuerpo.aire;                          // aire 0–1 (cuerpo.pulmones = 35 s); sin aire sube sola (evento MC.on('sinAire'))
+cuerpo.puedeMontar(3) && cuerpo.montar(3);             // vuelve al vehículo parqueado
+cuerpo.embarcar('lancha', 30); cuerpo.desembarcar(16); // lancha en el agua honda más cercana / a la tierra firme más cercana
+MC.Terreno.aguaHonda(M, x, y, r, min); MC.Terreno.tierraFirme(M, x, y, r);
 ```
+- **Lo que pinta el motor solo:**
+  - el vehículo parqueado;
+  - las poses `nada` y `bucea`;
+  - el agua tapando el cuerpo;
+  - las burbujas;
+  - el tono bajo el agua en todas las vistas.
 **Reglas de paso:**
 
 | Clase | Pendiente máxima fuera de vía | Agua que cruza |

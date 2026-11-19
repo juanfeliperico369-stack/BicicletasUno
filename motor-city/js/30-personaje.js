@@ -23,7 +23,7 @@ const Personaje = {
   /* un aspecto al azar (gente de la ciudad), siempre igual para la misma semilla */
   azar(semilla) { const r = mulberry32(semilla); return this.aspecto({ piel: r() * PIELES.length | 0, colPelo: r() * 6 | 0, peinado: r() * 6 | 0, camisa: r() * ROPA.length | 0, pantalon: r() * PANTALONES.length | 0, zapatos: r() * ZAPATOS.length | 0, casco: 0, gafas: r() < .15 ? 1 : 0, barba: r() < .2 ? 1 : 0, estatura: .9 + r() * .2 }); },
   /* ---------- pose: articulaciones en metros, de lado (x adelante, z arriba), con la cadera sobre el suelo ----------
-     estado: 'quieto' | 'camina' | 'corre' | 'pedalea' | 'impulsa' | 'patina' | 'tabla' | 'sentado' | 'salta' | 'cae'
+     estado: 'quieto' | 'camina' | 'corre' | 'pedalea' | 'impulsa' | 'patina' | 'tabla' | 'sentado' | 'salta' | 'cae' | 'nada' | 'bucea'
      fase: ciclo del paso (rad) · v: velocidad (m/s) · alto: estatura (m) */
   pose(estado, fase = 0, o = {}) {
     const H = o.alto || 1.72, k = H / 1.72, s = Math.sin(fase), c = Math.cos(fase), J = {};
@@ -39,6 +39,9 @@ const Personaje = {
       case 'sentado': { cad = [-.05, .62]; inc = .1; pies = [[.45, .12], [.4, .12]]; break; }
       case 'salta': { cad = [0, 1.0]; inc = .2; pies = [[.2, .55], [-.15, .5]]; break; }
       case 'cae': { cad = [0, .3]; inc = 1.3; pies = [[.6, .05], [.5, .1]]; break; }
+      /* en el agua: el cuerpo casi horizontal, patada que alterna (crol) o que abre y cierra (bucear, como la rana) */
+      case 'nada': { cad = [-.15, .5]; inc = 1.32; pies = [[-.95, .5 + s * .14], [-.95, .5 - s * .14]]; break; }
+      case 'bucea': { cad = [-.1, .5]; inc = 1.45; pies = [[-.9 + Math.abs(s) * .15, .5 + .16 * c], [-.9 + Math.abs(s) * .15, .5 - .16 * c]]; break; }
       default: { pies = [[.08, 0], [-.08, 0]]; }
     }
     if (o.z) cad = [cad[0], cad[1] + o.z];
@@ -49,6 +52,8 @@ const Personaje = {
     /* brazos: al manubrio si va en algo con manubrio; si no, se balancean al paso */
     let mI, mD;
     if (o.manubrio) { mI = mD = [o.manubrio[0], o.manubrio[1] + (o.z || 0)]; }
+    else if (estado === 'nada') { mI = [pecho[0] + .1 + Math.cos(fase) * .5, pecho[1] + Math.sin(fase) * .35]; mD = [pecho[0] + .1 - Math.cos(fase) * .5, pecho[1] - Math.sin(fase) * .35]; }   // brazadas de crol
+    else if (estado === 'bucea') { const e = (Math.sin(fase) + 1) / 2; mI = [pecho[0] + .55 - e * .5, pecho[1] + .18 * e]; mD = [pecho[0] + .55 - e * .5, pecho[1] - .18 * e]; }   // brazada de rana
     else { const b = estado === 'corre' ? .5 : estado === 'camina' ? .28 : estado === 'patina' ? .4 : .08; mI = [pecho[0] - s * b, pecho[1] - .5 + Math.abs(s) * .05]; mD = [pecho[0] + s * b, pecho[1] - .5 + Math.abs(c) * .05]; if (estado === 'corre') { mI[1] += .12; mD[1] += .12; } }
     const codo = (m, sg) => { const mx = (pecho[0] + m[0]) / 2, mz = (pecho[1] + m[1]) / 2, dx = m[0] - pecho[0], dz = m[1] - pecho[1], L = Math.hypot(dx, dz) || 1, a = .3, h = Math.sqrt(Math.max(0, a * a - (L / 2) ** 2)); return [mx + dz / L * h * sg, mz - dx / L * h * sg]; };
     Object.assign(J, { cadera: P(...cad), pecho: P(...pecho), cabeza: P(...cabeza), pieI: P(...pI), pieD: P(...pD), rodI: P(...rod(pI, 1)), rodD: P(...rod(pD, 1)), manoI: P(...mI), manoD: P(...mD), codoI: P(...codo(mI, -1)), codoD: P(...codo(mD, -1)), inc, estado, radioCabeza: cab * k });

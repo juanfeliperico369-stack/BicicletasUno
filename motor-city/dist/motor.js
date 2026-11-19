@@ -1,4 +1,4 @@
-/* Motor City 2.4.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.5.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.4.0',
+  version: '2.5.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -1359,10 +1359,10 @@ const Terreno = {
     if (!M.dentro(x, y)) return { ok: false, f: 0, motivo: 'el borde del mundo' };
     if (cl === 'aire' && C.z > 3) return { ok: true, f: 1 };
     const ag = (tt === TT.WATER || tt === TT.CANAL) ? Terreno.aguaEn(M, x, y) : null;
-    if (cl === 'agua') { if (!ag) return { ok: false, f: 0, motivo: 'la lancha no anda en tierra' }; if (ag.prof < .6) return { ok: false, f: 0, motivo: 'muy pando para la lancha' }; return { ok: true, f: Math.max(.3, base || 1) }; }
+    if (cl === 'agua') { if (!ag) return { ok: false, f: 0, tierra: true, motivo: 'la lancha no anda en tierra' }; if (ag.prof < .6) return { ok: false, f: 0, motivo: 'muy pando para la lancha' }; return { ok: true, f: Math.max(.3, base || 1) }; }
     if (ag && !C.paso) {
       if (cl === 'pie') return ag.prof < .5 ? { ok: true, f: .55, vadea: true } : ag.prof < 1.15 ? { ok: true, f: .32, vadea: true } : { ok: true, f: .26, nada: true };
-      const lim = AGUA_MAX[cl] ?? 0; if (ag.prof > lim) return { ok: false, f: 0, motivo: ag.tipo === 'quebrada' ? 'la quebrada está muy honda para ' + (cl === 'rueda' ? 'la bici' : 'este vehículo') : 'el agua está muy honda (' + ag.prof.toFixed(1) + ' m)' };
+      const lim = AGUA_MAX[cl] ?? 0; if (ag.prof > lim) return { ok: false, f: 0, agua: true, motivo: ag.tipo === 'quebrada' ? 'la quebrada está muy honda para ' + (cl === 'rueda' ? 'la bici' : 'este vehículo') : 'el agua está muy honda (' + ag.prof.toFixed(1) + ' m)' };
       return { ok: true, f: .35, vadea: true };
     }
     if (base <= 0 && !(cl === 'auto' && tt === TT.MOUNT && (V.id === 'todoterreno' || V.offroad))) return { ok: false, f: 0, motivo: { 1: 'el monte es muy cerrado', 16: 'por las escalas no pasa', 17: 'se entierra en la arena', 18: 'no avanza en la nieve', 19: 'no pasa por la roca' }[tt] || 'por ahí no pasa' };
@@ -1371,6 +1371,10 @@ const Terreno = {
       if (s > lim * 1.35 || g > lim || -g > lim * 1.6) return { ok: false, f: 0, motivo: g < 0 ? 'es un barranco' : 'está muy empinado' }; }
     return { ok: true, f: Math.max(.12, base || .5) * (tt === TT.MOUNT && cl === 'auto' ? .55 : 1) };
   },
+  /* el punto más cercano (anillos cada 2 m hasta r) que cumple cond(x, y): para embarcar, desembarcar y salir del agua */
+  cerca(M, x, y, r, cond) { if (cond(x, y)) return { x, y, d: 0 }; for (let d = 2; d <= r; d += 2) { const n = Math.max(8, Math.round(d * 1.6)); for (let k = 0; k < n; k++) { const a = k / n * TAU, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d; if (M.dentro(px, py) && cond(px, py)) return { x: px, y: py, d }; } } return null; },
+  aguaHonda(M, x, y, r = 30, min = .8) { return Terreno.cerca(M, x, y, r, (a, b) => { const g = Terreno.aguaEn(M, a, b); return g && g.prof >= min; }); },
+  tierraFirme(M, x, y, r = 14) { return Terreno.cerca(M, x, y, r, (a, b) => { const t = M.suelo(a, b); return t !== TT.WATER && t !== TT.CANAL && t !== TT.BLDG && !M.edificioEn(a, b, .5) && Terreno.pendiente(M, a, b) < .8; }); },
   /* ---------- obstáculos: lo que ocupa espacio en el piso ---------- */
   _indiceSitios(M) {
     if (M._sitiosIdx) return M._sitiosIdx; const G = new Map(), C = 80, E = M.sitios().E || [];
@@ -2127,7 +2131,7 @@ const Personaje = {
   /* un aspecto al azar (gente de la ciudad), siempre igual para la misma semilla */
   azar(semilla) { const r = mulberry32(semilla); return this.aspecto({ piel: r() * PIELES.length | 0, colPelo: r() * 6 | 0, peinado: r() * 6 | 0, camisa: r() * ROPA.length | 0, pantalon: r() * PANTALONES.length | 0, zapatos: r() * ZAPATOS.length | 0, casco: 0, gafas: r() < .15 ? 1 : 0, barba: r() < .2 ? 1 : 0, estatura: .9 + r() * .2 }); },
   /* ---------- pose: articulaciones en metros, de lado (x adelante, z arriba), con la cadera sobre el suelo ----------
-     estado: 'quieto' | 'camina' | 'corre' | 'pedalea' | 'impulsa' | 'patina' | 'tabla' | 'sentado' | 'salta' | 'cae'
+     estado: 'quieto' | 'camina' | 'corre' | 'pedalea' | 'impulsa' | 'patina' | 'tabla' | 'sentado' | 'salta' | 'cae' | 'nada' | 'bucea'
      fase: ciclo del paso (rad) · v: velocidad (m/s) · alto: estatura (m) */
   pose(estado, fase = 0, o = {}) {
     const H = o.alto || 1.72, k = H / 1.72, s = Math.sin(fase), c = Math.cos(fase), J = {};
@@ -2143,6 +2147,9 @@ const Personaje = {
       case 'sentado': { cad = [-.05, .62]; inc = .1; pies = [[.45, .12], [.4, .12]]; break; }
       case 'salta': { cad = [0, 1.0]; inc = .2; pies = [[.2, .55], [-.15, .5]]; break; }
       case 'cae': { cad = [0, .3]; inc = 1.3; pies = [[.6, .05], [.5, .1]]; break; }
+      /* en el agua: el cuerpo casi horizontal, patada que alterna (crol) o que abre y cierra (bucear, como la rana) */
+      case 'nada': { cad = [-.15, .5]; inc = 1.32; pies = [[-.95, .5 + s * .14], [-.95, .5 - s * .14]]; break; }
+      case 'bucea': { cad = [-.1, .5]; inc = 1.45; pies = [[-.9 + Math.abs(s) * .15, .5 + .16 * c], [-.9 + Math.abs(s) * .15, .5 - .16 * c]]; break; }
       default: { pies = [[.08, 0], [-.08, 0]]; }
     }
     if (o.z) cad = [cad[0], cad[1] + o.z];
@@ -2153,6 +2160,8 @@ const Personaje = {
     /* brazos: al manubrio si va en algo con manubrio; si no, se balancean al paso */
     let mI, mD;
     if (o.manubrio) { mI = mD = [o.manubrio[0], o.manubrio[1] + (o.z || 0)]; }
+    else if (estado === 'nada') { mI = [pecho[0] + .1 + Math.cos(fase) * .5, pecho[1] + Math.sin(fase) * .35]; mD = [pecho[0] + .1 - Math.cos(fase) * .5, pecho[1] - Math.sin(fase) * .35]; }   // brazadas de crol
+    else if (estado === 'bucea') { const e = (Math.sin(fase) + 1) / 2; mI = [pecho[0] + .55 - e * .5, pecho[1] + .18 * e]; mD = [pecho[0] + .55 - e * .5, pecho[1] - .18 * e]; }   // brazada de rana
     else { const b = estado === 'corre' ? .5 : estado === 'camina' ? .28 : estado === 'patina' ? .4 : .08; mI = [pecho[0] - s * b, pecho[1] - .5 + Math.abs(s) * .05]; mD = [pecho[0] + s * b, pecho[1] - .5 + Math.abs(c) * .05]; if (estado === 'corre') { mI[1] += .12; mD[1] += .12; } }
     const codo = (m, sg) => { const mx = (pecho[0] + m[0]) / 2, mz = (pecho[1] + m[1]) / 2, dx = m[0] - pecho[0], dz = m[1] - pecho[1], L = Math.hypot(dx, dz) || 1, a = .3, h = Math.sqrt(Math.max(0, a * a - (L / 2) ** 2)); return [mx + dz / L * h * sg, mz - dx / L * h * sg]; };
     Object.assign(J, { cadera: P(...cad), pecho: P(...pecho), cabeza: P(...cabeza), pieI: P(...pI), pieD: P(...pD), rodI: P(...rod(pI, 1)), rodD: P(...rod(pD, 1)), manoI: P(...mI), manoD: P(...mD), codoI: P(...codo(mI, -1)), codoD: P(...codo(mD, -1)), inc, estado, radioCabeza: cab * k });
@@ -2289,7 +2298,19 @@ class Cuerpo {
     this.mundo = mundo; this.x = op.x || 0; this.y = op.y || 0; this.a = op.a || 0; this.v = 0; this.z = 0; this.vz = 0; this.enAire = false;
     this.veh = Vehiculos.get(op.veh || 'pie'); this.corriendo = false; this.fase = 0; this.paso = null; this.zPaso = 0; this.giroV = 0; this.choque = 0; this.pend = 0; this.tt = 0;
     this.chocaEdificios = op.chocaEdificios !== false; this.escala = op.escala || 1; this.eventos = [];
+    /* agua (2.4): aire de los pulmones (0–1), buceo, vehículo que quedó parqueado en la orilla y bajarse solo al empujar hacia el agua */
+    this.aire = 1; this.buceando = false; this.estacionado = null; this.empujaAgua = 0; this.bajarseEnAgua = op.bajarseEnAgua !== false; this.pulmones = op.pulmones || 35;
   }
+  /* ---------- entrar y salir del agua ---------- */
+  /* se baja del vehículo y lo deja parqueado donde está (en la orilla, si iba hacia el agua) */
+  bajarse(motivo = '') { if (this.veh.id === 'pie') return null; const e = { veh: this.veh.id, x: this.x, y: this.y, a: this.a, motivo }; this.estacionado = e; this.setVeh('pie'); this.v = Math.min(Math.abs(this.v), 1.2); this.eventos.push('bajarse'); MC.emit('bajarse', { cuerpo: this, estacionado: e }); return e; }
+  /* vuelve al vehículo parqueado si está cerca (r metros) */
+  puedeMontar(r = 3) { const e = this.estacionado; return !!e && this.veh.id === 'pie' && !this.nadando && Math.hypot(e.x - this.x, e.y - this.y) <= r; }
+  montar(r = 3) { if (!this.puedeMontar(r)) return false; const e = this.estacionado; this.x = e.x; this.y = e.y; this.a = e.a; this.z = 0; this.setVeh(e.veh); this.estacionado = null; this.eventos.push('montar'); MC.emit('montar', { cuerpo: this }); return true; }
+  /* subirse a una lancha en el agua honda más cercana (r m); lo que traía queda parqueado */
+  embarcar(id = 'lancha', r = 30) { const w = Terreno.aguaHonda(this.mundo, this.x, this.y, r, .8); if (!w) return false; if (this.veh.id !== 'pie') this.bajarse('embarcar'); this.x = w.x; this.y = w.y; this.z = 0; this.setVeh(id); this.eventos.push('embarca'); MC.emit('embarcar', { cuerpo: this }); return true; }
+  /* bajarse de la lancha a la tierra firme más cercana (r m); la lancha queda amarrada donde estaba */
+  desembarcar(r = 14) { if (this.veh.clase !== 'agua') return false; const t = Terreno.tierraFirme(this.mundo, this.x, this.y, r); if (!t) return false; const e = { veh: this.veh.id, x: this.x, y: this.y, a: this.a, motivo: 'amarrada' }; this.setVeh('pie'); this.x = t.x; this.y = t.y; this.estacionado = e; this.eventos.push('desembarca'); MC.emit('desembarcar', { cuerpo: this }); return true; }
   setVeh(id) { this.veh = Vehiculos.get(id); this.v = Math.min(this.v, this.veh.vmax); if (this.veh.clase !== 'aire') { this.enAire = this.z > .05; } MC.emit('cambiaVehiculo', this); }
   /* altura absoluta (m s. n. m.) de los pies: terreno + tablero del puente + salto o vuelo */
   get alturaSuelo() { return this.mundo.cota(this.x, this.y) + this.zPaso; }
@@ -2302,7 +2323,7 @@ class Cuerpo {
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
     /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
-    const T = Terreno.paso(this, x, y); if (!T.ok) return this._bloquea(T.motivo);
+    const T = Terreno.paso(this, x, y); if (!T.ok) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }
     if (this.chocaEdificios && V.clase !== 'agua') {
       /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
          y también los edificios de los sitios y las partes bajas de los emblemáticos */
@@ -2339,6 +2360,7 @@ class Cuerpo {
     if (V.clase === 'pie' && !E.dir) this.a += giro * V.giro[0] * dt;
     /* vuelo */
     if (V.clase === 'aire') this._vuelo(dt, E);
+    else if (this.nadando && V.clase === 'pie') this._nadar(dt, E);
     else {
       /* salto con «tiempo de coyote» (se puede saltar un instante después de dejar el borde) y con memoria del botón
          (si se oprime un poco antes de caer, salta al tocar el piso): así se siente justo, como en los buenos plataformeros */
@@ -2356,7 +2378,11 @@ class Cuerpo {
     this.choque = Math.max(0, this.choque - dt);
     this._niveles(dt);
     this.fase += Math.abs(this.v) * dt * (V.clase === 'pie' ? (this.corriendo ? 2.4 : 3.2) : V.cuerpo === 'pedalea' ? 1.6 : 1.2);
-    this.estado = Personaje.estadoPara(V, Math.abs(this.v), this.enAire && V.clase !== 'aire');
+    this.estado = this.nadando && V.clase === 'pie' ? (this.buceando ? 'bucea' : 'nada') : Personaje.estadoPara(V, Math.abs(this.v), this.enAire && V.clase !== 'aire');
+    if (!this.nadando) { this.buceando = false; this.aire = Math.min(1, this.aire + dt / 4); }
+    /* empujar hacia el agua honda con un vehículo: se baja solo y deja el vehículo en la orilla (y entra nadando) */
+    const quiere = (E.dir && E.dir.m > .3) || (E.acel || 0) > .3; if (this.bloqueoAgua && quiere && V.clase !== 'pie' && V.clase !== 'agua' && V.clase !== 'aire') this.empujaAgua += dt; else this.empujaAgua = Math.max(0, this.empujaAgua - dt * 2);
+    this.bloqueoAgua = false; if (this.bajarseEnAgua && this.empujaAgua > .6) { this.empujaAgua = 0; this.bajarse('agua'); }
     return this;
   }
   _vuelo(dt, E) {
@@ -2394,7 +2420,18 @@ class Cuerpo {
     if (out.some(S => S.P && S.P.tipo === 'tunel')) out.shift();   // dentro del deprimido no hay piso arriba
     return out;
   }
+  /* nadar: «baja» bucea, «sube» o «salto» sale a respirar; quieto, flota despacio hacia arriba. Bajo el agua el aire se gasta
+     (unos 35 s, como una persona que no entrena apnea) y arriba se recupera. Sin aire, sube sola. */
+  _nadar(dt, E) {
+    const ag = Terreno.aguaEn(this.mundo, this.x, this.y), fondo = ag ? -Math.max(0, Math.min(12, ag.prof - .5)) : 0, q = this.sinAire ? 1 : E.baja ? -1 : (E.sube || E.salto) ? 1 : 0;
+    this.vz = lerp(this.vz, q * 1.2 + (q === 0 && this.z < 0 ? .3 : 0), Math.min(1, dt * 3)); this.z = clamp(this.z + this.vz * dt, fondo, 0); this.enAire = false;
+    this.buceando = this.z < -.6;
+    if (this.buceando) { this.aire = Math.max(0, this.aire - dt / this.pulmones); if (this.aire <= 0 && !this.sinAire) { this.sinAire = true; this.eventos.push('sinAire'); MC.emit('sinAire', this); } }
+    else { this.aire = Math.min(1, this.aire + dt / 4); if (this.z > -.05 && this.aire > .3) this.sinAire = false; }   /* sin aire: arriba hasta tomar algo de aire */
+  }
   _niveles(dt) {
+    if (this.nadando && !this.paso) { this.zPaso = 0; return; }   // en el agua manda _nadar (la cota del agua es su superficie)
+    if (this.z < 0 && !this.enAire) this.z = 0;
     const pie = this.zPaso + this.z, esc = this.escalonDin(), SS = this.superficies(this.x, this.y); let apoyo = null;
     for (const S of SS) if (S.h <= pie + esc && (!apoyo || S.h > apoyo.h)) apoyo = S;
     if (!apoyo) apoyo = SS.reduce((a, b) => b.h < a.h ? b : a, SS[0]);   // nada a la mano: lo más bajo
@@ -3177,6 +3214,7 @@ const Vista2D = {
     for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
     for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
     if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
+    const est = E.jugador && E.jugador.cuerpo && E.jugador.cuerpo.estacionado; if (est && est.x >= x0 - 20 && est.x <= x1 + 20 && est.y >= y0 - 20 && est.y <= y1 + 20) objs.push({ y: dy(est.x, est.y), t: 9, q: est });
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
     objs.sort((p, q) => p.y - q.y);
     /* rayos X: lo que queda delante del jugador y lo tapa se dibuja transparente */
@@ -3185,7 +3223,7 @@ const Vista2D = {
     for (const o of objs) {
       const rx = Jc && modo !== 'cenital' && (o.t === 0 || o.t === 4) && o.y > jKey && tapa(o.q); if (rx) g.globalAlpha = .28;
       if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
-      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces); else if (o.t === 8) Naturaleza.objeto(dibCtx, o.q);
+      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces); else if (o.t === 8) Naturaleza.objeto(dibCtx, o.q); else if (o.t === 9) this.estacionado(dibCtx, o.q);
       if (rx) g.globalAlpha = 1;
     }
     Sombras.luces(g, luces, noche);   // los charcos de luz de los postes, encima de todo (como luz que se suma)
@@ -3259,14 +3297,28 @@ const Vista2D = {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
       if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
       g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
-      if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } }
+      if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } if (C.buceando) { g.fillStyle = 'rgba(30,95,140,.55)'; g.beginPath(); g.arc(x, y, z * .9, 0, TAU); g.fill(); this.burbujas(g, x, y - z * .2, y + z * .4, z * 1.5, D.E.t || 0); } }
       return;
     }
     const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
     const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
     const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir);
     /* en el agua: el agua tapa las piernas (vadeando) o casi todo el cuerpo (nadando), con su onda */
-    if (C.nadando || C.vadeando) { const hA = C.nadando ? 1.25 : .55, [, ya] = pr(C.x, C.y, (C.zPaso || 0) + hA); g.fillStyle = 'rgba(52,120,160,.62)'; g.fillRect(x - esc * .75, ya, esc * 1.5, y - ya + 1); g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = Math.max(1, esc * .06); g.beginPath(); g.ellipse(x, ya, esc * (.6 + .15 * Math.sin((D.E.t || 0) * 3)), esc * .12, 0, 0, TAU); g.stroke(); }
+    if (C.nadando || C.vadeando) {
+      /* la superficie del agua tapa lo que está debajo: las piernas al vadear, el cuerpo al nadar y todo al bucear */
+      const sup = pr(C.x, C.y, (C.zPaso || 0) + (C.buceando ? 0 : C.nadando ? .58 : .55))[1], bajo = y + esc * (C.buceando ? .9 : .1), t = D.E.t || 0;
+      g.fillStyle = C.buceando ? 'rgba(30,95,140,.72)' : 'rgba(52,120,160,.62)'; g.fillRect(x - esc * 1.1, sup, esc * 2.2, Math.max(1, bajo - sup));
+      g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = Math.max(1, esc * .06); g.beginPath(); g.ellipse(x, sup, esc * (.7 + .15 * Math.sin(t * 3)), esc * .12, 0, 0, TAU); g.stroke();
+      if (C.buceando) this.burbujas(g, x, sup, y, esc, t);
+    }
+  },
+  /* burbujas que suben desde quien bucea hasta la superficie */
+  burbujas(g, x, ySup, yBase, esc, t) { g.fillStyle = 'rgba(235,248,255,.85)'; for (let i = 0; i < 6; i++) { const f = ((t * .7 + i / 6) % 1), yy = lerp(yBase, ySup, f), xx = x + Math.sin(t * 2 + i * 1.7) * esc * .2 + esc * .15; g.beginPath(); g.arc(xx, yy, Math.max(1, esc * (.05 + .03 * (i % 3))), 0, TAU); g.fill(); } },
+  /* el vehículo que quedó parqueado (en la orilla o amarrado en el agua) */
+  estacionado(D, e) {
+    const { g, pr, z, P, modo } = D, V = Vehiculos.get(e.veh), [x, y] = pr(e.x, e.y, 0);
+    if (modo === 'cenital') { g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
+    const vl = MC.arte.f('vehiculoLado'); Sombras.contacto(g, x, y, z * (V.largo || 1.6) * .5, z * .25, .25); if (vl) vl(g, V, x, y, Math.max(4, z * P.hk * 1.1), Math.cos(e.a + P.yaw) >= 0 ? 1 : -1, null);
   },
   cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
   etiquetas(D) {
@@ -3884,6 +3936,8 @@ class Vistas {
     } catch (e) { MC.falla('vista ' + v.id, e); }
     E.camara.zoom = zoomReal;
     if (px) { g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._buf, 0, 0, W, H); g.restore(); }
+    /* bajo el agua: todo se tiñe de azul (más oscuro mientras más hondo), con rayos de luz que se mueven */
+    const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);
     /* fundido desde la vista anterior */
     if (this.fundido && this.fundido.cv) { this.fundido.t += dt / .55; const a = 1 - suave(this.fundido.t); if (a <= 0) this.fundido = null; else { g.save(); g.globalAlpha = a; g.drawImage(this.fundido.cv, 0, 0, W, H); g.restore(); } }
     this._ultimo = g.canvas;
@@ -3892,6 +3946,12 @@ class Vistas {
     const ms = MC.ahora() - t0; this.ms = this.ms * .92 + ms * .08; if (v.tipo === 'gl' && this.auto) this.res.medir(ms);
     if (this.auto) { if (this.ms > 26 && this.calidad > .35) this.calidad = Math.max(.35, this.calidad - .01); else if (this.ms < 11 && this.calidad < 1) this.calidad = Math.min(1, this.calidad + .004); }
     return ms;
+  }
+  _bajoAgua(g, W, H, hondo, t) {
+    g.save(); const a = clamp(.28 + hondo * .05, .28, .7), gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(40,120,160,' + (a * .8).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(6,40,70,' + a.toFixed(3) + ')'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(160,220,255,' + (.12 / (1 + hondo * .2)).toFixed(3) + ')'; g.lineWidth = Math.max(6, W * .02);
+    for (let i = 0; i < 6; i++) { const x0 = ((i / 6 + Math.sin(t * .2 + i) * .05) % 1) * W; g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0 - W * .15 + Math.sin(t * .5 + i) * 20, H); g.stroke(); }
+    g.restore();
   }
   _clima2D(g, W, H, E, gl) {
     const Cl = E.clima; if (!Cl) return; const t = E.t || 0;
@@ -4568,8 +4628,9 @@ const UI = {
       zonaLibre() { const W = innerWidth, H = innerHeight, v = H > W; return v ? { x0: W * .16, y0: H * .24, x1: W * .84, y1: H * .68 } : { x0: W * .26, y0: H * .2, x1: W * .74, y1: H * .74 }; },
       boton({ id: bid, icono = '', texto = '', al, padre }) { const b = document.createElement('button'); b.className = 'p'; b.innerHTML = icono + (texto ? '<small>' + texto + '</small>' : ''); b.setAttribute('aria-label', texto || bid); b.onclick = e => { e.stopPropagation(); al && al(e); }; (padre || botones).appendChild(b); Bs[bid] = b; return b; },
       velocidad(ms, extra = '') { vel.innerHTML = '<b>' + Math.round(Math.abs(ms) * 3.6) + '</b> km/h ' + extra; },
-      barra(clave, etiqueta, v) { if (!Ba[clave]) { const w = div('', barras); w.innerHTML = '<small>' + etiqueta + '</small><div class="barra"><i></i></div>'; Ba[clave] = w.querySelector('i'); } Ba[clave].style.width = Math.round(clamp(v, 0, 1) * 100) + '%'; },
+      barra(clave, etiqueta, v) { if (!Ba[clave]) { const w = div('', barras); w.innerHTML = '<small>' + etiqueta + '</small><div class="barra"><i></i></div>'; Ba[clave] = w.querySelector('i'); Ba[clave]._w = w; } Ba[clave].style.width = Math.round(clamp(v, 0, 1) * 100) + '%'; },
       /* avisos en cola: uno a la vez; si llega uno igual, no se repite */
+      barraVisible(clave, v) { if (Ba[clave]) Ba[clave]._w.hidden = !v; },
       aviso(texto, ms = 2200) { const C = ui._cola || (ui._cola = []); if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms]); if (!ui._av) ui._sig(); },
       _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; return; } ui._av = true; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
       mision(texto) { mision.hidden = !texto; mision.innerHTML = texto || ''; },
@@ -4859,7 +4920,7 @@ class Ocurrencias {
     this.t += dt; const C = o.cuerpo, M = o.mundo; if (!C || !M) return;
     if (![C.x, C.y, C.v, C.z, C.a].every(Number.isFinite)) return this._volver(C, 'numero_invalido');
     if (!M.dentro(C.x, C.y)) return this._volver(C, 'fuera_del_mundo');
-    if (C.z < -.5 && !(C.paso && C.paso.tipo === 'tunel')) { C.z = 0; this.anotar('bajo_el_piso', { arreglo: 'subió al piso' }, C); }
+    if (C.z < -.5 && !C.nadando && !(C.paso && C.paso.tipo === 'tunel')) { C.z = 0; this.anotar('bajo_el_piso', { arreglo: 'subió al piso' }, C); }
     const vmax = C.vmax ? C.vmax() : 30; if (Math.abs(C.v) > vmax * 2.5 + 5) { C.v = Math.sign(C.v) * vmax; this.anotar('velocidad_imposible', { arreglo: 'limitada' }, C); }
     const libre = C.paso || C.veh.clase === 'aire' || C.puede(C.x, C.y); this.dentro = libre ? 0 : this.dentro + dt; if (this.dentro > .5) { this.dentro = 0; this._volver(C, 'atrapado'); }
     const quiere = o.entrada && ((o.entrada.stick && o.entrada.stick.m > .5) || Math.abs(o.entrada.acel || 0) > .5); if (quiere && Math.abs(C.v) < .15) this.quieto += dt; else this.quieto = 0; if (this.quieto > 4) { this.quieto = 0; this.anotar('atascado', { sugerencia: 'botón «salir de aquí»' }, C); MC.emit('atascado', C); }

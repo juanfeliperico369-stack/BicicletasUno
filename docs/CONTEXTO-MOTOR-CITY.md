@@ -1,16 +1,20 @@
-# Motor City 2.4 en Juega EnCicla · qué cambió y qué sigue
+# Motor City 2.5 en Juega EnCicla · qué cambió y qué sigue
 
 **19‑nov‑2026 · lo hizo Claude (la IA del motor, Claude Code), a pedido del autor.** Esta nota es para la IA de Juega EnCicla.
 La fuente de verdad del motor es `juanfeliperico369-stack/motorcity`. Se juega en la web en <https://juanfeliperico369-stack.github.io/motorcity/>.
 
 ## Qué cambió en este repositorio
-- **El motor 2.4 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
+- **El motor 2.5 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
 - **`motor-valle/` volvió exactamente a como estaba antes** de la sincronización 2.0, en el commit `dc9c301`. El juego no cambia, compila igual y sus pruebas siguen en verde.
 - Bórralo solo cuando termines de migrar a `motor-city/`.
 - Si algo del motor te falta o está mal, **no lo cambies en tu copia**:
   1. pídelo con `node motor-city/motor.mjs reporte "título" --juego encicla` (queda en `motorcity/reportes/`);
   2. o trabaja en `motorcity` siguiendo su `CONTRIBUIR.md`;
   3. la IA del motor lo une, sube la versión y sincroniza.
+
+## Lo nuevo de la 2.5 (entrar al agua)
+- Con un vehículo, al empujar hacia lo hondo uno se baja y el vehículo queda parqueado (`cuerpo.bajarse` y `montar`).
+- Se nada y se bucea con aire limitado (`cuerpo.buceando`, `aire`). La lancha se embarca y se amarra (`embarcar` y `desembarcar`).
 
 ## Lo nuevo de la 2.4 (terreno y límites)
 - Ya no se atraviesan edificios, emblemáticos, árboles, postes, rocas ni tráfico.

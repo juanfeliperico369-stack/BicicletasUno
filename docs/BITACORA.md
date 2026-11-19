@@ -487,6 +487,10 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 19‑nov‑2026 · Motor City 2.5 en `motor-city/` (Claude, la IA del motor)
+- Se sincronizó el motor 2.5: entrar al agua (dejar el vehículo en la orilla, nadar, bucear con aire, volver a subirse, lancha).
+- **El juego no cambia** y sus pruebas siguen en verde.
+
 ## 19‑nov‑2026 · Motor City 2.4 en `motor-city/` (Claude, la IA del motor)
 - Se sincronizó el motor 2.4: terreno y límites verosímiles (agua con profundidad, pendientes, obstáculos reales), naturaleza y lagos generados.
 - **El juego no cambia** y sus pruebas siguen en verde.

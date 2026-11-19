@@ -14,7 +14,19 @@ class Cuerpo {
     this.mundo = mundo; this.x = op.x || 0; this.y = op.y || 0; this.a = op.a || 0; this.v = 0; this.z = 0; this.vz = 0; this.enAire = false;
     this.veh = Vehiculos.get(op.veh || 'pie'); this.corriendo = false; this.fase = 0; this.paso = null; this.zPaso = 0; this.giroV = 0; this.choque = 0; this.pend = 0; this.tt = 0;
     this.chocaEdificios = op.chocaEdificios !== false; this.escala = op.escala || 1; this.eventos = [];
+    /* agua (2.4): aire de los pulmones (0–1), buceo, vehículo que quedó parqueado en la orilla y bajarse solo al empujar hacia el agua */
+    this.aire = 1; this.buceando = false; this.estacionado = null; this.empujaAgua = 0; this.bajarseEnAgua = op.bajarseEnAgua !== false; this.pulmones = op.pulmones || 35;
   }
+  /* ---------- entrar y salir del agua ---------- */
+  /* se baja del vehículo y lo deja parqueado donde está (en la orilla, si iba hacia el agua) */
+  bajarse(motivo = '') { if (this.veh.id === 'pie') return null; const e = { veh: this.veh.id, x: this.x, y: this.y, a: this.a, motivo }; this.estacionado = e; this.setVeh('pie'); this.v = Math.min(Math.abs(this.v), 1.2); this.eventos.push('bajarse'); MC.emit('bajarse', { cuerpo: this, estacionado: e }); return e; }
+  /* vuelve al vehículo parqueado si está cerca (r metros) */
+  puedeMontar(r = 3) { const e = this.estacionado; return !!e && this.veh.id === 'pie' && !this.nadando && Math.hypot(e.x - this.x, e.y - this.y) <= r; }
+  montar(r = 3) { if (!this.puedeMontar(r)) return false; const e = this.estacionado; this.x = e.x; this.y = e.y; this.a = e.a; this.z = 0; this.setVeh(e.veh); this.estacionado = null; this.eventos.push('montar'); MC.emit('montar', { cuerpo: this }); return true; }
+  /* subirse a una lancha en el agua honda más cercana (r m); lo que traía queda parqueado */
+  embarcar(id = 'lancha', r = 30) { const w = Terreno.aguaHonda(this.mundo, this.x, this.y, r, .8); if (!w) return false; if (this.veh.id !== 'pie') this.bajarse('embarcar'); this.x = w.x; this.y = w.y; this.z = 0; this.setVeh(id); this.eventos.push('embarca'); MC.emit('embarcar', { cuerpo: this }); return true; }
+  /* bajarse de la lancha a la tierra firme más cercana (r m); la lancha queda amarrada donde estaba */
+  desembarcar(r = 14) { if (this.veh.clase !== 'agua') return false; const t = Terreno.tierraFirme(this.mundo, this.x, this.y, r); if (!t) return false; const e = { veh: this.veh.id, x: this.x, y: this.y, a: this.a, motivo: 'amarrada' }; this.setVeh('pie'); this.x = t.x; this.y = t.y; this.estacionado = e; this.eventos.push('desembarca'); MC.emit('desembarcar', { cuerpo: this }); return true; }
   setVeh(id) { this.veh = Vehiculos.get(id); this.v = Math.min(this.v, this.veh.vmax); if (this.veh.clase !== 'aire') { this.enAire = this.z > .05; } MC.emit('cambiaVehiculo', this); }
   /* altura absoluta (m s. n. m.) de los pies: terreno + tablero del puente + salto o vuelo */
   get alturaSuelo() { return this.mundo.cota(this.x, this.y) + this.zPaso; }
@@ -27,7 +39,7 @@ class Cuerpo {
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
     /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
-    const T = Terreno.paso(this, x, y); if (!T.ok) return this._bloquea(T.motivo);
+    const T = Terreno.paso(this, x, y); if (!T.ok) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }
     if (this.chocaEdificios && V.clase !== 'agua') {
       /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
          y también los edificios de los sitios y las partes bajas de los emblemáticos */
@@ -64,6 +76,7 @@ class Cuerpo {
     if (V.clase === 'pie' && !E.dir) this.a += giro * V.giro[0] * dt;
     /* vuelo */
     if (V.clase === 'aire') this._vuelo(dt, E);
+    else if (this.nadando && V.clase === 'pie') this._nadar(dt, E);
     else {
       /* salto con «tiempo de coyote» (se puede saltar un instante después de dejar el borde) y con memoria del botón
          (si se oprime un poco antes de caer, salta al tocar el piso): así se siente justo, como en los buenos plataformeros */
@@ -81,7 +94,11 @@ class Cuerpo {
     this.choque = Math.max(0, this.choque - dt);
     this._niveles(dt);
     this.fase += Math.abs(this.v) * dt * (V.clase === 'pie' ? (this.corriendo ? 2.4 : 3.2) : V.cuerpo === 'pedalea' ? 1.6 : 1.2);
-    this.estado = Personaje.estadoPara(V, Math.abs(this.v), this.enAire && V.clase !== 'aire');
+    this.estado = this.nadando && V.clase === 'pie' ? (this.buceando ? 'bucea' : 'nada') : Personaje.estadoPara(V, Math.abs(this.v), this.enAire && V.clase !== 'aire');
+    if (!this.nadando) { this.buceando = false; this.aire = Math.min(1, this.aire + dt / 4); }
+    /* empujar hacia el agua honda con un vehículo: se baja solo y deja el vehículo en la orilla (y entra nadando) */
+    const quiere = (E.dir && E.dir.m > .3) || (E.acel || 0) > .3; if (this.bloqueoAgua && quiere && V.clase !== 'pie' && V.clase !== 'agua' && V.clase !== 'aire') this.empujaAgua += dt; else this.empujaAgua = Math.max(0, this.empujaAgua - dt * 2);
+    this.bloqueoAgua = false; if (this.bajarseEnAgua && this.empujaAgua > .6) { this.empujaAgua = 0; this.bajarse('agua'); }
     return this;
   }
   _vuelo(dt, E) {
@@ -119,7 +136,18 @@ class Cuerpo {
     if (out.some(S => S.P && S.P.tipo === 'tunel')) out.shift();   // dentro del deprimido no hay piso arriba
     return out;
   }
+  /* nadar: «baja» bucea, «sube» o «salto» sale a respirar; quieto, flota despacio hacia arriba. Bajo el agua el aire se gasta
+     (unos 35 s, como una persona que no entrena apnea) y arriba se recupera. Sin aire, sube sola. */
+  _nadar(dt, E) {
+    const ag = Terreno.aguaEn(this.mundo, this.x, this.y), fondo = ag ? -Math.max(0, Math.min(12, ag.prof - .5)) : 0, q = this.sinAire ? 1 : E.baja ? -1 : (E.sube || E.salto) ? 1 : 0;
+    this.vz = lerp(this.vz, q * 1.2 + (q === 0 && this.z < 0 ? .3 : 0), Math.min(1, dt * 3)); this.z = clamp(this.z + this.vz * dt, fondo, 0); this.enAire = false;
+    this.buceando = this.z < -.6;
+    if (this.buceando) { this.aire = Math.max(0, this.aire - dt / this.pulmones); if (this.aire <= 0 && !this.sinAire) { this.sinAire = true; this.eventos.push('sinAire'); MC.emit('sinAire', this); } }
+    else { this.aire = Math.min(1, this.aire + dt / 4); if (this.z > -.05 && this.aire > .3) this.sinAire = false; }   /* sin aire: arriba hasta tomar algo de aire */
+  }
   _niveles(dt) {
+    if (this.nadando && !this.paso) { this.zPaso = 0; return; }   // en el agua manda _nadar (la cota del agua es su superficie)
+    if (this.z < 0 && !this.enAire) this.z = 0;
     const pie = this.zPaso + this.z, esc = this.escalonDin(), SS = this.superficies(this.x, this.y); let apoyo = null;
     for (const S of SS) if (S.h <= pie + esc && (!apoyo || S.h > apoyo.h)) apoyo = S;
     if (!apoyo) apoyo = SS.reduce((a, b) => b.h < a.h ? b : a, SS[0]);   // nada a la mano: lo más bajo

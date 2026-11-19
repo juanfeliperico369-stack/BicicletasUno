@@ -58,6 +58,8 @@ class Vistas {
     } catch (e) { MC.falla('vista ' + v.id, e); }
     E.camara.zoom = zoomReal;
     if (px) { g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._buf, 0, 0, W, H); g.restore(); }
+    /* bajo el agua: todo se tiñe de azul (más oscuro mientras más hondo), con rayos de luz que se mueven */
+    const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);
     /* fundido desde la vista anterior */
     if (this.fundido && this.fundido.cv) { this.fundido.t += dt / .55; const a = 1 - suave(this.fundido.t); if (a <= 0) this.fundido = null; else { g.save(); g.globalAlpha = a; g.drawImage(this.fundido.cv, 0, 0, W, H); g.restore(); } }
     this._ultimo = g.canvas;
@@ -66,6 +68,12 @@ class Vistas {
     const ms = MC.ahora() - t0; this.ms = this.ms * .92 + ms * .08; if (v.tipo === 'gl' && this.auto) this.res.medir(ms);
     if (this.auto) { if (this.ms > 26 && this.calidad > .35) this.calidad = Math.max(.35, this.calidad - .01); else if (this.ms < 11 && this.calidad < 1) this.calidad = Math.min(1, this.calidad + .004); }
     return ms;
+  }
+  _bajoAgua(g, W, H, hondo, t) {
+    g.save(); const a = clamp(.28 + hondo * .05, .28, .7), gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(40,120,160,' + (a * .8).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(6,40,70,' + a.toFixed(3) + ')'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(160,220,255,' + (.12 / (1 + hondo * .2)).toFixed(3) + ')'; g.lineWidth = Math.max(6, W * .02);
+    for (let i = 0; i < 6; i++) { const x0 = ((i / 6 + Math.sin(t * .2 + i) * .05) % 1) * W; g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0 - W * .15 + Math.sin(t * .5 + i) * 20, H); g.stroke(); }
+    g.restore();
   }
   _clima2D(g, W, H, E, gl) {
     const Cl = E.clima; if (!Cl) return; const t = E.t || 0;

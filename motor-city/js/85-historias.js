@@ -80,7 +80,7 @@ class Ocurrencias {
     this.t += dt; const C = o.cuerpo, M = o.mundo; if (!C || !M) return;
     if (![C.x, C.y, C.v, C.z, C.a].every(Number.isFinite)) return this._volver(C, 'numero_invalido');
     if (!M.dentro(C.x, C.y)) return this._volver(C, 'fuera_del_mundo');
-    if (C.z < -.5 && !(C.paso && C.paso.tipo === 'tunel')) { C.z = 0; this.anotar('bajo_el_piso', { arreglo: 'subió al piso' }, C); }
+    if (C.z < -.5 && !C.nadando && !(C.paso && C.paso.tipo === 'tunel')) { C.z = 0; this.anotar('bajo_el_piso', { arreglo: 'subió al piso' }, C); }
     const vmax = C.vmax ? C.vmax() : 30; if (Math.abs(C.v) > vmax * 2.5 + 5) { C.v = Math.sign(C.v) * vmax; this.anotar('velocidad_imposible', { arreglo: 'limitada' }, C); }
     const libre = C.paso || C.veh.clase === 'aire' || C.puede(C.x, C.y); this.dentro = libre ? 0 : this.dentro + dt; if (this.dentro > .5) { this.dentro = 0; this._volver(C, 'atrapado'); }
     const quiere = o.entrada && ((o.entrada.stick && o.entrada.stick.m > .5) || Math.abs(o.entrada.acel || 0) > .5); if (quiere && Math.abs(C.v) < .15) this.quieto += dt; else this.quieto = 0; if (this.quieto > 4) { this.quieto = 0; this.anotar('atascado', { sugerencia: 'botón «salir de aquí»' }, C); MC.emit('atascado', C); }

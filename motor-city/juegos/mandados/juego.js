@@ -15,7 +15,7 @@
    ===================================================================== */
 const GUARDA = 'motorcity.mandados.v1', leerG = () => { try { return JSON.parse(localStorage.getItem(GUARDA) || '{}'); } catch (e) { return {}; } }, escribirG = o => { try { localStorage.setItem(GUARDA, JSON.stringify(Object.assign(leerG(), o))); } catch (e) { /* sin almacenamiento */ } };
 const $ = s => document.querySelector(s), cop = c => MC.Dinero.formato(c, 'COP');
-const PRECIOS = { agua: 250000, gasolinaL: 430000, scooter: 4000000, moto: 12000000, carro: 30000000 };   // centavos (valores de juego; la gasolina, cerca del precio de referencia por litro)
+const PRECIOS = { lancha: 1500000, agua: 250000, gasolinaL: 430000, scooter: 4000000, moto: 12000000, carro: 30000000 };   // centavos (valores de juego; la gasolina, cerca del precio de referencia por litro)
 let mundo = null, generado = false;
 async function abrir(gen) {
   $('#estado').textContent = gen ? 'Generando un mundo nuevo…' : 'Abriendo Guatapé…'; await new Promise(r => setTimeout(r, 30));
@@ -78,6 +78,15 @@ function jugar() {
   ui.boton({ id: 'casa', icono: '🏠', texto: 'Mi casa', al: () => casa() }); ui.boton({ id: 'ciudad', icono: '🏙️', texto: 'Ciudad', al: () => menuCiudad() }); ui.boton({ id: 'control', icono: '🎮', texto: 'Control', al: () => menuControl() });
   const bLugar = ui.boton({ id: 'lugar', icono: '🔧', texto: 'Lugar', al: () => menuLugar() }); bLugar.hidden = true;
   const bRescate = ui.boton({ id: 'rescate', icono: '🆘', texto: 'Salir de aquí', al: () => { ocu.rescatar(cuerpo, M); bRescate.hidden = true; } }); bRescate.hidden = true;
+  /* el agua (2.4): entrar (dejando el vehículo en la orilla), bucear, subir a respirar, volver al vehículo, lancha y tierra */
+  let bucear = false, subirT = 0;
+  const bAgua = ui.boton({ id: 'agua', icono: '🏊', texto: 'Al agua', al: () => { const w = MC.Terreno.aguaHonda(M, cuerpo.x, cuerpo.y, 8, .3); cuerpo.bajarse('agua'); if (w) { cuerpo.a = Math.atan2(w.y - cuerpo.y, w.x - cuerpo.x); } } }); bAgua.hidden = true;
+  const bBucear = ui.boton({ id: 'bucear', icono: '🤿', texto: 'Bucear', al: () => { bucear = true; subirT = 0; } }); bBucear.hidden = true;
+  const bSubir = ui.boton({ id: 'subir', icono: '⬆️', texto: 'Subir', al: () => { bucear = false; subirT = 2; } }); bSubir.hidden = true;
+  const bMontar = ui.boton({ id: 'montar', icono: '🚲', texto: 'Subirse', al: () => { if (cuerpo.montar(3.5)) ui.aviso('🚲 De nuevo en ' + cuerpo.veh.n); } }); bMontar.hidden = true;
+  const bTierra = ui.boton({ id: 'tierra', icono: '⚓', texto: 'A tierra', al: () => { if (cuerpo.desembarcar(16)) ui.aviso('⚓ La lancha queda amarrada aquí'); else ui.aviso('Acércate más a la orilla'); } }); bTierra.hidden = true;
+  MC.on('bajarse', ev => { if (ev.estacionado.motivo === 'agua') ui.aviso('🏊 Dejaste ' + MC.Vehiculos.get(ev.estacionado.veh).n.toLowerCase() + ' en la orilla. ¡Al agua!', 3000); });
+  MC.on('sinAire', () => { bucear = false; ui.aviso('😮‍💨 ¡Sin aire! Subes a respirar'); });
   const menuControl = () => ui.menu('Tipo de control', Object.entries(MC.Manejo.ESQUEMAS).filter(([id]) => ['joystick', 'un_pulgar', 'inclinacion', 'tocar_ir'].includes(id)).map(([id, Q]) => ({ id, texto: Q.icono + ' ' + Q.n + (esquema === id ? ' ✓' : '') })), id => { esquema = id; escribirG({ esquema }); ruta = null; if (id === 'inclinacion') MC.Manejo.activarInclinacion(); if (id === 'tocar_ir' && vistas.actual.id !== 'cenital') { iv = 0; ponVista('cenital'); } ui.aviso(MC.Manejo.ESQUEMAS[id].ayuda, 3500); });
   /* lugares jugables: talleres, tiendas, restaurantes, bibliotecas, parques… */
   let lugarCerca = null;
@@ -90,7 +99,10 @@ function jugar() {
       hogar = R.hogar; F.hidden = true; if (!generado) escribirG({ hogar: hogar.guardar() }); const q = { exacta: 'exacta', calle: 'sobre esa calle', lugar: 'cerca de ese lugar' }[R.ubicacion.calidad] || ''; ui.aviso('🏠 Tu casa: ' + M.lugarTexto(hogar.d.x, hogar.d.y) + ' (' + q + ')', 4000); }; };
   ui.capa.querySelector('[aria-label="Mi casa"]').addEventListener('contextmenu', e => { e.preventDefault(); pedirDireccion(); });
   ui.minimapa(vistas);
-  const menuVeh = () => ui.menu('Garaje', Object.entries(garaje).map(([id, G]) => ({ id, texto: G.n + (G.tiene ? '' : ' · ' + cop(G.precio)) + (cuerpo.veh.id === id ? ' ✓' : '') })), id => { const G = garaje[id]; if (!G.tiene) { if (!libro.mover('jugador', 'tienda', G.precio, 'Compra: ' + G.n)) return ui.aviso('Te faltan ' + cop(G.precio - libro.saldo('jugador'))); G.tiene = true; ui.aviso('🎉 Compraste ' + G.n); } cuerpo.setVeh(id); if (seguir) seguir.v = Math.min(seguir.v, cuerpo.vmax()); });
+  const menuVeh = () => ui.menu('Garaje', Object.entries(garaje).map(([id, G]) => ({ id, texto: G.n + (G.tiene ? '' : ' · ' + cop(G.precio)) + (cuerpo.veh.id === id ? ' ✓' : '') })).concat(MC.Terreno.aguaHonda(M, cuerpo.x, cuerpo.y, 30) ? [{ id: 'lancha', texto: '🚤 Lancha (alquiler) · ' + cop(PRECIOS.lancha) }] : []), id => {
+    if (cuerpo.nadando) return ui.aviso('Primero sal del agua');
+    if (id === 'lancha') { if (!libro.mover('jugador', 'muelle', PRECIOS.lancha, 'Alquiler de lancha')) return ui.aviso('No te alcanza para la lancha'); if (cuerpo.embarcar('lancha', 30)) ui.aviso('🚤 ¡A navegar! Para volver, «⚓ A tierra»'); return; }
+    if (cuerpo.veh.clase === 'agua') return ui.aviso('Primero baja a tierra (⚓)'); const G = garaje[id]; if (!G.tiene) { if (!libro.mover('jugador', 'tienda', G.precio, 'Compra: ' + G.n)) return ui.aviso('Te faltan ' + cop(G.precio - libro.saldo('jugador'))); G.tiene = true; ui.aviso('🎉 Compraste ' + G.n); } cuerpo.setVeh(id); if (seguir) seguir.v = Math.min(seguir.v, cuerpo.vmax()); });
   let tocando = null, temaI = 0; const TEMAS = [null, ...Object.keys(MC.Musica.CLASICOS)];
   const musica = () => { if (tocando) { MC.Musica.parar(); tocando = null; ui.aviso('🔇 Música apagada'); return; } temaI = (temaI + 1) % TEMAS.length; const A = MC.Musica.adaptar({ velocidad: Math.abs(cuerpo.v), hora: reloj.hora, clima }); tocando = MC.Musica.tocar({ estilo: A.estilo, tema: TEMAS[temaI], energia: A.energia, compases: 16, semilla: (Math.random() * 99) | 0 }); if (tocando) ui.aviso('🎵 ' + tocando.pieza.titulo + (TEMAS[temaI] ? ' (' + MC.Musica.CLASICOS[TEMAS[temaI]].autor + ', dominio público)' : '')); };
   /* sonido: música procedural y paisaje sonoro del lugar (tráfico, pájaros, grillos, lluvia, agua) */
@@ -163,7 +175,7 @@ function jugar() {
     cuerpo.escala = humano ? .55 + .45 * yo.rendimiento : sinGas ? .08 : 1;
     const x0 = cuerpo.x, y0 = cuerpo.y;
     if (vistas.actual.tipo === 'pano' && seguir) { seguir.paso(dt, { acel: Math.abs(ent.stick.x) > .2 ? ent.stick.x * (vistas.pano.lado < 0 ? 1 : -1) : ent.acel, salto: ent.salto, turbo: ent.turbo }); E.pano = { trazo: seguir.trazo, s: seguir.s, id: seguir.id }; }
-    else { const gl = vistas.actual.tipo === 'gl', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92;
+    else { const gl = vistas.actual.tipo === 'gl', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92; if (bucear) entrada.baja = true; if (subirT > 0) { subirT -= dt; entrada.sube = true; } if (!cuerpo.nadando) bucear = false;
       if (ruta) { const sg = MC.Manejo.seguirRuta(cuerpo, ruta); if (!sg || sg.llego) { ruta = null; ui.aviso('📍 Llegaste'); } else if (ent.stick.m > .3) ruta = null; else Object.assign(entrada, sg); }
       cuerpo.actualizar(dt, entrada); }
     const ds = Math.hypot(cuerpo.x - x0, cuerpo.y - y0), st = V.clase !== 'pie' ? (desg[V.id] || (desg[V.id] = MC.Desgaste.nuevo(V))) : null; if (st) { MC.Desgaste.usar(st, ds, cuerpo.eventos.includes('choque') ? 1 : 0, clima); cuerpo.escala *= .82 + .18 * st.estado; } if (tanque[V.id] != null) tanque[V.id] = Math.max(0, tanque[V.id] - ds * garaje[V.id].consumo / 100 / 1000 * 1.4);
@@ -190,9 +202,13 @@ function jugar() {
       const P = mision && mision.actual; ui.mision(mision ? '<b>📦 ' + mision.def.titulo + '</b><br>' + (P ? P.texto : '') + ' · ⏱ ' + Math.ceil(mision.restante) + ' s · ' + (P && P.x != null ? Math.round(Math.hypot(P.x - cuerpo.x, P.y - cuerpo.y)) + ' m' : '') : '');
       bAccion.hidden = !(mision && mision.paso === 3 && mision.destino); ui.foco(Math.abs(cuerpo.v) > 11);
       lugarCerca = MC.Lugares.cerca(M, cuerpo.x, cuerpo.y, 28)[0] || null; bLugar.hidden = !lugarCerca; if (lugarCerca) { bLugar.firstChild.textContent = lugarCerca.icono; bLugar.querySelector('small').textContent = lugarCerca.nombre.length > 12 ? MC.Lugares.TIPOS[lugarCerca.tipo].n.split(' ')[0] : lugarCerca.nombre; }
-      if (st) ui.barra('estado', '🔧 Estado', st.estado); bComprar.hidden = !(cercaDe(tiendas, 30) || (tanque[V.id] != null && cercaDe(gasolineras, 40))); bComprar.firstChild.textContent = tanque[V.id] != null && cercaDe(gasolineras, 40) ? '⛽' : '💧';
+      if (st) ui.barra('estado', '🔧 Estado', st.estado);
+      const nada = cuerpo.nadando, aguaCerca = V.clase !== 'pie' && V.clase !== 'agua' && V.clase !== 'aire' && !!MC.Terreno.aguaHonda(M, cuerpo.x, cuerpo.y, 6, .3);
+      bAgua.hidden = !aguaCerca; bBucear.hidden = !(nada && !cuerpo.buceando && !bucear); bSubir.hidden = !(nada && (cuerpo.buceando || bucear)); bTierra.hidden = !(V.clase === 'agua' && MC.Terreno.tierraFirme(M, cuerpo.x, cuerpo.y, 16));
+      bMontar.hidden = !cuerpo.puedeMontar(3.5); if (!bMontar.hidden) bMontar.firstChild.textContent = MC.Vehiculos.get(cuerpo.estacionado.veh).icon || '🚲';
+      ui.barra('aire', '🫧 Aire', cuerpo.aire); ui.barraVisible('aire', cuerpo.buceando || cuerpo.aire < .999); bComprar.hidden = !(cercaDe(tiendas, 30) || (tanque[V.id] != null && cercaDe(gasolineras, 40))); bComprar.firstChild.textContent = tanque[V.id] != null && cercaDe(gasolineras, 40) ? '⛽' : '💧';
       ui.pintarMinimapa(cuerpo.x, cuerpo.y, camara.yaw, (P && P.x != null ? [{ x: P.x, y: P.y, color: '#ffc23a' }] : []).concat(hogar ? [{ x: hogar.d.x, y: hogar.d.y, color: '#39ffb3' }] : []));
-      window.MANDADOS = { mundo: M, cuerpo, yo, libro, mision, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
+      window.MANDADOS = { mundo: M, cuerpo, yo, libro, mision, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, get botones() { return { bAgua, bBucear, bSubir, bMontar, bTierra }; }, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
   };
   requestAnimationFrame(cuadro);
 }
