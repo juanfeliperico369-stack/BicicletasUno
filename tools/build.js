@@ -8,7 +8,8 @@ const ROOT = path.join(__dirname, '..'), SRC = path.join(ROOT, 'src'), DIST = pa
 const URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
 const rd = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 const jsFiles = fs.readdirSync(path.join(SRC, 'js')).filter(f => f.endsWith('.js')).sort();
-let js = jsFiles.map(f => `/* ---- ${f} ---- */\n` + rd('js/' + f)).join('\n');
+const mvJs = path.join(ROOT, 'motor-valle', 'js', 'valle.js');
+let js = jsFiles.map(f => `/* ---- ${f} ---- */\n` + rd('js/' + f)).join('\n') + (fs.existsSync(mvJs) ? `\n/* ---- motor-valle/js/valle.js ---- */\n` + fs.readFileSync(mvJs, 'utf8') : '');
 // mapa real del Valle de Aburrá (motor-valle/geo/build.py): casillas y relieve comprimidos (deflate) + líneas en JSON
 const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '${fs.readFileSync(path.join(SRC, 'data', 'valle.bin')).toString('base64')}';\nconst VIAS_BIN = '${fs.existsSync(path.join(SRC, 'data', 'vias.bin')) ? fs.readFileSync(path.join(SRC, 'data', 'vias.bin')).toString('base64') : ''}';\nconst SITIOS_META = ${fs.existsSync(path.join(SRC, 'data', 'sitios.json')) ? rd('data/sitios.json') : 'null'};\nconst SITIOS_BIN = '${fs.existsSync(path.join(SRC, 'data', 'sitios.bin')) ? fs.readFileSync(path.join(SRC, 'data', 'sitios.bin')).toString('base64') : ''}';\n`;
 // guion del juego (contenido/guion/*.json): historia "Un día del valle", frases de la ciudad, tutor, fiestas y Metro

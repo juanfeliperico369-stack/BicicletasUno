@@ -361,11 +361,13 @@ const CityMap = JE.map = {
   },
   /* valor del campo en la casilla (1e9 = fuera / sin camino) */
   fv(F, x, y) { x -= F.x0; y -= F.y0; return (x < 0 || y < 0 || x >= F.w || y >= F.h) ? 1e9 : F.D[y * F.w + x]; },
-  nextStep(F, x, y) {
+  nextStep(F, x, y, lvl) {
     let best = null, bv = this.fv(F, x, y);
+    const dn = lvl && this.desnivel ? this.desnivel.get(y * MW + x) : null;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-      const nx = x + dx, ny = y + dy; let v = this.fv(F, nx, ny);
+      const nx = x + dx, ny = y + dy; let v = this.fv(F, nx, ny); if (v >= 1e9) continue;
       if (dx && dy) { if (this.fv(F, nx, y) >= 1e9 || this.fv(F, x, ny) >= 1e9) continue; v += .5; }
+      if (dn && Math.abs(Math.cos(angDiff(Math.atan2(dy, dx), dn.a))) < .45) v += 6;
       if (v < bv) { bv = v; best = { x: nx, y: ny }; }
     }
     return best;

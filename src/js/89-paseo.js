@@ -20,7 +20,8 @@ const Paseo = JE.paseo = {
   },
   /* el lugar con postal más cercano que no haya visitado en este paseo (primero los que están a menos de 2,5 km) */
   siguiente(M) {
-    const P = M.paseo, R = M.ride, p = R.p, L = PUBLIC_LM().filter(l => !P.vis.has(l.id)).map(l => ({ l, d: dist((l.x + l.w / 2) * TS, (l.y + l.h / 2) * TS, p.x, p.y) })).sort((a, b) => a.d - b.d);
+    const P = M.paseo, R = M.ride, p = R.p, d25 = 2500 / M_PER_PX;
+    const L = PUBLIC_LM().filter(l => !P.vis.has(l.id)).map(l => ({ l, d: dist((l.x + l.w / 2) * TS, (l.y + l.h / 2) * TS, p.x, p.y) })).sort((a, b) => (a.d <= d25 ? 0 : 1) - (b.d <= d25 ? 0 : 1) || a.d - b.d);
     if (!L.length) { this.parar(M, '🧭 ¡Recorriste todos los lugares del paseo!'); return; }
     const l = L[0].l; P.lugar = l; if (P.m) R.removeMarker(P.m); P.prog = { d: 1e9, t: 0 };
     const o = JE.map.nearestOpen(Math.floor(l.x + l.w / 2), Math.floor(l.y + l.h) + 1, false);   // la parada, en la calle o el andén frente al lugar (no dentro del edificio)
@@ -36,7 +37,8 @@ const Paseo = JE.paseo = {
   },
   tick(M, dt) {
     const P = M.paseo; if (!P || !P.on) return; const C = Cam.cfg();
-    const d = Input.keys && Object.keys(Input.keys).some(k => Input.keys[k] && /^(Arrow|Key[WASD]$)/.test(k)) ? 1 : (Input.joy.on && Math.hypot(Input.joy.x - Input.joy.ox, Input.joy.y - Input.joy.oy) > 12 ? 1 : 0);
+    const joyDrag = !Cam.g && Cam.ptr.size <= 1 && Input.joy.on && (performance.now() - (Input.joy.t0 || 0) > 140) && Math.hypot(Input.joy.x - Input.joy.ox, Input.joy.y - Input.joy.oy) > 20;
+    const d = (Input.keys && Object.keys(Input.keys).some(k => Input.keys[k] && /^(Arrow|Key[WASD]$)/.test(k))) || joyDrag ? 1 : 0;
     if (d || !this.puede(M)) { this.parar(M, d ? '🚲 Manejas tú. Toca 🧭 Paseo para seguir el recorrido.' : null); return; }
     if (P.pausa > 0) {   // en el lugar: quieta, y la cámara le da la vuelta
       P.pausa -= dt; M.botDir = { x: 0, y: 0, m: 0 }; C.sigue = 0; C.r = angDiff(0, (C.r || 0) + dt * .22); C.t = Math.max(C.t || 0, .5); P.zT = 1.15;

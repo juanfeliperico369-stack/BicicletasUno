@@ -21,7 +21,7 @@ const Cam = JE.cam = {
     if (!this.d3()) { const S = Save.data.settings, z = clamp((S.zoom | 0) + (f > 1 ? 1 : -1), -1, 2); if (z !== (S.zoom | 0)) { S.zoom = z; View.apply(); } return; }
     C.z = clamp(C.z * f, this.ZMIN, this.ZMAX);
   },
-  girar(da) { const C = this.cfg(); if (!this.d3()) return; C.sigue = 0; C.r = angDiff(0, C.r + da); if ((C.t || 0) < .3) C.t = .3; }   // girar con la cámara cenital no se notaría: se inclina un poco
+  girar(da) { const C = this.cfg(); if (!this.d3()) return; C.sigue = 0; C.r = angDiff(0, C.r + da); if ((C.t || 0) < .28) C.t = Math.min(.28, (C.t || 0) + Math.min(.14, Math.abs(da) * .9)); }   // girar con la cámara cenital no se notaría: se inclina suavemente
   ,
   inclinar(dt) { const C = this.cfg(); if (!this.d3()) return; C.t = clamp((C.t || 0) + dt, 0, 1); },
   angulo() { const C = this.cfg(); let i = CAM_ANG.findIndex(a => Math.abs(a.t - (C.t || 0)) < .04 && a.sigue === (C.sigue | 0)); i = (i + 1) % CAM_ANG.length; const A = CAM_ANG[i]; C.t = A.t; C.sigue = A.sigue; if (!A.sigue && A.id === 'arriba') C.r = 0; Save.save(); return A; },
@@ -34,7 +34,7 @@ const Cam = JE.cam = {
   },
   libre(R, on) {
     R = R || this.ride(); if (!R) return; const L = R.libre || (R.libre = { on: false });
-    L.on = on == null ? !L.on : !!on; Input.joy.on = false; Snd.sfx('tap');   // al salir, la cámara vuelve sola a la bici (camara() en 30-ride.js)
+    L.on = on == null ? !L.on : !!on; if (Ctrl.clear) Ctrl.clear(); else Input.joy.on = false; Snd.sfx('tap');   // al salir, la cámara vuelve sola a la bici (camara() en 30-ride.js)
     if (L.on && JE.ui) JE.ui.toast('📷 Cámara libre: arrastra para mirar la ciudad · pellizca para acercar · ⌖ para volver');
   },
   /* cada cuadro: suaviza ángulo e inclinación y avisa a la vista */
@@ -60,7 +60,7 @@ const Cam = JE.cam = {
       const R = this.ride(); if (!R || Game.paused) return; const p = pos(e); if (e.isPrimary) { this.ptr.clear(); this.g = null; this.pan = null; }   // primer dedo: empieza un gesto nuevo
       if (e.pointerType === 'mouse' && e.button > 0) { this.orb = { id: e.pointerId, x: p.x, y: p.y }; try { cv.setPointerCapture(e.pointerId); } catch (er) { } return; }   // botón derecho o del medio: girar e inclinar
       this.ptr.set(e.pointerId, p);
-      if (this.ptr.size === 2) { Input.joy.on = false; this.pan = null; this.g = this.gesto0(); }
+      if (this.ptr.size === 2) { if (Ctrl.clear) Ctrl.clear(); else Input.joy.on = false; this.pan = null; this.g = this.gesto0(); }
       else if (this.ptr.size === 1 && R.libre && R.libre.on) { this.pan = { id: e.pointerId, x: p.x, y: p.y }; try { cv.setPointerCapture(e.pointerId); } catch (er) { } }
     });
     cv.addEventListener('pointermove', e => {
@@ -89,10 +89,10 @@ const Cam = JE.cam = {
   gesto() {
     const G = this.g, [a, b] = [...this.ptr.values()], C = this.cfg(), d = Math.hypot(b.x - a.x, b.y - a.y) || 1, an = Math.atan2(b.y - a.y, b.x - a.x), m = (a.y + b.y) / 2;
     const dz = Math.abs(d - G.d0), da = Math.abs(angDiff(G.a0, an)), dm = m - G.m0;
-    if (!G.lock) { if (Math.abs(dm) > 16 && dz < 14 && da < .1) G.lock = 'tilt'; else if (dz > 12 || da > .14) G.lock = 'zr'; }
+    if (!G.lock) { if (Math.abs(dm) > 14 && Math.abs(dm) > dz * 1.15 && da < .12) G.lock = 'tilt'; else if (dz > 14 || da > .14) G.lock = 'zr'; }
     if (G.lock === 'tilt') { if (this.d3()) C.t = clamp(G.t0 - dm / 170, 0, 1); return; }
     if (G.lock !== 'zr') return;
-    if (this.d3()) { C.z = clamp(G.z0 * d / G.d0, this.ZMIN, this.ZMAX); if (da > .14 || G.rot) { G.rot = 1; C.sigue = 0; C.r = angDiff(0, G.r0 - angDiff(G.a0, an)); if ((C.t || 0) < .3) C.t = .3; } }
+    if (this.d3()) { C.z = clamp(G.z0 * d / G.d0, this.ZMIN, this.ZMAX); if (da > .14 || G.rot) { G.rot = 1; C.sigue = 0; C.r = angDiff(0, G.r0 - angDiff(G.a0, an)); if ((C.t || 0) < .28) C.t = clamp(G.t0 + Math.min(.28, da * .85), C.t || 0, .28); } }
     else { const S = Save.data.settings, z = clamp(G.zl + Math.round(Math.log(d / G.d0) / Math.log(1.45)), -1, 2); if (z !== (S.zoom | 0)) { S.zoom = z; View.apply(); } }
   },
   /* ---- botones: ángulo, norte y cámara libre (a la izquierda, a media altura) ---- */
@@ -152,16 +152,24 @@ Game.pause = function () {
   const b = document.createElement('button'); b.className = 'btn'; b.id = 'pVel'; const lbl = () => { const V = VELS.find(v => v[0] === velMul(M)) || VELS[1]; b.textContent = V[2] + ' Velocidad: ' + V[1]; }; lbl(); go.after(b);
   b.onclick = () => { const i = VELS.findIndex(v => v[0] === velMul(M)), V = VELS[(i + 1) % VELS.length]; Save.data.settings.vel = V[0]; Save.save(); Snd.sfx('tap'); lbl(); };
 };
-/* calidad automática: si en el mapa los cuadros tardan más de 30 ms (mediana de ~2 s), la resolución baja un paso; si sobra, sube */
+/* calidad automática: si en el mapa los cuadros tardan más de 28 ms (mediana de ~2 s), aligera primero el detalle 3D lejano (sin borrar los trozos) y luego la resolución */
 const Calidad = JE.calidad = {
-  T: [], last: 0, bien: 0,
+  T: [], last: 0, bien: 0, d3: 1,
   cuadro(t) {
     const dt = t - this.last; this.last = t; const M = Game.mode; if (!M || !M.ride || M.sub || Game.paused || JE.headless || !(dt > 0 && dt < 250)) return;
     this.T.push(dt); if (this.T.length < 120) return; const T = this.T.sort((a, b) => a - b), med = T[60]; this.T = [];
-    const q = View.calidad || 1, base = Math.min(window.devicePixelRatio || 1, 2); if (base <= 1.01) return;
-    if (med > 30 && q > .6) { View.calidad = Math.round((q - .2) * 10) / 10; this.bien = 0; View.resize(); }
-    else if (med < 18 && q < 1) { if (++this.bien >= 3) { View.calidad = Math.round((q + .2) * 10) / 10; this.bien = 0; View.resize(); } }
-    else this.bien = 0;
+    const q = View.calidad || 1, base = Math.min(window.devicePixelRatio || 1, 2);
+    if (med > 28) {
+      this.bien = 0;
+      if (this.d3 > 0) { this.d3 = 0; JE.calidad3D = 0; }
+      else if (base > 1.01 && q > .6) { View.calidad = Math.round((q - .2) * 10) / 10; View.resize(); }
+    } else if (med < 18) {
+      if (++this.bien >= 3) {
+        this.bien = 0;
+        if (q < 1 && base > 1.01) { View.calidad = Math.round((q + .2) * 10) / 10; View.resize(); }
+        else if (this.d3 < 1) { this.d3 = 1; JE.calidad3D = 1; }
+      }
+    } else this.bien = 0;
   }
 };
 const _loop88 = Game.loop;

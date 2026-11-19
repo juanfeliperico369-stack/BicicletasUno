@@ -19,6 +19,20 @@
   "quien": "Don Efraín",
   "dice": "La red no es de hierro, mija. Es de la gente que la cuida."
  },
+ "personajesMetro": [
+  { "id": "rosalba", "name": "Rosalba", "rol": "Instructora de trenes · Línea A", "lugar": "San Antonio", "tx": 1272, "ty": 2338, "shirt": "#1c5c9c", "skin": 2, "hair": 3, "saludo": "¡Quiubo! Dejé el tren en San Antonio y bajé a ver cómo va el relevo de las bicis." },
+  { "id": "efrain", "name": "Don Efraín", "rol": "Memoria del Ferrocarril de Antioquia", "lugar": "Cisneros / Universidad", "tx": 1286, "ty": 2152, "shirt": "#6b4f35", "skin": 1, "hair": 4, "saludo": "Por donde hoy pedaleás pasaba la locomotora Nº 45 rumbo a Puerto Berrío." },
+  { "id": "marleny", "name": "Doña Marleny", "rol": "Aromáticas y tinto · Estación San Javier", "lugar": "San Javier", "tx": 958, "ty": 2265, "shirt": "#d94e34", "skin": 2, "hair": 1, "saludo": "Tómese un tintico con canela antes de subir esa loma de San Javier." },
+  { "id": "wilmar", "name": "Wílmar", "rol": "Operador de Metrocable · Línea K", "lugar": "Acevedo / Santo Domingo", "tx": 1352, "ty": 1915, "shirt": "#3f8f5a", "skin": 3, "hair": 0, "saludo": "Desde las cabinas del cable se ven las bicis verdes rodando junto al río." },
+  { "id": "libardo", "name": "Don Libardo", "rol": "Jefe de estación · Universidad", "lugar": "Universidad", "tx": 1294, "ty": 2125, "shirt": "#0a2342", "skin": 1, "hair": 4, "saludo": "Cuando llega el tren de las cinco, media estación sale directo a buscar bici EnCicla." },
+  { "id": "jhon", "name": "Jhon", "rol": "Aprendiz de taller ferroviario", "lugar": "Industriales", "tx": 1255, "ty": 2475, "shirt": "#e38835", "skin": 2, "hair": 0, "saludo": "Rieles arriba y bielas abajo: al final todo es mantener el valle en movimiento." }
+ ],
+ "fragmentos": [
+  { "id": "edmonson", "name": "Tiquete Edmonson de 1929", "quien": "Don Efraín", "lugar": "Universidad", "tx": 1288, "ty": 2148, "texto": "Un boleto de cartón prensado del antiguo Ferrocarril de Antioquia: «Estación Medellín – Estación Botero, 1929»." },
+  { "id": "silbato", "name": "Silbato de bronce de La Quiebra", "quien": "Rosalba", "lugar": "San Antonio", "tx": 1274, "ty": 2340, "texto": "El silbato con que los guardagujas daban salida a los vagones antes de que existiera el viaducto de la Línea A." },
+  { "id": "polea", "name": "Polea guía del Metrocable K (2004)", "quien": "Doña Marleny", "lugar": "San Javier", "tx": 956, "ty": 2262, "texto": "Pieza conmemorativa del primer cable aéreo urbano del mundo integrado al transporte público en las laderas del valle." },
+  { "id": "mural", "name": "Plano Maestro Ruedas y Rieles", "quien": "Don Rubén", "lugar": "La Alpujarra", "tx": 1235, "ty": 2372, "texto": "El mapa firmado por los equipos de EnCicla y El Metro que une las 133 estaciones de bici con las 12 líneas del SITVA." }
+ ],
  "creditos": "¿Te gustan los trenes? Juega El Metro",
  "web": "https://juanfeliperico369-stack.github.io/MetroZero/"
 }
