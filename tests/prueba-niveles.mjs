@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {RedNiveles} from '../motor-valle/js/red-niveles.mjs';
+const red=new RedNiveles();
+const p=(x,y,nivel,conector)=>({x,y,nivel,conector});
+red.agregar('suelo',[p(1,0,0,'sur'),p(1,1,0),p(1,2,0,'norte')]);
+red.agregar('tablero',[p(0,1,1,'estribo'),p(1,1,1),p(2,1,1,'fin')]);
+red.agregar('pasoInferior',[p(0,1,-1),p(1,1,-1),p(2,1,-1)]);
+assert.equal(red.ruta('n:sur:0','n:fin:1').length,0);
+assert.equal(red.ruta('v:pasoInferior:1','v:suelo:1').length,0);
+red.agregar('rampa',[p(1,0,0,'sur'),p(0,1,1,'estribo')]);
+assert.deepEqual(red.ruta('n:sur:0','n:fin:1'),['n:sur:0','n:estribo:1','v:tablero:1','n:fin:1']);
+console.log('OK: superficie, tablero y paso inferior separados; entrada por la rampa');

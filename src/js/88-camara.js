@@ -109,8 +109,8 @@ const Cam = JE.cam = {
         else if (k === 'norte') this.norte(); else if (k === 'libre') this.libre(RR); };
     }
     if (bar.hidden) bar.hidden = false;
-    const vb = bar.children[0], fija = !!(M.net || M.id === 'carrera'), V = VELS.find(v => v[0] === velMul(M)) || VELS[1], vt = fija ? '🚲' : V[2];
-    if (vb.textContent !== vt) { vb.textContent = vt; vb.setAttribute('aria-label', 'Velocidad: ' + V[1]); } if (vb.hidden !== fija) vb.hidden = fija;   // en carreras y en red, todos a la misma velocidad
+    const vb = bar.children[0], fija = !!(M.net || M.id === 'carrera'), V = VELS.find(v => v[0] === velMul(M)) || VELS[1], vt = fija ? '🚲' : '×' + String(V[0]).replace('.', ',');   // el valor a la vista (antes solo un dibujo que se confundía con «Bajarse»)
+    if (vb.textContent !== vt) { vb.textContent = vt; vb.setAttribute('aria-label', 'Velocidad: ' + V[1] + ' (' + vt + ')'); vb.classList.toggle('ritmo', !fija); } if (vb.hidden !== fija) vb.hidden = fija;   // en carreras y en red, todos a la misma velocidad
     for (const b of [bar.children[1], bar.children[3]]) if (b.hidden === d3) b.hidden = !d3;   // en pixel clásico no hay ángulos ni cámara libre
     if (!d3) { if (!bar.children[2].hidden) bar.children[2].hidden = true; return; }
     const n = bar.children[2], l = bar.children[3], C = this.cfg(), rot = Math.abs(R.rot || 0) > .05 || C.sigue;

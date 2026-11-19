@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v1.7.2 · compilado el 2026-11-19.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v2.0.0 · compilado el 2026-11-19.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v1.7.2)
+## 2.3 Estado actual (v2.0.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-19 | Claude Code | documento creado (v1.7.2) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-19 | Claude Code | documento creado (v2.0.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1761,6 +1761,23 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v2.0.0 · La revolución* (`94-revolucion.js`, `91-runner.js`, `91-taller-arte.js`, `92-ciclovia.js`, `92-vehiculos.js`, `93-trama.js`, `contenido/guion/fragmentos.json`):
+- **Carreras en el menú:**
+  - `ModoRun3D` y `ModoCiclovia` (`extends ModeSub`) se registran con `JE.modos.registrar`, con 3 niveles cada una.
+  - `ModoRun3D` envuelve a `MGRunner3D`, con el corredor, la meta y la duración de cada nivel.
+  - `ModoCiclovia` envuelve a `CarreraCiclovia` sobre `TramoCiclista.cercana`, la ciclorruta de 100 m o más más cercana al hito del nivel. Termina sola al llegar a 2,5 veces su meta.
+- **`JE.taller`:**
+  - `abrir(M, resultado)` pinta en un modal la escena de TallerValle y los vehículos de `vehLista()`, con su dibujo de lado.
+  - `ARTE_VEH` traduce los ids del registro a los de TallerValle.
+  - Las acciones `vehiculo` y `runner3d` se quitan y en su lugar queda una sola: `taller`.
+- **`JE.boleto`:**
+  - Lleva los pasos de `GUION.fragmentos`, con eventos `montar`, `carrera` y `visitar`, en `Save.data.flags.fragmentosCiclovia`.
+  - `marca(M)` pone la señal y el marcador.
+  - Todo `runSub` de `MGRunner3D` o de `CarreraCiclovia` cuenta sus hojas para el boleto.
+- **`Ride.chipGiro(c, x, y, k, texto)`:** el aviso del giro, con la flecha dibujada.
+- **Botón de velocidad:** muestra `×valor`, con la clase `ritmo`.
+- **`MGRunner3D.pieUI()`:** el espacio de los controles en px del búfer.
 
 *v1.7.2 · Terreno para lo nuevo* (`25-vehiculos.js`, `91-modos.js`, `83-guion.js`, `contenido/guion/misiones.json`, `docs/INTEGRAR.md`):
 - **`VEHICULOS` y `JE.vehiculos`:**
@@ -2731,6 +2748,41 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+### 2026-11-19 · v2.0.0 · La revolución: las dos entregas del plan único en un solo juego
+
+**Qué cambió**
+1. **Las dos entregas, unidas.** Gemini con Antigravity entregó el código y ChatGPT con Codex el arte. Lo que llegó en `docs/ENTREGA-PLAN-UNICO-ENCICLA.md` y en «La vuelta del boleto» quedó en un solo juego (`94-revolucion.js`):
+   - **Dos carreras sin fin en el menú** (`JE.modos`), con 3 niveles cada una:
+     - **Run EnCicla 3D** (Gemini): corredores reales (Carabobo, Parques del Río y Las Vegas), con la cámara en primera o en tercera persona.
+     - **Carrera de la ciclorruta** (ChatGPT): 3 carriles sobre una ciclorruta real (Jardín Botánico, Pies Descalzos y Estadio), vista desde la canasta o desde atrás del ciclista.
+   - **Un solo Taller en el modo libre.** Reemplaza los botones «Vehículo» y «Carrera 3D» y trae:
+     - la escena del taller de TallerValle, de día o de noche;
+     - los 7 vehículos de Gemini, dibujados con el arte de ChatGPT;
+     - las dos carreras y el boleto.
+   - **El boleto de Rosalba** (`contenido/guion/fragmentos.json`), con los vehículos del registro:
+     - primero la bici eléctrica, luego 3 hojas en una sola carrera y por último el scooter hasta Parque Berrío;
+     - su señal en el mapa y el logro «El boleto de Rosalba».
+   - **TallerValle** (`91-taller-arte.js`): casas de ladera, quebradas, mobiliario, hitos, vehículos en 4 vistas y escenas.
+   - **La propuesta de niveles del motor** (`motor-valle/geo/pasos.py`, `motor-valle/js/red-niveles.mjs`) entra con su prueba (`tests/prueba-niveles.mjs`). Todavía no cambia la salida del motor.
+2. **Los arreglos que encontró la revisión de ChatGPT (M1):**
+   - la flecha del giro ahora se dibuja: en algunos celulares ↰, ↱ y ◎ salían como un cuadro vacío (`Ride.chipGiro`);
+   - el botón de velocidad muestra su valor: ×0,8, ×1, ×1,25 o ×1,5.
+3. **Lo que se arregló al unir:**
+   - En Run EnCicla 3D, los botones tapaban al ciclista y al manubrio. Ahora van encima (`pieUI`).
+   - El nombre del corredor quedaba debajo de las metas.
+   - En el Taller, los patines se salían de su cuadro.
+
+**Qué se probó**
+- Toda la suite, con la nueva sección 3n.
+- Las dos carreras, desde el Taller y desde el menú, en el celular vertical y acostado.
+- El boleto completo y los 7 vehículos.
+- La prueba de niveles del motor.
+
+**Qué falta**
+- **Dos «Motor del Valle 1.1.0»:** la entrega de El Metro trae el suyo, distinto del de Gemini, y en su `VERSION.json` pone a MetroZero como fuente de verdad, al revés de lo acordado. Hay que reconciliar los dos en una 1.2.0 desde `motor-valle/` de EnCicla y luego sincronizarla.
+- Probar en un celular real: los gestos, la GPU móvil y el APK instalado.
+- **La rama `revolucion-v2`** es de otra sesión: tiene una v2.0.0 y una v2.0.1 basadas en la 1.3.1. No se usa. Por eso el APK sube al versionCode 20002, para quedar por encima de ella.
+
 ### 2026-11-19 · Llega la entrega del plan único (M1–M6) y se une a la v1.7.2
 
 **Qué pasó:**
@@ -3187,6 +3239,19 @@ Los archivos de `src/js/` se juntan **en orden alfabético** en `dist/juega-enci
 | Trama y textos | `contenido/guion/<nombre>.json` | `tools/build.js` lo embebe como `GUION.<nombre>` |
 | Datos del mapa | `motor-valle/` | Nunca a mano en `src/data/` |
 | Pruebas | una sección `3x)` en `tests/run.js` | Antes de `4) Rendimiento` |
+
+**En la v2.0 ya están:**
+
+| Archivo | Qué es |
+|---|---|
+| `91-runner.js` | Run EnCicla 3D |
+| `91-taller-arte.js` | TallerValle: el arte de ChatGPT |
+| `92-ciclovia.js` | La carrera de 3 carriles |
+| `92-vehiculos.js` | Los 7 vehículos de Gemini |
+| `93-trama.js` | «Ruedas y Rieles» |
+| `94-revolucion.js` | Las une: las carreras en el menú, el Taller y el boleto |
+
+Un vehículo nuevo con `libre: 1` sale solo en el Taller. Su dibujo de lado sale de TallerValle si se agrega a `ARTE_VEH`.
 
 ### 2. Un vehículo nuevo (M5: scooter, bici eléctrica, skate, patines, monopatín)
 **Registro:** `src/js/25-vehiculos.js`. Ahí también están las cifras exactas de los tres de siempre: la bici EnCicla, a pie y el camión de Balance.

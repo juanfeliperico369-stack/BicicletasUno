@@ -1,0 +1,5 @@
+[
+  {"id":"canasta","titulo":"La canasta que suena","quien":"Cata","antes":"¿Oís ese golpecito? Revisá la canasta de la eléctrica. Adentro quedó algo del turno de anoche.","evento":"montar","vehiculo":"electrica","despues":"Debajo del caucho aparece medio boleto. Al dorso alguien dibujó tres luces."},
+  {"id":"luces","titulo":"Tres luces en la ciclovía","quien":"Cata","antes":"Llevá el boleto por la ciclorruta. Juntá tres hojas en una sola carrera y regresá al taller.","evento":"carrera","hojas":3,"despues":"Al trasluz, los agujeros del boleto forman la aguja del Coltejer. Cata recuerda dónde vio la otra mitad."},
+  {"id":"regreso","titulo":"El último doblez","quien":"Rosalba","antes":"Acercate al Parque Berrío en scooter. Buscá el boleto en la parada del taller.","evento":"visitar","vehiculo":"scooter","lugar":"berrio","despues":"Rosalba junta los dos pedazos. «Usted se fija hasta en lo que cabe en un bolsillo. Así también se cuida una ciudad»."}
+]

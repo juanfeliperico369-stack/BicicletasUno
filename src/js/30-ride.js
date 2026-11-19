@@ -346,6 +346,17 @@ class Ride {
     this.mundo(c); this.drawGlow(c, ox, oy, inV, n);
     c.restore();
   }
+  /* aviso del próximo giro: la flecha va dibujada, no como letra (hay celulares sin ↰ ↱ ◎ en sus fuentes y se veía un cuadro vacío) */
+  chipGiro(c, x, y, k, t) {
+    const fs = Math.round(13 * (Save.data.settings.big ? 1.15 : 1)); c.font = '700 ' + fs + 'px Cuerpo,system-ui,sans-serif';
+    const tw = c.measureText(t).width, W = Math.round(tw + fs + 22), H = fs + 12, x0 = Math.round(x - W / 2), y0 = Math.round(y - H / 2), ax = x0 + 9 + fs / 2, ay = y0 + H / 2, r = fs * .45;
+    c.fillStyle = '#0a2342'; c.beginPath(); c.roundRect(x0, y0, W, H, H / 2); c.fill();
+    c.strokeStyle = c.fillStyle = '#fff'; c.lineWidth = 2; c.lineCap = c.lineJoin = 'round';
+    if (k === 'llega') { c.beginPath(); c.arc(ax, ay, r, 0, TAU); c.stroke(); c.beginPath(); c.arc(ax, ay, r * .38, 0, TAU); c.fill(); }
+    else { const s = k < 0 ? -1 : 1; c.beginPath(); c.moveTo(ax - s * r * .45, ay + r); c.lineTo(ax - s * r * .45, ay - r * .05); c.quadraticCurveTo(ax - s * r * .45, ay - r * .55, ax + s * r * .1, ay - r * .55); c.stroke();
+      c.beginPath(); c.moveTo(ax + s * r * .95, ay - r * .55); c.lineTo(ax + s * r * .1, ay - r * 1.12); c.lineTo(ax + s * r * .1, ay + r * .02); c.closePath(); c.fill(); }
+    c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t, ax + fs / 2 + 7, ay + 1);
+  }
   /* transformación del mundo en la capa nítida: escala y, si la cámara está girada, giro alrededor del centro de la vista */
   mundo(c) {
     const V = View, k = V.s * V.dpr, q = this.piv; c.setTransform(k, 0, 0, k, 0, 0);
@@ -406,7 +417,7 @@ class Ride {
       }
     }
     // próximo giro: un aviso pequeño y translúcido, abajo al centro (solo si hay un giro cerca)
-    if (T && !this.big && this.gps.length > 3) { const g = this.giro(); if (g) { const tx2 = V.w / 2, ty2 = V.h - 118, txt = g.k === 'llega' ? '◎ ' + g.m + ' m' : (g.k < 0 ? '↰ ' : '↱ ') + g.m + ' m'; c.save(); c.globalAlpha = .78; V.text(txt, tx2, ty2, { size: 13, align: 'center', color: '#fff', bg: '#0a2342bb', pad: 4, body: true }); c.restore(); } }
+    if (T && !this.big && this.gps.length > 3) { const g = this.giro(); if (g) { c.save(); c.globalAlpha = .78; this.chipGiro(c, V.w / 2, V.h - 122, g.k, g.m + ' m'); c.restore(); } }
     // minimapa
     if (!opts.noMini) {
       // radar: ventana del mapa alrededor del jugador (el valle completo se ve tocándolo)

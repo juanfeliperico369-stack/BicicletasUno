@@ -35,6 +35,19 @@ Los archivos de `src/js/` se juntan **en orden alfabético** en `dist/juega-enci
 | Datos del mapa | `motor-valle/` | Nunca a mano en `src/data/` |
 | Pruebas | una sección `3x)` en `tests/run.js` | Antes de `4) Rendimiento` |
 
+**En la v2.0 ya están:**
+
+| Archivo | Qué es |
+|---|---|
+| `91-runner.js` | Run EnCicla 3D |
+| `91-taller-arte.js` | TallerValle: el arte de ChatGPT |
+| `92-ciclovia.js` | La carrera de 3 carriles |
+| `92-vehiculos.js` | Los 7 vehículos de Gemini |
+| `93-trama.js` | «Ruedas y Rieles» |
+| `94-revolucion.js` | Las une: las carreras en el menú, el Taller y el boleto |
+
+Un vehículo nuevo con `libre: 1` sale solo en el Taller. Su dibujo de lado sale de TallerValle si se agrega a `ARTE_VEH`.
+
 ## 2. Un vehículo nuevo (M5: scooter, bici eléctrica, skate, patines, monopatín)
 **Registro:** `src/js/25-vehiculos.js`. Ahí también están las cifras exactas de los tres de siempre: la bici EnCicla, a pie y el camión de Balance.
 

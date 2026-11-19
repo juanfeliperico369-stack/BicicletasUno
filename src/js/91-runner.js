@@ -315,7 +315,7 @@ class MGRunner3D extends MG {
   drawFirstPerson(b, vw, vh) {
     const P = Save.data ? Save.data.profile : {}, skin = SKINS[P.skin] || '#f0c090';
     const steer = (this.lane - this.lx) * .22, bob = Math.sin(this.distM * 1.4) * (this.z > 0 ? 0 : 2.2) + (this.duckT > 0 ? 10 : 0) - this.z * 7;
-    const cx = Math.round(vw / 2), cy = Math.round(vh - 18 + bob);
+    const cx = Math.round(vw / 2), cy = Math.round(vh - this.pieUI() - 18 + bob);
     b.save();
     b.translate(cx, cy);
     b.rotate(steer);
@@ -359,11 +359,11 @@ class MGRunner3D extends MG {
     const P = Save.data ? Save.data.profile : {};
     const shirt = SHIRTS[P.shirt] || PAL.vd, skin = SKINS[P.skin] || '#f0c090';
     const helmet = P.helmet === 0 ? (PELO[P.hairCol | 0] || '#2a1a10') : (HELMETS[P.helmet] || '#ffffff');
-    const x = Math.round(vw / 2), y = Math.round(vh - 16 - this.z * 20), duck = this.duckT > 0 ? 7 : 0;
+    const x = Math.round(vw / 2), y = Math.round(vh - this.pieUI() - 16 - this.z * 20), duck = this.duckT > 0 ? 7 : 0;
     const ped = Math.sin(this.distM * 1.9) * 3;
     /* Sombra en el suelo */
     b.fillStyle = 'rgba(0,0,0,0.28)';
-    b.beginPath(); b.ellipse(x, vh - 12, 10, 3.5, 0, 0, TAU); b.fill();
+    b.beginPath(); b.ellipse(x, vh - this.pieUI() - 12, 10, 3.5, 0, 0, TAU); b.fill();
     if (this.veh === 'skate' || this.veh === 'patines') {
       if (this.veh === 'skate') {
         prect(b, x - 8, y - 3, 16, 3, '#d9a066');
@@ -389,12 +389,14 @@ class MGRunner3D extends MG {
     pcirc(b, x, y - 32 + duck, 5, helmet);
   }
 
+  /* espacio (px del búfer) que ocupan los controles de abajo: el ciclista y el manubrio van encima, no tapados por los botones */
+  pieUI() { return Math.round(104 / (View.s || 2)); }
   hud(V) {
     this.btns = [];
     const pct = Math.min(100, Math.round(this.distM / this.metaM * 100));
     const kmh = Math.round(this.spd * 2.4);
-    V.text('🏁 ' + this.corr.name + ' · ' + this.barrio, 12, (View.hudB || 50) + 18, { size: 13, color: '#c4ec7c', bg: '#0a2342dd', pad: 4 });
-    V.text(Math.round(this.distM) + ' / ' + this.metaM + ' m (' + pct + ' %) · ' + kmh + ' km/h · 🍃 ' + this.hojas, 12, (View.hudB || 50) + 42, { size: 13, color: '#fff', bg: '#0a2342cc', pad: 4 });
+    V.text('🏁 ' + this.corr.name + ' · ' + this.barrio, 12, Math.max((View.hudB || 50) + 18, (View.top || 0) + 12),   /* debajo de las metas, si las hay */ { size: 13, color: '#c4ec7c', bg: '#0a2342dd', pad: 4 });
+    V.text(Math.round(this.distM) + ' / ' + this.metaM + ' m (' + pct + ' %) · ' + kmh + ' km/h · 🍃 ' + this.hojas, 12, Math.max((View.hudB || 50) + 42, (View.top || 0) + 36), { size: 13, color: '#fff', bg: '#0a2342cc', pad: 4 });
     /* Botón de cambio instantáneo entre 1.ª y 3.ª persona */
     this.button(V, V.w - 148, (View.hudB || 50) + 10, 136, 36, this.fp ? '🎥 1.ª Persona' : '🎥 3.ª Persona', () => this.toggleCam(), { bg: PAL.az1, size: 13, key: 'cam' });
     /* Controles táctiles grandes abajo para celular y escritorio */

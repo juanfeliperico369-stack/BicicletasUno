@@ -179,6 +179,23 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v2.0.0 · La revolución* (`94-revolucion.js`, `91-runner.js`, `91-taller-arte.js`, `92-ciclovia.js`, `92-vehiculos.js`, `93-trama.js`, `contenido/guion/fragmentos.json`):
+- **Carreras en el menú:**
+  - `ModoRun3D` y `ModoCiclovia` (`extends ModeSub`) se registran con `JE.modos.registrar`, con 3 niveles cada una.
+  - `ModoRun3D` envuelve a `MGRunner3D`, con el corredor, la meta y la duración de cada nivel.
+  - `ModoCiclovia` envuelve a `CarreraCiclovia` sobre `TramoCiclista.cercana`, la ciclorruta de 100 m o más más cercana al hito del nivel. Termina sola al llegar a 2,5 veces su meta.
+- **`JE.taller`:**
+  - `abrir(M, resultado)` pinta en un modal la escena de TallerValle y los vehículos de `vehLista()`, con su dibujo de lado.
+  - `ARTE_VEH` traduce los ids del registro a los de TallerValle.
+  - Las acciones `vehiculo` y `runner3d` se quitan y en su lugar queda una sola: `taller`.
+- **`JE.boleto`:**
+  - Lleva los pasos de `GUION.fragmentos`, con eventos `montar`, `carrera` y `visitar`, en `Save.data.flags.fragmentosCiclovia`.
+  - `marca(M)` pone la señal y el marcador.
+  - Todo `runSub` de `MGRunner3D` o de `CarreraCiclovia` cuenta sus hojas para el boleto.
+- **`Ride.chipGiro(c, x, y, k, texto)`:** el aviso del giro, con la flecha dibujada.
+- **Botón de velocidad:** muestra `×valor`, con la clase `ritmo`.
+- **`MGRunner3D.pieUI()`:** el espacio de los controles en px del búfer.
+
 *v1.7.2 · Terreno para lo nuevo* (`25-vehiculos.js`, `91-modos.js`, `83-guion.js`, `contenido/guion/misiones.json`, `docs/INTEGRAR.md`):
 - **`VEHICULOS` y `JE.vehiculos`:**
   - `registrar(id, def)` hereda de su base (`bike`, `walk` o `truck`). Lee `fis`, `suelo(t)`, `loma`, `asist`, `solido(t)`, `via`, `spr(R)`, `lado(...)`, `timbre`, `bajar`, `libre` y `gasto`.

@@ -90,6 +90,14 @@ El `valle.json` (o `VALLE_META`) trae, entre otros, `barrios`, `munis`, `comunas
 | Ciudad oficial | `tools/ciudad_datos.py` (El Metro) | — | `ciudad.js` | Por unificar (F2) |
 | Lugares e hitos | `19-lugares.js` (EnCicla) | `LUGARES` | `hitos.js`, `lugares.js` | Por unificar (F3) |
 
+## Propuestas en estudio
+- **Pasos a distinto nivel** (entrega de ChatGPT, v2.0 de EnCicla):
+  - `geo/pasos.py` saca de Overture los túneles, los puentes y los pasos inferiores abiertos, con su nivel firmado.
+  - `js/red-niveles.mjs` arma una red por casilla y nivel: un cruce no conecta niveles distintos, salvo por una rampa.
+  - Su prueba es `node tests/prueba-niveles.mjs`.
+- Todavía no cambia la salida del motor. Para adoptarla hay que subir la versión.
+- **Hay dos «1.1.0»:** la de Gemini (aquí) y la que trae la entrega de El Metro. Se deben reconciliar en una 1.2.0 desde este repositorio, que es la fuente de verdad.
+
 ## Hoja de ruta de la unificación
 - **F1 (hecho, v1.0.0):**
   - una sola tubería con dos resoluciones;

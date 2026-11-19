@@ -350,7 +350,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     const V = JE.vehiculos.registrar('pruebav', { n: 'Patineta de prueba', corto: 'patineta', icon: '🛹', fis: { max: 90, acc: 60 }, asist: 1, libre: 1, gasto: .05, spr: () => cv });
     o.hereda = V.fis.brk === 72 && V.de === 'bike' && V.timbre === 0 && V.loma.length === 3;
     let er = ''; try { JE.vehiculos.registrar('bike', {}); } catch (e) { er = e.message; } o.protege = /de siempre/.test(er);
-    o.boton = typeof vehLista === 'function' ? vehLista().some(v => v.id === 'pruebav') && M.actions().some(a => a.id === 'vehiculo') : M.actions().some(a => a.id === 'veh'); JE.vehiculos.usar('pruebav', R);   // con el selector de 92-vehiculos.js, sale en su lista
+    o.boton = typeof vehLista === 'function' ? vehLista().some(v => v.id === 'pruebav') && M.actions().some(a => a.id === 'vehiculo' || a.id === 'taller') : M.actions().some(a => a.id === 'veh'); JE.vehiculos.usar('pruebav', R);   // con el selector de 92-vehiculos.js, sale en su lista
     o.fis = Math.abs(R.stats_().max - 90 * WK * f) < 1e-9 && !M.actions().some(a => a.id === 'bell');
     const lc = R.updCars, ll = R.updLife; R.updCars = () => { }; R.updLife = () => { };   // sin tráfico: que nada choque la medición
     for (let i = 0; i < 40; i++) R.update(1 / 60, { x: Math.cos(P.a), y: Math.sin(P.a), m: 1 }); o.anda = P.v > 0; R.updCars = lc; R.updLife = ll;
@@ -386,6 +386,27 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     S.trama = tr0; JE.game.stop(); S.tramaHechas = t0 || []; S.huevos = h0 || []; return o;
   });
   ok(tra.sale && tra.hora && tra.req && tra.marca && tra.guarda && tra.sigue && tra.migra, 'trama en datos (contenido/guion/misiones.json): sale según el día y la hora, en su lugar, guarda el fragmento, abre la siguiente y pasa las partidas de la v1.7.2 ' + JSON.stringify(tra));
+  console.log('3n) v2.0: las dos entregas juntas · dos carreras sin fin, un Taller, 7 vehículos, el boleto de Rosalba y la flecha dibujada');
+  const v2 = await p.evaluate(async () => {
+    const o = {}, w = ms => new Promise(r => setTimeout(r, ms)), F = Save.data.flags || (Save.data.flags = {}), b0 = F.fragmentosCiclovia, e0 = JE.errors.length;
+    JE.game.stop(); UI.go('sHome'); UI.setTab('ruta'); o.menu = ['run3d', 'ciclovia'].every(id => document.querySelectorAll('[data-juego="' + id + '"]').length === 3);
+    for (const id of ['run3d', 'ciclovia']) { JE.game.start(id, 1, { seed: 3, nov: NOVEDADES[0] }); await w(300); const G = JE.game.mode; for (let i = 0; i < 15; i++) { if (G.sub.bot) G.sub.bot(.1); await w(80); } o[id] = G.goals.length >= 2 && G.t > .5; G.end(); await w(400); o[id] = o[id] && !JE.game.mode; }
+    UI.go('sHome'); JE.game.start('usuario', 1, { seed: 8, nov: NOVEDADES[0], free: true }); await w(600); const M = JE.game.mode, R = M.ride, P = R.p, f = VEL * velMul(M); F.fragmentosCiclovia = 0;
+    const ids = M.actions().map(a => a.id); o.taller = ids.includes('taller') && !ids.includes('vehiculo') && !ids.includes('runner3d');
+    o.vel = /^×1$/.test(document.querySelector('#camBar [data-cam=vel]').textContent);
+    let ok7 = true; for (const v of VEH_CATALOGO) { M.cambiarVehiculo(v.id); for (let i = 0; i < 8; i++) R.update(1 / 60, { x: Math.cos(P.a), y: Math.sin(P.a), m: 1 }); const want = (VSTATS[v.id] || VSTATS.bike).max * WK * f; if (Math.abs(R.stats_().max - want) > 1e-9) ok7 = false; } o.vehiculos = ok7;
+    M.cambiarVehiculo('bike'); F.fragmentosCiclovia = 0; JE.taller.abrir(M); await w(120); o.modal = !!document.querySelector('#tlEsc') && document.querySelectorAll('[data-tc]').length >= 6;
+    document.querySelector('[data-tv=ebike]').click(); await w(80); o.boleto1 = F.fragmentosCiclovia === 1;
+    Boleto.evento(M, 'carrera', 5); o.boleto2 = F.fragmentosCiclovia === 2 && !!M.marcaBoleto; UI.closeModal(); Game.paused = false;
+    M.cambiarVehiculo('scooter'); P.x = M.marcaBoleto.x; P.y = M.marcaBoleto.y; for (let i = 0; i < 8; i++) R.update(1 / 30, { x: 0, y: 0, m: 0 }); o.boleto3 = F.fragmentosCiclovia === 3 && !!F.boletoRosalba;
+    const c = View.ctx; for (const k of [-1, 1, 'llega']) R.chipGiro(c, 200, 400, k, '70 m'); o.flecha = true;
+    JE.game.stop(); F.fragmentosCiclovia = b0 || 0; delete F.boletoRosalba; o.sinErrores = JE.errors.length === e0; return o;
+  });
+  const niv = (() => { try { return require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'prueba-niveles.mjs')], { encoding: 'utf8' }).trim(); } catch (e) { return 'FALLA ' + e.message; } })();
+  ok(v2.menu && v2.run3d && v2.ciclovia, 'las dos carreras sin fin (Run EnCicla 3D y Carrera de la ciclorruta) salen en el menú con 3 niveles, se juegan y terminan');
+  ok(v2.taller && v2.modal && v2.vehiculos && v2.vel, 'modo libre: un solo Taller con el arte de TallerValle, los 7 vehículos con sus cifras y la velocidad con su valor (×1)');
+  ok(v2.boleto1 && v2.boleto2 && v2.boleto3 && v2.flecha && v2.sinErrores, 'el boleto de Rosalba completo (eléctrica, carrera y scooter en Parque Berrío) y la flecha del giro dibujada ' + JSON.stringify(v2).slice(0, 160));
+  ok(/^OK/.test(niv), 'propuesta de niveles del motor (red-niveles.mjs): ' + niv.slice(0, 90));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

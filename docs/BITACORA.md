@@ -486,6 +486,41 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 2026-11-19 · v2.0.0 · La revolución: las dos entregas del plan único en un solo juego
+
+**Qué cambió**
+1. **Las dos entregas, unidas.** Gemini con Antigravity entregó el código y ChatGPT con Codex el arte. Lo que llegó en `docs/ENTREGA-PLAN-UNICO-ENCICLA.md` y en «La vuelta del boleto» quedó en un solo juego (`94-revolucion.js`):
+   - **Dos carreras sin fin en el menú** (`JE.modos`), con 3 niveles cada una:
+     - **Run EnCicla 3D** (Gemini): corredores reales (Carabobo, Parques del Río y Las Vegas), con la cámara en primera o en tercera persona.
+     - **Carrera de la ciclorruta** (ChatGPT): 3 carriles sobre una ciclorruta real (Jardín Botánico, Pies Descalzos y Estadio), vista desde la canasta o desde atrás del ciclista.
+   - **Un solo Taller en el modo libre.** Reemplaza los botones «Vehículo» y «Carrera 3D» y trae:
+     - la escena del taller de TallerValle, de día o de noche;
+     - los 7 vehículos de Gemini, dibujados con el arte de ChatGPT;
+     - las dos carreras y el boleto.
+   - **El boleto de Rosalba** (`contenido/guion/fragmentos.json`), con los vehículos del registro:
+     - primero la bici eléctrica, luego 3 hojas en una sola carrera y por último el scooter hasta Parque Berrío;
+     - su señal en el mapa y el logro «El boleto de Rosalba».
+   - **TallerValle** (`91-taller-arte.js`): casas de ladera, quebradas, mobiliario, hitos, vehículos en 4 vistas y escenas.
+   - **La propuesta de niveles del motor** (`motor-valle/geo/pasos.py`, `motor-valle/js/red-niveles.mjs`) entra con su prueba (`tests/prueba-niveles.mjs`). Todavía no cambia la salida del motor.
+2. **Los arreglos que encontró la revisión de ChatGPT (M1):**
+   - la flecha del giro ahora se dibuja: en algunos celulares ↰, ↱ y ◎ salían como un cuadro vacío (`Ride.chipGiro`);
+   - el botón de velocidad muestra su valor: ×0,8, ×1, ×1,25 o ×1,5.
+3. **Lo que se arregló al unir:**
+   - En Run EnCicla 3D, los botones tapaban al ciclista y al manubrio. Ahora van encima (`pieUI`).
+   - El nombre del corredor quedaba debajo de las metas.
+   - En el Taller, los patines se salían de su cuadro.
+
+**Qué se probó**
+- Toda la suite, con la nueva sección 3n.
+- Las dos carreras, desde el Taller y desde el menú, en el celular vertical y acostado.
+- El boleto completo y los 7 vehículos.
+- La prueba de niveles del motor.
+
+**Qué falta**
+- **Dos «Motor del Valle 1.1.0»:** la entrega de El Metro trae el suyo, distinto del de Gemini, y en su `VERSION.json` pone a MetroZero como fuente de verdad, al revés de lo acordado. Hay que reconciliar los dos en una 1.2.0 desde `motor-valle/` de EnCicla y luego sincronizarla.
+- Probar en un celular real: los gestos, la GPU móvil y el APK instalado.
+- **La rama `revolucion-v2`** es de otra sesión: tiene una v2.0.0 y una v2.0.1 basadas en la 1.3.1. No se usa. Por eso el APK sube al versionCode 20002, para quedar por encima de ella.
+
 ## 2026-11-19 · Llega la entrega del plan único (M1–M6) y se une a la v1.7.2
 
 **Qué pasó:**
