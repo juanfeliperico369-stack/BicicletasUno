@@ -26,19 +26,20 @@ function estiloEdificio(mundo, e) {
 }
 /* ---------- losas del suelo ---------- */
 class Losas {
-  constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; }
-  limpiar() { this.cache.clear(); this.version++; }
+  constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; this.px = 0; this.maxPx = op.maxPx || (GPU.perfil().nivel === 'alta' ? 40e6 : 22e6); }   // presupuesto de píxeles: las losas nítidas de cerca pesan más
+  limpiar() { this.cache.clear(); this.px = 0; this.version++; }
+  _poner(k, c) { this.cache.set(k, c); if (c) this.px += c.width * c.height; while (this.cache.size > this.max || this.px > this.maxPx) { const k0 = this.cache.keys().next().value, c0 = this.cache.get(k0); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k0); if (k0 === k) break; } }
   /* borra las losas de una caja (cuando la ciudad crece o cambia) */
-  invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) this.cache.delete(k); } this.version++; }
+  invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) { const c0 = this.cache.get(k); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k); } } this.version++; }
   /* la losa (gx, gy) a res px por metro; se pinta si no está (o se pone en cola si `diferir`) */
   losa(gx, gy, res, diferir, sinTechos) {
     const k = gx + ',' + gy + ',' + res + ',' + (sinTechos ? 1 : 0) + ',' + MC.arte.activa; let c = this.cache.get(k);
     if (c) { this.cache.delete(k); this.cache.set(k, c); return c; }
     if (diferir) { if (!this.pend.includes(k)) this.pend.push(k); return null; }
-    c = this.pintar(gx, gy, res, sinTechos); this.cache.set(k, c); while (this.cache.size > this.max) this.cache.delete(this.cache.keys().next().value); return c;
+    c = this.pintar(gx, gy, res, sinTechos); this._poner(k, c); return c;
   }
   /* pinta las losas pendientes con un presupuesto de milisegundos */
-  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this.cache.set(k, this.pintar(gx, gy, res, !!st)); } }
+  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this._poner(k, this.pintar(gx, gy, res, !!st)); } }
   pintar(gx, gy, res, sinTechos) {
     const M = this.mundo, L = this.L, T = M.tile, n = Math.round(L / T), px = Math.max(8, Math.round(L * res)), cv = lienzo(px, px); if (!cv) return null;
     const g = cv.getContext('2d'), x0 = gx * L, y0 = gy * L, S = MC.arte.dato('suelo', PAL_SUELO), V = Object.assign({}, PAL_VIA, MC.arte.dato('via', {}));

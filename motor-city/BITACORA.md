@@ -1,5 +1,58 @@
 # Bitácora de Motor City
 
+## 19‑nov‑2026 · 2.5.1 · Mandados jugable de verdad (Claude Code)
+**Pedido:** «Traté de probar el minijuego pero es injugable. No hay controles de verdad, no se puede mover nada. No está completamente liberado porque hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos en el repositorio?»
+
+**Lo que pasaba:**
+- El personaje sí se movía, pero la cámara estaba tan lejos que en un celular medía unos 3 píxeles.
+- El joystick era invisible.
+- Por eso parecía que nada respondía.
+- Además, casi todo costaba plata.
+
+**Lo que se hizo:**
+1. **Cámara cerca:** unos 45 m en el lado corto de la pantalla, en celular y en computador. El jugador tiene un **anillo verde con flecha**.
+2. **Joystick visible** abajo a la izquierda (`ui.joystick`), con la guía «Arrastra para moverte» (en computador: «Flechas o WASD»).
+3. **Botones de acción** redondos abajo a la derecha (`ui.accion`): ⤒ saltar y ⚡ turbo; 🔽 bajar y 🔼 subir aparecen en el agua o en el aire.
+4. **Flecha al objetivo** con la distancia (`MC.UI.indicador`), siempre dentro de la zona libre, sin tapar la interfaz.
+5. **Modo libre**, prendido por defecto: los 34 vehículos, la lancha, la gasolina, la casa, los lugares y el modo alcalde son gratis. Se apaga en ⚙️ Ajustes.
+6. **Tutorial** «Cómo se juega» al empezar, y otra vez desde Ajustes. Los menús quedaron en **Vista** (vistas, pixel y zoom) y **Ajustes** (modo libre, controles y rescate).
+7. **El primer mandado empieza cerca**, y la distancia crece con cada entrega.
+8. La interfaz:
+   - las barras pasaron arriba y la velocidad, abajo al centro;
+   - la tarjeta del mandado lleva el título en una línea y, primero, la distancia y el tiempo.
+9. **`docs/PEDIDOS.md`:** cada pedido del autor, su estado y dónde quedó. Hay 55 hechos, 2 que dependen de afuera y 3 pendientes con dueño.
+
+10. **Llegó la entrega de Gemini** (`ENTREGA-GEMINI-MOTOR-CITY-2.5.md`, G‑M0…G‑M15) y quedó integrada:
+    - el arte, extraído a `arte/gemini/`: 10 atlas WebP, manifiesto, 53 íconos, 30 hitos y paletas;
+    - `MC.Pieles` lo instala como piel con respaldo procedural en cada gancho, a la medida del motor y con una copia nocturna;
+    - en Mandados se usan los árboles del trópico, los props, las rocas, las fachadas y los muebles, con el selector 🎨 Arte en Vista;
+    - el personaje, los vehículos y los animales siguen procedurales, porque los de Gemini no vienen a escala;
+    - la revisión está en `arte/gemini/LEEME.md`.
+11. **De la auditoría de Gemini** se corrigió:
+    - la leyenda de las capas de datos (`ui.leyenda`);
+    - las etiquetas de los cuartos, ahora en la esquina;
+    - las ventanas de noche en las casas bajas;
+    - la maqueta, sin el corte de tierra de la vista lateral;
+    - las barras, con fondo.
+
+    También apareció un `//` que desde la 2.2 anulaba `mision.hidden` y el `aria-live` del aviso.
+12. **De la auditoría de Codex** (`docs/AUDITORIA-MOTOR-CITY-2026-11-19.md`): las pruebas usan el Chromium del sistema si Playwright no trae el suyo, o el que diga `MC_CHROMIUM`. Quedan anotados, con su dueño:
+    - la maqueta, que midió 44,7 ms en su máquina y aquí 27–29 ms;
+    - el test de WebRTC de EnCicla.
+
+**Probado** (118 pruebas). La nueva, en un celular táctil emulado (412 × 860), comprueba:
+- aparece el tutorial;
+- todo es libre y gratis, con 34 vehículos;
+- el joystick se ve;
+- arrastrarlo mueve al personaje unos 4 m en 2 s;
+- la cámara da 9 px por metro;
+- el primer mandado está a menos de 900 m;
+- el arte de Gemini carga (10 atlas, de día y de noche) sin sprites faltantes.
+
+En computador, las flechas y WASD mueven y giran.
+
+**Falta:** probarlo en un celular real.
+
 ## 19‑nov‑2026 · 2.5.0 · Entrar al agua (Claude Code)
 **Pedido:** «Añade la capacidad de poder entrar en el agua».
 

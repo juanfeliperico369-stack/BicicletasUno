@@ -264,6 +264,9 @@ console.log('15) Terreno: agua, montañas, rocas y límites de paso');
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
+  /* 2.5.1 (auditoría de Codex): si Playwright no trae su navegador (red cerrada), se usa el Chromium del sistema; o se elige con MC_CHROMIUM=/ruta */
+  if (chromium) { const L = chromium.launch.bind(chromium), cand = [process.env.MC_CHROMIUM, '/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome-stable', '/usr/bin/google-chrome'].filter(Boolean); let avisado = false;
+    chromium = { launch: async (op = {}) => { if (process.env.MC_CHROMIUM) return L({ ...op, executablePath: process.env.MC_CHROMIUM }); try { return await L(op); } catch (e) { for (const x of cand) if (fs.existsSync(x)) { if (!avisado) { console.log('  (Playwright sin su navegador: se usa ' + x + ')'); avisado = true; } return L({ ...op, executablePath: x }); } throw e; } } }; }
   if (chromium && fs.existsSync(html)) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
@@ -285,6 +288,22 @@ if (process.argv.includes('--navegador')) {
   }
   /* el minijuego Mandados: mi casa, diseño, lugares, historias y que la interfaz no tape el centro */
   const mh = path.join(RAIZ, 'dist/juegos/mandados.html');
+  /* 2.5.1: jugable en un celular de verdad (táctil): tutorial, joystick visible que mueve, cámara legible, todo libre y el primer mandado cerca */
+  if (chromium && fs.existsSync(mh)) {
+    const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 412, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage(), errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+    await p.goto('file://' + mh); await p.tap('#jugar'); await p.waitForFunction(() => window.MANDADOS && window.MANDADOS.mision, null, { timeout: 120000 }); await p.waitForTimeout(1200);
+    const tuto = await p.$('.dialogo button'); if (tuto) await tuto.tap(); await p.waitForTimeout(300);
+    const a = await p.evaluate(() => { const G = window.MANDADOS, P = G.mision.actual, j = document.querySelector('.joy'); return { x: G.cuerpo.x, y: G.cuerpo.y, libre: G.libre, vehiculos: G.vehiculos, pxPorMetro: +(G.camara.zoom / Math.min(2, devicePixelRatio)).toFixed(1), joystick: !!j && j.getBoundingClientRect().width > 80, primerMandado: Math.round(Math.hypot(P.x - G.cuerpo.x, P.y - G.cuerpo.y)) }; });
+    const cdp = await ctx.newCDPSession(p), sx = 412 * .25, sy = 860 * .8;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sx, y: sy, id: 1 }] });
+    for (let i = 1; i <= 10; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sx, y: sy - i * 6, id: 1 }] }); await p.waitForTimeout(30); }
+    await p.waitForTimeout(2000); const movio = await p.evaluate(c => +Math.hypot(MANDADOS.cuerpo.x - c.x, MANDADOS.cuerpo.y - c.y).toFixed(1), a); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    const arte = await p.evaluate(async () => { for (let i = 0; i < 100 && !MC.Sprites.atlases.get('gemini_u_noche'); i++) await new Promise(q => setTimeout(q, 50)); MANDADOS.ponVista('maqueta'); MANDADOS.reloj.min = 20.5 * 60; await new Promise(q => setTimeout(q, 700)); MANDADOS.ponVista('cenital'); const L = [...MC.Sprites.atlases.values()]; return { piel: MC.arte.activa, atlas: L.filter(A => A.listo && A.id.startsWith('gemini')).length, faltan: MC.Pieles.faltan().length, icono: MC.Pieles.icono('vista_cenital').startsWith('<svg') }; });
+    const r = { tutorial: !!tuto, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio, arte };
+    ok(r.tutorial && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && arte.piel === 'gemini' && arte.atlas >= 10 && arte.faltan === 0 && arte.icono && !errs.length, 'Mandados en un celular táctil: tutorial, todo libre y gratis, joystick visible que mueve, cámara legible, el primer mandado cerca y el arte de Gemini cargado (de día y de noche)', r);
+    await b.close();
+  }
   if (chromium && fs.existsSync(mh)) {
     const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });

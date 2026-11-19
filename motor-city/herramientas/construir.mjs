@@ -53,6 +53,16 @@ if (!process.argv.includes('--sin-sandbox') && fs.existsSync(path.join(RAIZ, 'sa
     .replaceAll('%VERSION%', VER.version);
   fs.writeFileSync(path.join(DIST, 'motor-city.html'), html);
 }
+/* ---------- paquetes de arte (arte/<id>/): también sueltos en dist/arte/<id>.js para que cualquier juego los incluya ---------- */
+function paqueteArte(id) {
+  const d = path.join(RAIZ, 'arte', id), mf = path.join(d, 'manifiesto.json'); if (!fs.existsSync(mf)) { console.warn('⚠ falta arte/' + id + '/manifiesto.json'); return null; }
+  const man = JSON.parse(fs.readFileSync(mf, 'utf8')), atlases = {};
+  for (const [aid, m] of Object.entries(man)) { const img = ['webp', 'png'].map(e => path.join(d, aid + '.' + e)).find(f => fs.existsSync(f)); if (!img) continue; atlases[aid] = Object.assign({ imagen: 'data:image/' + path.extname(img).slice(1) + ';base64,' + fs.readFileSync(img).toString('base64') }, m); }
+  const extra = {}; for (const k of ['iconos', 'hitos', 'paletas']) { const f = path.join(d, k + '.json'); if (fs.existsSync(f)) extra[k] = JSON.parse(fs.readFileSync(f, 'utf8')); }
+  return JSON.stringify(id) + ':' + JSON.stringify(Object.assign({ atlases }, extra));
+}
+if (fs.existsSync(path.join(RAIZ, 'arte'))) for (const id of fs.readdirSync(path.join(RAIZ, 'arte'))) { const t = fs.existsSync(path.join(RAIZ, 'arte', id, 'manifiesto.json')) && paqueteArte(id); if (t) { fs.mkdirSync(path.join(DIST, 'arte'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'arte', id + '.js'), '/* Paquete de arte «' + id + '» para Motor City: var MC_ARTE.' + id + ' = { atlases, iconos, hitos, paletas }. Se instala con MC.Pieles.instalar(). */\nvar MC_ARTE = window.MC_ARTE || {}; MC_ARTE[' + JSON.stringify(id) + '] = ' + t.slice(t.indexOf(':') + 1) + ';\n'); } }
+
 /* ---------- los juegos de juegos/<id>/ (cada uno con su mundo): dist/juegos/<id>.html ---------- */
 const juegos = [];
 const dirJ = path.join(RAIZ, 'juegos');
@@ -60,7 +70,9 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   const jd = path.join(dirJ, id), jj = path.join(jd, 'juego.json'); if (!fs.existsSync(jj)) continue;
   const J = JSON.parse(fs.readFileSync(jj, 'utf8')), cId = J.mundo || CIUDAD, mc = path.join(RAIZ, 'datos', cId, 'mundo.mc4');
   if (!fs.existsSync(mc)) { console.warn('⚠ ' + id + ': falta datos/' + cId + '/mundo.mc4'); continue; }
-  const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')), mundoJ = `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
+  let mundoJ; const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')); mundoJ = `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
+  /* arte en sprites: "arte": ["gemini"] en juego.json compila arte/<id>/ (atlas WebP + manifiesto + íconos + hitos + paletas) dentro del HTML */
+  const arteJ = (J.arte || []).map(a => paqueteArte(a)).filter(Boolean); if (arteJ.length) mundoJ += 'var MC_ARTE = {' + arteJ.join(',') + '};\n';
   const jsJ = fs.readdirSync(jd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(jd, f), 'utf8')).join('\n');
   const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
   const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replaceAll('%VERSION%', VER.version);

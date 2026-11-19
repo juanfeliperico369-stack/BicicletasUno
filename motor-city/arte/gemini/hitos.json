@@ -1,0 +1,302 @@
+[
+{
+"id": "coltejer",
+"nombre": "Edificio Coltejer",
+"clase": "aguja",
+"alto": 150,
+"corona": 25,
+"altoTotal": 175,
+"viewBox": "0 0 100 100",
+"path": "M 33 100 L 33 34 L 40 24 L 47 24 L 47 0 L 53 0 L 53 24 L 60 24 L 67 34 L 67 100 Z"
+},
+{
+"id": "catedral",
+"nombre": "Basílica Metropolitana",
+"clase": "basilica",
+"alto": 30,
+"corona": 0,
+"altoTotal": 30,
+"viewBox": "0 0 100 100",
+"path": "M 14 100 L 14 48 L 28 48 L 28 16 L 35 0 L 42 16 L 42 44 L 58 44 L 58 16 L 65 0 L 72 16 L 72 48 L 86 48 L 86 100 Z"
+},
+{
+"id": "palacio",
+"nombre": "Palacio de la Cultura Rafael Uribe Uribe",
+"clase": "palacio",
+"alto": 24,
+"corona": 0,
+"altoTotal": 24,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 42 L 34 42 L 34 22 Q 50 0 66 22 L 66 42 L 90 42 L 90 100 Z"
+},
+{
+"id": "museo",
+"nombre": "Museo de Antioquia",
+"clase": "republicano",
+"alto": 20,
+"corona": 0,
+"altoTotal": 20,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 34 L 22 24 L 50 18 L 78 24 L 90 34 L 90 100 Z"
+},
+{
+"id": "botero",
+"nombre": "Plaza Botero",
+"clase": "botero",
+"alto": 0,
+"corona": 0,
+"altoTotal": 0,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 82 L 24 82 L 25 56 A 8 10 0 1 1 39 56 L 40 82 L 58 82 L 62 50 A 10 12 0 1 1 80 50 L 82 82 L 92 82 L 92 100 Z"
+},
+{
+"id": "candelaria",
+"nombre": "Iglesia de La Candelaria",
+"clase": "iglesia",
+"alto": 16,
+"corona": 0,
+"altoTotal": 16,
+"viewBox": "0 0 100 100",
+"path": "M 18 100 L 18 46 L 40 46 L 40 18 L 50 0 L 60 18 L 60 46 L 82 46 L 82 100 Z"
+},
+{
+"id": "veracruz",
+"nombre": "Iglesia de la Veracruz",
+"clase": "iglesia",
+"alto": 15,
+"corona": 0,
+"altoTotal": 15,
+"viewBox": "0 0 100 100",
+"path": "M 18 100 L 18 46 L 40 46 L 40 18 L 50 0 L 60 18 L 60 46 L 82 46 L 82 100 Z"
+},
+{
+"id": "sanjose",
+"nombre": "Iglesia de San José",
+"clase": "iglesia",
+"alto": 16,
+"corona": 0,
+"altoTotal": 16,
+"viewBox": "0 0 100 100",
+"path": "M 18 100 L 18 46 L 40 46 L 40 18 L 50 0 L 60 18 L 60 46 L 82 46 L 82 100 Z"
+},
+{
+"id": "sanantonio",
+"nombre": "Iglesia de San Antonio",
+"clase": "iglesia",
+"alto": 20,
+"corona": 0,
+"altoTotal": 20,
+"viewBox": "0 0 100 100",
+"path": "M 18 100 L 18 46 L 40 46 L 40 18 L 50 0 L 60 18 L 60 46 L 82 46 L 82 100 Z"
+},
+{
+"id": "estadio",
+"nombre": "Estadio Atanasio Girardot",
+"clase": "estadio",
+"alto": 22,
+"corona": 0,
+"altoTotal": 22,
+"viewBox": "0 0 100 100",
+"path": "M 4 100 L 10 44 Q 50 26 90 44 L 96 100 Z M 22 44 L 22 24 L 26 24 L 26 43 M 74 43 L 74 24 L 78 24 L 78 44"
+},
+{
+"id": "bibespana",
+"nombre": "Parque Biblioteca España",
+"clase": "rocas",
+"alto": 20,
+"corona": 0,
+"altoTotal": 20,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 16 28 L 36 22 L 40 100 L 44 18 L 66 12 L 70 100 L 74 26 L 92 32 L 94 100 Z"
+},
+{
+"id": "epm",
+"nombre": "Edificio EPM",
+"clase": "vidrio",
+"alto": 85,
+"corona": 0,
+"altoTotal": 85,
+"viewBox": "0 0 100 100",
+"path": "M 20 100 L 20 12 L 42 12 L 42 8 L 58 8 L 58 12 L 80 12 L 80 100 Z"
+},
+{
+"id": "teatro",
+"nombre": "Teatro Metropolitano",
+"clase": "ladrillo",
+"alto": 24,
+"corona": 0,
+"altoTotal": 24,
+"viewBox": "0 0 100 100",
+"path": "M 14 100 L 14 26 L 86 26 L 86 100 Z"
+},
+{
+"id": "pies",
+"nombre": "Parque de los Pies Descalzos",
+"clase": "pies",
+"alto": 0,
+"corona": 0,
+"altoTotal": 0,
+"viewBox": "0 0 100 100",
+"path": "M 8 100 L 8 82 L 24 68 L 40 82 L 58 72 L 74 84 L 92 78 L 92 100 Z"
+},
+{
+"id": "luces",
+"nombre": "Parque de las Luces",
+"clase": "luces",
+"alto": 0,
+"corona": 0,
+"altoTotal": 0,
+"viewBox": "0 0 100 100",
+"path": "M 12 100 L 12 12 L 18 12 L 18 100 M 36 100 L 36 12 L 42 12 L 42 100 M 60 100 L 60 12 L 66 12 L 66 100 M 84 100 L 84 12 L 90 12 L 90 100"
+},
+{
+"id": "vasquez",
+"nombre": "Edificio Vásquez",
+"clase": "republicano",
+"alto": 16,
+"corona": 0,
+"altoTotal": 16,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 34 L 22 24 L 50 18 L 78 24 L 90 34 L 90 100 Z"
+},
+{
+"id": "carre",
+"nombre": "Edificio Carré",
+"clase": "republicano",
+"alto": 16,
+"corona": 0,
+"altoTotal": 16,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 34 L 22 24 L 50 18 L 78 24 L 90 34 L 90 100 Z"
+},
+{
+"id": "bibepm",
+"nombre": "Biblioteca EPM",
+"clase": "ladrillo",
+"alto": 22,
+"corona": 0,
+"altoTotal": 22,
+"viewBox": "0 0 100 100",
+"path": "M 14 100 L 14 26 L 86 26 L 86 100 Z"
+},
+{
+"id": "ferrocarril",
+"nombre": "Estación del Ferrocarril de Antioquia",
+"clase": "republicano",
+"alto": 12,
+"corona": 0,
+"altoTotal": 12,
+"viewBox": "0 0 100 100",
+"path": "M 8 100 L 8 44 L 28 32 L 50 26 L 72 32 L 92 44 L 92 100 Z"
+},
+{
+"id": "alcaldia",
+"nombre": "Alcaldía de Medellín",
+"clase": "alpujarra",
+"alto": 48,
+"corona": 0,
+"altoTotal": 48,
+"viewBox": "0 0 100 100",
+"path": "M 18 100 L 18 18 L 42 12 L 58 12 L 82 18 L 82 100 Z"
+},
+{
+"id": "gobernacion",
+"nombre": "Gobernación de Antioquia",
+"clase": "alpujarra",
+"alto": 48,
+"corona": 0,
+"altoTotal": 48,
+"viewBox": "0 0 100 100",
+"path": "M 18 100 L 18 18 L 42 12 L 58 12 L 82 18 L 82 100 Z"
+},
+{
+"id": "concejo",
+"nombre": "Concejo de Medellín",
+"clase": "moderno",
+"alto": 18,
+"corona": 0,
+"altoTotal": 18,
+"viewBox": "0 0 100 100",
+"path": "M 16 100 L 16 28 L 52 28 L 52 14 L 84 14 L 84 100 Z"
+},
+{
+"id": "justicia",
+"nombre": "Palacio de Justicia",
+"clase": "alpujarra",
+"alto": 36,
+"corona": 0,
+"altoTotal": 36,
+"viewBox": "0 0 100 100",
+"path": "M 18 100 L 18 18 L 42 12 L 58 12 L 82 18 L 82 100 Z"
+},
+{
+"id": "nacional",
+"nombre": "Palacio Nacional",
+"clase": "republicano",
+"alto": 24,
+"corona": 0,
+"altoTotal": 24,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 34 L 22 24 L 50 18 L 78 24 L 90 34 L 90 100 Z"
+},
+{
+"id": "banrep",
+"nombre": "Banco de la República",
+"clase": "republicano",
+"alto": 20,
+"corona": 0,
+"altoTotal": 20,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 34 L 22 24 L 50 18 L 78 24 L 90 34 L 90 100 Z"
+},
+{
+"id": "planetario",
+"nombre": "Planetario de Medellín",
+"clase": "cupula",
+"alto": 10,
+"corona": 0,
+"altoTotal": 10,
+"viewBox": "0 0 100 100",
+"path": "M 14 100 L 14 58 L 26 58 A 24 24 0 0 1 74 58 L 86 58 L 86 100 Z"
+},
+{
+"id": "explora",
+"nombre": "Parque Explora",
+"clase": "cubos",
+"alto": 16,
+"corona": 0,
+"altoTotal": 16,
+"viewBox": "0 0 100 100",
+"path": "M 8 100 L 8 44 L 30 44 L 30 22 L 52 22 L 52 38 L 72 38 L 72 14 L 94 14 L 94 100 Z"
+},
+{
+"id": "pablotobon",
+"nombre": "Teatro Pablo Tobón Uribe",
+"clase": "republicano",
+"alto": 14,
+"corona": 0,
+"altoTotal": 14,
+"viewBox": "0 0 100 100",
+"path": "M 10 100 L 10 34 L 22 24 L 50 18 L 78 24 L 90 34 L 90 100 Z"
+},
+{
+"id": "memoria",
+"nombre": "Museo Casa de la Memoria",
+"clase": "moderno",
+"alto": 12,
+"corona": 0,
+"altoTotal": 12,
+"viewBox": "0 0 100 100",
+"path": "M 16 100 L 16 28 L 52 28 L 52 14 L 84 14 L 84 100 Z"
+},
+{
+"id": "mamm",
+"nombre": "Museo de Arte Moderno de Medellín",
+"clase": "ladrillo",
+"alto": 18,
+"corona": 0,
+"altoTotal": 18,
+"viewBox": "0 0 100 100",
+"path": "M 14 100 L 14 26 L 86 26 L 86 100 Z"
+}
+]

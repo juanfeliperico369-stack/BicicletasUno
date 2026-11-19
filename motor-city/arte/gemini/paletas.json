@@ -1,0 +1,203 @@
+{
+ "paletasHora": {
+  "amanecer": {
+   "cieloTop": "#52608e",
+   "cieloHor": "#f2a47e",
+   "bruma": "#f7c59f",
+   "sol": "#ffd39b",
+   "sombra": "#4a3556",
+   "sombraAlfa": 0.34,
+   "muroTint": "#f5ccb0",
+   "luzNoche": 0.15
+  },
+  "manana": {
+   "cieloTop": "#4a88d8",
+   "cieloHor": "#b4d9f7",
+   "bruma": "#d9ecfa",
+   "sol": "#fff4d6",
+   "sombra": "#243554",
+   "sombraAlfa": 0.3,
+   "muroTint": "#fff8ec",
+   "luzNoche": 0
+  },
+  "mediodia": {
+   "cieloTop": "#3574cc",
+   "cieloHor": "#9bd0f8",
+   "bruma": "#cde6fa",
+   "sol": "#ffffff",
+   "sombra": "#161e34",
+   "sombraAlfa": 0.28,
+   "muroTint": "#ffffff",
+   "luzNoche": 0
+  },
+  "tarde": {
+   "cieloTop": "#4e79bf",
+   "cieloHor": "#ebd4a8",
+   "bruma": "#f2dec0",
+   "sol": "#ffe5ad",
+   "sombra": "#2b2442",
+   "sombraAlfa": 0.34,
+   "muroTint": "#ffe8cc",
+   "luzNoche": 0
+  },
+  "atardecer": {
+   "cieloTop": "#3a346e",
+   "cieloHor": "#f08257",
+   "bruma": "#e8966b",
+   "sol": "#ff9d52",
+   "sombra": "#331b3b",
+   "sombraAlfa": 0.38,
+   "muroTint": "#f2a77c",
+   "luzNoche": 0.28
+  },
+  "noche": {
+   "cieloTop": "#081024",
+   "cieloHor": "#132245",
+   "bruma": "#182b52",
+   "sol": "#000000",
+   "sombra": "#000000",
+   "sombraAlfa": 0,
+   "muroTint": "#415170",
+   "luzNoche": 0.92
+  }
+ },
+ "paletasCapas": {
+  "estandar": {
+   "valor": [
+    "#c82828",
+    "#f0c83c",
+    "#28aa50"
+   ],
+   "ruido": [
+    "#14161f",
+    "#fa9628",
+    "#a01ea0"
+   ],
+   "contaminacion": [
+    "#1c1c1c",
+    "#aa7832",
+    "#5a3c1e"
+   ],
+   "verde": [
+    "#1e2620",
+    "#78c85a",
+    "#147832"
+   ],
+   "servicios": [
+    "#141e2e",
+    "#50a0f0",
+    "#1e46c8"
+   ],
+   "transporte": [
+    "#1a1e2a",
+    "#f0c83c",
+    "#e65a28"
+   ],
+   "trafico": [
+    "#28aa50",
+    "#f0c83c",
+    "#d82828"
+   ],
+   "zonas": {
+    "R": "#43a047",
+    "C": "#1e88e5",
+    "I": "#f9a825",
+    "O": "#8e24aa"
+   }
+  },
+  "daltonicos": {
+   "_nota": "Escalas perceptualmente uniformes (Okabe-Ito / Viridis / Cividis) seguras para deuteranopia, protanopia y tritanopia",
+   "valor": [
+    "#440154",
+    "#21918c",
+    "#fde725"
+   ],
+   "ruido": [
+    "#00204d",
+    "#7c7b78",
+    "#ffea46"
+   ],
+   "contaminacion": [
+    "#1b1b2f",
+    "#d55e00",
+    "#f0e442"
+   ],
+   "verde": [
+    "#2b2d42",
+    "#56b4e9",
+    "#009e73"
+   ],
+   "servicios": [
+    "#1b1e2b",
+    "#56b4e9",
+    "#f0e442"
+   ],
+   "transporte": [
+    "#221831",
+    "#cc79a7",
+    "#f0e442"
+   ],
+   "trafico": [
+    "#0072b2",
+    "#f0e442",
+    "#d55e00"
+   ],
+   "zonas": {
+    "R": "#0072b2",
+    "C": "#e69f00",
+    "I": "#cc79a7",
+    "O": "#009e73"
+   }
+  }
+ },
+ "estilosInteriores": {
+  "paisa": {
+   "nombre": "paisa",
+   "piso": "hidraulica",
+   "acento": "#c43a26",
+   "madera": "#7b4a2e"
+  },
+  "moderno": {
+   "nombre": "moderno",
+   "piso": "porcelanato",
+   "acento": "#2f80ed",
+   "madera": "#c8b79c"
+  },
+  "minimalista": {
+   "nombre": "minimalista",
+   "piso": "cemento",
+   "acento": "#111111",
+   "madera": "#e3d5bf"
+  },
+  "bohemio": {
+   "nombre": "bohemio",
+   "piso": "madera",
+   "acento": "#d9822b",
+   "madera": "#6b4423"
+  },
+  "campestre": {
+   "nombre": "campestre",
+   "piso": "madera",
+   "acento": "#4a7c3a",
+   "madera": "#5d3d24"
+  },
+  "industrial": {
+   "nombre": "industrial",
+   "piso": "cemento",
+   "acento": "#d35400",
+   "madera": "#3f3a36"
+  },
+  "juvenil": {
+   "nombre": "juvenil",
+   "piso": "madera",
+   "acento": "#ff2fb3",
+   "madera": "#c9a77c"
+  },
+  "clasico": {
+   "nombre": "clasico",
+   "piso": "madera",
+   "acento": "#8e1b1b",
+   "madera": "#4e2f1a"
+  }
+ }
+}
