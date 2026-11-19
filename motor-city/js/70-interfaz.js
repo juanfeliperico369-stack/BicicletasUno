@@ -24,7 +24,7 @@ const UI = {
     if (typeof document === 'undefined') return null;
     const T = Object.assign({}, TEMAS_UI[op.tema || 'motorcity'], op.colores || {}), id = 'mcui-' + Math.random().toString(36).slice(2, 7), capa = document.createElement('div'); capa.className = 'mcui'; capa.id = id; raiz.appendChild(capa);
     const css = document.createElement('style'); css.textContent = `#${id}{--f:${T.fondo};--t:${T.tinta};--a:${T.acento};--a2:${T.acento2};--b:${T.borde};--r:${T.radio};position:fixed;inset:0;pointer-events:none;font:14px/1.3 ${T.letra};color:var(--t);z-index:20}
-#${id} [hidden]{display:none!important}#${id} .p{pointer-events:auto}#${id} .izq{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;right:84px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}#${id} .fichas{display:flex;flex-wrap:wrap;gap:6px}
+#${id} [hidden]{display:none!important}#${id} .p{pointer-events:auto}#${id} .izq{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;right:84px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}#${id} .fichas{display:flex;flex-wrap:wrap;gap:6px;max-height:76px;overflow:hidden}#${id} .ficha{max-width:52vw;overflow:hidden;text-overflow:ellipsis}#${id} .mision{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}#${id} .aviso.on{-webkit-line-clamp:3}
 #${id} .ficha{padding:6px 10px;border-radius:999px;background:var(--f);border:1px solid var(--b);font-weight:700;white-space:nowrap;backdrop-filter:blur(6px)}
 #${id} .botones{position:absolute;right:8px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;flex-wrap:wrap-reverse;align-content:flex-start;max-height:calc(100vh - 170px);gap:6px}
 #${id} button{min-width:48px;min-height:48px;border-radius:var(--r);border:1px solid var(--b);background:var(--f);color:var(--t);font:700 18px/1 ${T.letra};cursor:pointer}
@@ -38,7 +38,7 @@ const UI = {
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
 #${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.38}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
-@media (orientation:landscape) and (max-height:500px){#${id} .fichas{right:120px}#${id} .ficha{padding:4px 8px;font-size:12px}}
+@media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:58px}#${id} .ficha{max-width:23vw}#${id} .mision{-webkit-line-clamp:2}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
     const div = (cls, padre = capa) => { const d = document.createElement('div'); d.className = cls; padre.appendChild(d); return d; };
