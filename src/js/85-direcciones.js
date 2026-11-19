@@ -53,7 +53,7 @@ Ride.prototype.updLife = function (dt) {
 const _hud85 = Ride.prototype.hud;
 Ride.prototype.hud = function (V) {
   const r = _hud85.apply(this, arguments), C = this.calle; if (!C || !(this.calleT > 0) || this.mode.sub || this.big) return r;
-  const y = (View.hudB || 50) + 12, t = '📍 ' + C.n + (C.nom ? ' · ' + C.nom : '');
+  const y = Math.max((View.hudB || 50) + 12, (View.top || 0) + 8), t = '📍 ' + C.n   // debajo de los objetivos, si los hay + (C.nom ? ' · ' + C.nom : '');
   V.text(t.length > 46 ? t.slice(0, 45) + '…' : t, 10, y, { size: 11, align: 'left', color: '#fff', stroke: '#0a2342', sw: 3, body: true });
   return r;
 };

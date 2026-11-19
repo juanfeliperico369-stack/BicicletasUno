@@ -91,14 +91,14 @@ const MapView = JE.mapView = {
     const w = this.W(x, y), R = this.ride, M = JE.map, r = 16 / this.z; let name = '', px = w.x, py = w.y, bd = r;
     for (const s of M.stations) { const d = dist(s.x, s.y, w.x, w.y); if (d < bd) { bd = d; name = 'EnCicla ' + s.name; px = s.x; py = s.y + 12 * WK; } }
     for (const L of LANDMARKS) { if (L.secret) continue; const lx = (L.x + L.w / 2) * TS, ly = (L.y + L.h) * TS + 6 * WK, d = dist(lx, (L.y + L.h / 2) * TS, w.x, w.y); if (d < bd) { bd = d; name = L.name; px = lx; py = ly; } }
-    const o = M.nearestOpen(Math.floor(px / TS), Math.floor(py / TS), R.p.veh === 'truck'); if (!o) return;
+    const o = M.nearestOpen(Math.floor(px / TS), Math.floor(py / TS), vehVia(R.p.veh)); if (!o) return;
     R.way = { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, label: name || 'Tu destino', col: '#ff2fb3' }; R.gpsT = 0; this.route = null; Snd.sfx('star'); vib(20);
   },
   /* ruta completa del jugador al destino (o a la tarea actual) */
   calcRoute() {
     const R = this.ride, T = R.way || R.target, M = JE.map, out = []; this.routeFor = T; if (!T) return (this.route = out);
-    let c = { x: Math.floor(R.p.x / TS), y: Math.floor(R.p.y / TS) }; const D = M.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), R.p.veh === 'truck', c.x, c.y);
-    if (M.fv(D, c.x, c.y) >= 1e9) c = M.nearestOpen(c.x, c.y, R.p.veh === 'truck');
+    let c = { x: Math.floor(R.p.x / TS), y: Math.floor(R.p.y / TS) }; const D = M.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), vehVia(R.p.veh), c.x, c.y);
+    if (M.fv(D, c.x, c.y) >= 1e9) c = M.nearestOpen(c.x, c.y, vehVia(R.p.veh));
     for (let i = 0; i < 1500; i++) { const n = M.nextStep(D, c.x, c.y); if (!n) break; c = n; if (i % 2 === 0) out.push(c.x * TS + TS / 2, c.y * TS + TS / 2); }
     return (this.route = out);
   },

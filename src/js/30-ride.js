@@ -60,12 +60,12 @@ class Ride {
   }
   /* conducción con peso (v1.7): velocidad punta VEL (el reloj de los oficios corre MS/VEL más lento, así cada viaje cuesta los mismos minutos de juego),
      arranque gradual (acc), frenada (brk) y rodada libre al soltar (coast), en px/s²; giro limitado por la velocidad: w0 rad/s parado y w1 a toda marcha, con inercia tw s */
-  stats_() { const v = this.p.veh, f = VEL * velMul(this.mode); return v === 'truck' ? { max: 50 * WK * f, acc: 24 * WK * f, brk: 62 * WK * f, coast: 22 * WK * f, w0: 2.4, w1: 1.2, tw: .2, r: 3.4 * 1.4 } : v === 'walk' ? { max: 26 * WK * f, acc: 90 * WK * f, brk: 170 * WK * f, coast: 120 * WK * f, w0: 7.5, w1: 6, tw: .05, r: 2 } : { max: 60 * WK * f, acc: 30 * WK * f, brk: 72 * WK * f, coast: 40 * WK * f, w0: 5, w1: 2.7, tw: .09, r: 2.5 }; }
-  solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)); return this.p.veh === 'truck' ? !TRUCK_OK[v] : SOLID[v] === 1; }
+  stats_() { return vehStats(this.p.veh, VEL * velMul(this.mode)); }   // las cifras de cada vehículo están en 25-vehiculos.js
+  solidAt(x, y) { const v = this.map.get(Math.floor(x / TS), Math.floor(y / TS)), D = vehDef(this.p.veh); return D.solido ? D.solido(v) : SOLID[v] === 1; }
   blocked(x, y, r) { return this.solidAt(x - r, y - r) || this.solidAt(x + r, y - r) || this.solidAt(x - r, y + r) || this.solidAt(x + r, y + r); }
   tileAt() { return this.map.get(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS)); }
   setVeh(v) {
-    this.p.veh = v; if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), v === 'truck'); this.p.x = n.x * TS + TS / 2; this.p.y = n.y * TS + TS / 2; }
+    this.p.veh = v; if (this.blocked(this.p.x, this.p.y, this.stats_().r)) { const n = this.map.nearestOpen(Math.floor(this.p.x / TS), Math.floor(this.p.y / TS), vehVia(v)); this.p.x = n.x * TS + TS / 2; this.p.y = n.y * TS + TS / 2; }
   }
   /* radios fijos (≤ 30 px, del diseño de 8 px) se escalan; los calculados con el tamaño del lugar ya vienen en la escala */
   marker(m) { m.inside = false; m.r = (m.r || 14) <= 30 ? (m.r || 14) * WK : m.r; this.markers.push(m); return m; }
@@ -87,12 +87,12 @@ class Ride {
     const P = this.p, S = this.stats_(), M = this.mode, rain = M.mods.rain;
     this.belT = Math.max(0, (this.belT || 0) - dt); this.inv = Math.max(0, (this.inv || 0) - dt);
     if (P.stun > 0) { P.stun -= dt; dir = { x: 0, y: 0, m: 0 }; }
-    let mult = P.veh === 'truck' ? 1 : P.veh === 'walk' ? (WSURF[this.tileAt()] || .8) : (SURF[this.tileAt()] || .5);
+    const VD = vehDef(P.veh); let mult = VD.suelo(this.tileAt());
     mult *= (M.has('llantas') && P.veh === 'bike' ? 1.12 : 1) * (M.has('camion') && P.veh === 'truck' ? 1.15 : 1) * (rain ? .93 : 1) * (M.mods.ciclovia && P.veh === 'bike' ? 1.06 : 1);
     // relieve real: en subida se pedalea más lento y en bajada se va más rápido (el camión lo siente menos; la bici eléctrica no sufre en subida)
     const sl = this.sl = this.map.slope(P.x, P.y, P.a), eb = P.veh === 'bike' && !!(M.ebike || this.ebike);
     if (M.speedMul) mult *= M.speedMul(this);
-    mult *= P.veh === 'truck' ? clamp(1 - .9 * sl, .7, 1.12) : P.veh === 'walk' ? clamp(1 - 1.1 * sl, .6, 1.15) : eb && sl > 0 ? 1 : clamp(1 - 2.2 * sl, .5, 1.32);
+    mult *= (eb || VD.asist) && sl > 0 ? 1 : clamp(1 - VD.loma[0] * sl, VD.loma[1], VD.loma[2]);
     const kw = 1 - Math.exp(-dt / S.tw);
     if (dir.m > 0) {
       // giro con peso: la velocidad de giro deseada sigue al joystick, limitada por la velocidad (a toda marcha se abre la curva) y con inercia
@@ -172,8 +172,8 @@ class Ride {
   calcGps() {
     this.gps = []; const T = this.way || this.target; if (!T) return;
     let c = { x: Math.floor(this.p.x / TS), y: Math.floor(this.p.y / TS) };
-    const D = this.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), this.p.veh === 'truck', c.x, c.y);
-    if (this.map.fv(D, c.x, c.y) >= 1e9) { const n = this.map.nearestOpen(c.x, c.y, this.p.veh === 'truck'); c = n; }
+    const D = this.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), vehVia(this.p.veh), c.x, c.y);
+    if (this.map.fv(D, c.x, c.y) >= 1e9) { const n = this.map.nearestOpen(c.x, c.y, vehVia(this.p.veh)); c = n; }
     for (let i = 0; i < 90; i++) { const n = this.map.nextStep(D, c.x, c.y); if (!n) break; c = n; if (i % 2 === 1) this.gps.push({ x: c.x * TS + TS / 2, y: c.y * TS + TS / 2 }); }
     this.flowD = D;
   }
@@ -326,7 +326,7 @@ class Ride {
     this.drawGround(c, ox, oy, inV);
     for (const cr of this.cars) if (!cr.arriba && inV(cr.x, cr.y)) spr(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, '#0004');
     for (const o of this.opps) if (inV(o.x, o.y)) { c.globalAlpha = .9; spr(Art.riderTop(o.shirt || PAL.cor, '#ffffff', o.skin || SKINS[2]), o.x, o.y, o.a); c.globalAlpha = 1; }
-    const sp = P.veh === 'truck' ? Art.truckTop(P.load, P.cap) : P.veh === 'walk' ? Art.walker((this.stepT | 0) % 2) : Art.rider(this.mode.shirt), abajo = !d3 || !(P.lvl > 0);
+    const sp = vehDef(P.veh).spr(this), abajo = !d3 || !(P.lvl > 0);
     // en la ciudad 3D el jugador va debajo de lo que está en alto (viaducto, estaciones, puentes); en un puente va encima
     if (d3) this.drawTrenesSuelo(c, ox, oy, inV, spr);   // trenes a nivel del suelo (los del viaducto van con su pieza en draw3D)
     if (abajo) spr(sp, P.x, P.y, P.a, '#0005');

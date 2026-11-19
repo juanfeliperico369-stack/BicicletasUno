@@ -1,7 +1,7 @@
 {
- "version": "1.7.1",
- "hash": "51c3b482",
- "cache": "juega-encicla-v1.7.1-51c3b482",
+ "version": "1.7.2",
+ "hash": "5a476cd6",
+ "cache": "juega-encicla-v1.7.2-5a476cd6",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -9,6 +9,7 @@
   "20-map.js",
   "21-map-art.js",
   "22-sitios.js",
+  "25-vehiculos.js",
   "30-ride.js",
   "35-life.js",
   "40-mg.js",
@@ -49,12 +50,13 @@
   "88-camara.js",
   "89-paseo.js",
   "90-bot.js",
+  "91-modos.js",
   "95-promo.js",
   "99-boot.js"
  ],
  "bytes": {
-  "single": 5006154,
-  "web": 5007178,
-  "js": 4825382
+  "single": 5019489,
+  "web": 5020513,
+  "js": 4838717
  }
 }

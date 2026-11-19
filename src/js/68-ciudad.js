@@ -69,13 +69,15 @@ Ride.prototype.update = function (dt, dir) {
   if (this.p.veh === 'walk') { this.stepT = (this.stepT || 0) + dt * this.p.v * .12; }
   _rideUpdate.call(this, dt, dir);
 };
-Ride.prototype.getOff = function () { const P = this.p; this.parked = { x: P.x, y: P.y, a: P.a }; P.veh = 'walk'; P.v = 0; Snd.sfx('tap'); this.float('A pie', PAL.vd1); };
-Ride.prototype.getOn = function () { const P = this.p, pk = this.parked; if (!pk || dist(pk.x, pk.y, P.x, P.y) > 22 * WK) return false; P.x = pk.x; P.y = pk.y; P.a = pk.a; this.parked = null; P.veh = 'bike'; Snd.sfx('coin'); this.float('¡A pedalear!', PAL.vd1); return true; };
+Ride.prototype.getOff = function () { const P = this.p; this.parked = { x: P.x, y: P.y, a: P.a, veh: P.veh }; P.veh = 'walk'; P.v = 0; Snd.sfx('tap'); this.float('A pie', PAL.vd1); };
+Ride.prototype.getOn = function () { const P = this.p, pk = this.parked; if (!pk || dist(pk.x, pk.y, P.x, P.y) > 22 * WK) return false; P.x = pk.x; P.y = pk.y; P.a = pk.a; this.parked = null; P.veh = pk.veh || 'bike'; Snd.sfx('coin'); this.float(P.veh === 'bike' ? '¡A pedalear!' : vehDef(P.veh).icon + ' ¡En marcha!', PAL.vd1); return true; };
 const _uActions = ModeUsuario.prototype.actions;
 ModeUsuario.prototype.actions = function () {
   const a = _uActions.call(this); if (!this.free || this.sub) return a; const R = this.ride, P = R.p;
-  if (P.veh === 'bike') a.push({ id: 'off', icon: 'usuario', label: 'Bajarse', fn: () => R.getOff() });
-  else if (P.veh === 'walk') a.push({ id: 'on', icon: 'estacion', label: R.parked && dist(R.parked.x, R.parked.y, P.x, P.y) < 22 * WK ? 'Subirse' : 'Ir a la bici', fn: () => { if (!R.getOn()) { R.target = R.marker({ x: R.parked.x, y: R.parked.y, r: 12, col: PAL.vd, label: 'Tu bici', enter: m => R.removeMarker(m) }); JE.ui && JE.ui.toast('🚲 Sigue la línea hasta tu bici'); } } });
+  const VD = vehDef(P.veh), pk = R.parked, tu = pk && pk.veh && pk.veh !== 'bike' ? vehDef(pk.veh).corto : 'bici';
+  if (P.veh !== 'walk' && P.veh !== 'truck' && VD.bajar) a.push({ id: 'off', icon: 'usuario', label: 'Bajarse', fn: () => R.getOff() });
+  else if (P.veh === 'walk') a.push({ id: 'on', icon: 'estacion', label: R.parked && dist(R.parked.x, R.parked.y, P.x, P.y) < 22 * WK ? 'Subirse' : tu === 'bici' ? 'Ir a la bici' : 'Ir', fn: () => { if (!R.getOn()) { R.target = R.marker({ x: R.parked.x, y: R.parked.y, r: 12, col: PAL.vd, label: 'Tu ' + tu, enter: m => R.removeMarker(m) }); JE.ui && JE.ui.toast((tu === 'bici' ? '🚲' : vehDef(pk.veh).icon) + ' Sigue la línea hasta tu ' + tu); } } });
+  const vs = JE.vehiculos.libres(); if (vs.length > 1 && P.veh !== 'walk' && P.veh !== 'truck' && !R.carry) a.push({ id: 'veh', icon: 'balance', label: 'Vehículo', fn: () => { const i = vs.findIndex(v => v.id === P.veh), n = vs[(i + 1) % vs.length]; R.setVeh(n.id); JE.ui && JE.ui.toast(n.icon + ' ' + n.n); } });   // con vehículos registrados (libre: 1), se elige aquí
   return a;
 };
 

@@ -179,6 +179,25 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v1.7.2 · Terreno para lo nuevo* (`25-vehiculos.js`, `91-modos.js`, `83-guion.js`, `contenido/guion/misiones.json`, `docs/INTEGRAR.md`):
+- **`VEHICULOS` y `JE.vehiculos`:**
+  - `registrar(id, def)` hereda de su base (`bike`, `walk` o `truck`). Lee `fis`, `suelo(t)`, `loma`, `asist`, `solido(t)`, `via`, `spr(R)`, `lado(...)`, `timbre`, `bajar`, `libre` y `gasto`.
+  - `mejorar(id, partes)` cambia el arte de uno de siempre, sin su física.
+  - `usar(id)` sube al jugador; `libres()` lista los que se eligen en el modo libre.
+  - El código consulta el registro con `vehStats`, `vehDef` y `vehVia` en `stats_`, `solidAt`, `update` (suelo y loma), el GPS, el bot, `renderTop0`, la vista panorámica, `getOff`/`getOn` y la energía del modo libre.
+- **`JE.modos`:**
+  - `registrar({ id, name, cls, niveles, how, desc, emoji })` crea `ROLE[id]`, con `juego: 1` y los niveles como `shifts`, y `MODE_CLASS[id]`.
+  - El panel va en Ruta, debajo de la carrera de postales.
+  - `isJuego(id)` deja fuera del escalafón la racha, las mejoras y los logros «Aprobado» y «Turno perfecto».
+  - `quitar(id)` lo retira.
+- **`guionMisiones(now)`:**
+  - Toma de `GUION.misiones` una o dos misiones por día, con la semilla de la fecha, según `dias`, `desde`, `hasta` y `req`.
+  - Son de tipo `visita` hacia un id de `LUGARES` o `[lat, lon]`.
+  - Al cumplirlas se guardan en `Save.data.trama` y `Save.data.huevos` y se ven las frases de `despues`.
+- **Interfaz:**
+  - `Cam.lugar()` pone los botones de la cámara entre las metas y el control, en fila si no caben.
+  - `#actBar` pasa a la izquierda del minimapa cuando no cabe debajo.
+
 *v1.7.1 · El sistema metro como en El Metro y la guía discreta* (`74-sistema.js`, `76-altura.js`, `35-life.js`, `75-graficos.js`, `30-ride.js`, `motor-valle/geo/metroplus_elmetro.py`, `src/data/metroplus.json`):
 - **`SisSpr`:**
   - `veh(g, kind, L, W, col, o)` es el `Spr.veh` de El Metro (metro, tranvía, `brt` y cable), en px, mirando a +x;

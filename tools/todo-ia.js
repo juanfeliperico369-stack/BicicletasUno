@@ -43,6 +43,8 @@ function compilar() {
     + '\n\n---\n\n' + anexoA.trimEnd()
     + '\n\n---\n\n# Anexo B · Guía del juego\n\n' + bajar(rd('docs/GUIA.md')).trimEnd()
     + '\n\n---\n\n# Anexo C · Bitácora de desarrollo\n\n' + bajar(rd('docs/BITACORA.md')).trimEnd()
+    + (fs.existsSync(path.join(ROOT, 'docs/PLAN-UNICO-IA.md')) ? '\n\n---\n\n# Anexo D · Plan único (Gemini con Antigravity y ChatGPT con Codex)\n\n' + bajar(rd('docs/PLAN-UNICO-IA.md')).trimEnd() : '')
+    + (fs.existsSync(path.join(ROOT, 'docs/INTEGRAR.md')) ? '\n\n---\n\n# Anexo E · Cómo integrar lo nuevo (vehículos, modos, trama, arte, mapa y pruebas)\n\n' + bajar(rd('docs/INTEGRAR.md')).trimEnd() : '')
     + '\n\n---\n\n# FIN DEL DOCUMENTO\n';
   fs.mkdirSync(path.join(ROOT, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(ROOT, 'dist', 'ENCICLA-TODO.md'), doc);

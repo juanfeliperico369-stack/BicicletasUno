@@ -141,8 +141,8 @@ class MapMode extends Mode {
     if (this.ride.inMini(cx, cy)) { this.ride.big = true; Snd.sfx('tap'); return true; }
     return false;
   }
-  key(e) { if (e.code === 'Space' && this.ride && this.ride.p.veh === 'bike') this.ride.bell(); if (e.code === 'KeyM' && this.ride) this.ride.big = !this.ride.big; }
-  actions() { return this.ride && this.ride.p.veh === 'bike' ? [{ id: 'bell', icon: 'timbre', label: 'Timbre', fn: () => { this.ride.bell(); if (this.has('timbre')) this.score += 1; } }] : []; }
+  key(e) { if (e.code === 'Space' && this.ride && vehDef(this.ride.p.veh).timbre) this.ride.bell(); if (e.code === 'KeyM' && this.ride) this.ride.big = !this.ride.big; }
+  actions() { return this.ride && vehDef(this.ride.p.veh).timbre ? [{ id: 'bell', icon: 'timbre', label: 'Timbre', fn: () => { this.ride.bell(); if (this.has('timbre')) this.score += 1; } }] : []; }
   stationZone(z) { return JE.map.stations.filter(s => !z || s.zone === z); }
   /* sub-zona: estaciones a menos de rad baldosas de un centro al azar (el mapa es grande: Caldas → Barbosa) */
   subZone(list, rad, cx, cy) {
@@ -153,8 +153,8 @@ class MapMode extends Mode {
   botDrive() {
     const T = this.ride.target; if (!T) { this.botDir = { x: 0, y: 0, m: 0 }; return; }
     const P = this.ride.p; let tx = Math.floor(P.x / TS), ty = Math.floor(P.y / TS);
-    const D = JE.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), P.veh === 'truck', tx, ty);
-    if (JE.map.fv(D, tx, ty) >= 1e9) { const n = JE.map.nearestOpen(tx, ty, P.veh === 'truck'); this.botDir = this.dirTo(n.x * TS + TS / 2, n.y * TS + TS / 2); return; }
+    const D = JE.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), vehVia(P.veh), tx, ty);
+    if (JE.map.fv(D, tx, ty) >= 1e9) { const n = JE.map.nearestOpen(tx, ty, vehVia(P.veh)); this.botDir = this.dirTo(n.x * TS + TS / 2, n.y * TS + TS / 2); return; }
     let c = { x: tx, y: ty }; const h0 = this.botHist; const cur = JE.map.lightIdx(ty * MW + tx);
     for (let i = 0; i < 2; i++) {
       const n = JE.map.nextStep(D, c.x, c.y); if (!n) break;
@@ -534,7 +534,7 @@ class ModeMonitoreo extends Mode {
       this.button(V, x + 24 + half, yy + 62, half, 54, 'RECOGER −' + Math.max(2, Math.round(s.bikes - s.cap * .5)), () => this.order(s, 'recoger'), { bg: '#b0651a', size: 18, key: 'rec' });
     } else {
       this.button(V, 10, V.h - 74, bw, 58, '🏠 Regresar camiones', () => this.home(), { size: 16 });
-      V.text('Zona ' + this.zone + ' · Base: ' + this.sim.depot + ' bicis · ' + this.trucks.map(t => '🚚' + t.id + ':' + t.load).join('  '), V.w - 10, V.h - 40, { size: 13, align: 'right', color: '#c4ec7c', body: true });
+      V.text('Zona ' + this.zone + ' · Base: ' + this.sim.depot + ' bicis · ' + this.trucks.map(t => '🚚' + t.id + ':' + t.load).join('  '), 12, V.h - 86, { size: 13, color: '#c4ec7c', bg: '#0a2342cc', pad: 3, body: true });   // encima del botón: en pantallas angostas el texto quedaba debajo de «Regresar camiones»
     }
   }
   pointer(type, vx, vy, cx, cy) {

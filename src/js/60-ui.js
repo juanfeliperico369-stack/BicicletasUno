@@ -144,16 +144,16 @@ const UI = JE.ui = {
     const rng = new RNG(seed ^ 0x5bd1e995), nov = o.nov || (turno === 1 && !o.free && !o.reto ? NOVEDADES[0] : Season.pick(rng)), sea = Season.now(), wet = !!sea.wet && !o.reto && roleId !== 'carrera' && !(turno === 1 && !o.free);
     this.mute = true; JE.briefing = true; let tmp; try { tmp = new MODE_CLASS[roleId](r, turno, { seed, nov, perks: o.free ? [] : Save.data.perks, free: o.free, zona: o.zona }); } finally { this.mute = false; JE.briefing = false; }   // solo para leer las metas: sin avisos
     const goals = tmp.goals.map(g => `<li class="${g.main ? 'main' : ''}"><b>${g.main ? '★' : '☆'}</b><span>${esc(g.txt)}${g.main ? ' <small style="color:var(--vd1)">(obligatoria)</small>' : ''}</span></li>`).join('');
-    let h = `<div class="row" style="justify-content:space-between"><span class="pag">${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
+    let h = `<div class="row" style="justify-content:space-between"><span class="pag">${roleId === 'carrera' ? 'CARRERA · NIVEL ' + turno : r.juego ? 'NIVEL ' + turno + ' · ' + esc(shiftName(roleId, turno)).toUpperCase() : o.reto ? 'RETO DEL DÍA' : o.free ? 'PRÁCTICA LIBRE' : esc(shiftName(roleId, turno)).toUpperCase()}</span><button class="btn sm gh" id="bBack">✕ Volver</button></div>`;
     h += `<div class="boxh">${esc(r.name)}</div>`;
-    if (r.shifts && !isMulti(roleId) && roleId !== 'usuario') h += `<div class="paper" style="margin:8px 0"><div class="t">${esc(shiftName(roleId, turno))}</div><p style="margin:4px 0 0">🕐 ${esc(r.shifts[turno - 1].h)}</p></div>`;
+    if (r.shifts && !r.juego && !isMulti(roleId) && roleId !== 'usuario') h += `<div class="paper" style="margin:8px 0"><div class="t">${esc(shiftName(roleId, turno))}</div><p style="margin:4px 0 0">🕐 ${esc(r.shifts[turno - 1].h)}</p></div>`;
     if (roleId === 'apoyo') { const zz = o.zona || APOYO_ZONAS[(seed >>> 5) % APOYO_ZONAS.length][0]; o.zona = zz; h += `<div class="pag">Tu zona (toca para cambiarla)</div><div class="zonas">${APOYO_ZONAS.map(z => `<button class="chip ${z[0] === zz ? 'on' : ''}" data-zona="${z[0]}">${esc(z[1])} · ${z[2]}</button>`).join('')}</div>`; }
     h += Historia.brief(roleId, turno, o);
     h += `<div class="howto">${r.how.map((t, i) => `<div><b>${i + 1}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
-    if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas ${roleId === 'carrera' ? 'de la carrera' : 'del turno'}</div><ul class="goals">${goals}</ul>`;
+    if (!o.free || roleId !== 'usuario') h += `<div class="pag" style="margin-top:12px">Metas ${roleId === 'carrera' ? 'de la carrera' : r.juego ? 'del juego' : 'del turno'}</div><ul class="goals">${goals}</ul>`;
     h += `<div class="nov"><b>Hoy: ${esc(nov.name)}</b> · ${esc(nov.desc)}</div>`;
     if (!o.free && Save.data.perks.length) h += `<div class="perks">${Save.data.perks.map(p => `<span class="chip">${esc(PERKS[p].name)}</span>`).join('')}</div>`;
-    h += `<div class="row" style="margin-top:16px"><button class="btn pri" id="bGo" style="flex:1">▶ Empezar ${o.free ? 'práctica' : 'turno'}</button></div>`;
+    h += `<div class="row" style="margin-top:16px"><button class="btn pri" id="bGo" style="flex:1">▶ ${r.juego ? 'Jugar' : 'Empezar ' + (o.free ? 'práctica' : 'turno')}</button></div>`;
     $('#briefBody').innerHTML = h; this.go('sBrief');
     $('#bBack').onclick = () => this.go(o.reto ? 'sCover' : 'sHome');
     $$('[data-zona]').forEach(b => b.onclick = () => { Snd.sfx('tap'); this.brief(roleId, turno, Object.assign({}, o, { seed, zona: b.dataset.zona })); });
@@ -356,7 +356,7 @@ const Game = JE.game = {
   mode: null, meta: null, paused: false, raf: 0, last: 0, _vk: '', hudKey: '', actKey: '', goalT: 0,
   start(roleId, turno, o) {
     const role = ROLE[roleId];
-    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona, bici: o.bici, comp: o.comp, n: o.n });
+    this.mode = new MODE_CLASS[roleId](role, turno, { seed: o.seed, nov: o.nov, perks: o.free || isMulti(roleId) || role.juego ? [] : Save.data.perks.slice(), free: o.free, reto: o.reto, net: o.net, oppName: o.oppName, oppShirt: o.oppShirt, players: o.players, wet: o.wet, driver: o.driver, zona: o.zona, bici: o.bici, comp: o.comp, n: o.n });
     this.meta = { roleId, turno, free: !!o.free, reto: !!o.reto, net: !!o.net, seed: o.seed, nov: o.nov, dur: 0 };
     this.hintsOn = Save.data.settings.hints !== false && (roleId === 'carrera' ? !Save.data.history.some(h => h.m === 'carrera') : !(UI.stars(roleId)[0] > 0));
     UI.go('sGame'); $('#toast').classList.remove('on'); View.resize(); this._vk = ''; this.applyView();
@@ -429,7 +429,12 @@ const Game = JE.game = {
     View.hudB = hb; View.top = Math.max(hb, Math.round(g.bottom)) + 6;
     const tt = Math.max(View.top, mmB) + 8 + 'px'; document.documentElement.style.setProperty('--toastTop', tt);
     const ctrl = ride && Ctrl.pad() && Ctrl.side() === 'der'; document.body.classList.toggle('ctrlR', ctrl);
-    const ab = $('#actBar'); if (ab && ab.childElementCount) { const r = ab.getBoundingClientRect(), mh = Math.max(84, Math.round(r.bottom - (ride ? mmB : hb) - 10)) + 'px'; if (ab.style.maxHeight !== mh) ab.style.maxHeight = mh; }   // los botones no tapan el minimapa: si no caben, segunda columna
+    const ab = $('#actBar'); if (ab && ab.childElementCount) {   // los botones no tapan el minimapa: si no caben, segunda columna
+      const r = ab.getBoundingClientRect(), bt = ab.firstElementChild.getBoundingClientRect().height || 58, libre = Math.round(r.bottom - (ride ? mmB : hb) - 10);
+      const lado = ride && libre < bt ? Math.round(Math.min(84, View.w * .21)) + 22 : 0;   // sin espacio debajo del minimapa (celular acostado con el control a la derecha): los botones van a su izquierda
+      const rt = lado ? 'calc(' + lado + 'px + var(--sar))' : ''; if (ab.style.right !== rt) ab.style.right = rt;
+      const mh = Math.max(84, lado ? Math.round(r.bottom - hb - 10) : libre) + 'px'; if (ab.style.maxHeight !== mh) ab.style.maxHeight = mh;
+    }
   },
   pause() {
     if (!this.mode) return; const net = !!this.meta.net; this.paused = !net; if (!net) Snd.music(false); const map = !!this.mode.ride;   // en red el juego no se detiene
@@ -460,7 +465,8 @@ const Progress = JE.progress = {
     if (!meta.free && !isMulti(meta.roleId)) {
       const st = S.stars[meta.roleId] || [0, 0, 0]; if (res.stars > st[meta.turno - 1]) st[meta.turno - 1] = res.stars; S.stars[meta.roleId] = st;
       const k = meta.roleId + meta.turno; if (res.score > (S.best[k] || 0)) { out.best = !!S.best[k]; S.best[k] = res.score; }
-      if (res.pass) {
+      if (isJuego(meta.roleId)) { }   // los juegos registrados (91-modos.js): estrellas y récord, sin racha ni mejoras del escalafón
+      else if (res.pass) {
         S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak);
         const pool = Object.keys(PERKS).filter(p => !S.perks.includes(p)), rng = new RNG((Date.now() ^ meta.seed) >>> 0);
         out.perkOpts = rng.shuffle(pool).slice(0, 3);

@@ -486,6 +486,54 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 2026-11-19 · v1.7.2 · Jugar, pulir y preparar el terreno para lo nuevo
+
+**Qué cambió**
+1. **Fallas encontradas jugando.** Se jugó cada oficio con el bot:
+   - en el celular vertical (412 × 915) y acostado (915 × 412);
+   - en 3D, en pixel y en la vista panorámica;
+   - de día, de noche y con lluvia.
+
+   Lo que se arregló:
+   - **Monitoreo:** la línea de estado (zona, base y camiones) quedaba debajo de «Regresar camiones». Ahora va encima, con fondo.
+   - **Celular acostado:**
+     - el Timbre y los demás botones de acción quedaban sobre el minimapa. Si no caben debajo de él, ahora van a su izquierda;
+     - los botones de la cámara tapaban la lista de metas (en Bodega y en Técnico). Ahora van siempre debajo de las metas y encima del control, y en fila si no caben.
+   - **El nombre de la calle (📍)** quedaba debajo de las metas. Ahora va después de ellas.
+   - **`retarget()` del modo Usuario** fallaba en los turnos, que no tienen misiones. Ahora no hace nada.
+2. **Registro de vehículos** (`25-vehiculos.js`):
+   - La bici, a pie y el camión, con sus cifras exactas de siempre.
+   - `JE.vehiculos.registrar(id, def)` suma uno nuevo (scooter, bici eléctrica, skate, patines o monopatín) con:
+     - su física, el suelo y las lomas;
+     - su choque y sus rutas (solo por la vía, si se pide);
+     - su dibujo desde arriba y de lado;
+     - el timbre, parquearlo y elegirlo en el modo libre, con el botón «Vehículo».
+   - El GPS, el bot, el choque y el dibujo leen el registro.
+3. **Registro de modos** (`91-modos.js`):
+   - `JE.modos.registrar({ id, name, cls, niveles, how, desc })` pone un juego nuevo en la pestaña Ruta, con un botón por nivel.
+   - Antes de empezar se ven sus metas.
+   - Gana estrellas por nivel, pero no toca la racha, las mejoras ni los logros del escalafón. Antes de este cambio, perder un juego así habría borrado las mejoras del jugador.
+4. **La trama en datos** (`contenido/guion/misiones.json`, que lee `83-guion.js`):
+   - Son misiones del modo libre según el día, la hora y las que ya se hicieron.
+   - Cada una guarda su fragmento escondido en `Save.data.huevos`, y lo hecho queda en `Save.data.trama`.
+   - Las tres primeras traen a Rosalba, don Efraín y la nieta de Rosalba, de El Metro.
+5. **Guía para integrar:** `docs/INTEGRAR.md`. Dice dónde va cada archivo y cómo entran un vehículo, un modo (la carrera sin fin), una misión, el arte, un cambio del mapa y sus pruebas.
+   - Va enlazada desde el plan único.
+   - `dist/ENCICLA-TODO.md` suma los anexos D (plan único) y E (integrar).
+
+**Qué se probó**
+- `tests/run.js` completo, con la nueva sección 3m (vehículos, modos y trama), y 54 partidas del bot sin fallas.
+- Rendimiento con la CPU 4× más lenta: mediana de 16,7 ms por cuadro.
+- El bot jugó los 14 modos en el celular vertical y acostado, sin errores ni encimados.
+- 12 combinaciones de vista y pantalla, a 58–60 cuadros por segundo.
+- La noche también oscurece con la cámara girada (el brillo baja de 154 a 113).
+
+**Qué falta:** lo que entreguen Gemini y ChatGPT según `docs/PLAN-UNICO-IA.md`:
+- la carrera sin fin;
+- los vehículos;
+- la trama completa;
+- los túneles y la cuadrícula de dos niveles.
+
 ## 2026-11-19 · Motor del Valle 1.0.0 · Un solo motor para el mapa de los dos juegos
 
 Pedido del autor: «que tengan un mapa igual para ambos: el motor que crea el mapa, unificado en un motor único; los módulos, mecánicas y trama van por aparte».

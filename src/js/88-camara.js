@@ -126,7 +126,15 @@ const _down88 = Ctrl.down;
 Ctrl.down = function (e, cx, cy, cv) { const R = Cam.ride(); if ((R && R.libre && R.libre.on) || (e.pointerType === 'mouse' && e.button > 0) || Cam.ptr.size >= 2) return false; return _down88.call(this, e, cx, cy, cv); };
 /* botones en el juego y aviso la primera vez */
 const _layout88 = Game.layout;
-Game.layout = function (ride) { _layout88.call(this, ride); Cam.barra(this.mode); };
+Game.layout = function (ride) { _layout88.call(this, ride); Cam.barra(this.mode); Cam.lugar(); };
+/* dónde van los botones de la cámara: a media altura, pero siempre debajo de los objetivos y encima del control; si no caben en columna (celular acostado), en fila */
+Cam.lugar = function () {
+  const bar = $('#camBar'); if (!bar || bar.hidden) return;
+  const n = [...bar.children].filter(b => !b.hidden).length, bh = n * 42 + (n - 1) * 8, top = (View.top || 60) + 4;
+  const bot = Ctrl.pad() && Ctrl.side() === 'izq' ? Ctrl.anchor().y - (40 + 46 * Ctrl.size()) - 8 : View.h - 84, fila = bh > bot - top;
+  const ty = Math.round(fila ? top + 21 : clamp(View.h * .46, top + bh / 2, bot - bh / 2)) + 'px', fd = fila ? 'row' : '';
+  if (bar.style.top !== ty) bar.style.top = ty; if (bar.style.flexDirection !== fd) bar.style.flexDirection = fd;
+};
 const _start88 = Game.start;
 Game.start = function () {
   const r = _start88.apply(this, arguments); Cam.bind(); View.rotOn = false; View.rot = 0; View.zf = Cam.d3() ? Cam.cfg().z || 1 : 1; View.apply();

@@ -78,6 +78,7 @@ function genMisiones(now) {
     L.push({ id: 'saludo', kind: 'saludo', txt: 'Saluda con el timbre a 8 ciclistas', h: 8, xp: 20, need: 8 });
   } else if (Cal.ciclovia(now)) L.push({ id: 'saludo', kind: 'saludo', txt: 'Domingo de bici: saluda con el timbre a 5 ciclistas', h: 6, xp: 15, need: 5 });
   if (f) L.push(festMision(f, now));
+  for (const g of guionMisiones(now)) L.push(g);   // la trama en datos (83-guion.js), antes de las misiones menores
   L.push({ id: 'foto', kind: 'foto', txt: 'Toma una foto en un lugar emblemático', h: 6, xp: 15 });
   if (L.length < 4) L.push({ id: 'banca', kind: 'banca', txt: 'Descansa en una banca de un parque', h: 4, xp: 10 });
   if (m >= 18 * 60) L.push({ id: 'casa', kind: 'casa', txt: 'Vuelve a tu casa', h: 5, xp: 10 });
@@ -181,7 +182,7 @@ class ModeUsuarioR extends ModeUsuario {
     this.retarget();
   }
   retarget() {
-    const P = this.ride.p, open = this.misiones.filter(m => !m.done && m.marks && m.marks.length).flatMap(m => m.marks);
+    if (!this.misiones) return; const P = this.ride.p, open = this.misiones.filter(m => !m.done && m.marks && m.marks.length).flatMap(m => m.marks);
     if (open.length) { this.ride.target = open.sort((a, b) => dist(a.x, a.y, P.x, P.y) - dist(b.x, b.y, P.x, P.y))[0]; return; }
     this.pickFreeTarget();
   }
@@ -202,7 +203,7 @@ class ModeUsuarioR extends ModeUsuario {
     const hr = this.clock / 60, base = this.mods.ciclovia ? .5 : 1; R.traffic = base * (hr < 5 ? .25 : hr < 6 ? .5 : (hr < 9 || (hr >= 17 && hr < 19.5)) ? 1.3 : hr >= 21 ? .55 : 1);
     if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.lend && m < sv.lend + 2 && !this.lendTold) { this.lendTold = 1; JE.ui && JE.ui.toast('🕘 Ya no se prestan bicis; puedes devolver la tuya hasta las ' + Cal.hora(sv.close)); } if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
     // energía: las subidas cansan, parar descansa; con poca energía se pedalea más lento
-    const sl = Math.max(0, R.sl || 0), drain = P.v > 5 ? (P.veh === 'walk' ? .12 : .35 + sl * 30) : -3;
+    const sl = Math.max(0, R.sl || 0), VG = vehDef(P.veh).gasto, drain = P.v > 5 ? (VG != null ? VG : P.veh === 'walk' ? .12 : .35 + sl * 30) : -3;
     this.energy = clamp(this.energy - drain * dt, 0, 100); if (this.energy < 15 && !this.tiredTold) { this.tiredTold = 1; JE.ui && JE.ui.toast('😮‍💨 Poca energía: siéntate en una banca de un parque o para un momento'); } if (this.energy > 40) this.tiredTold = 0;
     // ciclovía y ciclorrutas: distancia
     const v = R.tileAt(); if ((this.mods.ciclovia && (v === TT.AVE || v === TT.AUTO)) || v === TT.CICLO) this.cvDist += P.v * dt;

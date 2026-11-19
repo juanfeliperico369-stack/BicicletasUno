@@ -42,7 +42,7 @@ ModeUsuarioR.prototype.tick = function (dt) {
   if (this.clock >= sv.close) { Cuenta.tarde(Math.max(1, lm - 60), this); JE.ui && JE.ui.toast('🕙 EnCicla cerró y no devolviste la bici'); this.endT = 3.2; return; }
   // bici abandonada: si te alejas, alguien puede reportarla
   const pk = R.parked;
-  if (pk && P.veh === 'walk' && dist(pk.x, pk.y, P.x, P.y) > 30 * WK) {
+  if (pk && (!pk.veh || pk.veh === 'bike') && P.veh === 'walk' && dist(pk.x, pk.y, P.x, P.y) > 30 * WK) {
     this.abT = (this.abT || 0) + dt; if (this.abT > 6 && !this.abTold) { this.abTold = 1; JE.ui && JE.ui.toast('👀 Dejaste sola la bici de EnCicla: alguien puede reportarla'); }
     if (this.abT > 14 && this.rng.f() < dt * .12) { Cuenta.reporte(this, this.rng.pick(['Un anfitrión de EnCicla', 'Un funcionario del Área Metropolitana', 'Un usuario'])); R.parked = null; this.sinBici = true; this.abT = 0; }
   } else { this.abT = 0; this.abTold = 0; }

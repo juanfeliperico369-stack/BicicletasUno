@@ -1,0 +1,43 @@
+[
+  {
+    "id": "rosalba-1",
+    "txt": "Lleva un tinto a Rosalba, la maquinista del primer tren, en la Plaza Botero",
+    "lugar": "botero",
+    "nombre": "Rosalba",
+    "dias": "semana",
+    "desde": "5:00 a. m.",
+    "hasta": "11:00 a. m.",
+    "h": 8,
+    "xp": 20,
+    "despues": "☕ Rosalba: «Gracias. El primer tren sale a las cuatro y media y la ciudad no espera a nadie.»",
+    "huevo": "metro-rosalba"
+  },
+  {
+    "id": "efrain-1",
+    "txt": "Saluda a don Efraín, que cuida la red del Metro, en el Parque Norte",
+    "lugar": "parquenorte",
+    "nombre": "Don Efraín",
+    "dias": "sabado|domingo|festivo",
+    "desde": "8:00 a. m.",
+    "hasta": "5:00 p. m.",
+    "req": ["rosalba-1"],
+    "h": 10,
+    "xp": 25,
+    "despues": "🔧 Don Efraín: «La red no es de hierro: es de la gente que la cuida.»",
+    "huevo": "metro-efrain"
+  },
+  {
+    "id": "nieta-1",
+    "txt": "La nieta de Rosalba te espera en el Parque de los Pies Descalzos",
+    "lugar": "pies",
+    "nombre": "La nieta de Rosalba",
+    "dias": "todos",
+    "desde": "9:00 a. m.",
+    "hasta": "7:00 p. m.",
+    "req": ["efrain-1"],
+    "h": 12,
+    "xp": 30,
+    "despues": ["🚇 «Qué bonito celebrar dos formas de movernos: en bici y en metro.»", "¿Te gustan los trenes? Juega El Metro."],
+    "huevo": "metro-nieta"
+  }
+]

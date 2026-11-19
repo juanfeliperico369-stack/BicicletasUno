@@ -8,6 +8,11 @@
 > - Nada de entregas sueltas, varios archivos, enlaces a otros documentos ni «ver el chat».
 > - Si algo no cabe completo, divídelo dentro del mismo documento en secciones numeradas.
 > - El formato del documento está al final, en la sección 6.
+>
+> **Para que lo de EnCicla entre sin tocar el resto:** sigue [`docs/INTEGRAR.md`](INTEGRAR.md). Ahí está:
+> - el registro de vehículos (`JE.vehiculos.registrar`) y el de modos (`JE.modos.registrar`);
+> - la trama en datos (`contenido/guion/misiones.json`);
+> - las reglas del arte, el mapa y las pruebas.
 
 ## 1. Los dos juegos y lo que comparten
 | | Juega EnCicla | El Metro |
