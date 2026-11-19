@@ -34,6 +34,20 @@ const Generador = {
       E[j * eW + i] = h * altMax;
     }
     const cotaE = (x, y) => { const gx = clamp(x / (es * T), 0, eW - 1.001), gy = clamp(y / (es * T), 0, eH - 1.001), x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, k = y0 * eW + x0; return (E[k] * (1 - fx) + E[k + 1] * fx) * (1 - fy) + (E[k + eW] * (1 - fx) + E[k + eW + 1] * fx) * fy; };
+    /* 1b. LAGOS: llenado por prioridad (Barnes, 2014): el agua entra desde el borde y el mar, y lo que queda por debajo
+       del punto de desborde de su cuenca se llena. Las cuencas grandes quedan como lagos (superficie plana); los
+       hoyitos se rellenan. Con un épsilon de pendiente, todo tiene salida: los ríos atraviesan los lagos. */
+    const llenar = eps => { const F = Float32Array.from(E), vis = new Uint8Array(eW * eH), hp = [], up = k => { let i = hp.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (F[hp[p]] <= F[hp[i]]) break; [hp[p], hp[i]] = [hp[i], hp[p]]; i = p; } }, down = () => { let i = 0; for (;;) { const l = 2 * i + 1, r2 = l + 1; let m = i; if (l < hp.length && F[hp[l]] < F[hp[m]]) m = l; if (r2 < hp.length && F[hp[r2]] < F[hp[m]]) m = r2; if (m === i) break; [hp[m], hp[i]] = [hp[i], hp[m]]; i = m; } };
+      for (let j = 0; j < eH; j++) for (let i = 0; i < eW; i++) if (i === 0 || j === 0 || i === eW - 1 || j === eH - 1 || E[j * eW + i] <= 0) { const k = j * eW + i; vis[k] = 1; hp.push(k); up(); }
+      while (hp.length) { const c = hp[0], last = hp.pop(); if (hp.length) { hp[0] = last; down(); } const ci = c % eW, cj = (c / eW) | 0;
+        for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = ci + a, jj = cj + b; if (ii < 0 || jj < 0 || ii >= eW || jj >= eH) continue; const n = jj * eW + ii; if (vis[n]) continue; vis[n] = 1; F[n] = Math.max(E[n], F[c] + eps); hp.push(n); up(); } }
+      return F; };
+    const F0 = llenar(0), Fe = llenar(.02), lago = new Uint8Array(eW * eH), compL = new Int32Array(eW * eH).fill(-1); let nLagos = 0;
+    const cuencas = []; for (let s = 0; s < eW * eH; s++) { if (compL[s] >= 0 || !(F0[s] - E[s] > .8 && E[s] > 0)) continue; const pila = [s], mie = [s]; compL[s] = s; let hondo = 0; while (pila.length) { const k = pila.pop(), i = k % eW, j = (k / eW) | 0; hondo = Math.max(hondo, F0[k] - E[k]); for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= eW || jj >= eH) continue; const q = jj * eW + ii; if (compL[q] < 0 && F0[q] - E[q] > .8 && E[q] > 0) { compL[q] = s; pila.push(q); mie.push(q); } } } cuencas.push({ mie, hondo }); }
+    /* solo las cuencas grandes y hondas son lagos (las de verdad, pocas); el resto se rellena */
+    cuencas.filter(c => c.mie.length >= (op.lagoMin ?? 8) && c.hondo > 2.5).sort((a, b) => b.mie.length * b.hondo - a.mie.length * a.hondo).slice(0, op.lagos ?? (tipo === 'llanura' ? 5 : 3)).forEach(c => { for (const k of c.mie) lago[k] = 1; nLagos++; });
+    for (let k = 0; k < eW * eH; k++) E[k] = lago[k] ? Fe[k] : Math.max(E[k], E[k] > 0 ? Fe[k] : E[k]);   // hoyos rellenos; los lagos, con su leve pendiente hacia el desagüe
+    const lagoFrac = (x, y) => { const gx = clamp(x / (es * T), 0, eW - 1.001), gy = clamp(y / (es * T), 0, eH - 1.001), x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, k = y0 * eW + x0; return (lago[k] * (1 - fx) + lago[k + 1] * fx) * (1 - fy) + (lago[k + eW] * (1 - fx) + lago[k + eW + 1] * fx) * fy; };
     /* 2. ríos: de los nacimientos (altos y húmedos) por la pendiente más fuerte */
     const rios = [], flujo = new Float32Array(eW * eH), nac = [];
     for (let k = 0; k < 400; k++) { const i = 2 + r.e(0, eW - 5), j = 2 + r.e(0, eH - 5), h = E[j * eW + i]; if (h > altMax * .35) nac.push([i, j, h]); }
@@ -51,9 +65,11 @@ const Generador = {
     const suelo = new Uint8Array(W * H), T0 = 27 - Math.abs(lat) * .45;   // temperatura a nivel del mar según la latitud (aprox.)
     for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
       const x = (tx + .5) * T, y = (ty + .5) * T, h = cotaE(x, y), temp = T0 - .0065 * h, hum = N.fbm(x * esc * 2 + 40, y * esc * 2 + 11, 3) * .5 + .5, pend = Math.hypot(cotaE(x + T, y) - cotaE(x - T, y), cotaE(x, y + T) - cotaE(x, y - T)) / (2 * T);
-      let t = TT.GRASS; if (h <= 0) t = TT.WATER; else if (h < 4 && tipo !== 'valle') t = TT.ARENA; else if (temp < -1) t = TT.NIEVE; else if (pend > 1.1 || (temp < 4 && pend > .5)) t = TT.ROCA; else if (hum > .55 || (pend > .35 && hum > .4)) t = TT.MOUNT;
+      let t = TT.GRASS; if (h <= 0 || lagoFrac(x, y) > .5) t = TT.WATER; else if (h < 4 && tipo !== 'valle') t = TT.ARENA; else if (lagoFrac(x, y) > .2 && hum > .45) t = TT.ARENA; else if (temp < -1) t = TT.NIEVE; else if (pend > 1.1 || (temp < 4 && pend > .5)) t = TT.ROCA; else if (hum > .55 || (pend > .35 && hum > .4)) t = TT.MOUNT;
       suelo[ty * W + tx] = t;
     }
+    /* charquitos sueltos (suavizado de la orilla, o lo que dejen calles y casas): menos de 0,6 ha de agua → pasto */
+    const limpiarCharcos = () => { const vis = new Uint8Array(W * H); for (let s0 = 0; s0 < W * H; s0++) { if (vis[s0] || suelo[s0] !== TT.WATER) continue; const pila = [s0], mie = [s0]; vis[s0] = 1; while (pila.length) { const k = pila.pop(), i = k % W, j = (k / W) | 0; for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= W || jj >= H) continue; const q = jj * W + ii; if (!vis[q] && suelo[q] === TT.WATER) { vis[q] = 1; pila.push(q); mie.push(q); } } } if (mie.length * T * T < 6000) for (const k of mie) suelo[k] = TT.GRASS; } }; limpiarCharcos();
     const pon = (x, y, t, R = T / 2) => { for (let yy = y - R; yy <= y + R; yy += T / 2) for (let xx = x - R; xx <= x + R; xx += T / 2) { const tx = Math.floor(xx / T), ty = Math.floor(yy / T); if (tx >= 0 && ty >= 0 && tx < W && ty < H && (xx - x) ** 2 + (yy - y) ** 2 <= R * R + 1) suelo[ty * W + tx] = t; } };
     const linea = (P, ancho, t) => { for (let k = 0; k + 3 < P.length; k += 2) { const ax = P[k], ay = P[k + 1], bx = P[k + 2], by = P[k + 3], L = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(L / (T / 2))); for (let q = 0; q <= n; q++) pon(ax + (bx - ax) * q / n, ay + (by - ay) * q / n, t, ancho / 2); } };
     for (const P of rios) { const i = Math.floor(P[1] / (es * T)) * eW + Math.floor(P[0] / (es * T)); linea(P, 6 + Math.min(18, (flujo[i] || 1) * 2), TT.CANAL); }
@@ -64,7 +80,7 @@ const Generador = {
     const dRio = (x, y) => { let b = 1e9; for (const P of rios) for (let k = 0; k < P.length; k += 6) b = Math.min(b, Math.hypot(P[k] - x, P[k + 1] - y)); return b; };
     const pueblos = cand.map(([x, y]) => ({ x, y, p: -dRio(x, y) / 400 - cotaE(x, y) / altMax })).sort((a, b) => b.p - a.p).slice(0, op.pueblos ?? 4).map((q, i) => Object.assign(q, { id: i + 1, nombre: this.nombre(r), radio: [420, 320, 260, 220, 200, 180][i] || 160, ang: r.r2(0, Math.PI / 2) }));
     const vias = [], edif = [], lugares = [], calles = new Set(), pasos = [];
-    const valida = (x, y) => x > 0 && y > 0 && x < W * T && y < H * T && cotaE(x, y) > 2 && suelo[Math.floor(y / T) * W + Math.floor(x / T)] !== TT.CANAL;
+    const valida = (x, y) => x > 0 && y > 0 && x < W * T && y < H * T && cotaE(x, y) > 2 && suelo[Math.floor(y / T) * W + Math.floor(x / T)] !== TT.CANAL && suelo[Math.floor(y / T) * W + Math.floor(x / T)] !== TT.WATER;   /* ni en quebradas ni en lagos */
     for (const Pb of pueblos) {
       const ca = Math.cos(Pb.ang), sa = Math.sin(Pb.ang), cuad = 70, n = Math.ceil(Pb.radio / cuad);
       for (const eje of [0, 1]) for (let k = -n; k <= n; k++) {
@@ -90,7 +106,7 @@ const Generador = {
     const camino = (a, b) => {
       const ia = Math.round(a.x / (es * T)), ja = Math.round(a.y / (es * T)), ib = Math.round(b.x / (es * T)), jb = Math.round(b.y / (es * T)), g = new Float64Array(eW * eH).fill(Infinity), de = new Int32Array(eW * eH).fill(-1), abiertos = [[0, ja * eW + ia]]; g[ja * eW + ia] = 0;
       while (abiertos.length) { let m = 0; for (let k = 1; k < abiertos.length; k++) if (abiertos[k][0] < abiertos[m][0]) m = k; const [, u] = abiertos.splice(m, 1)[0]; if (u === jb * eW + ib) break; const ui = u % eW, uj = (u / eW) | 0;
-        for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) { const vi = ui + di, vj = uj + dj; if (vi < 1 || vj < 1 || vi >= eW - 1 || vj >= eH - 1) continue; const v = vj * eW + vi, hv = E[v]; if (hv <= 0) continue; const L = Math.hypot(di, dj) * es * T, pend = Math.abs(hv - E[u]) / L, c = g[u] + L * (1 + pend * pend * 400 + (flujo[v] > 0 ? 8 : 0)); if (c < g[v]) { g[v] = c; de[v] = u; abiertos.push([c + Math.hypot(vi - ib, vj - jb) * es * T, v]); } }
+        for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) { const vi = ui + di, vj = uj + dj; if (vi < 1 || vj < 1 || vi >= eW - 1 || vj >= eH - 1) continue; const v = vj * eW + vi, hv = E[v]; if (hv <= 0) continue; const L = Math.hypot(di, dj) * es * T, pend = Math.abs(hv - E[u]) / L, c = g[u] + L * (1 + pend * pend * 400 + (flujo[v] > 0 ? 8 : 0) + (lago[v] ? 60 : 0)); /* los lagos se rodean (o se cruzan por un puente) */ if (c < g[v]) { g[v] = c; de[v] = u; abiertos.push([c + Math.hypot(vi - ib, vj - jb) * es * T, v]); } }
         if (abiertos.length > 40000) break; }
       if (de[jb * eW + ib] < 0) return null; const R = []; for (let v = jb * eW + ib; v !== -1 && v !== ja * eW + ia; v = de[v]) R.push(((v % eW) + .5) * es * T, (((v / eW) | 0) + .5) * es * T); R.push(a.x, a.y);
       let P = []; for (let k = R.length - 2; k >= 0; k -= 2) P.push(R[k], R[k + 1]);
@@ -114,6 +130,9 @@ const Generador = {
     if (cima) lugares.push({ id: 'cima', nombre: 'Mirador del cerro más alto', municipio: '', x: cima.x, y: cima.y, ancho: 40, alto: 40, dibujo: 'cerro', dato: 'A ' + Math.round(cima.h) + ' m sobre el mar.', secreto: false });
     const lineas = []; if (cima && pueblos[0] && Math.hypot(cima.x - pueblos[0].x, cima.y - pueblos[0].y) < 4500) lineas.push({ id: 'CG', nombre: 'Cable ' + pueblos[0].nombre, clase: 'cable', color: '#e38835', estado: 'operativa', estaciones: [[pueblos[0].nombre, pueblos[0].x + 60, pueblos[0].y + 60], ['Mirador', cima.x, cima.y]], eje: null });
     /* 7. el mundo */
+    limpiarCharcos();
+    /* el agua queda a su nivel: el mar en 0 m y cada lago plano en su nivel de desborde (se nada y se navega encima) */
+    for (let k = 0; k < E.length; k++) E[k] = lago[k] ? F0[k] : Math.max(0, E[k]);
     const relieve = new Int16Array(eW * eH); for (let k = 0; k < E.length; k++) relieve[k] = Math.round(E[k]);
     const nombre = op.nombre || 'Mundo ' + sem, kx = 111320 * Math.cos(lat * Math.PI / 180) / T, ky = 110574 / T;
     const cfg = { id: 'gen-' + sem, nombre, ventana: { lon0: -75, latN: lat + H * T / 2 / 110574, lon1: -75 + W * T / (kx * T), latS: lat - H * T / 2 / 110574, lat_ref: lat }, casilla_m: T, zonas: Object.assign({}, ZONAS_BASE, (MC.ciudadBase && MC.ciudadBase.zonas) || {}), zona_por_comuna: [null], zona_por_municipio: [null, ...pueblos.map(() => 'pueblo')], clima: op.clima || null, transporte: { servicio: { habil: [300, 1320], domingo: [360, 1260] }, pico: [], clases: { cable: { vel_ms: 5, cabina_cada_s: 15, altura_m: 30 } } } };
@@ -128,7 +147,7 @@ const Generador = {
         transporte: { datos: { lineas, encicla: [] } }, lugares: { datos: { lugares, hitos: [] } }, trafico: { datos: { carriles: [], semaforos: [] } }
       }
     }, cfg);
-    M.generado = { pueblos, rios: rios.length, edificios: edJ.length, vias: vias.length, puentes: pasos.length, cfg };
+    M.generado = { pueblos, rios: rios.length, lagos: nLagos, edificios: edJ.length, vias: vias.length, puentes: pasos.length, cfg };
     return M;
   }
 };

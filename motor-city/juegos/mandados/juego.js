@@ -23,6 +23,7 @@ async function abrir(gen) {
   if (gen) { mundo = MC.Generador.mundo({ semilla: (Math.random() * 1e6) | 0, ancho: 448, alto: 448, tipo: Math.random() < .5 ? 'valle' : 'isla', pueblos: 3, lat: 6.2 }); generado = true; }
   else { const cfg = Object.assign({}, MC_CIUDAD, { zonas: Object.assign({}, MC.ZONAS_BASE, MC_CIUDAD.zonas || {}) }); mundo = await MC.Mundo.cargar(MC_MUNDO, cfg); }
   $('#estado').textContent = 'Armando las calles…'; await new Promise(r => setTimeout(r, 30)); mundo.red('rueda');
+  $('#estado').textContent = 'Midiendo el agua…'; await new Promise(r => setTimeout(r, 30)); MC.Terreno.agua(mundo);   // lagos, ríos, mar y su profundidad (una vez)
   $('#portada').hidden = true; jugar();
 }
 $('#jugar').onclick = () => abrir(false); $('#generado').onclick = () => abrir(true);
@@ -152,7 +153,9 @@ function jugar() {
   let W = 0, H = 0; const ajustar = () => { const d = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
   ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
   /* ciclo */
-  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0;
+  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0, ultBloqueo = null, nadaba = false;
+  /* el tráfico y la gente también ocupan espacio: no se atraviesan */
+  cuerpo.obstaculos = () => { const L = []; for (const v of E.trafico || []) { if (v.clase === 'metro' || v.clase === 'cable' || v.clase === 'tram') continue; const r = (v.ancho || 1.8) / 2 + .15, l = (v.largo || 4.3) / 3, c = Math.cos(v.a || 0), s2 = Math.sin(v.a || 0); for (const k of [-1, 0, 1]) L.push({ x: v.x + c * l * k, y: v.y + s2 * l * k, r, motivo: 'un vehículo' }); } for (const p of E.peatones || []) L.push({ x: p.x, y: p.y, r: .28, motivo: 'una persona' }); return L; };
   const cuadro = ahora => {
     requestAnimationFrame(cuadro); const dt = Math.min(.1, (ahora - t0) / 1000); t0 = ahora; if (interior) return; E.t += dt;
     reloj.avanzar(dt); clima.actualizar(reloj, dt); E.cielo = MC.Cielo.en(reloj.fecha, reloj.hora, clima);
@@ -165,7 +168,10 @@ function jugar() {
       cuerpo.actualizar(dt, entrada); }
     const ds = Math.hypot(cuerpo.x - x0, cuerpo.y - y0), st = V.clase !== 'pie' ? (desg[V.id] || (desg[V.id] = MC.Desgaste.nuevo(V))) : null; if (st) { MC.Desgaste.usar(st, ds, cuerpo.eventos.includes('choque') ? 1 : 0, clima); cuerpo.escala *= .82 + .18 * st.estado; } if (tanque[V.id] != null) tanque[V.id] = Math.max(0, tanque[V.id] - ds * garaje[V.id].consumo / 100 / 1000 * 1.4);
     if (mision && mision.paquete) { const carga = mision.paso >= 2 && mision.estado === 'activa'; cuerpo.escala *= carga ? MC.clamp(1 - mision.paquete.masa / (V.clase === 'pie' ? 25 : V.clase === 'rueda' ? 60 : 900), .5, 1) : 1; }
-    yo.vivir(dt * 6, cuerpo.estado || 'quieto', Math.abs(cuerpo.v), clima);
+    yo.vivir(dt * 6, cuerpo.nadando ? 'corre' : cuerpo.estado || 'quieto', Math.abs(cuerpo.v), clima);   // nadar cansa como correr
+    /* el terreno dice por qué no se pasa (una vez), y avisa al empezar a nadar */
+    if (cuerpo.bloqueo && cuerpo.bloqueo !== ultBloqueo) { ultBloqueo = cuerpo.bloqueo; const b = cuerpo.bloqueo; ui.aviso((/agua|quebrada|pando/.test(b) ? '🌊 ' : /empinado|barranco/.test(b) ? '⛰️ ' : /árbol|palma/.test(b) ? '🌳 ' : /roca/.test(b) ? '🪨 ' : /borde/.test(b) ? '🧭 ' : '🚧 ') + b[0].toUpperCase() + b.slice(1)); } else if (!cuerpo.bloqueo) ultBloqueo = null;
+    if (cuerpo.nadando && !nadaba) ui.aviso('🏊 Nadando: cansa rápido'); nadaba = cuerpo.nadando;
     if (mision) mision.actualizar(dt, cuerpo);
     camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z, zPaso: cuerpo.zPaso });
     ocu.vigilar(dt, { cuerpo, mundo: M, libro, entrada: ent, ms: vistas.ms });

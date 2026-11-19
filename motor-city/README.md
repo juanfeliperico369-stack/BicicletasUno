@@ -9,7 +9,7 @@
 |---|---|
 | **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/> · minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
 | **Documento único** (contexto, código a usar y plan de cada IA) | [`docs/DOCUMENTO-UNICO.md`](docs/DOCUMENTO-UNICO.md) · todo junto con anexos: `dist/MOTOR-CITY-TODO.md` |
-| Versión | **2.3.0** · `VERSION.json` |
+| Versión | **2.4.0** · `VERSION.json` |
 | Cómo se usa | [`docs/MANUAL.md`](docs/MANUAL.md) |
 | Guía completa | [`docs/GUIA.md`](docs/GUIA.md) |
 | Contrato técnico | [`MOTOR.md`](MOTOR.md) |
@@ -53,11 +53,17 @@
   - **objetos inteligentes** (alguien vive en tu casa y usa lo que pongas);
   - rejilla irregular y autotile;
   - **paisaje sonoro**.
+- **2.4, terreno y límites verosímiles:**
+  - agua por tipo (mar, lago, río, quebrada) y por profundidad: se vadea, se nada y la lancha necesita calado;
+  - montañas con pendiente máxima por vehículo, y roca, monte, arena y nieve;
+  - rocas, palmas, frailejones y juncos;
+  - nada se atraviesa sin sentido (emblemáticos, árboles, postes, tráfico);
+  - lagos en los mundos generados.
 
 ## Trabajar en el motor
 ```bash
 node motor.mjs construir            # dist/motor.js, los mundos, dist/motor-city.html y dist/juegos/*.html
-node motor.mjs prueba --navegador   # 109 pruebas: ciencia, mundo, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
+node motor.mjs prueba --navegador   # 115 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
 node motor.mjs documento            # dist/MOTOR-CITY-TODO.md: el documento único con todo
 node motor.mjs nuevo juego nombre   # un juego nuevo desde la plantilla
 node motor.mjs reporte "título" --juego encicla   # obligatorio si otra IA cambia el motor

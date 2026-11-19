@@ -18,6 +18,7 @@ async function iniciar() {
   await progreso(30, 'Casas y edificios del valle (639.457)…'); mundo._ed();
   await progreso(48, 'Calles con nombre y ciclorrutas…'); mundo.vias(); mundo._rejillaVias();
   await progreso(62, 'Red de calles para el tráfico y la panorámica…'); mundo.red('rueda');
+  await progreso(70, 'Ríos, quebradas y su profundidad…'); MC.Terreno.agua(mundo);
   await progreso(80, 'Metro, tranvía, cables y Metroplús con su horario…');
   const reloj = new MC.Reloj({ vel: 1 }), clima = new MC.Clima(cfg), transporte = new MC.Transporte(mundo, cfg), trafico = new MC.Trafico(mundo, { n: 34, peatones: 26, red: 'rueda' });
   const vistas = new MC.Vistas(mundo), camara = new MC.Camara({ zoom: 3.2 }), inicio = mundo.buscar(guard.lugar) || mundo.buscar('explora');

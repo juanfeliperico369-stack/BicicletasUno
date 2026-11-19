@@ -1,4 +1,4 @@
-/* Motor City 2.3.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.4.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.3.0',
+  version: '2.4.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -736,7 +736,7 @@ class Mundo {
     const E = this._ed(); if (!E) return null; const rx = Math.floor(x / E.R), ry = Math.floor(y / E.R);
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) for (const e of this.edificiosRegion(rx + dx, ry + dy)) {
       if (Math.abs(e.x - x) > e.hw + e.hd + r + 1 || Math.abs(e.y - y) > e.hw + e.hd + r + 1) continue;
-      if (e.P) { if (dentroPol(e.P, x, y)) return e; }
+      if (e.P) { if (dentroPol(e.P, x, y) && (r >= 0 || [[-r, 0], [r, 0], [0, -r], [0, r]].every(([a, b]) => dentroPol(e.P, x + a, y + b)))) return e; }   // r < 0: solo si está a más de |r| adentro
       else { const lx = (x - e.x) * e.ux + (y - e.y) * e.uy, ly = -(x - e.x) * e.uy + (y - e.y) * e.ux; if (Math.abs(lx) < e.hw + r && Math.abs(ly) < e.hd + r) return e; }
     }
     return null;
@@ -1021,6 +1021,20 @@ const Generador = {
       E[j * eW + i] = h * altMax;
     }
     const cotaE = (x, y) => { const gx = clamp(x / (es * T), 0, eW - 1.001), gy = clamp(y / (es * T), 0, eH - 1.001), x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, k = y0 * eW + x0; return (E[k] * (1 - fx) + E[k + 1] * fx) * (1 - fy) + (E[k + eW] * (1 - fx) + E[k + eW + 1] * fx) * fy; };
+    /* 1b. LAGOS: llenado por prioridad (Barnes, 2014): el agua entra desde el borde y el mar, y lo que queda por debajo
+       del punto de desborde de su cuenca se llena. Las cuencas grandes quedan como lagos (superficie plana); los
+       hoyitos se rellenan. Con un épsilon de pendiente, todo tiene salida: los ríos atraviesan los lagos. */
+    const llenar = eps => { const F = Float32Array.from(E), vis = new Uint8Array(eW * eH), hp = [], up = k => { let i = hp.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (F[hp[p]] <= F[hp[i]]) break; [hp[p], hp[i]] = [hp[i], hp[p]]; i = p; } }, down = () => { let i = 0; for (;;) { const l = 2 * i + 1, r2 = l + 1; let m = i; if (l < hp.length && F[hp[l]] < F[hp[m]]) m = l; if (r2 < hp.length && F[hp[r2]] < F[hp[m]]) m = r2; if (m === i) break; [hp[m], hp[i]] = [hp[i], hp[m]]; i = m; } };
+      for (let j = 0; j < eH; j++) for (let i = 0; i < eW; i++) if (i === 0 || j === 0 || i === eW - 1 || j === eH - 1 || E[j * eW + i] <= 0) { const k = j * eW + i; vis[k] = 1; hp.push(k); up(); }
+      while (hp.length) { const c = hp[0], last = hp.pop(); if (hp.length) { hp[0] = last; down(); } const ci = c % eW, cj = (c / eW) | 0;
+        for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = ci + a, jj = cj + b; if (ii < 0 || jj < 0 || ii >= eW || jj >= eH) continue; const n = jj * eW + ii; if (vis[n]) continue; vis[n] = 1; F[n] = Math.max(E[n], F[c] + eps); hp.push(n); up(); } }
+      return F; };
+    const F0 = llenar(0), Fe = llenar(.02), lago = new Uint8Array(eW * eH), compL = new Int32Array(eW * eH).fill(-1); let nLagos = 0;
+    const cuencas = []; for (let s = 0; s < eW * eH; s++) { if (compL[s] >= 0 || !(F0[s] - E[s] > .8 && E[s] > 0)) continue; const pila = [s], mie = [s]; compL[s] = s; let hondo = 0; while (pila.length) { const k = pila.pop(), i = k % eW, j = (k / eW) | 0; hondo = Math.max(hondo, F0[k] - E[k]); for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= eW || jj >= eH) continue; const q = jj * eW + ii; if (compL[q] < 0 && F0[q] - E[q] > .8 && E[q] > 0) { compL[q] = s; pila.push(q); mie.push(q); } } } cuencas.push({ mie, hondo }); }
+    /* solo las cuencas grandes y hondas son lagos (las de verdad, pocas); el resto se rellena */
+    cuencas.filter(c => c.mie.length >= (op.lagoMin ?? 8) && c.hondo > 2.5).sort((a, b) => b.mie.length * b.hondo - a.mie.length * a.hondo).slice(0, op.lagos ?? (tipo === 'llanura' ? 5 : 3)).forEach(c => { for (const k of c.mie) lago[k] = 1; nLagos++; });
+    for (let k = 0; k < eW * eH; k++) E[k] = lago[k] ? Fe[k] : Math.max(E[k], E[k] > 0 ? Fe[k] : E[k]);   // hoyos rellenos; los lagos, con su leve pendiente hacia el desagüe
+    const lagoFrac = (x, y) => { const gx = clamp(x / (es * T), 0, eW - 1.001), gy = clamp(y / (es * T), 0, eH - 1.001), x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, k = y0 * eW + x0; return (lago[k] * (1 - fx) + lago[k + 1] * fx) * (1 - fy) + (lago[k + eW] * (1 - fx) + lago[k + eW + 1] * fx) * fy; };
     /* 2. ríos: de los nacimientos (altos y húmedos) por la pendiente más fuerte */
     const rios = [], flujo = new Float32Array(eW * eH), nac = [];
     for (let k = 0; k < 400; k++) { const i = 2 + r.e(0, eW - 5), j = 2 + r.e(0, eH - 5), h = E[j * eW + i]; if (h > altMax * .35) nac.push([i, j, h]); }
@@ -1038,9 +1052,11 @@ const Generador = {
     const suelo = new Uint8Array(W * H), T0 = 27 - Math.abs(lat) * .45;   // temperatura a nivel del mar según la latitud (aprox.)
     for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
       const x = (tx + .5) * T, y = (ty + .5) * T, h = cotaE(x, y), temp = T0 - .0065 * h, hum = N.fbm(x * esc * 2 + 40, y * esc * 2 + 11, 3) * .5 + .5, pend = Math.hypot(cotaE(x + T, y) - cotaE(x - T, y), cotaE(x, y + T) - cotaE(x, y - T)) / (2 * T);
-      let t = TT.GRASS; if (h <= 0) t = TT.WATER; else if (h < 4 && tipo !== 'valle') t = TT.ARENA; else if (temp < -1) t = TT.NIEVE; else if (pend > 1.1 || (temp < 4 && pend > .5)) t = TT.ROCA; else if (hum > .55 || (pend > .35 && hum > .4)) t = TT.MOUNT;
+      let t = TT.GRASS; if (h <= 0 || lagoFrac(x, y) > .5) t = TT.WATER; else if (h < 4 && tipo !== 'valle') t = TT.ARENA; else if (lagoFrac(x, y) > .2 && hum > .45) t = TT.ARENA; else if (temp < -1) t = TT.NIEVE; else if (pend > 1.1 || (temp < 4 && pend > .5)) t = TT.ROCA; else if (hum > .55 || (pend > .35 && hum > .4)) t = TT.MOUNT;
       suelo[ty * W + tx] = t;
     }
+    /* charquitos sueltos (suavizado de la orilla, o lo que dejen calles y casas): menos de 0,6 ha de agua → pasto */
+    const limpiarCharcos = () => { const vis = new Uint8Array(W * H); for (let s0 = 0; s0 < W * H; s0++) { if (vis[s0] || suelo[s0] !== TT.WATER) continue; const pila = [s0], mie = [s0]; vis[s0] = 1; while (pila.length) { const k = pila.pop(), i = k % W, j = (k / W) | 0; for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= W || jj >= H) continue; const q = jj * W + ii; if (!vis[q] && suelo[q] === TT.WATER) { vis[q] = 1; pila.push(q); mie.push(q); } } } if (mie.length * T * T < 6000) for (const k of mie) suelo[k] = TT.GRASS; } }; limpiarCharcos();
     const pon = (x, y, t, R = T / 2) => { for (let yy = y - R; yy <= y + R; yy += T / 2) for (let xx = x - R; xx <= x + R; xx += T / 2) { const tx = Math.floor(xx / T), ty = Math.floor(yy / T); if (tx >= 0 && ty >= 0 && tx < W && ty < H && (xx - x) ** 2 + (yy - y) ** 2 <= R * R + 1) suelo[ty * W + tx] = t; } };
     const linea = (P, ancho, t) => { for (let k = 0; k + 3 < P.length; k += 2) { const ax = P[k], ay = P[k + 1], bx = P[k + 2], by = P[k + 3], L = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(L / (T / 2))); for (let q = 0; q <= n; q++) pon(ax + (bx - ax) * q / n, ay + (by - ay) * q / n, t, ancho / 2); } };
     for (const P of rios) { const i = Math.floor(P[1] / (es * T)) * eW + Math.floor(P[0] / (es * T)); linea(P, 6 + Math.min(18, (flujo[i] || 1) * 2), TT.CANAL); }
@@ -1051,7 +1067,7 @@ const Generador = {
     const dRio = (x, y) => { let b = 1e9; for (const P of rios) for (let k = 0; k < P.length; k += 6) b = Math.min(b, Math.hypot(P[k] - x, P[k + 1] - y)); return b; };
     const pueblos = cand.map(([x, y]) => ({ x, y, p: -dRio(x, y) / 400 - cotaE(x, y) / altMax })).sort((a, b) => b.p - a.p).slice(0, op.pueblos ?? 4).map((q, i) => Object.assign(q, { id: i + 1, nombre: this.nombre(r), radio: [420, 320, 260, 220, 200, 180][i] || 160, ang: r.r2(0, Math.PI / 2) }));
     const vias = [], edif = [], lugares = [], calles = new Set(), pasos = [];
-    const valida = (x, y) => x > 0 && y > 0 && x < W * T && y < H * T && cotaE(x, y) > 2 && suelo[Math.floor(y / T) * W + Math.floor(x / T)] !== TT.CANAL;
+    const valida = (x, y) => x > 0 && y > 0 && x < W * T && y < H * T && cotaE(x, y) > 2 && suelo[Math.floor(y / T) * W + Math.floor(x / T)] !== TT.CANAL && suelo[Math.floor(y / T) * W + Math.floor(x / T)] !== TT.WATER;   /* ni en quebradas ni en lagos */
     for (const Pb of pueblos) {
       const ca = Math.cos(Pb.ang), sa = Math.sin(Pb.ang), cuad = 70, n = Math.ceil(Pb.radio / cuad);
       for (const eje of [0, 1]) for (let k = -n; k <= n; k++) {
@@ -1077,7 +1093,7 @@ const Generador = {
     const camino = (a, b) => {
       const ia = Math.round(a.x / (es * T)), ja = Math.round(a.y / (es * T)), ib = Math.round(b.x / (es * T)), jb = Math.round(b.y / (es * T)), g = new Float64Array(eW * eH).fill(Infinity), de = new Int32Array(eW * eH).fill(-1), abiertos = [[0, ja * eW + ia]]; g[ja * eW + ia] = 0;
       while (abiertos.length) { let m = 0; for (let k = 1; k < abiertos.length; k++) if (abiertos[k][0] < abiertos[m][0]) m = k; const [, u] = abiertos.splice(m, 1)[0]; if (u === jb * eW + ib) break; const ui = u % eW, uj = (u / eW) | 0;
-        for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) { const vi = ui + di, vj = uj + dj; if (vi < 1 || vj < 1 || vi >= eW - 1 || vj >= eH - 1) continue; const v = vj * eW + vi, hv = E[v]; if (hv <= 0) continue; const L = Math.hypot(di, dj) * es * T, pend = Math.abs(hv - E[u]) / L, c = g[u] + L * (1 + pend * pend * 400 + (flujo[v] > 0 ? 8 : 0)); if (c < g[v]) { g[v] = c; de[v] = u; abiertos.push([c + Math.hypot(vi - ib, vj - jb) * es * T, v]); } }
+        for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) { const vi = ui + di, vj = uj + dj; if (vi < 1 || vj < 1 || vi >= eW - 1 || vj >= eH - 1) continue; const v = vj * eW + vi, hv = E[v]; if (hv <= 0) continue; const L = Math.hypot(di, dj) * es * T, pend = Math.abs(hv - E[u]) / L, c = g[u] + L * (1 + pend * pend * 400 + (flujo[v] > 0 ? 8 : 0) + (lago[v] ? 60 : 0)); /* los lagos se rodean (o se cruzan por un puente) */ if (c < g[v]) { g[v] = c; de[v] = u; abiertos.push([c + Math.hypot(vi - ib, vj - jb) * es * T, v]); } }
         if (abiertos.length > 40000) break; }
       if (de[jb * eW + ib] < 0) return null; const R = []; for (let v = jb * eW + ib; v !== -1 && v !== ja * eW + ia; v = de[v]) R.push(((v % eW) + .5) * es * T, (((v / eW) | 0) + .5) * es * T); R.push(a.x, a.y);
       let P = []; for (let k = R.length - 2; k >= 0; k -= 2) P.push(R[k], R[k + 1]);
@@ -1101,6 +1117,9 @@ const Generador = {
     if (cima) lugares.push({ id: 'cima', nombre: 'Mirador del cerro más alto', municipio: '', x: cima.x, y: cima.y, ancho: 40, alto: 40, dibujo: 'cerro', dato: 'A ' + Math.round(cima.h) + ' m sobre el mar.', secreto: false });
     const lineas = []; if (cima && pueblos[0] && Math.hypot(cima.x - pueblos[0].x, cima.y - pueblos[0].y) < 4500) lineas.push({ id: 'CG', nombre: 'Cable ' + pueblos[0].nombre, clase: 'cable', color: '#e38835', estado: 'operativa', estaciones: [[pueblos[0].nombre, pueblos[0].x + 60, pueblos[0].y + 60], ['Mirador', cima.x, cima.y]], eje: null });
     /* 7. el mundo */
+    limpiarCharcos();
+    /* el agua queda a su nivel: el mar en 0 m y cada lago plano en su nivel de desborde (se nada y se navega encima) */
+    for (let k = 0; k < E.length; k++) E[k] = lago[k] ? F0[k] : Math.max(0, E[k]);
     const relieve = new Int16Array(eW * eH); for (let k = 0; k < E.length; k++) relieve[k] = Math.round(E[k]);
     const nombre = op.nombre || 'Mundo ' + sem, kx = 111320 * Math.cos(lat * Math.PI / 180) / T, ky = 110574 / T;
     const cfg = { id: 'gen-' + sem, nombre, ventana: { lon0: -75, latN: lat + H * T / 2 / 110574, lon1: -75 + W * T / (kx * T), latS: lat - H * T / 2 / 110574, lat_ref: lat }, casilla_m: T, zonas: Object.assign({}, ZONAS_BASE, (MC.ciudadBase && MC.ciudadBase.zonas) || {}), zona_por_comuna: [null], zona_por_municipio: [null, ...pueblos.map(() => 'pueblo')], clima: op.clima || null, transporte: { servicio: { habil: [300, 1320], domingo: [360, 1260] }, pico: [], clases: { cable: { vel_ms: 5, cabina_cada_s: 15, altura_m: 30 } } } };
@@ -1115,7 +1134,7 @@ const Generador = {
         transporte: { datos: { lineas, encicla: [] } }, lugares: { datos: { lugares, hitos: [] } }, trafico: { datos: { carriles: [], semaforos: [] } }
       }
     }, cfg);
-    M.generado = { pueblos, rios: rios.length, edificios: edJ.length, vias: vias.length, puentes: pasos.length, cfg };
+    M.generado = { pueblos, rios: rios.length, lagos: nLagos, edificios: edJ.length, vias: vias.length, puentes: pasos.length, cfg };
     return M;
   }
 };
@@ -1275,6 +1294,110 @@ const RejillaIrregular = {
 const _FZ = new Map(); Ondas.presupuesto = 30;
 Ondas.fachadaCache = (clave, pisos, columnas) => { const k = clave + ':' + pisos + 'x' + columnas; let F = _FZ.get(k); if (F) return F; if (Ondas.presupuesto <= 0) return null; Ondas.presupuesto--; F = Ondas.fachada(pisos, columnas, clave >>> 0); _FZ.set(k, F); if (_FZ.size > 5000) _FZ.delete(_FZ.keys().next().value); return F; };
 Object.assign(MC, { Ondas, Autotile, RejillaIrregular });
+
+/* ---- js/15-terreno.js ---- */
+/* =====================================================================
+   TERRENO Y LÍMITES · por dónde se puede ir de verdad (que nada se atraviese sin sentido)
+   AGUA: el agua del mapa se analiza una vez: cuerpos de agua (componentes), su TIPO (mar, lago o embalse, río y
+   quebrada, según su tamaño, su forma, su altura y si toca el borde) y la DISTANCIA A LA ORILLA. La profundidad
+   crece con esa distancia según el tipo (playas suaves en el mar, orillas más hondas en los lagos, ríos de 1–4 m,
+   quebradas de rodilla). Así se puede vadear la orilla, nadar en lo hondo y la lancha no encalla.
+   MATERIAL: pasto, monte (bosque), roca, arena (playa), nieve, barro, asfalto, andén, escalas, agua… con la PENDIENTE
+   real del relieve (los barrancos y acantilados salen de ella).
+   REGLAS DE PASO por clase de vehículo (a pie, bici, moto, carro, camión, lancha, aire), con su motivo:
+   - pendiente máxima fuera de la vía (a pie ~45°, bici ~19°, carro ~24°, camión ~17°); bajar un barranco tampoco;
+   - agua: a pie se vadea hasta la cintura y luego se nada; la bici cruza charcos y quebradas de hasta 25 cm; el carro,
+     hasta 40 cm; la lancha necesita al menos 60 cm;
+   - roca, monte, arena y nieve: quién entra y qué tan rápido (el todoterreno y la bici de montaña sí entran al monte);
+   - OBSTÁCULOS: edificios (también las partes de los emblemáticos y lo que crece con MC.Urbe), árboles (los mismos
+     que pintan las losas), postes, bancas, paraderos, hidrantes, rocas, y lo que el juego diga (tráfico, gente);
+   - el borde del mundo.
+   Sobre una vía (calle, andén, ciclorruta, escalas, puente) la pendiente no bloquea: las calles reales existen ahí.
+   ===================================================================== */
+const MATERIAL_TT = ['pasto', 'monte', 'ladrillo', 'edificio', 'asfalto', 'asfalto', 'anden', 'ciclorruta', 'agua', 'agua', 'plaza', 'puente', 'estacion', 'tierra', 'asfalto', 'patio', 'escalas', 'arena', 'nieve', 'roca'];
+const VIA_TT = new Set([4, 5, 6, 7, 10, 11, 12, 14, 15, 16]);   // calle, avenida, andén, ciclorruta, plaza, puente, estación, autopista, patio, escalas
+const PEND_MAX = { pie: 1.0, rueda: .35, moto: .5, auto: .45, pesado: .3, agua: 99, aire: 99, riel: .08, cable: 99 };
+const AGUA_MAX = { pie: 99, rueda: .25, moto: .3, auto: .4, pesado: .7, agua: 0, aire: 99 };   // profundidad que se cruza (m)
+const OBST_R = { poste: .22, arbol: .4, banca: .55, caneca: .3, paradero: .95, hidrante: .2, roca: 0, palma: .3, frailejon: .25, arbusto: .5 };
+const Terreno = {
+  MATERIAL_TT, PEND_MAX, AGUA_MAX,
+  /* ---------- agua: tipo y profundidad ---------- */
+  agua(M) {
+    if (M._agua) return M._agua; const T = M.tile, paso = Math.max(T, 10, Math.ceil(Math.sqrt(M.ancho * M.alto / 1.2e6) / T) * T), w = Math.ceil(M.ancho / paso), h = Math.ceil(M.alto / paso), n = w * h;
+    const tipo = new Uint8Array(n), tierra = new Uint8Array(n), rio = new Uint8Array(n);   // 0 tierra · 1 agua · 2 quebrada
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const t = M.suelo((i + .5) * paso, (j + .5) * paso), k = j * w + i; tipo[k] = t === TT.WATER ? 1 : t === TT.CANAL ? 2 : 0; }
+    /* el río con nombre del mapa (si lo trae): se marca para que no se corte en la rejilla gruesa y se reconozca como río */
+    let info = null; try { info = M.tiene && M.tiene('info') ? M.capa('info') : null; } catch (e) { info = null; }
+    const R = info && Array.isArray(info.rio) ? info.rio : []; for (let q = 0; q + 3 < R.length; q += 2) { const L = Math.hypot(R[q + 2] - R[q], R[q + 3] - R[q + 1]); if (L > 400) continue; const m = Math.max(1, Math.ceil(L / (paso / 2))); for (let t = 0; t <= m; t++) { const i = Math.floor((R[q] + (R[q + 2] - R[q]) * t / m) / paso), j = Math.floor((R[q + 1] + (R[q + 3] - R[q + 1]) * t / m) / paso); if (i >= 0 && j >= 0 && i < w && j < h) { const k = j * w + i; rio[k] = 1; if (!tipo[k]) tipo[k] = 1; } } }
+    for (let k = 0; k < n; k++) tierra[k] = tipo[k] ? 0 : 1;
+    const D = distanciaRejilla(tierra, w, h), comp = new Int32Array(n).fill(-1), C = [];
+    for (let s = 0; s < n; s++) { if (!tipo[s] || comp[s] >= 0) continue; const id = C.length, pila = [s]; comp[s] = id; let tam = 0, borde = false, dmax = 0, cota = 0, canal = 0, enRio = 0;
+      while (pila.length) { const k = pila.pop(), i = k % w, j = (k / w) | 0; tam++; if (i === 0 || j === 0 || i === w - 1 || j === h - 1) borde = true; dmax = Math.max(dmax, D[k]); if (tam <= 400) cota += M.cota((i + .5) * paso, (j + .5) * paso); if (tipo[k] === 2) canal++; if (rio[k]) enRio++;
+        for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= w || jj >= h) continue; const q = jj * w + ii; if (tipo[q] && comp[q] < 0) { comp[q] = id; pila.push(q); } } }
+      const area = tam * paso * paso, ancho = dmax * paso * 2, cotaMedia = cota / Math.min(tam, 400);
+      const t = enRio > 3 ? 'rio' : canal > tam * .5 ? (area > 5e4 ? 'rio' : 'quebrada') : (borde && cotaMedia < 8 && area > 1e6) ? 'mar' : (ancho < 90 && area / Math.max(1, ancho) > 400) ? 'rio' : 'lago';
+      C.push({ id, tipo: t, area, ancho, borde, cota: cotaMedia }); }
+    return (M._agua = { w, h, paso, D, comp, C, tipo });
+  },
+  /* el cuerpo de agua en (x, y) o null; con su profundidad (m) */
+  aguaEn(M, x, y) {
+    const tt = M.suelo(x, y); if (tt !== TT.WATER && tt !== TT.CANAL) return null; const A = Terreno.agua(M), i = clamp(Math.floor(x / A.paso), 0, A.w - 1), j = clamp(Math.floor(y / A.paso), 0, A.h - 1), k = j * A.w + i;
+    const c = A.comp[k] >= 0 ? A.C[A.comp[k]] : { tipo: tt === TT.CANAL ? 'quebrada' : 'lago' };
+    /* distancia a la orilla, suave (interpolada); medio paso porque la celda de borde ya está a media celda */
+    const fx = x / A.paso - .5, fy = y / A.paso - .5, i0 = clamp(Math.floor(fx), 0, A.w - 2), j0 = clamp(Math.floor(fy), 0, A.h - 2), u = clamp(fx - i0, 0, 1), v = clamp(fy - j0, 0, 1), Dk = (a, b) => Math.min(A.D[(j0 + b) * A.w + i0 + a], 60);
+    const d = Math.max(.3, ((Dk(0, 0) * (1 - u) + Dk(1, 0) * u) * (1 - v) + (Dk(0, 1) * (1 - u) + Dk(1, 1) * u) * v) * A.paso - A.paso * .5 + 2);
+    const prof = c.tipo === 'mar' ? Math.min(40, .2 + d * .045) : c.tipo === 'lago' ? Math.min(30, .3 + d * .11) : c.tipo === 'rio' ? Math.min(4, .35 + d * .13) : Math.min(.7, .12 + d * .06);
+    return { tipo: c.tipo, prof, orilla: d, cuerpo: c };
+  },
+  /* pendiente (magnitud, metros por metro) en (x, y) */
+  pendiente(M, x, y, d = 6) { const gx = (M.cota(x + d, y) - M.cota(x - d, y)) / (2 * d), gy = (M.cota(x, y + d) - M.cota(x, y - d)) / (2 * d); return Math.hypot(gx, gy); },
+  /* todo lo que hay en (x, y) */
+  en(M, x, y) { const tt = M.suelo(x, y); return { tt, material: MATERIAL_TT[tt] || 'tierra', via: VIA_TT.has(tt), pendiente: Terreno.pendiente(M, x, y), agua: Terreno.aguaEn(M, x, y), cota: M.cota(x, y) }; },
+  /* ---------- reglas de paso: { ok, f (factor de velocidad), nada, motivo } ---------- */
+  paso(C, x, y) {
+    const M = C.mundo, V = C.veh, cl = V.clase, tt = M.suelo(x, y), via = VIA_TT.has(tt), base = Vehiculos.suelo(V, tt);
+    if (!M.dentro(x, y)) return { ok: false, f: 0, motivo: 'el borde del mundo' };
+    if (cl === 'aire' && C.z > 3) return { ok: true, f: 1 };
+    const ag = (tt === TT.WATER || tt === TT.CANAL) ? Terreno.aguaEn(M, x, y) : null;
+    if (cl === 'agua') { if (!ag) return { ok: false, f: 0, motivo: 'la lancha no anda en tierra' }; if (ag.prof < .6) return { ok: false, f: 0, motivo: 'muy pando para la lancha' }; return { ok: true, f: Math.max(.3, base || 1) }; }
+    if (ag && !C.paso) {
+      if (cl === 'pie') return ag.prof < .5 ? { ok: true, f: .55, vadea: true } : ag.prof < 1.15 ? { ok: true, f: .32, vadea: true } : { ok: true, f: .26, nada: true };
+      const lim = AGUA_MAX[cl] ?? 0; if (ag.prof > lim) return { ok: false, f: 0, motivo: ag.tipo === 'quebrada' ? 'la quebrada está muy honda para ' + (cl === 'rueda' ? 'la bici' : 'este vehículo') : 'el agua está muy honda (' + ag.prof.toFixed(1) + ' m)' };
+      return { ok: true, f: .35, vadea: true };
+    }
+    if (base <= 0 && !(cl === 'auto' && tt === TT.MOUNT && (V.id === 'todoterreno' || V.offroad))) return { ok: false, f: 0, motivo: { 1: 'el monte es muy cerrado', 16: 'por las escalas no pasa', 17: 'se entierra en la arena', 18: 'no avanza en la nieve', 19: 'no pasa por la roca' }[tt] || 'por ahí no pasa' };
+    /* pendiente: fuera de las vías, lo muy empinado no se sube ni se baja (barrancos y acantilados) */
+    if (!via && !C.paso) { const s = Terreno.pendiente(M, x, y), lim = (V.id === 'mtb' || V.id === 'todoterreno' || V.offroad ? 1.4 : 1) * (PEND_MAX[cl] ?? .5), d = Math.hypot(x - C.x, y - C.y) || .5, g = (M.cota(x, y) - M.cota(C.x, C.y)) / d;
+      if (s > lim * 1.35 || g > lim || -g > lim * 1.6) return { ok: false, f: 0, motivo: g < 0 ? 'es un barranco' : 'está muy empinado' }; }
+    return { ok: true, f: Math.max(.12, base || .5) * (tt === TT.MOUNT && cl === 'auto' ? .55 : 1) };
+  },
+  /* ---------- obstáculos: lo que ocupa espacio en el piso ---------- */
+  _indiceSitios(M) {
+    if (M._sitiosIdx) return M._sitiosIdx; const G = new Map(), C = 80, E = M.sitios().E || [];
+    E.forEach((q, n) => { const k = q.caja; if (!k) return; for (let gy = Math.floor(k[1] / C); gy <= Math.floor(k[3] / C); gy++) for (let gx = Math.floor(k[0] / C); gx <= Math.floor(k[2] / C); gx++) { const key = gx * 65536 + gy; (G.get(key) || G.set(key, []).get(key)).push(n); } });
+    return (M._sitiosIdx = { G, C, E });
+  },
+  /* ¿hay un edificio de los sitios (emblemáticos, universidades, iglesias…) en (x, y)? */
+  sitioEn(M, x, y) { const I = Terreno._indiceSitios(M), L = I.G.get(Math.floor(x / I.C) * 65536 + Math.floor(y / I.C)); if (!L) return null; for (const n of L) { const q = I.E[n]; if (x < q.caja[0] || x > q.caja[2] || y < q.caja[1] || y > q.caja[3]) continue; for (const R of q.R) if (dentroPol(R, x, y)) return q; if (q.partes) for (const p of q.partes) if (p.z0 < 2.5 && dentroPol(p.B, x, y)) return q; } return null; },
+  /* árbol de las losas (los mismos que se pintan) cuyo tronco toca el círculo (x, y, r) */
+  arbolLosaEn(M, x, y, r) {
+    const cel = 7; for (let gy = Math.floor((y - 3) / cel) * cel; gy <= y + 3; gy += cel) for (let gx = Math.floor((x - 3) / cel) * cel; gx <= x + 3; gx += cel) {
+      const tt = M.suelo(gx, gy); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(gx, gy), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(gx, gy, 41) > dens) continue;
+      const tx = gx + h2(gx, gy, 42) * cel, ty = gy + h2(gx, gy, 43) * cel; if (Math.hypot(tx - x, ty - y) < .38 + r) return { t: 'arbol', x: tx, y: ty };
+    }
+    return null;
+  },
+  /* el obstáculo que toca el círculo (x, y, r): mobiliario, naturaleza, árboles de las losas y lo que diga el juego */
+  obstaculo(C, x, y, r) {
+    const M = C.mundo, k = 3 + r;
+    if (MC.Mobiliario) for (const p of Mobiliario.en(M, x - k, y - k, x + k, y + k, 200)) { const R = OBST_R[p.t]; if (R && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
+    if (MC.Naturaleza) for (const p of Naturaleza.en(M, x - k, y - k, x + k, y + k)) { const R = p.t === 'roca' ? p.s * .45 : OBST_R[p.t]; if (R && (p.t !== 'roca' || p.s > .7 || C.veh.clase !== 'pie') && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
+    if (Terreno.arbolLosaEn(M, x, y, r)) return { t: 'arbol' };
+    if (C.obstaculos) for (const o of C.obstaculos()) if (Math.hypot(o.x - x, o.y - y) < (o.r || .5) + r) return o;
+    return null;
+  }
+};
+Object.assign(MC, { Terreno });
 
 /* ---- js/20-tiempo.js ---- */
 /* =====================================================================
@@ -1935,6 +2058,49 @@ const Mobiliario = {
 };
 MC.Mobiliario = Mobiliario;
 
+/* ---- js/28-naturaleza.js ---- */
+/* =====================================================================
+   NATURALEZA · rocas, palmas, frailejones, arbustos y juncos donde de verdad van
+   Con azar fijo por celdas de 16 m y según el material, la pendiente, la altura y el agua (MC.Terreno):
+   - ROCAS (de 0,4 a 3 m): en la roca y la montaña empinada, en los cauces de ríos y quebradas y en las playas
+     rocosas. Las grandes no se atraviesan; las pequeñas se pasan a pie pero frenan las ruedas.
+   - PALMAS en las playas y en tierra caliente baja; FRAILEJONES en el páramo (más de 3.000 m, como en los Andes);
+     ARBUSTOS en el monte; JUNCOS en la orilla poco honda de lagos y ríos.
+   Se dibujan en las vistas 2D con su sombra de contacto y chocan (MC.Terreno.obstaculo). Arte: gancho `naturaleza`.
+   ===================================================================== */
+const Naturaleza = {
+  CELDA: 16,
+  _celda(M, gx, gy) {
+    const C = M._natura || (M._natura = new Map()), k = gx * 65536 + gy; let L = C.get(k); if (L) return L; L = [];
+    const r = mulberry32((gx * 73856093) ^ (gy * 19349663) ^ 0x2545f491), S = Naturaleza.CELDA;
+    for (let n = 0; n < 4; n++) {
+      const x = (gx + r()) * S, y = (gy + r()) * S, u = r(), s = r(); if (!M.dentro(x, y)) continue; const tt = M.suelo(x, y);
+      if (tt === TT.WATER || tt === TT.CANAL) { const ag = Terreno.aguaEn(M, x, y); if (ag && ag.prof < .45 && ag.tipo !== 'mar' && u < .35) L.push({ t: 'junco', x, y, s: .6 + s }); else if (ag && ag.tipo !== 'lago' && ag.tipo !== 'mar' && ag.prof < .9 && u < .12) L.push({ t: 'roca', x, y, s: .4 + s * .8 }); continue; }
+      if (VIA_TT.has(tt) || tt === TT.BLDG || tt === TT.BRICK || M.edificioEn(x, y, 1)) continue;
+      const pend = Terreno.pendiente(M, x, y), alt = M.cota(x, y);
+      if (tt === TT.ROCA) { if (u < .55) L.push({ t: 'roca', x, y, s: .5 + s * 2.5 }); continue; }
+      if (tt === TT.ARENA) { if (u < .1) L.push({ t: 'palma', x, y, s: .8 + s * .4 }); else if (u < .16) L.push({ t: 'roca', x, y, s: .4 + s }); continue; }
+      if (alt > 3000 && (tt === TT.GRASS || tt === TT.MOUNT)) { if (u < .4) L.push({ t: 'frailejon', x, y, s: .7 + s * .8 }); else if (u < .5) L.push({ t: 'roca', x, y, s: .4 + s * 1.2 }); continue; }
+      if (pend > .7 && u < .3 + (pend - .7) * .5) { L.push({ t: 'roca', x, y, s: .5 + s * (1 + pend) }); continue; }
+      if (tt === TT.MOUNT && u < .14) { L.push({ t: 'arbusto', x, y, s: .7 + s * .8 }); continue; }
+      if (tt === TT.GRASS && alt < 900 && u < .03) L.push({ t: 'palma', x, y, s: .9 + s * .3 });
+    }
+    C.set(k, L); if (C.size > 20000) C.delete(C.keys().next().value); return L;
+  },
+  en(M, x0, y0, x1, y1, max = 3000) { const S = Naturaleza.CELDA, out = []; for (let gy = Math.floor(y0 / S); gy <= Math.floor(y1 / S); gy++) for (let gx = Math.floor(x0 / S); gx <= Math.floor(x1 / S); gx++) { for (const p of Naturaleza._celda(M, gx, gy)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } } return out; },
+  /* dibujo 2D: pr(x, y, h) del mundo a la pantalla, z = px por metro */
+  objeto(D, p) {
+    const { g, pr, z, P, noche, modo } = D, [x, y] = pr(p.x, p.y, 0), cen = modo === 'cenital', fa = MC.arte.f('naturaleza'); if (fa && fa(g, p, x, y, z, D) === true) return;
+    const osc = noche > .3 ? -.35 : 0, s = p.s * z;
+    if (p.t === 'roca') { Sombras.contacto(g, x + s * .15, y + s * .1, s * .62, s * .32 * (cen ? 1 : P.k + .3), .3); const hh = cen ? 0 : s * .55 * P.hk; g.fillStyle = tono('#8a857c', osc - .05); g.beginPath(); g.moveTo(x - s * .5, y); g.quadraticCurveTo(x - s * .55, y - hh - s * .25 * (cen ? 1 : P.k), x - s * .05, y - hh - s * .3 * (cen ? 1 : P.k)); g.quadraticCurveTo(x + s * .5, y - hh - s * .2 * (cen ? 1 : P.k), x + s * .5, y); g.closePath(); g.fill(); g.fillStyle = tono('#b3ada2', osc); g.beginPath(); g.ellipse(x - s * .12, y - hh - s * .18 * (cen ? 1 : P.k), s * .22, s * .1, -.3, 0, TAU); g.fill(); return; }
+    if (p.t === 'palma') { const h = 6 * p.s, [, yt] = pr(p.x, p.y, h); Sombras.contacto(g, x, y, z * .6, z * .3, .2); if (!cen) { g.strokeStyle = tono('#8b6b4a', osc); g.lineWidth = Math.max(1, z * .28); g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + z * .6, (y + yt) / 2, x + z * .3, yt); g.stroke(); } const cx = cen ? x : x + z * .3, cy = cen ? y : yt; g.strokeStyle = tono('#3f8f3a', osc); g.lineWidth = Math.max(1, z * .35); for (let k = 0; k < 7; k++) { const a = k / 7 * TAU, L = z * 2.4; g.beginPath(); g.moveTo(cx, cy); g.quadraticCurveTo(cx + Math.cos(a) * L * .6, cy + Math.sin(a) * L * .3 - z * .4, cx + Math.cos(a) * L, cy + Math.sin(a) * L * .55 + z * .3); g.stroke(); } return; }
+    if (p.t === 'frailejon') { const h = 1.4 * p.s, [, yt] = pr(p.x, p.y, h); Sombras.contacto(g, x, y, z * .4, z * .2, .2); if (!cen) { g.fillStyle = tono('#6b5a43', osc); g.fillRect(x - z * .15, yt, z * .3, y - yt); } g.fillStyle = tono('#a9b48a', osc); g.beginPath(); g.arc(x, cen ? y : yt, z * .55 * p.s, 0, TAU); g.fill(); g.fillStyle = tono('#e3c84a', osc); g.beginPath(); g.arc(x, (cen ? y : yt) - z * .2, z * .15, 0, TAU); g.fill(); return; }
+    if (p.t === 'arbusto') { Sombras.contacto(g, x, y, s * .6, s * .3, .2); g.fillStyle = tono('#4f7f3a', osc); g.beginPath(); g.arc(x, y - (cen ? 0 : s * .35 * P.hk), s * .55, 0, TAU); g.fill(); return; }
+    if (p.t === 'junco') { g.strokeStyle = tono('#6c8f3a', osc); g.lineWidth = Math.max(.6, z * .08); for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(x + k * z * .12, y); g.lineTo(x + k * z * .2, y - z * (cen ? .4 : 1.2) * p.s); g.stroke(); } }
+  }
+};
+MC.Naturaleza = Naturaleza;
+
 /* ---- js/30-personaje.js ---- */
 /* =====================================================================
    PERSONAJE ÚNICO · el mismo cuerpo para todos los juegos; cada juego lo viste a su estilo
@@ -2135,10 +2301,21 @@ class Cuerpo {
     if (this.paso) return true;
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
-    const tt = this.mundo.suelo(x, y); if (Vehiculos.suelo(V, tt) <= 0) return false;
-    if (this.chocaEdificios && V.clase !== 'agua' && tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO && tt !== TT.CICLO && this.mundo.edificioEn(x, y, V.clase === 'pie' ? .2 : .4)) return false;
+    /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
+    const T = Terreno.paso(this, x, y); if (!T.ok) return this._bloquea(T.motivo);
+    if (this.chocaEdificios && V.clase !== 'agua') {
+      /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
+         y también los edificios de los sitios y las partes bajas de los emblemáticos */
+      const tt = this.mundo.suelo(x, y), enVia = VIA_TT.has(tt), r = V.clase === 'pie' ? .2 : .4;
+      if (this.mundo.edificioEn(x, y, enVia ? -1 : r)) return this._bloquea('un edificio');
+      if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
+      /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente) */
+      if (!(this.z > 1.2)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+    }
     return true;
   }
+  /* por qué no pasó (para que el juego lo diga una vez: «🌊 el agua está muy honda») */
+  _bloquea(motivo) { this.bloqueo = motivo || 'algo'; this.tBloqueo = 1.2; return false; }
   actualizar(dt, E = {}) {
     const V = this.veh, M = this.mundo; this.eventos.length = 0; dt = Math.min(dt, .1); this._dt = dt;
     this.corriendo = !!E.correr && V.id === 'pie';
@@ -2146,8 +2323,10 @@ class Cuerpo {
     let acel = E.acel || 0, giro = E.giro || 0;
     if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2, -1, 1); acel = E.dir.m * (Math.abs(d) > 2.2 && V.clase !== 'pie' ? .2 : 1); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
     /* suelo, pendiente y velocidad objetivo */
-    this.tt = M.suelo(this.x, this.y); this.pend = this.paso ? 0 : M.pendiente(this.x, this.y, this.a, 12);
-    const suelo = this.paso ? 1 : Math.max(.15, Vehiculos.suelo(V, this.tt)), loma = V.electrico ? clamp(1 - this.pend * .4, .85, 1.15) : Vehiculos.loma(V, this.pend);
+    this.tt = M.suelo(this.x, this.y); this.pend = this.paso ? 0 : M.pendiente(this.x, this.y, this.a, 12); this.tBloqueo = Math.max(0, (this.tBloqueo || 0) - dt); if (!this.tBloqueo) this.bloqueo = null;
+    /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
+    const Tp = this.paso || (V.clase === 'aire' && this.z > 3) ? { f: 1 } : Terreno.paso(this, this.x, this.y); this.nadando = !!Tp.nada; this.vadeando = !!Tp.vadea;
+    const suelo = this.paso ? 1 : Math.max(.12, Tp.ok === false ? .15 : Tp.f), loma = V.electrico ? clamp(1 - this.pend * .4, .85, 1.15) : Vehiculos.loma(V, this.pend);
     const vmax = this.vmax() * suelo * loma * (E.turbo ? 1.25 : 1), objetivo = acel >= 0 ? vmax * acel : -vmax * .35 * -acel;
     const empuje = acel > 0 ? V.acc * (E.turbo ? 1.4 : 1) : V.freno;
     if (this.enAire && V.clase !== 'aire') { /* en el aire no se acelera */ }
@@ -2808,6 +2987,8 @@ MC.Sombras = Sombras;
    el pixel, la 3D oblicua, la maqueta 2:1 y el piso de la vista 3D en WebGL.
    Cada juego puede cambiar la paleta (MC.arte.registrar(juego, { suelo: {...}, via: {...} })).
    ===================================================================== */
+/* agua por tipo: [somero, hondo, profundidad a la que ya es «hondo» (m)] · roca de los acantilados */
+const AGUA_COL = { mar: [[.36, .74, .80], [.05, .24, .44], 22], lago: [[.40, .64, .62], [.10, .30, .42], 12], rio: [[.47, .58, .52], [.24, .38, .40], 3.5], quebrada: [[.48, .64, .66], [.30, .48, .55], .8] }, ROCA_COL = [.55, .53, .49];
 const PAL_SUELO = ['#78ad55', '#3f7a3c', '#cdbfa5', '#bdb3a2', '#5d636e', '#565c68', '#c9c4b8', '#4caf63', '#4f9fd0', '#5f9fb8', '#d8cfbd', '#6b7180', '#e7e2d6', '#b9b4a8', '#4d525c', '#a9a395', '#b8a98e', '#e6d7a8', '#f2f5f9', '#8d8a86'];
 const PAL_VIA = { anden: '#d4cfc3', asfalto: '#4a4f59', avenida: '#444955', autopista: '#3c414b', linea: '#f4f1e6', amarilla: '#f2c400', ciclo: '#3fae5a', cicloBorde: '#e8f5d0', peatonal: '#e3dccb', escalas: '#b8a98e', sendero: '#c9b78f' };
 MC.arte.pieles.motor.suelo = PAL_SUELO; MC.arte.pieles.motor.via = PAL_VIA;
@@ -2848,7 +3029,11 @@ class Losas {
     for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) {
       const wx = x0 + (i - .5) * T, wy = y0 + (j - .5) * T, tt = M.suelo(wx, wy); let col = S[tt] || '#888';
       if (tt === TT.BRICK || tt === TT.BLDG) col = M.estilo(wx, wy).suelo || col;
-      const c = hex3(col), dzx = (M.cota(wx + T, wy) - M.cota(wx - T, wy)) / (2 * T), dzy = (M.cota(wx, wy + T) - M.cota(wx, wy - T)) / (2 * T), sh = clamp(1 + (dzx * luzX + dzy * luzY) * 1.6, .62, 1.3), rn = .96 + h2(Math.floor(wx / T), Math.floor(wy / T), 3) * .08;
+      let c = hex3(col); const dzx = (M.cota(wx + T, wy) - M.cota(wx - T, wy)) / (2 * T), dzy = (M.cota(wx, wy + T) - M.cota(wx, wy - T)) / (2 * T); let sh = clamp(1 + (dzx * luzX + dzy * luzY) * 1.6, .62, 1.3); const rn = .96 + h2(Math.floor(wx / T), Math.floor(wy / T), 3) * .08;
+      /* agua: color según el tipo y la profundidad (turquesa en la orilla del mar, oscuro en lo hondo) y espuma en la orilla */
+      if (tt === TT.WATER || tt === TT.CANAL) { const ag = Terreno.aguaEn(M, wx, wy); if (ag) { const A = AGUA_COL[ag.tipo] || AGUA_COL.lago, k = clamp(ag.prof / A[2], 0, 1); c = mez3(A[0], A[1], k); if (ag.orilla < T * 1.3 + 2) c = mez3(c, [.88, .94, .96], .3); sh = 1; } }
+      /* laderas muy empinadas: la roca asoma (acantilados y barrancos), y la playa se aclara junto al agua */
+      else if (tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO && tt !== TT.WALK && tt !== TT.CICLO && tt !== TT.BLDG && tt !== TT.BRICK) { const m2 = Math.hypot(dzx, dzy); if (m2 > .65) c = mez3(c, ROCA_COL, clamp((m2 - .65) / .7, 0, .85)); }
       const o = (j * m + i) * 4; D[o] = clamp(c[0] * sh * rn * 255, 0, 255); D[o + 1] = clamp(c[1] * sh * rn * 255, 0, 255); D[o + 2] = clamp(c[2] * sh * rn * 255, 0, 255); D[o + 3] = 255;
     }
     /* la casilla de borde de cada lado es de la losa vecina: así el suavizado no deja costuras entre losas */
@@ -2978,6 +3163,12 @@ const Vista2D = {
       if (conSombra) { const S = lista.map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
       if (modo !== 'cenital') { for (const q of lista) if (q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q }); for (const q of sit) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); } }
     }
+    /* agua viva: brillos que se mueven sobre lagos, ríos y mar (baratos: una muestra cada pocos metros) */
+    if (cal > .4 && z > .35 && op.agua !== false) { const area = (x1 - x0) * (y1 - y0), st = Math.max(7, Math.sqrt(area / 500)), t = E.t || 0; g.save(); g.strokeStyle = 'rgba(255,255,255,' + (noche > .5 ? .12 : .32) + ')'; g.lineWidth = Math.max(1, z * .25); g.beginPath(); let n = 0;
+      for (let yy = Math.floor(y0 / st) * st; yy < y1 && n < 700; yy += st) for (let xx = Math.floor(x0 / st) * st; xx < x1 && n < 700; xx += st) { const tt = E.mundo.suelo(xx, yy); if (tt !== TT.WATER && tt !== TT.CANAL) continue; n++; const ph = h2(xx | 0, yy | 0, 7) * TAU, a = (Math.sin(t * 1.3 + ph) + 1) / 2; if (a < .55) continue; const wx = xx + Math.sin(t * .4 + ph) * st * .3, wy = yy + Math.cos(t * .3 + ph) * st * .2, p1 = pr(wx - 1.2 * a, wy, 0), p2 = pr(wx + 1.2 * a, wy, 0); g.moveTo(p1[0], p1[1]); g.lineTo(p2[0], p2[1]); }
+      g.stroke(); g.restore(); }
+    /* naturaleza: rocas, palmas, frailejones, arbustos y juncos (de cerca) */
+    if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
     /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
     if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
     /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
@@ -2994,7 +3185,7 @@ const Vista2D = {
     for (const o of objs) {
       const rx = Jc && modo !== 'cenital' && (o.t === 0 || o.t === 4) && o.y > jKey && tapa(o.q); if (rx) g.globalAlpha = .28;
       if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
-      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces);
+      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces); else if (o.t === 8) Naturaleza.objeto(dibCtx, o.q);
       if (rx) g.globalAlpha = 1;
     }
     Sombras.luces(g, luces, noche);   // los charcos de luz de los postes, encima de todo (como luz que se suma)
@@ -3067,11 +3258,15 @@ const Vista2D = {
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
       if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
-      g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw); return;
+      g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
+      if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } }
+      return;
     }
     const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
     const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
     const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir);
+    /* en el agua: el agua tapa las piernas (vadeando) o casi todo el cuerpo (nadando), con su onda */
+    if (C.nadando || C.vadeando) { const hA = C.nadando ? 1.25 : .55, [, ya] = pr(C.x, C.y, (C.zPaso || 0) + hA); g.fillStyle = 'rgba(52,120,160,.62)'; g.fillRect(x - esc * .75, ya, esc * 1.5, y - ya + 1); g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = Math.max(1, esc * .06); g.beginPath(); g.ellipse(x, ya, esc * (.6 + .15 * Math.sin((D.E.t || 0) * 3)), esc * .12, 0, 0, TAU); g.stroke(); }
   },
   cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
   etiquetas(D) {
@@ -4747,7 +4942,7 @@ class Habitante {
 }
 Object.assign(MC, { Necesidades, Habitante });
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

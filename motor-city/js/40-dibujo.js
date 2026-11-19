@@ -6,6 +6,8 @@
    el pixel, la 3D oblicua, la maqueta 2:1 y el piso de la vista 3D en WebGL.
    Cada juego puede cambiar la paleta (MC.arte.registrar(juego, { suelo: {...}, via: {...} })).
    ===================================================================== */
+/* agua por tipo: [somero, hondo, profundidad a la que ya es «hondo» (m)] · roca de los acantilados */
+const AGUA_COL = { mar: [[.36, .74, .80], [.05, .24, .44], 22], lago: [[.40, .64, .62], [.10, .30, .42], 12], rio: [[.47, .58, .52], [.24, .38, .40], 3.5], quebrada: [[.48, .64, .66], [.30, .48, .55], .8] }, ROCA_COL = [.55, .53, .49];
 const PAL_SUELO = ['#78ad55', '#3f7a3c', '#cdbfa5', '#bdb3a2', '#5d636e', '#565c68', '#c9c4b8', '#4caf63', '#4f9fd0', '#5f9fb8', '#d8cfbd', '#6b7180', '#e7e2d6', '#b9b4a8', '#4d525c', '#a9a395', '#b8a98e', '#e6d7a8', '#f2f5f9', '#8d8a86'];
 const PAL_VIA = { anden: '#d4cfc3', asfalto: '#4a4f59', avenida: '#444955', autopista: '#3c414b', linea: '#f4f1e6', amarilla: '#f2c400', ciclo: '#3fae5a', cicloBorde: '#e8f5d0', peatonal: '#e3dccb', escalas: '#b8a98e', sendero: '#c9b78f' };
 MC.arte.pieles.motor.suelo = PAL_SUELO; MC.arte.pieles.motor.via = PAL_VIA;
@@ -46,7 +48,11 @@ class Losas {
     for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) {
       const wx = x0 + (i - .5) * T, wy = y0 + (j - .5) * T, tt = M.suelo(wx, wy); let col = S[tt] || '#888';
       if (tt === TT.BRICK || tt === TT.BLDG) col = M.estilo(wx, wy).suelo || col;
-      const c = hex3(col), dzx = (M.cota(wx + T, wy) - M.cota(wx - T, wy)) / (2 * T), dzy = (M.cota(wx, wy + T) - M.cota(wx, wy - T)) / (2 * T), sh = clamp(1 + (dzx * luzX + dzy * luzY) * 1.6, .62, 1.3), rn = .96 + h2(Math.floor(wx / T), Math.floor(wy / T), 3) * .08;
+      let c = hex3(col); const dzx = (M.cota(wx + T, wy) - M.cota(wx - T, wy)) / (2 * T), dzy = (M.cota(wx, wy + T) - M.cota(wx, wy - T)) / (2 * T); let sh = clamp(1 + (dzx * luzX + dzy * luzY) * 1.6, .62, 1.3); const rn = .96 + h2(Math.floor(wx / T), Math.floor(wy / T), 3) * .08;
+      /* agua: color según el tipo y la profundidad (turquesa en la orilla del mar, oscuro en lo hondo) y espuma en la orilla */
+      if (tt === TT.WATER || tt === TT.CANAL) { const ag = Terreno.aguaEn(M, wx, wy); if (ag) { const A = AGUA_COL[ag.tipo] || AGUA_COL.lago, k = clamp(ag.prof / A[2], 0, 1); c = mez3(A[0], A[1], k); if (ag.orilla < T * 1.3 + 2) c = mez3(c, [.88, .94, .96], .3); sh = 1; } }
+      /* laderas muy empinadas: la roca asoma (acantilados y barrancos), y la playa se aclara junto al agua */
+      else if (tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO && tt !== TT.WALK && tt !== TT.CICLO && tt !== TT.BLDG && tt !== TT.BRICK) { const m2 = Math.hypot(dzx, dzy); if (m2 > .65) c = mez3(c, ROCA_COL, clamp((m2 - .65) / .7, 0, .85)); }
       const o = (j * m + i) * 4; D[o] = clamp(c[0] * sh * rn * 255, 0, 255); D[o + 1] = clamp(c[1] * sh * rn * 255, 0, 255); D[o + 2] = clamp(c[2] * sh * rn * 255, 0, 255); D[o + 3] = 255;
     }
     /* la casilla de borde de cada lado es de la losa vecina: así el suavizado no deja costuras entre losas */

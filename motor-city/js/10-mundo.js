@@ -216,7 +216,7 @@ class Mundo {
     const E = this._ed(); if (!E) return null; const rx = Math.floor(x / E.R), ry = Math.floor(y / E.R);
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) for (const e of this.edificiosRegion(rx + dx, ry + dy)) {
       if (Math.abs(e.x - x) > e.hw + e.hd + r + 1 || Math.abs(e.y - y) > e.hw + e.hd + r + 1) continue;
-      if (e.P) { if (dentroPol(e.P, x, y)) return e; }
+      if (e.P) { if (dentroPol(e.P, x, y) && (r >= 0 || [[-r, 0], [r, 0], [0, -r], [0, r]].every(([a, b]) => dentroPol(e.P, x + a, y + b)))) return e; }   // r < 0: solo si está a más de |r| adentro
       else { const lx = (x - e.x) * e.ux + (y - e.y) * e.uy, ly = -(x - e.x) * e.uy + (y - e.y) * e.ux; if (Math.abs(lx) < e.hw + r && Math.abs(ly) < e.hd + r) return e; }
     }
     return null;

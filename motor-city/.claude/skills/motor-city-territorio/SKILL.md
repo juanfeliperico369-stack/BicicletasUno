@@ -20,3 +20,11 @@ python3 geo/territorio.py --id mi-lugar --nombre "Nombre" --bbox=lon0,latS,lon1,
 - Devuelve un `MC.Mundo` como el real: sirve en todas las vistas, con la física, la IA y Run. La misma semilla da el mismo mundo.
 
 **Atribución siempre:** © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; relieve SRTM/NASA (AWS Terrain Tiles).
+
+## Terreno, agua y límites (2.4)
+- **`MC.Terreno.agua(M)`** al cargar: tipo de cada cuerpo de agua (mar, lago, río, quebrada) y su profundidad por distancia a la orilla. En Medellín, el río con nombre (`info.rio`) se marca para que no se corte.
+- **Reglas de paso** (`MC.Terreno.paso`): pendiente máxima fuera de las vías, agua que cruza cada vehículo, roca, monte, arena, nieve y borde del mundo. **Sobre una vía la pendiente no bloquea.**
+- **Obstáculos:** edificios (también los sitios y los emblemáticos), árboles de las losas, mobiliario, naturaleza y lo que el juego pase en `cuerpo.obstaculos`.
+- **Mundos generados:** lagos por llenado de prioridad (solo los grandes y hondos), mar a nivel 0, pueblos fuera del agua, sin charquitos sueltos.
+- Si craqueas un lugar nuevo, revisa con `MC.Terreno.agua(M).C` que los cuerpos de agua salgan con el tipo correcto. Un embalse en el borde de la ventana no es mar: el mar está a menos de 8 m de altura.
+

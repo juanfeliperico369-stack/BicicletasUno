@@ -26,10 +26,21 @@ class Cuerpo {
     if (this.paso) return true;
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
-    const tt = this.mundo.suelo(x, y); if (Vehiculos.suelo(V, tt) <= 0) return false;
-    if (this.chocaEdificios && V.clase !== 'agua' && tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO && tt !== TT.CICLO && this.mundo.edificioEn(x, y, V.clase === 'pie' ? .2 : .4)) return false;
+    /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
+    const T = Terreno.paso(this, x, y); if (!T.ok) return this._bloquea(T.motivo);
+    if (this.chocaEdificios && V.clase !== 'agua') {
+      /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
+         y también los edificios de los sitios y las partes bajas de los emblemáticos */
+      const tt = this.mundo.suelo(x, y), enVia = VIA_TT.has(tt), r = V.clase === 'pie' ? .2 : .4;
+      if (this.mundo.edificioEn(x, y, enVia ? -1 : r)) return this._bloquea('un edificio');
+      if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
+      /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente) */
+      if (!(this.z > 1.2)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+    }
     return true;
   }
+  /* por qué no pasó (para que el juego lo diga una vez: «🌊 el agua está muy honda») */
+  _bloquea(motivo) { this.bloqueo = motivo || 'algo'; this.tBloqueo = 1.2; return false; }
   actualizar(dt, E = {}) {
     const V = this.veh, M = this.mundo; this.eventos.length = 0; dt = Math.min(dt, .1); this._dt = dt;
     this.corriendo = !!E.correr && V.id === 'pie';
@@ -37,8 +48,10 @@ class Cuerpo {
     let acel = E.acel || 0, giro = E.giro || 0;
     if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2, -1, 1); acel = E.dir.m * (Math.abs(d) > 2.2 && V.clase !== 'pie' ? .2 : 1); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
     /* suelo, pendiente y velocidad objetivo */
-    this.tt = M.suelo(this.x, this.y); this.pend = this.paso ? 0 : M.pendiente(this.x, this.y, this.a, 12);
-    const suelo = this.paso ? 1 : Math.max(.15, Vehiculos.suelo(V, this.tt)), loma = V.electrico ? clamp(1 - this.pend * .4, .85, 1.15) : Vehiculos.loma(V, this.pend);
+    this.tt = M.suelo(this.x, this.y); this.pend = this.paso ? 0 : M.pendiente(this.x, this.y, this.a, 12); this.tBloqueo = Math.max(0, (this.tBloqueo || 0) - dt); if (!this.tBloqueo) this.bloqueo = null;
+    /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
+    const Tp = this.paso || (V.clase === 'aire' && this.z > 3) ? { f: 1 } : Terreno.paso(this, this.x, this.y); this.nadando = !!Tp.nada; this.vadeando = !!Tp.vadea;
+    const suelo = this.paso ? 1 : Math.max(.12, Tp.ok === false ? .15 : Tp.f), loma = V.electrico ? clamp(1 - this.pend * .4, .85, 1.15) : Vehiculos.loma(V, this.pend);
     const vmax = this.vmax() * suelo * loma * (E.turbo ? 1.25 : 1), objetivo = acel >= 0 ? vmax * acel : -vmax * .35 * -acel;
     const empuje = acel > 0 ? V.acc * (E.turbo ? 1.4 : 1) : V.freno;
     if (this.enAire && V.clase !== 'aire') { /* en el aire no se acelera */ }

@@ -487,6 +487,11 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 19‑nov‑2026 · Motor City 2.4 en `motor-city/` (Claude, la IA del motor)
+- Se sincronizó el motor 2.4: terreno y límites verosímiles (agua con profundidad, pendientes, obstáculos reales), naturaleza y lagos generados.
+- **El juego no cambia** y sus pruebas siguen en verde.
+- Qué sigue: `motor-city/docs/DOCUMENTO-UNICO.md`, §9.
+
 ## 19‑nov‑2026 · Motor City 2.3 en `motor-city/` (Claude, la IA del motor)
 - **Qué cambió:** el motor subió a la 2.3, con lo aprendido de SimCity, Los Sims, Cities: Skylines y Townscaper: sombras del sol, mobiliario urbano, fachadas por reglas, ciudad con zonas y capas de datos, casas habitadas y sonido ambiente.
 - **El juego no cambia:** misma huella y pruebas en verde.

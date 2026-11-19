@@ -1,5 +1,46 @@
 # Bitácora de Motor City
 
+## 19‑nov‑2026 · 2.4.0 · Montañas, rocas, agua y límites de paso (Claude Code)
+**Pedido del autor:** un sistema de montañas, rocas y tipos de terreno; agua en lagos, ríos, playa y mar; y límites de movimiento que no rompan la verosimilitud («el personaje pasa por encima de cosas que no debería»).
+
+**Lo que se encontró** (por qué se atravesaban cosas):
+1. Sobre las casillas de calle no se revisaban los edificios.
+2. Los edificios de los sitios y los emblemáticos no chocaban.
+3. Los árboles de las losas solo eran dibujo.
+4. Postes y bancas no chocaban.
+5. El agua era «sí o no», sin profundidad.
+6. La pendiente frenaba, pero nunca bloqueaba.
+
+**Lo que se hizo:**
+1. **`MC.Terreno`:**
+   - análisis del agua: componentes, tipo (mar, lago, río, quebrada) y distancia a la orilla, con la profundidad que sale de ahí;
+   - reglas de paso por clase con su motivo: a pie se vadea y luego se nada; bici, moto, carro y camión tienen un límite de agua; la lancha necesita calado;
+   - pendiente máxima fuera de las vías (subir y bajar barrancos);
+   - roca, monte, arena y nieve según el vehículo;
+   - borde del mundo;
+   - obstáculos: edificios también sobre la calle si uno se mete más de 1 m, sitios y emblemáticos, los mismos árboles que pintan las losas, mobiliario, naturaleza, y tráfico y gente si el juego los pasa.
+2. **`MC.Naturaleza`:** rocas (las grandes chocan), palmas, frailejones en el páramo, arbustos y juncos.
+3. **Generador:**
+   - lagos por llenado de prioridad (Barnes, 2014), solo los grandes y hondos, de superficie plana y con desagüe;
+   - el mar a nivel 0;
+   - los pueblos no se construyen sobre los lagos;
+   - los charquitos sueltos se limpian.
+4. **Dibujo:**
+   - el agua toma color por tipo y profundidad, con espuma en la orilla;
+   - la roca asoma en las laderas de más de 65 %;
+   - brillos que se mueven sobre el agua;
+   - vadear y nadar se ven, en lateral y en cenital.
+5. **Mandados:** el agua se mide al cargar; dice por qué no se pasa (🌊, ⛰️, 🌳, 🪨) y avisa al nadar; nadar cansa; el tráfico y la gente estorban.
+
+**Probado** (115 pruebas):
+- el embalse de Guatapé es lago, de 0,3 m en la orilla y 16,6 m adentro;
+- Medellín tiene su río;
+- caminando hacia el embalse se termina nadando;
+- la bici no entra a lo hondo y la lancha no anda en lo pando;
+- el carro no sube una ladera de 68 % fuera de la vía;
+- no se atraviesan los emblemáticos, los postes ni los árboles;
+- los lagos generados son planos, el mar está a 0 m y nada de naturaleza cae sobre las vías.
+
 ## 19‑nov‑2026 · 2.3.0 · La ciudad como SimCity, Los Sims, Cities: Skylines y Townscaper (Claude Code)
 **Pedido del autor:**
 - estudiar esos juegos y sus motores: cómo crean entornos, ambientes, sombras y detalles de una ciudad;

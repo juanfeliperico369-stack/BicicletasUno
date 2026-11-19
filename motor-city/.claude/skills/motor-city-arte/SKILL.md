@@ -21,3 +21,5 @@ description: El arte en Motor City - pieles por juego con funciones de dibujo (h
 - `mueble(g, m, estilo, P)`: muebles del plano, en metros (`m.tipo`, `m.x`, `m.y`, `m.w`, `m.h`; `estilo` es uno de los 8).
 - Si el gancho devuelve `true`, el motor no dibuja el suyo. **Las sombras las pone el motor:** el arte va sin sombra proyectada.
 - Los encargos están en `docs/DOCUMENTO-UNICO.md`, §10.1 (G‑M10 a G‑M14 son nuevos).
+- **2.4:** gancho `naturaleza(g, p, x, y, pxPorMetro, D)` para rocas, palmas, frailejones, arbustos y juncos (`p.t`; `p.s` es el tamaño). El agua y la roca de las laderas salen de las losas (`AGUA_COL` y `ROCA_COL` en `40-dibujo.js`).
+

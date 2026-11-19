@@ -60,6 +60,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 | Documentos | ✅ | `docs/MANUAL.md`, `GUIA.md`, `INVESTIGACION.md`, `OPTIMIZACION.md`, `PLAN-IAS.md`, `PETICION-*.md` y `NEGOCIO-Y-USOS.md` |
 | Repo abierto a las IAs de los juegos, con reportes | ✅ | `CONTRIBUIR.md`, `AGENTS.md`, `reportes/`, `node motor.mjs reporte` |
 | **2.3 · SimCity, Los Sims, Cities: Skylines y Townscaper** | ✅ | `39-sombras` (sol por hora), `27-mobiliario` (props y luces), fachadas WFC (`14-ondas`), `26-urbe` (ciudad y capas de datos), `86-necesidades` (objetos inteligentes), `61-sonido` (paisaje sonoro). Mandados con modo alcalde. |
+| **2.4 · Montañas, rocas, agua (lagos, ríos, playa, mar) y límites de paso** | ✅ | `15-terreno` (agua, pendiente, reglas de paso, obstáculos), `28-naturaleza`, lagos en `12-generador`, agua y roca en `40-dibujo`; `MC.Cuerpo` vadea, nada y dice por qué no pasa |
 | **Un solo documento con todo** | ✅ | `docs/DOCUMENTO-UNICO.md` (contexto, código a usar y plan de cada IA) y `dist/MOTOR-CITY-TODO.md` (con anexos; `node motor.mjs documento`) |
 
 ## 4. Decisiones que no hay que deshacer sin motivo
@@ -97,7 +98,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 109 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 115 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»
@@ -115,4 +116,7 @@ Capturas: `dist/motor-city.html` en Chromium con `--use-gl=swiftshader` (ver `pr
 - **Nombres repetidos en el cierre único:** todos los `js/NN-*.js` comparten un solo ámbito. Antes de declarar `const ESTILOS` o `const ACTIVIDADES`, busca si ya existe (pasó con la música y con los lugares).
 - La vista lateral recorta la caja visible a una franja de profundidad (`E._franja`): sin eso, con `k` cerca de 0, la caja se va al infinito.
 - `MC.Vistas.motor3d`: `'auto'` usa el raster si el WebGL es por software (SwiftShader en las pruebas); `'gl'` lo fuerza; `'raster'` también.
+- **El agua se analiza una vez por mundo** (`MC.Terreno.agua`, 0,3–1 s). Los juegos la llaman al cargar; si no, la primera vez que alguien toca agua se nota un tirón.
+- **Sobre la vía** el edificio solo bloquea si uno se mete más de 1 m en su huella (los datos se solapan con la calle), y la pendiente no bloquea. Fuera de la vía, sí.
+- **Comentarios `//` en líneas largas de una sola instrucción** cortan el resto de la línea: usa `/* … */` dentro del código.
 - En las pruebas de Node no hay `document`: `MC.GPU.perfil()` da `'sin-pantalla'` y `MC.UI.crear` devuelve `null`.

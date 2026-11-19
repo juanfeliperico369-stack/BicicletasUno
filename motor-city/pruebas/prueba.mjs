@@ -86,7 +86,7 @@ ok(['quieto', 'camina', 'corre', 'pedalea', 'impulsa', 'patina', 'tabla', 'senta
 const via = M.viaCercana(col.x, col.y, 80), B = new MC.Cuerpo(M, { x: via.x, y: via.y, a: via.ang, veh: 'bici' }); for (let i = 0; i < 300; i++) B.actualizar(1 / 30, { acel: 1 });
 ok(B.v > 3, 'la bici acelera por la calle', B.v.toFixed(1) + ' m/s');
 const B2 = new MC.Cuerpo(M, { x: via.x, y: via.y, a: via.ang, veh: 'pie' }); B2.actualizar(1 / 30, { salto: true }); let maxZ = 0; for (let i = 0; i < 60; i++) { B2.actualizar(1 / 30, {}); maxZ = Math.max(maxZ, B2.z); } ok(maxZ > .2 && B2.z === 0 && !B2.enAire, 'saltar y caer', maxZ.toFixed(2) + ' m');
-let agua = null; for (let i = 0; i < 4000 && !agua; i++) { const x = col.x + (i % 63) * 10 - 300, y = col.y + Math.floor(i / 63) * 10 - 300; if (M.suelo(x, y) === MC.TT.WATER) agua = { x, y }; }
+let agua = null; { const R = M.capa('info').rio; for (let i = 0; i + 1 < R.length && !agua; i += 2) for (const [dx, dy] of [[0, 0], [8, 0], [-8, 0], [0, 8], [0, -8]]) { const x = R[i] + dx, y = R[i + 1] + dy, a = M.suelo(x, y) === MC.TT.WATER && MC.Terreno.aguaEn(M, x, y); if (a && a.prof > 1) { agua = { x, y }; break; } } }   // lo hondo del río Medellín (la orilla se vadea)
 if (agua) { const B3 = new MC.Cuerpo(M, { x: agua.x - 60, y: agua.y, a: 0, veh: 'carro' }); ok(!B3.puede(agua.x, agua.y) && new MC.Cuerpo(M, { veh: 'lancha' }).puede(agua.x, agua.y), 'el carro no entra al río; la lancha sí'); }
 
 /* puentes por superficies: se sube por la rampa al tablero y por debajo se pasa sin subir */
@@ -213,8 +213,39 @@ if (fs.existsSync(gu)) {
 { const n = MC.Paisaje.plan({ hora: 23, clima: { lluvia: 0 }, verde: .6 }), m = MC.Paisaje.plan({ hora: 6.3, clima: { lluvia: 0 }, verde: .6, ruido: .2 }), ll = MC.Paisaje.plan({ hora: 14, clima: { lluvia: .8, tormenta: .5 } });
   ok(n.grillos > .3 && n.pajaros < .1 && m.pajaros > .3 && ll.lluvia > .7 && ll.truenos > .3, 'paisaje sonoro: grillos de noche, pájaros al amanecer, lluvia y truenos', { noche: n.grillos, amanecer: m.pajaros }); }
 
+console.log('15) Terreno: agua, montañas, rocas y límites de paso');
+{ /* agua real: el embalse de Guatapé es lago y se hace más hondo lejos de la orilla; Medellín tiene su río */
+  const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))), AG = MC.Terreno.agua(MG), grande = AG.C.slice().sort((a, b) => b.area - a.area)[0];
+  let orilla = null, hondo = null; for (let x = 50; x < MG.ancho && !(orilla && hondo); x += 13) for (let y = 50; y < MG.alto && !(orilla && hondo); y += 17) { const a = MC.Terreno.aguaEn(MG, x, y); if (!a || a.tipo !== 'lago') continue; if (!orilla && a.prof < .5) orilla = { x, y, a }; if (!hondo && a.prof > 5) hondo = { x, y, a }; }
+  const AM = MC.Terreno.agua(M), rios = AM.C.filter(c => c.tipo === 'rio');
+  ok(grande.tipo === 'lago' && orilla && hondo && rios.length > 0, 'agua real: el embalse de Guatapé es lago (pando en la orilla, hondo adentro) y Medellín tiene su río', { embalse: Math.round(grande.area / 1e4) + ' ha', orilla: orilla && +orilla.a.prof.toFixed(2), hondo: hondo && +hondo.a.prof.toFixed(1), tramosDeRio: rios.length });
+  const P = new MC.Cuerpo(MG, { x: orilla.x, y: orilla.y, veh: 'pie' }), pa = MC.Terreno.paso(P, orilla.x, orilla.y), ph = MC.Terreno.paso(P, hondo.x, hondo.y), Bc = new MC.Cuerpo(MG, { x: hondo.x, y: hondo.y, veh: 'bici' }), pb = MC.Terreno.paso(Bc, hondo.x, hondo.y), Ln = new MC.Cuerpo(MG, { x: orilla.x, y: orilla.y, veh: 'lancha' }), pl = MC.Terreno.paso(Ln, orilla.x, orilla.y), pl2 = MC.Terreno.paso(Ln, hondo.x, hondo.y);
+  ok(pa.ok && pa.vadea && ph.ok && ph.nada && !pb.ok && /honda/.test(pb.motivo) && !pl.ok && pl2.ok, 'a pie se vadea la orilla y se nada en lo hondo; la bici no entra a lo hondo; la lancha no anda en lo pando', { bici: pb.motivo, lancha: pl.motivo });
+  /* caminar hacia el agua: llega nadando; la bici se queda en la orilla y dice por qué */
+  let tierra = null; for (let k = 1; k < 80 && !tierra; k++) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = orilla.x + dx * k * 4, y = orilla.y + dy * k * 4; if (MG.suelo(x, y) !== MC.TT.WATER && MG.suelo(x, y) !== MC.TT.CANAL && !MG.edificioEn(x, y, 1)) { tierra = { x, y, a: Math.atan2(-dy, -dx) }; break; } }
+  const W1 = new MC.Cuerpo(MG, { x: tierra.x, y: tierra.y, a: tierra.a, veh: 'pie' }); let nado = false; for (let i = 0; i < 1800 && !nado; i++) { W1.actualizar(1 / 30, { acel: 1, dir: { x: hondo.x - W1.x, y: hondo.y - W1.y, m: 1 } }); if (W1.nadando) nado = true; }
+  ok(nado, 'caminando hacia el embalse, el personaje entra al agua y termina nadando'); }
+{ /* pendientes: fuera de la vía, el carro no sube una ladera muy empinada; a pie sí (si no es un acantilado) */
+  let lad = null; for (let i = 0; i < 20000 && !lad; i++) { const x = 2000 + (i * 397) % 38000, y = 2000 + (i * 761) % 44000, tt = M.suelo(x, y); if ((tt === MC.TT.GRASS || tt === MC.TT.MOUNT) && MC.Terreno.pendiente(M, x, y) > .55 && MC.Terreno.pendiente(M, x, y) < .9 && !M.edificioEn(x, y, 3)) lad = { x, y }; }
+  const gx = (M.cota(lad.x + 6, lad.y) - M.cota(lad.x - 6, lad.y)) / 12, gy = (M.cota(lad.x, lad.y + 6) - M.cota(lad.x, lad.y - 6)) / 12, gl = Math.hypot(gx, gy), ab = { x: lad.x - gx / gl * 4, y: lad.y - gy / gl * 4 };
+  const Ca = new MC.Cuerpo(M, { x: ab.x, y: ab.y, veh: 'carro' }), Pe = new MC.Cuerpo(M, { x: ab.x, y: ab.y, veh: 'pie' }), rc = MC.Terreno.paso(Ca, lad.x, lad.y), rp = MC.Terreno.paso(Pe, lad.x, lad.y);
+  ok(!rc.ok && /empinado|barranco/.test(rc.motivo) && rp.ok, 'pendientes: el carro no sube una ladera de más de 50 % fuera de la vía; a pie sí', { pendiente: +MC.Terreno.pendiente(M, lad.x, lad.y).toFixed(2), carro: rc.motivo }); }
+{ /* obstáculos: emblemáticos, postes, árboles de las losas y edificios sobre la calle (solo si se mete de verdad) */
+  const S = M.sitios().E.find(q => q.R[0] && q.h > 20 && Math.abs(q.caja[2] - q.caja[0]) > 30), R0 = S.R[0]; let cx = 0, cy = 0; for (let x = S.caja[0]; x < S.caja[2] && !cx; x += 2) for (let y = S.caja[1]; y < S.caja[3]; y += 2) if ([[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].every(([a, b]) => MC.dentroPol(R0, x + a, y + b))) { cx = x; cy = y; break; }   // un punto bien adentro de la huella
+  const Pe = new MC.Cuerpo(M, { x: cx, y: cy - 60, veh: 'pie' }), adentro = MC.Terreno.sitioEn(M, cx, cy) && !Pe.puede(cx, cy);
+  const pos = MC.Mobiliario.en(M, col.x - 200, col.y - 200, col.x + 200, col.y + 200).find(p => p.t === 'poste'), Pp = new MC.Cuerpo(M, { x: pos.x + 3, y: pos.y, veh: 'pie' }), poste = !Pp.puede(pos.x + .1, pos.y);
+  let arb = null; for (let i = 0; i < 4000 && !arb; i++) { const x = col.x + (i % 60) * 7 - 200, y = col.y + Math.floor(i / 60) * 7 - 200; const a = MC.Terreno.arbolLosaEn(M, x, y, .3); if (a && a.x) arb = a; }
+  const Pa = new MC.Cuerpo(M, { x: arb.x + 3, y: arb.y, veh: 'pie' }), arbol = !Pa.puede(arb.x, arb.y) && /árbol/.test(Pa.bloqueo);
+  ok(adentro && poste && arbol, 'no se atraviesan los emblemáticos, los postes ni los árboles que se ven en el mapa', { sitio: S.nombre || S.clase, bloqueo: Pa.bloqueo }); }
+{ /* mundos generados: lagos planos, mar a nivel cero, rocas en la montaña y nada de naturaleza en las vías */
+  const Gm = MC.Generador.mundo({ semilla: 1, tipo: 'montaña', ancho: 256, alto: 256, pueblos: 2 }), Gi = MC.Generador.mundo({ semilla: 1, tipo: 'isla', ancho: 256, alto: 256, pueblos: 2 }), Am = MC.Terreno.agua(Gm), Ai = MC.Terreno.agua(Gi), lagoG = Am.C.filter(c => c.tipo === 'lago').sort((a, b) => b.area - a.area)[0];
+  let pts = []; for (let x = 20; x < Gm.ancho && pts.length < 2; x += 23) for (let y = 20; y < Gm.alto && pts.length < 2; y += 29) { const a = MC.Terreno.aguaEn(Gm, x, y); if (a && a.cuerpo === lagoG && a.orilla > 25) pts.push(Gm.cota(x, y)); }
+  let mar = null; for (let x = 5; x < Gi.ancho && !mar; x += 30) { const a = MC.Terreno.aguaEn(Gi, x, 5); if (a && a.tipo === 'mar') mar = Gi.cota(x, 5); }
+  const nat = MC.Naturaleza.en(Gm, 0, 0, Gm.ancho, Gm.alto), rocas = nat.filter(p => p.t === 'roca').length, enVia = nat.filter(p => p.t !== 'junco' && [4, 5, 6, 7, 14].includes(Gm.suelo(p.x, p.y))).length;
+  ok(Gm.generado.lagos > 0 && pts.length === 2 && Math.abs(pts[0] - pts[1]) < 1.5 && Ai.C.some(c => c.tipo === 'mar') && Math.abs(mar) < .5 && rocas > 30 && enVia === 0 && JSON.stringify(nat) === JSON.stringify(MC.Naturaleza.en(Gm, 0, 0, Gm.ancho, Gm.alto)), 'mundos generados: lagos de superficie plana, mar a nivel cero, rocas en la montaña y nada sobre las vías', { lagos: Gm.generado.lagos, rocas, naturaleza: nat.length }); }
+
 if (process.argv.includes('--navegador')) {
-  console.log('15) Banco de pruebas en Chromium');
+  console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
   if (chromium && fs.existsSync(html)) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];

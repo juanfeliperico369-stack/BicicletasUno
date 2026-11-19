@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.3.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 2.4.0 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -8,7 +8,7 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.3.0** · 19‑nov‑2026 |
+> | Versión | **Motor City 2.4.0** · 19‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
@@ -57,12 +57,13 @@
 | **2.0** | Un solo motor de mundo abierto según el *Plan del Mundo Abierto*, en el repo nuevo `motorcity` | El mundo de Medellín en un solo archivo MC4: 639.457 edificios, 35.746 calles, metro, cables, Metroplús y EnCicla. Personaje, 35 vehículos, física, controles y cámara. 8 vistas más pixel, panorámica de perfil y WebGL. Reloj, festivos, cielo, clima, tráfico y transporte con horario. Run en la ciclovía. Banco de pruebas y 54 pruebas. Sincronización a los juegos. |
 | **2.1** | Craquear territorios; física, química y economía reales; mundos nuevos; biología; vehículos y animales; interfaz; música; mundo vivo; interiores; nombre solo «Motor City»; repo abierto a las IAs | `geo/territorio.py` (Guatapé en 20 s). `MC.Generador`. Ciencia, química y economía con pruebas. Clima global con estaciones y nieve. Seres (persona, genética, animales y criaturas). Taller de vehículos. IA y población con rutinas. Interiores. Música procedural y clásicos de dominio público. Interfaz y mecánicas. Minijuego **Mandados**. Plantillas, skills, `CONTRIBUIR.md` y reportes. 80 pruebas. |
 | **2.2** | Solución a la tarjeta gráfica; puentes y cámara; vistas de lado (FEZ, Little Nightmares, Monument Valley); sprites; interfaz con psicología; los mejores motores; historia con 3 pilares; ocurrencias; manual; optimización; controles; **casa del jugador por su dirección**; talleres y tiendas; No Man's Sky; proporciones | GPU virtual y 3D por software (`MC.Raster`). Física por superficies. Cámara con resortes. **Vista lateral.** `MC.Manejo` con 7 esquemas. `MC.Sprites`. `MC.Escala`. Interfaz por zonas. **Mi casa** (`MC.Direccion` + `MC.Hogar`, 8 estilos y 22 muebles). `MC.Lugares` y `MC.Desgaste`. `MC.Historias` con director. `MC.Ocurrencias`. `MC.Cosmos`. Web en GitHub Pages. 103 pruebas. |
-| **2.3** (esta) | Estudiar **SimCity, Los Sims, Cities: Skylines y Townscaper**: cómo crean entornos, ambientes, sombras y detalles de ciudad. Un **documento único** con todo y el código a usar | **Sombras del sol** por hora en todas las vistas. **Mobiliario urbano** y luces de noche. **Fachadas por reglas** (WFC). **`MC.Urbe`**: zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y **capas de datos**. **Objetos inteligentes** y necesidades (`MC.Habitante`). **`MC.Ondas`**, `MC.Autotile` y `MC.RejillaIrregular`. **`MC.Paisaje`** (sonido ambiente). Mandados con **modo alcalde** y casa habitada. 109 pruebas. Este documento. |
+| **2.3** | Estudiar **SimCity, Los Sims, Cities: Skylines y Townscaper**: cómo crean entornos, ambientes, sombras y detalles de ciudad. Un **documento único** con todo y el código a usar | **Sombras del sol** por hora en todas las vistas. **Mobiliario urbano** y luces de noche. **Fachadas por reglas** (WFC). **`MC.Urbe`**: zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y **capas de datos**. **Objetos inteligentes** y necesidades (`MC.Habitante`). **`MC.Ondas`**, `MC.Autotile` y `MC.RejillaIrregular`. **`MC.Paisaje`** (sonido ambiente). Mandados con **modo alcalde** y casa habitada. 109 pruebas. Este documento. |
+| **2.4** (esta) | Montañas, rocas y tipos de terreno; agua en **lagos, ríos, playa y mar**; **límites de paso verosímiles** («el personaje pasa por encima de cosas que no debería») | **`MC.Terreno`**: agua por tipo y profundidad; material y pendiente; **reglas de paso** por vehículo con su motivo (vadear, nadar, barrancos, roca, monte, arena, nieve, borde del mundo); **obstáculos reales** (emblemáticos, árboles de las losas, postes, bancas, rocas, tráfico y gente). **`MC.Naturaleza`**: rocas, palmas, frailejones, arbustos y juncos. **Lagos** en los mundos generados (llenado por prioridad) y mar a nivel 0. **Agua y roca en las losas**: color por profundidad, espuma en la orilla y roca en las laderas empinadas. Brillos del agua. El personaje se ve vadeando o nadando. 115 pruebas. |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **109 en verde** (`node motor.mjs prueba --navegador`): 103 en Node y 6 en Chromium. |
+| **Pruebas** | **115 en verde** (`node motor.mjs prueba --navegador`): 109 en Node y 6 en Chromium. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -93,6 +94,7 @@ CIENCIA         Ciencia · Fis · Quim · Termo · Escala · Dinero · Libro · 
 | 12 | `Generador` | 46 | `Vistas` |
 | 13 | `Cosmos` | 47 | seguir la ruta |
 | 14 | `Ondas`, `Autotile`, `RejillaIrregular` (2.3) | 48 | `Interiores` |
+| 15 | **`Terreno`** (2.4): agua, material, pendiente, reglas de paso y obstáculos | 28 | **`Naturaleza`** (2.4): rocas, palmas, frailejones, arbustos y juncos |
 | 20–22 | tiempo, tráfico, transporte | 49 | `Hogar` y `Direccion` |
 | 24 | ambiente | 50 | Run |
 | 25 | IA | 60 | música |
@@ -203,7 +205,31 @@ const rejilla = MC.RejillaIrregular.crear({ anillos: 4, lado: 6, semilla: 3 }); 
 MC.Autotile.mascara8((x, y) => agua(x, y), i, j);        // 47 casos de borde (agua, pasto, andén…)
 ```
 
-### 5.9 Probar y medir
+### 5.9 Terreno, agua y límites (2.4)
+```js
+MC.Terreno.agua(M);                                    // al cargar (una vez, ~0,3–1 s): lagos, ríos, mar, quebradas y su profundidad
+MC.Terreno.aguaEn(M, x, y);                            // { tipo: 'mar'|'lago'|'rio'|'quebrada', prof (m), orilla (m) } o null
+MC.Terreno.en(M, x, y);                                // { material, via, pendiente, agua, cota }
+MC.Terreno.paso(cuerpo, x, y);                         // { ok, f, vadea, nada, motivo }: lo usa MC.Cuerpo solo
+cuerpo.nadando; cuerpo.vadeando; cuerpo.bloqueo;       // 'el agua está muy honda (2.3 m)', 'está muy empinado', 'un árbol'…
+cuerpo.obstaculos = () => trafico.map(v => ({ x: v.x, y: v.y, r: 1.1, motivo: 'un vehículo' }));   // lo que el juego quiera que estorbe
+MC.Naturaleza.en(M, x0, y0, x1, y1);                   // rocas, palmas, frailejones, arbustos y juncos (se dibujan y chocan solos)
+```
+**Reglas de paso:**
+
+| Clase | Pendiente máxima fuera de vía | Agua que cruza |
+|---|---|---|
+| A pie | ~45° | Vadea hasta ~1,15 m; después nada |
+| Bici | ~19° | 0,25 m |
+| Moto | ~27° | 0,3 m |
+| Carro | ~24° | 0,4 m |
+| Camión | ~17° | 0,7 m |
+| Lancha | — | Necesita 0,6 m |
+
+- La bici de montaña y el todoterreno toleran 40 % más pendiente, y el todoterreno entra al monte.
+- Sobre las vías la pendiente no bloquea, porque las calles reales existen ahí.
+
+### 5.10 Probar y medir
 ```bash
 node motor.mjs construir && node motor.mjs prueba --navegador     # 109 en verde
 node motor.mjs reporte "Lo que cambié" --juego encicla --autor "IA de EnCicla"
@@ -218,6 +244,7 @@ node motor.mjs documento                                          # arma dist/MO
 | **Los Sims** | «Personas simples, **objetos inteligentes**». Los objetos **anuncian** qué necesidad satisfacen. 8 motivos (hambre, higiene, diversión, energía, vejiga, social, comodidad y ambiente). **Ambiente del cuarto** por decoración. Modos de construir y de comprar. | `MC.Necesidades` (anuncios, urgencia cuadrática y atenuación por distancia) y `MC.Habitante` (vive en la casa); `Hogar.ambiente()`. Comprar y poner ya estaban (`MC.Hogar`). | Paredes editables (modo construir), dos o más habitantes que conversan, A* dentro de la casa (C‑M10). |
 | **Townscaper** (Oskar Stålberg) | **Rejilla irregular** (hexágono → triángulos → cuadriláteros relajados). **Reglas locales** (WFC) que eligen el módulo según los vecinos. Las casas se arman en las **esquinas** (rejilla dual). Paleta suave, sombras de contacto y detalles automáticos (arcos, escaleras, jardines). | `MC.RejillaIrregular`, `MC.Ondas.resolver` (WFC) y `fachada`, `MC.Autotile` (máscaras 4/8 y esquinas). Fachadas por reglas en ciudad 3D, maqueta y lateral. Oclusión de contacto en losas, árboles y gente. | Pueblos generados sobre la rejilla irregular; módulos 3D de casas por esquina (G‑M12 y C‑M11). |
 | **Sombras** (todas) | La sombra **sienta** las cosas y cuenta la hora. Un buen sistema es barato: una sombra por objeto, en caché y por calidad. | `MC.Sombras`: sombra proyectada según el sol real (larga y cálida al atardecer, ninguna de noche); casco convexo en caché; recorte de techos en cenital; también en el raster. Luz de noche: charcos cálidos en los postes. | Sombras sobre los muros de los vecinos y de los árboles (C‑M12). |
+| **Terreno y agua** (motores de mundo abierto; Barnes, 2014) | Controlador de personaje con **pendiente máxima** y escalón; agua con profundidad (vadear o nadar); llenado de depresiones por prioridad para tener lagos con salida; la naturaleza sigue al material y a la pendiente. | `MC.Terreno`, `MC.Naturaleza`, lagos del generador, agua y roca en las losas. | Texturas de agua y orillas, olas y animación de la espuma (G‑M15); capa de agua precalculada en el MC4 (C‑M15). |
 | **FEZ, Monument Valley, Little Nightmares** | Vistas ortográficas, giros de a 90° y casa de muñecas. | Vista lateral, maqueta 2:1 y rayos X. | — |
 | **GTA, Forza, Need for Speed** | Cámara de persecución, FOV con la velocidad y asistencias. | `MC.Camara`, `MC.Manejo`. | Carreras (*Motor City*, 2.4). |
 | **No Man's Sky** | Todo desde una semilla y ruido continuo. | `MC.Cosmos`. | — |
@@ -232,6 +259,7 @@ node motor.mjs documento                                          # arma dist/MO
 6. Sombras y luz según la hora.
 7. Gente con necesidades.
 8. Capas de datos para entender y decidir.
+9. **Terreno con reglas (2.4):** el agua tiene tipo y profundidad, la montaña tiene pendiente y roca, y nada se atraviesa sin sentido.
 
 ## 7. Reglas para todas las IAs
 1. **Lee todo este documento.** Antes de cambiar el motor, sigue la skill `motor-city-desarrollo` (en `.claude/skills/`).
@@ -280,6 +308,7 @@ node motor.mjs construir && node motor.mjs prueba --navegador
 11. **NUEVO G‑M10** · kit de props urbanos (gancho `prop`).
 12. **NUEVO G‑M11** · *decals* del piso.
 13. **NUEVO G‑M12** · módulos de fachada para las reglas (gancho `fachadaModulo`).
+    - **NUEVO G‑M15 (2.4)** · naturaleza y agua: rocas (5 tamaños), palmas, frailejones, arbustos y juncos para el gancho `naturaleza`; texturas de agua por tipo (mar, lago, río, quebrada), espuma de orilla y arena mojada.
 14. **NUEVO G‑M13** · paletas por hora y por capa de datos.
 15. **NUEVO G‑M14** · guía de luz y sombra.
 16. **Auditoría visual.**
@@ -309,6 +338,7 @@ MC.arte.registrar('motor', { prop: (g, p, x, y, pxm) => MC.Sprites.dibujar(g, 'g
 11. **NUEVO C‑M11** · pueblo sobre la rejilla irregular.
 12. **NUEVO C‑M12** · sombras sobre muros y de árboles, en caché.
 13. **NUEVO C‑M13** · maqueta por debajo de 20 ms.
+    - **NUEVO C‑M15 (2.4)** · terreno.
 14. **NUEVO C‑M14** · distritos y políticas en `MC.Urbe`.
 
 **El código que usarás:**
@@ -378,6 +408,7 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 | **G‑M11 (nuevo)** | ***Decals* del piso:** manchas de aceite, grietas, alcantarillas, huecos, hojas caídas, charcos para la lluvia, rayas gastadas y cebras viejas. Transparentes, de 64–128 px. |
 | **G‑M12 (nuevo)** | **Módulos de fachada para las reglas** (WFC, como Townscaper): `ventana`, `balcon`, `local`, `vitrina`, `puerta` y `muro`, cada uno en 3 variantes por zona, de día y con la ventana encendida. Para el gancho `fachadaModulo(g, tipo, x, y, w, h, encendida, D)`. Que encajen entre sí: lado con lado y piso con piso. |
 | **G‑M13 (nuevo)** | **Paletas:** 6 por hora (amanecer, mañana, mediodía, tarde, atardecer y noche) para el tono de la ciudad, al estilo de la paleta suave de Townscaper. Y paletas para las **capas de datos** (valor, ruido, contaminación, verde, servicios y transporte), con versión para **daltónicos**. JSON con colores HEX. |
+| **G‑M15 (2.4)** | **Naturaleza y agua:** rocas de 5 tamaños (de 0,4 a 3 m, grises andinas), palma de coco y palma de cera (la del Quindío), frailejón (páramo), arbustos de monte y juncos de orilla. Cenital y frontal, para el gancho `naturaleza(g, p, x, y, pxPorMetro, D)` (`p.t`, `p.s` es el tamaño). Más *tiles* de agua de 64×64 por tipo (mar turquesa, lago verdoso, río pardo, quebrada clara), en somera y honda, la espuma de la orilla y la arena mojada. |
 | **G‑M14 (nuevo)** | **Guía de luz y sombra:** color y opacidad de las sombras por hora y por zona, contacto suave en las bases y charcos de luz de noche (cálido o frío). Ejemplos pintados de una cuadra a las 7, 12, 17 y 20 h. |
 
 **Auditoría visual:**
@@ -404,6 +435,7 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 | **C‑M11 (nuevo)** | **Pueblo orgánico:** `MC.Generador` arma la plaza y las manzanas de un pueblo sobre `MC.RejillaIrregular`, con `MC.Ondas` para decidir casa, patio, calle o plaza. |
 | **C‑M12 (nuevo)** | **Sombras:** también sobre los muros de los edificios vecinos y de los árboles del mobiliario, en caché por hora y sin pasar de 3 ms. |
 | **C‑M13 (nuevo)** | **Maqueta por debajo de 20 ms** con la CPU 4× más lenta, con todo el detalle: lotes por región, fachadas en caché y mobiliario en lienzos. |
+| **C‑M15 (2.4)** | **Terreno:** (1) guardar en el MC4 una capa `agua` precalculada (tipo y distancia a la orilla), porque hoy se calcula al cargar en 0,3–1 s; (2) física en terreno irregular: el carro se inclina y patina en barro y nieve, y la moto y la bici de montaña saltan rocas pequeñas; (3) pruebas de los motivos de `Terreno.paso` en los 7 tipos de vehículo; (4) en el raster, agua y rocas. |
 | **C‑M14 (nuevo)** | **Distritos y políticas** en `MC.Urbe`, como Cities: Skylines: nombre, impuestos por distrito y políticas (prohibir industria pesada, bici prioritaria, parques gratis), con efecto en los campos y en la demanda. |
 
 ## 11. Cómo entregar
@@ -451,6 +483,8 @@ No hace falta conectar ninguna aplicación.
 - Charlas de Oskar Stålberg (por ejemplo, «Beyond Townscaper», 2021).
 - Los detalles exactos de su rejilla no están documentados oficialmente.
 
+**Terreno:** Barnes, Lehman y Mulla, «Priority-Flood: An Optimal Depression-Filling and Watershed-Labeling Algorithm» (2014), para los lagos.
+
 **Las anteriores** (FEZ, Monument Valley, Little Nightmares, No Man's Sky, storylets, Left 4 Dead, cámaras y diseño de interfaz) están en `docs/INVESTIGACION.md`.
 
 
@@ -495,6 +529,7 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **A dónde ir** | `MC.Lugares`, `MC.Desgaste` | Talleres, tiendas, restaurantes, bibliotecas y parques; reparar y mejorar. |
 | **Qué pasa** | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo`, `MC.Historias`, `MC.Director`, `MC.Ocurrencias` | Misiones, carreras, historias con pilares, ritmo y lo imprevisto. |
 | **Pantalla y sonido** | `MC.UI`, `MC.Musica`, `MC.Paisaje` | Interfaz con zonas y atenuación; música procedural y clásicos; sonido ambiente del lugar. |
+| **Terreno (2.4)** | `MC.Terreno`, `MC.Naturaleza` | Agua por tipo y profundidad (vadear y nadar), pendientes, roca, monte, arena y nieve; quién pasa por dónde y por qué; rocas, palmas y frailejones. |
 | **Ciudad (2.3)** | `MC.Urbe`, `MC.Sombras`, `MC.Mobiliario`, `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular`, `MC.Necesidades`, `MC.Habitante` | Zonas, demanda, valor del suelo y capas de datos; sombras del sol; postes, árboles y cebras; fachadas por reglas; casas habitadas. |
 
 ### 3. Cómo se usa (cinco recetas)
@@ -564,7 +599,7 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 109 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 115 pruebas, también en Chromium. |
 | `node motor.mjs documento` | Arma `dist/MOTOR-CITY-TODO.md` (el documento único con anexos). |
 | `node motor.mjs nuevo juego\|modulo nombre` | Crea un juego o un módulo desde su plantilla. |
 | `node motor.mjs reporte "título" --juego X` | Deja el reporte de un cambio hecho desde otro juego. |
@@ -577,7 +612,7 @@ new MC.Bucle({
 # ANEXO B. Contrato técnico (`MOTOR.md`)
 
 
-**Versión 2.3.0 · 19‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 2.4.0 · 19‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -697,6 +732,8 @@ Se incluye con un `<script>` (o pegado en el HTML único) **antes** del código 
 | Mecánicas | `80-mecanicas.js` | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo` |
 | Lugares | `82-lugares.js` | `MC.Lugares.en`, `cerca`, `hacer(lugar, actividad, ctx)`, `interior`, `TIPOS`; `MC.Desgaste` (usar, reparar, mejorar, aplicar) |
 | Ondas | `14-ondas.js` | `MC.Ondas.resolver({ ancho, alto, fichas, compat, fijos, semilla })` (WFC), `fachada(pisos, cols, semilla)`, `fachadaCache`; `MC.Autotile.mascara4`, `mascara8`, `esquinas`; `MC.RejillaIrregular.crear({ anillos, lado, semilla })` |
+| Terreno | `15-terreno.js` | `MC.Terreno.agua(M)` (cuerpos de agua: mar, lago, río, quebrada; distancia a la orilla), `aguaEn(M, x, y)` (tipo y profundidad), `pendiente`, `en`, `paso(cuerpo, x, y)` (reglas por clase con motivo: vadear, nadar, barrancos, roca, monte, arena, nieve, borde), `sitioEn`, `arbolLosaEn`, `obstaculo`; `PEND_MAX`, `AGUA_MAX` |
+| Naturaleza | `28-naturaleza.js` | `MC.Naturaleza.en(M, x0, y0, x1, y1)`: rocas, palmas, frailejones, arbustos y juncos con azar fijo por material, pendiente, altura y agua; `objeto(D, p)` (gancho de arte `naturaleza`) |
 | Urbe | `26-urbe.js` | `new MC.Urbe(mundo, { libro, centro, caja, alCambiar })`: `zonificar(tipo, x, y, r, dens)`, `quitarZonas`, `servicio(tipo, x, y)`, `avanzar(meses)`, `demanda()`, `valorEn`, `campoEn`, `capa(nombre)` (→ `E.capaInfo`), `resumen`, `guardar`; `MC.ZONAS_URBE`, `MC.SERVICIOS_URBE` |
 | Mobiliario | `27-mobiliario.js` | `MC.Mobiliario.en(mundo, x0, y0, x1, y1)`: postes, árboles, bancas, canecas, paraderos, hidrantes y cebras por vía (las vistas 2D lo dibujan solo; gancho de arte `prop`) |
 | Sombras | `39-sombras.js` | `MC.Sombras.vector(cielo)`, `poligono`, `dibujar2D`, `contacto` y `luces` (las vistas 2D y el raster las usan solas) |
@@ -796,6 +833,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.4.0** | 19‑nov‑2026 | Terreno y límites verosímiles: agua por tipo y profundidad (vadear, nadar; lancha con calado), pendiente máxima fuera de las vías, roca, monte, arena y nieve por vehículo, obstáculos reales (emblemáticos, árboles de las losas, mobiliario, rocas, tráfico y gente) y edificios también sobre la calle si uno se mete de verdad. Naturaleza. Lagos por llenado de prioridad en el generador y mar a nivel 0. Agua por profundidad, espuma y roca de acantilado en las losas; brillos del agua; vadear y nadar visibles. 115 pruebas. |
 | **2.3.0** | 19‑nov‑2026 | Lo aprendido de SimCity, Los Sims, Cities: Skylines y Townscaper: sombras del sol por hora (2D y raster), mobiliario urbano y luces de noche, fachadas por reglas (WFC), `MC.Urbe` (zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y capas de datos), objetos inteligentes y `MC.Habitante`, `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular` y `MC.Paisaje`. Ganchos de arte `prop`, `fachadaModulo` y `mueble`. Documento único. 109 pruebas. |
 | **2.2.0** | 19‑nov‑2026 | GPU virtual (perfil, resolución dinámica, bucle de paso fijo y raster 3D por software). Física de niveles por superficies. Cámara con resortes, brazo con choque, FOV por velocidad y trauma. **Vista lateral.** Manejo (curvas, esquemas y asistencias), sprites, escala real, interfaz por zonas, interiores con 8 estilos y catálogo, **Mi casa** desde la dirección, lugares jugables y desgaste, historias con director, ocurrencias y cosmos. 103 pruebas. |
 | **2.1.0** | 19‑nov‑2026 | Nombre: solo «Motor City» (carpeta `motor-city/`). Ciencia, economía, generador de mundos, territorios (`geo/territorio.py`), clima global, seres, taller, IA y población, interiores, música, interfaz y mecánicas. Minijuego Mandados, plantillas, reportes y skills. 80 pruebas. |
@@ -867,6 +905,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 | Documentos | ✅ | `docs/MANUAL.md`, `GUIA.md`, `INVESTIGACION.md`, `OPTIMIZACION.md`, `PLAN-IAS.md`, `PETICION-*.md` y `NEGOCIO-Y-USOS.md` |
 | Repo abierto a las IAs de los juegos, con reportes | ✅ | `CONTRIBUIR.md`, `AGENTS.md`, `reportes/`, `node motor.mjs reporte` |
 | **2.3 · SimCity, Los Sims, Cities: Skylines y Townscaper** | ✅ | `39-sombras` (sol por hora), `27-mobiliario` (props y luces), fachadas WFC (`14-ondas`), `26-urbe` (ciudad y capas de datos), `86-necesidades` (objetos inteligentes), `61-sonido` (paisaje sonoro). Mandados con modo alcalde. |
+| **2.4 · Montañas, rocas, agua (lagos, ríos, playa, mar) y límites de paso** | ✅ | `15-terreno` (agua, pendiente, reglas de paso, obstáculos), `28-naturaleza`, lagos en `12-generador`, agua y roca en `40-dibujo`; `MC.Cuerpo` vadea, nada y dice por qué no pasa |
 | **Un solo documento con todo** | ✅ | `docs/DOCUMENTO-UNICO.md` (contexto, código a usar y plan de cada IA) y `dist/MOTOR-CITY-TODO.md` (con anexos; `node motor.mjs documento`) |
 
 ### 4. Decisiones que no hay que deshacer sin motivo
@@ -904,7 +943,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 109 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 115 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»
@@ -922,6 +961,9 @@ Capturas: `dist/motor-city.html` en Chromium con `--use-gl=swiftshader` (ver `pr
 - **Nombres repetidos en el cierre único:** todos los `js/NN-*.js` comparten un solo ámbito. Antes de declarar `const ESTILOS` o `const ACTIVIDADES`, busca si ya existe (pasó con la música y con los lugares).
 - La vista lateral recorta la caja visible a una franja de profundidad (`E._franja`): sin eso, con `k` cerca de 0, la caja se va al infinito.
 - `MC.Vistas.motor3d`: `'auto'` usa el raster si el WebGL es por software (SwiftShader en las pruebas); `'gl'` lo fuerza; `'raster'` también.
+- **El agua se analiza una vez por mundo** (`MC.Terreno.agua`, 0,3–1 s). Los juegos la llaman al cargar; si no, la primera vez que alguien toca agua se nota un tirón.
+- **Sobre la vía** el edificio solo bloquea si uno se mete más de 1 m en su huella (los datos se solapan con la calle), y la pendiente no bloquea. Fuera de la vía, sí.
+- **Comentarios `//` en líneas largas de una sola instrucción** cortan el resto de la línea: usa `/* … */` dentro del código.
 - En las pruebas de Node no hay `document`: `MC.GPU.perfil()` da `'sin-pantalla'` y `MC.UI.crear` devuelve `null`.
 
 
@@ -1470,6 +1512,47 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 19‑nov‑2026 · 2.4.0 · Montañas, rocas, agua y límites de paso (Claude Code)
+**Pedido del autor:** un sistema de montañas, rocas y tipos de terreno; agua en lagos, ríos, playa y mar; y límites de movimiento que no rompan la verosimilitud («el personaje pasa por encima de cosas que no debería»).
+
+**Lo que se encontró** (por qué se atravesaban cosas):
+1. Sobre las casillas de calle no se revisaban los edificios.
+2. Los edificios de los sitios y los emblemáticos no chocaban.
+3. Los árboles de las losas solo eran dibujo.
+4. Postes y bancas no chocaban.
+5. El agua era «sí o no», sin profundidad.
+6. La pendiente frenaba, pero nunca bloqueaba.
+
+**Lo que se hizo:**
+1. **`MC.Terreno`:**
+   - análisis del agua: componentes, tipo (mar, lago, río, quebrada) y distancia a la orilla, con la profundidad que sale de ahí;
+   - reglas de paso por clase con su motivo: a pie se vadea y luego se nada; bici, moto, carro y camión tienen un límite de agua; la lancha necesita calado;
+   - pendiente máxima fuera de las vías (subir y bajar barrancos);
+   - roca, monte, arena y nieve según el vehículo;
+   - borde del mundo;
+   - obstáculos: edificios también sobre la calle si uno se mete más de 1 m, sitios y emblemáticos, los mismos árboles que pintan las losas, mobiliario, naturaleza, y tráfico y gente si el juego los pasa.
+2. **`MC.Naturaleza`:** rocas (las grandes chocan), palmas, frailejones en el páramo, arbustos y juncos.
+3. **Generador:**
+   - lagos por llenado de prioridad (Barnes, 2014), solo los grandes y hondos, de superficie plana y con desagüe;
+   - el mar a nivel 0;
+   - los pueblos no se construyen sobre los lagos;
+   - los charquitos sueltos se limpian.
+4. **Dibujo:**
+   - el agua toma color por tipo y profundidad, con espuma en la orilla;
+   - la roca asoma en las laderas de más de 65 %;
+   - brillos que se mueven sobre el agua;
+   - vadear y nadar se ven, en lateral y en cenital.
+5. **Mandados:** el agua se mide al cargar; dice por qué no se pasa (🌊, ⛰️, 🌳, 🪨) y avisa al nadar; nadar cansa; el tráfico y la gente estorban.
+
+**Probado** (115 pruebas):
+- el embalse de Guatapé es lago, de 0,3 m en la orilla y 16,6 m adentro;
+- Medellín tiene su río;
+- caminando hacia el embalse se termina nadando;
+- la bici no entra a lo hondo y la lancha no anda en lo pando;
+- el carro no sube una ladera de 68 % fuera de la vía;
+- no se atraviesan los emblemáticos, los postes ni los árboles;
+- los lagos generados son planos, el mar está a 0 m y nada de naturaleza cae sobre las vías.
 
 ### 19‑nov‑2026 · 2.3.0 · La ciudad como SimCity, Los Sims, Cities: Skylines y Townscaper (Claude Code)
 **Pedido del autor:**
