@@ -19,6 +19,12 @@
 | Pruebas | `node tests/run.js` | `node tools/test.mjs` |
 | Estado | `docs/BITACORA.md`, `docs/GUIA.md` y `dist/ENCICLA-TODO.md` | `docs/BITACORA.md`, `docs/PLAN.md` y `arte/06-guia-unica-ia.md` |
 
+**El tercer juego, para tomar su jugabilidad: Run Scooter.**
+- **Repositorio:** `juanfeliperico369-stack/RunRunZero`. Las ramas `main` y la de trabajo más reciente.
+- **Jugar:** https://juanfeliperico369-stack.github.io/RunRunZero/
+- **Qué es:** un corredor sin fin en 3D por la ciclovía, con scooter, bici, skate, patines y monopatín eléctrico; monedas, regalos y las páginas perdidas de EMSAY; funciona sin internet.
+- Es del mismo autor: su jugabilidad y sus vehículos se pueden adaptar a los otros dos juegos (misiones M4 y M5).
+
 **Lo que comparten: el mismo mapa.**
 - Está en `motor-valle/` (contrato en `motor-valle/MOTOR.md`). Es la misma tubería y las mismas fuentes: OpenStreetMap vía Overture, capas oficiales de Medellín y relieve SRTM.
 - EnCicla lo usa en casillas de 10 m (1 m = 1,6 px) y El Metro en casillas de 20 m (en metros).
@@ -74,7 +80,7 @@ Cada misión se hace para **los dos juegos**. El código y el arte de cada uno q
   - pantallas de inicio y de resultado.
 
 ### M4 · RunScooter en los dos juegos: endless runner en bici, en primera y tercera persona 3D
-Se toma la jugabilidad de *endless runner* del videojuego **RunScooter** (otro repositorio del autor) y se adapta, sin copiar marcas ni arte ajeno:
+Se toma la jugabilidad de *endless runner* de **Run Scooter** (`juanfeliperico369-stack/RunRunZero`, https://juanfeliperico369-stack.github.io/RunRunZero/, del mismo autor) y se adapta a cada juego. Se reutiliza su motor de carrera en 3D (carriles, saltos, obstáculos, monedas y regalos) y se pasa al mapa real:
 - **Código:**
   - Un modo «carrera sin fin» en bici, en 3D con vista en **primera persona** (manubrio) y en **tercera persona** (detrás de la bici).
   - Corre por calles reales del mapa único: carriles, obstáculos, saltos, rampas, monedas u hojas, y un ritmo que acelera.
@@ -88,7 +94,8 @@ Se toma la jugabilidad de *endless runner* del videojuego **RunScooter** (otro r
 ### M5 · Más vehículos para un mundo abierto más jugable
 - **Código:** se puede subir y bajar de cada vehículo en el mundo abierto, cada uno con su física y su sonido:
   - scooter, moto, carro, taxi, bus alimentador, bus del Metroplús, tranvía y metro (en El Metro);
-  - en EnCicla, la bici, la bici eléctrica, el scooter, el camión de Balance y caminar.
+  - en EnCicla, la bici, la bici eléctrica, el scooter, el camión de Balance y caminar;
+  - de Run Scooter se traen el skate, los patines y el monopatín eléctrico, con su manejo, a los dos juegos.
 
   Hay reglas de tránsito y de dónde puede ir cada uno.
 - **Arte:** cada vehículo visto desde arriba, en 3D en primera y tercera persona, y de lado, con su librea real cuando exista, luces de noche y su sombra.
