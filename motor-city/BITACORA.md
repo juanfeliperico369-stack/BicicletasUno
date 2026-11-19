@@ -1,5 +1,43 @@
 # Bitácora de Motor City
 
+## 19‑nov‑2026 · 2.3.0 · La ciudad como SimCity, Los Sims, Cities: Skylines y Townscaper (Claude Code)
+**Pedido del autor:**
+- estudiar esos juegos y sus motores: cómo crean entornos, ambientes, sombras y detalles de una ciudad;
+- añadirlo al motor, porque es crucial para cómo se crea;
+- entregar **un solo documento** con todo (contexto, código a usar y plan de cada IA), el minijuego, el HTML y el link.
+
+**Lo que se hizo:**
+1. **Sombras del sol** por hora en las vistas 2D y en el raster: casco convexo en caché, recorte de techos en cenital y oclusión de contacto en las losas. Probado: a las 12 h la sombra mide 0,13 m por metro de altura; a las 16:30, 2,4 m y hacia el oriente; de noche, nada.
+2. **Mobiliario urbano** por vía, con azar fijo: cerca del Coltejer, 269 postes, 206 árboles, 30 cebras, 45 bancas y 11 paraderos, ninguno dentro de un edificio. **Luces de noche** en charcos cálidos.
+3. **Fachadas por reglas** (WFC) en ciudad 3D, maqueta y lateral: locales, vitrinas y puerta abajo, balcones alineados y muros ciegos.
+4. **`MC.Urbe`:**
+   - campos de 40 m (valor, ruido, contaminación, verde, servicios y transporte);
+   - zonas de 8 m junto a las calles;
+   - demanda RCI que responde a lo que se construye;
+   - lotes que crecen mirando a la calle y suben de nivel;
+   - energía y agua con capacidad (GlassBox);
+   - predial y mantenimiento en el libro;
+   - capas de datos encima de las vistas.
+
+   Un parque sube el valor de 45 a 60.
+5. **Los Sims:** objetos que anuncian necesidades, `MC.Habitante` (con hambre va a la nevera o a la estufa) y ambiente de la casa (decorar lo sube). Ninguna casa queda sin cocina ni cama.
+6. **Townscaper:** WFC, autotile (4, 8 y esquinas) y rejilla irregular relajada.
+7. **Paisaje sonoro:** tráfico, pájaros, grillos, lluvia, truenos, viento, agua y gente.
+8. **Mandados:** 🏙️ modo alcalde (capas, zonas, parque, colegio, planta solar y resumen), casa con alguien que vive en ella y menú de sonido.
+9. **Ganchos de arte** `prop`, `fachadaModulo` y `mueble`.
+10. **Documentos:** `docs/DOCUMENTO-UNICO.md` y `node motor.mjs documento` (→ `dist/MOTOR-CITY-TODO.md`). `PLAN-IAS` y `PETICION-*` ahora apuntan ahí.
+
+**Cifras** (CPU 4× más lenta, con sombras y mobiliario):
+
+| Vista | ms |
+|---|---|
+| Cenital | 8–10 |
+| Ciudad 3D | ~15 |
+| Maqueta | ~27 |
+| Lateral | 14–20 |
+
+La calidad automática baja el detalle si hace falta. Bajar la maqueta a menos de 20 ms es el encargo C‑M13. 109 pruebas en verde.
+
 ## 19‑nov‑2026 · 2.2.0 · GPU virtual, mi casa, lugares, historias y vista lateral (Claude Code)
 **Pedido del autor:**
 - una solución a la tarjeta gráfica;

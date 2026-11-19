@@ -9,6 +9,9 @@
    MI CASA (tu dirección real → tu casa, que diseñas con muebles del catálogo), lugares jugables (talleres que
    reparan y mejoran, tiendas, restaurantes, bibliotecas), desgaste del vehículo, historias con director de ritmo
    y ocurrencias (lo imprevisto se corrige solo y se anota).
+   2.3: sombras del sol por hora, mobiliario urbano y luces de noche, fachadas por reglas (WFC), MODO ALCALDE (zonas,
+   demanda RCI, valor del suelo, servicios y capas de datos, a la manera de SimCity y Cities: Skylines), la casa con
+   alguien que vive en ella y usa lo que pongas (Los Sims) y paisaje sonoro (tráfico, pájaros, grillos, lluvia).
    ===================================================================== */
 const GUARDA = 'motorcity.mandados.v1', leerG = () => { try { return JSON.parse(localStorage.getItem(GUARDA) || '{}'); } catch (e) { return {}; } }, escribirG = o => { try { localStorage.setItem(GUARDA, JSON.stringify(Object.assign(leerG(), o))); } catch (e) { /* sin almacenamiento */ } };
 const $ = s => document.querySelector(s), cop = c => MC.Dinero.formato(c, 'COP');
@@ -67,11 +70,11 @@ function jugar() {
   const tocarMapa = q => { if (esquema !== 'tocar_ir' || vistas.actual.id !== 'cenital') return; const d = vistas.dpr || 1, [x, y] = camara.aMundo(q.x * d, q.y * d, W, H); ruta = MC.Manejo.rutaA(M, cuerpo, { x, y }, cuerpo.veh.clase === 'pie' ? 'rueda' : 'rueda'); ui.aviso('👆 Vamos para allá'); };
   const ponVista = id => { const v = vistas.usar(id, E); bGirar.hidden = !(v.id === 'lateral' || v.id === 'maqueta'); if (v.tipo === 'pano') { try { seguir = new MC.SeguirRuta(M, cuerpo, { red: 'rueda' }); } catch (e) { seguir = null; } } else seguir = null; ui.aviso(v.icon + ' ' + v.n); };
   const tecla = k => { if (k === 'KeyQ') camara.girar90(-1); else if (k === 'KeyR') camara.girar90(1); else if (k === 'KeyH') casa(); else if (k === 'KeyV') { iv = (iv + 1) % VIST.length; ponVista(VIST[iv]); } else if (k === 'KeyP') vistas.pixel = !vistas.pixel; else if (k === 'KeyM') musica(); else if (k === 'KeyE') entrar(); else if (k === 'KeyB') menuVeh(); };
-  ui.boton({ id: 'vista', icono: '🗺️', texto: 'Vista', al: () => tecla('KeyV') }); ui.boton({ id: 'pixel', icono: '👾', texto: 'Pixel', al: () => tecla('KeyP') }); ui.boton({ id: 'veh', icono: '🚲', texto: 'Vehículo', al: () => menuVeh() }); ui.boton({ id: 'musica', icono: '🎵', texto: 'Música', al: () => musica() });
+  ui.boton({ id: 'vista', icono: '🗺️', texto: 'Vista', al: () => tecla('KeyV') }); ui.boton({ id: 'pixel', icono: '👾', texto: 'Pixel', al: () => tecla('KeyP') }); ui.boton({ id: 'veh', icono: '🚲', texto: 'Vehículo', al: () => menuVeh() }); ui.boton({ id: 'musica', icono: '🎵', texto: 'Sonido', al: () => menuSonido() });
   const bAccion = ui.boton({ id: 'accion', icono: '🚪', texto: 'Entrar', al: () => entrar() }); bAccion.hidden = true;
   const bComprar = ui.boton({ id: 'comprar', icono: '💧', texto: 'Agua', al: () => comprar() }); bComprar.hidden = true;
   const bGirar = ui.boton({ id: 'girar', icono: '↻', texto: 'Girar', al: () => camara.girar90(1) }); bGirar.hidden = true;
-  ui.boton({ id: 'casa', icono: '🏠', texto: 'Mi casa', al: () => casa() }); ui.boton({ id: 'control', icono: '🎮', texto: 'Control', al: () => menuControl() });
+  ui.boton({ id: 'casa', icono: '🏠', texto: 'Mi casa', al: () => casa() }); ui.boton({ id: 'ciudad', icono: '🏙️', texto: 'Ciudad', al: () => menuCiudad() }); ui.boton({ id: 'control', icono: '🎮', texto: 'Control', al: () => menuControl() });
   const bLugar = ui.boton({ id: 'lugar', icono: '🔧', texto: 'Lugar', al: () => menuLugar() }); bLugar.hidden = true;
   const bRescate = ui.boton({ id: 'rescate', icono: '🆘', texto: 'Salir de aquí', al: () => { ocu.rescatar(cuerpo, M); bRescate.hidden = true; } }); bRescate.hidden = true;
   const menuControl = () => ui.menu('Tipo de control', Object.entries(MC.Manejo.ESQUEMAS).filter(([id]) => ['joystick', 'un_pulgar', 'inclinacion', 'tocar_ir'].includes(id)).map(([id, Q]) => ({ id, texto: Q.icono + ' ' + Q.n + (esquema === id ? ' ✓' : '') })), id => { esquema = id; escribirG({ esquema }); ruta = null; if (id === 'inclinacion') MC.Manejo.activarInclinacion(); if (id === 'tocar_ir' && vistas.actual.id !== 'cenital') { iv = 0; ponVista('cenital'); } ui.aviso(MC.Manejo.ESQUEMAS[id].ayuda, 3500); });
@@ -89,6 +92,23 @@ function jugar() {
   const menuVeh = () => ui.menu('Garaje', Object.entries(garaje).map(([id, G]) => ({ id, texto: G.n + (G.tiene ? '' : ' · ' + cop(G.precio)) + (cuerpo.veh.id === id ? ' ✓' : '') })), id => { const G = garaje[id]; if (!G.tiene) { if (!libro.mover('jugador', 'tienda', G.precio, 'Compra: ' + G.n)) return ui.aviso('Te faltan ' + cop(G.precio - libro.saldo('jugador'))); G.tiene = true; ui.aviso('🎉 Compraste ' + G.n); } cuerpo.setVeh(id); if (seguir) seguir.v = Math.min(seguir.v, cuerpo.vmax()); });
   let tocando = null, temaI = 0; const TEMAS = [null, ...Object.keys(MC.Musica.CLASICOS)];
   const musica = () => { if (tocando) { MC.Musica.parar(); tocando = null; ui.aviso('🔇 Música apagada'); return; } temaI = (temaI + 1) % TEMAS.length; const A = MC.Musica.adaptar({ velocidad: Math.abs(cuerpo.v), hora: reloj.hora, clima }); tocando = MC.Musica.tocar({ estilo: A.estilo, tema: TEMAS[temaI], energia: A.energia, compases: 16, semilla: (Math.random() * 99) | 0 }); if (tocando) ui.aviso('🎵 ' + tocando.pieza.titulo + (TEMAS[temaI] ? ' (' + MC.Musica.CLASICOS[TEMAS[temaI]].autor + ', dominio público)' : '')); };
+  /* sonido: música procedural y paisaje sonoro del lugar (tráfico, pájaros, grillos, lluvia, agua) */
+  let ambienteOn = false; const menuSonido = () => ui.menu('Sonido', [{ id: 'm', texto: tocando ? '🎵 Otra canción' : '🎵 Música' }, { id: 'x', texto: '🔇 Apagar la música' }, { id: 'a', texto: ambienteOn ? '🌿 Sonido ambiente: apagar' : '🌿 Sonido ambiente: encender' }], id => { if (id === 'm') { if (tocando) { MC.Musica.parar(); tocando = null; } musica(); } else if (id === 'x') { if (tocando) { MC.Musica.parar(); tocando = null; } } else { ambienteOn = !ambienteOn; if (ambienteOn) MC.Paisaje.tocar(ctxSonido()); else MC.Paisaje.parar(); ui.aviso(ambienteOn ? '🌿 Escucha el lugar' : 'Ambiente apagado'); } });
+  const ctxSonido = () => { const via = M.viaCercana(cuerpo.x, cuerpo.y, 40), ruido = urbe ? urbe.campoEn('ruido', cuerpo.x, cuerpo.y) : via ? ({ 1: .35, 2: .8, 3: 1, 4: .6 }[via.k] || .2) : .05; let agua = 1e4; for (let k = 0; k < 8 && agua > 100; k++) for (const r of [30, 70, 120]) if (M.suelo(cuerpo.x + Math.cos(k * .785) * r, cuerpo.y + Math.sin(k * .785) * r) === MC.TT.WATER) { agua = Math.min(agua, r); break; }
+    const t = M.suelo(cuerpo.x, cuerpo.y); return { hora: reloj.hora, clima, ruido, agua, verde: urbe ? urbe.campoEn('verde', cuerpo.x, cuerpo.y) : t === MC.TT.GRASS || t === MC.TT.MOUNT ? .7 : .3, gente: Math.min(1, (E.peatones || []).filter(p => Math.hypot(p.x - cuerpo.x, p.y - cuerpo.y) < 40).length / 8), altura: cuerpo.altura, velocidad: Math.abs(cuerpo.v), adentro: !!interior }; };
+  /* MODO ALCALDE: la simulación de ciudad (MC.Urbe) y las capas de datos */
+  let urbe = null, capaId = null, urbeT = 0;
+  const darUrbe = () => { if (!urbe) { urbe = new MC.Urbe(M, { libro, centro: { x: cuerpo.x, y: cuerpo.y }, alCambiar: (a, b, c, d) => vistas.losas.invalidar(a, b, c, d) }); libro.mover('mundo', 'alcaldia', 3000000000, 'Presupuesto inicial de la alcaldía', false); } return urbe; };
+  const ponCapa = id => { capaId = id; E.capaInfo = id ? darUrbe().capa(id) : null; if (vistas.actual.tipo !== '2d') { iv = 0; ponVista('cenital'); } };
+  const menuCiudad = () => ui.menu('🏙️ Ciudad (alcalde)', [
+    { id: 'c:valor', texto: '📊 Ver valor del suelo' }, { id: 'c:ruido', texto: '🔊 Ver ruido' }, { id: 'c:contaminacion', texto: '🏭 Ver contaminación' }, { id: 'c:verde', texto: '🌳 Ver verde' }, { id: 'c:servicios', texto: '🏥 Ver servicios' }, { id: 'c:zonas', texto: '🟩 Ver zonas' }, { id: 'c:', texto: '✖ Quitar la capa' },
+    { id: 'z:R', texto: '🏠 Zonificar residencial aquí' }, { id: 'z:C', texto: '🏪 Zonificar comercio aquí' }, { id: 'z:I', texto: '🏭 Zonificar industria aquí' },
+    { id: 's:parque', texto: '🌳 Parque aquí · ' + cop(MC.SERVICIOS_URBE.parque.costo) }, { id: 's:colegio', texto: '🏫 Colegio aquí · ' + cop(MC.SERVICIOS_URBE.colegio.costo) }, { id: 's:energia', texto: '☀️ Planta solar aquí · ' + cop(MC.SERVICIOS_URBE.energia.costo) }, { id: 'r', texto: '📋 Cómo va el pueblo' }
+  ], id => { const [k, v] = id.split(':'), U = darUrbe();
+    if (k === 'c') { ponCapa(v || null); ui.aviso(v ? '📊 Capa: ' + v : 'Sin capa'); }
+    else if (k === 'z') { const n = U.zonificar(v, cuerpo.x, cuerpo.y, 120); ponCapa('zonas'); ui.aviso(n ? '🟩 ' + n + ' lotes de ' + MC.ZONAS_URBE[v].n.toLowerCase() + ' junto a las calles. Crecerán si hay demanda.' : 'Aquí no hay terreno libre junto a una calle', 3500); }
+    else if (k === 's') { const s = U.servicio(v, cuerpo.x + 12, cuerpo.y + 12); ui.aviso(s ? MC.SERVICIOS_URBE[v].icono + ' ' + s.n + ' construido' : 'La alcaldía no tiene plata para eso', 3000); if (s) ponCapa(v === 'parque' ? 'verde' : 'valor'); }
+    else { const R = U.resumen(), D = R.demanda, b = x => (x > 0 ? '▲' : '▼') + Math.round(Math.abs(x) * 100); ui.dialogo('📋 ' + (M.meta.nombre || 'El pueblo') + ' · mes ' + R.mes, 'Población: ' + R.poblacion.toLocaleString('es-CO') + ' · empleos: ' + R.empleos.toLocaleString('es-CO') + '<br>Demanda: casas ' + b(D.R) + ' · comercio ' + b(D.C) + ' · industria ' + b(D.I) + '<br>Valor medio del suelo: ' + R.valorMedio + '/100 · lotes nuevos: ' + R.lotes + '<br>Alcaldía: ' + cop(libro.saldo('alcaldia')) + (R.ultimoMes ? ' · recaudo del mes ' + cop(R.ultimoMes.ingresos) : ''), ['Listo']); } });
   const cercaDe = (L, r) => L.find(l => Math.hypot(l.x - cuerpo.x, l.y - cuerpo.y) < r);
   const comprar = () => { const V = cuerpo.veh.id; if (tanque[V] != null && (cercaDe(gasolineras, 40) || !gasolineras.length && cercaDe(tiendas, 30))) { const L = garaje[V].tanque - tanque[V], c = Math.round(L * PRECIOS.gasolinaL); if (libro.mover('jugador', 'gasolinera', c, 'Gasolina')) { tanque[V] = garaje[V].tanque; ui.aviso('⛽ Tanque lleno: ' + L.toFixed(1) + ' L · ' + cop(c)); } else ui.aviso('No te alcanza la plata'); return; } if (libro.mover('jugador', 'tienda', PRECIOS.agua, 'Agua')) { yo.estado.hidratacion = Math.min(1, yo.estado.hidratacion + .5); yo.estado.energia = Math.min(1, yo.estado.energia + .15); ui.aviso('💧 Agua: ' + cop(PRECIOS.agua)); } else ui.aviso('No te alcanza para el agua'); };
   /* entregar adentro: el interior procedural del edificio del destino */
@@ -109,6 +129,8 @@ function jugar() {
   function abrirCasa() {
     const P = hogar.plano(), capa = $('#interior'), ic = $('#icv'), ig = ic.getContext('2d'), barra = $('#barraCasa'); let sel = -1, colocar = null, esc = 1, ox = 0, oy = 0; const d = Math.min(2, devicePixelRatio || 1);
     capa.hidden = false; barra.hidden = false; interior = true; ui.aviso('🏠 Bienvenido a casa · estilo ' + MC.Interiores.ESTILOS[P.estilo].n + ' · toca un mueble para moverlo', 3500);
+    /* alguien vive aquí (Los Sims): elige qué usar según lo que necesita y lo que tú pongas */
+    const hab = new MC.Habitante(P, { semilla: (hogar.d.semilla || 1) + 5, nombre: 'Tu familia' }), habA = MC.Personaje.azar(hogar.d.semilla || 7), ICO = { hambre: '🍽️', energia: '😴', vejiga: '🚻', higiene: '🚿', diversion: '🎮', social: '💬', comodidad: '🛋️' };
     const guardar = () => { if (!generado) escribirG({ hogar: hogar.guardar() }); };
     const ctlI = new MC.Controles(ic, { sinStick: true, alGesto: q => { if (q.tipo !== 'toque') return; const x = (q.x * d - ox) / esc, y = (q.y * d - oy) / esc, PL = hogar.plano();
       if (colocar) { const it = MC.Interiores.CATALOGO.find(c => c.id === colocar); if (hogar.poner(colocar, x - it.w / 2, y - it.h / 2)) { ui.aviso('✓ ' + it.n); colocar = null; guardar(); } else ui.aviso('Ahí no cabe: deja 0,5 m para pasar y no tapes las puertas'); return; }
@@ -119,14 +141,18 @@ function jugar() {
     $('#bcQuitar').onclick = () => { if (sel < 0) return ui.aviso('Primero toca un mueble'); hogar.quitar(sel); sel = -1; guardar(); ui.aviso('Quitado (queda guardado para ponerlo después)'); };
     $('#bcSalir').onclick = () => { interior = false; capa.hidden = true; barra.hidden = true; };
     const paso = () => { if (!interior || barra.hidden) return; requestAnimationFrame(paso); const W2 = ic.width = Math.round(innerWidth * d), H2 = ic.height = Math.round(innerHeight * d), PL = hogar.plano(); esc = Math.min(W2 / (PL.ancho + 2), (H2 * .82) / (PL.fondo + 2)); ox = (W2 - PL.ancho * esc) / 2; oy = (H2 * .86 - PL.fondo * esc) / 2;
-      ig.fillStyle = '#141822'; ig.fillRect(0, 0, W2, H2); MC.Interiores.dibujar(ig, PL, ox, oy, esc); const m = PL.muebles[sel]; if (m) { ig.strokeStyle = '#39ffb3'; ig.lineWidth = 3; ig.strokeRect(ox + m.x * esc, oy + m.y * esc, m.w * esc, m.h * esc); } ctlI.leer(); };
+      ig.fillStyle = '#141822'; ig.fillRect(0, 0, W2, H2); MC.Interiores.dibujar(ig, PL, ox, oy, esc); const m = PL.muebles[sel]; if (m) { ig.strokeStyle = '#39ffb3'; ig.lineWidth = 3; ig.strokeRect(ox + m.x * esc, oy + m.y * esc, m.w * esc, m.h * esc); } ctlI.leer();
+      hab.P = PL; hab.paso(1 / 60, 6); const J = MC.Personaje.pose(hab.accion ? 'quieto' : 'camina', hab.fase); J.fase = hab.fase; MC.Sombras.contacto(ig, ox + hab.x * esc, oy + hab.y * esc + esc * .1, esc * .35, esc * .18); MC.arte.f('personajeArriba')(ig, J, habA, ox + hab.x * esc, oy + hab.y * esc, esc, hab.a);
+      ig.font = Math.round(esc * .6) + 'px system-ui'; ig.textAlign = 'center'; ig.fillText(hab.accion ? '💭' : ICO[hab.masUrgente()] || '', ox + hab.x * esc, oy + (hab.y - .6) * esc);
+      if ((infoT += 1 / 60) > .5) { infoT = 0; $('#bcInfo').textContent = '✨ Ambiente ' + hogar.ambiente() + '/100 · ' + hab.nombre + ': ' + (hab.accion ? hab.accion.texto : 'busca qué hacer'); } };
+    let infoT = 1;
     requestAnimationFrame(paso);
   }
   /* tamaño */
   let W = 0, H = 0; const ajustar = () => { const d = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
   ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
   /* ciclo */
-  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false;
+  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0;
   const cuadro = ahora => {
     requestAnimationFrame(cuadro); const dt = Math.min(.1, (ahora - t0) / 1000); t0 = ahora; if (interior) return; E.t += dt;
     reloj.avanzar(dt); clima.actualizar(reloj, dt); E.cielo = MC.Cielo.en(reloj.fecha, reloj.hora, clima);
@@ -142,7 +168,9 @@ function jugar() {
     yo.vivir(dt * 6, cuerpo.estado || 'quieto', Math.abs(cuerpo.v), clima);
     if (mision) mision.actualizar(dt, cuerpo);
     camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z, zPaso: cuerpo.zPaso });
-    ocu.vigilar(dt, { cuerpo, mundo: M, libro, entrada: ent, ms: vistas.ms }); hist.paso(dt); if (mision && mision.restante < 25 && mision.estado === 'activa') hist.director.sumar('prisa', dt * .02);
+    ocu.vigilar(dt, { cuerpo, mundo: M, libro, entrada: ent, ms: vistas.ms });
+    if (urbe && urbe.zonas.size && (urbeT += dt) > 6) { urbeT = 0; const r = urbe.avanzar(1); if (r.nuevos) ui.aviso('🏗️ Se construyeron ' + r.nuevos + ' edificios nuevos · ' + r.pob.toLocaleString('es-CO') + ' habitantes'); if (capaId) E.capaInfo = urbe.capa(capaId); }
+    if (ambienteOn && (sonT += dt) > 1) { sonT = 0; MC.Paisaje.actualizar(ctxSonido()); } hist.paso(dt); if (mision && mision.restante < 25 && mision.estado === 'activa') hist.director.sumar('prisa', dt * .02);
     if (!dialogo && (histT += dt) > 25) { histT = 0; const L0 = MC.Lugares.cerca(M, cuerpo.x, cuerpo.y, 60)[0]; const s = hist.elegir({ hora: reloj.hora, clima, vehiculo: V, altura: cuerpo.altura, lugarTipo: L0 && L0.tipo, dinero: libro.saldo('jugador'), banderas });
       if (s) { dialogo = true; const ic = { diversion: '🎉', reflexion: '🌅', conciencia: '💡' }[s.pilar]; ui.dialogo(ic + ' ' + (L0 ? L0.nombre : M.calle(cuerpo.x, cuerpo.y) || ''), s.texto, s.opciones.map(o => o.texto)).then(i => { dialogo = false; const ef = s.opciones[i] ? s.opciones[i].elegir() : {}; if (ef.energia) yo.estado.energia = Math.min(1, yo.estado.energia + ef.energia); if (ef.hidratacion) yo.estado.hidratacion = Math.min(1, yo.estado.hidratacion + ef.hidratacion); if (ef.mision) { const en = hist.encargo(M, cuerpo.x, cuerpo.y, { clima }); if (en) { mision = new MC.Mision(Object.assign({}, en.def, { libro, cuenta: 'jugador' })); mision.pago = en.def.premio; ui.aviso('📜 ' + en.texto, 4500); } } }); } }
     /* el perro te sigue (dirección de Reynolds: llegar con separación) */
@@ -158,7 +186,7 @@ function jugar() {
       lugarCerca = MC.Lugares.cerca(M, cuerpo.x, cuerpo.y, 28)[0] || null; bLugar.hidden = !lugarCerca; if (lugarCerca) { bLugar.firstChild.textContent = lugarCerca.icono; bLugar.querySelector('small').textContent = lugarCerca.nombre.length > 12 ? MC.Lugares.TIPOS[lugarCerca.tipo].n.split(' ')[0] : lugarCerca.nombre; }
       if (st) ui.barra('estado', '🔧 Estado', st.estado); bComprar.hidden = !(cercaDe(tiendas, 30) || (tanque[V.id] != null && cercaDe(gasolineras, 40))); bComprar.firstChild.textContent = tanque[V.id] != null && cercaDe(gasolineras, 40) ? '⛽' : '💧';
       ui.pintarMinimapa(cuerpo.x, cuerpo.y, camara.yaw, (P && P.x != null ? [{ x: P.x, y: P.y, color: '#ffc23a' }] : []).concat(hogar ? [{ x: hogar.d.x, y: hogar.d.y, color: '#39ffb3' }] : []));
-      window.MANDADOS = { mundo: M, cuerpo, yo, libro, mision, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
+      window.MANDADOS = { mundo: M, cuerpo, yo, libro, mision, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
   };
   requestAnimationFrame(cuadro);
 }

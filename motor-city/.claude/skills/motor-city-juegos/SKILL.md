@@ -4,6 +4,7 @@ description: Armar rápido un juego o un modo nuevo sobre Motor City (plantillas
 ---
 # Motor City · hacer juegos rápido
 
+0. **Lee `docs/DOCUMENTO-UNICO.md`** (§5 tiene el código exacto a usar).
 1. `node motor.mjs nuevo juego mi-juego --mundo guatape` arma `juegos/mi-juego/`. Luego `node motor.mjs construir` da `dist/juegos/mi-juego.html`.
 2. **El ciclo de siempre** (ver `juegos/mandados/juego.js`, un ejemplo completo):
    - `reloj.avanzar` → `clima.actualizar` → `E.cielo = MC.Cielo.en(...)`;
@@ -34,6 +35,11 @@ description: Armar rápido un juego o un modo nuevo sobre Motor City (plantillas
    | `MC.Historias`, `MC.Director` y `MC.Ocurrencias` | Storylets de diversión, reflexión y conciencia; ritmo; lo imprevisto |
    | `MC.Sprites` | Arte en atlas con respaldo procedural |
    | `MC.Cosmos` y `MC.Generador` | Planetas y mundos por semilla |
+   | `MC.Urbe` | Ciudad viva a la SimCity / Cities: Skylines: zonas, demanda, valor del suelo, servicios, crecimiento y capas de datos (`E.capaInfo = urbe.capa('valor')`) |
+   | `MC.Habitante` y `MC.Necesidades` | Alguien que vive en la casa y usa los objetos según sus necesidades (Los Sims) |
+   | `MC.Paisaje` | Sonido ambiente del lugar y la hora |
+   | `MC.Ondas`, `MC.Autotile` y `MC.RejillaIrregular` | Generar con reglas locales (Townscaper) |
+   | Sombras, mobiliario y luces | Automáticos en `MC.Vistas`: sale la hora real del sol |
 4. **La piel del juego:** `MC.arte.registrar('mi-juego', { personajeLado, vehiculoLado, suelo, via, … }).usar('mi-juego')`, y el tema de la interfaz con `MC.UI.crear(raiz, { tema })`.
 5. **Tres pilares en cada juego:** diversión cada minuto, reflexión de vez en cuando y conciencia cuando sirve (`MC.Historias` los equilibra).
 6. **Que no estorbe:** el centro de la pantalla es del juego. Comprueba `MC.UI.verificar(ui).length === 0` en vertical y horizontal.

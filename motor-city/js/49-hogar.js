@@ -111,6 +111,8 @@ class Hogar {
   muebleEn(x, y) { const P = this.plano(); for (let i = P.muebles.length - 1; i >= 0; i--) { const m = P.muebles[i]; if (x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) return i; } return -1; }
   _guardarMuebles() { this.d.muebles = this.plano().muebles.map(m => ({ tipo: m.tipo, x: +m.x.toFixed(2), y: +m.y.toFixed(2), w: m.w, h: m.h, cuarto: m.cuarto, deco: m.deco, usuario: m.usuario })); }
   /* lo que se guarda (plano y sin datos personales si el jugador no quiso guardar la dirección) */
+  /* el ambiente de la casa (0–100), como el «room» de Los Sims: decorar sube el ánimo de quien vive aquí */
+  ambiente() { return MC.Necesidades ? MC.Necesidades.ambiente(this.plano()) : 50; }
   guardar() { const o = Object.assign({}, this.d); if (!o.guardaDireccion) delete o.direccion; return JSON.parse(JSON.stringify(o)); }
 }
 Object.assign(MC, { Direccion, Hogar });

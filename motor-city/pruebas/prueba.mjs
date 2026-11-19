@@ -188,8 +188,33 @@ if (fs.existsSync(gu)) {
   const hab = []; for (let i = 0; i < 400 && hab.length < 1; i++) { const e = MC.Cosmos.estrella(3, 2, i); for (let k = 0; k < e.planetas; k++) { const p = MC.Cosmos.planeta(e, k); if (p.habitable) hab.push(p); } }
   const cr = hab[0] && MC.Cosmos.criaturaDe(hab[0]); ok(hab.length && hab[0].temperatura > -10 && hab[0].temperatura < 60 && cr && cr.verosimil && MC.Cosmos.mundoDe(hab[0]).tipo, 'cosmos: un planeta habitable con agua, su mundo jugable y una criatura verosímil a su gravedad', hab[0] && { planeta: hab[0].nombre, g: +hab[0].g.toFixed(1), T: Math.round(hab[0].temperatura), criatura: cr && cr.especie }); }
 
+console.log('14) Ciudad: sombras, mobiliario, urbe, objetos inteligentes, ondas y paisaje sonoro');
+{ const f = new Date(2026, 2, 21), cm = MC.Cielo.en(f, 12.2, null), ct = MC.Cielo.en(f, 16.5, null), cn = MC.Cielo.en(f, 23, null), vm = MC.Sombras.vector(cm), vt = MC.Sombras.vector(ct);
+  const hull = MC.Sombras.poligono([0, 0, 10, 0, 10, 10, 0, 10], 20, vt);
+  ok(vm && vt && vm.L < .5 && vt.L > 1.2 && vt.dx > 0 && !MC.Sombras.vector(cn) && hull.length >= 4, 'sombras del sol: cortas al mediodía, largas hacia el oriente en la tarde, ninguna de noche', { mediodia: +vm.L.toFixed(2), tarde: +vt.L.toFixed(2) }); }
+{ const L = MC.Mobiliario.en(M, col.x - 300, col.y - 300, col.x + 300, col.y + 300), t = {}; for (const p of L) t[p.t] = (t[p.t] || 0) + 1; const dentro = L.filter(p => p.t !== 'cebra' && M.edificioEn(p.x, p.y, 0)).length, L2 = MC.Mobiliario.en(M, col.x - 300, col.y - 300, col.x + 300, col.y + 300);
+  ok(t.poste > 20 && t.arbol > 20 && t.cebra > 10 && dentro === 0 && JSON.stringify(L) === JSON.stringify(L2), 'mobiliario urbano: postes, árboles, cebras y bancas, nunca dentro de un edificio y siempre igual', t); }
+if (fs.existsSync(gu)) {
+  const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))), U = new MC.Urbe(MG), par = MG.lugares.find(l => /Parque de Guatape/i.test(l.nombre));
+  let vacio = null; for (const v of MG.vias()) { const x = v.p[0], y = v.p[1]; if (MG.edificiosEn(x - 80, y - 80, x + 80, y + 80).length < 3 && U.valorEn(x, y) > 20) { vacio = { x, y }; break; } }
+  const v0 = U.valorEn(vacio.x + 20, vacio.y + 20); U.libro.mover('mundo', 'alcaldia', 5e9); const nz = U.zonificar('R', vacio.x, vacio.y, 150), d0 = U.demanda();
+  let lotes = 0; for (let i = 0; i < 8; i++) lotes += U.avanzar(1).nuevos; const d1 = U.demanda(), nuevo = U.lotes[0], visto = nuevo && MG.edificiosEn(nuevo.x - 2, nuevo.y - 2, nuevo.x + 2, nuevo.y + 2).includes(nuevo.e);
+  U.servicio('parque', vacio.x + 20, vacio.y + 20); const v1 = U.valorEn(vacio.x + 20, vacio.y + 20);
+  ok(U.valorEn(par.x, par.y) > 45 && nz > 50 && lotes > 5 && visto && d1.C > d0.C && v1 > v0 + 5 && U.libro.cuadra() && U.capa('valor') && U.capa('zonas'), 'urbe: valor del suelo, zonas junto a las calles, crecimiento mirando a la calle, demanda RCI que responde y parques que valorizan', { zonas: nz, lotes, C: [+d0.C.toFixed(2), +d1.C.toFixed(2)], valor: [Math.round(v0), Math.round(v1)] });
+  const H2 = MC.Hogar.desdeDireccion(MG, 'Calle 31 # 28-15').hogar, PL = H2.plano(); PL.muebles = PL.muebles.filter(m => !m.deco); const a0 = H2.ambiente(), sala = PL.cuartos.find(c => c.tipo === 'sala') || PL.cuartos[0]; for (const t of ['matera', 'cuadro', 'lampara']) PL.muebles.push({ tipo: t, x: sala.x + .2, y: sala.y + .2, w: .3, h: .3, deco: true }); const a1 = H2.ambiente();
+  const Hb = new MC.Habitante(PL, { semilla: 4 }); Hb.N.hambre = 5; const elegido = Hb.elegir(); let comio = false; for (let i = 0; i < 2400 && !comio; i++) { Hb.paso(1 / 30, 2); if (Hb.accion && MC.Necesidades.ANUNCIOS[Hb.accion.tipo].hambre) comio = true; }
+  ok(a1 > a0 && elegido && MC.Necesidades.ANUNCIOS[elegido.tipo].hambre && comio, 'objetos inteligentes: con hambre va a la nevera o la estufa; decorar sube el ambiente de la casa', { ambiente: [a0, a1], va: elegido && elegido.tipo });
+}
+{ const F = { a: { peso: 1, lados: ['A', 'C', 'B', 'D'] }, b: { peso: 1, lados: ['B', 'D', 'A', 'C'] } }, R = MC.Ondas.resolver({ ancho: 8, alto: 8, fichas: F, semilla: 3 }); let bien = R.ok;
+  if (R.ok) for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { if (x < 7 && R.celdas[y][x] === R.celdas[y][x + 1]) bien = false; if (y < 7 && R.celdas[y][x] === R.celdas[y + 1][x]) bien = false; }
+  const fz = MC.Ondas.fachada(5, 4, 9), abajo = fz[4].every(t => ['local', 'puerta', 'vitrina'].includes(t)) && fz.slice(0, 4).every(f => f.every(t => !['local', 'puerta', 'vitrina'].includes(t)));
+  const RI = MC.RejillaIrregular.crear({ anillos: 3, semilla: 5 }), es = (x, y) => x >= 0 && y >= 0 && x < 3 && y < 3;
+  ok(bien && abajo && RI.quads.length > 40 && RI.quads.every(q => q.length === 4) && MC.Autotile.mascara4(es, 1, 1) === 15 && MC.Autotile.mascara4(es, 0, 0) === 6 && MC.Autotile.esquinas(1, 0, 0, 0).canonico === 1, 'ondas (WFC), fachadas por reglas, rejilla irregular de Townscaper y autotile', { quads: RI.quads.length, fachada: fz.map(f => f.join(' ')).slice(3) }); }
+{ const n = MC.Paisaje.plan({ hora: 23, clima: { lluvia: 0 }, verde: .6 }), m = MC.Paisaje.plan({ hora: 6.3, clima: { lluvia: 0 }, verde: .6, ruido: .2 }), ll = MC.Paisaje.plan({ hora: 14, clima: { lluvia: .8, tormenta: .5 } });
+  ok(n.grillos > .3 && n.pajaros < .1 && m.pajaros > .3 && ll.lluvia > .7 && ll.truenos > .3, 'paisaje sonoro: grillos de noche, pájaros al amanecer, lluvia y truenos', { noche: n.grillos, amanecer: m.pajaros }); }
+
 if (process.argv.includes('--navegador')) {
-  console.log('14) Banco de pruebas en Chromium');
+  console.log('15) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
   if (chromium && fs.existsSync(html)) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
@@ -218,8 +243,9 @@ if (process.argv.includes('--navegador')) {
     await p.goto('file://' + mh); await p.click('#jugar'); await p.waitForFunction(() => window.MANDADOS, null, { timeout: 120000 }); await p.waitForTimeout(1500);
     const r = await p.evaluate(async () => { const G = window.MANDADOS, tapa = MC.UI.verificar(G.ui), R = G.ponHogar('Calle 31 # 28-15'); G.cuerpo.x = G.hogar.d.x; G.cuerpo.y = G.hogar.d.y + 3; G.abrirCasa(); await new Promise(q => setTimeout(q, 600)); const barra = !document.querySelector('#barraCasa').hidden;
       document.querySelector('#bcEstilo').click(); const est = G.hogar.plano().estilo; document.querySelector('#bcSalir').click(); await new Promise(q => setTimeout(q, 400)); G.ponVista('lateral'); await new Promise(q => setTimeout(q, 800));
-      return { tapa, calidad: R.ubicacion.calidad, barra, estilo: est, lugares: MC.Lugares.en(G.mundo, 0, 0, G.mundo.ancho, G.mundo.alto).length, vista: G.vistas.actual.id, ocurrencias: G.ocu.resumen() }; });
-    ok(r.tapa.length === 0 && r.calidad === 'exacta' && r.barra && r.estilo && r.lugares > 20 && r.vista === 'lateral' && !errs.length, 'Mandados: la interfaz no tapa el centro; mi casa desde la dirección, se diseña; lugares y vista lateral', r);
+      const amb = document.querySelector('#bcInfo').textContent; const U = G.darUrbe(), zon = U.zonificar('R', G.cuerpo.x, G.cuerpo.y, 200); G.ponCapa('valor'); await new Promise(q => setTimeout(q, 700)); const crec = U.avanzar(4).nuevos; G.ponCapa('zonas'); await new Promise(q => setTimeout(q, 500)); G.ponCapa(null);
+      return { tapa, tapaDespues: MC.UI.verificar(G.ui), calidad: R.ubicacion.calidad, barra, estilo: est, ambiente: amb.slice(0, 40), lugares: MC.Lugares.en(G.mundo, 0, 0, G.mundo.ancho, G.mundo.alto).length, vista: G.vistas.actual.id, zonas: zon, crecen: crec, ocurrencias: G.ocu.resumen() }; });
+    ok(r.tapa.length === 0 && r.tapaDespues.length === 0 && r.calidad === 'exacta' && r.barra && r.estilo && /Ambiente/.test(r.ambiente) && r.lugares > 20 && ['cenital', 'lateral'].includes(r.vista) && r.zonas > 0 && !errs.length, 'Mandados: la interfaz no tapa el centro; mi casa con alguien que vive ahí; modo alcalde con capas de datos y crecimiento', r);
     await b.close();
   }
 }

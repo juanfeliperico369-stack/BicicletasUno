@@ -136,6 +136,16 @@
 - más de 100 pruebas;
 - reglas de no romper guardados ni la API.
 
+## 10. Ciudades: SimCity, Los Sims, Cities: Skylines y Townscaper (2.3)
+| Juego | Qué enseña | Dónde quedó |
+|---|---|---|
+| **SimCity** (y su motor GlassBox de 2013) | Capas de datos (valor del suelo, contaminación, deseabilidad). Desde 2013, recursos llevados por agentes. | `MC.Urbe` (campos y recursos con capacidad) y capas de datos encima de las vistas. |
+| **Cities: Skylines** | Zonas junto a las calles, lotes mirando a la vía, demanda RCI, niveles por valor del suelo y servicios, *props* y *decals*. La 2 enseña que sin LOD y con sombras caras el rendimiento se cae. | `MC.Urbe`, `MC.Mobiliario` y sombras baratas en caché. |
+| **Los Sims** | Personas simples y objetos inteligentes que anuncian qué necesidad satisfacen; ambiente del cuarto. | `MC.Necesidades`, `MC.Habitante` y `Hogar.ambiente()`. |
+| **Townscaper** | Rejilla irregular, reglas locales (WFC), módulos por esquina, paleta suave y sombras de contacto. | `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular`, fachadas por reglas y oclusión de contacto. |
+
+El detalle, el código y lo que falta están en `docs/DOCUMENTO-UNICO.md`, §6.
+
 ## Fuentes
 - *Fez (video game)*, Wikipedia. Game Developer, «The dimensions of Fez».
 - Hello Games, «Continuous World Generation in No Man's Sky» (Innes McKendrick, GDC 2017), GDC Vault. Sean Murray, «Building Worlds Using Math(s)» (GDC 2017).
@@ -147,3 +157,16 @@
 - Itay Keren, «Scroll Back: The Theory and Practice of Cameras in Side-Scrollers» (GDC 2015). Squirrel Eiserloh, «Math for Game Programmers: Juicing Your Cameras With Math» (GDC 2016).
 - Celia Hodent, *The Gamer's Brain* (2017). Ryan, Rigby y Przybylski, «The Motivational Pull of Video Games» (2006). Schultz, Dayan y Montague, «A Neural Substrate of Prediction and Reward» (1997). Csikszentmihalyi, *Flow* (1990).
 - Nintendo, «Breaking Conventions with *The Legend of Zelda: Breath of the Wild*» (GDC 2017).
+- **SimCity:**
+  - Game Developer, «GDC 2012: Breaking down SimCity's GlassBox engine»;
+  - Andrew Willmott, «Inside GlassBox».
+- **Cities: Skylines:**
+  - Paradox y Colossal Order, *dev diaries* de zonificación y economía;
+  - análisis técnicos de Cities: Skylines II (PC Gamer, Tom's Hardware).
+- **Los Sims:**
+  - Forbus y Wright, «Programming Objects in The Sims»;
+  - Game Maker's Toolkit, «The Genius AI Behind The Sims».
+- **Townscaper:**
+  - Boris the Brave, «Editable WFC» y «WFC tips and tricks»;
+  - Maxim Gumin, *WaveFunctionCollapse*;
+  - charlas de Oskar Stålberg.

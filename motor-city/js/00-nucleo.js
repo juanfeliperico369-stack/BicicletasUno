@@ -5,7 +5,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.2.0',
+  version: '2.3.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…

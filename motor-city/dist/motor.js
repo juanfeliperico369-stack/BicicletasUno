@@ -1,4 +1,4 @@
-/* Motor City 2.2.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.3.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.2.0',
+  version: '2.3.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -689,6 +689,17 @@ class Mundo {
   /* los edificios de una región: { x, y, hw, hd, ux, uy, h, pis, k, clase, P (polígono o null), s (semilla) } */
   edificiosRegion(rx, ry) {
     const E = this._ed(); if (!E || rx < 0 || ry < 0 || rx >= E.nx || ry >= E.ny) return [];
+    const X = this._extra && this._extra.get(ry * E.nx + rx); if (X && X.length) { const B = this._edRegionBase(E, rx, ry); return B.concat(X); }
+    return this._edRegionBase(E, rx, ry);
+  }
+  /* edificios agregados en el juego (la ciudad crece: MC.Urbe) */
+  agregarEdificio({ x, y, hw = 4, hd = 4, ang = 0, pis = 1, clase = 'casa', k = 0, urbe = null }) {
+    const E = this._ed(); if (!E) return null; const R = E.R, r = Math.floor(y / R) * E.nx + Math.floor(x / R), ux = Math.cos(ang), uy = Math.sin(ang);
+    const e = { x, y, hw, hd, ux, uy, h: Mundo.altoEdificio(k, pis), pis, k, clase, P: null, of: 0, s: h2(x * 2 | 0, y * 2 | 0, 9), agregado: true, urbe };
+    this._extra = this._extra || new Map(); (this._extra.get(r) || this._extra.set(r, []).get(r)).push(e); MC.emit('edificio', e); return e;
+  }
+  quitarEdificio(e) { if (!this._extra) return false; for (const L of this._extra.values()) { const i = L.indexOf(e); if (i >= 0) { L.splice(i, 1); return true; } } return false; }
+  _edRegionBase(E, rx, ry) {
     if (E.json) return E.reg.get(ry * E.nx + rx) || [];
     const r = ry * E.nx + rx; let L = E.cache.get(r); if (L) { E.cache.delete(r); E.cache.set(r, L); return L; }
     const b = E.b, n = E.cnt[r], R = E.R, Q = E.Q, X0 = rx * R, Y0 = ry * R; L = [];
@@ -1184,6 +1195,87 @@ const Cosmos = {
 };
 Object.assign(MC, { Cosmos });
 
+/* ---- js/14-ondas.js ---- */
+/* =====================================================================
+   ONDAS · generación por reglas locales (las herramientas de Townscaper y de tantos juegos procedurales)
+   - WFC («Wave Function Collapse», Maxim Gumin): cada celda empieza con todas las fichas posibles; se fija la de
+     menor entropía (la que tiene menos opciones), se propagan las reglas de vecindad y se repite. Si hay
+     contradicción, se vuelve a intentar con otra semilla. Sirve para fachadas, barrios, mobiliario, mazmorras…
+   - AUTOTILE: la ficha correcta según los vecinos (máscara de 4 o de 8), y las 16 esquinas de la «rejilla dual»
+     (cada celda mira sus 4 esquinas: es como Townscaper arma las casas sobre los vértices, no sobre las celdas).
+   - REJILLA IRREGULAR (la de Townscaper, según las charlas de Oskar Stålberg): hexágono de triángulos → se juntan
+     pares al azar en cuadriláteros → todo se subdivide en cuadriláteros → se relaja para que queden casi cuadrados.
+     Pueblos orgánicos, plazas y calles que no parecen hechas con regla.
+   ===================================================================== */
+const Ondas = {
+  /* fichas: { id: { peso, lados: [arriba, derecha, abajo, izquierda] } } (dos fichas encajan si sus lados enfrentados
+     son iguales) · o reglas explícitas: compat(a, b, dir). fijos: { 'x,y': id } · devuelve { ok, celdas: [[id]] } */
+  resolver({ ancho, alto, fichas, compat, fijos = {}, semilla = 1, intentos = 8, permitida }) {
+    const ids = Object.keys(fichas), n = ids.length, D = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+    const ok = compat || ((a, b, d) => fichas[ids[a]].lados[d] === fichas[ids[b]].lados[(d + 2) % 4]);
+    const tabla = []; for (let d = 0; d < 4; d++) { tabla[d] = []; for (let a = 0; a < n; a++) { tabla[d][a] = []; for (let b = 0; b < n; b++) if (ok(a, b, d)) tabla[d][a].push(b); } }
+    for (let intento = 0; intento < intentos; intento++) {
+      const r = mulberry32(semilla + intento * 7919), W = ancho * alto, P = Array.from({ length: W }, () => new Uint8Array(n).fill(1)), cuenta = new Int32Array(W).fill(n);
+      if (permitida) for (let i = 0; i < W; i++) for (let a = 0; a < n; a++) if (!permitida(ids[a], i % ancho, Math.floor(i / ancho))) { P[i][a] = 0; cuenta[i]--; }
+      const pila = [], quitar = (i, a) => { if (!P[i][a]) return true; P[i][a] = 0; cuenta[i]--; pila.push(i); return cuenta[i] > 0; };
+      let roto = false; for (const [k, id] of Object.entries(fijos)) { const [x, y] = k.split(',').map(Number), i = y * ancho + x, a = ids.indexOf(id); for (let b = 0; b < n; b++) if (b !== a && !quitar(i, b)) roto = true; }
+      const propagar = () => { while (pila.length) { const i = pila.pop(), x = i % ancho, y = (i / ancho) | 0; for (let d = 0; d < 4; d++) { const xx = x + D[d][0], yy = y + D[d][1]; if (xx < 0 || yy < 0 || xx >= ancho || yy >= alto) continue; const j = yy * ancho + xx; for (let b = 0; b < n; b++) { if (!P[j][b]) continue; let apoyo = false; for (let a = 0; a < n && !apoyo; a++) if (P[i][a] && tabla[d][a].includes(b)) apoyo = true; if (!apoyo && !quitar(j, b)) return false; } } } return true; };
+      if (roto || !propagar()) continue;
+      for (;;) {
+        let mejor = -1, me = 1e9; for (let i = 0; i < W; i++) if (cuenta[i] > 1) { const e = cuenta[i] + r() * .5; if (e < me) { me = e; mejor = i; } }
+        if (mejor < 0) break; let tot = 0; for (let a = 0; a < n; a++) if (P[mejor][a]) tot += fichas[ids[a]].peso || 1; let x = r() * tot, elegida = 0; for (let a = 0; a < n; a++) if (P[mejor][a]) { x -= fichas[ids[a]].peso || 1; if (x <= 0) { elegida = a; break; } }
+        for (let b = 0; b < n; b++) if (b !== elegida) quitar(mejor, b); if (!propagar()) { roto = true; break; }
+      }
+      if (roto || cuenta.some(c => c !== 1)) continue;
+      const celdas = []; for (let y = 0; y < alto; y++) { const f = []; for (let x = 0; x < ancho; x++) f.push(ids[P[y * ancho + x].indexOf(1)]); celdas.push(f); }
+      return { ok: true, celdas, intento };
+    }
+    return { ok: false, celdas: null };
+  },
+  /* una fachada de «pisos × columnas»: locales y puerta abajo, balcones que se alinean, muros ciegos y ventanas */
+  fachada(pisos, columnas, semilla = 1, estilo = 'paisa') {
+    const F = { ventana: { peso: 5, lados: ['m', 'v', 'm', 'v'] }, balcon: { peso: estilo === 'moderno' ? 1 : 3, lados: ['b', 'v', 'b', 'v'] }, muro: { peso: 2, lados: ['m', 'v', 'm', 'v'] }, local: { peso: 4, lados: ['m', 'l', 'p', 'l'] }, puerta: { peso: 2, lados: ['m', 'l', 'p', 'l'] }, vitrina: { peso: 2, lados: ['m', 'l', 'p', 'l'] } };
+    const K = Object.keys(F), piso = x => ['local', 'puerta', 'vitrina'].includes(x);
+    /* al lado: el primer piso con el primer piso, sin dos puertas juntas; arriba de un balcón sigue un balcón o una ventana */
+    const compat = (a, b, d) => { const A = K[a], B = K[b]; if (d === 1 || d === 3) return piso(A) === piso(B) && !(A === 'puerta' && B === 'puerta'); if (d === 0) return !(A === 'balcon' && B === 'muro'); return !(B === 'balcon' && A === 'muro'); };
+    const R = Ondas.resolver({ ancho: columnas, alto: pisos, fichas: F, compat, semilla, permitida: (id, x, y) => (y === pisos - 1) === ['local', 'puerta', 'vitrina'].includes(id) && !(id === 'balcon' && y === pisos - 1) });
+    if (!R.ok) return Array.from({ length: pisos }, (_, y) => Array.from({ length: columnas }, () => y === pisos - 1 ? 'local' : 'ventana'));
+    return R.celdas;
+  }
+};
+const Autotile = {
+  /* máscara de 4 vecinos (arriba=1, derecha=2, abajo=4, izquierda=8): 16 casos */
+  mascara4(es, x, y) { return (es(x, y - 1) ? 1 : 0) | (es(x + 1, y) ? 2 : 0) | (es(x, y + 1) ? 4 : 0) | (es(x - 1, y) ? 8 : 0); },
+  /* máscara de 8 vecinos reducida a los 47 casos «blob» (las esquinas solo cuentan si sus dos lados están) */
+  mascara8(es, x, y) { const n = es(x, y - 1), e = es(x + 1, y), s = es(x, y + 1), o = es(x - 1, y); let m = (n ? 1 : 0) | (e ? 4 : 0) | (s ? 16 : 0) | (o ? 64 : 0); if (n && e && es(x + 1, y - 1)) m |= 2; if (e && s && es(x + 1, y + 1)) m |= 8; if (s && o && es(x - 1, y + 1)) m |= 32; if (o && n && es(x - 1, y - 1)) m |= 128; return m; },
+  /* rejilla dual: las 4 esquinas de una celda (sobre los vértices) → caso 0–15 y su forma canónica con giro */
+  esquinas(a, b, c, d) { const k = (a ? 1 : 0) | (b ? 2 : 0) | (c ? 4 : 0) | (d ? 8 : 0); let mejor = k, giro = 0, q = k; for (let g = 1; g < 4; g++) { q = ((q << 1) | (q >> 3)) & 15; if (q < mejor) { mejor = q; giro = g; } } return { caso: k, canonico: mejor, giro }; }
+};
+const RejillaIrregular = {
+  /* { puntos: [[x, y]], quads: [[i, j, k, l]] } con lado aproximado «lado» (m) y «anillos» de hexágono */
+  crear({ anillos = 4, lado = 6, semilla = 1, relajar = 30 } = {}) {
+    const r = mulberry32(semilla), P = [], idx = new Map(), clave = (q, s) => q + ',' + s, pt = (q, s) => { const k = clave(q, s); if (!idx.has(k)) { idx.set(k, P.length); P.push([lado * (q + s / 2), lado * s * Math.sqrt(3) / 2]); } return idx.get(k); };
+    const T = []; for (let q = -anillos; q <= anillos; q++) for (let s = -anillos; s <= anillos; s++) { const d = (a, b) => Math.max(Math.abs(a), Math.abs(b), Math.abs(-a - b)); if (d(q, s) < anillos && d(q + 1, s) <= anillos && d(q, s + 1) <= anillos) T.push([pt(q, s), pt(q + 1, s), pt(q, s + 1)]); if (d(q + 1, s) <= anillos && d(q + 1, s + 1) <= anillos && d(q, s + 1) <= anillos && d(q, s) < anillos) T.push([pt(q + 1, s), pt(q + 1, s + 1), pt(q, s + 1)]); }
+    /* juntar pares de triángulos vecinos en cuadriláteros (al azar) */
+    const usado = new Uint8Array(T.length), Q = [], arista = (a, b) => a < b ? a + '_' + b : b + '_' + a, porArista = new Map(); T.forEach((t, i) => { for (let k = 0; k < 3; k++) { const e = arista(t[k], t[(k + 1) % 3]); (porArista.get(e) || porArista.set(e, []).get(e)).push(i); } });
+    const orden = T.map((_, i) => i).sort(() => r() - .5); const sueltos = [];
+    for (const i of orden) { if (usado[i]) continue; const t = T[i], vec = []; for (let k = 0; k < 3; k++) for (const j of porArista.get(arista(t[k], t[(k + 1) % 3]))) if (j !== i && !usado[j]) vec.push([j, k]); if (!vec.length) { sueltos.push(t); usado[i] = 1; continue; } const [j, k] = vec[Math.floor(r() * vec.length)], u = T[j], op = u.find(v => v !== t[k] && v !== t[(k + 1) % 3]); usado[i] = usado[j] = 1; Q.push([t[k], op, t[(k + 1) % 3], t[(k + 2) % 3]]); }
+    /* subdividir: cada cuadrilátero en 4 y cada triángulo suelto en 3 (todo queda en cuadriláteros) */
+    const medios = new Map(), medio = (a, b) => { const k = arista(a, b); if (!medios.has(k)) { medios.set(k, P.length); P.push([(P[a][0] + P[b][0]) / 2, (P[a][1] + P[b][1]) / 2]); } return medios.get(k); }, centro = L => { P.push([L.reduce((s, i) => s + P[i][0], 0) / L.length, L.reduce((s, i) => s + P[i][1], 0) / L.length]); return P.length - 1; };
+    const F = []; for (const q of Q) { const c = centro(q), m = [0, 1, 2, 3].map(k => medio(q[k], q[(k + 1) % 4])); for (let k = 0; k < 4; k++) F.push([q[k], m[k], c, m[(k + 3) % 4]]); }
+    for (const t of sueltos) { const c = centro(t), m = [0, 1, 2].map(k => medio(t[k], t[(k + 1) % 3])); for (let k = 0; k < 3; k++) F.push([t[k], m[k], c, m[(k + 2) % 3]]); }
+    /* relajar: cada vértice interior se acerca al promedio de sus vecinos (los del borde quedan fijos) */
+    const borde = new Set(), cuentaA = new Map(); for (const f of F) for (let k = 0; k < 4; k++) { const e = arista(f[k], f[(k + 1) % 4]); cuentaA.set(e, (cuentaA.get(e) || 0) + 1); } for (const [e, c] of cuentaA) if (c === 1) for (const v of e.split('_')) borde.add(+v);
+    const vec = P.map(() => new Set()); for (const f of F) for (let k = 0; k < 4; k++) { vec[f[k]].add(f[(k + 1) % 4]); vec[f[(k + 1) % 4]].add(f[k]); }
+    for (let it = 0; it < relajar; it++) for (let i = 0; i < P.length; i++) { if (borde.has(i) || !vec[i].size) continue; let sx = 0, sy = 0; for (const j of vec[i]) { sx += P[j][0]; sy += P[j][1]; } P[i][0] = lerp(P[i][0], sx / vec[i].size, .5); P[i][1] = lerp(P[i][1], sy / vec[i].size, .5); }
+    return { puntos: P, quads: F };
+  }
+};
+/* fachadas en caché con presupuesto por cuadro (las vistas piden muchas; se arman unas pocas por cuadro) */
+const _FZ = new Map(); Ondas.presupuesto = 30;
+Ondas.fachadaCache = (clave, pisos, columnas) => { const k = clave + ':' + pisos + 'x' + columnas; let F = _FZ.get(k); if (F) return F; if (Ondas.presupuesto <= 0) return null; Ondas.presupuesto--; F = Ondas.fachada(pisos, columnas, clave >>> 0); _FZ.set(k, F); if (_FZ.size > 5000) _FZ.delete(_FZ.keys().next().value); return F; };
+Object.assign(MC, { Ondas, Autotile, RejillaIrregular });
+
 /* ---- js/20-tiempo.js ---- */
 /* =====================================================================
    TIEMPO DEL MUNDO · reloj, calendario colombiano (festivos de la Ley Emiliani), cielo por hora,
@@ -1619,6 +1711,229 @@ class Poblacion {
   resumen() { const c = {}; for (const p of this.gente) c[p.act] = (c[p.act] || 0) + 1; return c; }
 }
 Object.assign(MC, { IA, Poblacion, ACTIVIDADES });
+
+/* ---- js/26-urbe.js ---- */
+/* =====================================================================
+   URBE · simulación de ciudad a la manera de SimCity y Cities: Skylines (sobre el mapa real o uno inventado)
+   - CAMPOS (rejilla de 40 m): valor del suelo, ruido, contaminación, verde, cobertura de servicios y acceso al
+     transporte. El valor sube con parques, agua, servicios, transporte y calles cerca; baja con ruido y contaminación
+     (como el «land value» y la «desirability» de SimCity 4 y Cities: Skylines). Se ven como capas de datos encima.
+   - ZONAS en celdas de 8 m pegadas a las calles (hasta 4 de fondo): residencial (R), comercial (C), industrial (I)
+     y oficinas (O), en densidad baja o alta. Los lotes crecen solos donde hay demanda y valor, mirando a la calle.
+   - DEMANDA RCI: las casas necesitan empleos; los comercios, clientes; la industria, comercio y trabajadores. La
+     ciudad real se toma en equilibrio con un leve crecimiento: la demanda responde a lo que el jugador cambia.
+   - NIVELES: con buen valor del suelo un edificio sube de nivel (más pisos), como en Cities: Skylines.
+   - RECURSOS (la idea de GlassBox, el motor de SimCity 2013): energía y agua tienen capacidad; si no alcanzan, la
+     ciudad no crece. Servicios con radio: parque, policía, bomberos, salud, colegio, biblioteca, estación.
+   - PRESUPUESTO en el libro de partida doble: predial por lote (avalúo × tarifa) y gastos de mantenimiento.
+   Determinista: mismas acciones, misma ciudad.
+   ===================================================================== */
+const ZONAS_URBE = {
+  R: { n: 'Residencial', color: '#43a047', clase: 'casa', umbral: 15, tarifa: .007 }, C: { n: 'Comercial', color: '#1e88e5', clase: 'comercio', umbral: 28, tarifa: .009 },
+  I: { n: 'Industrial', color: '#f9a825', clase: 'nave', umbral: 5, tarifa: .01 }, O: { n: 'Oficinas', color: '#8e24aa', clase: 'oficina', umbral: 40, tarifa: .009 }
+};
+const SERVICIOS_URBE = {
+  parque: { n: 'Parque', icono: '🌳', radio: 320, costo: 30000000, mes: 1500000 }, policia: { n: 'Estación de policía', icono: '🚓', radio: 900, costo: 120000000, mes: 9000000 },
+  bomberos: { n: 'Bomberos', icono: '🚒', radio: 1000, costo: 120000000, mes: 9000000 }, salud: { n: 'Centro de salud', icono: '🏥', radio: 1100, costo: 200000000, mes: 15000000 },
+  colegio: { n: 'Colegio', icono: '🏫', radio: 800, costo: 150000000, mes: 12000000 }, biblioteca: { n: 'Biblioteca', icono: '📚', radio: 900, costo: 90000000, mes: 5000000 },
+  estacion: { n: 'Estación de transporte', icono: '🚉', radio: 600, costo: 250000000, mes: 10000000 },
+  energia: { n: 'Planta de energía solar', icono: '☀️', capacidad: 8000, costo: 300000000, mes: 8000000 }, agua: { n: 'Planta de agua', icono: '💧', capacidad: 10000, costo: 250000000, mes: 7000000 }
+};
+const RUIDO_VIA = { 1: .35, 2: .8, 3: 1, 4: .6, 5: 0, 6: 0, 7: 0, 8: 0 };
+/* distancia (en celdas) a lo marcado, con la transformada «chamfer» de dos pasadas */
+function distanciaRejilla(mask, w, h) {
+  const D = new Float32Array(w * h), INF = 1e9; for (let i = 0; i < w * h; i++) D[i] = mask[i] ? 0 : INF; const a = 1, b = Math.SQRT2;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; let v = D[i]; if (x > 0) v = Math.min(v, D[i - 1] + a); if (y > 0) { v = Math.min(v, D[i - w] + a); if (x > 0) v = Math.min(v, D[i - w - 1] + b); if (x < w - 1) v = Math.min(v, D[i - w + 1] + b); } D[i] = v; }
+  for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) { const i = y * w + x; let v = D[i]; if (x < w - 1) v = Math.min(v, D[i + 1] + a); if (y < h - 1) { v = Math.min(v, D[i + w] + a); if (x < w - 1) v = Math.min(v, D[i + w + 1] + b); if (x > 0) v = Math.min(v, D[i + w - 1] + b); } D[i] = v; }
+  return D;
+}
+function desenfocar(F, w, h, r, pasadas = 2) { const T = new Float32Array(F.length); for (let p = 0; p < pasadas; p++) { for (let y = 0; y < h; y++) { let s = 0; for (let x = -r; x <= r; x++) s += F[y * w + clamp(x, 0, w - 1)]; for (let x = 0; x < w; x++) { T[y * w + x] = s / (2 * r + 1); s += F[y * w + Math.min(w - 1, x + r + 1)] - F[y * w + Math.max(0, x - r)]; } } for (let x = 0; x < w; x++) { let s = 0; for (let y = -r; y <= r; y++) s += T[clamp(y, 0, h - 1) * w + x]; for (let y = 0; y < h; y++) { F[y * w + x] = s / (2 * r + 1); s += T[Math.min(h - 1, y + r + 1) * w + x] - T[Math.max(0, y - r) * w + x]; } } } return F; }
+const ZONA_DE_CLASE = c => /casa|edificio|torre|apart|residen/.test(c) ? 'R' : /comerc|local|tienda|mercado/.test(c) ? 'C' : /nave|indust|bodega|fabric/.test(c) ? 'I' : /oficina|civico|salud|educ|transporte|gobierno/.test(c) ? 'O' : null;
+class Urbe {
+  constructor(mundo, op = {}) {
+    const M = this.mundo = mundo; this.paso = op.paso || 40; this.op = op;
+    const c = op.centro || { x: M.ancho / 2, y: M.alto / 2 }, caja = op.caja || (M.ancho * M.alto < 6e7 ? [0, 0, M.ancho, M.alto] : [c.x - 1500, c.y - 1500, c.x + 1500, c.y + 1500]);
+    this.x0 = Math.max(0, caja[0]); this.y0 = Math.max(0, caja[1]); this.x1 = Math.min(M.ancho, caja[2]); this.y1 = Math.min(M.alto, caja[3]);
+    this.w = Math.max(2, Math.ceil((this.x1 - this.x0) / this.paso)); this.h = Math.max(2, Math.ceil((this.y1 - this.y0) / this.paso)); const n = this.w * this.h;
+    this.C = { valor: new Float32Array(n), ruido: new Float32Array(n), contaminacion: new Float32Array(n), verde: new Float32Array(n), servicios: new Float32Array(n), transporte: new Float32Array(n), dVia: null, dAgua: null };
+    this.zonas = new Map(); this.lotes = []; this.servicios = []; this.libro = op.libro || new Libro(); this.mes = 0; this.version = 0; this.alCambiar = op.alCambiar || null;
+    this.impuesto = Object.fromEntries(Object.entries(ZONAS_URBE).map(([k, z]) => [k, z.tarifa])); this.cobertura = {};
+    this._fijos(); this.censar(); this.calcular(); const d0 = this._demandaCruda(); this._base = { R: .25 - d0.R, C: .12 - d0.C, I: .06 - d0.I, O: .06 - d0.O };   // la ciudad real, en equilibrio con un leve crecimiento
+    this.recursos = { energia: { cap: (this.pob + this.empleos() * .5) * 1.15, uso: 0 }, agua: { cap: (this.pob + this.empleos() * .5) * 1.15, uso: 0 } };
+  }
+  /* celda de campo de un punto */
+  _i(x, y) { const i = Math.floor((x - this.x0) / this.paso), j = Math.floor((y - this.y0) / this.paso); return i < 0 || j < 0 || i >= this.w || j >= this.h ? -1 : j * this.w + i; }
+  _centro(i) { return [this.x0 + (i % this.w + .5) * this.paso, this.y0 + (Math.floor(i / this.w) + .5) * this.paso]; }
+  /* lo que no cambia: distancia a las vías y al agua, ruido de las vías, verde del suelo, parques reales y estaciones */
+  _fijos() {
+    const M = this.mundo, w = this.w, h = this.h, n = w * h, via = new Uint8Array(n), agua = new Uint8Array(n), ruido = new Float32Array(n), verde = new Float32Array(n);
+    for (const v of M.vias()) { const P = v.p, kr = RUIDO_VIA[v.k] ?? .3; for (let j = 0; j + 3 < P.length; j += 2) { const L = Math.hypot(P[j + 2] - P[j], P[j + 3] - P[j + 1]), m = Math.max(1, Math.ceil(L / (this.paso / 2))); for (let t = 0; t <= m; t++) { const i = this._i(P[j] + (P[j + 2] - P[j]) * t / m, P[j + 1] + (P[j + 3] - P[j + 1]) * t / m); if (i >= 0) { via[i] = 1; ruido[i] = Math.max(ruido[i], kr); } } } }
+    for (let i = 0; i < n; i++) { const [x, y] = this._centro(i), tt = M.suelo(x, y); if (tt === TT.WATER || tt === TT.CANAL) agua[i] = 1; if (tt === TT.GRASS || tt === TT.MOUNT) verde[i] = tt === TT.MOUNT ? .55 : .3; }
+    this.C.dVia = distanciaRejilla(via, w, h).map(d => d * this.paso); this.C.dAgua = distanciaRejilla(agua, w, h).map(d => d * this.paso);
+    this._ruidoVias = desenfocar(ruido, w, h, 1, 2); this._verdeBase = desenfocar(verde, w, h, 1, 1);
+    const parques = (M.lugares || []).filter(L => /parque|plaza|z[oó]calo/i.test(L.nombre || '')).map(L => ({ x: L.x, y: L.y }));
+    const est = []; const T = M.transporte || {}; for (const l of T.lineas || []) for (const e of l.est || []) { const q = l.T && l.T.at ? l.T.at(e.s) : e; if (q) est.push({ x: q.x, y: q.y }); } for (const e of T.encicla || []) est.push({ x: e.x, y: e.y });
+    /* lo fijo de verde, transporte y contaminación (los parques y estaciones reales, la industria que ya existe) se calcula una vez */
+    this._verdeFijo = new Float32Array(n); this._transFijo = new Float32Array(n); this._contFija = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const [x, y] = this._centro(i); let v = this._verdeBase[i]; for (const p of parques) { const d = Math.hypot(p.x - x, p.y - y); if (d < 700) v += Math.exp(-d / 160); } this._verdeFijo[i] = v; let tr = 0; for (const s2 of est) { const d = Math.hypot(s2.x - x, s2.y - y); if (d < 1600) tr = Math.max(tr, Math.exp(-d / 380)); } this._transFijo[i] = tr; }
+    for (const e of M.edificiosEn(this.x0, this.y0, this.x1, this.y1)) if (ZONA_DE_CLASE(e.clase || '') === 'I') { const i = this._i(e.x, e.y); if (i >= 0) this._contFija[i] += .5; }
+  }
+  /* población y empleos de lo que ya existe (huellas reales) */
+  censar() {
+    let pob = 0; const emp = { C: 0, I: 0, O: 0 }; this.existentes = 0;
+    for (const e of this.mundo.edificiosEn(this.x0, this.y0, this.x1, this.y1)) { if (e.agregado) continue; const z = ZONA_DE_CLASE(e.clase || ''), area = 4 * e.hw * e.hd * (e.pis || 1); this.existentes++; if (z === 'R') pob += area / 28; else if (z === 'C') emp.C += area / 22; else if (z === 'I') emp.I += area / 60; else if (z === 'O') emp.O += area / 18; }
+    this.pob = Math.round(pob); this.emp = emp; return { pob: this.pob, empleos: this.empleos() };
+  }
+  empleos() { return this.emp.C + this.emp.I + this.emp.O; }
+  /* sin recortar: la demanda responde a los cambios respecto de la ciudad de partida */
+  _demandaCruda() { const pob = Math.max(1, this.pob), trab = pob * .45, emp = this.empleos(), s0 = this._escala || (this._escala = { R: Math.max(200, trab * .3), X: Math.max(60, pob * .05) }); return { R: (emp * 1.05 - trab) / s0.R, C: (pob * .12 - this.emp.C) / s0.X, I: (this.emp.C * .9 + pob * .05 - this.emp.I) / s0.X, O: (pob * .1 - this.emp.O) / s0.X }; }
+  /* demanda RCI (−1 a 1) */
+  demanda() { const d = this._demandaCruda(), b = this._base || { R: 0, C: 0, I: 0, O: 0 }; return { R: clamp(d.R + b.R, -1, 1), C: clamp(d.C + b.C, -1, 1), I: clamp(d.I + b.I, -1, 1), O: clamp(d.O + b.O, -1, 1) }; }
+  /* recalcula los campos (llámalo al cambiar zonas, lotes o servicios) */
+  calcular() {
+    const C = this.C, w = this.w, h = this.h, n = w * h, pq = this.servicios.filter(s => s.tipo === 'parque'), es = this.servicios.filter(s => s.tipo === 'estacion'), sv = this.servicios.filter(s => SERVICIOS_URBE[s.tipo].radio && s.tipo !== 'parque' && s.tipo !== 'estacion');
+    const cont = Float32Array.from(this._contFija), ruido = Float32Array.from(this._ruidoVias);
+    for (const L of this.lotes) { const i = this._i(L.x, L.y); if (i < 0) continue; if (L.tipo === 'I') { cont[i] += 1; ruido[i] = Math.max(ruido[i], .7); } else if (L.tipo === 'C') ruido[i] = Math.max(ruido[i], .35); }
+    desenfocar(cont, w, h, 3, 2); desenfocar(ruido, w, h, 1, 1);
+    const cober = {}; for (const t of ['policia', 'bomberos', 'salud', 'colegio', 'biblioteca']) cober[t] = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const [x, y] = this._centro(i); let v = this._verdeFijo[i]; for (const p of pq) v += Math.exp(-Math.hypot(p.x - x, p.y - y) / 160); C.verde[i] = clamp(v, 0, 1.5) / 1.5;
+      let tr = this._transFijo[i]; for (const s of es) tr = Math.max(tr, Math.exp(-Math.hypot(s.x - x, s.y - y) / 380)); C.transporte[i] = tr;
+      let sm = 0; for (const s of sv) { const cv = 1 - Math.hypot(s.x - x, s.y - y) / SERVICIOS_URBE[s.tipo].radio; if (cv > cober[s.tipo][i]) cober[s.tipo][i] = cv; } for (const t in cober) sm += cober[t][i]; C.servicios[i] = sm / 5;
+      C.contaminacion[i] = clamp(cont[i] * 1.6, 0, 1); C.ruido[i] = clamp(ruido[i], 0, 1);
+      C.valor[i] = clamp(22 + 14 * Math.exp(-C.dVia[i] / 60) + 26 * C.verde[i] + 14 * Math.exp(-C.dAgua[i] / 140) + 22 * C.servicios[i] + 14 * C.transporte[i] - 38 * C.contaminacion[i] - 14 * C.ruido[i], 0, 100);
+    }
+    this.cobertura = cober; this.version++; return this;
+  }
+  valorEn(x, y) { const i = this._i(x, y); return i < 0 ? 0 : this.C.valor[i]; }
+  campoEn(nombre, x, y) { const i = this._i(x, y), F = this.C[nombre]; return i < 0 || !F ? 0 : F[i]; }
+  /* ZONIFICAR: celdas de 8 m pegadas a las calles, hasta 4 de fondo, dentro del círculo (x, y, r) */
+  zonificar(tipo, x, y, r = 120, dens = 'baja') {
+    if (!ZONAS_URBE[tipo]) return 0; const M = this.mundo; let n = 0; const { G, C } = M._rejillaVias(), VV = M.vias(), vis = new Set();
+    for (let gy = Math.floor((y - r) / C); gy <= Math.floor((y + r) / C); gy++) for (let gx = Math.floor((x - r) / C); gx <= Math.floor((x + r) / C); gx++) { const a = G.get(gx * 65536 + gy); if (a) for (let q = 0; q < a.length; q += 2) vis.add(a[q]); }
+    for (const vi of vis) { const v = VV[vi]; if (v.k === VIA.CICLO || v.k === VIA.SENDERO || v.k === VIA.ESCALAS || v.k === VIA.AUTOPISTA) continue; const P = v.p, anc = (v.ancho || 8) / 2;
+      for (let j = 0; j + 3 < P.length; j += 2) { const ax = P[j], ay = P[j + 1], L = Math.hypot(P[j + 2] - ax, P[j + 3] - ay), a = Math.atan2(P[j + 3] - ay, P[j + 2] - ax), nx = -Math.sin(a), ny = Math.cos(a);
+        for (let s = 4; s < L; s += 8) for (const ld of [1, -1]) for (let k = 0; k < 4; k++) {
+          const cx = ax + Math.cos(a) * s + nx * ld * (anc + 4 + 8 * k), cy = ay + Math.sin(a) * s + ny * ld * (anc + 4 + 8 * k); if (Math.hypot(cx - x, cy - y) > r || !M.dentro(cx, cy)) continue;
+          const key = Math.round(cx / 4) * 65536 + Math.round(cy / 4); if (this.zonas.has(key)) { const z0 = this.zonas.get(key); if (!z0.lote) { z0.tipo = tipo; z0.dens = dens; } continue; }
+          const tt = M.suelo(cx, cy); if (tt === TT.WATER || tt === TT.CANAL || M.edificioEn(cx, cy, 2) || M.pendiente(cx, cy, a, 8) > .3) continue;
+          this.zonas.set(key, { tipo, dens, x: cx, y: cy, a, lado: ld, fondo: k, lote: null }); n++;
+        } } }
+    this.version++; return n;
+  }
+  quitarZonas(x, y, r) { let n = 0; for (const [k, z] of this.zonas) if (!z.lote && Math.hypot(z.x - x, z.y - y) <= r) { this.zonas.delete(k); n++; } this.version++; return n; }
+  /* un servicio en (x, y): cobra la construcción y queda en el presupuesto mensual */
+  servicio(tipo, x, y, cuenta = 'alcaldia') {
+    const S = SERVICIOS_URBE[tipo]; if (!S) return null; if (!this.libro.mover(cuenta, 'contratistas', S.costo, 'Construcción: ' + S.n)) return null;
+    const s = { tipo, x, y, n: S.n }; this.servicios.push(s); if (S.capacidad) this.recursos[tipo].cap += S.capacidad; this.calcular(); MC.emit('urbe', { tipo: 'servicio', s }); return s;
+  }
+  /* avanza «meses»: demanda, crecimiento, niveles, recursos y presupuesto */
+  avanzar(meses = 1) {
+    const M = this.mundo; let nuevos = 0, suben = 0;
+    for (let m = 0; m < meses; m++) {
+      this.mes++; const D = this.demanda(), uso = this.pob + this.empleos() * .5; this.recursos.energia.uso = uso; this.recursos.agua.uso = uso;
+      const recurso = Math.min(1, this.recursos.energia.cap / Math.max(1, uso), this.recursos.agua.cap / Math.max(1, uso));
+      const cand = []; for (const z of this.zonas.values()) if (!z.lote && D[z.tipo] > .05 && this.valorEn(z.x, z.y) >= ZONAS_URBE[z.tipo].umbral) cand.push(z);
+      cand.sort((p, q) => this.valorEn(q.x, q.y) - this.valorEn(p.x, p.y) || p.fondo - q.fondo || p.x - q.x);
+      const cupo = { R: Math.ceil(6 * Math.max(0, D.R) * recurso), C: Math.ceil(4 * Math.max(0, D.C) * recurso), I: Math.ceil(3 * Math.max(0, D.I) * recurso), O: Math.ceil(3 * Math.max(0, D.O) * recurso) };
+      for (const z of cand) { if (cupo[z.tipo] <= 0) continue; const L = this._lote(z); if (L) { cupo[z.tipo]--; nuevos++; } }
+      /* subir de nivel: el valor del suelo alrededor manda (como los niveles 1–5 de Cities: Skylines) */
+      for (const L of this.lotes) { const v = this.valorEn(L.x, L.y), obj = 1 + (v >= 80) + (v >= 65) + (v >= 50) + (v >= 35); if (obj > L.nivel && L.tipo !== 'I' && recurso >= 1 && h2(L.x | 0, this.mes, 5) < .35) { L.nivel++; L.e.pis += L.dens === 'alta' ? 2 : 1; L.e.h = Mundo.altoEdificio(L.e.k, L.e.pis); this._sumar(L, L.area * (L.dens === 'alta' ? 2 : 1)); suben++; this._avisar(L); } }
+      this._presupuesto();
+    }
+    if (nuevos || suben) this.calcular(); return { nuevos, suben, demanda: this.demanda(), pob: this.pob, empleos: Math.round(this.empleos()) };
+  }
+  _sumar(L, area) { if (L.tipo === 'R') this.pob += Math.round(area / 28); else if (L.tipo === 'C') this.emp.C += area / 22; else if (L.tipo === 'I') this.emp.I += area / 60; else this.emp.O += area / 18; }
+  _avisar(L) { if (this.alCambiar) this.alCambiar(L.x - 30, L.y - 30, L.x + 30, L.y + 30); }
+  /* crea el lote y su edificio mirando a la calle (ancho a lo largo de la vía, fondo hacia adentro) */
+  _lote(z) {
+    const M = this.mundo, alta = z.dens === 'alta', T = z.tipo, frente = T === 'I' ? 16 : alta ? 14 : T === 'C' ? 10 : 8, fondo = T === 'I' ? 20 : alta ? 16 : 12, ux = Math.cos(z.a), uy = Math.sin(z.a), nx = -uy * z.lado, ny = ux * z.lado;
+    const cx = z.x + nx * (fondo / 2 - 4), cy = z.y + ny * (fondo / 2 - 4);
+    for (const [px, py] of [[0, 0], [frente / 2, fondo / 2], [-frente / 2, fondo / 2], [frente / 2, -fondo / 2], [-frente / 2, -fondo / 2]]) { const x = cx + ux * px + nx * py, y = cy + uy * px + ny * py; if (!M.dentro(x, y) || M.edificioEn(x, y, .8) || M.suelo(x, y) === TT.WATER) return null; }
+    const v = this.valorEn(cx, cy), pis = T === 'I' ? 2 : T === 'R' ? (alta ? 3 + Math.floor(v / 14) : 1 + (v > 45)) : T === 'C' ? (alta ? 3 + Math.floor(v / 18) : 1 + (v > 50)) : 4 + Math.floor(v / 12);
+    const e = M.agregarEdificio({ x: cx, y: cy, hw: frente / 2 - .5, hd: fondo / 2 - .5, ang: z.a, pis, clase: ZONAS_URBE[T].clase, k: 99, urbe: T }); if (!e) return null;
+    const L = { tipo: T, dens: z.dens, x: cx, y: cy, e, nivel: 1, area: (frente - 1) * (fondo - 1) * pis, zona: z }; this.lotes.push(L);
+    for (const q of this.zonas.values()) if (!q.lote && Math.hypot(q.x - cx, q.y - cy) < Math.max(frente, fondo) / 2 + 2) q.lote = L; z.lote = L;
+    this._sumar(L, L.area); this._avisar(L); MC.emit('urbe', { tipo: 'lote', L }); return L;
+  }
+  /* predial (avalúo por m² según el valor del suelo × tarifa anual / 12) y mantenimiento de los servicios */
+  _presupuesto() {
+    let ing = 0; for (const L of this.lotes) { const aval = 1000000 + 40000 * this.valorEn(L.x, L.y); ing += L.area * aval * 100 * (this.impuesto[L.tipo] || .008) / 12; }
+    ing += this.pob * 150000;   // otros recaudos (industria y comercio, vehículos…): $1.500 por habitante al mes
+    ing = Math.round(ing); if (ing > 0) this.libro.mover('ciudadanos', 'alcaldia', ing, 'Recaudo del mes ' + this.mes, false);
+    let gas = 0; for (const s of this.servicios) gas += SERVICIOS_URBE[s.tipo].mes; if (gas) this.libro.mover('alcaldia', 'contratistas', gas, 'Mantenimiento del mes ' + this.mes, false);
+    this.ultimoMes = { ingresos: ing, gastos: gas };
+  }
+  /* las capas de información para MC.Vistas: E.capaInfo = urbe.capa('valor' | 'ruido' | 'contaminacion' | 'verde' | 'servicios' | 'transporte' | 'zonas') */
+  capa(nombre) {
+    const U = this; if (nombre === 'zonas') return { nombre, dibujar(g, a, b, c, d, e, f, D) { if (D.z < .5) return; g.save(); for (const z of U.zonas.values()) { if (z.lote) continue; const [x, y] = D.pr(z.x, z.y, 0), s = Math.max(2, D.z * 6.5); g.fillStyle = ZONAS_URBE[z.tipo].color + (z.dens === 'alta' ? 'aa' : '66'); g.fillRect(x - s / 2, y - s * .5 * (D.P.k || 1), s, s * (D.P.k || 1)); } g.restore(); } };
+    const PAL = { valor: [[200, 40, 40], [240, 200, 60], [40, 170, 80]], ruido: [[0, 0, 0], [250, 150, 40], [160, 30, 160]], contaminacion: [[0, 0, 0], [170, 120, 50], [90, 60, 30]], verde: [[0, 0, 0], [120, 200, 90], [20, 120, 50]], servicios: [[0, 0, 0], [80, 160, 240], [30, 70, 200]], transporte: [[0, 0, 0], [240, 200, 60], [230, 90, 40]] }[nombre];
+    if (!PAL || !this.C[nombre]) return null; let cv = null, ver = -1;
+    const hacer = () => { const F = U.C[nombre], w = U.w, h = U.h; cv = lienzo(w, h); if (!cv) return; const g2 = cv.getContext('2d'), img = g2.createImageData(w, h), D = img.data, esValor = nombre === 'valor';
+      for (let i = 0; i < w * h; i++) { const t = clamp(esValor ? F[i] / 100 : F[i], 0, 1), A = t < .5 ? PAL[0] : PAL[1], B = t < .5 ? PAL[1] : PAL[2], u = t < .5 ? t * 2 : (t - .5) * 2; D[4 * i] = A[0] + (B[0] - A[0]) * u; D[4 * i + 1] = A[1] + (B[1] - A[1]) * u; D[4 * i + 2] = A[2] + (B[2] - A[2]) * u; D[4 * i + 3] = esValor ? 150 : Math.round(t * 190); }
+      g2.putImageData(img, 0, 0); ver = U.version; };
+    return { nombre, dibujar(g, a, b, c, d, e, f) { if (ver !== U.version || !cv) hacer(); if (!cv) return; g.save(); g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = true; g.drawImage(cv, U.x0, U.y0, U.w * U.paso, U.h * U.paso); g.restore(); } };
+  }
+  resumen() { const D = this.demanda(); let vs = 0; for (const v of this.C.valor) vs += v; return { mes: this.mes, poblacion: this.pob, empleos: Math.round(this.empleos()), lotes: this.lotes.length, zonas: this.zonas.size, demanda: D, valorMedio: +(vs / this.C.valor.length).toFixed(1), alcaldia: this.libro.saldo('alcaldia'), recursos: this.recursos, ultimoMes: this.ultimoMes || null }; }
+  /* lo que se guarda (zonas, servicios y lotes crecidos se reconstruyen con las mismas acciones) */
+  guardar() { return { mes: this.mes, servicios: this.servicios.map(s => [s.tipo, Math.round(s.x), Math.round(s.y)]), lotes: this.lotes.map(L => [L.tipo, L.dens, +L.x.toFixed(1), +L.y.toFixed(1), +L.zona.a.toFixed(3), L.e.pis, L.nivel]) }; }
+}
+Object.assign(MC, { Urbe, ZONAS_URBE, SERVICIOS_URBE, distanciaRejilla });
+
+/* ---- js/27-mobiliario.js ---- */
+/* =====================================================================
+   MOBILIARIO URBANO · los detalles que hacen que una calle parezca una calle (los «props» de Cities: Skylines)
+   Sale de las vías reales con azar fijo (siempre lo mismo en el mismo lugar), con medidas reales:
+   - postes de luz cada ~30 m, alternando de lado (8–10 m de alto; de noche, su charco de luz);
+   - árboles de calle cada ~11 m donde la zona es arbolada (más en Laureles, menos en el centro);
+   - bancas y canecas cerca de plazas y en las calles tranquilas; paraderos de bus en las avenidas cada ~350 m;
+   - cebras (pasos peatonales) al llegar a los cruces de las calles; hidrantes cada ~120 m.
+   Nada cae dentro de un edificio ni en el agua. Lo lejano no se genera ni se dibuja (detalle por distancia).
+   ===================================================================== */
+const PROPS = { poste: { h: 9 }, arbol: { h: 7 }, banca: { h: .8 }, caneca: { h: 1 }, paradero: { h: 2.6 }, hidrante: { h: .7 }, cebra: { h: 0 } };
+const Mobiliario = {
+  PROPS,
+  /* lo de una vía (se calcula una vez) */
+  deVia(mundo, v, i) {
+    const C = mundo._propsVia || (mundo._propsVia = new Map()); let L = C.get(i); if (L) return L; L = [];
+    if (v.k === VIA.SENDERO || v.k === VIA.ESCALAS) { C.set(i, L); return L; }
+    const P = v.p, r = mulberry32(i * 2654435761 + 7), anc = (v.ancho || (v.k <= 2 ? 12 : 7)) / 2, ciclo = v.k === VIA.CICLO, peat = v.k === VIA.PEATONAL;
+    let s = r() * 12, lado = 1, acum = 0; const largoV = []; for (let j = 0; j + 3 < P.length; j += 2) largoV.push(Math.hypot(P[j + 2] - P[j], P[j + 3] - P[j + 1]));
+    const total = largoV.reduce((a, b) => a + b, 0), punto = d => { let j = 0; while (j < largoV.length - 1 && d > largoV[j]) { d -= largoV[j]; j++; } const t = largoV[j] ? clamp(d / largoV[j], 0, 1) : 0, ax = P[2 * j], ay = P[2 * j + 1], bx = P[2 * j + 2], by = P[2 * j + 3], a = Math.atan2(by - ay, bx - ax); return { x: ax + (bx - ax) * t, y: ay + (by - ay) * t, a }; };
+    const poner = (t, d, ld, extra = 0) => { const q = punto(d), nx = -Math.sin(q.a), ny = Math.cos(q.a), off = anc + 1 + extra, x = q.x + nx * ld * off, y = q.y + ny * ld * off; if (!mundo.dentro(x, y) || mundo.suelo(x, y) === TT.WATER || mundo.edificioEn(x, y, .4)) return; L.push({ t, x, y, a: q.a, v: r() }); };
+    const est = mundo.estilo ? mundo.estilo(P[0], P[1]) : { arboles: .5 }, arb = clamp(est.arboles ?? .5, 0, 1);
+    if (!ciclo) for (let d = 6 + r() * 10; d < total - 4; d += 28 + r() * 6) { poner('poste', d, lado); lado = -lado; }
+    for (let d = 4 + r() * 8; d < total - 3; d += 10 + r() * 3) for (const ld of [1, -1]) if (r() < arb * (ciclo ? .8 : .65)) poner('arbol', d + ld * 2, ld, ciclo ? 0 : .6);
+    if (!ciclo) for (let d = 20 + r() * 30; d < total - 10; d += 55 + r() * 40) { if (peat || v.k === VIA.CALLE && r() < .35) { poner('banca', d, r() < .5 ? 1 : -1, .2); poner('caneca', d + 2.2, 1, .1); } }
+    if (v.k === VIA.AVENIDA || v.k === VIA.CARRERA) for (let d = 60 + r() * 120; d < total - 20; d += 330 + r() * 60) poner('paradero', d, 1, .4);
+    if (!ciclo) for (let d = 30 + r() * 60; d < total - 10; d += 110 + r() * 30) if (r() < .5) poner('hidrante', d, r() < .5 ? 1 : -1, -.2);
+    if ((v.k === VIA.CALLE || v.k === VIA.CARRERA || v.k === VIA.AVENIDA) && total > 30) for (const [d, sg] of [[3.5, 1], [total - 3.5, -1]]) { const q = punto(d); L.push({ t: 'cebra', x: q.x, y: q.y, a: q.a, ancho: anc * 2, v: 0 }); }
+    C.set(i, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
+  },
+  /* los props en una caja (solo de las vías que pasan por ahí) */
+  en(mundo, x0, y0, x1, y1, max = 2000) {
+    if (!mundo._rejillaVias) return []; const { G, C } = mundo._rejillaVias(), VV = mundo.vias(), vis = new Set(), out = [];
+    for (let gy = Math.floor(y0 / C); gy <= Math.floor(y1 / C); gy++) for (let gx = Math.floor(x0 / C); gx <= Math.floor(x1 / C); gx++) { const a = G.get(gx * 65536 + gy); if (a) for (let q = 0; q < a.length; q += 2) vis.add(a[q]); }
+    for (const i of vis) { for (const p of Mobiliario.deVia(mundo, VV[i], i)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } }
+    return out;
+  },
+  /* dibujo en las vistas 2D: cebras en el piso (antes de lo demás); el resto, de pie con su sombra de contacto */
+  piso(D, L) {
+    const { g, pr, z } = D; g.fillStyle = 'rgba(245,245,240,.82)';
+    for (const p of L) { if (p.t !== 'cebra') continue; const c = Math.cos(p.a), s = Math.sin(p.a), n = Math.max(3, Math.round(p.ancho / 1.1)); for (let k = 0; k < n; k++) { const off = -p.ancho / 2 + (k + .5) * p.ancho / n, x = p.x - s * off, y = p.y + c * off, a0 = pr(x - c * 1.5 - s * .25, y - s * 1.5 + c * .25, 0), a1 = pr(x + c * 1.5 - s * .25, y + s * 1.5 + c * .25, 0), a2 = pr(x + c * 1.5 + s * .25, y + s * 1.5 - c * .25, 0), a3 = pr(x - c * 1.5 + s * .25, y - s * 1.5 - c * .25, 0); g.beginPath(); g.moveTo(a0[0], a0[1]); g.lineTo(a1[0], a1[1]); g.lineTo(a2[0], a2[1]); g.lineTo(a3[0], a3[1]); g.fill(); } }
+  },
+  objeto(D, p, luces) {
+    const { g, pr, z, P, noche, modo } = D, [x, y] = pr(p.x, p.y, 0), cen = modo === 'cenital', hk = cen ? 0 : P.hk;
+    /* arte del juego (sprites de Gemini/ChatGPT): MC.arte.registrar(j, { prop(g, p, x, y, pxPorMetro, D) { … return true } }) */
+    const fa = MC.arte.f('prop'); if (fa && fa(g, p, x, y, z, D) === true) { if (p.t === 'poste' && luces && noche > .3) luces.push([x, y, Math.max(14, z * 11)]); return; }
+    if (p.t === 'arbol') { const h = 5 + p.v * 4, r = (1.6 + p.v * 1.2) * z, [, yc] = pr(p.x, p.y, h * .75); Sombras.contacto(g, x + r * .3, y + r * .15, r * .9, r * .45 * (cen ? 1 : P.k + .2), .22); if (!cen) { g.strokeStyle = '#5b4030'; g.lineWidth = Math.max(1, z * .25); g.beginPath(); g.moveTo(x, y); g.lineTo(x, yc); g.stroke(); } const cy = cen ? y : yc; g.fillStyle = noche > .3 ? '#21402c' : ['#3f7d3a', '#4b8b3f', '#356f37'][(p.v * 3) | 0]; g.beginPath(); g.arc(x, cy, r, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.arc(x - r * .3, cy - r * .3, r * .45, 0, TAU); g.fill(); return; }
+    if (p.t === 'poste') { const [, yt] = pr(p.x, p.y, 8.5); if (!cen) { g.strokeStyle = '#4a4f58'; g.lineWidth = Math.max(1, z * .16); g.beginPath(); g.moveTo(x, y); g.lineTo(x, yt); g.stroke(); } g.fillStyle = noche > .3 ? '#ffe7b0' : '#cfd3d8'; g.beginPath(); g.arc(x, cen ? y : yt, Math.max(1.2, z * .35), 0, TAU); g.fill(); if (luces && noche > .3) luces.push([x, y, Math.max(14, z * 11)]); return; }
+    const h = (PROPS[p.t] || { h: 1 }).h, w = Math.max(1.5, z * (p.t === 'paradero' ? 3 : p.t === 'banca' ? 1.6 : .5)), hh = Math.max(1, h * z * (cen ? .4 : hk));
+    g.fillStyle = p.t === 'paradero' ? 'rgba(120,170,200,.85)' : p.t === 'banca' ? '#8d6e63' : p.t === 'hidrante' ? '#d8432f' : '#3d6b4f'; g.fillRect(x - w / 2, y - hh, w, hh);
+    if (p.t === 'paradero') { g.fillStyle = '#2b3442'; g.fillRect(x - w / 2 - 1, y - hh - 2, w + 2, 2); }
+  }
+};
+MC.Mobiliario = Mobiliario;
 
 /* ---- js/30-personaje.js ---- */
 /* =====================================================================
@@ -2428,6 +2743,62 @@ const Sprites = {
 };
 MC.Sprites = Sprites;
 
+/* ---- js/39-sombras.js ---- */
+/* =====================================================================
+   SOMBRAS Y LUZ · el sol de verdad sobre la ciudad (lo que hace que una ciudad «se vea viva»)
+   - SOMBRA PROYECTADA: cada edificio (y cada emblemático) proyecta su sombra en el piso según el sol de esa hora y
+     ese lugar (MC.Cielo): largas y rojizas al amanecer y al atardecer, cortas al mediodía (en Medellín casi bajo los
+     pies), débiles con nubes, ninguna de noche. La sombra es el casco convexo de la base y de la base corrida
+     h·cot(altura del sol) en la dirección contraria al sol. En la vista cenital la sombra no oscurece su propio techo.
+   - OCLUSIÓN DE CONTACTO: una sombra corta y suave pegada a la base de todo (edificios, árboles, gente, carros):
+     es lo que «sienta» las cosas en el piso (la usan Townscaper, Los Sims y Cities: Skylines).
+   - LUZ DE NOCHE: los postes encienden charcos de luz cálida sobre el andén y la calle (MC.Mobiliario).
+   Todo es barato: un solo trazo para todas las sombras, recortado por calidad y por zoom.
+   ===================================================================== */
+const Sombras = {
+  /* vector de la sombra en el piso por metro de altura { dx, dy, L (largo por metro), fuerza, alt } o null */
+  vector(cielo) {
+    const s = cielo && cielo.sol; if (!s || s.alt <= .03) return null;
+    const hl = Math.hypot(s.x, s.y) || 1e-6, L = Math.min(9, 1 / Math.tan(Math.max(.07, s.alt)));
+    const fuerza = clamp(cielo.luzSol ?? .6, 0, 1) * clamp((s.alt - .03) / .14, 0, 1);
+    return { dx: -s.x / hl * L, dy: -s.y / hl * L, L, fuerza, alt: s.alt, calida: clamp(1 - s.alt / .45, 0, 1) };
+  },
+  /* casco convexo (cadena monótona) de una lista de puntos [[x, y], …] */
+  casco(pts) {
+    const P = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]); if (P.length < 3) return P; const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = []; for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    const up = []; for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    up.pop(); lo.pop(); return lo.concat(up);
+  },
+  /* polígono de la sombra (metros del mundo) de un prisma de base P (plano [x,y,…]) y altura h */
+  poligono(P, h, v) { const pts = []; for (let i = 0; i + 1 < P.length; i += 2) { pts.push([P[i], P[i + 1]]); pts.push([P[i] + v.dx * h, P[i + 1] + v.dy * h]); } return Sombras.casco(pts); },
+  _cv: null, _cache: new WeakMap(),
+  /* capa de sombras de las vistas 2D. objs: [{ P, h }] · pr: mundo → pantalla · cenital: recorta los techos */
+  dibujar2D(g, W, H, objs, pr, v, op = {}) {
+    if (!v || !objs.length || v.fuerza < .03) return 0; const a = (op.alfa ?? .34) * v.fuerza, col = v.calida > .3 ? '38,22,40' : '22,30,52';
+    let dst = g; if (op.cenital) { if (!this._cv || this._cv.width !== W || this._cv.height !== H) this._cv = lienzo(W, H); if (!this._cv) return 0; dst = this._cv.getContext('2d'); dst.setTransform(1, 0, 0, 1, 0, 0); dst.clearRect(0, 0, W, H); }
+    dst.save(); dst.fillStyle = op.cenital ? '#000' : 'rgba(' + col + ',' + a.toFixed(3) + ')'; dst.beginPath();
+    const kv = Math.round(v.dx * 25) + ',' + Math.round(v.dy * 25);   // el sol se mueve despacio: la sombra de cada edificio se guarda mientras no cambie
+    for (const o of objs) { let S; if (o.q) { const c = Sombras._cache.get(o.q); if (c && c.k === kv) S = c.S; else { S = Sombras.poligono(o.P, o.h, v); Sombras._cache.set(o.q, { k: kv, S }); } } else S = Sombras.poligono(o.P, o.h, v); if (S.length < 3) continue; const p0 = pr(S[0][0], S[0][1], 0); dst.moveTo(p0[0], p0[1]); for (let i = 1; i < S.length; i++) { const p = pr(S[i][0], S[i][1], 0); dst.lineTo(p[0], p[1]); } dst.closePath(); }
+    dst.fill('nonzero');
+    if (op.cenital) {   // el techo propio (y los más altos que la sombra no alcanza) no se oscurece
+      dst.globalCompositeOperation = 'destination-out'; dst.beginPath();
+      for (const o of objs) { const P = o.P, p0 = pr(P[0], P[1], 0); dst.moveTo(p0[0], p0[1]); for (let i = 2; i < P.length; i += 2) { const p = pr(P[i], P[i + 1], 0); dst.lineTo(p[0], p[1]); } dst.closePath(); }
+      dst.fill(); dst.restore(); g.save(); g.globalAlpha = a; g.drawImage(this._cv, 0, 0); g.restore(); return objs.length;
+    }
+    dst.restore(); return objs.length;
+  },
+  /* oclusión de contacto: elipse suave bajo algo de radio r (m) en (x, y) */
+  contacto(g, sx, sy, rx, ry, a = .28) { g.fillStyle = 'rgba(10,14,26,' + a + ')'; g.beginPath(); g.ellipse(sx, sy, Math.max(1, rx), Math.max(.6, ry), 0, 0, TAU); g.fill(); },
+  /* luz de noche: charcos cálidos (se suman con «lighter») en puntos de pantalla [[x, y, radioPx], …] */
+  luces(g, L, noche) {
+    if (noche < .15 || !L.length) return; g.save(); g.globalCompositeOperation = 'lighter';
+    for (const [x, y, r] of L) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(255,196,110,' + (.32 * noche).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,170,80,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); }
+    g.restore();
+  }
+};
+MC.Sombras = Sombras;
+
 /* ---- js/40-dibujo.js ---- */
 /* =====================================================================
    DIBUJO 2D COMPARTIDO · paleta del motor, losas del suelo en caché y pinceles de edificios y vehículos
@@ -2457,6 +2828,8 @@ function estiloEdificio(mundo, e) {
 class Losas {
   constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; }
   limpiar() { this.cache.clear(); this.version++; }
+  /* borra las losas de una caja (cuando la ciudad crece o cambia) */
+  invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) this.cache.delete(k); } this.version++; }
   /* la losa (gx, gy) a res px por metro; se pinta si no está (o se pone en cola si `diferir`) */
   losa(gx, gy, res, diferir, sinTechos) {
     const k = gx + ',' + gy + ',' + res + ',' + (sinTechos ? 1 : 0) + ',' + MC.arte.activa; let c = this.cache.get(k);
@@ -2505,7 +2878,7 @@ class Losas {
     }
     /* 5. techos de las huellas reales (sombra suave al sureste) y tanques en las laderas */
     const E = lejos ? [] : M.edificiosEn(x0, y0, x0 + L, y0 + L).sort((a, b) => a.h - b.h);
-    for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(6, b.h * .25); g.fillStyle = 'rgba(20,24,40,.22)'; g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
+    for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(1.4, .3 + b.h * .04); g.fillStyle = 'rgba(20,24,40,.2)';   /* solo oclusión de contacto: la sombra del sol la pone MC.Sombras según la hora */ g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
     if (!sinTechos) for (const b of E) this.techo(g, b, M);
     if (!sinTechos) for (const b of SI.E) if (dentroL(b.caja)) { g.fillStyle = b.techo === 'cupula' ? '#56665f' : b.clase === 'iglesia' ? '#b5542f' : '#bdbcb6'; this._poly(g, b.R); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .4; this._poly(g, b.R, true); }
     g.restore();
@@ -2561,7 +2934,7 @@ const Vista2D = {
     const p = clamp(cam.pitch, .15, 1.47); return { yaw: cam.yaw, k: Math.cos(p), hk: Math.sin(p) };
   },
   dibujar(g, W, H, E, op = {}) {
-    const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw);
+    const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw); Ondas.presupuesto = 12;
     /* matriz mundo → pantalla (sin altura) */
     const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
@@ -2593,30 +2966,38 @@ const Vista2D = {
     g.restore();
     const noche0 = E.cielo ? E.cielo.noche : 0; if (noche0 > .02) { g.fillStyle = 'rgba(8,18,52,' + (noche0 * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     /* ---------- lo que se levanta: edificios, pasos elevados, vehículos y gente, en orden de profundidad ---------- */
-    const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f;
-    if (modo !== 'cenital') {
-      const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * (E.calidad ?? 1));
-      const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
-      const lista = E.mundo.edificiosEn(x0, y0, x1, y1).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
-      for (const q of lista) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q });
-      for (const q of E.mundo.sitios().E) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); }
+    const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
+    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H }, luces = [];
+    const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
+    /* sombras del sol de esta hora (también de edificios que están fuera de la pantalla y la alcanzan) */
+    const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3;
+    const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * cal);
+    if (modo !== 'cenital' || conSombra) {
+      const pad = conSombra ? Math.min(160, 25 * sv.L) : 0, lista = E.mundo.edificiosEn(x0 - pad, y0 - pad, x1 + pad, y1 + pad).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
+      const sit = E.mundo.sitios().E.filter(q => { const k2 = q.caja; return !(k2[2] < x0 - pad || k2[0] > x1 + pad || k2[3] < y0 - pad || k2[1] > y1 + pad); });
+      if (conSombra) { const S = lista.map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
+      if (modo !== 'cenital') { for (const q of lista) if (q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q }); for (const q of sit) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); } }
     }
+    /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
+    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
+    if (E.capaInfo && E.capaInfo.dibujar) E.capaInfo.dibujar(g, a, b, c, d, e, f, dibCtx);
     for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
     for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
     for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
     if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
     objs.sort((p, q) => p.y - q.y);
-    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H };
     /* rayos X: lo que queda delante del jugador y lo tapa se dibuja transparente */
     const Jc = E.jugador && E.jugador.cuerpo, jKey = Jc ? dy(Jc.x, Jc.y) : 0, jS = Jc ? pr(Jc.x, Jc.y, (Jc.zPaso || 0) + (Jc.z || 0) + 1) : null;
     const tapa = q => { const hw = q.hw != null ? Math.max(q.hw, q.hd) : q.caja ? Math.max(q.caja[2] - q.caja[0], q.caja[3] - q.caja[1]) / 2 : 15, r = hw * z * 1.15 + 12, [bx, by] = pr(q.x, q.y, 0), [, ty] = pr(q.x, q.y, q.h || 10); return Math.abs(jS[0] - bx) < r && jS[1] > ty - 12 && jS[1] < by + hw * z * P.k + 12; };
     for (const o of objs) {
       const rx = Jc && modo !== 'cenital' && (o.t === 0 || o.t === 4) && o.y > jKey && tapa(o.q); if (rx) g.globalAlpha = .28;
       if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
-      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P);
+      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces);
       if (rx) g.globalAlpha = 1;
     }
+    Sombras.luces(g, luces, noche);   // los charcos de luz de los postes, encima de todo (como luz que se suma)
     /* cables del Metrocable: el cable entre torres por encima de todo */
     if (E.cables) this.cables(dibCtx, E.cables);
     /* etiquetas (estaciones, lugares) */
@@ -2632,7 +3013,16 @@ const Vista2D = {
       const j = (i + 1) % n, ex = B[j][0] - B[i][0], ey = B[j][1] - B[i][1], ny = ex * sg; if (ny <= 0) continue;   // el muro mira hacia abajo de la pantalla: se ve
       const lz = clamp(.72 + .28 * (ey * sg / (Math.hypot(ex, ey) || 1)) * D.luzX + .1, .55, 1.05) - noche * .45;
       g.fillStyle = tono(muro, lz - 1); g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
-      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) { for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u - (T[i][1] - B[i][1]) * -v; g.fillStyle = lit ? 'rgba(255,214,120,' + (.55 + noche * .4) + ')' : 'rgba(25,35,50,.32)'; g.fillRect(x, y, Math.max(1, ex / cols * .45), Math.max(1, z * 1.2)); } } }
+      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
+        /* fachada por reglas (WFC, como Townscaper): locales, vitrinas y puerta abajo; balcones alineados; muros ciegos */
+        const FZ = pisos * cols <= 48 && z > 2.2 ? Ondas.fachadaCache(ventanas * 31 + i, pisos, cols) : null, alturaV = (T[i][1] - B[i][1]);
+        const fm = MC.arte.f('fachadaModulo');   // arte del juego: fachadaModulo(g, tipo, x, y, ancho, alto, encendida, D) → true si lo dibujó
+        for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const tipo = FZ ? FZ[pisos - 1 - p][q] : 'ventana'; if (tipo === 'muro') continue; const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u + alturaV * v, w = Math.max(1, ex / cols * .45);
+          if (fm && fm(g, tipo, x, y, w, Math.max(1, z * 1.2), lit, D) === true) continue;
+          if (tipo === 'local' || tipo === 'vitrina') { const yb = B[i][1] + ey * u + alturaV * (p + .08) / pisos; g.fillStyle = noche > .3 ? 'rgba(255,226,150,' + (.5 + noche * .4) + ')' : 'rgba(120,160,190,.55)'; g.fillRect(x - w * .25, yb - z * 1.9, w * 1.5, z * 1.9); if (tipo === 'vitrina') { g.fillStyle = ['#c43a26', '#2f80ed', '#2e7d32', '#f2b705'][(ventanas + q) % 4]; g.fillRect(x - w * .35, yb - z * 2.4, w * 1.7, Math.max(1, z * .45)); } continue; }
+          if (tipo === 'puerta') { const yb = B[i][1] + ey * u + alturaV * .02; g.fillStyle = '#4a2f22'; g.fillRect(x, yb - z * 2.1, w * .8, z * 2.1); continue; }
+          g.fillStyle = lit ? 'rgba(255,214,120,' + (.55 + noche * .4) + ')' : 'rgba(25,35,50,.32)'; g.fillRect(x, y, w, Math.max(1, z * 1.2));
+          if (tipo === 'balcon') { g.fillStyle = 'rgba(40,44,52,.55)'; g.fillRect(x - w * .2, y + Math.max(1, z * 1.2), w * 1.4, Math.max(1, z * .3)); } } } }
     }
     g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();
@@ -3016,7 +3406,7 @@ class Raster {
     /* cielo */
     const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, css3(cielo.top)); gr.addColorStop(.55, css3(cielo.hor)); gr.addColorStop(1, css3(bruma)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
     const cam = (x, y, z) => { const dx = x - o[0], dy = y - o[1], dz = z - o[2]; return [dx * rx + dy * ry, dx * ux + dy * uy + dz * uz, dx * fx + dy * fy + dz * fz]; };
-    const L = [], Ls = []; const tanH = Math.tan((C.fov || 1) / 2) * (W / H) * 1.25;
+    const L = [], Ls = [], Lsh = []; const tanH = Math.tan((C.fov || 1) / 2) * (W / H) * 1.25;
     const visible = (x, y, r) => { const dx = x - o[0], dy = y - o[1], fl = Math.hypot(fx, fy) || 1, d = (dx * fx + dy * fy) / fl; if (d < -r) return false; const lat = Math.abs(dx * rx + dy * ry); return lat <= (Math.max(d, 0) + r * 2) * tanH + r + 30 && Math.hypot(dx, dy) < R + r; };
     const sombra = (nx, ny, nz) => clamp(.42 + .5 * amb + luz * Math.max(0, nx * sol.x + ny * sol.y + nz * sol.z) * .55 - (cielo.noche || 0) * .3, .3, 1.15);
     const color = (c, k, d) => css3(mez3([c[0] * k, c[1] * k, c[2] * k], bruma, clamp((d - cerca) / Math.max(1, lejos - cerca), 0, 1)));
@@ -3025,7 +3415,7 @@ class Raster {
       let Q = P.map(p => cam(p[0], p[1], p[2])), S = [];
       for (let i = 0; i < Q.length; i++) { const a = Q[i], c = Q[(i + 1) % Q.length], ia = a[2] >= NEAR, ic = c[2] >= NEAR; if (ia) S.push(a); if (ia !== ic) { const t = (NEAR - a[2]) / (c[2] - a[2]); S.push([a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t, NEAR]); } }
       if (S.length < 3) return; let d = 0; for (const s of S) d += s[2]; d /= S.length; if (d > lejos * 1.15) return;
-      (suelo ? Ls : L).push({ d, pts: S.map(s => [W / 2 + s[0] / s[2] * F, H / 2 - s[1] / s[2] * F]), fill: color(col, k, d) });
+      (suelo === 2 ? Lsh : suelo ? Ls : L).push({ d, pts: S.map(s => [W / 2 + s[0] / s[2] * F, H / 2 - s[1] / s[2] * F]), fill: suelo === 2 ? col : color(col, k, d), sh: suelo === 2 });
     };
     /* relieve: rejilla alrededor del ojo, más fina con más calidad */
     const PAL = (MC.arte.dato('suelo', PAL_SUELO) || PAL_SUELO).map(hex3), paso = cal > .75 ? 14 : cal > .5 ? 20 : 28, cx0 = Math.floor((o[0] - R) / paso), cx1 = Math.ceil((o[0] + R) / paso), cy0 = Math.floor((o[1] - R) / paso), cy1 = Math.ceil((o[1] + R) / paso);
@@ -3053,7 +3443,8 @@ class Raster {
     };
     const Rb = R * .8, maxB = Math.round(90 + 420 * cal), lista = M.edificiosEn(o[0] - Rb, o[1] - Rb, o[0] + Rb, o[1] + Rb).filter(q => visible(q.x, q.y, Math.max(q.hw, q.hd)));
     if (lista.length > maxB) { lista.sort((p, q) => Math.hypot(p.x - o[0], p.y - o[1]) - Math.hypot(q.x - o[0], q.y - o[1])); lista.length = maxB; }
-    for (const q of lista) { const st = estiloEdificio(M, q), z0 = this._z(q.x, q.y); prisma(Mundo.esquinas(q), z0, z0 + q.h, hex3(st.muro), hex3(st.techo)); }
+    const sv = Sombras.vector(cielo), aS = sv ? (.38 * sv.fuerza).toFixed(3) : 0;
+    for (const q of lista) { const st = estiloEdificio(M, q), z0 = this._z(q.x, q.y), Pq = Mundo.esquinas(q); prisma(Pq, z0, z0 + q.h, hex3(st.muro), hex3(st.techo)); if (sv && sv.fuerza > .05) poly(Sombras.poligono(Pq, q.h, sv).map(p => [p[0], p[1], z0 + .25]), 'rgba(18,26,46,' + aS + ')', 1, 2); }
     for (const q of M.sitios().E) { if (!visible(q.x, q.y, 40)) continue; const z0 = this._z(q.x, q.y); for (const Rr of q.R.slice(0, 1)) prisma(Rr, z0, z0 + Math.min(q.h, 60), hex3('#d9d4c9'), hex3('#b5542f')); }
     /* tráfico (cajas) y gente (de perfil, como recortes en la escena) */
     for (const v of E.vehiculos || []) {
@@ -3073,11 +3464,11 @@ class Raster {
     }
     for (const x of E.extras || []) if (x.dibujar3d) figura(x.x, x.y, this._z(x.x, x.y) + (x.z || 0), (sx, sy, esc) => x.dibujar3d(g, sx, sy, esc));
     /* pintor: primero el piso (relieve y calles) y encima lo que se levanta, cada capa de lejos a cerca */
-    Ls.sort((p, q) => q.d - p.d); L.sort((p, q) => q.d - p.d); this.n = Ls.length + L.length;
-    for (const it of Ls.concat(L)) {
+    Ls.sort((p, q) => q.d - p.d); L.sort((p, q) => q.d - p.d); this.n = Ls.length + L.length + Lsh.length;
+    for (const it of Ls.concat(Lsh, L)) {
       if (it.fn) { it.fn(); continue; }
       const P = it.pts; g.fillStyle = it.fill; g.beginPath(); g.moveTo(P[0][0], P[0][1]); for (let i = 1; i < P.length; i++) g.lineTo(P[i][0], P[i][1]); g.closePath(); g.fill();
-      if (cal > .6) { g.strokeStyle = it.fill; g.lineWidth = .7; g.stroke(); }   // tapa las rendijas entre polígonos
+      if (cal > .6 && !it.sh) { g.strokeStyle = it.fill; g.lineWidth = .7; g.stroke(); }   // tapa las rendijas entre polígonos
     }
     /* luz de noche: una capa azul y los faroles como puntos (barato) */
     if ((cielo.noche || 0) > .05) { g.fillStyle = 'rgba(10,20,60,' + (cielo.noche * .35).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
@@ -3444,11 +3835,13 @@ const Interiores = {
     /* ventanas en los muros de afuera de cuartos con luz (no en baños ni bodegas) */
     const ventanas = []; for (const c of C2) { if (['bano', 'bodega', 'ropas'].includes(c.tipo)) continue; if (c.y < .01 && c !== ent) ventanas.push({ x: c.x + c.w / 2, y: 0, vertical: false, ancho: Math.min(1.8, c.w * .5) }); if (c.y + c.h > D - .01) ventanas.push({ x: c.x + c.w / 2, y: D, vertical: false, ancho: Math.min(1.8, c.w * .5) }); if (c.x < .01) ventanas.push({ x: 0, y: c.y + c.h / 2, vertical: true, ancho: Math.min(1.5, c.h * .4) }); if (c.x + c.w > W - .01) ventanas.push({ x: W, y: c.y + c.h / 2, vertical: true, ancho: Math.min(1.5, c.h * .4) }); }
     /* muebles contra los muros, sin tapar puertas, con 0,6 m para pasar */
-    const muebles = [], libreDePuerta = (x, y, w, h) => puertas.every(p => Math.hypot(clamp(p.x, x, x + w) - p.x, clamp(p.y, y, y + h) - p.y) > 1.1);
+    const muebles = [], ESENCIAL = new Set(['cama', 'nevera', 'estufa', 'inodoro', 'sofa', 'ducha', 'comedor', 'mostrador', 'banco_trabajo']); let holgura = .6, puertaMin = 1.1;
+    const libreDePuerta = (x, y, w, h) => puertas.every(p => Math.hypot(clamp(p.x, x, x + w) - p.x, clamp(p.y, y, y + h) - p.y) > puertaMin);
     for (const c of C2) { const L = (MUEBLES[c.tipo] || []).slice(); let i = 0;
-      for (const [tipo, mw, mh] of L) { let puesto = false; for (let intento = 0; intento < 12 && !puesto; intento++, i++) { const lado = i % 4, rot = lado % 2 === 1, w2 = rot ? mh : mw, h2b = rot ? mw : mh; if (w2 > c.w - .3 || h2b > c.h - .3) continue; const t = r(); let x, y; if (lado === 0) { x = c.x + .1 + t * (c.w - w2 - .2); y = c.y + .1; } else if (lado === 1) { x = c.x + c.w - w2 - .1; y = c.y + .1 + t * (c.h - h2b - .2); } else if (lado === 2) { x = c.x + .1 + t * (c.w - w2 - .2); y = c.y + c.h - h2b - .1; } else { x = c.x + .1; y = c.y + .1 + t * (c.h - h2b - .2); }
+      /* lo esencial (cama, nevera, estufa, inodoro…) se reintenta con menos holgura: ninguna casa queda sin cocina ni cama */
+      for (const [tipo, mw, mh] of L) { let puesto = false; for (let intento = 0; intento < (ESENCIAL.has(tipo) ? 36 : 12) && !puesto; intento++, i++) { holgura = intento < 12 ? .6 : intento < 24 ? .35 : .15; puertaMin = intento < 12 ? 1.1 : intento < 24 ? .85 : .65; const lado = i % 4, rot = lado % 2 === 1, w2 = rot ? mh : mw, h2b = rot ? mw : mh; if (w2 > c.w - .3 || h2b > c.h - .3) continue; const t = r(); let x, y; if (lado === 0) { x = c.x + .1 + t * (c.w - w2 - .2); y = c.y + .1; } else if (lado === 1) { x = c.x + c.w - w2 - .1; y = c.y + .1 + t * (c.h - h2b - .2); } else if (lado === 2) { x = c.x + .1 + t * (c.w - w2 - .2); y = c.y + c.h - h2b - .1; } else { x = c.x + .1; y = c.y + .1 + t * (c.h - h2b - .2); }
           if (tipo === 'banca' || tipo === 'pupitre' || tipo === 'mesa_centro' || tipo === 'comedor' || tipo === 'mesa_juntas' || tipo === 'estiba') { x = c.x + (c.w - w2) / 2 + (r() - .5) * Math.max(0, c.w - w2 - 1.2); y = c.y + .8 + r() * Math.max(0, c.h - h2b - 1.6); }
-          const choca = muebles.some(m => x < m.x + m.w + .6 && x + w2 + .6 > m.x && y < m.y + m.h + .6 && y + h2b + .6 > m.y); if (!choca && libreDePuerta(x, y, w2, h2b)) { muebles.push({ tipo, x, y, w: w2, h: h2b, cuarto: c.tipo }); puesto = true; } } } }
+          const choca = muebles.some(m => x < m.x + m.w + holgura && x + w2 + holgura > m.x && y < m.y + m.h + holgura && y + h2b + holgura > m.y); if (!choca && libreDePuerta(x, y, w2, h2b)) { muebles.push({ tipo, x, y, w: w2, h: h2b, cuarto: c.tipo }); puesto = true; } } } }
     const pisos = Math.max(1, e.pis || 1), plano = { programa: prog, ancho: W, fondo: D, pisos, cuartos: C2, puertas, ventanas, muebles, escaleras: pisos > 1 ? { x: W - 1.3, y: D - 3.2, w: 1.1, h: 3 } : null, edificio: e };
     plano.solido = (x, y) => { if (x < .15 || y < .15 || x > W - .15 || y > D - .15) return !puertas.some(p => p.entrada && Math.abs(p.x - x) < p.ancho / 2 && y < .3); if (muebles.some(m => x > m.x && x < m.x + m.w && y > m.y && y < m.y + m.h && !['tapete', 'ducha'].includes(m.tipo))) return true; for (const c of C2) for (const b of [[c.x, c.y, c.x + c.w, c.y], [c.x, c.y, c.x, c.y + c.h]]) { const vert = b[0] === b[2]; if (vert ? Math.abs(x - b[0]) < .08 && y > b[1] && y < b[3] : Math.abs(y - b[1]) < .08 && x > b[0] && x < b[2]) { if (!puertas.some(p => p.vertical === vert && (vert ? Math.abs(p.x - b[0]) < .1 && Math.abs(p.y - y) < p.ancho / 2 : Math.abs(p.y - b[1]) < .1 && Math.abs(p.x - x) < p.ancho / 2))) return true; } } return false; };
     plano.cuartoEn = (x, y) => C2.find(c => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) || null;
@@ -3465,7 +3858,8 @@ const Interiores = {
     for (const v of P.ventanas) { g.fillStyle = '#8cbedc'; if (v.vertical) g.fillRect(v.x - .1, v.y - v.ancho / 2, .2, v.ancho); else g.fillRect(v.x - v.ancho / 2, v.y - .1, v.ancho, .2); }
     const COL = { cama: '#f2efe8', sofa: '#6d8fb3', closet: '#8d6e63', estufa: '#3b3d42', nevera: '#e9eef3', inodoro: '#ffffff', ducha: '#b7d7e6', lavamanos: '#ffffff', mostrador: '#a1887f', estante: '#8d6e63', banca: '#8d6e63', altar: '#efe8d8', escritorio: '#a1887f', comedor: '#8d6e63', tv: '#1d1f24', matera: '#4a9444', pupitre: '#a1887f', tablero: '#2e5d3a' };
     const EST = (P.estilo && ESTILOS_INT[P.estilo]) || ESTILOS_INT.paisa;
-    for (const m of P.muebles) { if (m.tipo === 'tapete') { Interiores.tapete(g, m, EST); continue; } g.fillStyle = m.color || (EST.muebles[m.tipo]) || COL[m.tipo] || EST.madera; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; g.strokeRect(m.x, m.y, m.w, m.h); if (m.tipo === 'cama') { g.fillStyle = '#c43a26'; g.fillRect(m.x + m.w * .08, m.y + m.h * .3, m.w * .84, m.h * .62); } }
+    const fmu = MC.arte.f('mueble');   // arte: mueble(g, m, estilo, P) en metros del plano → true si lo dibujó
+    for (const m of P.muebles) { if (fmu && fmu(g, m, P.estilo, P) === true) continue; if (m.tipo === 'tapete') { Interiores.tapete(g, m, EST); continue; } g.fillStyle = m.color || (EST.muebles[m.tipo]) || COL[m.tipo] || EST.madera; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; g.strokeRect(m.x, m.y, m.w, m.h); if (m.tipo === 'cama') { g.fillStyle = '#c43a26'; g.fillRect(m.x + m.w * .08, m.y + m.h * .3, m.w * .84, m.h * .62); } }
     if (P.escaleras) { const s2 = P.escaleras; g.fillStyle = '#bdb8ad'; g.fillRect(s2.x, s2.y, s2.w, s2.h); g.strokeStyle = '#7d7f84'; g.lineWidth = .04; for (let q = 0; q < s2.h; q += .28) { g.beginPath(); g.moveTo(s2.x, s2.y + q); g.lineTo(s2.x + s2.w, s2.y + q); g.stroke(); } }
     if (op.etiquetas !== false && esc > 14) { g.fillStyle = 'rgba(20,24,32,.55)'; g.font = '600 ' + (.42) + 'px system-ui'; g.textAlign = 'center'; for (const c of P.cuartos) if (c.w > 1.8) g.fillText({ bano: 'baño', sala_juntas: 'juntas', recepcion: 'recepción', balcon: 'balcón', rectoria: 'rectoría', sacristia: 'sacristía' }[c.tipo] || c.tipo, c.x + c.w / 2, c.y + c.h / 2); }
     g.restore();
@@ -3644,6 +4038,8 @@ class Hogar {
   muebleEn(x, y) { const P = this.plano(); for (let i = P.muebles.length - 1; i >= 0; i--) { const m = P.muebles[i]; if (x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) return i; } return -1; }
   _guardarMuebles() { this.d.muebles = this.plano().muebles.map(m => ({ tipo: m.tipo, x: +m.x.toFixed(2), y: +m.y.toFixed(2), w: m.w, h: m.h, cuarto: m.cuarto, deco: m.deco, usuario: m.usuario })); }
   /* lo que se guarda (plano y sin datos personales si el jugador no quiso guardar la dirección) */
+  /* el ambiente de la casa (0–100), como el «room» de Los Sims: decorar sube el ánimo de quien vive aquí */
+  ambiente() { return MC.Necesidades ? MC.Necesidades.ambiente(this.plano()) : 50; }
   guardar() { const o = Object.assign({}, this.d); if (!o.guardaDireccion) delete o.direccion; return JSON.parse(JSON.stringify(o)); }
 }
 Object.assign(MC, { Direccion, Hogar });
@@ -3868,6 +4264,55 @@ const Musica = {
   }
 };
 MC.Musica = Musica;
+
+/* ---- js/61-sonido.js ---- */
+/* =====================================================================
+   PAISAJE SONORO · el ambiente que se oye (sin un solo archivo de audio)
+   Como en Cities: Skylines y Los Sims, la ciudad suena según dónde y cuándo: zumbido de tráfico que crece con las
+   avenidas y la hora pico, pájaros al amanecer, chicharras y grillos de noche, lluvia y truenos, viento en lo alto,
+   agua cerca del embalse o del río, y gente en las plazas. Todo sintetizado con WebAudio (ruido filtrado y pulsos).
+   - plan(ctx): PURO (se prueba en Node): qué capas suenan y con qué volumen.
+   - tocar(ctx) / actualizar(ctx) / parar(): el sonido en el navegador (empieza con un toque del jugador).
+   ===================================================================== */
+const Paisaje = {
+  /* ctx: { hora, clima, ruido (0–1, del lugar), agua (m al agua), verde (0–1), gente (0–1), altura (m), velocidad (m/s), adentro } */
+  plan(c = {}) {
+    const h = c.hora ?? 12, cl = c.clima || {}, dentro = c.adentro ? .35 : 1, pico = Math.exp(-((h - 7.5) ** 2) / 2) + Math.exp(-((h - 18) ** 2) / 2.5);
+    const noche = h < 5.5 || h > 19.5 ? 1 : h < 6.5 ? (6.5 - h) : h > 18.5 ? (h - 18.5) : 0;
+    const L = {
+      trafico: clamp((c.ruido ?? .3) * (.45 + .55 * Math.min(1, pico)) * (1 - noche * .55), 0, 1) * dentro,
+      pajaros: clamp((c.verde ?? .3) * (Math.exp(-((h - 6.3) ** 2) / 1.2) + .25 * (h > 6 && h < 17 ? 1 : 0)) * (1 - (cl.lluvia || 0)), 0, 1) * dentro,
+      grillos: clamp(noche * (.4 + (c.verde ?? .3) * .6) * (1 - (cl.lluvia || 0) * .8), 0, 1) * dentro,
+      lluvia: clamp((cl.lluvia || 0) * (c.adentro ? .55 : 1), 0, 1), truenos: clamp(cl.tormenta || 0, 0, 1),
+      viento: clamp(((cl.viento && cl.viento.v) || 2) / 12 + Math.max(0, ((c.altura ?? 1500) - 2000) / 1500) + (c.velocidad || 0) / 30, 0, 1) * dentro,
+      agua: clamp(1 - (c.agua ?? 1e4) / 120, 0, 1) * dentro, gente: clamp((c.gente ?? 0) * (1 - noche * .7), 0, 1) * dentro
+    };
+    for (const k in L) L[k] = +L[k].toFixed(3); return L;
+  },
+  _ac: null, _capas: null,
+  tocar(c) {
+    if (typeof window === 'undefined') return null; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    if (!this._ac) this._ac = new AC(); const ac = this._ac; if (ac.state === 'suspended') ac.resume();
+    if (!this._capas) {
+      const ruido = (tipo) => { const n = ac.sampleRate * 2, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); let ult = 0; for (let i = 0; i < n; i++) { const w = Math.random() * 2 - 1; ult = tipo === 'cafe' ? (ult + .02 * w) / 1.02 : w; d[i] = tipo === 'cafe' ? ult * 3.5 : w; } const s = ac.createBufferSource(); s.buffer = b; s.loop = true; s.start(); return s; };
+      const capa = (fuente, tipo, f, q) => { const fl = ac.createBiquadFilter(); fl.type = tipo; fl.frequency.value = f; fl.Q.value = q || .7; const g = ac.createGain(); g.gain.value = 0; fuente.connect(fl).connect(g).connect(ac.destination); return { g, fl }; };
+      this._capas = { trafico: capa(ruido('cafe'), 'lowpass', 380), lluvia: capa(ruido('blanco'), 'bandpass', 2600, .5), viento: capa(ruido('cafe'), 'bandpass', 520, .4), agua: capa(ruido('blanco'), 'bandpass', 900, 1.2), gente: capa(ruido('cafe'), 'bandpass', 700, 1.8) };
+      this._pulsos = setInterval(() => this._eventos(), 180);
+    }
+    return this.actualizar(c);
+  },
+  actualizar(c) { if (!this._capas) return null; const L = this.plan(c), ac = this._ac, t = ac.currentTime, V = { trafico: .22, lluvia: .2, viento: .12, agua: .1, gente: .08 }; for (const k in this._capas) this._capas[k].g.gain.setTargetAtTime(L[k] * V[k], t, .8); this._L = L; return L; },
+  /* pájaros (silbidos que suben), grillos (pulsos agudos) y truenos (ruido grave con caída) */
+  _eventos() {
+    const ac = this._ac, L = this._L; if (!ac || !L) return; const t = ac.currentTime;
+    const tono = (f0, f1, dur, vol, tipo = 'sine') => { const o = ac.createOscillator(), g = ac.createGain(); o.type = tipo; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur); o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + .05); };
+    if (Math.random() < L.pajaros * .35) { const f = 2400 + Math.random() * 2400; tono(f, f * (1.2 + Math.random() * .5), .08 + Math.random() * .12, .025 * L.pajaros); }
+    if (Math.random() < L.grillos * .6) for (let k = 0; k < 3; k++) setTimeout(() => tono(4300, 4250, .03, .012 * L.grillos, 'square'), k * 45);
+    if (Math.random() < L.truenos * .01) tono(70, 35, 2.2, .25 * L.truenos, 'sawtooth');
+  },
+  parar() { if (this._pulsos) clearInterval(this._pulsos); this._pulsos = null; if (this._ac) { try { this._ac.close(); } catch (e) { /* ya cerrado */ } } this._ac = null; this._capas = null; }
+};
+MC.Paisaje = Paisaje;
 
 /* ---- js/70-interfaz.js ---- */
 /* =====================================================================
@@ -4240,7 +4685,69 @@ class Ocurrencias {
 }
 Object.assign(MC, { Historias, Director, Ocurrencias, PILARES });
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js"];
+/* ---- js/86-necesidades.js ---- */
+/* =====================================================================
+   NECESIDADES Y OBJETOS INTELIGENTES · la casa viva de Los Sims
+   «Las personas son simples y los objetos son inteligentes» (Will Wright): cada objeto ANUNCIA qué necesidad
+   satisface y cuánto. La persona suma los anuncios según qué tan urgente es cada necesidad, los atenúa por la
+   distancia y elige el mejor (con un poco de azar entre los mejores para que no sea un robot).
+   - 8 necesidades (0–100): hambre, energía, vejiga, higiene, diversión, social, comodidad y AMBIENTE.
+   - El AMBIENTE de cada cuarto (como el «room» de Los Sims): decoración, luz (ventanas), tamaño y orden.
+     Decorar la casa (MC.Hogar) sube el ánimo de quien vive ahí.
+   - MC.Habitante vive solo dentro de un plano (MC.Interiores): camina, usa la nevera, duerme, ve televisión…
+   ===================================================================== */
+const MOTIVOS = ['hambre', 'energia', 'vejiga', 'higiene', 'diversion', 'social', 'comodidad', 'ambiente'];
+const DECAE = { hambre: 6, energia: 4, vejiga: 8, higiene: 3, diversion: 5, social: 3, comodidad: 4, ambiente: 0 };   // puntos por hora de juego
+const ANUNCIOS = {   // objeto: { necesidad: puntos que da, min: duración en minutos de juego, accion }
+  nevera: { hambre: 35, min: 15, accion: 'come algo' }, estufa: { hambre: 55, min: 35, accion: 'cocina' }, comedor: { hambre: 25, social: 15, min: 25, accion: 'almuerza' },
+  cama: { energia: 70, comodidad: 20, min: 240, accion: 'duerme' }, cama_sencilla: { energia: 65, comodidad: 15, min: 240, accion: 'duerme' }, hamaca: { energia: 25, comodidad: 30, min: 40, accion: 'se mece en la hamaca' },
+  inodoro: { vejiga: 90, min: 5, accion: 'va al baño' }, ducha: { higiene: 80, min: 15, accion: 'se baña' }, lavamanos: { higiene: 20, min: 3, accion: 'se lava las manos' },
+  sofa: { comodidad: 35, diversion: 10, min: 30, accion: 'descansa en el sofá' }, sofa_l: { comodidad: 40, diversion: 10, min: 30, accion: 'descansa en el sofá' }, sillon: { comodidad: 30, min: 25, accion: 'se sienta' },
+  tv: { diversion: 40, min: 45, accion: 've televisión' }, consola: { diversion: 55, min: 50, accion: 'juega videojuegos' }, biblioteca: { diversion: 30, min: 40, accion: 'lee un libro' },
+  escritorio: { diversion: 15, min: 60, accion: 'estudia' }, acuario: { diversion: 15, ambiente: 5, min: 10, accion: 'mira los peces' }, matera: { ambiente: 3, min: 5, accion: 'riega la matera' }, puff: { comodidad: 20, min: 20, accion: 'se recuesta' },
+  lavadero: { higiene: 10, min: 20, accion: 'lava la ropa' }, banco_trabajo: { diversion: 30, min: 60, accion: 'arregla algo' }
+};
+const DECORA = { matera: 6, cuadro: 7, tapete: 6, lampara: 5, acuario: 10, cojines: 3, hamaca: 4, biblioteca: 4, puff: 2, tv: 2 };
+const Necesidades = {
+  MOTIVOS, DECAE, ANUNCIOS, DECORA,
+  nuevas(v = 70) { return Object.fromEntries(MOTIVOS.map(m => [m, v])); },
+  /* urgencia: una necesidad baja pesa mucho más que una media (curva cuadrática, como en Los Sims) */
+  urgencia(v) { const t = clamp((100 - v) / 100, 0, 1); return t * t * 1.6 + t * .2; },
+  /* puntaje de un objeto para estas necesidades, atenuado por la distancia (m) */
+  puntaje(N, tipo, dist = 0) { const A = ANUNCIOS[tipo]; if (!A) return 0; let s = 0; for (const m of MOTIVOS) if (A[m]) s += A[m] * Necesidades.urgencia(N[m]); return s / (1 + dist / 6); },
+  /* el ambiente de un cuarto (0–100): decoración por m², luz de las ventanas, tamaño y que no esté abarrotado */
+  ambienteCuarto(P, c) {
+    const area = Math.max(1, c.w * c.h), dentro = m => m.x + m.w / 2 >= c.x && m.x + m.w / 2 <= c.x + c.w && m.y + m.h / 2 >= c.y && m.y + m.h / 2 <= c.y + c.h, M = P.muebles.filter(dentro);
+    let deco = 0; for (const m of M) deco += DECORA[m.tipo] || 0; const ocupado = M.reduce((a, m) => a + (m.tipo === 'tapete' || m.tipo === 'cuadro' ? 0 : m.w * m.h), 0) / area;
+    const luz = P.ventanas.filter(v => (v.vertical ? Math.abs(v.x - c.x) < .05 || Math.abs(v.x - c.x - c.w) < .05 : Math.abs(v.y - c.y) < .05 || Math.abs(v.y - c.y - c.h) < .05) && (v.vertical ? v.y >= c.y && v.y <= c.y + c.h : v.x >= c.x && v.x <= c.x + c.w)).length;
+    return Math.round(clamp(30 + Math.min(35, deco * 18 / Math.sqrt(area)) + Math.min(20, luz * 10) + Math.min(10, area / 2) - Math.max(0, ocupado - .45) * 60, 0, 100));
+  },
+  /* ambiente de la casa: promedio de los cuartos de estar (no cuenta baños ni ropas) */
+  ambiente(P) { const C = P.cuartos.filter(c => !['bano', 'ropas', 'bodega', 'pasillo'].includes(c.tipo)); if (!C.length) return 50; const v = C.map(c => Necesidades.ambienteCuarto(P, c)); return Math.round(v.reduce((a, b) => a + b, 0) / v.length); }
+};
+/* alguien que vive solo dentro de un plano: elige, camina, usa y vuelve a elegir */
+class Habitante {
+  constructor(P, op = {}) { this.P = P; const ent = P.puertas.find(p => p.entrada) || { x: P.ancho / 2, y: .6 }; this.x = op.x ?? ent.x; this.y = op.y ?? Math.max(.7, ent.y + .7); this.a = 0; this.fase = 0; this.N = Necesidades.nuevas(op.inicial ?? 65); this.r = mulberry32(op.semilla || 3); this.accion = null; this.objetivo = null; this.t = 0; this.aspecto = op.aspecto || null; this.nombre = op.nombre || 'Alguien'; }
+  /* dt en segundos reales; minPorSeg: minutos de juego por segundo */
+  paso(dt, minPorSeg = 1) {
+    const horas = dt * minPorSeg / 60; for (const m of MOTIVOS) this.N[m] = clamp(this.N[m] - DECAE[m] * horas, 0, 100); this.N.ambiente = Necesidades.ambiente(this.P);
+    if (this.accion) { const A = ANUNCIOS[this.accion.tipo], k = dt * minPorSeg / A.min; for (const m of MOTIVOS) if (A[m]) this.N[m] = clamp(this.N[m] + A[m] * k, 0, 100); this.accion.resto -= dt * minPorSeg; if (this.accion.resto <= 0) this.accion = null; return this; }
+    if (!this.objetivo) this.elegir();
+    if (this.objetivo) { const o = this.objetivo, tx = o.x + o.w / 2, ty = o.y + o.h / 2, d = Math.hypot(tx - this.x, ty - this.y);
+      if (d < Math.max(o.w, o.h) / 2 + .55) { this.accion = { tipo: o.tipo, resto: ANUNCIOS[o.tipo].min, texto: ANUNCIOS[o.tipo].accion }; this.objetivo = null; MC.emit('habitante', { h: this, accion: this.accion }); return this; }
+      const v = 1.3 * dt, ux = (tx - this.x) / d, uy = (ty - this.y) / d; let nx = this.x + ux * v, ny = this.y + uy * v; const S = this.P.solido;
+      if (!S(nx, ny)) { this.x = nx; this.y = ny; } else if (!S(nx, this.y)) this.x = nx; else if (!S(this.x, ny)) this.y = ny; else { this.atasco = (this.atasco || 0) + dt; if (this.atasco > 1.5) { this.atasco = 0; this.objetivo = null; this.evitar = o; } }
+      this.a = Math.atan2(uy, ux); this.fase += v * 3; }
+    return this;
+  }
+  /* los tres mejores anuncios y uno de ellos al azar (ponderado): vivo, pero no robótico */
+  elegir() { const L = []; for (const m of this.P.muebles) { if (m === this.evitar || !ANUNCIOS[m.tipo]) continue; const s = Necesidades.puntaje(this.N, m.tipo, Math.hypot(m.x + m.w / 2 - this.x, m.y + m.h / 2 - this.y)); if (s > .5) L.push([s, m]); } L.sort((a, b) => b[0] - a[0]); const T = L.slice(0, 3).filter(q => q[0] >= L[0][0] * .6); /* solo los que valen casi tanto como el mejor */ if (!T.length) return null; const tot = T.reduce((a, q) => a + q[0], 0); let x = this.r() * tot; for (const [s, m] of T) { x -= s; if (x <= 0) { this.objetivo = m; this.evitar = null; return m; } } this.objetivo = T[0][1]; return T[0][1]; }
+  /* la necesidad más baja (para mostrar un globito de pensamiento) */
+  masUrgente() { let b = null; for (const m of MOTIVOS) if (m !== 'ambiente' && (!b || this.N[m] < this.N[b])) b = m; return b; }
+}
+Object.assign(MC, { Necesidades, Habitante });
+
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

@@ -18,7 +18,7 @@ const Vista2D = {
     const p = clamp(cam.pitch, .15, 1.47); return { yaw: cam.yaw, k: Math.cos(p), hk: Math.sin(p) };
   },
   dibujar(g, W, H, E, op = {}) {
-    const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw);
+    const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw); Ondas.presupuesto = 12;
     /* matriz mundo → pantalla (sin altura) */
     const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
@@ -50,30 +50,38 @@ const Vista2D = {
     g.restore();
     const noche0 = E.cielo ? E.cielo.noche : 0; if (noche0 > .02) { g.fillStyle = 'rgba(8,18,52,' + (noche0 * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     /* ---------- lo que se levanta: edificios, pasos elevados, vehículos y gente, en orden de profundidad ---------- */
-    const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f;
-    if (modo !== 'cenital') {
-      const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * (E.calidad ?? 1));
-      const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
-      const lista = E.mundo.edificiosEn(x0, y0, x1, y1).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
-      for (const q of lista) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q });
-      for (const q of E.mundo.sitios().E) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); }
+    const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
+    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H }, luces = [];
+    const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
+    /* sombras del sol de esta hora (también de edificios que están fuera de la pantalla y la alcanzan) */
+    const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3;
+    const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * cal);
+    if (modo !== 'cenital' || conSombra) {
+      const pad = conSombra ? Math.min(160, 25 * sv.L) : 0, lista = E.mundo.edificiosEn(x0 - pad, y0 - pad, x1 + pad, y1 + pad).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
+      const sit = E.mundo.sitios().E.filter(q => { const k2 = q.caja; return !(k2[2] < x0 - pad || k2[0] > x1 + pad || k2[3] < y0 - pad || k2[1] > y1 + pad); });
+      if (conSombra) { const S = lista.map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
+      if (modo !== 'cenital') { for (const q of lista) if (q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q }); for (const q of sit) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); } }
     }
+    /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
+    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
+    if (E.capaInfo && E.capaInfo.dibujar) E.capaInfo.dibujar(g, a, b, c, d, e, f, dibCtx);
     for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
     for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
     for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
     if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
     objs.sort((p, q) => p.y - q.y);
-    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H };
     /* rayos X: lo que queda delante del jugador y lo tapa se dibuja transparente */
     const Jc = E.jugador && E.jugador.cuerpo, jKey = Jc ? dy(Jc.x, Jc.y) : 0, jS = Jc ? pr(Jc.x, Jc.y, (Jc.zPaso || 0) + (Jc.z || 0) + 1) : null;
     const tapa = q => { const hw = q.hw != null ? Math.max(q.hw, q.hd) : q.caja ? Math.max(q.caja[2] - q.caja[0], q.caja[3] - q.caja[1]) / 2 : 15, r = hw * z * 1.15 + 12, [bx, by] = pr(q.x, q.y, 0), [, ty] = pr(q.x, q.y, q.h || 10); return Math.abs(jS[0] - bx) < r && jS[1] > ty - 12 && jS[1] < by + hw * z * P.k + 12; };
     for (const o of objs) {
       const rx = Jc && modo !== 'cenital' && (o.t === 0 || o.t === 4) && o.y > jKey && tapa(o.q); if (rx) g.globalAlpha = .28;
       if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
-      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P);
+      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces);
       if (rx) g.globalAlpha = 1;
     }
+    Sombras.luces(g, luces, noche);   // los charcos de luz de los postes, encima de todo (como luz que se suma)
     /* cables del Metrocable: el cable entre torres por encima de todo */
     if (E.cables) this.cables(dibCtx, E.cables);
     /* etiquetas (estaciones, lugares) */
@@ -89,7 +97,16 @@ const Vista2D = {
       const j = (i + 1) % n, ex = B[j][0] - B[i][0], ey = B[j][1] - B[i][1], ny = ex * sg; if (ny <= 0) continue;   // el muro mira hacia abajo de la pantalla: se ve
       const lz = clamp(.72 + .28 * (ey * sg / (Math.hypot(ex, ey) || 1)) * D.luzX + .1, .55, 1.05) - noche * .45;
       g.fillStyle = tono(muro, lz - 1); g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
-      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) { for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u - (T[i][1] - B[i][1]) * -v; g.fillStyle = lit ? 'rgba(255,214,120,' + (.55 + noche * .4) + ')' : 'rgba(25,35,50,.32)'; g.fillRect(x, y, Math.max(1, ex / cols * .45), Math.max(1, z * 1.2)); } } }
+      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
+        /* fachada por reglas (WFC, como Townscaper): locales, vitrinas y puerta abajo; balcones alineados; muros ciegos */
+        const FZ = pisos * cols <= 48 && z > 2.2 ? Ondas.fachadaCache(ventanas * 31 + i, pisos, cols) : null, alturaV = (T[i][1] - B[i][1]);
+        const fm = MC.arte.f('fachadaModulo');   // arte del juego: fachadaModulo(g, tipo, x, y, ancho, alto, encendida, D) → true si lo dibujó
+        for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const tipo = FZ ? FZ[pisos - 1 - p][q] : 'ventana'; if (tipo === 'muro') continue; const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u + alturaV * v, w = Math.max(1, ex / cols * .45);
+          if (fm && fm(g, tipo, x, y, w, Math.max(1, z * 1.2), lit, D) === true) continue;
+          if (tipo === 'local' || tipo === 'vitrina') { const yb = B[i][1] + ey * u + alturaV * (p + .08) / pisos; g.fillStyle = noche > .3 ? 'rgba(255,226,150,' + (.5 + noche * .4) + ')' : 'rgba(120,160,190,.55)'; g.fillRect(x - w * .25, yb - z * 1.9, w * 1.5, z * 1.9); if (tipo === 'vitrina') { g.fillStyle = ['#c43a26', '#2f80ed', '#2e7d32', '#f2b705'][(ventanas + q) % 4]; g.fillRect(x - w * .35, yb - z * 2.4, w * 1.7, Math.max(1, z * .45)); } continue; }
+          if (tipo === 'puerta') { const yb = B[i][1] + ey * u + alturaV * .02; g.fillStyle = '#4a2f22'; g.fillRect(x, yb - z * 2.1, w * .8, z * 2.1); continue; }
+          g.fillStyle = lit ? 'rgba(255,214,120,' + (.55 + noche * .4) + ')' : 'rgba(25,35,50,.32)'; g.fillRect(x, y, w, Math.max(1, z * 1.2));
+          if (tipo === 'balcon') { g.fillStyle = 'rgba(40,44,52,.55)'; g.fillRect(x - w * .2, y + Math.max(1, z * 1.2), w * 1.4, Math.max(1, z * .3)); } } } }
     }
     g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();

@@ -26,6 +26,8 @@ function estiloEdificio(mundo, e) {
 class Losas {
   constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; }
   limpiar() { this.cache.clear(); this.version++; }
+  /* borra las losas de una caja (cuando la ciudad crece o cambia) */
+  invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) this.cache.delete(k); } this.version++; }
   /* la losa (gx, gy) a res px por metro; se pinta si no está (o se pone en cola si `diferir`) */
   losa(gx, gy, res, diferir, sinTechos) {
     const k = gx + ',' + gy + ',' + res + ',' + (sinTechos ? 1 : 0) + ',' + MC.arte.activa; let c = this.cache.get(k);
@@ -74,7 +76,7 @@ class Losas {
     }
     /* 5. techos de las huellas reales (sombra suave al sureste) y tanques en las laderas */
     const E = lejos ? [] : M.edificiosEn(x0, y0, x0 + L, y0 + L).sort((a, b) => a.h - b.h);
-    for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(6, b.h * .25); g.fillStyle = 'rgba(20,24,40,.22)'; g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
+    for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(1.4, .3 + b.h * .04); g.fillStyle = 'rgba(20,24,40,.2)';   /* solo oclusión de contacto: la sombra del sol la pone MC.Sombras según la hora */ g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
     if (!sinTechos) for (const b of E) this.techo(g, b, M);
     if (!sinTechos) for (const b of SI.E) if (dentroL(b.caja)) { g.fillStyle = b.techo === 'cupula' ? '#56665f' : b.clase === 'iglesia' ? '#b5542f' : '#bdbcb6'; this._poly(g, b.R); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .4; this._poly(g, b.R, true); }
     g.restore();

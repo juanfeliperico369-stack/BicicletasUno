@@ -169,6 +169,17 @@ class Mundo {
   /* los edificios de una región: { x, y, hw, hd, ux, uy, h, pis, k, clase, P (polígono o null), s (semilla) } */
   edificiosRegion(rx, ry) {
     const E = this._ed(); if (!E || rx < 0 || ry < 0 || rx >= E.nx || ry >= E.ny) return [];
+    const X = this._extra && this._extra.get(ry * E.nx + rx); if (X && X.length) { const B = this._edRegionBase(E, rx, ry); return B.concat(X); }
+    return this._edRegionBase(E, rx, ry);
+  }
+  /* edificios agregados en el juego (la ciudad crece: MC.Urbe) */
+  agregarEdificio({ x, y, hw = 4, hd = 4, ang = 0, pis = 1, clase = 'casa', k = 0, urbe = null }) {
+    const E = this._ed(); if (!E) return null; const R = E.R, r = Math.floor(y / R) * E.nx + Math.floor(x / R), ux = Math.cos(ang), uy = Math.sin(ang);
+    const e = { x, y, hw, hd, ux, uy, h: Mundo.altoEdificio(k, pis), pis, k, clase, P: null, of: 0, s: h2(x * 2 | 0, y * 2 | 0, 9), agregado: true, urbe };
+    this._extra = this._extra || new Map(); (this._extra.get(r) || this._extra.set(r, []).get(r)).push(e); MC.emit('edificio', e); return e;
+  }
+  quitarEdificio(e) { if (!this._extra) return false; for (const L of this._extra.values()) { const i = L.indexOf(e); if (i >= 0) { L.splice(i, 1); return true; } } return false; }
+  _edRegionBase(E, rx, ry) {
     if (E.json) return E.reg.get(ry * E.nx + rx) || [];
     const r = ry * E.nx + rx; let L = E.cache.get(r); if (L) { E.cache.delete(r); E.cache.set(r, L); return L; }
     const b = E.b, n = E.cnt[r], R = E.R, Q = E.Q, X0 = rx * R, Y0 = ry * R; L = [];

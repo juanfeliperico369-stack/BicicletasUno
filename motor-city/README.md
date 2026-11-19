@@ -8,12 +8,11 @@
 | | |
 |---|---|
 | **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/> · minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
-| Versión | **2.2.0** · `VERSION.json` |
+| **Documento único** (contexto, código a usar y plan de cada IA) | [`docs/DOCUMENTO-UNICO.md`](docs/DOCUMENTO-UNICO.md) · todo junto con anexos: `dist/MOTOR-CITY-TODO.md` |
+| Versión | **2.3.0** · `VERSION.json` |
 | Cómo se usa | [`docs/MANUAL.md`](docs/MANUAL.md) |
 | Guía completa | [`docs/GUIA.md`](docs/GUIA.md) |
 | Contrato técnico | [`MOTOR.md`](MOTOR.md) |
-| Plan de cada IA | [`docs/PLAN-IAS.md`](docs/PLAN-IAS.md) |
-| Peticiones a Gemini y ChatGPT | [`docs/PETICION-GEMINI.md`](docs/PETICION-GEMINI.md) · [`docs/PETICION-CHATGPT.md`](docs/PETICION-CHATGPT.md) |
 | Investigación | [`docs/INVESTIGACION.md`](docs/INVESTIGACION.md) |
 | Optimización | [`docs/OPTIMIZACION.md`](docs/OPTIMIZACION.md) |
 | Usos y negocio | [`docs/NEGOCIO-Y-USOS.md`](docs/NEGOCIO-Y-USOS.md) |
@@ -46,11 +45,20 @@
 - **Interfaz que no estorba:** el centro es del juego, lo que no cambia se atenúa y hay un aviso a la vez.
 - **Sprites** con atlas, animación por fase, 8 direcciones, 9‑slice y fondo magenta.
 - **Música procedural:** electrónica, rock, jazz y lo‑fi, más clásicos de dominio público.
+- **2.3, la ciudad como SimCity, Los Sims, Cities: Skylines y Townscaper:**
+  - **sombras del sol** según la hora;
+  - **mobiliario urbano** (postes, árboles, bancas, paraderos, cebras) y luces de noche;
+  - **fachadas armadas por reglas** (WFC);
+  - **simulación de ciudad** (zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles y presupuesto), con **capas de datos**;
+  - **objetos inteligentes** (alguien vive en tu casa y usa lo que pongas);
+  - rejilla irregular y autotile;
+  - **paisaje sonoro**.
 
 ## Trabajar en el motor
 ```bash
 node motor.mjs construir            # dist/motor.js, los mundos, dist/motor-city.html y dist/juegos/*.html
-node motor.mjs prueba --navegador   # 103 pruebas: ciencia, mundo, física, vistas, casa, lugares, historias, cosmos y Mandados
+node motor.mjs prueba --navegador   # 109 pruebas: ciencia, mundo, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
+node motor.mjs documento            # dist/MOTOR-CITY-TODO.md: el documento único con todo
 node motor.mjs nuevo juego nombre   # un juego nuevo desde la plantilla
 node motor.mjs reporte "título" --juego encicla   # obligatorio si otra IA cambia el motor
 node motor.mjs sincronizar ../BicicletasUno       # copia el motor a BicicletasUno/motor-city/
@@ -60,7 +68,7 @@ python3 geo/territorio.py --id x --nombre "X" --bbox=lon0,latS,lon1,latN   # cra
 ## Estructura
 | Carpeta o archivo | Qué hay |
 |---|---|
-| `js/` | El motor en fragmentos numerados (`00-` a `85-`) → `dist/motor.js`. `valle.js` es el lector 1.x de EnCicla (no se toca). |
+| `js/` | El motor en fragmentos numerados (`00-` a `86-`) → `dist/motor.js`. `valle.js` es el lector 1.x de EnCicla (no se toca). |
 | `juegos/` | Juegos hechos con el motor (Mandados) → `dist/juegos/*.html`. |
 | `plantillas/` | Plantillas de juego y de módulo. |
 | `ciudades/`, `datos/` | Reglas de estilo de cada lugar y sus mundos MC4. |

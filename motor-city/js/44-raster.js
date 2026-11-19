@@ -22,7 +22,7 @@ class Raster {
     /* cielo */
     const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, css3(cielo.top)); gr.addColorStop(.55, css3(cielo.hor)); gr.addColorStop(1, css3(bruma)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
     const cam = (x, y, z) => { const dx = x - o[0], dy = y - o[1], dz = z - o[2]; return [dx * rx + dy * ry, dx * ux + dy * uy + dz * uz, dx * fx + dy * fy + dz * fz]; };
-    const L = [], Ls = []; const tanH = Math.tan((C.fov || 1) / 2) * (W / H) * 1.25;
+    const L = [], Ls = [], Lsh = []; const tanH = Math.tan((C.fov || 1) / 2) * (W / H) * 1.25;
     const visible = (x, y, r) => { const dx = x - o[0], dy = y - o[1], fl = Math.hypot(fx, fy) || 1, d = (dx * fx + dy * fy) / fl; if (d < -r) return false; const lat = Math.abs(dx * rx + dy * ry); return lat <= (Math.max(d, 0) + r * 2) * tanH + r + 30 && Math.hypot(dx, dy) < R + r; };
     const sombra = (nx, ny, nz) => clamp(.42 + .5 * amb + luz * Math.max(0, nx * sol.x + ny * sol.y + nz * sol.z) * .55 - (cielo.noche || 0) * .3, .3, 1.15);
     const color = (c, k, d) => css3(mez3([c[0] * k, c[1] * k, c[2] * k], bruma, clamp((d - cerca) / Math.max(1, lejos - cerca), 0, 1)));
@@ -31,7 +31,7 @@ class Raster {
       let Q = P.map(p => cam(p[0], p[1], p[2])), S = [];
       for (let i = 0; i < Q.length; i++) { const a = Q[i], c = Q[(i + 1) % Q.length], ia = a[2] >= NEAR, ic = c[2] >= NEAR; if (ia) S.push(a); if (ia !== ic) { const t = (NEAR - a[2]) / (c[2] - a[2]); S.push([a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t, NEAR]); } }
       if (S.length < 3) return; let d = 0; for (const s of S) d += s[2]; d /= S.length; if (d > lejos * 1.15) return;
-      (suelo ? Ls : L).push({ d, pts: S.map(s => [W / 2 + s[0] / s[2] * F, H / 2 - s[1] / s[2] * F]), fill: color(col, k, d) });
+      (suelo === 2 ? Lsh : suelo ? Ls : L).push({ d, pts: S.map(s => [W / 2 + s[0] / s[2] * F, H / 2 - s[1] / s[2] * F]), fill: suelo === 2 ? col : color(col, k, d), sh: suelo === 2 });
     };
     /* relieve: rejilla alrededor del ojo, más fina con más calidad */
     const PAL = (MC.arte.dato('suelo', PAL_SUELO) || PAL_SUELO).map(hex3), paso = cal > .75 ? 14 : cal > .5 ? 20 : 28, cx0 = Math.floor((o[0] - R) / paso), cx1 = Math.ceil((o[0] + R) / paso), cy0 = Math.floor((o[1] - R) / paso), cy1 = Math.ceil((o[1] + R) / paso);
@@ -59,7 +59,8 @@ class Raster {
     };
     const Rb = R * .8, maxB = Math.round(90 + 420 * cal), lista = M.edificiosEn(o[0] - Rb, o[1] - Rb, o[0] + Rb, o[1] + Rb).filter(q => visible(q.x, q.y, Math.max(q.hw, q.hd)));
     if (lista.length > maxB) { lista.sort((p, q) => Math.hypot(p.x - o[0], p.y - o[1]) - Math.hypot(q.x - o[0], q.y - o[1])); lista.length = maxB; }
-    for (const q of lista) { const st = estiloEdificio(M, q), z0 = this._z(q.x, q.y); prisma(Mundo.esquinas(q), z0, z0 + q.h, hex3(st.muro), hex3(st.techo)); }
+    const sv = Sombras.vector(cielo), aS = sv ? (.38 * sv.fuerza).toFixed(3) : 0;
+    for (const q of lista) { const st = estiloEdificio(M, q), z0 = this._z(q.x, q.y), Pq = Mundo.esquinas(q); prisma(Pq, z0, z0 + q.h, hex3(st.muro), hex3(st.techo)); if (sv && sv.fuerza > .05) poly(Sombras.poligono(Pq, q.h, sv).map(p => [p[0], p[1], z0 + .25]), 'rgba(18,26,46,' + aS + ')', 1, 2); }
     for (const q of M.sitios().E) { if (!visible(q.x, q.y, 40)) continue; const z0 = this._z(q.x, q.y); for (const Rr of q.R.slice(0, 1)) prisma(Rr, z0, z0 + Math.min(q.h, 60), hex3('#d9d4c9'), hex3('#b5542f')); }
     /* tráfico (cajas) y gente (de perfil, como recortes en la escena) */
     for (const v of E.vehiculos || []) {
@@ -79,11 +80,11 @@ class Raster {
     }
     for (const x of E.extras || []) if (x.dibujar3d) figura(x.x, x.y, this._z(x.x, x.y) + (x.z || 0), (sx, sy, esc) => x.dibujar3d(g, sx, sy, esc));
     /* pintor: primero el piso (relieve y calles) y encima lo que se levanta, cada capa de lejos a cerca */
-    Ls.sort((p, q) => q.d - p.d); L.sort((p, q) => q.d - p.d); this.n = Ls.length + L.length;
-    for (const it of Ls.concat(L)) {
+    Ls.sort((p, q) => q.d - p.d); L.sort((p, q) => q.d - p.d); this.n = Ls.length + L.length + Lsh.length;
+    for (const it of Ls.concat(Lsh, L)) {
       if (it.fn) { it.fn(); continue; }
       const P = it.pts; g.fillStyle = it.fill; g.beginPath(); g.moveTo(P[0][0], P[0][1]); for (let i = 1; i < P.length; i++) g.lineTo(P[i][0], P[i][1]); g.closePath(); g.fill();
-      if (cal > .6) { g.strokeStyle = it.fill; g.lineWidth = .7; g.stroke(); }   // tapa las rendijas entre polígonos
+      if (cal > .6 && !it.sh) { g.strokeStyle = it.fill; g.lineWidth = .7; g.stroke(); }   // tapa las rendijas entre polígonos
     }
     /* luz de noche: una capa azul y los faroles como puntos (barato) */
     if ((cielo.noche || 0) > .05) { g.fillStyle = 'rgba(10,20,60,' + (cielo.noche * .35).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }

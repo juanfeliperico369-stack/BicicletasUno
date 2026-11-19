@@ -59,6 +59,8 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 | Minijuego, HTML y link web | ✅ | `juegos/mandados` → `dist/juegos/mandados.html` · <https://juanfeliperico369-stack.github.io/motorcity/> (Pages sirve `main`) |
 | Documentos | ✅ | `docs/MANUAL.md`, `GUIA.md`, `INVESTIGACION.md`, `OPTIMIZACION.md`, `PLAN-IAS.md`, `PETICION-*.md` y `NEGOCIO-Y-USOS.md` |
 | Repo abierto a las IAs de los juegos, con reportes | ✅ | `CONTRIBUIR.md`, `AGENTS.md`, `reportes/`, `node motor.mjs reporte` |
+| **2.3 · SimCity, Los Sims, Cities: Skylines y Townscaper** | ✅ | `39-sombras` (sol por hora), `27-mobiliario` (props y luces), fachadas WFC (`14-ondas`), `26-urbe` (ciudad y capas de datos), `86-necesidades` (objetos inteligentes), `61-sonido` (paisaje sonoro). Mandados con modo alcalde. |
+| **Un solo documento con todo** | ✅ | `docs/DOCUMENTO-UNICO.md` (contexto, código a usar y plan de cada IA) y `dist/MOTOR-CITY-TODO.md` (con anexos; `node motor.mjs documento`) |
 
 ## 4. Decisiones que no hay que deshacer sin motivo
 1. **El mundo 2.0 junta los datos ya generados** por los dos juegos, que comparten el mismo origen. Así no hacen falta los 190 MB de fuentes ni Python para tener el mundo. La tubería `geo/` sigue para regenerar desde cero (y ya acepta otra ciudad con `CIUDAD=ciudades/x.json`).
@@ -95,7 +97,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 103 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 109 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»

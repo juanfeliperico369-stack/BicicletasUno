@@ -1,6 +1,6 @@
 # Instrucciones para agentes (Codex, Gemini, Claude, Cursor…)
 
-Lee en este orden: `README.md` → `CONTEXTO-IA.md` → `MOTOR.md` → `CONTRIBUIR.md`.
+**Lee primero `docs/DOCUMENTO-UNICO.md`** (todo el contexto, el código a usar y el plan de cada IA). Después, si vas a tocar el motor: `CONTEXTO-IA.md` → `MOTOR.md` → `CONTRIBUIR.md`. Todo junto en un archivo: `node motor.mjs documento` → `dist/MOTOR-CITY-TODO.md`.
 
 Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas Claude:**
 
@@ -12,4 +12,4 @@ Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas 
 | `motor-city-ciencia` | Números reales |
 | `motor-city-arte` | Arte |
 
-**Comandos:** `node motor.mjs construir` · `node motor.mjs prueba --navegador` (todo en verde) · `node motor.mjs reporte "título" --juego X` (obligatorio si cambias el motor desde otro juego).
+**Comandos:** `node motor.mjs construir` · `node motor.mjs prueba --navegador` (todo en verde) · `node motor.mjs reporte "título" --juego X` (obligatorio si cambias el motor desde otro juego) · `node motor.mjs documento`.

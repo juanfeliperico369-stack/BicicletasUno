@@ -1,6 +1,6 @@
 # Motor City · el contrato
 
-**Versión 2.2.0 · 19‑nov‑2026.** Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 2.3.0 · 19‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -119,6 +119,13 @@ Se incluye con un `<script>` (o pegado en el HTML único) **antes** del código 
 | Interfaz | `70-interfaz.js` | `MC.UI.crear(raiz, { tema })`: `ficha`, `boton`, `barra`, `aviso` (en cola), `mision`, `dialogo`, `menu`, `minimapa`, `foco`, `cine`, `zonaLibre`; `MC.UI.verificar(ui)` |
 | Mecánicas | `80-mecanicas.js` | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo` |
 | Lugares | `82-lugares.js` | `MC.Lugares.en`, `cerca`, `hacer(lugar, actividad, ctx)`, `interior`, `TIPOS`; `MC.Desgaste` (usar, reparar, mejorar, aplicar) |
+| Ondas | `14-ondas.js` | `MC.Ondas.resolver({ ancho, alto, fichas, compat, fijos, semilla })` (WFC), `fachada(pisos, cols, semilla)`, `fachadaCache`; `MC.Autotile.mascara4`, `mascara8`, `esquinas`; `MC.RejillaIrregular.crear({ anillos, lado, semilla })` |
+| Urbe | `26-urbe.js` | `new MC.Urbe(mundo, { libro, centro, caja, alCambiar })`: `zonificar(tipo, x, y, r, dens)`, `quitarZonas`, `servicio(tipo, x, y)`, `avanzar(meses)`, `demanda()`, `valorEn`, `campoEn`, `capa(nombre)` (→ `E.capaInfo`), `resumen`, `guardar`; `MC.ZONAS_URBE`, `MC.SERVICIOS_URBE` |
+| Mobiliario | `27-mobiliario.js` | `MC.Mobiliario.en(mundo, x0, y0, x1, y1)`: postes, árboles, bancas, canecas, paraderos, hidrantes y cebras por vía (las vistas 2D lo dibujan solo; gancho de arte `prop`) |
+| Sombras | `39-sombras.js` | `MC.Sombras.vector(cielo)`, `poligono`, `dibujar2D`, `contacto` y `luces` (las vistas 2D y el raster las usan solas) |
+| Paisaje | `61-sonido.js` | `MC.Paisaje.plan(ctx)` (puro), `tocar`, `actualizar` y `parar` |
+| Necesidades | `86-necesidades.js` | `MC.Necesidades` (`ANUNCIOS`, `urgencia`, `puntaje`, `ambiente(plano)`), `new MC.Habitante(plano, { semilla })` con `paso(dt, minPorSeg)`; `MC.Hogar.ambiente()` |
+| Mundo (2.3) | `10-mundo.js` | `mundo.agregarEdificio({ x, y, hw, hd, ang, pis, clase })` y `quitarEdificio`; `vistas.losas.invalidar(x0, y0, x1, y1)` |
 | Historias | `85-historias.js` | `MC.Historias` (storylets con pilares, `elegir`, `encargo`), `MC.Director` (ritmo y dificultad), `MC.Ocurrencias` (vigilar, rescatar, exportar) |
 
 **La escena** que reciben las vistas: `{ mundo, camara, reloj, clima, cielo, transporte, jugador: { cuerpo, aspecto }, vehiculos, trafico, peatones, cables, pano: { trazo, s, id }, extras: [{ x, y, dibujar }], t }`. El banco de pruebas (`sandbox/10-juego.js`) es el ejemplo completo de un juego sobre el motor, en unas 150 líneas.
@@ -212,6 +219,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.3.0** | 19‑nov‑2026 | Lo aprendido de SimCity, Los Sims, Cities: Skylines y Townscaper: sombras del sol por hora (2D y raster), mobiliario urbano y luces de noche, fachadas por reglas (WFC), `MC.Urbe` (zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y capas de datos), objetos inteligentes y `MC.Habitante`, `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular` y `MC.Paisaje`. Ganchos de arte `prop`, `fachadaModulo` y `mueble`. Documento único. 109 pruebas. |
 | **2.2.0** | 19‑nov‑2026 | GPU virtual (perfil, resolución dinámica, bucle de paso fijo y raster 3D por software). Física de niveles por superficies. Cámara con resortes, brazo con choque, FOV por velocidad y trauma. **Vista lateral.** Manejo (curvas, esquemas y asistencias), sprites, escala real, interfaz por zonas, interiores con 8 estilos y catálogo, **Mi casa** desde la dirección, lugares jugables y desgaste, historias con director, ocurrencias y cosmos. 103 pruebas. |
 | **2.1.0** | 19‑nov‑2026 | Nombre: solo «Motor City» (carpeta `motor-city/`). Ciencia, economía, generador de mundos, territorios (`geo/territorio.py`), clima global, seres, taller, IA y población, interiores, música, interfaz y mecánicas. Minijuego Mandados, plantillas, reportes y skills. 80 pruebas. |
 | **2.0.0** | 19‑nov‑2026 | **Motor City.** La fuente de verdad pasa a `motorcity`.<br>• Mundo 2.0 en un solo archivo (MC4), con todas las huellas, sitios, pasos con nivel, transporte, lugares y tráfico.<br>• El motor en el navegador: personaje, vehículos, física, controles, cámara, 8 vistas más pixel, panorámica de perfil, WebGL, reglas del mundo y Run en la ciclovía.<br>• Banco de pruebas jugable y 54 pruebas.<br>• La tubería 1.x sigue igual (y ya lee cualquier ventana de ciudad). |

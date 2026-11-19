@@ -70,3 +70,4 @@ const sha = b => crypto.createHash('sha1').update(b).digest('hex').slice(0, 8);
 const info = { version: VER.version, motor_kb: Math.round(motor.length / 1024), mundo_kb: Math.round(mundoJS.length / 1024), html_kb: html ? Math.round(html.length / 1024) : null, sha: sha(motor), archivos: lista.length };
 fs.writeFileSync(path.join(DIST, 'construccion.json'), JSON.stringify(info, null, 1));
 console.log(`✓ Motor City ${VER.version}: motor.js ${info.motor_kb} KB (${lista.length} archivos) · mundo ${info.mundo_kb} KB` + (html ? ` · motor-city.html ${info.html_kb} KB` : '') + (juegos.length ? ' · juegos: ' + juegos.join(', ') : ''));
+await import('./documento.mjs');   // el documento único con anexos (dist/MOTOR-CITY-TODO.md) siempre al día

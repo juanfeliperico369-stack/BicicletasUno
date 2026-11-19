@@ -14,3 +14,10 @@ description: El arte en Motor City - pieles por juego con funciones de dibujo (h
 - **Las zonas de estilo** de cada ciudad están en `ciudades/<id>.json` y salen de mirarla desde arriba. Nunca se copian imágenes al juego.
 - **Imágenes** (solo lo que el código no logra): sin texto ni logos; de perfil mirando a la derecha; cenital mirando al oriente; 16 px por metro; luz de arriba a la izquierda; sin sombra proyectada; WebP con transparencia y en base64.
 - **Pedir a Gemini y ChatGPT:** `docs/PETICION-GEMINI.md` y `docs/PETICION-CHATGPT.md`. Cada uno entrega **un solo documento**, y la IA del motor lo integra y lo prueba.
+
+## Ganchos de arte de la 2.3 (ciudad con detalle)
+- `prop(g, p, x, y, pxPorMetro, D)`: mobiliario urbano. `p.t` es `poste`, `arbol`, `banca`, `caneca`, `paradero`, `hidrante` o `cebra`; `p.v` es la variante (0–1).
+- `fachadaModulo(g, tipo, x, y, ancho, alto, encendida, D)`: módulos de fachada que eligen las reglas (WFC): `ventana`, `balcon`, `local`, `vitrina` o `puerta`.
+- `mueble(g, m, estilo, P)`: muebles del plano, en metros (`m.tipo`, `m.x`, `m.y`, `m.w`, `m.h`; `estilo` es uno de los 8).
+- Si el gancho devuelve `true`, el motor no dibuja el suyo. **Las sombras las pone el motor:** el arte va sin sombra proyectada.
+- Los encargos están en `docs/DOCUMENTO-UNICO.md`, §10.1 (G‑M10 a G‑M14 son nuevos).

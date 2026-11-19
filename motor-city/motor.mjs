@@ -10,6 +10,7 @@
      node motor.mjs sincronizar RUTA_JUEGO [--verificar]      copia el motor a RUTA_JUEGO/motor-city (o solo compara)
      node motor.mjs nuevo juego|modulo NOMBRE                  arma un juego o un módulo nuevo desde plantillas
      node motor.mjs reporte "título"                           abre un reporte de cambios para la IA del motor
+     node motor.mjs documento                                  arma dist/MOTOR-CITY-TODO.md (el documento único + anexos)
      python3 geo/territorio.py --id ID --bbox=lon0,latS,lon1,latN   craquea cualquier lugar del mundo a datos/ID/mundo.mc4
    Mapa 1.x (sigue igual, para los datos que hoy leen los juegos):
    ---------------------------------------------------------------------
@@ -53,6 +54,7 @@ else if (cmd === 'prueba') nodo('pruebas/prueba.mjs', args.slice(1));
 else if (cmd === 'sincronizar') nodo('herramientas/sincronizar.mjs', args.slice(1));
 else if (cmd === 'nuevo') nodo('herramientas/nuevo.mjs', args.slice(1));
 else if (cmd === 'reporte') nodo('herramientas/reporte.mjs', args.slice(1));
+else if (cmd === 'documento') nodo('herramientas/documento.mjs', args.slice(1));
 else if (cmd === 'fuentes') { py('fetch.py'); py('oficial.py'); }
 else if (cmd === 'encicla') {
   const out = prueba ? salida('encicla') : path.join(ROOT, 'src', 'data');
