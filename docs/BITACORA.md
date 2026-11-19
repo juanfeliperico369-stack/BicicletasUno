@@ -486,6 +486,25 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 2026-11-19 · v2.0.1 · Motor del Valle 1.2.0: un solo motor otra vez
+
+**Qué cambió**
+- **Había dos «1.1.0» del motor:** la de Gemini (en EnCicla) y la de la entrega de El Metro. La de El Metro ponía a MetroZero como fuente de verdad, al revés de lo acordado. Las dos quedaron unidas en la **1.2.0**, con la fuente de verdad en BicicletasUno:
+  - `VERSION.json`: las capas comunes y las propias de cada juego, la propuesta de pasos y el historial.
+  - `js/valle.js`: el lector de EnCicla (`Valle`, también como `JE.valle`) más la interfaz de El Metro (`MotorValle` y `Valle.elmetro`, con MAP, VC y G3).
+  - `motor.mjs version`: mide los datos de los dos juegos.
+  - `capas/index.mjs`: suma las capas de El Metro y la propuesta de pasos.
+  - `sincronizar.mjs --verificar`: compara las dos copias sin copiar, y avisa si alguna dice otra fuente de verdad.
+- Los datos del mapa no cambian: es la misma salida, en los dos juegos.
+- El motor 1.2.0 se copió a El Metro en la rama `motor-valle` de MetroZero, con su compilación y sus 100 partidas.
+
+**Qué se probó**
+- Toda la suite, con la comprobación nueva del motor 1.2.0 en el juego.
+- `motor.mjs version`.
+- `sincronizar --verificar`, antes y después de copiar.
+
+**Qué falta:** las capas propias de El Metro (`vias_datos.mjs`, `rutas_calles.mjs` e `hitos.js`) siguen en su repositorio hasta mudarse a `motor-valle/capas/` (F2).
+
 ## 2026-11-19 · v2.0.0 · La revolución: las dos entregas del plan único en un solo juego
 
 **Qué cambió**

@@ -46,6 +46,6 @@ else if (cmd === 'elmetro') {
 }
 else if (cmd === 'version') {
   console.log('Motor del Valle', VERSION.version, '·', VERSION.fecha);
-  for (const f of ['valle.json', 'valle.bin', 'vias.bin', 'sitios.bin', 'sitios.json', 'alturas.json', 'metroplus.json']) { const p = path.join(ROOT, 'src', 'data', f); if (fs.existsSync(p)) console.log('  ' + f.padEnd(15), sha(p), (fs.statSync(p).size / 1024).toFixed(0) + ' KB'); }
+  for (const f of ['valle.json', 'valle.bin', 'vias.bin', 'sitios.bin', 'sitios.json', 'alturas.json', 'metroplus.json', 'valle.js', 'ciudad.js', 'vias.js', 'puentes.js', 'edificios.js', 'hitos.js', 'metroplus.js', 'metroplus_andenes.js', 'rieles.js', 'rutas_calles.js', 'ajustes.js']) {   /* los datos de los dos juegos (EnCicla y El Metro) */ const p = path.join(ROOT, 'src', 'data', f); if (fs.existsSync(p)) console.log('  ' + f.padEnd(15), sha(p), (fs.statSync(p).size / 1024).toFixed(0) + ' KB'); }
 }
 else { console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(2, 11).join('\n')); }

@@ -1,6 +1,6 @@
 # Motor del Valle · el motor único del mapa
 
-**Versión 1.0.0 · 18‑nov‑2026.**
+**Versión 1.2.0 · 19‑nov‑2026.** (El historial de versiones está al final.)
 
 **Qué es.** El motor del Valle crea el mapa del Valle de Aburrá que comparten **Juega EnCicla** y **El Metro**: es el mismo mapa, cada juego en su resolución.
 
@@ -34,7 +34,8 @@ Lo demás va por aparte, porque cada juego es una obra propia con su trama y sus
 | `node motor-valle/motor.mjs encicla [RUTA_ELMETRO]` | Casillas de **10 m** → `src/data/` de Juega EnCicla: `valle.json`, `valle.bin`, `vias.bin`, `sitios.*`, `alturas.json` y, con la ruta de El Metro, `metroplus.json`. |
 | `node motor-valle/motor.mjs elmetro RUTA_ELMETRO` | Casillas de **20 m** → `RUTA_ELMETRO/src/data/valle.js`, en formato v3 de El Metro, con la misma tubería. |
 | `… --prueba` | Deja la salida en `motor-valle/salida/` sin tocar los juegos. |
-| `node motor-valle/motor.mjs version` | Versión y huella sha1 de cada archivo de datos. |
+| `node motor-valle/motor.mjs version` | Versión y huella sha1 de cada archivo de datos de los dos juegos. |
+| `node motor-valle/sincronizar.mjs RUTA --verificar` | Solo compara las dos copias: la versión, la fuente de verdad y los archivos distintos. No copia nada. |
 
 Requiere Python 3 con `duckdb`, `numpy`, `shapely` y `pillow`, y Node 18 o más nuevo.
 
@@ -96,7 +97,7 @@ El `valle.json` (o `VALLE_META`) trae, entre otros, `barrios`, `munis`, `comunas
   - `js/red-niveles.mjs` arma una red por casilla y nivel: un cruce no conecta niveles distintos, salvo por una rampa.
   - Su prueba es `node tests/prueba-niveles.mjs`.
 - Todavía no cambia la salida del motor. Para adoptarla hay que subir la versión.
-- **Hay dos «1.1.0»:** la de Gemini (aquí) y la que trae la entrega de El Metro. Se deben reconciliar en una 1.2.0 desde este repositorio, que es la fuente de verdad.
+- **Las dos «1.1.0» ya están unidas en la 1.2.0** (ver el historial). Sus capas propias (`vias_datos.mjs`, `rutas_calles.mjs` e `hitos.js`) siguen en el repositorio de El Metro hasta mudarse a `capas/` (F2).
 
 ## Hoja de ruta de la unificación
 - **F1 (hecho, v1.0.0):**
@@ -114,3 +115,12 @@ El `valle.json` (o `VALLE_META`) trae, entre otros, `barrios`, `munis`, `comunas
 - **F4:** las mismas capas en los dos juegos (EnCicla con las huellas de edificios de El Metro; El Metro con sitios, alturas y Metroplús de EnCicla), y una auditoría del mapa que mide los dos con las mismas cifras (`tools/auditoria-mapa.js`).
 
 **Para trabajar al tiempo:** cada IA trabaja en su juego. Un cambio del mapa va en `motor-valle/` del repositorio de EnCicla (la fuente de verdad), sube la versión y se sincroniza al otro.
+
+## Historial
+| Versión | Fecha | Qué cambió |
+|---|---|---|
+| 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y este contrato. |
+| 1.1.0 · EnCicla (Gemini) | 18‑nov‑2026 | Túneles y deprimidos en `geo/alturas.py`, el lector `js/valle.js` y el catálogo `capas/index.mjs`. |
+| 1.1.0 · El Metro | 19‑nov‑2026 | La fachada `MotorValle` (MAP, VC, G3), la huella de los datos de los dos juegos en `version` y sus capas propias. Puso a MetroZero como fuente de verdad, al revés de lo acordado. |
+| **1.2.0** | 19‑nov‑2026 | **Une las dos 1.1.0**, con la fuente de verdad en BicicletasUno. `js/valle.js` trae el lector de EnCicla y la interfaz de El Metro: `Valle` y `MotorValle`, con `Valle.elmetro`. `version` mide los datos de los dos juegos. `sincronizar --verificar` compara las copias y avisa si una dice otra fuente de verdad. El catálogo suma las capas de El Metro y la propuesta de pasos. |
+

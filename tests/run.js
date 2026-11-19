@@ -407,6 +407,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(v2.taller && v2.modal && v2.vehiculos && v2.vel, 'modo libre: un solo Taller con el arte de TallerValle, los 7 vehículos con sus cifras y la velocidad con su valor (×1)');
   ok(v2.boleto1 && v2.boleto2 && v2.boleto3 && v2.flecha && v2.sinErrores, 'el boleto de Rosalba completo (eléctrica, carrera y scooter en Parque Berrío) y la flecha del giro dibujada ' + JSON.stringify(v2).slice(0, 160));
   ok(/^OK/.test(niv), 'propuesta de niveles del motor (red-niveles.mjs): ' + niv.slice(0, 90));
+  const mv12 = await p.evaluate(() => ({ v: typeof Valle !== 'undefined' && Valle.version, alias: typeof MotorValle !== 'undefined' && MotorValle === Valle && JE.valle === Valle, em: typeof Valle.elmetro === 'object' && Valle.elmetro.map === null, suelo: (() => { const q = Valle.decodificar(); return !!q && typeof q.suelo(10, 10) === 'number'; })() }));
+  ok(mv12.v === '1.2.0' && mv12.alias && mv12.em && mv12.suelo, 'Motor del Valle 1.2.0 en el juego: Valle (lector de EnCicla) y MotorValle (nombre de El Metro) ' + JSON.stringify(mv12));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

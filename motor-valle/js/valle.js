@@ -1,5 +1,5 @@
 /* =====================================================================
-   MOTOR DEL VALLE (motor-valle/js/valle.js · v1.1.0)
+   MOTOR DEL VALLE (motor-valle/js/valle.js · v1.2.0)
    Lector y consultor unificado del mapa del Valle de Aburrá para Juega EnCicla (10 m/casilla)
    y El Metro (20 m/casilla). Decodifica VALLE_META y VALLE_BIN, convierte coordenadas
    (lat/lon ↔ metros ↔ casilla ↔ píxel) y responde consultas de suelo, cota, pendiente,
@@ -11,7 +11,7 @@
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 
   const Valle = {
-    version: '1.1.0',
+    version: '1.2.0',
     /* decodifica o enlaza el mapa del Valle de Aburrá en un consultor unificado */
     decodificar(meta, binB64, tsPx) {
       const jm = root.JE && root.JE.map;
@@ -87,6 +87,13 @@
     }
   };
 
-  root.Valle = Valle;
+  /* la interfaz de El Metro (su 1.1.0): sus módulos de mapa, ciudad y 3D, con el mismo motor */
+  Valle.elmetro = {
+    get map() { return typeof MAP !== 'undefined' ? MAP : null; },
+    get vcity() { return typeof VC !== 'undefined' ? VC : null; },
+    get g3() { return typeof G3 !== 'undefined' ? G3 : null; }
+  };
+  root.Valle = Valle; root.MotorValle = Valle;   // MotorValle: el nombre que usa El Metro
   if (typeof root.JE === 'object' && root.JE) root.JE.valle = Valle;
+  if (typeof EM !== 'undefined' && EM && typeof EM === 'object') EM.motorValle = Valle;
 })(typeof window !== 'undefined' ? window : globalThis);

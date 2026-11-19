@@ -179,6 +179,8 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
 
+*v2.0.1 · Motor del Valle 1.2.0*: `motor-valle/js/valle.js` va dentro del HTML (lo agrega `tools/build.js`) y expone `Valle` (y `JE.valle`, `MotorValle`), con `Valle.version === '1.2.0'` y `Valle.elmetro`. Las dos copias del motor se comparan con `node motor-valle/sincronizar.mjs RUTA --verificar`.
+
 *v2.0.0 · La revolución* (`94-revolucion.js`, `91-runner.js`, `91-taller-arte.js`, `92-ciclovia.js`, `92-vehiculos.js`, `93-trama.js`, `contenido/guion/fragmentos.json`):
 - **Carreras en el menú:**
   - `ModoRun3D` y `ModoCiclovia` (`extends ModeSub`) se registran con `JE.modos.registrar`, con 3 niveles cada una.

@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v2.0.0 · compilado el 2026-11-19.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v2.0.1 · compilado el 2026-11-19.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v2.0.0)
+## 2.3 Estado actual (v2.0.1)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-19 | Claude Code | documento creado (v2.0.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-19 | Claude Code | documento creado (v2.0.1) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -1761,6 +1761,8 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
   (`MGLlamadas`: sanciones, errores de préstamo, inscripciones; casos en `CASOS`).
 - **Supuestos que hay que confirmar con el usuario:** ubicación de la bodega (`PUNTO_BODEGA`, Guayabal) y del taller (junto a Casa EnCicla), horarios de Monitoreo y de los turnos 2 y 3 de Balance,
   y cuántos relevos/inventarios se exigen. El usuario dijo que luego confirma horarios, la lista oficial de estaciones, más puestos y la historia de los personajes.
+
+*v2.0.1 · Motor del Valle 1.2.0*: `motor-valle/js/valle.js` va dentro del HTML (lo agrega `tools/build.js`) y expone `Valle` (y `JE.valle`, `MotorValle`), con `Valle.version === '1.2.0'` y `Valle.elmetro`. Las dos copias del motor se comparan con `node motor-valle/sincronizar.mjs RUTA --verificar`.
 
 *v2.0.0 · La revolución* (`94-revolucion.js`, `91-runner.js`, `91-taller-arte.js`, `92-ciclovia.js`, `92-vehiculos.js`, `93-trama.js`, `contenido/guion/fragmentos.json`):
 - **Carreras en el menú:**
@@ -2747,6 +2749,25 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 - comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
+
+### 2026-11-19 · v2.0.1 · Motor del Valle 1.2.0: un solo motor otra vez
+
+**Qué cambió**
+- **Había dos «1.1.0» del motor:** la de Gemini (en EnCicla) y la de la entrega de El Metro. La de El Metro ponía a MetroZero como fuente de verdad, al revés de lo acordado. Las dos quedaron unidas en la **1.2.0**, con la fuente de verdad en BicicletasUno:
+  - `VERSION.json`: las capas comunes y las propias de cada juego, la propuesta de pasos y el historial.
+  - `js/valle.js`: el lector de EnCicla (`Valle`, también como `JE.valle`) más la interfaz de El Metro (`MotorValle` y `Valle.elmetro`, con MAP, VC y G3).
+  - `motor.mjs version`: mide los datos de los dos juegos.
+  - `capas/index.mjs`: suma las capas de El Metro y la propuesta de pasos.
+  - `sincronizar.mjs --verificar`: compara las dos copias sin copiar, y avisa si alguna dice otra fuente de verdad.
+- Los datos del mapa no cambian: es la misma salida, en los dos juegos.
+- El motor 1.2.0 se copió a El Metro en la rama `motor-valle` de MetroZero, con su compilación y sus 100 partidas.
+
+**Qué se probó**
+- Toda la suite, con la comprobación nueva del motor 1.2.0 en el juego.
+- `motor.mjs version`.
+- `sincronizar --verificar`, antes y después de copiar.
+
+**Qué falta:** las capas propias de El Metro (`vias_datos.mjs`, `rutas_calles.mjs` e `hitos.js`) siguen en su repositorio hasta mudarse a `motor-valle/capas/` (F2).
 
 ### 2026-11-19 · v2.0.0 · La revolución: las dos entregas del plan único en un solo juego
 
