@@ -1,8 +1,9 @@
 {
- "version": "1.0.0",
+ "version": "1.1.0",
  "fecha": "2026-11-18",
  "fuente_de_verdad": "juanfeliperico369-stack/BicicletasUno (carpeta motor-valle/)",
  "copias": ["juanfeliperico369-stack/MetroZero (carpeta motor-valle/)"],
  "resoluciones": { "encicla": 10, "elmetro": 20 },
+ "capas": ["suelo", "relieve", "red_sitva", "estaciones_encicla", "ciclorrutas", "barrios", "comunas", "alturas", "tuneles", "sitios", "personajes"],
  "origen": { "lon0": -75.70, "latN": 6.46, "lon1": -75.31, "latS": 6.015 }
 }

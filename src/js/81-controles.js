@@ -30,11 +30,15 @@ Object.assign(Ctrl, {
   pad() { return ['fijo', 'flechas'].includes(this.kind()); },            // ¿hay un control dibujado en pantalla?
   anchor() { const k = this.size(), m = 40 + 46 * k; return { x: this.side() === 'izq' ? m + cssPx('--sal') : View.w - m - cssPx('--sar'), y: View.h - 74 - 46 * k }; },
   arrows() { const a = this.anchor(), s = 52 * this.size(); return [['ArrowUp', a.x, a.y - s, '▲'], ['ArrowDown', a.x, a.y + s, '▼'], ['ArrowLeft', a.x - s, a.y, '◀'], ['ArrowRight', a.x + s, a.y, '▶']]; },
+  clear() {
+    if (this.held) { for (const id in this.held) Input.keys[this.held[id]] = false; this.held = {}; }
+    Input.joy = { on: false, id: null, ox: 0, oy: 0, x: 0, y: 0, t0: 0 };
+  },
   down(e, cx, cy, cv) {
     const k = this.kind(), z = this.size();
     if (k === 'flechas') { for (const [key, x, y] of this.arrows()) if (Math.abs(cx - x) < 28 * z && Math.abs(cy - y) < 28 * z) { Input.keys[key] = true; (this.held || (this.held = {}))[e.pointerId] = key; return true; } return false; }
     const fx = this.anchor(), a = k === 'fijo' && dist(cx, cy, fx.x, fx.y) <= 110 * z ? fx : { x: cx, y: cy };   // también se puede arrastrar en cualquier parte
-    Input.joy = { on: true, id: e.pointerId, ox: a.x, oy: a.y, x: cx, y: cy }; try { cv.setPointerCapture(e.pointerId); } catch (er) { }
+    Input.joy = { on: true, id: e.pointerId, ox: a.x, oy: a.y, x: cx, y: cy, t0: performance.now() }; try { cv.setPointerCapture(e.pointerId); } catch (er) { }
     return true;
   },
   draw(V) {

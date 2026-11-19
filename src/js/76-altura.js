@@ -11,7 +11,7 @@ const ALT_KV = { 1: [1, 4], 4: [1, 4], 2: [2, 3], 3: [2, 3], 5: [5], 6: [6, 8] }
 
 Object.assign(CityMap, {
   alturas() {
-    this.altG = new Map(); this.decks = []; this.deckG = new Map();
+    this.altG = new Map(); this.decks = []; this.deckG = new Map(); this.tunnels = []; this.tunG = new Map(); this.desnivel = new Map();
     const A = typeof ALTURAS !== 'undefined' && ALTURAS; if (!A) return;
     const q = A.q || 8, S = CH * TS, CK = (x, y) => Math.floor(x / S) + ',' + Math.floor(y / S), meter = (G, k, o) => (G.get(k) || G.set(k, []).get(k)).push(o);
     // ---- metro: tramos en viaducto de las líneas A y B, con rampas en sus extremos ----
@@ -63,13 +63,26 @@ Object.assign(CityMap, {
       const D = { P, w, z, r, k, lvl, agua, pe, len: P.len, zAt: s => z * altSuave(s / r) * altSuave((P.len - s) / r), x0: x0 - w, y0: y0 - w, x1: x1 + w, y1: y1 + w };
       this.decks.push(D); const seen = new Set();
       for (let s = 0; s <= P.len + 15; s += 15) { const p = this.at(P, Math.min(s, P.len)); for (const [dx, dy] of [[0, 0], [w, 0], [-w, 0], [0, w], [0, -w]]) { const kk = CK(p.x + dx, p.y + dy); if (!seen.has(kk)) { seen.add(kk); meter(this.deckG, kk, D); } } }
+      for (let s = r + 4; s < P.len - r - 4; s += TS * .75) { const p = this.at(P, s), ti = Math.floor(p.y / TS) * MW + Math.floor(p.x / TS); this.desnivel.set(ti, { a: p.a, lvl: 1 }); }
       for (let s = 0; s < P.len - .5; s += ALT.pz) {
         const s1 = Math.min(P.len, s + ALT.pz), pc = this.altPieza('p', P, s, s1, w / 2, D.zAt); pc.D = D;
         for (let t = Math.ceil(s / 40) * 40; t < s1; t += 40) { const kk = Math.round((t - s) / (s1 - s) * (pc.n - 1)); if (pc.Z[kk] > .12) pc.pil.push(kk); }
         meter(this.altG, CK(pc.x, pc.y), pc);
       }
     }
-    this.altInfo = { metroA: (this.lineA && this.lineA.alto || []).length, metroB: (this.lineB && this.lineB.alto || []).length, puentes: this.decks.length, cortados: this.decks.filter(d => d.P).length };
+    // ---- túneles y deprimidos viales (is_tunnel, nivel <= -1): rampas, muros de contención y paso inferior ----
+    for (const T of A.tuneles || []) {
+      const k = T[0], lvl = T[1] || -1, lenM = T[2], pts = []; for (let i = 3; i + 1 < T.length; i += 2) pts.push({ x: T[i] / q * TS, y: T[i + 1] / q * TS });
+      if (pts.length < 2) continue;
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const p of pts) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+      const P = this.poly(pts), w = (CHW[k] || 1.2) * TS; if (P.len < 12) continue;
+      const z = -.18, r = Math.min(28, P.len / 3.2);
+      const D = { P, w, z, r, k, lvl, tun: 1, len: P.len, zAt: s => z * altSuave(s / r) * altSuave((P.len - s) / r), x0: x0 - w, y0: y0 - w, x1: x1 + w, y1: y1 + w };
+      this.tunnels.push(D); const seen = new Set();
+      for (let s = 0; s <= P.len + 15; s += 15) { const p = this.at(P, Math.min(s, P.len)); for (const [dx, dy] of [[0, 0], [w, 0], [-w, 0], [0, w], [0, -w]]) { const kk = CK(p.x + dx, p.y + dy); if (!seen.has(kk)) { seen.add(kk); meter(this.tunG, kk, D); } } }
+      for (let s = r + 4; s < P.len - r - 4; s += TS * .75) { const p = this.at(P, s), ti = Math.floor(p.y / TS) * MW + Math.floor(p.x / TS); if (!this.desnivel.has(ti)) this.desnivel.set(ti, { a: p.a, lvl: -1 }); }
+    }
+    this.altInfo = { metroA: (this.lineA && this.lineA.alto || []).length, metroB: (this.lineB && this.lineB.alto || []).length, puentes: this.decks.length, tuneles: this.tunnels.length, cortados: this.decks.filter(d => d.P).length };
   },
   /* el edificio de acceso de una estación (de 22 m adentro de cada punta del andén), partido donde una calle pasa por debajo; el trozo de la pieza [s0, s1] */
   altHall(L, st, s0, s1) {
@@ -114,13 +127,40 @@ Object.assign(CityMap, {
   /* el tramo [s0, s1] de una línea que pasa cerca de un trozo (o null) */
   altRango(L, px0, py0, S, m) { let a = 1e9, b = -1e9; const P = L.pts, c = L.cum; for (let i = 0; i < P.length; i++) { const p = P[i]; if (p.x > px0 - m && p.y > py0 - m && p.x < px0 + S + m && p.y < py0 + S + m) { a = Math.min(a, c[Math.max(0, i - 1)]); b = Math.max(b, c[Math.min(P.length - 1, i + 1)]); } } return a <= b ? [a, b] : null; },
   decksNear(x, y) { const S = CH * TS; return this.deckG ? this.deckG.get(Math.floor(x / S) + ',' + Math.floor(y / S)) || [] : []; },
-  /* posición sobre un puente: s a lo largo, d de lado (con signo), a el rumbo del puente ahí */
+  tunnelsNear(x, y) { const S = CH * TS; return this.tunG ? this.tunG.get(Math.floor(x / S) + ',' + Math.floor(y / S)) || [] : []; },
+  /* posición sobre un puente o deprimido: s a lo largo, d de lado (con signo), a el rumbo ahí */
   deckProj(D, x, y) { const pr = this.project(D.P, x, y), q = this.at(D.P, pr.s), d = (x - q.x) * -Math.sin(q.a) + (y - q.y) * Math.cos(q.a); return { s: pr.s, d, a: q.a, dd: pr.d }; },
-  /* en el suelo (trozo 3D): sombras y bases de los pilares de lo que va en alto */
+  /* en el suelo (trozo 3D): sombras y bases de los pilares de lo que va en alto, más las bocas y muros de los deprimidos */
   altSuelo(c, px0, py0, S) {
     if (!this.altG) return; const near = (x, y, m) => x > px0 - m && y > py0 - m && x < px0 + S + m && y < py0 + S + m;
-    const piezas = []; for (let gy = -1; gy <= 1; gy++) for (let gx = -1; gx <= 1; gx++) { const L = this.altG.get((Math.floor(px0 / S) + gx) + ',' + (Math.floor(py0 / S) + gy)); if (L) piezas.push(...L); }
+    const piezas = [], tunSet = new Set();
+    for (let gy = -1; gy <= 1; gy++) for (let gx = -1; gx <= 1; gx++) {
+      const k = (Math.floor(px0 / S) + gx) + ',' + (Math.floor(py0 / S) + gy);
+      const L = this.altG.get(k); if (L) piezas.push(...L);
+      const T = this.tunG && this.tunG.get(k); if (T) for (const d of T) tunSet.add(d);
+    }
     c.lineCap = 'round'; c.lineJoin = 'round';
+    // deprimidos / soterrados: rampa excavada, muros de contención laterales y dintel de entrada/salida
+    for (const D of tunSet) {
+      const hw = D.w / 2, step = 10, pts = [];
+      for (let s = 0; s <= D.len; s += step) pts.push(this.at(D.P, Math.min(s, D.len)));
+      if (pts.length < 2) continue;
+      c.fillStyle = '#252932'; c.beginPath();
+      for (let i = 0; i < pts.length; i++) { const p = pts[i], nx = -Math.sin(p.a) * hw, ny = Math.cos(p.a) * hw; c[i ? 'lineTo' : 'moveTo'](p.x + nx, p.y + ny); }
+      for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i], nx = -Math.sin(p.a) * hw, ny = Math.cos(p.a) * hw; c.lineTo(p.x - nx, p.y - ny); }
+      c.closePath(); c.fill();
+      c.strokeStyle = '#7e838c'; c.lineWidth = 1.6;
+      for (const sd of [-1, 1]) {
+        c.beginPath();
+        for (let i = 0; i < pts.length; i++) { const p = pts[i], nx = -Math.sin(p.a) * hw * sd, ny = Math.cos(p.a) * hw * sd; c[i ? 'lineTo' : 'moveTo'](p.x + nx, p.y + ny); }
+        c.stroke();
+      }
+      // franja amarilla preventiva en los portales del deprimido
+      for (const sPortal of [D.r, D.len - D.r]) {
+        const p = this.at(D.P, clamp(sPortal, 0, D.len)), nx = -Math.sin(p.a) * (hw + 1), ny = Math.cos(p.a) * (hw + 1);
+        c.strokeStyle = '#f2c400'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(p.x - nx, p.y - ny); c.lineTo(p.x + nx, p.y + ny); c.stroke();
+      }
+    }
     for (const b of piezas) {
       if (!near(b.x, b.y, 60)) continue; const hw = b.est ? ALT_SW : b.hw, zt = b.est ? b.Z[b.n >> 1] + ALT.techo : 0;
       c.fillStyle = 'rgba(8,14,30,.2)'; c.beginPath();
@@ -283,23 +323,37 @@ Ride.prototype.altVagones = function () {
 };
 /* trenes a nivel del suelo (antes que el jugador); en pixel clásico se queda el dibujo de siempre */
 Ride.prototype.drawTrenesSuelo = function (c, ox, oy, inV, spr) { this.altVagones(); const cl = SIS.metro.carL * PXM, night = Art.night(this.min) > .5; for (const q of this._lowCars) if (inV(q.x, q.y, 30)) { c.fillStyle = 'rgba(0,0,0,.22)'; SisSpr.dib(c, 'metro', q.L.col, cl, SIS.metro.W * PXM, q.x - ox, q.y - oy, q.a, 1, q.end, night); } };
-/* encima de todo: el jugador cuando va por un puente y los carros que van por los puentes */
+/* encima de todo: el jugador cuando va por un puente, los carros de los puentes y el dintel traslúcido cuando se pasa por un deprimido */
 Ride.prototype.drawArriba = function (c, ox, oy, inV, spr, sp) {
   const P = this.p, E = this.ojo(), px = E.x - ox, py = E.y - oy, K = E.K;
-  const sprZ = (img, x, y, a, z, sh) => { const f = 1 + K * z; c.save(); c.translate(px + (x - ox - px) * f, py + (y - oy - py) * f); c.rotate(a + Math.PI / 2); c.scale(f, f); blit(c, img, sh); c.restore(); };
+  const sprZ = (img, x, y, a, z, sh) => { const f = Math.max(.75, 1 + K * z); c.save(); c.translate(px + (x - ox - px) * f, py + (y - oy - py) * f); c.rotate(a + Math.PI / 2); c.scale(f, f); blit(c, img, sh); c.restore(); };
   for (const cr of this.cars) if (cr.arriba && inV(cr.x, cr.y)) sprZ(Art.carTop(cr.col, cr.kind), cr.x, cr.y, cr.ang, cr.z || .2, '#0004');
   if (P.lvl > 0) sprZ(sp, P.x, P.y, P.a, P.z || 0, '#0005');
+  else if (P.lvl < 0 && P.deck && P.deck.tun) {
+    // dentro de un deprimido/soterrado: se ve al ciclista con luces cálidas y la cubierta del paso superior semitransparente
+    const D = P.deck, hw = D.w / 2;
+    c.save(); c.fillStyle = 'rgba(255,212,122,.22)'; c.beginPath(); c.arc(P.x - ox, P.y - oy, 14, 0, TAU); c.fill();
+    c.fillStyle = 'rgba(18,24,38,.36)'; c.beginPath();
+    for (let s = D.r; s <= D.len - D.r; s += 12) { const p = this.map.at(D.P, s), nx = -Math.sin(p.a) * hw, ny = Math.cos(p.a) * hw; c[s === D.r ? 'moveTo' : 'lineTo'](p.x - ox + nx, p.y - oy + ny); }
+    for (let s = D.len - D.r; s >= D.r; s -= 12) { const p = this.map.at(D.P, s), nx = -Math.sin(p.a) * hw, ny = Math.cos(p.a) * hw; c.lineTo(p.x - ox - nx, p.y - oy - ny); }
+    c.closePath(); c.fill(); c.restore();
+  }
 };
-/* el nivel del jugador: arriba si entró al puente por uno de sus extremos (o va sobre el agua), debajo si llegó por un lado */
+/* el nivel del jugador: +1 si entró a un puente por sus extremos, -1 si bajó por la rampa de un deprimido/túnel, 0 a nivel del suelo */
 Ride.prototype.nivel = function () {
-  const P = this.p, M = this.map; if (!M.deckG || !M.decks.length) { P.lvl = 0; P.z = 0; return; }
+  const P = this.p, M = this.map; if (!M.deckG) { P.lvl = 0; P.z = 0; return; }
   let D = P.deck;
   if (D) {
     const pr = M.deckProj(D, P.x, P.y);
     if (pr.s < -3 || pr.s > D.len + 3 || Math.abs(pr.d) > D.w / 2 + 3) { P.deck = null; P.lvl = 0; P.z = 0; D = null; }
-    else if (P.lvl > 0) {
+    else if (P.lvl !== 0) {
       P.z = D.zAt(clamp(pr.s, 0, D.len));
-      if (D.agua) { const lim = D.w / 2 - 1.5; if (Math.abs(pr.d) > lim) { const e = (Math.abs(pr.d) - lim) * Math.sign(pr.d), nx = -Math.sin(pr.a), ny = Math.cos(pr.a); if (!this.blocked(P.x - nx * e, P.y - ny * e, this.stats_().r)) { P.x -= nx * e; P.y -= ny * e; } } }   // baranda sobre el río
+      // baranda del puente o muro de contención del deprimido: en el tramo central no se puede salir por los costados
+      const enTramo = D.agua || (pr.s > D.r * .7 && pr.s < D.len - D.r * .7);
+      if (enTramo) {
+        const lim = Math.max(2, D.w / 2 - 1.3);
+        if (Math.abs(pr.d) > lim) { const e = (Math.abs(pr.d) - lim) * Math.sign(pr.d), nx = -Math.sin(pr.a), ny = Math.cos(pr.a); if (!this.blocked(P.x - nx * e, P.y - ny * e, this.stats_().r)) { P.x -= nx * e; P.y -= ny * e; } }
+      }
     }
   }
   if (!D) {
@@ -310,15 +364,34 @@ Ride.prototype.nivel = function () {
       const ext = pr.s < d.r + 8 || pr.s > d.len - d.r - 8, along = Math.abs(Math.cos(angDiff(P.a, pr.a))) > .5;
       P.deck = d; P.lvl = (ext && along) || (sobreAgua && d.agua) ? 1 : 0; P.z = P.lvl ? d.zAt(pr.s) : 0; break;
     }
+    if (!P.deck && M.tunG) {
+      for (const d of M.tunnelsNear(P.x, P.y)) {
+        if (P.x < d.x0 || P.x > d.x1 || P.y < d.y0 || P.y > d.y1) continue;
+        const pr = M.deckProj(d, P.x, P.y); if (pr.s < 0 || pr.s > d.len || Math.abs(pr.d) > d.w / 2) continue;
+        const ext = pr.s < d.r + 10 || pr.s > d.len - d.r - 10, along = Math.abs(Math.cos(angDiff(P.a, pr.a))) > .5;
+        P.deck = d; P.lvl = (ext && along) ? -1 : 0; P.z = P.lvl ? d.zAt(pr.s) : 0; break;
+      }
+    }
   }
 };
-/* los carros: arriba si van por un puente en su mismo sentido */
+/* los carros: nivel +1 si van por un puente en su mismo sentido, -1 si van por un deprimido, 0 a nivel del suelo */
 Ride.prototype.nivelCarros = function () {
-  const M = this.map; if (!M.deckG || !M.decks.length) return;
+  const M = this.map; if (!M.deckG) return;
   for (const cr of this.cars) {
-    cr.arriba = false; const L = M.decksNear(cr.x, cr.y); if (!L.length) continue;
-    for (const d of L) { if (d.pe || cr.x < d.x0 || cr.x > d.x1 || cr.y < d.y0 || cr.y > d.y1) continue; const pr = M.deckProj(d, cr.x, cr.y); if (pr.s < 0 || pr.s > d.len || Math.abs(pr.d) > d.w / 2 + 2) continue; if (Math.abs(Math.cos(angDiff(cr.ang, pr.a))) > .8) { cr.arriba = true; cr.z = d.zAt(pr.s); break; } }
+    cr.arriba = false; cr.bajo = false; cr.nivel = 0;
+    for (const d of M.decksNear(cr.x, cr.y)) {
+      if (d.pe || cr.x < d.x0 || cr.x > d.x1 || cr.y < d.y0 || cr.y > d.y1) continue;
+      const pr = M.deckProj(d, cr.x, cr.y); if (pr.s < 0 || pr.s > d.len || Math.abs(pr.d) > d.w / 2 + 2) continue;
+      if (Math.abs(Math.cos(angDiff(cr.ang, pr.a))) > .8) { cr.arriba = true; cr.nivel = 1; cr.z = d.zAt(pr.s); break; }
+    }
+    if (!cr.nivel && M.tunG) {
+      for (const d of M.tunnelsNear(cr.x, cr.y)) {
+        if (cr.x < d.x0 || cr.x > d.x1 || cr.y < d.y0 || cr.y > d.y1) continue;
+        const pr = M.deckProj(d, cr.x, cr.y); if (pr.s < 0 || pr.s > d.len || Math.abs(pr.d) > d.w / 2 + 2) continue;
+        if (Math.abs(Math.cos(angDiff(cr.ang, pr.a))) > .8) { cr.bajo = true; cr.nivel = -1; cr.z = d.zAt(pr.s); break; }
+      }
+    }
   }
 };
 const _upd76 = Ride.prototype.update;
-Ride.prototype.update = function (dt, dir) { _upd76.call(this, dt, dir); if (GFX() === '3d') { this.nivel(); if (!JE.headless) this.nivelCarros(); } else { this.p.lvl = 0; this.p.z = 0; } };
+Ride.prototype.update = function (dt, dir) { _upd76.call(this, dt, dir); this.nivel(); this.nivelCarros(); };

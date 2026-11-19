@@ -77,7 +77,7 @@ ModeUsuario.prototype.actions = function () {
   const VD = vehDef(P.veh), pk = R.parked, tu = pk && pk.veh && pk.veh !== 'bike' ? vehDef(pk.veh).corto : 'bici';
   if (P.veh !== 'walk' && P.veh !== 'truck' && VD.bajar) a.push({ id: 'off', icon: 'usuario', label: 'Bajarse', fn: () => R.getOff() });
   else if (P.veh === 'walk') a.push({ id: 'on', icon: 'estacion', label: R.parked && dist(R.parked.x, R.parked.y, P.x, P.y) < 22 * WK ? 'Subirse' : tu === 'bici' ? 'Ir a la bici' : 'Ir', fn: () => { if (!R.getOn()) { R.target = R.marker({ x: R.parked.x, y: R.parked.y, r: 12, col: PAL.vd, label: 'Tu ' + tu, enter: m => R.removeMarker(m) }); JE.ui && JE.ui.toast((tu === 'bici' ? '🚲' : vehDef(pk.veh).icon) + ' Sigue la línea hasta tu ' + tu); } } });
-  const vs = JE.vehiculos.libres(); if (vs.length > 1 && P.veh !== 'walk' && P.veh !== 'truck' && !R.carry) a.push({ id: 'veh', icon: 'balance', label: 'Vehículo', fn: () => { const i = vs.findIndex(v => v.id === P.veh), n = vs[(i + 1) % vs.length]; R.setVeh(n.id); JE.ui && JE.ui.toast(n.icon + ' ' + n.n); } });   // con vehículos registrados (libre: 1), se elige aquí
+  const vs = JE.vehiculos.libres(); if (!UI.vehiculos && vs.length > 1 && P.veh !== 'walk' && P.veh !== 'truck' && !R.carry) a.push({ id: 'veh', icon: 'balance', label: 'Vehículo', fn: () => { const i = vs.findIndex(v => v.id === P.veh), n = vs[(i + 1) % vs.length]; R.setVeh(n.id); JE.ui && JE.ui.toast(n.icon + ' ' + n.n); } });   // con vehículos registrados (libre: 1), se elige aquí
   return a;
 };
 

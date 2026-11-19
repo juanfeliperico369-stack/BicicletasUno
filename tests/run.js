@@ -350,13 +350,13 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     const V = JE.vehiculos.registrar('pruebav', { n: 'Patineta de prueba', corto: 'patineta', icon: '🛹', fis: { max: 90, acc: 60 }, asist: 1, libre: 1, gasto: .05, spr: () => cv });
     o.hereda = V.fis.brk === 72 && V.de === 'bike' && V.timbre === 0 && V.loma.length === 3;
     let er = ''; try { JE.vehiculos.registrar('bike', {}); } catch (e) { er = e.message; } o.protege = /de siempre/.test(er);
-    o.boton = M.actions().some(a => a.id === 'veh'); JE.vehiculos.usar('pruebav', R);
+    o.boton = typeof vehLista === 'function' ? vehLista().some(v => v.id === 'pruebav') && M.actions().some(a => a.id === 'vehiculo') : M.actions().some(a => a.id === 'veh'); JE.vehiculos.usar('pruebav', R);   // con el selector de 92-vehiculos.js, sale en su lista
     o.fis = Math.abs(R.stats_().max - 90 * WK * f) < 1e-9 && !M.actions().some(a => a.id === 'bell');
     const lc = R.updCars, ll = R.updLife; R.updCars = () => { }; R.updLife = () => { };   // sin tráfico: que nada choque la medición
     for (let i = 0; i < 40; i++) R.update(1 / 60, { x: Math.cos(P.a), y: Math.sin(P.a), m: 1 }); o.anda = P.v > 0; R.updCars = lc; R.updLife = ll;
     R.getOff(); o.bajar = P.veh === 'walk' && R.parked.veh === 'pruebav'; R.getOn(); o.subir = P.veh === 'pruebav';
     const e0 = JE.errors.length; await new Promise(r => setTimeout(r, 400)); o.dibuja = JE.errors.length === e0;
-    R.setVeh('bike'); delete VEHICULOS.pruebav; o.sinBoton = !M.actions().some(a => a.id === 'veh');
+    R.setVeh('bike'); delete VEHICULOS.pruebav; o.sinBoton = typeof vehLista === 'function' ? !vehLista().some(v => v.id === 'pruebav') : !M.actions().some(a => a.id === 'veh');
     // un juego nuevo en el menú: se juega, gana su estrella y no toca la racha ni las mejoras
     class ModoPrueba extends Mode {
       constructor(role, t, opt) { super(role, t, opt); this.view = { kind: 'px', dw: 200, dh: 150 }; this.goal('Aguanta dos segundos', true, () => this.t >= 2, () => Math.floor(this.t) + ' s'); }
@@ -376,14 +376,16 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(reg.cifras && reg.camion && reg.hereda && reg.protege && reg.boton && reg.fis && reg.anda && reg.bajar && reg.subir && reg.dibuja && reg.sinBoton, 'vehículos: los de siempre con sus cifras; uno nuevo hereda, anda, se dibuja, se elige y se parquea ' + JSON.stringify(reg).slice(0, 220));
   ok(reg.protegeM && reg.menu && reg.brief && reg.titulo === 'Juego de prueba · Turbo' && reg.fin && reg.estrella && reg.racha && reg.limpio, 'modos: un juego nuevo sale en el menú, se juega, gana su estrella y no toca la racha ni las mejoras · ' + reg.titulo);
   const tra = await p.evaluate(() => {
-    const o = {}, S = Save.data, t0 = S.trama, h0 = S.huevos; S.trama = []; S.huevos = [];
+    const o = {}, S = Save.data, t0 = S.tramaHechas, h0 = S.huevos; S.tramaHechas = []; S.huevos = [];
     const mar = new Date(2026, 10, 17, 8, 0), sab = new Date(2026, 10, 21, 10, 0), noche = new Date(2026, 10, 17, 22, 0);   // el lunes 16 es festivo (Independencia de Cartagena)
     const ms = genMisiones(mar).find(m => m.id === 'g_rosalba-1'); o.sale = !!ms && ms.kind === 'visita' && ms.place[0] === 'botero'; o.hora = !genMisiones(noche).some(m => m.id.startsWith('g_')); o.req = !genMisiones(sab).some(m => m.id === 'g_efrain-1');
     JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true }); const M = JE.game.mode; M.addMision(ms); o.marca = ms.marks.length === 1;
-    M.cumplir(ms); o.guarda = S.trama.includes('rosalba-1') && S.huevos.includes('metro-rosalba'); o.sigue = genMisiones(sab).some(m => m.id === 'g_efrain-1') && !genMisiones(mar).some(m => m.id === 'g_rosalba-1');
-    JE.game.stop(); S.trama = t0 || []; S.huevos = h0 || []; return o;
+    M.cumplir(ms); o.guarda = S.tramaHechas.includes('rosalba-1') && S.huevos.includes('metro-rosalba'); o.sigue = genMisiones(sab).some(m => m.id === 'g_efrain-1') && !genMisiones(mar).some(m => m.id === 'g_rosalba-1');
+    const tr0 = S.trama; S.trama = ['viejo-1']; S.tramaHechas = []; tramaHechas(); o.migra = S.tramaHechas.includes('viejo-1') && S.trama === null;   // una partida de la v1.7.2
+    if (typeof Trama !== 'undefined') { S.trama = ['viejo-2']; const E = Trama.estado(); o.migra = o.migra && !Array.isArray(E) && Array.isArray(E.done) && S.tramaHechas.includes('viejo-2'); }
+    S.trama = tr0; JE.game.stop(); S.tramaHechas = t0 || []; S.huevos = h0 || []; return o;
   });
-  ok(tra.sale && tra.hora && tra.req && tra.marca && tra.guarda && tra.sigue, 'trama en datos (contenido/guion/misiones.json): sale según el día y la hora, en su lugar, guarda el fragmento y abre la siguiente ' + JSON.stringify(tra));
+  ok(tra.sale && tra.hora && tra.req && tra.marca && tra.guarda && tra.sigue && tra.migra, 'trama en datos (contenido/guion/misiones.json): sale según el día y la hora, en su lugar, guarda el fragmento, abre la siguiente y pasa las partidas de la v1.7.2 ' + JSON.stringify(tra));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};

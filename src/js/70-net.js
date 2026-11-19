@@ -29,28 +29,55 @@ const Net = JE.net = {
     if (this.onmsg) this.onmsg(m);
   },
   ice(pc) { return new Promise(res => { if (pc.iceGatheringState === 'complete') return res(); const t = setTimeout(res, 3500); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } }); }); },
+  /* canal local (BroadcastChannel) de respaldo cuando el dispositivo no tiene interfaz de red con candidatos ICE */
+  wireBC(peer, roomId, gId, isHost) {
+    if (!window.BroadcastChannel) return;
+    const bc = new BroadcastChannel('je-net-' + roomId);
+    const ch = {
+      readyState: isHost ? 'open' : 'connecting',
+      send(d) { bc.postMessage(isHost ? { to: gId, d } : { to: 'host', from: gId, d }); },
+      close() { try { bc.postMessage(isHost ? { to: gId, t: 'bye' } : { to: 'host', from: gId, t: 'bye' }); bc.close(); } catch (e) { } }
+    };
+    bc.onmessage = e => {
+      const m = e.data; if (!m || typeof m !== 'object') return;
+      if (isHost) {
+        if (m.to !== 'host' || m.from !== gId) return;
+        if (m.t === 'bye') { ch.readyState = 'closed'; if (ch.onclose) ch.onclose(); return; }
+        if (typeof m.d === 'string' && ch.onmessage) ch.onmessage({ data: m.d });
+      } else {
+        if (m.to !== gId) return;
+        if (m.t === 'open' && ch.readyState !== 'open') { ch.readyState = 'open'; if (ch.onopen) ch.onopen(); return; }
+        if (m.t === 'bye') { ch.readyState = 'closed'; if (ch.onclose) ch.onclose(); return; }
+        if (typeof m.d === 'string' && ch.onmessage) ch.onmessage({ data: m.d });
+      }
+    };
+    this.wire(peer, ch);
+    if (isHost) { bc.postMessage({ to: gId, t: 'open' }); setTimeout(() => { if (ch.onopen) ch.onopen(); }, 10); }
+  },
   /* anfitrión: un código (oferta) por invitado */
   async host() {
     if (this.role !== 'host') { this.reset(); this.role = 'host'; this.myId = 0; }
     if (this.peers.length >= this.MAX) throw new Error('La sala ya tiene 4 jugadores');
-    const peer = { id: this.peers.length + 1, open: false }; peer.pc = this.newPC(peer); this.peers.push(peer);
+    const peer = { id: this.peers.length + 1, open: false, bcId: Math.random().toString(36).slice(2, 8) }; peer.pc = this.newPC(peer); this.peers.push(peer);
     this.wire(peer, peer.pc.createDataChannel('je', { ordered: true }));
     await peer.pc.setLocalDescription(await peer.pc.createOffer()); await this.ice(peer.pc);
     this.pending = peer; this.setStatus('waiting');
-    return this.pack({ t: 'o', s: peer.pc.localDescription.sdp });
+    return this.pack({ t: 'o', s: peer.pc.localDescription.sdp, r: peer.bcId });
   },
   async accept(code) {
     const o = await this.unpack(code); if (o.t !== 'a') throw new Error('Ese no es un código de respuesta');
     const p = this.pending; if (!p) throw new Error('Primero crea un código de invitación');
     await p.pc.setRemoteDescription({ type: 'answer', sdp: o.s }); this.pending = null;
+    if (p.bcId && o.g && !/a=candidate:/m.test(o.s)) this.wireBC(p, p.bcId, o.g, true);
   },
   /* invitado */
   async join(code) {
     const o = await this.unpack(code); if (o.t !== 'o') throw new Error('Ese no es un código de sala');
-    this.reset(); this.role = 'guest'; const peer = { id: 0, open: false }; peer.pc = this.newPC(peer); this.peers = [peer];
+    this.reset(); this.role = 'guest'; const peer = { id: 0, open: false, bcId: o.r, bcG: Math.random().toString(36).slice(2, 8) }; peer.pc = this.newPC(peer); this.peers = [peer];
     peer.pc.ondatachannel = e => this.wire(peer, e.channel);
     await peer.pc.setRemoteDescription({ type: 'offer', sdp: o.s }); await peer.pc.setLocalDescription(await peer.pc.createAnswer()); await this.ice(peer.pc); this.setStatus('waiting');
-    return this.pack({ t: 'a', s: peer.pc.localDescription.sdp });
+    if (o.r && !/a=candidate:/m.test(peer.pc.localDescription.sdp)) this.wireBC(peer, o.r, peer.bcG, false);
+    return this.pack({ t: 'a', s: peer.pc.localDescription.sdp, r: o.r, g: peer.bcG });
   },
   rawSend(peer, m) { if (peer.ch && peer.ch.readyState === 'open') { try { peer.ch.send(JSON.stringify(m)); } catch (e) { } } },
   send(m) { if (this.role === 'host') m.from = 0; for (const p of this.peers) if (p.open) this.rawSend(p, m); },

@@ -174,7 +174,7 @@ class Ride {
     let c = { x: Math.floor(this.p.x / TS), y: Math.floor(this.p.y / TS) };
     const D = this.map.flow(Math.floor(T.x / TS), Math.floor(T.y / TS), vehVia(this.p.veh), c.x, c.y);
     if (this.map.fv(D, c.x, c.y) >= 1e9) { const n = this.map.nearestOpen(c.x, c.y, vehVia(this.p.veh)); c = n; }
-    for (let i = 0; i < 90; i++) { const n = this.map.nextStep(D, c.x, c.y); if (!n) break; c = n; if (i % 2 === 1) this.gps.push({ x: c.x * TS + TS / 2, y: c.y * TS + TS / 2 }); }
+    for (let i = 0; i < 90; i++) { const n = this.map.nextStep(D, c.x, c.y, i < 10 ? (this.p.lvl || 0) : 0); if (!n) break; c = n; if (i % 2 === 1) this.gps.push({ x: c.x * TS + TS / 2, y: c.y * TS + TS / 2 }); }
     this.flowD = D;
   }
   /* ---- tráfico: carros por las vías principales reales ---- */
@@ -192,6 +192,7 @@ class Ride {
         this.carPos(c); this.cars.push(c); break;
       }
     }
+    const pLvl = Math.sign(P.lvl || 0);
     for (const c of this.cars) {
       let v = c.spd * (this.mode.mods.rain ? .85 : 1); if (c.stop > 0) { c.stop -= dt; v = 0; } if (c.yield > 0) { c.yield -= dt; v *= .35; }
       const len = c.kind === 'bus' ? 30 : 14;
@@ -202,10 +203,11 @@ class Ride {
         if (s) { const d = c.L.dir > 0 ? s.p0 - front : front - s.p1, st = M.lightState(s.g, this.mode.t)[s.ax]; if (d < 24 * WK && (st === 'r' || (st === 'a' && d > 6 * WK))) v = Math.min(v, Math.max(0, (d - 2) * 3)); }
       }
       const fx = Math.cos(c.ang), fy = Math.sin(c.ang), dx = P.x - c.x, dy = P.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
-      const pr = this.stats_().r; if (along > 0 && along < 28 + pr * 2 && lat < 5 + pr) { v = along < 16 + pr * 2 ? 0 : Math.min(v, 6 * WK); if (this.honkT <= 0 && P.v > 2 && dist(P.x, P.y, c.x, c.y) < 60 * WK) { this.honkT = 2.5; Snd.sfx('honk'); } }
+      const pr = this.stats_().r, sameLvl = (c.nivel != null ? c.nivel : (c.arriba ? 1 : 0)) === pLvl;
+      if (sameLvl && along > 0 && along < 28 + pr * 2 && lat < 5 + pr) { v = along < 16 + pr * 2 ? 0 : Math.min(v, 6 * WK); if (this.honkT <= 0 && P.v > 2 && dist(P.x, P.y, c.x, c.y) < 60 * WK) { this.honkT = 2.5; Snd.sfx('honk'); } }
       c.v = v; c.p += v * c.L.dir * dt; this.carPos(c);
-      // choque con el jugador (rectángulo orientado con el carro)
-      if (c.ghost > 0) c.ghost -= dt; else if (Math.abs(along) < ({ bus: 13, camion: 11, moto: 3 }[c.kind] || 6) + pr && lat < (c.kind === 'moto' ? 1.5 : 3) + pr && P.stun <= 0 && !(this.inv > 0)) this.crash(c);
+      // choque con el jugador (solo si van en el mismo nivel vertical: suelo, puente o deprimido)
+      if (c.ghost > 0) c.ghost -= dt; else if (sameLvl && Math.abs(along) < ({ bus: 13, camion: 11, moto: 3 }[c.kind] || 6) + pr && lat < (c.kind === 'moto' ? 1.5 : 3) + pr && P.stun <= 0 && !(this.inv > 0)) this.crash(c);
     }
     this.honkT -= dt;
     this.cars = this.cars.filter(c => c.p > -12 && c.p < c.L.len + 12 && dist(c.x, c.y, this.cam.x, this.cam.y) < R * 1.5);

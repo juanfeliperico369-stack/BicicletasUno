@@ -179,8 +179,9 @@ LOGROS.push({ id: 'nigota', name: 'Ni una gota', desc: 'Lleva un tinto de estaci
      dias     'semana|sabado|domingo|festivo' (o 'todos'); desde/hasta: '7:00 a. m.'…; req: ids de misiones de la trama ya hechas
      despues  frase o lista de frases al cumplirla; huevo: id del fragmento (Easter egg) que se guarda en Save.data.huevos
    Salen una o dos por día (las mismas todo el día), antes de las misiones menores. Guía: docs/INTEGRAR.md */
+function tramaHechas() { const S = Save.data; if (Array.isArray(S.trama)) { S.tramaHechas = (S.tramaHechas || []).concat(S.trama); S.trama = null; } return S.tramaHechas || (S.tramaHechas = []); }   // la v1.7.2 las guardaba en Save.data.trama, que ahora es de «Ruedas y Rieles» (93-trama.js)
 function guionMisiones(now) {
-  const G = Array.isArray(GUION.misiones) ? GUION.misiones : [], S = Save.data, hechas = S.trama || [], dt = Cal.dayType(now), m = Cal.min(now);
+  const G = Array.isArray(GUION.misiones) ? GUION.misiones : [], S = Save.data, hechas = tramaHechas(), dt = Cal.dayType(now), m = Cal.min(now);
   const okL = g => typeof g.lugar === 'string' ? !!LM[g.lugar] : Array.isArray(g.lugar) && g.lugar.length >= 2 && isFinite(g.lugar[0]) && isFinite(g.lugar[1]);
   const ok = G.filter(g => g && g.id && g.txt && okL(g) && (!g.dias || g.dias === 'todos' || String(g.dias).split('|').includes(dt)) && (!g.desde || m >= horaMin(g.desde)) && (!g.hasta || m < horaMin(g.hasta)) && (!g.req || [].concat(g.req).every(r => hechas.includes(r))) && (g.repite || !hechas.includes(g.id)));
   const rng = new RNG(hashStr('trama' + Cal.key(now))), pick = rng.shuffle(ok.slice()).slice(0, 2);
@@ -189,7 +190,7 @@ function guionMisiones(now) {
 const _cumplirG = ModeUsuarioR.prototype.cumplir;
 ModeUsuarioR.prototype.cumplir = function (ms, late) {
   const was = ms.done; _cumplirG.call(this, ms, late); const g = ms.trama; if (was || !g) return;
-  const S = Save.data; if (!(S.trama || (S.trama = [])).includes(g.id)) S.trama.push(g.id);
+  const S = Save.data, H = tramaHechas(); if (!H.includes(g.id)) H.push(g.id);
   if (g.huevo && !(S.huevos || (S.huevos = [])).includes(g.huevo)) { S.huevos.push(g.huevo); JE.ui && JE.ui.toast('🥚 Encontraste un fragmento escondido'); }
   if (JE.ui) for (const t of [].concat(g.despues || [])) JE.ui.toast(t); Save.save();
 };

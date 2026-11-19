@@ -446,9 +446,10 @@ function hull8(P, d) {
 /* edificios con volumen: cada lote de edificio se levanta con perspectiva desde el jugador (lo lejano primero), girado con su calle */
 Ride.prototype.draw3D = function (c, ox, oy, vw, vh) {
   if (GFX() !== '3d') return; const M = this.map, E = this.ojo(), px = E.x - ox, py = E.y - oy, K = E.K, S = CH * TS, nb = Math.round(Art.night(this.min) * 3), L = [], mg = 70;   // perspectiva desde el ojo de la cámara (sobre el jugador, o corrido si está inclinada)
+  const fast3D = JE.calidad3D === 0 || ((this.til || 0) > .55 && (View.zf || 1) < .82), maxD2 = fast3D ? 270 * 270 : 1e9;
   for (let cy = Math.floor((oy - mg) / S); cy <= Math.floor((oy + vh + mg) / S); cy++) for (let cx = Math.floor((ox - mg) / S); cx <= Math.floor((ox + vw + mg) / S); cx++) {
     if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue;
-    for (const b of M.lotes(cx, cy).ed) { const x = b.x - ox, y = b.y - oy, m2 = b.z > .6 ? mg + 200 : mg; if (x > vw + m2 || y > vh + m2 || x < -m2 || y < -m2) continue; if (b.gx != null) { const gx = b.gx - ox - px, gy = b.gy - oy - py; b.dd = gx * gx + gy * gy + (2 - b.z); } else b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* las partes de un lugar van juntas: primero las bajas, luego las torres */
+    for (const b of M.lotes(cx, cy).ed) { const x = b.x - ox, y = b.y - oy, m2 = b.z > .6 ? mg + 200 : mg; if (x > vw + m2 || y > vh + m2 || x < -m2 || y < -m2) continue; if (b.gx != null) { const gx = b.gx - ox - px, gy = b.gy - oy - py; b.dd = gx * gx + gy * gy + (2 - b.z); } else b.dd = (x - px) * (x - px) + (y - py) * (y - py); if (fast3D && !b.t && b.z < .16 && b.dd > maxD2) continue; L.push(b); }   /* las partes de un lugar van juntas: primero las bajas, luego las torres */
     const AP = M.altG && M.altG.get(cx + ',' + cy); if (AP) for (const b of AP) { const x = b.x - ox, y = b.y - oy; if (x > vw + mg + 40 || y > vh + mg + 40 || x < -mg - 40 || y < -mg - 40) continue; b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* lo que va en alto: viaducto del metro, estaciones elevadas y puentes (76-altura.js) */
     const ST = M.sitTrozo(cx, cy); if (ST) for (const b of ST.e) { if (b.oculto || (b.fl < 3 && !b.P) || Math.floor(b.x / S) !== cx || Math.floor(b.y / S) !== cy) continue; const x = b.x - ox, y = b.y - oy, m2 = ((b.zt || b.z) > .6 ? mg + 200 : mg) + (b.bb[2] - b.bb[0]) / 2; if (x > vw + m2 || y > vh + m2 || x < -m2 || y < -m2) continue; b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* edificios reales de los sitios (22-sitios.js) */
   }
@@ -464,11 +465,11 @@ Ride.prototype.draw3D = function (c, ox, oy, vw, vh) {
       const j = (i + 1) & 3, ex = (bx[i] + bx[j]) / 2, ey = (by[i] + by[j]) / 2, nx = ex - mx, ny = ey - my;
       if (nx * (px - ex) + ny * (py - ey) <= 0) continue;   // esa pared mira hacia el otro lado
       c.fillStyle = Math.abs(nx) > Math.abs(ny) ? p.wb : p.wa; c.beginPath(); c.moveTo(bx[i], by[i]); c.lineTo(bx[j], by[j]); c.lineTo(rx[j], ry[j]); c.lineTo(rx[i], ry[i]); c.closePath(); c.fill();
-      if (nf > 1) { c.strokeStyle = b.lnc ? (p.lnc || (p.lnc = mixHex(b.lnc, '#0b1430', nb * .17))) : p.ln; if (nb >= 2) c.setLineDash([1.2, 2.2]); c.beginPath(); for (let k = 1; k < nf; k++) { const t = k / nf; c.moveTo(bx[i] + (rx[i] - bx[i]) * t, by[i] + (ry[i] - by[i]) * t); c.lineTo(bx[j] + (rx[j] - bx[j]) * t, by[j] + (ry[j] - by[j]) * t); } c.stroke(); if (nb >= 2) c.setLineDash([]); }
+      if (nf > 1 && !(fast3D && b.dd > 180 * 180 && !b.t)) { c.strokeStyle = b.lnc ? (p.lnc || (p.lnc = mixHex(b.lnc, '#0b1430', nb * .17))) : p.ln; if (nb >= 2) c.setLineDash([1.2, 2.2]); c.beginPath(); for (let k = 1; k < nf; k++) { const t = k / nf; c.moveTo(bx[i] + (rx[i] - bx[i]) * t, by[i] + (ry[i] - by[i]) * t); c.lineTo(bx[j] + (rx[j] - bx[j]) * t, by[j] + (ry[j] - by[j]) * t); } c.stroke(); if (nb >= 2) c.setLineDash([]); }
     }
     c.fillStyle = p.roof; c.beginPath(); c.moveTo(rx[0], ry[0]); c.lineTo(rx[1], ry[1]); c.lineTo(rx[2], ry[2]); c.lineTo(rx[3], ry[3]); c.closePath(); c.fill();
-    const cxr = (rx[0] + rx[2]) / 2, cyr = (ry[0] + ry[2]) / 2; if (!(b.t === 'dos' || b.t === 'cuatro' || b.t === 'aguja')) { c.strokeStyle = p.top; c.beginPath(); for (let i = 0; i < 4; i++) { const x = cxr + (rx[i] - cxr) * .84, y = cyr + (ry[i] - cyr) * .84; i ? c.lineTo(x, y) : c.moveTo(x, y); } c.closePath(); c.stroke(); }
-    if (b.t) techoLM(c, b, rx, ry, p, nb, px, py, f, K); else techoL(c, b, rx, ry, p);
+    const cxr = (rx[0] + rx[2]) / 2, cyr = (ry[0] + ry[2]) / 2; if (!(b.t === 'dos' || b.t === 'cuatro' || b.t === 'aguja') && !(fast3D && b.dd > 180 * 180)) { c.strokeStyle = p.top; c.beginPath(); for (let i = 0; i < 4; i++) { const x = cxr + (rx[i] - cxr) * .84, y = cyr + (ry[i] - cyr) * .84; i ? c.lineTo(x, y) : c.moveTo(x, y); } c.closePath(); c.stroke(); }
+    if (b.t) techoLM(c, b, rx, ry, p, nb, px, py, f, K); else if (!(fast3D && b.dd > 160 * 160)) techoL(c, b, rx, ry, p);
   }
 };
 /* techos de los edificios, en el sentido del lote: aires, tanques, helipuerto, jardín o paneles */

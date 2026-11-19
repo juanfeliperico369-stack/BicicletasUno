@@ -32,7 +32,7 @@ JE.vehiculos = {
   registrar(id, def = {}) {
     if (!/^[a-z][a-z0-9_-]{1,23}$/.test(id || '')) throw new Error('vehículo: id inválido «' + id + '» (minúsculas, de 2 a 24)');
     if (VEHICULOS[id] && VEHICULOS[id].base) throw new Error('vehículo: «' + id + '» es de los de siempre; para su arte usa JE.vehiculos.mejorar');
-    const b = VEHICULOS[def.base] || VEHICULOS.bike;
+    const b = VEHICULOS[def.base] || VEHICULOS.bike; def = Object.fromEntries(Object.entries(def).filter(([, x]) => x !== undefined));
     const v = Object.assign({}, b, { timbre: 0, bajar: 1, libre: 0, corto: def.n || id }, def, { id, base: 0, de: b.id, fis: Object.assign({}, b.fis, def.fis) });
     if (!Array.isArray(v.loma) || v.loma.length !== 3) v.loma = b.loma;
     VEHICULOS[id] = v; return v;

@@ -193,7 +193,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **`guionMisiones(now)`:**
   - Toma de `GUION.misiones` una o dos misiones por día, con la semilla de la fecha, según `dias`, `desde`, `hasta` y `req`.
   - Son de tipo `visita` hacia un id de `LUGARES` o `[lat, lon]`.
-  - Al cumplirlas se guardan en `Save.data.trama` y `Save.data.huevos` y se ven las frases de `despues`.
+  - Al cumplirlas se guardan en `Save.data.tramaHechas` (la v1.7.2 usaba `Save.data.trama`, que ahora es de «Ruedas y Rieles»; se pasa sola) y `Save.data.huevos` y se ven las frases de `despues`.
 - **Interfaz:**
   - `Cam.lugar()` pone los botones de la cámara entre las metas y el control, en fila si no caben.
   - `#actBar` pasa a la izquierda del minimapa cuando no cabe debajo.

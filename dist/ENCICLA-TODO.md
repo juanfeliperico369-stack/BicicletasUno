@@ -1776,7 +1776,7 @@ Para depurar en el navegador: `?unlock=1` desbloquea todos los oficios. En conso
 - **`guionMisiones(now)`:**
   - Toma de `GUION.misiones` una o dos misiones por día, con la semilla de la fecha, según `dias`, `desde`, `hasta` y `req`.
   - Son de tipo `visita` hacia un id de `LUGARES` o `[lat, lon]`.
-  - Al cumplirlas se guardan en `Save.data.trama` y `Save.data.huevos` y se ven las frases de `despues`.
+  - Al cumplirlas se guardan en `Save.data.tramaHechas` (la v1.7.2 usaba `Save.data.trama`, que ahora es de «Ruedas y Rieles»; se pasa sola) y `Save.data.huevos` y se ven las frases de `despues`.
 - **Interfaz:**
   - `Cam.lugar()` pone los botones de la cámara entre las metas y el control, en fila si no caben.
   - `#actBar` pasa a la izquierda del minimapa cuando no cabe debajo.
@@ -2731,6 +2731,49 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+### 2026-11-19 · Llega la entrega del plan único (M1–M6) y se une a la v1.7.2
+
+**Qué pasó:**
+- Mientras se cerraba la v1.7.2, la entrega de código del plan único llegó a esta misma rama, en el commit 9dfe005. La trae `docs/ENTREGA-PLAN-UNICO-ENCICLA.md`:
+  - Run EnCicla 3D (`91-runner.js`);
+  - 7 vehículos e interiores de estaciones (`92-vehiculos.js`);
+  - la trama «Ruedas y Rieles» (`93-trama.js`, `contenido/guion/trama_valle.json`);
+  - Motor del Valle 1.1.0, con `motor-valle/js/valle.js`, túneles y deprimidos;
+  - el GPS en dos niveles y ajustes a los gestos y a la calidad automática.
+- Se unió con la v1.7.2 sin reescribir la historia, porque la rama ya la tenía.
+
+**Lo que se arregló al unir:**
+- **`JE.vehiculos`:** el catálogo de la entrega reemplazaba la API del registro (`registrar`, `usar` y `libres`), y el modo libre habría fallado en cada cuadro.
+  - Ahora `VEH_CATALOGO` es solo la ficha del selector.
+  - Los vehículos nuevos (bici eléctrica, patinete, monopatín eléctrico, skate y patines) entran al registro con:
+    - sus cifras (`VSTATS`);
+    - su suelo (`VSURF`);
+    - su sensibilidad a las lomas (`up`);
+    - su gasto y su dibujo (`Art.vehTop`).
+- **Tipos de casilla que no existen:** la tabla de suelos usaba `TT.SIDE`, `TT.PARK`, `TT.EARTH`, `TT.STAIRS`, `TT.EST` y `TT.BODEGA`, y todos caían en la misma clave (`undefined`). Ahora usa `WALK`, `GRASS`, `LAND`, `STEPS`, `STATION` y `DEPOT`.
+- **`stats_`:** ya no reemplaza al registro. Solo la bici eléctrica de EnCicla (la bici con el motor encendido) usa las cifras de `ebike`.
+- **El suelo:** se quitó el truco que cambiaba la tabla global `SURF` en cada cuadro.
+- **El selector «Vehículo»** lista el catálogo y lo que se registre después con `libre: 1`.
+- **El guardado:**
+  - las dos tramas usaban `Save.data.trama`: la de la entrega, como objeto, y `misiones.json`, como lista;
+  - las misiones hechas pasan a `Save.data.tramaHechas`, y una partida de la v1.7.2 se pasa sola, sin perder nada.
+- **Los dos choques de código:**
+  - en el GPS se juntan las rutas por vehículo y los dos niveles;
+  - en la energía del modo libre se juntan el gasto por vehículo y el ajuste por la velocidad elegida.
+
+**Qué se probó:**
+- la suite completa sobre la unión;
+- los 7 vehículos uno por uno: cifras, suelo, dibujo y manejo, sin errores.
+
+**Qué falta (la «revolución» v2.0):**
+- revisar la entrega completa contra el plan y jugar cada parte;
+- pasar Run EnCicla 3D al registro de modos (`JE.modos`), para que también salga en el menú;
+- juntar la trama «Ruedas y Rieles» con `misiones.json`;
+- sincronizar el Motor del Valle 1.1.0 con El Metro;
+- esperar la entrega de arte y publicar.
+
+La rama tiene esta unión, pero **lo publicado sigue siendo la v1.7.2**.
+
 ### 2026-11-19 · v1.7.2 · Jugar, pulir y preparar el terreno para lo nuevo
 
 **Qué cambió**
@@ -3140,7 +3183,7 @@ Los archivos de `src/js/` se juntan **en orden alfabético** en `dist/juega-enci
 |---|---|---|
 | Arte (funciones de dibujo) | `src/js/11-arte-<tema>.js` | Después de `10-art.js` (`Art`, `PAL`, `prect`…) |
 | Vehículos | `src/js/26-veh-<id>.js` | Después del registro `25-vehiculos.js` |
-| Modos y juegos | `src/js/92-<id>.js` a `94-<id>.js` | Después del registro `91-modos.js` y antes de `95-promo.js` y `99-boot.js` |
+| Modos y juegos | `src/js/94-<id>.js` (ya están `91-runner.js`, `92-vehiculos.js` y `93-trama.js`) | Después del registro `91-modos.js` y antes de `95-promo.js` y `99-boot.js` |
 | Trama y textos | `contenido/guion/<nombre>.json` | `tools/build.js` lo embebe como `GUION.<nombre>` |
 | Datos del mapa | `motor-valle/` | Nunca a mano en `src/data/` |
 | Pruebas | una sección `3x)` en `tests/run.js` | Antes de `4) Rendimiento` |
@@ -3165,7 +3208,7 @@ JE.vehiculos.registrar('scooter', {
   fis: { max: 70, acc: 45, brk: 80, coast: 30, w0: 4.2, w1: 2.2, tw: .08, r: 2.2 },   // px/s del diseño de 8 px (la bici: 60/30/72/40)
   asist: 1,                                   // motor: no se frena en las subidas
   suelo: t => t === TT.STEPS ? 0 : t === TT.GRASS ? .35 : (SURF[t] || .5),   // no sube escaleras, en el pasto casi no anda
-  timbre: 1, bajar: 1, libre: 1,              // con timbre, se parquea y se elige en el modo libre (botón «Vehículo»)
+  timbre: 1, bajar: 1, libre: 1,              // con timbre, se parquea y sale en el selector «Vehículo» del modo libre
   gasto: .05,                                 // energía por segundo en el modo libre (la bici gasta 0,35)
   spr: R => scooterTop(R.mode.shirt || PAL.vd),
   lado: (b, x, y, R, yo, fase) => { prect(b, x - 6, y - 3, 12, 2, '#23272f'); prect(b, x + 4, y - 14, 2, 11, '#d6dde6'); Art.person(b, x - 1, y - 3, yo, 0, 1); }   // vista panorámica
@@ -3186,7 +3229,7 @@ JE.vehiculos.registrar('scooter', {
 | `via` | `1`: solo por calles; el GPS y las salidas van por la vía | No |
 | `spr(R)` | Lienzo visto desde arriba, mirando al norte | El de la base |
 | `lado(b, x, y, R, yo, fase)` | Dibujo de lado en la vista panorámica | El de la bici |
-| `timbre`, `bajar`, `libre`, `gasto` | Timbre, parquear, elegir en el modo libre y energía | `0`, `1`, `0`, la de la bici |
+| `timbre`, `bajar`, `libre`, `gasto` | Timbre, parquear, salir en el selector «Vehículo» del modo libre (`92-vehiculos.js`) y energía | `0`, `1`, `0`, la de la bici |
 
 **API:**
 - `JE.vehiculos.usar('scooter')`: súbete ya, en la partida actual.
@@ -3300,7 +3343,7 @@ Unidades: `TS = 16` px por casilla de 10 m (1 m = 1,6 px).
 | `despues` | Una frase o una lista, al cumplirla |
 | `huevo` | El fragmento escondido (Easter egg) que queda en `Save.data.huevos` |
 
-Lo hecho queda en `Save.data.trama`.
+Lo hecho queda en `Save.data.tramaHechas`. (`Save.data.trama` es el estado de la trama «Ruedas y Rieles» de `93-trama.js`.)
 
 **Los otros guiones** son JSON en la misma carpeta:
 - `dia_del_valle.json`: la campaña, con un capítulo por turno;

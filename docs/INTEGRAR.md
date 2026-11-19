@@ -30,7 +30,7 @@ Los archivos de `src/js/` se juntan **en orden alfabético** en `dist/juega-enci
 |---|---|---|
 | Arte (funciones de dibujo) | `src/js/11-arte-<tema>.js` | Después de `10-art.js` (`Art`, `PAL`, `prect`…) |
 | Vehículos | `src/js/26-veh-<id>.js` | Después del registro `25-vehiculos.js` |
-| Modos y juegos | `src/js/92-<id>.js` a `94-<id>.js` | Después del registro `91-modos.js` y antes de `95-promo.js` y `99-boot.js` |
+| Modos y juegos | `src/js/94-<id>.js` (ya están `91-runner.js`, `92-vehiculos.js` y `93-trama.js`) | Después del registro `91-modos.js` y antes de `95-promo.js` y `99-boot.js` |
 | Trama y textos | `contenido/guion/<nombre>.json` | `tools/build.js` lo embebe como `GUION.<nombre>` |
 | Datos del mapa | `motor-valle/` | Nunca a mano en `src/data/` |
 | Pruebas | una sección `3x)` en `tests/run.js` | Antes de `4) Rendimiento` |
@@ -55,7 +55,7 @@ JE.vehiculos.registrar('scooter', {
   fis: { max: 70, acc: 45, brk: 80, coast: 30, w0: 4.2, w1: 2.2, tw: .08, r: 2.2 },   // px/s del diseño de 8 px (la bici: 60/30/72/40)
   asist: 1,                                   // motor: no se frena en las subidas
   suelo: t => t === TT.STEPS ? 0 : t === TT.GRASS ? .35 : (SURF[t] || .5),   // no sube escaleras, en el pasto casi no anda
-  timbre: 1, bajar: 1, libre: 1,              // con timbre, se parquea y se elige en el modo libre (botón «Vehículo»)
+  timbre: 1, bajar: 1, libre: 1,              // con timbre, se parquea y sale en el selector «Vehículo» del modo libre
   gasto: .05,                                 // energía por segundo en el modo libre (la bici gasta 0,35)
   spr: R => scooterTop(R.mode.shirt || PAL.vd),
   lado: (b, x, y, R, yo, fase) => { prect(b, x - 6, y - 3, 12, 2, '#23272f'); prect(b, x + 4, y - 14, 2, 11, '#d6dde6'); Art.person(b, x - 1, y - 3, yo, 0, 1); }   // vista panorámica
@@ -76,7 +76,7 @@ JE.vehiculos.registrar('scooter', {
 | `via` | `1`: solo por calles; el GPS y las salidas van por la vía | No |
 | `spr(R)` | Lienzo visto desde arriba, mirando al norte | El de la base |
 | `lado(b, x, y, R, yo, fase)` | Dibujo de lado en la vista panorámica | El de la bici |
-| `timbre`, `bajar`, `libre`, `gasto` | Timbre, parquear, elegir en el modo libre y energía | `0`, `1`, `0`, la de la bici |
+| `timbre`, `bajar`, `libre`, `gasto` | Timbre, parquear, salir en el selector «Vehículo» del modo libre (`92-vehiculos.js`) y energía | `0`, `1`, `0`, la de la bici |
 
 **API:**
 - `JE.vehiculos.usar('scooter')`: súbete ya, en la partida actual.
@@ -190,7 +190,7 @@ Unidades: `TS = 16` px por casilla de 10 m (1 m = 1,6 px).
 | `despues` | Una frase o una lista, al cumplirla |
 | `huevo` | El fragmento escondido (Easter egg) que queda en `Save.data.huevos` |
 
-Lo hecho queda en `Save.data.trama`.
+Lo hecho queda en `Save.data.tramaHechas`. (`Save.data.trama` es el estado de la trama «Ruedas y Rieles» de `93-trama.js`.)
 
 **Los otros guiones** son JSON en la misma carpeta:
 - `dia_del_valle.json`: la campaña, con un capítulo por turno;
