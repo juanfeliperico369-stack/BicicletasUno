@@ -5,13 +5,13 @@
      node herramientas/sincronizar.mjs ../MetroZero --verificar    solo compara (versión, fuente de verdad y archivos)
    La fuente de verdad es juanfeliperico369-stack/motorcity. Si el destino tiene una versión más nueva, no copia.
    No viajan: las entregas de las IAs (ENTREGA-*.md, su arte ya está en arte/), .git, la caché de fuentes (geo/cache), las salidas de prueba, el banco de pruebas compilado
-   (dist/*.html) ni el mundo en base64 (dist/mundo-*.js): cada juego los rehace con node motor-city/motor.mjs construir.
+   (dist/*.html), el mundo en base64 (dist/mundo-*.js) ni Manhattan (datos/nueva_york, 10 MB: es de Turno Cero): cada juego los rehace con node motor-city/motor.mjs construir.
    ===================================================================== */
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const AQUI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), args = process.argv.slice(2), soloVer = args.includes('--verificar'), otro = args.find(a => !a.startsWith('--'));
 if (!otro) { console.error('Uso: node herramientas/sincronizar.mjs RUTA_AL_JUEGO [--verificar]'); process.exit(1); }
 const R = path.resolve(otro), DEST = fs.existsSync(path.join(R, 'VERSION.json')) && fs.existsSync(path.join(R, 'js', '00-nucleo.js')) ? R : path.join(R, 'motor-city');
-const NO = new Set(['.git', '.github', 'cache', 'salida', '__pycache__', 'node_modules', '.DS_Store', 'web']), NO_RUTA = [/^ENTREGA-.*\.md$/, /^dist\/exportar\//, /^arte\/referencias\//, /^dist\/capturas\//, /^arte\/chatgpt\/guias\//, /^index\.html$/, /^\.nojekyll$/, /^dist\/.*\.html$/, /^dist\/mundo-.*\.js$/, /^dist\/\.sandbox/];
+const NO = new Set(['.git', '.github', 'cache', 'salida', '__pycache__', 'node_modules', '.DS_Store', 'web']), NO_RUTA = [/^datos\/nueva_york\//, /^ENTREGA-.*\.md$/, /^dist\/exportar\//, /^arte\/referencias\//, /^dist\/capturas\//, /^arte\/chatgpt\/guias\//, /^index\.html$/, /^\.nojekyll$/, /^dist\/.*\.html$/, /^dist\/mundo-.*\.js$/, /^dist\/\.sandbox/];
 const vj = p => { try { return JSON.parse(fs.readFileSync(path.join(p, 'VERSION.json'), 'utf8')); } catch (e) { return { version: '0.0.0' }; } };
 const cmp = (a, b) => { const A = a.split('.').map(Number), B = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((A[i] || 0) !== (B[i] || 0)) return (A[i] || 0) - (B[i] || 0); return 0; };
 const lista = (b, r = '') => { const o = []; if (!fs.existsSync(b)) return o; for (const e of fs.readdirSync(b, { withFileTypes: true })) { if (NO.has(e.name)) continue; const q = r ? r + '/' + e.name : e.name; if (e.isDirectory()) o.push(...lista(path.join(b, e.name), q)); else if (!NO_RUTA.some(x => x.test(q))) o.push(q); } return o; };

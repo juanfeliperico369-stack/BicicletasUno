@@ -14,12 +14,17 @@ const op = process.env.MC_CHROMIUM ? { executablePath: process.env.MC_CHROMIUM }
 const ctx = await b.newContext({ viewport: { width: 412, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage(), errs = [];
 p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto(URL); await p.tap('#jugar'); await p.waitForFunction(() => window.MANDADOS && window.MANDADOS.mision, null, { timeout: 120000 }); await p.waitForTimeout(1500);
+/* Los storylets se cierran a través del botón real (no se ocultan por CSS). */
+const cerrarDialogo = async () => {
+  const b = p.locator('.mcui .dialogo button:visible').first();
+  if (await b.count()) { await b.click({ timeout: 3000 }); await p.waitForTimeout(100); }
+};
 const lista = [];
 for (const [h, n] of [[10, '10h'], [17, '17h'], [20.5, '20h30']]) for (const v of ['cenital', 'maqueta', 'lateral', 'ciudad3d']) {
-  await p.evaluate(([h, v]) => { MANDADOS.reloj.min = h * 60; MANDADOS.ponVista(v); }, [h, v]); await p.waitForTimeout(1400); const f = v + '-' + n + '.png'; await p.screenshot({ path: path.join(OUT, f) }); lista.push(f);
+  await p.evaluate(([h, v]) => { MANDADOS.reloj.min = h * 60; MANDADOS.ponVista(v); }, [h, v]); await p.waitForTimeout(1400); await cerrarDialogo(); const f = v + '-' + n + '.png'; await p.screenshot({ path: path.join(OUT, f) }); lista.push(f);
 }
-await p.evaluate(() => { MANDADOS.reloj.min = 11 * 60; MANDADOS.ponVista('cenital'); MANDADOS.darUrbe(); MANDADOS.ponCapa('valor'); }); await p.waitForTimeout(1200); await p.screenshot({ path: path.join(OUT, 'capa-valor.png') }); lista.push('capa-valor.png');
-await p.evaluate(() => { MANDADOS.ponCapa(null); const G = MANDADOS; G.ponHogar('Calle 31 # 28-15'); G.cuerpo.x = G.hogar.d.x; G.cuerpo.y = G.hogar.d.y + 3; G.abrirCasa(); }); await p.waitForTimeout(1000); await p.screenshot({ path: path.join(OUT, 'mi-casa.png') }); lista.push('mi-casa.png');
+await p.evaluate(() => { MANDADOS.reloj.min = 11 * 60; MANDADOS.ponVista('cenital'); MANDADOS.darUrbe(); MANDADOS.ponCapa('valor'); }); await p.waitForTimeout(1200); await cerrarDialogo(); await p.screenshot({ path: path.join(OUT, 'capa-valor.png') }); lista.push('capa-valor.png');
+await p.evaluate(() => { MANDADOS.ponCapa(null); const G = MANDADOS; G.ponHogar('Calle 31 # 28-15'); G.cuerpo.x = G.hogar.d.x; G.cuerpo.y = G.hogar.d.y + 3; G.abrirCasa(); }); await p.waitForTimeout(1000); await cerrarDialogo(); await p.screenshot({ path: path.join(OUT, 'mi-casa.png') }); lista.push('mi-casa.png');
 const info = await p.evaluate(() => ({ version: MC.version, estilo: MC.estilo, arte: MC.arte.activa, tapa: MC.UI.verificar(MANDADOS.ui), faltan: MC.Sprites.faltan.size, gpu: MC.GPU && MC.GPU.perfil ? MC.GPU.perfil().nivel : '?' }));
 fs.writeFileSync(path.join(OUT, 'LEEME.md'), '# Capturas de Mandados\n\n- Página: ' + URL + '\n- Motor City ' + info.version + ' · estilo ' + info.estilo + ' · arte ' + info.arte + ' · GPU ' + info.gpu + '\n- La interfaz tapa el centro: ' + (info.tapa.length ? info.tapa.join(', ') : 'no') + ' · sprites que faltan: ' + info.faltan + ' · errores: ' + (errs.length ? errs.slice(0, 5).join(' | ') : 'ninguno') + '\n\n' + lista.map(f => '- `' + f + '`').join('\n') + '\n');
 console.log('✓ ' + lista.length + ' capturas en dist/capturas/ · errores: ' + errs.length); await b.close();

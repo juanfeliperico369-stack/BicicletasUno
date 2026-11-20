@@ -1,5 +1,7 @@
 # Contexto para la IA que retome Motor City
 
+> **4.0 (20‑nov‑2026):** `MC.Planeta` (ciudades y carreteras en un anillo), `MC.Busqueda` (búsqueda 0–5), `MC.Modelos` (lector GLB) y el juego adulto *Turno Cero* (`juegos/getaway/`, canon de Codex en tres ciudades). Lee `docs/TURNO-CERO.md` y `TAREAS-IA.md` § 4.0.
+
 > **Léelo completo antes de tocar nada.** Si se te acaba el contexto, este documento, `MOTOR.md` y `BITACORA.md` bastan para seguir.
 > Lo escribió Claude (Claude Code) el 19‑nov‑2026, a pedido del autor (OneZero). La 2.0 sigue el *Plan del Mundo Abierto*; la 2.1 y la 2.2, los pedidos que vinieron después (ver §3b).
 > Ese plan está en `docs/PLAN-MUNDO-ABIERTO.md` de BicicletasUno, rama `ccr-bed2d98a-uho2kr`.

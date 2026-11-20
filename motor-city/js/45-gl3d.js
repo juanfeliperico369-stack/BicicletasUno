@@ -58,7 +58,11 @@ Object.assign(Malla.prototype, {
     if (dos) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
     else if (detalle >= 3 || !casa) {
       for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < .8) continue; const nx = (b[1] - a[1]) / L * sg * .18, nz = -(b[0] - a[0]) / L * sg * .18, a2 = [a[0] - nx, a[1] - nz], b2 = [b[0] - nx, b[1] - nz]; this.quadF([a[0], zt, a[1]], [b[0], zt, b[1]], [b[0], zt + .55, b[1]], [a[0], zt + .55, a[1]], osc3(muro, .93), 0, ctr); this.quadF([a2[0], zt, a2[1]], [b2[0], zt, b2[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], osc3(muro, .8), 0, [cx, zt + 5, cz]); this.quadF([a[0], zt + .55, a[1]], [b[0], zt + .55, b[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], acl3(muro, .2), 0, [cx, zt - 5, cz]); }
-      if (st.tanque || h2(sem, 3, 82) < .35) this.cil(cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), zt, cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4), .62, 1.25, 7, hex3('#1d2228'), .62, hex3('#2b3138'));
+      const tx = cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), tz = cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4);
+      if (Z.tanques_madera && H > 12 && h2(sem, 3, 82) < (Z.tanques || .5)) {   // Nueva York: tanque de agua de madera sobre patas, con techo cónico
+        for (const [px, pz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) this.cajaF(tx + px * .9, zt + .55, tz + pz * .9, 0, .14, .14, 2.2, hex3('#2a2b2e'));
+        this.cil(tx, zt + 2.7, tz, 1.25, 2.6, 9, hex3('#6b4e35'), 1.25, hex3('#5a412c')); this.cil(tx, zt + 5.3, tz, 1.35, 1.1, 9, hex3('#3b3d42'), 0);
+      } else if (st.tanque || h2(sem, 3, 82) < .35) this.cil(tx, zt, tz, .62, 1.25, 7, hex3('#1d2228'), .62, hex3('#2b3138'));
     }
     if (detalle < 3 && !casa) return;
     /* fachada por cada muro: zócalo, ventanas con marco y vidrio, puerta, balcones y cornisa */
@@ -85,7 +89,7 @@ Object.assign(Malla.prototype, {
     }
   },
   /* carro low-poly (o buseta, camión, moto o bici) en (x, y, z) GL con rumbo a */
-  carro3d(x, y, z, a, L, W, col, tipo = 'carro', noche = 0) {
+  carro3d(x, y, z, a, L, W, col, tipo = 'carro', noche = 0, extra = null) {
     const c = hex3(col), ca = Math.cos(a), sa = Math.sin(a), pt = (u, v, h) => [x + u * ca - v * sa, y + h, z + u * sa + v * ca], rueda = hex3('#16181c');
     if (tipo === 'moto' || tipo === 'bici') { this.cajaF(x, y + .45, z, a, L * .55, .22, .35, c); for (const u of [-L * .36, L * .36]) { const p = pt(u, 0, 0); this.cajaF(p[0], y + .02, p[2], a, .62, .12, .62, rueda); } if (noche > .3) { const f = pt(L * .45, 0, .75); this.cajaF(f[0], f[1], f[2], a, .1, .14, .12, [1, .95, .7], 1); } return; }
     const alto = tipo === 'buseta' || tipo === 'camion' || tipo === 'bus' ? 2.6 : 1.0, bajo = .34;
@@ -101,6 +105,9 @@ Object.assign(Malla.prototype, {
     const fl = pt(L / 2 + .01, W * .32, bajo + .32), fr = pt(L / 2 + .01, -W * .32, bajo + .32), bl = pt(-L / 2 - .01, W * .32, bajo + .32), br = pt(-L / 2 - .01, -W * .32, bajo + .32), on = noche > .3 ? 1 : 0;
     for (const p of [fl, fr]) this.cajaF(p[0], p[1], p[2], a, .06, .32, .14, on ? [1, .95, .75] : [.85, .85, .8], on);
     for (const p of [bl, br]) this.cajaF(p[0], p[1], p[2], a, .06, .3, .14, [.75, .08, .08], on);
+    /* 4.0: barra de luces de la patrulla (rojo y azul que se alternan) */
+    if (extra && extra.sirena && alto < 2) { const f = Math.floor((typeof performance !== 'undefined' ? performance.now() : 0) / 160) % 2, l = pt(-L * .06, W * .2, bajo + 1.08), r = pt(-L * .06, -W * .2, bajo + 1.08);
+      this.cajaF(l[0], l[1], l[2], a, .3, .14, .34, f ? [1, .1, .1] : [.35, .05, .05], f); this.cajaF(r[0], r[1], r[2], a, .3, .14, .34, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); }
   },
   /* persona (peatón): piernas, torso, brazos, cabeza y pelo */
   persona3d(x, y, z, a, A, fase = 0, alto = 1.7) {

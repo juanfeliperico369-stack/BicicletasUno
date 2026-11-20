@@ -28,6 +28,8 @@ class Vistas {
     const aj = GPU.ajustes(); this.motor3d = op.motor3d || 'auto'; this.raster = null; this.res = new ResDinamica({ objetivo: 1000 / aj.fps, escala: aj.escala });
   }
   lista() { return VISTAS.map(v => Object.assign({ disponible: true }, v)); }
+  /* 4.0: al cambiar de mundo (planeta), suelta el contexto WebGL y las losas; el navegador solo da unos pocos contextos */
+  liberar() { if (this.gl) { try { this.gl.liberar(); const x = this.gl.gl && this.gl.gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { /* ya estaba suelto */ } this.gl = null; } this.glIntentado = true; this.losas = this.losasLejos = null; this._buf = null; }
   /* ¿la 3D la dibuja el raster por software? 'auto': si no hay WebGL o si el WebGL es por software */
   usaRaster() { if (this.motor3d === 'raster') return true; if (this.motor3d === 'gl') return !this.hayGL(); return GPU.perfil().nivel === 'software' || !this.hayGL(); }
   hayGL() { if (!this.glIntentado) { this.glIntentado = true; try { this.gl = new VistaGL(this.mundo, this.losas); if (!this.gl.ok) this.gl = null; } catch (e) { this.gl = null; MC.falla('WebGL', e); } } return !!this.gl; }

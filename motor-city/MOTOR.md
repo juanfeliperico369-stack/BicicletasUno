@@ -209,6 +209,30 @@ MC.arte.registrar('encicla', {
 - **Deprimidos:** solo se entra por sus extremos.
 - **Salto:** tiempo de coyote (0,12 s) y memoria del botón (0,14 s).
 
+## 9c. El planeta, la búsqueda y los modelos (4.0)
+- **`MC.Planeta`:**
+  - `new MC.Planeta({ anillo, cargar: id => MC.Mundo.cargar(b64, cfg) })` arma el anillo de ciudades y carreteras;
+  - `await P.mundo(id)` carga perezosa, con dos mundos en memoria como máximo;
+  - `P.puertas(id).siguiente` da `{ x, y, a, nombre }`;
+  - `P.cruce(id, x, y, dt)` da `{ a: idVecino }`;
+  - `P.llegada(id, desde)` dice dónde aparece quien llega;
+  - `P.restante(id, x, y)` sirve para el letrero;
+  - `P.globo(g, W, H, { lon0, inclinacion, t, yo })` dibuja el planeta;
+  - `Generador.carretera({ largo, biomas, semilla })` crea un tramo de la nada.
+  - En la vista 3D, `E.curvatura = 1/(2R)` curva el horizonte.
+- **`MC.Busqueda`:**
+  - `new MC.Busqueda(M)`;
+  - `B.alerta(gravedad, { testigos, visible, causa })` y `B.ponerNivel(n)`;
+  - `B.banda(n)`, `B.esconder()`, `B.senuelo(x, y, s)`, `B.pulso(J)` y `B.disparar(J)`;
+  - cada cuadro, `B.actualizar(dt, cuerpo, trafico)`, más `B.vehiculos()` (con `sirena` y `roto`) y `B.obstaculos()`;
+  - `B.sacar()` entrega los eventos `nivel`, `embestida`, `disparo`, `herido`, `fuera`, `pinchado`, `bloqueo`, `puas`, `atrapado` y `perdidos`.
+- **`MC.Modelos`:**
+  - `MC.Modelos.registrar(id, glb | base64)` y `MC.Modelos.paquete(MC_MODELOS)`;
+  - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro })`;
+  - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
+  - `E.modelos3d = [{ id, x, y, a, k }]` pone modelos en el mundo.
+- **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
+
 ## 10. Hoja de ruta (lo que sigue)
 - **2.1:** precalcular las redes en el MC4 (hoy `red('rueda')` tarda alrededor de 1 s al arrancar). Guardar el ancho y la nomenclatura de las ciclorrutas. Sumar `geo/pasos.py` (niveles firmados de Overture) y conectarlo al GPS de dos niveles.
 - **2.2:** sombras del sol en WebGL. Agua animada del río. Ventanas con textura. Árboles por especie. Atlas del arte que entreguen Gemini y ChatGPT (`MC.arte`).

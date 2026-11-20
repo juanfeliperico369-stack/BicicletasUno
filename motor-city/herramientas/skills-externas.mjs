@@ -10,7 +10,12 @@ import fs from 'node:fs'; import path from 'node:path'; import { spawnSync } fro
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), args = process.argv.slice(2), val = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const C = JSON.parse(fs.readFileSync(path.join(RAIZ, 'skills-externas.json'), 'utf8'));
 const agentes = (val('--agente') || 'codex,antigravity,gemini-cli').split(',').map(s => s.trim()).filter(Boolean);
-const cmd = s => ['-y', 'skills', 'add', s.repo, '--skill', s.skill, ...agentes.flatMap(a => ['-a', a]), '-y', ...(args.includes('--global') ? ['-g'] : [])];
+/* El catálogo fija commits para evitar instalar accidentalmente otra versión. */
+const fuenteFijada = s => {
+  if (!/^[0-9a-f]{40}$/.test(s.commit) || !/^[\w.-]+\/[\w.-]+$/.test(s.repo)) throw new Error('Referencia no fijada o repositorio inválido para ' + s.id);
+  return s.repo + '@' + s.commit;
+};
+const cmd = s => ['-y', 'skills', 'add', fuenteFijada(s), '--skill', s.skill, ...agentes.flatMap(a => ['-a', a]), '-y', ...(args.includes('--global') ? ['-g'] : [])];
 if (args.includes('--instalar') || args.includes('--comandos')) {
   let mal = 0;
   for (const s of C.skills) {

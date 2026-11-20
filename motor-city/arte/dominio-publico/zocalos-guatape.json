@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "fecha": "2026-11-20",
+  "estado": "referencia visual, pendiente muestreo RGB de fotografías",
+  "fuentes": [
+    {
+      "url": "https://puebliar.co/municipios/guatape",
+      "tipo": "galería fotográfica; algunas imágenes con licencia CC BY-SA"
+    },
+    {
+      "url": "https://www.municipiodeguatape.gov.co/publicaciones/1219/preservando-la-identidad-de-guatape-institucionalizacion-de-los-zocalos-en-las-fachadas/",
+      "tipo": "fuente municipal sobre zócalos"
+    },
+    {
+      "url": "https://turismoguatape.com/",
+      "tipo": "sitio oficial de turismo; referencia visual"
+    }
+  ],
+  "nota": "Los valores hex son aproximaciones editoriales realizadas con fotografías observadas, NO extracción exacta de píxeles ni definición normativa de colores del municipio. Verificar cada foto y su licencia antes de incorporar atlas derivado.",
+  "colores": [
+    {
+      "hex": "#f0e9dc",
+      "dónde": "muro encalado blanco cálido",
+      "tipo": "fachada",
+      "fuente": "https://puebliar.co/municipios/guatape",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#f4d348",
+      "dónde": "fachada amarillo saturado",
+      "tipo": "fachada",
+      "fuente": "https://turismoguatape.com/",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#f0782f",
+      "dónde": "panel de zócalo naranja",
+      "tipo": "zócalo",
+      "fuente": "https://puebliar.co/municipios/guatape",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#ba292d",
+      "dónde": "zócalo y puerta rojo",
+      "tipo": "zócalo",
+      "fuente": "https://turismoguatape.com/",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#257cba",
+      "dónde": "postigos y marcos azul",
+      "tipo": "marco",
+      "fuente": "https://puebliar.co/municipios/guatape",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#37b4c1",
+      "dónde": "guardapolvo y zócalo turquesa",
+      "tipo": "zócalo",
+      "fuente": "https://turismoguatape.com/",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#1d8a68",
+      "dónde": "postigos verdes y barandas",
+      "tipo": "marco",
+      "fuente": "https://puebliar.co/municipios/guatape",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#ab5893",
+      "dónde": "moldura violeta",
+      "tipo": "marco",
+      "fuente": "https://turismoguatape.com/",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#da8aa0",
+      "dónde": "fachada rosada",
+      "tipo": "fachada",
+      "fuente": "https://puebliar.co/municipios/guatape",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#dca04a",
+      "dónde": "panel ocre",
+      "tipo": "zócalo",
+      "fuente": "https://turismoguatape.com/",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#82513a",
+      "dónde": "madera barnizada oscura",
+      "tipo": "puerta",
+      "fuente": "https://puebliar.co/municipios/guatape",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#b96540",
+      "dónde": "teja de barro envejecida",
+      "tipo": "techo",
+      "fuente": "https://turismoguatape.com/",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#6c8c60",
+      "dónde": "moldura verde musgo",
+      "tipo": "marco",
+      "fuente": "https://puebliar.co/municipios/guatape",
+      "metodo": "estimación visual, no muestreo instrumental"
+    },
+    {
+      "hex": "#e4c19d",
+      "dónde": "zócalo crema y piedra",
+      "tipo": "zócalo",
+      "fuente": "https://turismoguatape.com/",
+      "metodo": "estimación visual, no muestreo instrumental"
+    }
+  ]
+}

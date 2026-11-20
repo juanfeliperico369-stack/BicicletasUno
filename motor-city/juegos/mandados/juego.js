@@ -47,9 +47,25 @@ function jugar() {
   const tanque = { moto_mandados: 6, carro_mandados: 20 };
   const ORDEN = ['pie', 'rueda', 'moto', 'auto', 'pesado', 'aire', 'agua'], GRUPO = { pie: 'A pie', rueda: 'Bicis, patinetes y tablas', moto: 'Motos', auto: 'Carros', pesado: 'Pesados', aire: 'Aire', agua: 'Agua' };
   const listaVeh = () => libre ? MC.Vehiculos.de('mandados', v => ORDEN.includes(v.clase)).sort((a, b) => ORDEN.indexOf(a.clase) - ORDEN.indexOf(b.clase)).map(v => [v.id, { n: (v.icon || '•') + ' ' + v.n + ' · ' + GRUPO[v.clase].toLowerCase(), tiene: true, agua: v.clase === 'agua' }]) : Object.entries(garaje);
-  const E = { mundo: M, camara, reloj, clima, transporte: null, jugador, t: 0, vehiculos: [], trafico: [], peatones: [], extras: [], cables: [] };
+  const E = { mundo: M, camara, reloj, clima, transporte: null, jugador, t: 0, vehiculos: [], trafico: [], peatones: [], extras: [], cables: [],
+    /* Las etiquetas del mundo se omiten si quedan debajo de la columna de botones; son Canvas, no DOM. */
+    bloqueosEtiquetas: (w, h) => [[w - 84 * w / innerWidth, 0, w, h]]
+  };
   /* 3.0: artilugios físicos (MC.Objetos): conos y vallas en las vías, balones en las plazas, canecas y cajas en los andenes */
-  const objetos = new MC.Objetos(M); objetos.sembrar(c0.x, c0.y, 340, 46); E.objetos = objetos;
+  /* C-M29 + G-H17: una semilla aleatoria nunca hereda el guardado de Guatapé. */
+  const claveObjetos = 'motorcity.mandados.objetos.guatape.v1';
+  let guardadoObjetos = null;
+  if (!generado) {
+    try { guardadoObjetos = MC.GuardadoSectores.leer(claveObjetos) || new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 }); }
+    catch (e) { guardadoObjetos = new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 }); }
+  }
+  const persecucion = new MC.Persecucion(M, { nivel: 1, duracion: 90 });
+  const objetos = new MC.Objetos(M, { guardado: guardadoObjetos, mundoId: 'guatape' });
+  objetos.sembrar(c0.x, c0.y, 340, 46); E.objetos = objetos;
+  if (guardadoObjetos) guardadoObjetos.actualizar(cuerpo.x, cuerpo.y, 1);
+  const guardarObjetos = () => { if (guardadoObjetos && objetos.guardarCambios()) guardadoObjetos.guardar(claveObjetos); };
+  addEventListener('pagehide', guardarObjetos);
+  addEventListener('visibilitychange', () => { if (document.hidden) guardarObjetos(); });
   MC.on('golpe', ev => { camara.sacudir(Math.min(.22, ev.fuerza * .025)); if (MC.Vida && MC.Vida.emitir) MC.Vida.emitir('polvo', ev.o.x, ev.o.y, 6); });
   const pobl = new MC.Poblacion(M, { n: 36, centro: c0, radio: 900, semilla: 4 }), trafico = new MC.Trafico(M, { n: 10, peatones: 0, red: 'rueda', radio: 400 });
   const perro = MC.Seres.Animal.crear('perro_criollo', 3); perro.x = c0.x - 3; perro.y = c0.y; perro.a = 0; perro.v = 0;
@@ -72,7 +88,7 @@ function jugar() {
     entregado = false; const paquete = { id: 'paquete', n: 'Paquete', masa, volumen: masa * 3 };
     mision = new MC.Mision({ titulo: 'De ' + o.nombre + ' a ' + d.nombre, limite, premio: pago, libro, cuenta: 'jugador', pasos: [{ tipo: 'ir', x: o.x, y: o.y, radio: 22, texto: 'Recoge en ' + o.nombre }, { tipo: 'esperar', x: o.x, y: o.y, radio: 22, seg: 1.2, texto: 'Recogiendo…' }, { tipo: 'ir', x: d.x, y: d.y, radio: 22, texto: 'Lleva a ' + d.nombre }, { tipo: 'condicion', x: d.x, y: d.y, radio: 40, cond: () => entregado, texto: 'Entra y entrega en la mano 🚪' }] });
     mision.paquete = paquete; mision.origen = o; mision.destino = d; mision.pago = pago; dinero0 = libro.saldo('jugador');
-    ui.aviso('📦 Mandado nuevo: ' + o.nombre + ' → ' + d.nombre + ' · ' + cop(pago) + ' · ' + masa + ' kg', 3500);
+    if (hechos > 0) ui.aviso('📦 Mandado nuevo: ' + o.nombre + ' → ' + d.nombre + ' · ' + cop(pago) + ' · ' + masa + ' kg', 3500);
   };
   MC.on('mision', ev => { if (ev.estado === 'cumplida' || ev.estado === 'fallida') hist.director.resultado(ev.estado === 'cumplida'); if (ev.estado === 'cumplida') { hechos++; ui.aviso('✅ ¡Entregado! +' + cop(mision.pago) + ' · llevas ' + hechos, 3000); setTimeout(nuevaMision, 2500); } else if (ev.estado === 'fallida') { ui.aviso('⏰ Se acabó el tiempo. Pagan la mitad.', 3000); libro.mover('mundo', 'jugador', mision.pago / 2, 'Mandado tarde', false); setTimeout(nuevaMision, 2500); } });
   /* controles e interfaz */
@@ -80,13 +96,20 @@ function jugar() {
   const VIST = ['cenital', 'ciudad3d', 'maqueta', 'lateral', 'pano', 'tercera']; let iv = 0, seguir = null;
   /* tocar para ir: en la vista cenital, un toque marca el destino y el personaje va solo por las calles (A*) */
   const tocarMapa = q => { if (esquema !== 'tocar_ir' || vistas.actual.id !== 'cenital') return; const d = vistas.dpr || 1, [x, y] = camara.aMundo(q.x * d, q.y * d, W, H); ruta = MC.Manejo.rutaA(M, cuerpo, { x, y }, cuerpo.veh.clase === 'pie' ? 'rueda' : 'rueda'); ui.aviso('👆 Vamos para allá'); };
-  const ponVista = id => { const v = vistas.usar(id, E); bGirar.hidden = !(v.id === 'lateral' || v.id === 'maqueta'); if (v.tipo === 'pano') { try { seguir = new MC.SeguirRuta(M, cuerpo, { red: 'rueda' }); } catch (e) { seguir = null; } } else seguir = null; ui.aviso(v.icon + ' ' + v.n, 1600, 'vista'); };
+  const ponVista = (id, sinAviso = false) => { const v = vistas.usar(id, E); bGirar.hidden = !(v.id === 'lateral' || v.id === 'maqueta'); if (v.tipo === 'pano') { try { seguir = new MC.SeguirRuta(M, cuerpo, { red: 'rueda' }); } catch (e) { seguir = null; } } else seguir = null; if (!sinAviso) ui.aviso(v.icon + ' ' + v.n, 1600, 'vista'); };
   const tecla = k => { if (k === 'KeyQ') camara.girar90(-1); else if (k === 'KeyR') camara.girar90(1); else if (k === 'KeyH') casa(); else if (k === 'KeyV') { iv = (iv + 1) % VIST.length; ponVista(VIST[iv]); } else if (k === 'KeyP') vistas.pixel = !vistas.pixel; else if (k === 'KeyM') musica(); else if (k === 'KeyE') entrar(); else if (k === 'KeyB') menuVeh(); };
   ui.boton({ id: 'vista', icono: '🗺️', texto: 'Vista', al: () => menuVista() }); ui.boton({ id: 'veh', icono: '🚲', texto: 'Vehículo', al: () => menuVeh() }); ui.boton({ id: 'musica', icono: '🎵', texto: 'Sonido', al: () => menuSonido() });
   const bAccion = ui.boton({ id: 'accion', icono: '🚪', texto: 'Entrar', al: () => entrar() }); bAccion.hidden = true;
   const bComprar = ui.boton({ id: 'comprar', icono: '💧', texto: 'Agua', al: () => comprar() }); bComprar.hidden = true;
   const bGirar = ui.boton({ id: 'girar', icono: '↻', texto: 'Girar', al: () => camara.girar90(1) }); bGirar.hidden = true;
   ui.boton({ id: 'casa', icono: '🏠', texto: 'Mi casa', al: () => casa() }); ui.boton({ id: 'ciudad', icono: '🏙️', texto: 'Ciudad', al: () => menuCiudad() }); ui.boton({ id: 'ajustes', icono: '⚙️', texto: 'Ajustes', al: () => menuAjustes() });
+  /* C-M26: reto opcional; no activa persecuciones por abrir el juego. */
+  ui.boton({ id: 'persecucion', icono: '🚨', texto: 'Persecución',
+    al: () => { if (persecucion.estado === 'activa') return persecucion.parar('cancelada');
+      if (!['auto', 'moto', 'pesado'].includes(cuerpo.veh.clase)) return ui.aviso('🚗 Elige un carro o moto para el reto');
+      if (!persecucion.iniciar(cuerpo)) return ui.aviso('🚧 No hay calles seguras cerca para iniciar');
+      ui.aviso(persecucion.evento, 3500); persecucion.evento = null; }
+  });
   const bLugar = ui.boton({ id: 'lugar', icono: '🔧', texto: 'Lugar', al: () => menuLugar() }); bLugar.hidden = true;
   const bRescate = ui.boton({ id: 'rescate', icono: '🆘', texto: 'Salir de aquí', al: () => { ocu.rescatar(cuerpo, M); bRescate.hidden = true; } }); bRescate.hidden = true;
   /* el agua (2.4): entrar (dejando el vehículo en la orilla), bucear, subir a respirar, volver al vehículo, lancha y tierra */
@@ -222,10 +245,10 @@ function jugar() {
   const densidad = new MC.DensidadLienzo({ max: Math.min(2, devicePixelRatio || 1), activa: MC.opciones.densidad !== false }); let dEf = densidad.max;
   let W = 0, H = 0; const ajustar = () => { densidad.ponerMax(Math.min(2, devicePixelRatio || 1)); const d = dEf = densidad.medir(0, vistas.actual.id); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
   const redensificar = d => { if (d === dEf) return; const k = d / dEf; camara.zoom *= k; camara.limites.zoom = [camara.limites.zoom[0] * k, camara.limites.zoom[1] * k]; dEf = d; W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; };
-  ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
+  ponVista('cenital', true); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
   /* 2.6: el tutorial es opcional (en la portada y en ⚙️ Ajustes); al empezar solo queda la guía del joystick, que se va sola */
   /* ciclo */
-  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0, ultBloqueo = null, nadaba = false;
+  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0, ultBloqueo = null, nadaba = false, objetosT = 0, sectoresT = 0;
   /* el tráfico y la gente también ocupan espacio: no se atraviesan */
   cuerpo.obstaculos = () => { const L = []; for (const v of E.trafico || []) { if (v.clase === 'metro' || v.clase === 'cable' || v.clase === 'tram') continue; const r = (v.ancho || 1.8) / 2 + .15, l = (v.largo || 4.3) / 3, c = Math.cos(v.a || 0), s2 = Math.sin(v.a || 0); for (const k of [-1, 0, 1]) L.push({ x: v.x + c * l * k, y: v.y + s2 * l * k, r, motivo: 'un vehículo' }); } for (const p of E.peatones || []) L.push({ x: p.x, y: p.y, r: .28, motivo: 'una persona' }); return L; };
   const cuadro = ahora => {
@@ -237,7 +260,7 @@ function jugar() {
     if (vistas.actual.tipo === 'pano' && seguir) { seguir.paso(dt, { acel: Math.abs(ent.stick.x) > .2 ? ent.stick.x * (vistas.pano.lado < 0 ? 1 : -1) : ent.acel, salto: ent.salto, turbo: ent.turbo }); E.pano = { trazo: seguir.trazo, s: seguir.s, id: seguir.id }; }
     else { const gl = vistas.actual.control === 'volante', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92; if (bucear) entrada.baja = true; if (subirT > 0) { subirT -= dt; entrada.sube = true; } if (!cuerpo.nadando) bucear = false;
       if (ruta) { const sg = MC.Manejo.seguirRuta(cuerpo, ruta); if (!sg || sg.llego) { ruta = null; ui.aviso('📍 Llegaste'); } else if (ent.stick.m > .3) ruta = null; else Object.assign(entrada, sg); }
-      entrada.lluvia = clima.lluvia; cuerpo.actualizar(impacto ? 0 : dt, entrada); }
+      entrada.lluvia = clima.lluvia; if (persecucion.turbo > 0) entrada.turbo = true; cuerpo.actualizar(impacto ? 0 : dt, entrada); }
     const ds = Math.hypot(cuerpo.x - x0, cuerpo.y - y0), st = V.clase !== 'pie' ? (desg[V.id] || (desg[V.id] = MC.Desgaste.nuevo(V))) : null; if (st) { MC.Desgaste.usar(st, ds, cuerpo.eventos.includes('choque') ? 1 : 0, clima); cuerpo.escala *= .82 + .18 * st.estado; } if (tanque[V.id] != null && !libre) tanque[V.id] = Math.max(0, tanque[V.id] - ds * garaje[V.id].consumo / 100 / 1000 * 1.4);
     if (mision && mision.paquete) { const carga = mision.paso >= 2 && mision.estado === 'activa'; cuerpo.escala *= carga ? MC.clamp(1 - mision.paquete.masa / (V.clase === 'pie' ? 25 : V.clase === 'rueda' ? 60 : 900), .5, 1) : 1; }
     yo.vivir(dt * 6, cuerpo.nadando ? 'corre' : cuerpo.estado || 'quieto', Math.abs(cuerpo.v), clima);   // nadar cansa como correr
@@ -247,6 +270,7 @@ function jugar() {
     if (mision) mision.actualizar(dt, cuerpo);
     /* 3.0: contra reloj (queda menos de un cuarto del tiempo del mandado), la cámara entra en «persecución»: se aleja, se inclina y se mece */
     camara.persecucion = mision && mision.estado === 'activa' && mision.def.limite ? MC.clamp((.3 - (mision.def.limite - mision.t) / mision.def.limite) / .3, 0, 1) : 0;
+    if (persecucion.estado === 'activa') camara.persecucion = Math.max(camara.persecucion, .55 + persecucion.nivel * .07);
     camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z, zPaso: cuerpo.zPaso, mundo: M });
     ocu.vigilar(dt, { cuerpo, mundo: M, libro, entrada: ent, ms: vistas.ms });
     if (urbe && urbe.zonas.size && (urbeT += dt) > 6) { urbeT = 0; const r = urbe.avanzar(1); if (r.nuevos) ui.aviso('🏗️ Se construyeron ' + r.nuevos + ' edificios nuevos · ' + r.pob.toLocaleString('es-CO') + ' habitantes'); if (capaId) E.capaInfo = urbe.capa(capaId); }
@@ -256,14 +280,25 @@ function jugar() {
     /* el perro te sigue (dirección de Reynolds: llegar con separación) */
     const f = MC.IA.llegar([perro.x, perro.y], [cuerpo.x - Math.cos(cuerpo.a) * 3, cuerpo.y - Math.sin(cuerpo.a) * 3], Math.min(perro.vmax, Math.abs(cuerpo.v) + 3), 4); perro.x += f[0] * dt; perro.y += f[1] * dt; perro.v = Math.hypot(f[0], f[1]); if (perro.v > .2) perro.a = Math.atan2(f[1], f[0]);
     E.peatones = pobl.paso(dt, reloj, cuerpo.x, cuerpo.y, 420); E.trafico = trafico.paso(dt, cuerpo.x, cuerpo.y, reloj.seg, vistas.calidad);
+    if (persecucion.estado === 'activa') {
+      persecucion.actualizar(dt, cuerpo, E.trafico);
+      E.trafico = E.trafico.concat(persecucion.vehiculos());
+      if (persecucion.evento) { ui.aviso(persecucion.evento, 2400, 'persecucion'); persecucion.evento = null; }
+    }
     { const V = cuerpo.veh, cs = [{ x: cuerpo.x, y: cuerpo.y, z: cuerpo.z, r: V.clase === 'pie' ? .35 : Math.max(.4, (V.ancho || .8) / 2), masa: V.masa || (V.clase === 'auto' ? 1200 : V.clase === 'pesado' ? 6000 : 90), vx: Math.cos(cuerpo.a) * cuerpo.v, vy: Math.sin(cuerpo.a) * cuerpo.v }]; for (const t of E.trafico) if (Math.hypot(t.x - cuerpo.x, t.y - cuerpo.y) < 160) cs.push({ x: t.x, y: t.y, z: 0, r: 1, masa: 1200, vx: Math.cos(t.a) * (t.v || 0), vy: Math.sin(t.a) * (t.v || 0) }); objetos.actualizar(dt, cs); }
+    if (guardadoObjetos) {
+      if ((sectoresT += dt) >= 1) { sectoresT = 0; const cambio = guardadoObjetos.actualizar(cuerpo.x, cuerpo.y, 1); if (cambio.duermen.length) guardarObjetos(); }
+      if ((objetosT += dt) >= 8) { objetosT = 0; guardarObjetos(); }
+    }
     if (!interior) { densidad.activa = MC.opciones.densidad !== false; redensificar(densidad.medir(dt, vistas.actual.id + (vistas.pixel ? '_px' : ''))); }
     vistas.dibujar(g, W, H, E, dt); if (vistas.efectiva().tipo === '2d' && !vistas.pixel) objetos.dibujar2D(g, (x, y, z) => vistas.aPantalla(E, x, y, z), camara.zoom, cuerpo, 140); ui.pintarJoystick(); MC.Telemetria.registro(vistas.ms, dt); if (tele && (teleT -= dt) <= 0) { teleT = .25; ui.ficha('tele', MC.Telemetria.linea(E)).hidden = false; }   /* 2.8: telemetría (percentiles) */
     /* la flecha al objetivo del mandado (en las vistas 2D): pin si se ve, flecha en el borde si no */
     const Pm = mision && mision.actual; const spm = Pm && Pm.x != null ? vistas.aPantalla(E, Pm.x, Pm.y, 0) : null; if (spm && vistas.actual.tipo !== 'pano') { const [sx, sy] = spm; const Z = ui.zonaLibre(), d2 = W / innerWidth; MC.UI.indicador(g, W, H, sx, sy, { texto: Math.round(Math.hypot(Pm.x - cuerpo.x, Pm.y - cuerpo.y)) + ' m', escala: dEf, t: E.t, rect: [Z.x0 * d2 + 20 * dEf, Z.y0 * d2 + 10 * dEf, Z.x1 * d2 - 20 * dEf, Z.y1 * d2] }); }
     if ((adapt += dt) > 20 && tocando) { adapt = 0; const A = MC.Musica.adaptar({ velocidad: Math.abs(cuerpo.v), hora: reloj.hora, clima }); if (A.estilo !== tocando.pieza.titulo.split(' · ').pop()) tocando = MC.Musica.tocar({ estilo: A.estilo, tema: TEMAS[temaI], energia: A.energia, compases: 16 }); }
     if ((hud -= dt) <= 0) { hud = .25;
-      ui.ficha('hora', '🕐 ' + reloj.texto()); ui.ficha('clima', clima.texto()); ui.ficha('plata', libre ? '🆓 ' + cop(libro.saldo('jugador')) : '💰 ' + cop(libro.saldo('jugador'))); ui.ficha('lugar', '📍 ' + (M.calle(cuerpo.x, cuerpo.y) || M.meta.nombre));
+      ui.ficha('hora', '🕐 ' + reloj.texto()); ui.ficha('clima', clima.texto()); ui.ficha('plata', libre ? '🆓 ' + cop(libro.saldo('jugador')) : '💰 ' + cop(libro.saldo('jugador')));
+      ui.ficha('lugar', '📍 ' + (M.calle(cuerpo.x, cuerpo.y) || M.meta.nombre)).hidden = persecucion.estado === 'activa';
+      ui.ficha('reto', persecucion.estado === 'activa' ? '🚨 ' + Math.ceil(persecucion.duracion - persecucion.t) + ' s · ' + persecucion.puntos + ' pts' : '').hidden = persecucion.estado !== 'activa';
       ui.velocidad(cuerpo.v, V.icon || ''); ui.barra('energia', '⚡ Energía', yo.estado.energia); ui.barra('agua', '💧 Agua', yo.estado.hidratacion); if (tanque[V.id] != null) ui.barra('gas', '⛽ Gasolina', tanque[V.id] / garaje[V.id].tanque);
       const P = mision && mision.actual; ui.mision(mision ? '<b>📦 ' + mision.def.titulo + '</b><br>' + (P && P.x != null ? '<b>' + Math.round(Math.hypot(P.x - cuerpo.x, P.y - cuerpo.y)) + ' m</b> · ' : '') + '⏱ ' + Math.ceil(mision.restante) + ' s · ' + (P ? P.texto : '') : '');   // lo urgente (distancia y tiempo) va primero
       bAccion.hidden = !(mision && mision.paso === 3 && mision.destino); ui.foco(Math.abs(cuerpo.v) > 11);
@@ -274,7 +309,7 @@ function jugar() {
       bMontar.hidden = !cuerpo.puedeMontar(3.5); if (!bMontar.hidden) bMontar.firstChild.textContent = MC.Vehiculos.get(cuerpo.estacionado.veh).icon || '🚲';
       ui.barra('aire', '🫧 Aire', cuerpo.aire); ui.barraVisible('aire', cuerpo.buceando || cuerpo.aire < .999); bComprar.hidden = !(cercaDe(tiendas, 30) || (tanque[V.id] != null && cercaDe(gasolineras, 40))); bComprar.firstChild.textContent = tanque[V.id] != null && cercaDe(gasolineras, 40) ? '⛽' : '💧';
       ui.pintarMinimapa(cuerpo.x, cuerpo.y, camara.yaw, (P && P.x != null ? [{ x: P.x, y: P.y, color: '#ffc23a' }] : []).concat(hogar ? [{ x: hogar.d.x, y: hogar.d.y, color: '#39ffb3' }] : []));
-      window.MANDADOS = { mundo: M, cuerpo, yo, libro, get mision() { return mision; }, get piloto() { return piloto; }, set piloto(p) { piloto = p; }, get vehiculos() { return listaVeh().length; }, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, get botones() { return { bAgua, bMontar, bTierra, bBaja, bSube }; }, get libre() { return libre; }, cambiarArte, ponEstilo, opciones: OPC, aplicarOpc, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
+      window.MANDADOS = { mundo: M, cuerpo, yo, libro, get mision() { return mision; }, get piloto() { return piloto; }, set piloto(p) { piloto = p; }, get vehiculos() { return listaVeh().length; }, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, objetos, guardadoObjetos, guardarObjetos, get botones() { return { bAgua, bMontar, bTierra, bBaja, bSube }; }, get libre() { return libre; }, cambiarArte, ponEstilo, opciones: OPC, aplicarOpc, darUrbe, ponCapa, persecucion, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
   };
   requestAnimationFrame(cuadro);
 }

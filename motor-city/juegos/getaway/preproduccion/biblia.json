@@ -1,0 +1,103 @@
+{
+  "schema": "turno-cero-preproduction-v1",
+  "status": "proposal",
+  "maturity": "adult themes; rating proposed, not certified",
+  "world": {
+    "name": "Manhattan NYC",
+    "dataBbox": [
+      -74.03,
+      40.68,
+      -73.9,
+      40.88
+    ],
+    "geoSource": "OSM+Overture pipeline pending",
+    "mapStatus": "missing MC4; POIs not a map",
+    "sectors_m": 1000,
+    "activeRadius_m": 150
+  },
+  "stats": {
+    "heat": {
+      "min": 0,
+      "max": 100,
+      "thresholds": [
+        15,
+        35,
+        55,
+        70,
+        85
+      ]
+    },
+    "maxPursuers": 4,
+    "hearing": "situational",
+    "wantedDecayPerSecNoContact": 2.5
+  },
+  "episodes": [
+    {
+      "id": "ep0",
+      "area": "Chelsea",
+      "title": "Papel de ruta",
+      "mission": "intro-car",
+      "branch": "read-or-deliver"
+    },
+    {
+      "id": "ep1",
+      "area": "Lower Manhattan",
+      "title": "Kilómetro cero",
+      "mission": "pickup",
+      "branch": "fast-or-discreet"
+    },
+    {
+      "id": "ep2",
+      "area": "Chinatown/LES",
+      "title": "La lista",
+      "mission": "radio",
+      "branch": "leak-or-quiet"
+    },
+    {
+      "id": "ep3",
+      "area": "East River waterfront",
+      "title": "Muelle 4",
+      "mission": "extraction",
+      "branch": "person-or-documents"
+    },
+    {
+      "id": "ep4",
+      "area": "Midtown",
+      "title": "Cruce de cuentas",
+      "mission": "crossroads",
+      "branch": "inspector-or-journalist"
+    },
+    {
+      "id": "ep5",
+      "area": "bridge approach",
+      "title": "Después de las tres",
+      "mission": "escape",
+      "branch": "car-or-source"
+    },
+    {
+      "id": "ep6",
+      "area": "Chelsea",
+      "title": "Saldo",
+      "mission": "epilogue",
+      "branch": "A-expose/B-protect/C-negotiate"
+    }
+  ],
+  "art": {
+    "palette": [
+      "#182224",
+      "#E4D9C5",
+      "#73848A",
+      "#A84635",
+      "#D7A15C",
+      "#466F79",
+      "#DDBB4B"
+    ],
+    "style": "editorial ink/gouache, architectural volume, no generic neon",
+    "original": true
+  },
+  "rights": {
+    "gameplayReferences": "analysis only; no assets reused",
+    "geodata": "OSM/Overture + official attribution",
+    "people": "fictional"
+  }
+}

@@ -9,11 +9,11 @@
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **3.0.0** en `main`; **3.0.1 propuesta en la PR #5** · 20‑nov‑2026 · **138 pruebas en verde en Chromium para el commit f976776** ([ejecución](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44750220010)).
 
 ## Resumen
 - **Hechos:** 76 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 5 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos, pero falta algo de afuera:** 5 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. La documentación decía que el motor estaba copiado en EnCicla y El Metro, pero la auditoría de las ramas `main` no encontró `motor-city/` en sus raíces (ver `docs/AUDITORIA-ECOSISTEMA-2026-11-20.md`). Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -181,3 +181,26 @@ Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.m
 | Fluidez | Hecho | 2.11: la densidad dinámica y la capa de suelo. |
 | Pedidos nuevos para Gemini y ChatGPT | Hecho | G‑H14 a G‑H17, y C‑M26 a C‑M29, C‑A13 y C‑A14, en `TAREAS-IA.md`. |
 
+
+## 14. «Empieza con el monstruo, nada de *family friendly*; todo en un planeta, con caminos largos en medio de la nada»; y luego «adapta todo lo nuevo» (4.0, esta sesión)
+| Pedido | Estado |
+|---|---|
+| El juego grande y adulto | ✅ *Turno Cero* (`juegos/getaway/`), con el canon de Codex. Ver `docs/TURNO-CERO.md`. |
+| Guatapé, la mejor versión de Medellín y el Valle, y Nueva York en un solo planeta | ✅ `MC.Planeta`: anillo de 3 ciudades y 3 carreteras, con globo y horizonte curvo |
+| Caminos largos en medio de la nada para llegar a cada ciudad | ✅ 16, 12 y 15 km generados, con biomas, paradas, letrero de km y viaje ×3 |
+| Los modos, vehículos y transporte de Medellín, adaptados | ✅ Metro, cables, tranvía y Metroplús (subirse y perder a la policía), EnCicla, lancha del embalse y robo de carros |
+| Lo nuevo de Codex: espionaje 2026, artefactos y GLB | ✅ Artefactos T01, T02, T03, T05, T06, T08, T09, T11 y T04 en el juego; los 42 GLB en la cámara 3D (`MC.Modelos`) |
+| Lo nuevo de Codex: acción a pie, esqueletos y texturas | ⏳ C‑M32, C‑M33 y C‑A16 (`TAREAS-IA.md` § 4.0) |
+| Medir en un celular real | ⏳ G‑H20 y G‑H24 |
+
+## 20-nov-2026 · Entrega ChatGPT (rama de integración)
+- **C-M29 / G-H17 · Parcial funcional:** 30 objetos con parámetros de juego, guardado por sector original e IDs estables; restauración en Mandados.
+- **Pendiente:** arte y modelos detallados, streaming de objetos por sectores, prueba móvil y ejecución integral de Playwright desde un clon.
+
+## 20-nov-2026 · Nueva ronda de IA y diseño
+- **C-M25:** portada editorial sin neón ni tarjetas genéricas, con prueba en Chromium `pruebas/portada.mjs`; ejecución CI pendiente de inspección en el commit correspondiente.
+- **G-H19, parcial:** investigación documental de persecuciones de tres juegos. No se inventan minutos/segundos ni conteo de policías; `reportes/2026-11-20-gemini-persecuciones.md`.
+- **G-H18:** 50 registros de NYC CommonPlace publicados en `contenido/nueva-york-lugares.json` (IDs/coordenadas/fuente); **acceso a cada lugar sin verificar**. Ver `docs/ESTADO-3.1.0.md`.
+
+## Nota de consolidación · 3.1.0
+Esta página conserva la historia original de los pedidos, incluso estados de 2.10/3.0 ahora superados. El **estado actualizado y con evidencias** se mantiene en [`docs/ESTADO-3.1.0.md`](ESTADO-3.1.0.md). No leer «Hecho» de versiones anteriores como una certificación de la rama principal ni del rendimiento en teléfonos físicos.

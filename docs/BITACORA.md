@@ -3,6 +3,17 @@
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 
+
+## 20-nov-2026 · Motor City 4.0.0 en `motor-city/`
+- Llegó el motor 4.0. Trae:
+  - el planeta (`MC.Planeta`);
+  - la búsqueda 0–5 (`MC.Busqueda`);
+  - el lector GLB (`MC.Modelos`);
+  - los juegos con varios mundos.
+- *Turno Cero*, el juego adulto de Motor City, queda aislado en `motor-city/juegos/getaway/` y no se mezcla con este juego. Manhattan no se copia aquí.
+- `TAREAS-IA.md` tiene la nota de la 4.0 y un pedido adaptado a este juego.
+- Pruebas en verde.
+
 ## 2026-11-04 · v0.1.0 · Primera versión jugable
 
 **Qué cambió**

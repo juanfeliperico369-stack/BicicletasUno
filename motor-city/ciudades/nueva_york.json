@@ -1,0 +1,391 @@
+{
+ "id": "nueva_york",
+ "nombre": "Nueva York · Manhattan",
+ "pais": "Estados Unidos",
+ "idioma": "es-CO",
+ "zona_horaria": "America/New_York",
+ "ventana": {
+  "lon0": -74.025,
+  "latN": 40.88,
+  "lon1": -73.905,
+  "latS": 40.695,
+  "lat_ref": 40.7875
+ },
+ "casilla_m": 6.0,
+ "celda_casillas": 8,
+ "relieve_casillas": 8,
+ "atribucion": [
+  "© colaboradores de OpenStreetMap (ODbL), vía Overture Maps Foundation; huellas de Overture (OSM, Microsoft y Google)",
+  "Relieve: Terrain Tiles (AWS Open Data; SRTM/NASA y otros)"
+ ],
+ "zonas": {
+  "_nota": "Reglas de estilo que salieron de mirar la ciudad desde arriba (dron, satélite y fotos; docs/MEDELLIN-DESDE-EL-AIRE.md de Juega EnCicla). Las imágenes solo se miraron: nunca se copian al juego.",
+  "ladera": {
+   "nombre": "Ladera",
+   "muros": [
+    "#b4552f",
+    "#c0633a",
+    "#a54a2a",
+    "#d07a4a",
+    "#9c4426",
+    "#e9e0d0"
+   ],
+   "techos": [
+    "#7d7f84",
+    "#8e9095",
+    "#a8a294",
+    "#5e5f63"
+   ],
+   "plancha": 0.7,
+   "tanques": 0.45,
+   "teja": 0.15,
+   "arboles": 0.25,
+   "densidad": 0.95,
+   "pisos": [
+    1,
+    4
+   ],
+   "suelo": "#c9b8a0"
+  },
+  "centro": {
+   "nombre": "Centro",
+   "muros": [
+    "#c9b38a",
+    "#b7a07a",
+    "#9da3ad",
+    "#c2774e",
+    "#d8cfbf",
+    "#8c939d"
+   ],
+   "techos": [
+    "#6f7177",
+    "#8a6a55",
+    "#9c9d9f"
+   ],
+   "plancha": 0.6,
+   "tanques": 0.2,
+   "teja": 0.25,
+   "arboles": 0.2,
+   "densidad": 1.0,
+   "pisos": [
+    2,
+    12
+   ],
+   "suelo": "#b9b2a6"
+  },
+  "laureles": {
+   "nombre": "Laureles",
+   "muros": [
+    "#efe9dc",
+    "#e6dccb",
+    "#c46a40",
+    "#d9cbb3",
+    "#f4f0e6"
+   ],
+   "techos": [
+    "#b5542f",
+    "#a8492a",
+    "#c4643a"
+   ],
+   "plancha": 0.2,
+   "tanques": 0.1,
+   "teja": 0.75,
+   "arboles": 0.7,
+   "densidad": 0.75,
+   "pisos": [
+    1,
+    6
+   ],
+   "suelo": "#cdbfa5"
+  },
+  "poblado": {
+   "nombre": "El Poblado",
+   "muros": [
+    "#b25a36",
+    "#a65230",
+    "#c06b44",
+    "#e2ddd2",
+    "#8f4a2c"
+   ],
+   "techos": [
+    "#5f6166",
+    "#7a7c80",
+    "#b5542f"
+   ],
+   "plancha": 0.4,
+   "tanques": 0.1,
+   "teja": 0.3,
+   "arboles": 0.9,
+   "densidad": 0.6,
+   "pisos": [
+    4,
+    30
+   ],
+   "suelo": "#a8b48f"
+  },
+  "mixto": {
+   "nombre": "Ciudad mixta",
+   "muros": [
+    "#c25f37",
+    "#d9cdb7",
+    "#b4552f",
+    "#e6dccb",
+    "#a9b1bc"
+   ],
+   "techos": [
+    "#7d7f84",
+    "#b5542f",
+    "#9c9d9f"
+   ],
+   "plancha": 0.45,
+   "tanques": 0.3,
+   "teja": 0.4,
+   "arboles": 0.45,
+   "densidad": 0.85,
+   "pisos": [
+    1,
+    8
+   ],
+   "suelo": "#c4b79f"
+  },
+  "pueblo": {
+   "nombre": "Nueva York",
+   "muros": [
+    "#8b4a3a",
+    "#9a5a44",
+    "#6e3b2e",
+    "#c9bfae",
+    "#d8cfc0",
+    "#b8b2a6",
+    "#7f93a6",
+    "#5f6f7f",
+    "#a14f3c",
+    "#4b4f57"
+   ],
+   "techos": [
+    "#4a4c52",
+    "#5c5e64",
+    "#3f4146",
+    "#6b6d72"
+   ],
+   "plancha": 0.97,
+   "tanques": 0.55,
+   "tanques_madera": true,
+   "teja": 0.0,
+   "zocalos": 0.06,
+   "arboles": 0.3,
+   "densidad": 1.0,
+   "pisos": [
+    4,
+    40
+   ],
+   "suelo": "#9a958c",
+   "_nota": "Ladrillo rojo y brownstone, caliza, torres de vidrio; azoteas planas con tanques de agua de madera."
+  },
+  "industria": {
+   "nombre": "Industria",
+   "muros": [
+    "#a9b1bc",
+    "#c3c9d1",
+    "#8e98a6"
+   ],
+   "techos": [
+    "#9aa3ad",
+    "#b8c0c8",
+    "#7f8891"
+   ],
+   "plancha": 1.0,
+   "tanques": 0.05,
+   "teja": 0.0,
+   "arboles": 0.15,
+   "densidad": 0.7,
+   "pisos": [
+    1,
+    3
+   ],
+   "suelo": "#b4b0a6"
+  },
+  "campus": {
+   "nombre": "Campus",
+   "muros": [
+    "#c25f37",
+    "#e6dccb",
+    "#d9cdb7"
+   ],
+   "techos": [
+    "#7d7f84",
+    "#b5542f"
+   ],
+   "plancha": 0.5,
+   "tanques": 0.05,
+   "teja": 0.3,
+   "arboles": 0.95,
+   "densidad": 0.35,
+   "pisos": [
+    2,
+    6
+   ],
+   "suelo": "#8fae6e"
+  },
+  "rural": {
+   "nombre": "Rural",
+   "muros": [
+    "#f2eee4",
+    "#e8dfcc",
+    "#c46a40"
+   ],
+   "techos": [
+    "#b5542f",
+    "#7d7f84"
+   ],
+   "plancha": 0.3,
+   "tanques": 0.2,
+   "teja": 0.6,
+   "arboles": 1.0,
+   "densidad": 0.15,
+   "pisos": [
+    1,
+    2
+   ],
+   "suelo": "#6f9a52"
+  },
+  "manhattan": {
+   "nombre": "Manhattan",
+   "muros": [
+    "#8b4a3a",
+    "#9a5a44",
+    "#6e3b2e",
+    "#c9bfae",
+    "#d8cfc0",
+    "#b8b2a6",
+    "#7f93a6",
+    "#5f6f7f",
+    "#a14f3c",
+    "#4b4f57"
+   ],
+   "techos": [
+    "#4a4c52",
+    "#5c5e64",
+    "#3f4146",
+    "#6b6d72"
+   ],
+   "plancha": 0.97,
+   "tanques": 0.55,
+   "tanques_madera": true,
+   "teja": 0.0,
+   "zocalos": 0.06,
+   "arboles": 0.3,
+   "densidad": 1.0,
+   "pisos": [
+    4,
+    40
+   ],
+   "suelo": "#9a958c",
+   "_nota": "Ladrillo rojo y brownstone, caliza, torres de vidrio; azoteas planas con tanques de agua de madera."
+  }
+ },
+ "zona_por_comuna": [
+  null
+ ],
+ "zona_por_municipio": [
+  null,
+  "manhattan"
+ ],
+ "transporte": {
+  "_nota": "Horario real del Metro de Medellín: lunes a sábado de 4:30 a. m. a 11 p. m.; domingos y festivos de 5 a. m. a 10 p. m. Las frecuencias son aproximadas (hora pico y valle).",
+  "servicio": {
+   "habil": [
+    270,
+    1380
+   ],
+   "domingo": [
+    300,
+    1320
+   ]
+  },
+  "pico": [
+   [
+    360,
+    540
+   ],
+   [
+    1020,
+    1200
+   ]
+  ],
+  "clases": {
+   "metro": {
+    "vel_ms": 16.5,
+    "parada_s": 22,
+    "frec_pico_s": 210,
+    "frec_valle_s": 390,
+    "frec_domingo_s": 480,
+    "largo_m": 120,
+    "nivel_viaducto": 3
+   },
+   "tram": {
+    "vel_ms": 6.5,
+    "parada_s": 25,
+    "frec_pico_s": 300,
+    "frec_valle_s": 420,
+    "frec_domingo_s": 540,
+    "largo_m": 42
+   },
+   "cable": {
+    "vel_ms": 5.0,
+    "cabina_cada_s": 12,
+    "altura_m": 28
+   },
+   "brt": {
+    "vel_ms": 9.0,
+    "parada_s": 18,
+    "frec_pico_s": 240,
+    "frec_valle_s": 420,
+    "frec_domingo_s": 600,
+    "largo_m": 18
+   },
+   "feeder": {
+    "vel_ms": 7.5,
+    "parada_s": 15,
+    "frec_pico_s": 480,
+    "frec_valle_s": 720,
+    "frec_domingo_s": 900,
+    "largo_m": 11
+   }
+  }
+ },
+ "clima": {
+  "_nota": "Nueva York: cuatro estaciones; inviernos con nieve, veranos húmedos y tormentas de tarde.",
+  "temp_media_c": 13,
+  "amplitud_c": 12,
+  "lluvia_mes": [
+   0.35,
+   0.32,
+   0.38,
+   0.38,
+   0.38,
+   0.35,
+   0.36,
+   0.33,
+   0.32,
+   0.32,
+   0.34,
+   0.36
+  ],
+  "hora_lluvia": [
+   15,
+   20
+  ]
+ },
+ "emblematicos": null,
+ "huevos": [
+  "rosalba_primer_tren",
+  "boleto_rosalba",
+  "canasta_verde",
+  "aguja_coltejer",
+  "orquideorama",
+  "tres_timbrazos",
+  "ni_una_gota",
+  "paginas_emsay"
+ ]
+}

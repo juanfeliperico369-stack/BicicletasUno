@@ -7,9 +7,9 @@
 
 | | |
 |---|---|
-| **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/> · minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
+| **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/>. Juegos:<ul><li>**Turno Cero** (18+, Manhattan, Medellín y Guatapé en un planeta): [dist/juegos/getaway.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html)</li><li>minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html)</li></ul> |
 | **Documento único** (contexto, código a usar y plan de cada IA) | [`docs/DOCUMENTO-UNICO.md`](docs/DOCUMENTO-UNICO.md) · todo junto con anexos: `dist/MOTOR-CITY-TODO.md` |
-| Versión | **3.0.0** · `VERSION.json` |
+| Versión | **4.0.0** · `VERSION.json` · el planeta y *Turno Cero*: [`docs/TURNO-CERO.md`](docs/TURNO-CERO.md) |
 | Referencias del autor (25 fichas) | [`docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`](docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md) |
 | Inspiración visual y motores potentes | [`docs/INSPIRACION-VISUAL.md`](docs/INSPIRACION-VISUAL.md) · [`docs/MOTORES-POTENTES.md`](docs/MOTORES-POTENTES.md) |
 | **Tareas de cada IA** («mira el repositorio y haz tu parte») | [`TAREAS-IA.md`](TAREAS-IA.md) |
@@ -25,7 +25,8 @@
 
 ## Qué trae
 - **Mundos:**
-  - **reales**: Medellín completo (639.457 edificios, 35.746 calles, metro, cables, Metroplús y EnCicla), y Guatapé craqueado en 20 s desde datos abiertos (`geo/territorio.py`);
+  - **un planeta** (4.0): Manhattan, Medellín y el Valle y Guatapé, unidos por carreteras generadas de 12 a 16 km en medio de la nada (`MC.Planeta`), con globo y horizonte curvo;
+  - **reales**: Manhattan (craqueado a 6 m), Medellín completo (639.457 edificios, 35.746 calles, metro, cables, Metroplús y EnCicla), y Guatapé craqueado en 20 s desde datos abiertos (`geo/territorio.py`);
   - **inventados**: isla, valle, costa, montaña o llanura por semilla (`MC.Generador`);
   - **planetas enteros**: estrellas y planetas con leyes reales y relieve infinito (`MC.Cosmos`).
 - **Vistas** (+ **pixel** en todas):

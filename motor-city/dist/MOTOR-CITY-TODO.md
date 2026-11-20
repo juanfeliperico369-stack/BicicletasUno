@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 3.0.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.0.0 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -68,15 +68,16 @@
 | **2.8** | La **entrega maestra de referencias** (los 14 reels, videos y el análisis de ChatGPT y de Gemini: 25 fichas, peso, vida, arquitectura y rendimiento) y «prepara todo». | La entrega quedó en `docs/referencias/` y su resumen en `docs/INSPIRACION-VISUAL.md` §1. Al motor se sumó:<ul><li>**palomas que alzan vuelo** cuando el jugador se acerca (R12);</li><li>**huellas** de llantas y pisadas en arena, tierra, nieve y barro, que con lluvia salen en el pasto (R12 y R19);</li><li>**faros y luces de freno** del jugador (R13 y R19);</li><li>los estilos **vintage**, **CRT** y **visión térmica** (R17 y R22), para 11 en total;</li><li>**accesibilidad**: sacudida y partículas ajustables (§10.3);</li><li>**telemetría en percentiles** (p95 y p99) y **calidad baja, media o alta** en Ajustes (§13 y §14);</li><li>**contratos versionados** (`schemas/` y `MC.Contratos`, §12.3);</li><li>el hitstop también en Mandados.</li></ul>Lo demás quedó repartido: C‑M20, C‑M21, C‑M22, C‑A10, C‑A11, G‑H7 y G‑H9. 125 pruebas. |
 | **2.9** | Llegaron, en paralelo, las entregas de **Gemini** (G‑H1…G‑H8) y de **ChatGPT y Codex** (2.7.1: arte C‑A, C‑M1, C‑M13, C‑M15…C‑M19). | Todo quedó unido en la rama:<ul><li>los **6 atlas de ChatGPT** (676 cuadros; Vista → Arte → ChatGPT);</li><li>el agua precalculada en los MC4;</li><li>el gancho `textura` y los charcos con lluvia;</li><li>el estilo de **1 bit**;</li><li>la caché de fachadas (la maqueta de Medellín baja a **22 ms** con la CPU 4×);</li><li>los adaptadores de **Godot y three.js** probados;</li><li>los hallazgos de Gemini, corregidos;</li><li>las paletas de las obras colombianas.</li></ul>Son 12 estilos. 132 pruebas. |
 | **2.10** | «Retoma y continúa: une todo, mejora y optimiza todo, y añade peticiones para Gemini y ChatGPT». Llegaron 11 enlaces, y después «añade las skills y plugins de los videos y sigue desarrollando». | <ul><li>Se unieron las ramas de El Metro (Motor del Valle 1.2.0) y de EnCicla (alto contraste y metro sin casas debajo).</li><li>El cómic y el 1 bit ya no leen la pantalla y no hacen muaré.</li><li>Mandados bajó de 8,2 a 5,1 MB.</li><li>Las rutas van por la calle (`rutaA`).</li><li>Skills de los videos: **Hallmark, Modern Web Guidance, find-skills y HyperFrames** (`skills-externas.json`, `node motor.mjs skills`, plugins en `.claude/settings.json`).</li><li>El **público simulado** (`MC.Publico`, `node motor.mjs publico`).</li><li>Pedidos G‑H10…G‑H13, C‑M23…C‑M25 y C‑A12.</li></ul> |
-| **3.0** (esta) | «Sigue básico: las dimensiones están mal ideadas; hay cosas en 2D que deberían ser 3D; el mundo de la cenital, la maqueta y la 3D debe ser uno solo, híbrido. Investiga #DRIVE, Pako Forever, Getaway, Reckless Getaway 2 y la distancia de GTA San Andreas; pon tope al zoom; define un radio de vista; mejora las fachadas; agrega artilugios físicos.» | <ul><li>**Un solo mundo 3D y varias cámaras**: la cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo, con respaldo 2D.</li><li>Fachadas con zócalo, ventanas, puerta y balcones; árboles low-poly que son los mismos de la 2D; carros y gente con detalle.</li><li>Topes de zoom, cámara continua y mapa grande.</li><li>Radio de vista con niebla, rayos X del jugador y persecución.</li><li>`MC.Objetos`, los artilugios físicos.</li><li>La investigación está en `docs/INVESTIGACION-CAMARA.md`.</li></ul> |
+| **3.0** | «Sigue básico: las dimensiones están mal ideadas; hay cosas en 2D que deberían ser 3D; el mundo de la cenital, la maqueta y la 3D debe ser uno solo, híbrido. Investiga #DRIVE, Pako Forever, Getaway, Reckless Getaway 2 y la distancia de GTA San Andreas; pon tope al zoom; define un radio de vista; mejora las fachadas; agrega artilugios físicos.» | <ul><li>**Un solo mundo 3D y varias cámaras**: la cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo, con respaldo 2D.</li><li>Fachadas con zócalo, ventanas, puerta y balcones; árboles low-poly que son los mismos de la 2D; carros y gente con detalle.</li><li>Topes de zoom, cámara continua y mapa grande.</li><li>Radio de vista con niebla, rayos X del jugador y persecución.</li><li>`MC.Objetos`, los artilugios físicos.</li><li>La investigación está en `docs/INVESTIGACION-CAMARA.md`.</li></ul> |
+| **4.0** (esta) | «Empieza con el monstruo, nada de *family friendly*. Combina ese mundo con Guatapé y la mejor versión de Medellín y el valle, todo en un mismo planeta, con caminos largos en medio de la nada». Luego, «adapta todo lo nuevo» (Codex: *Turno Cero*, espionaje 2026, 42 GLB). | **Motor:**<ul><li>`MC.Planeta`: anillo de ciudades y carreteras generadas, globo y horizonte curvo;</li><li>`MC.Busqueda`: búsqueda de 0 a 5 con la última posición vista, embestidas, disparos, púas, retenes y helicóptero;</li><li>`MC.Modelos`: lector GLB, con los 42 modelos en la cámara 3D;</li><li>juegos con varios mundos.</li></ul>**Juego:** *Turno Cero* (`juegos/getaway/`), de Manhattan a Medellín y Guatapé, con el metro, EnCicla, la lancha y los artefactos de Codex. Ver `docs/TURNO-CERO.md`. |
 
 ## 3. Estado actual
 | | |
 |---|---|
 | **Pruebas** | **137 en verde** (`node motor.mjs prueba --navegador`), en Node y en Chromium. Incluyen el público simulado y las rutas por la calle (2.10). Una juega Mandados en un celular táctil y otra recorre los 11 estilos. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
-| **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
-| **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
+| **Mundos** | Manhattan (MC4, 10 MB, 6 m); Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
+| **Juegos** | **Turno Cero** (`dist/juegos/getaway.html`, 18+, tres ciudades en un planeta) y Mandados (Guatapé). EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
 | **Lo que falta medir** | Un **celular real** de gama media. |
 
 ## 4. Cómo está hecho
@@ -616,6 +617,16 @@ No hace falta conectar ninguna aplicación.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
 
+**Novedades de la 4.0 (20‑nov‑2026): el planeta y *Turno Cero*.** Lee `docs/TURNO-CERO.md`.
+- **El planeta** (`MC.Planeta`): Manhattan, Medellín y el Valle y Guatapé, unidos por carreteras de 12 a 16 km «en medio de la nada». Tiene horizonte curvo y vista de globo.
+- **El juego adulto *Turno Cero*** (`juegos/getaway/`) toma el canon de Codex y lo lleva a las tres ciudades.
+- **Sistemas nuevos del motor:**
+  - `MC.Busqueda`, la búsqueda de 0 a 5, con tus umbrales y la última posición vista;
+  - `MC.Modelos`, el lector GLB: tus 42 modelos ya se ven en la cámara 3D;
+  - los juegos con varios mundos (`"mundos"` en `juego.json`);
+  - los GLB dentro del HTML (`"modelos"`).
+- **Los pedidos nuevos** están abajo, en «## 4.0 · Pedidos nuevos».
+
 **Lo que sigue después de la 3.0:** la prueba en grande, «Getaway Nueva York». El plan, el orden y **las 10 reglas que dejó el feedback del autor para todas las IA** están en `docs/PROXIMO-NUEVA-YORK.md`. Léelas antes de tu encargo.
 
 **Novedades de la 3.0 (20‑nov‑2026): un solo mundo 3D y varias cámaras.**
@@ -658,6 +669,43 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
   - árboles con volumen (guayacanes florecidos, ceibas, mangos).
 - Nada de caricatura plana. Nada de violencia, sangre ni marcas.
 - El estilo clásico (plano) sigue disponible: `MC.estilo = 'clasico'`.
+
+---
+
+### 4.0 · Pedidos nuevos (20‑nov‑2026)
+> Juega primero `dist/juegos/getaway.html` (o desde la página del motor) en un celular real.
+> - En la portada, «Calle libre» deja elegir ciudad.
+> - En el menú ⏸ están los personajes y los artefactos.
+> - `window.TURNO` expone el estado para pruebas.
+
+#### Gemini · Antigravity («hydrogen») · fáciles
+| Id | Tarea | Cómo | Entrega |
+|---|---|---|---|
+| **G‑H20** | **Turno Cero en un celular real con GPU** | Juega el Acto I completo y una persecución de nivel 5 en Medellín. Saca capturas de la cámara 3D, donde se ven los modelos GLB, y de la carretera. Anota la telemetría p95. | `reportes/AAAA-MM-DD-gemini-turno-cero.md` con 12 capturas |
+| **G‑H21** | **Verifica los 19 lugares de la historia** (`TC.LUGARES` en `juegos/getaway/10-contenido.js`) | Para cada uno, revisa que:<ul><li>la calle es real;</li><li>no hay un negocio real con ese nombre;</li><li>no es un lugar sensible (memorial, hospital, colegio, iglesia).</li></ul>Propón coordenadas mejores donde haga falta. | Una tabla en el reporte |
+| **G‑H22** | **Paradas de carretera** por bioma: costa, llanura, desierto, bosque, montaña, nieve y lagos | 4 por bioma: un nombre inventado y creíble (en español y, para la Ruta del Atlántico, también en inglés) y una línea de ambiente | `contenido/paradas-carretera.json` |
+| **G‑H23** | **Revisión del lenguaje** | Activa «🗣️ Lenguaje: suave» y lista las groserías o expresiones del guion que se escapan del filtro | Lista en el reporte |
+| **G‑H24** | **Carga y memoria por ciudad** | Mide el tiempo desde la portada hasta manejar en Manhattan, Medellín y Guatapé, y la memoria del navegador (DevTools remoto) | Tabla en el reporte |
+
+#### ChatGPT · Codex («astra») · fuertes
+| Id | Tarea | Contrato | Entrega |
+|---|---|---|---|
+| **C‑M31** | **El globo en WebGL y la transición continua** | Al alejar la cámara más allá del mapa, el mundo se vuelve esfera sin corte. Debe tener:<ul><li>biomas de `MC.Planeta.BIOMAS`;</li><li>dispersión de Rayleigh simple;</li><li>las estrellas de `MC.Cosmos`.</li></ul>Con respaldo al lienzo actual (`Planeta.globo`). | `js/` + prueba |
+| **C‑M32** | **Acción a pie** (tu biblia 3D, §2): bajarse, cobertura tras `MC.Objetos`, guardias que patrullan y van a la última posición vista | Reusa `MC.Busqueda` (rivales a pie) y los conos del sigilo de `juegos/getaway/30-historia.js`. Sin gore y sin instrucciones reales. | `js/` + paso «a pie» en Turno Cero |
+| **C‑M33** | **Esqueleto procedural y LOD de los GLB** | Personajes: caminar, correr y agacharse. Vehículos: LOD1 y LOD2. `MC.Modelos` ya los dibuja: añade huesos y LOD sin romper `Malla.modelo`. | `arte/modelos/turno-cero/` + `js/45-glb.js` |
+| **C‑M34** | **Manhattan por sectores de 1 km** (era C‑M22) | El MC4 de 10 MB por sectores alrededor del jugador, con `MC.GuardadoSectores` | Herramienta + prueba de memoria |
+| **C‑M35** | **Daño por piezas en los carros GLB**: capó, puertas y llantas | Deformar vértices por zona según `Busqueda` y los choques. Humo y fuego en 3D. | `js/45-glb.js` |
+| **C‑M36** | **Audio de persecución**: motor por capas de rpm y sirena con Doppler y oclusión aproximada | Sin samples con derechos; Web Audio | `js/61-sonido.js` |
+| **C‑A16** | **Texturas PBR de bajo polígono** para 6 vehículos y 6 personajes | UV más un atlas de 1024 px por familia, sin marcas, con la paleta de tu biblia | `arte/modelos/turno-cero/texturas/` |
+| **C‑A17** | **Portada vertical de Turno Cero** (1080×1920) y **5 láminas de acto** | Sin texto (la tipografía la pone el juego): Manhattan de noche, la carretera del desierto, Medellín desde el metro, la autopista con helicóptero y el embalse al amanecer | `arte/chatgpt/turno-cero/` |
+
+#### Claude · motor
+- Une las entregas de esta tabla.
+- **Lanchas de la banda en el embalse:** `MC.Busqueda` en el agua.
+- **El helicóptero como GLB** (o un modelo procedural).
+- **Más contratos en la Calle libre.**
+- **Los eventos de la Carretera del Norte**, en el regreso a Nueva York.
+- **Los juegos de los repositorios** reciben el motor 4.0 sin cambiar su forma.
 
 ---
 
@@ -714,7 +762,7 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 > - el 1 bit ya no hace muaré en la maqueta;
 > - Mandados pasó de 8,2 a 5,1 MB (`herramientas/aligerar_arte.py`).
 >
-> **Lo que sigue, en orden:**
+> **Lo que sigue, en orden (ver estado actualizado en `docs/ESTADO-3.1.0.md`):**
 > 1. **C‑M13**: la maqueta por debajo de 20 ms;
 > 2. **C‑M21**, **C‑M20** y **C‑M22**;
 > 3. **C‑A10** y **C‑A11**;
@@ -792,12 +840,18 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 ---
 
 ### Las IAs de los juegos
-Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
+Cada juego **debería** tener su propio `TAREAS-IA.md` en la raíz: la auditoría de las ramas `main` no los encontró, por lo que es trabajo de integración pendiente:
 - **Juega EnCicla** (`BicicletasUno`): migrar a `motor-city/` y el estilo 2.6.
 - **El Metro** (`MetroZero`): su protocolo de 7 pasos y la migración.
 - **Run Scooter** (`RunRunZero`): sigue independiente.
 
 ### Claude · la IA del motor
+- **4.0:**
+  - el planeta (`MC.Planeta`);
+  - la búsqueda 0–5 (`MC.Busqueda`);
+  - el lector GLB (`MC.Modelos`);
+  - los juegos con varios mundos;
+  - *Turno Cero* (`juegos/getaway/`), con el canon de Codex llevado a Manhattan, Medellín y Guatapé.
 - **3.0:** mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, artilugios físicos, mapa grande y la investigación de cámara.
 - **2.10:**
   - unió las ramas viejas de los juegos;
@@ -809,6 +863,16 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 - Une las entregas (arte de ChatGPT en `MC.Pieles` y código de Codex).
 - Mantiene `docs/PEDIDOS.md`.
 - Sigue con *Motor City* (carreras) y *Extremo* (§9.7).
+
+---
+### Consolidación de la rama 3.1.0 (20-nov-2026)
+La PR #5 contiene C-M26 (persecución jugable y E2E verificado), C-M25 (portada editorial), C-M27 (sombras solares proyectadas, parcial), C-M29/G-H17 (física y guardado parcial), G-H1 (14 capturas inspeccionadas), G-H18 (50 lugares oficiales de Manhattan), G-H19 (investigación documental parcial) y guías de arte. Consultar [`docs/ESTADO-3.1.0.md`](docs/ESTADO-3.1.0.md) antes de asumir que una tarea está cerrada. **C-A14, C-M28, tilt-shift y pruebas móviles físicas continúan pendientes.**
+
+### 20-nov-2026 · C-A15 / G-H19 ampliada · Manhattan adulto
+- **Publicado en PR #5:** `docs/REFERENCIAS-MANHATTAN-13.md` (13 fichas Google Play), `docs/GETAWAY-MANHATTAN-BIBLIA.md` (7 misiones adultas y tres finales), `juegos/getaway/preproduccion/*.json` para agentes, `juegos/getaway/prototipo.html` como mini juego offline esquemático, y dos `arte/chatgpt/guias/manhattan-*.svg` con fuentes vectoriales originales. Estas entregas **no contienen mapa MC4 real**.
+- **C-A15:** dirección artística conceptual y wireframe listos como documentos, no atlas UV ni captura de gameplay.
+- **G-H19:** investigación documental ampliada de 3 a 13 fichas, sin cronometrajes de vídeos no observados.
+- **Siguiente IA:** antes de iniciar 3D, auditar licencias del GIS, cobertura de la isla y conectividad de puentes, carga por 1 km y transición de prototipo a MC4.
 
 
 ---
@@ -881,6 +945,8 @@ Sobre las cámaras de esos juegos se publica poco. Lo que sigue sale de lo que s
 # ANEXO 0e. Lo que sigue: Getaway Nueva York y las reglas del feedback (`docs/PROXIMO-NUEVA-YORK.md`)
 
 
+> **Actualización de alcance (20-nov-2026, posterior al pedido original):** el autor cambió explícitamente el concepto de **todo público** a **thriller criminal para adultos**. Esta página conserva el plan geográfico histórico, pero el contrato vigente de historia y arte es `docs/GETAWAY-MANHATTAN-BIBLIA.md`, y el juego de trabajo se llama provisionalmente **TURNO CERO: MANHATTAN**. No copiar un juego comercial ni representar como exacta una cuadrícula inventada. Se agregó un prototipo independiente en `juegos/getaway/prototipo.html`, que **no usa Manhattan MC4**.
+
 > **Pedido del autor (20‑nov‑2026)**, para después de las mejoras de Gemini y ChatGPT:
 > - craquear Nueva York, en especial Manhattan;
 > - alrededor, llanuras, montañas, lagos, playas y todos los tipos de terreno, para exprimir el motor;
@@ -898,7 +964,7 @@ Sobre las cámaras de esos juegos se publica poco. Lo que sigue sale de lo que s
 | **Rascacielos que se ven a lo lejos** | Impostores (siluetas horneadas) para lo que está a más de 600 m, como el LOD de GTA San Andreas. En el borde, la niebla. | Codex (C‑M28) |
 | **Mundo redondo, atmósfera y espacio** | Se hace en tres pasos:<ol><li>**Curvatura en el sombreador:** la altura baja con d²/2R, así que el horizonte se curva al subir.</li><li>**Vista de planeta:** al alejarse más allá del mapa, el mundo pasa a ser una esfera con la textura de `losasLejos`, con un halo de atmósfera (dispersión de Rayleigh simple) y estrellas.</li><li>**El espacio:** con `MC.Cosmos` (ya existe) pone el Sol y la Luna en su lugar y las estrellas de la hora.</li></ol> | Claude (C‑M31 para el sombreador de atmósfera, si Codex llega antes) |
 
-### 2. El juego (*Getaway*, todo público)
+### 2. Concepto histórico para todo público (SUPERADO por la versión adulta)
 - **Trama breve, cinco capítulos:**
   - un conductor novato hereda el taxi de su tío y descubre que una familia de «la mafia» le debe al barrio;
   - escapes, rescates de mercancía robada (cuadros de un museo) y una última persecución por el puente de Brooklyn.
@@ -1005,11 +1071,11 @@ El catálogo completo, con la trazabilidad de los enlaces, está en `docs/SKILLS
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **3.0.0** en `main`; **3.0.1 propuesta en la PR #5** · 20‑nov‑2026 · **138 pruebas en verde en Chromium para el commit f976776** ([ejecución](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44750220010)).
 
 ### Resumen
 - **Hechos:** 76 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 5 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos, pero falta algo de afuera:** 5 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. La documentación decía que el motor estaba copiado en EnCicla y El Metro, pero la auditoría de las ramas `main` no encontró `motor-city/` en sus raíces (ver `docs/AUDITORIA-ECOSISTEMA-2026-11-20.md`). Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -1177,6 +1243,29 @@ Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.m
 | Fluidez | Hecho | 2.11: la densidad dinámica y la capa de suelo. |
 | Pedidos nuevos para Gemini y ChatGPT | Hecho | G‑H14 a G‑H17, y C‑M26 a C‑M29, C‑A13 y C‑A14, en `TAREAS-IA.md`. |
 
+
+### 14. «Empieza con el monstruo, nada de *family friendly*; todo en un planeta, con caminos largos en medio de la nada»; y luego «adapta todo lo nuevo» (4.0, esta sesión)
+| Pedido | Estado |
+|---|---|
+| El juego grande y adulto | ✅ *Turno Cero* (`juegos/getaway/`), con el canon de Codex. Ver `docs/TURNO-CERO.md`. |
+| Guatapé, la mejor versión de Medellín y el Valle, y Nueva York en un solo planeta | ✅ `MC.Planeta`: anillo de 3 ciudades y 3 carreteras, con globo y horizonte curvo |
+| Caminos largos en medio de la nada para llegar a cada ciudad | ✅ 16, 12 y 15 km generados, con biomas, paradas, letrero de km y viaje ×3 |
+| Los modos, vehículos y transporte de Medellín, adaptados | ✅ Metro, cables, tranvía y Metroplús (subirse y perder a la policía), EnCicla, lancha del embalse y robo de carros |
+| Lo nuevo de Codex: espionaje 2026, artefactos y GLB | ✅ Artefactos T01, T02, T03, T05, T06, T08, T09, T11 y T04 en el juego; los 42 GLB en la cámara 3D (`MC.Modelos`) |
+| Lo nuevo de Codex: acción a pie, esqueletos y texturas | ⏳ C‑M32, C‑M33 y C‑A16 (`TAREAS-IA.md` § 4.0) |
+| Medir en un celular real | ⏳ G‑H20 y G‑H24 |
+
+### 20-nov-2026 · Entrega ChatGPT (rama de integración)
+- **C-M29 / G-H17 · Parcial funcional:** 30 objetos con parámetros de juego, guardado por sector original e IDs estables; restauración en Mandados.
+- **Pendiente:** arte y modelos detallados, streaming de objetos por sectores, prueba móvil y ejecución integral de Playwright desde un clon.
+
+### 20-nov-2026 · Nueva ronda de IA y diseño
+- **C-M25:** portada editorial sin neón ni tarjetas genéricas, con prueba en Chromium `pruebas/portada.mjs`; ejecución CI pendiente de inspección en el commit correspondiente.
+- **G-H19, parcial:** investigación documental de persecuciones de tres juegos. No se inventan minutos/segundos ni conteo de policías; `reportes/2026-11-20-gemini-persecuciones.md`.
+- **G-H18:** 50 registros de NYC CommonPlace publicados en `contenido/nueva-york-lugares.json` (IDs/coordenadas/fuente); **acceso a cada lugar sin verificar**. Ver `docs/ESTADO-3.1.0.md`.
+
+### Nota de consolidación · 3.1.0
+Esta página conserva la historia original de los pedidos, incluso estados de 2.10/3.0 ahora superados. El **estado actualizado y con evidencias** se mantiene en [`docs/ESTADO-3.1.0.md`](ESTADO-3.1.0.md). No leer «Hecho» de versiones anteriores como una certificación de la rama principal ni del rendimiento en teléfonos físicos.
 
 
 ---
@@ -1541,6 +1630,30 @@ MC.arte.registrar('encicla', {
 - **Deprimidos:** solo se entra por sus extremos.
 - **Salto:** tiempo de coyote (0,12 s) y memoria del botón (0,14 s).
 
+### 9c. El planeta, la búsqueda y los modelos (4.0)
+- **`MC.Planeta`:**
+  - `new MC.Planeta({ anillo, cargar: id => MC.Mundo.cargar(b64, cfg) })` arma el anillo de ciudades y carreteras;
+  - `await P.mundo(id)` carga perezosa, con dos mundos en memoria como máximo;
+  - `P.puertas(id).siguiente` da `{ x, y, a, nombre }`;
+  - `P.cruce(id, x, y, dt)` da `{ a: idVecino }`;
+  - `P.llegada(id, desde)` dice dónde aparece quien llega;
+  - `P.restante(id, x, y)` sirve para el letrero;
+  - `P.globo(g, W, H, { lon0, inclinacion, t, yo })` dibuja el planeta;
+  - `Generador.carretera({ largo, biomas, semilla })` crea un tramo de la nada.
+  - En la vista 3D, `E.curvatura = 1/(2R)` curva el horizonte.
+- **`MC.Busqueda`:**
+  - `new MC.Busqueda(M)`;
+  - `B.alerta(gravedad, { testigos, visible, causa })` y `B.ponerNivel(n)`;
+  - `B.banda(n)`, `B.esconder()`, `B.senuelo(x, y, s)`, `B.pulso(J)` y `B.disparar(J)`;
+  - cada cuadro, `B.actualizar(dt, cuerpo, trafico)`, más `B.vehiculos()` (con `sirena` y `roto`) y `B.obstaculos()`;
+  - `B.sacar()` entrega los eventos `nivel`, `embestida`, `disparo`, `herido`, `fuera`, `pinchado`, `bloqueo`, `puas`, `atrapado` y `perdidos`.
+- **`MC.Modelos`:**
+  - `MC.Modelos.registrar(id, glb | base64)` y `MC.Modelos.paquete(MC_MODELOS)`;
+  - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro })`;
+  - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
+  - `E.modelos3d = [{ id, x, y, a, k }]` pone modelos en el mundo.
+- **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
+
 ### 10. Hoja de ruta (lo que sigue)
 - **2.1:** precalcular las redes en el MC4 (hoy `red('rueda')` tarda alrededor de 1 s al arrancar). Guardar el ancho y la nomenclatura de las ciclorrutas. Sumar `geo/pasos.py` (niveles firmados de Overture) y conectarlo al GPS de dos niveles.
 - **2.2:** sombras del sol en WebGL. Agua animada del río. Ventanas con textura. Árboles por especie. Atlas del arte que entreguen Gemini y ChatGPT (`MC.arte`).
@@ -1572,6 +1685,8 @@ MC.arte.registrar('encicla', {
 
 # ANEXO C. Contexto para la IA que retome (`CONTEXTO-IA.md`)
 
+
+> **4.0 (20‑nov‑2026):** `MC.Planeta` (ciudades y carreteras en un anillo), `MC.Busqueda` (búsqueda 0–5), `MC.Modelos` (lector GLB) y el juego adulto *Turno Cero* (`juegos/getaway/`, canon de Codex en tres ciudades). Lee `docs/TURNO-CERO.md` y `TAREAS-IA.md` § 4.0.
 
 > **Léelo completo antes de tocar nada.** Si se te acaba el contexto, este documento, `MOTOR.md` y `BITACORA.md` bastan para seguir.
 > Lo escribió Claude (Claude Code) el 19‑nov‑2026, a pedido del autor (OneZero). La 2.0 sigue el *Plan del Mundo Abierto*; la 2.1 y la 2.2, los pedidos que vinieron después (ver §3b).
@@ -3158,6 +3273,79 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 20-nov-2026 · 4.0.0 · El planeta y *Turno Cero*
+- **Pedido del autor:**
+  - «empieza con la creación del monstruo; nada de *family friendly*»;
+  - «combina ese mundo con Guatapé y la mejor versión de Medellín y el valle, todo en un mismo planeta, con caminos largos en medio de la nada»;
+  - y luego: «adapta todo lo nuevo que se agregó».
+- **Lo nuevo de Codex, unido a la rama:**
+  - *Turno Cero: Manhattan*, en `docs/GETAWAY-MANHATTAN-BIBLIA.md` y `docs/GETAWAY-ESPIONAJE-3D.md`;
+  - las 13 referencias;
+  - el prototipo 2D;
+  - el generador de 42 GLB, con su CI.
+- **`MC.Planeta`** (`js/13-planeta.js`):
+  - un anillo con Nueva York, la Ruta del Atlántico (16 km), Medellín y el Valle, la Autopista del Embalse (12 km), Guatapé y la Carretera del Norte (15 km);
+  - las carreteras se generan con `Generador.carretera` y tienen sus biomas;
+  - las puertas son reales (los puentes George Washington y de Brooklyn, las autopistas Norte y Medellín–Bogotá, la vía a El Peñol);
+  - vista de globo y horizonte curvo (`uCurv` en el sombreador).
+- **`MC.Busqueda`** (`js/28-busqueda.js`):
+  - búsqueda de 0 a 5 con los umbrales de Codex (15/35/55/70/85) y un tope de 4;
+  - los rivales nacen fuera de la vista y van a la última posición vista;
+  - tácticas seguir, cerrar y embestir, con empuje por masa;
+  - disparos, púas, retenes y helicóptero con reflector;
+  - cebo, pulso y disparos del jugador, y captura.
+- **`MC.Modelos`** (`js/45-glb.js`):
+  - lector GLB sin librerías;
+  - los 42 modelos de Codex, guardados en `arte/modelos/turno-cero/` (CC0);
+  - la cámara 3D los usa en carros, patrullas (con barra de luces), camionetas, guardias, retenes y contenedores.
+- **Construcción:**
+  - juegos con varios mundos (`"mundos"`; cada MC4 va en un `<script type="text/plain">`);
+  - GLB dentro del HTML (`"modelos"`).
+  - Además: `Vistas.liberar()` y el tema de interfaz «noche».
+- **Turno Cero** (`juegos/getaway/`, 25 MB, 18+):
+  - cinco actos y siete misiones por las tres ciudades;
+  - artefactos T01, T02, T03, T05, T06, T08, T09, T11 y T04;
+  - sigilo con conos de visión;
+  - el metro, los cables, el tranvía y el Metroplús de Medellín para perder a la policía;
+  - EnCicla, lancha en el embalse, robo de carros, talleres que reparan y repintan, y escondites;
+  - Calle libre con contratos;
+  - finales A, B y C según las pruebas y las decisiones;
+  - lenguaje fuerte, con opción de suavizarlo.
+  - El diseño está en `docs/TURNO-CERO.md`.
+- **Pruebas:**
+  - en Node, las secciones 19 (planeta) y 20 (búsqueda y GLB);
+  - en Chromium, Turno Cero de Manhattan a Medellín por la Ruta del Atlántico;
+  - un bot recorrió la historia completa hasta el final A en 161 s, sin errores.
+- **Corregido en el camino:**
+  - al cerrar un capítulo se saltaban capítulos (el último paso se completaba varias veces);
+  - el Muelle 4 caía sobre el agua;
+  - los subtítulos y el letrero de la carretera tapaban el joystick y las barras.
+- **Pendiente:** medir en un celular real con GPU. Los nuevos pedidos para Gemini, Codex y ChatGPT están en `TAREAS-IA.md` § 4.0.
+
+
+### 20-nov-2026 · C-M27 (parcial), dirección visual y catalogación
+- Sombras solares proyectadas sobre el suelo en WebGL1 (sin texturas de profundidad), mezcladas antes que los volúmenes, con cache por celda de cámara y posición solar; prueba sintética en `pruebas/prueba.mjs`.
+- G-H1: 14 capturas reales auditadas, avisos duplicados corregidos, HUD atenuado más legible, nombres protegidos frente a los botones y cierre real de diálogos por el capturador.
+- G-H18: `contenido/nueva-york-lugares.json` generado desde NYC CommonPlace con 50 lugares, coordenadas e IDs; excluye instalaciones municipales internas y marca accesibilidad pendiente de comprobar.
+- La tabla de estado vigente, con límites y prioridades, está en `docs/ESTADO-3.1.0.md`.
+- **C-M27 requiere CI del nuevo commit y prueba en GPU física**; no se afirma rendimiento móvil ni tilt-shift terminado.
+
+
+### 20-nov-2026 · 3.1.0 · Persecución optativa en Mandados
+- C-M26: clase pública `MC.Persecucion` con patrullas y pilotos que recomputan rutas A* por calles, un seguidor y otro que busca cortar el paso. Motor físico de `MC.Cuerpo`, sin atravesar edificios por «IA» de línea recta.
+- Reto voluntario de 90 segundos con botón para iniciar/salir; disponible en moto o carro, con huellas de vehículo en el mismo mundo 3D/2D, cámara de seguimiento sin saltos y captura si el jugador se detiene.
+- Los casi choques con tráfico no dan puntos en contacto ni a baja velocidad; bonus de turbo de duración corta y máximo una recompensa por ID de vehículo.
+- Comprobaciones deterministas de aparición fuera del jugador, física, bonos y cierre en `pruebas/prueba.mjs`. **Validado** en el commit `ff5977ec4`: CI [#44758766581](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44758766581), con 131 tests Node y 141 en Chromium, incluido E2E de persecución. La evaluación en celular real sigue pendiente.
+
+
+### 20-nov-2026 · 3.0.1 · Objetos de barrio y persistencia (ChatGPT)
+- C-M29 / G-H17 (entrega parcial): 30 tipos de mobiliario urbano en `js/32-objetos.js` y tamaños **aproximados para diseño** en `contenido/objetos-gemini.json`.
+- IDs estables por origen de los objetos: restauración de desplazamientos, velocidad, orientación y daño con `MC.GuardadoSectores`.
+- Mandados guarda cambios de Guatapé periódicamente y al ocultar/cerrar la pestaña; los mundos aleatorios no heredan esos datos.
+- Regresiones agregadas a `pruebas/prueba.mjs`. Comprobación aislada del código realizada; **batería Node/Chromium pendiente** en clon completo.
+- Falta arte individualizado de cada objeto y medición con hardware móvil.
 
 
 ### 20‑nov‑2026 · 3.0.0 · Los tres juegos actualizados y Nueva York preparado (Claude Code)

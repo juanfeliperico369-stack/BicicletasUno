@@ -68,14 +68,21 @@ const juegos = [];
 const dirJ = path.join(RAIZ, 'juegos');
 if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id of fs.readdirSync(dirJ)) {
   const jd = path.join(dirJ, id), jj = path.join(jd, 'juego.json'); if (!fs.existsSync(jj)) continue;
-  const J = JSON.parse(fs.readFileSync(jj, 'utf8')), cId = J.mundo || CIUDAD, mc = path.join(RAIZ, 'datos', cId, 'mundo.mc4');
+  const J = JSON.parse(fs.readFileSync(jj, 'utf8')), cId = J.mundo || (J.mundos && J.mundos[0]) || CIUDAD, mc = path.join(RAIZ, 'datos', cId, 'mundo.mc4');
   if (!fs.existsSync(mc)) { console.warn('⚠ ' + id + ': falta datos/' + cId + '/mundo.mc4'); continue; }
-  let mundoJ; const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')); mundoJ = `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
+  /* 4.0: varios mundos en un juego ("mundos": ["nueva_york", "medellin", "guatape"]): cada MC4 va en un <script type="text/plain">
+     (el navegador no lo interpreta como JavaScript: se lee y se descomprime solo el mundo al que se llega) y sus reglas en MC_CIUDADES */
+  let mundosHTML = '';
+  if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`; }
+    J._ciudades = C; }
+  let mundoJ; const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')); mundoJ = J.mundos ? `var MC_CIUDADES = ${JSON.stringify(J._ciudades)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n` : `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
   /* arte en sprites: "arte": ["gemini"] en juego.json compila arte/<id>/ (atlas WebP + manifiesto + íconos + hitos + paletas) dentro del HTML */
   const arteJ = (J.arte || []).map(a => paqueteArte(a)).filter(Boolean); if (arteJ.length) mundoJ += 'var MC_ARTE = {' + arteJ.join(',') + '};\n';
+  /* 4.0: modelos GLB ("modelos": "arte/modelos/turno-cero") → var MC_MODELOS = { id: base64 } (MC.Modelos los lee) */
+  if (J.modelos) { const dm = path.join(RAIZ, J.modelos), MOD = {}; if (fs.existsSync(dm)) for (const f of fs.readdirSync(dm).filter(f => f.endsWith('.glb')).sort()) MOD[f.slice(0, -4)] = fs.readFileSync(path.join(dm, f)).toString('base64'); else console.warn('⚠ ' + id + ': falta ' + J.modelos); mundoJ += 'var MC_MODELOS = ' + JSON.stringify(MOD) + ';\n'; }
   const jsJ = fs.readdirSync(jd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(jd, f), 'utf8')).join('\n');
   const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
-  const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replaceAll('%VERSION%', VER.version);
+  const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version);
   fs.mkdirSync(path.join(DIST, 'juegos'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'juegos', id + '.html'), out); juegos.push(id + ' ' + Math.round(out.length / 1024) + ' KB');
 }
 const sha = b => crypto.createHash('sha1').update(b).digest('hex').slice(0, 8);

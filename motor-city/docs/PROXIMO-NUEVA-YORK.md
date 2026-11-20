@@ -1,5 +1,7 @@
 # Lo que sigue: «Getaway Nueva York», la prueba en grande del motor
 
+> **Actualización de alcance (20-nov-2026, posterior al pedido original):** el autor cambió explícitamente el concepto de **todo público** a **thriller criminal para adultos**. Esta página conserva el plan geográfico histórico, pero el contrato vigente de historia y arte es `docs/GETAWAY-MANHATTAN-BIBLIA.md`, y el juego de trabajo se llama provisionalmente **TURNO CERO: MANHATTAN**. No copiar un juego comercial ni representar como exacta una cuadrícula inventada. Se agregó un prototipo independiente en `juegos/getaway/prototipo.html`, que **no usa Manhattan MC4**.
+
 > **Pedido del autor (20‑nov‑2026)**, para después de las mejoras de Gemini y ChatGPT:
 > - craquear Nueva York, en especial Manhattan;
 > - alrededor, llanuras, montañas, lagos, playas y todos los tipos de terreno, para exprimir el motor;
@@ -17,7 +19,7 @@
 | **Rascacielos que se ven a lo lejos** | Impostores (siluetas horneadas) para lo que está a más de 600 m, como el LOD de GTA San Andreas. En el borde, la niebla. | Codex (C‑M28) |
 | **Mundo redondo, atmósfera y espacio** | Se hace en tres pasos:<ol><li>**Curvatura en el sombreador:** la altura baja con d²/2R, así que el horizonte se curva al subir.</li><li>**Vista de planeta:** al alejarse más allá del mapa, el mundo pasa a ser una esfera con la textura de `losasLejos`, con un halo de atmósfera (dispersión de Rayleigh simple) y estrellas.</li><li>**El espacio:** con `MC.Cosmos` (ya existe) pone el Sol y la Luna en su lugar y las estrellas de la hora.</li></ol> | Claude (C‑M31 para el sombreador de atmósfera, si Codex llega antes) |
 
-## 2. El juego (*Getaway*, todo público)
+## 2. Concepto histórico para todo público (SUPERADO por la versión adulta)
 - **Trama breve, cinco capítulos:**
   - un conductor novato hereda el taxi de su tío y descubre que una familia de «la mafia» le debe al barrio;
   - escapes, rescates de mercancía robada (cuadros de un museo) y una última persecución por el puente de Brooklyn.

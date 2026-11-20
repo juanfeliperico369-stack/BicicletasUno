@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "project": "Noche de Cobro: Manhattan",
+  "date": "2026-11-20",
+  "type": "guía artística ficticia; no medición de materiales reales",
+  "colors": {
+    "paper": "#efe7d6",
+    "ink": "#182426",
+    "asphalt": "#394449",
+    "slate": "#344752",
+    "stone": "#b7a991",
+    "brownstone": "#a65f49",
+    "brickDark": "#805746",
+    "amber": "#e1b16e",
+    "policeMuted": "#6f8c94",
+    "nightGreen": "#738477",
+    "dangerRed": "#a64d3c",
+    "wetConcrete": "#525b5c"
+  },
+  "rules": [
+    "Grises cromáticos primero, no azules neón.",
+    "El rojo indica consecuencia; nunca decorar toda la interfaz con él.",
+    "Las sombras son oscuras, pero números/hitos conservan contraste.",
+    "Mostrar granos y desgaste solo donde la escala del material lo justifique.",
+    "No usar logos, vehículos, HUD ni personajes de juegos citados.",
+    "Separar art conceptual y sprites validados.",
+    "Ninguna ilustración se etiqueta como captura jugable."
+  ]
+}

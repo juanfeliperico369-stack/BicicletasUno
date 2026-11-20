@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "project": "Noche de Cobro: Manhattan",
+  "status": "guías vectoriales, NO atlas de motor ya implementado",
+  "date": "2026-11-20",
+  "sources": [
+    "arte/getaway/00-portada-original.svg",
+    "arte/getaway/01-vehiculos-superior.svg",
+    "arte/getaway/02-fachadas-ortograficas.svg",
+    "arte/getaway/03-objetos-urbanos.svg",
+    "arte/getaway/04-hud-wireframe.svg",
+    "arte/getaway/05-storyboard-capitulo1.svg"
+  ],
+  "canvas_px": {
+    "cover": [
+      1600,
+      900
+    ],
+    "vehicles": [
+      1320,
+      850
+    ],
+    "facades": [
+      1300,
+      905
+    ],
+    "props": [
+      1250,
+      900
+    ],
+    "hud": [
+      1400,
+      880
+    ],
+    "storyboard": [
+      1380,
+      860
+    ]
+  },
+  "vehicleIds": [
+    "v_sedan",
+    "v_taxi",
+    "v_furgon",
+    "v_coupe",
+    "v_patrulla",
+    "v_moto"
+  ],
+  "facadeIds": [
+    "fachada_1",
+    "fachada_2",
+    "fachada_3",
+    "fachada_4",
+    "fachada_5",
+    "fachada_6"
+  ],
+  "propIds": [
+    "objeto_01",
+    "objeto_02",
+    "objeto_03",
+    "objeto_04",
+    "objeto_05",
+    "objeto_06",
+    "objeto_07",
+    "objeto_08",
+    "objeto_09",
+    "objeto_10",
+    "objeto_11",
+    "objeto_12"
+  ],
+  "geometry": {
+    "spriteGuidePxPerM": 32,
+    "collisionsMeters": [
+      {
+        "id": "sedan",
+        "length": 4.55,
+        "width": 1.82
+      },
+      {
+        "id": "taxi",
+        "length": 4.9,
+        "width": 1.9
+      },
+      {
+        "id": "van",
+        "length": 5.75,
+        "width": 2.1
+      },
+      {
+        "id": "coupe",
+        "length": 4.25,
+        "width": 1.79
+      },
+      {
+        "id": "police",
+        "length": 4.85,
+        "width": 1.92
+      },
+      {
+        "id": "motorcycle",
+        "length": 2.3,
+        "width": 0.82
+      }
+    ],
+    "spritePositions": [
+      {
+        "spriteId": "v_sedan",
+        "cropHint": [
+          80,
+          74,
+          386,
+          335
+        ],
+        "anchor": "center",
+        "note": "hint incluye pie de ficha; extraer solo el dibujo, no texto ni fondo"
+      },
+      {
+        "spriteId": "v_taxi",
+        "cropHint": [
+          510,
+          74,
+          386,
+          335
+        ],
+        "anchor": "center",
+        "note": "hint incluye pie de ficha; extraer solo el dibujo, no texto ni fondo"
+      },
+      {
+        "spriteId": "v_furgon",
+        "cropHint": [
+          940,
+          74,
+          386,
+          335
+        ],
+        "anchor": "center",
+        "note": "hint incluye pie de ficha; extraer solo el dibujo, no texto ni fondo"
+      },
+      {
+        "spriteId": "v_coupe",
+        "cropHint": [
+          80,
+          444,
+          386,
+          335
+        ],
+        "anchor": "center",
+        "note": "hint incluye pie de ficha; extraer solo el dibujo, no texto ni fondo"
+      },
+      {
+        "spriteId": "v_patrulla",
+        "cropHint": [
+          510,
+          444,
+          386,
+          335
+        ],
+        "anchor": "center",
+        "note": "hint incluye pie de ficha; extraer solo el dibujo, no texto ni fondo"
+      },
+      {
+        "spriteId": "v_moto",
+        "cropHint": [
+          940,
+          444,
+          386,
+          335
+        ],
+        "anchor": "center",
+        "note": "hint incluye pie de ficha; extraer solo el dibujo, no texto ni fondo"
+      }
+    ]
+  },
+  "usage": "Los SVG contienen fichas y rótulos de diseño. La exportación de sprites individuales requiere recortar por ID / símbolo y limpiar el fondo; NO usar ficha completa como sprite.",
+  "rights": {
+    "authorship": "dibujo vectorial original generado para este proyecto; sin imágenes, marcas ni personajes extraídos de juegos ajenos",
+    "license": "pendiente de la decisión del titular del repositorio; no interpretar como CC0 ni dominio público",
+    "sourceImages": "no incluidas"
+  },
+  "quality": [
+    "Vista superior ortográfica para vehículos, sin perspectiva.",
+    "No extrapolar tamaños desde los SVG: usar colisión en metros.",
+    "Impostores LOD por diseñar (lejos >600 m, solo si renderer lo soporta).",
+    "Sin fotografías externas ni fuentes Web en SVG.",
+    "Probar sprites a 1x/2x DPR, día/noche y modo daltónico."
+  ]
+}

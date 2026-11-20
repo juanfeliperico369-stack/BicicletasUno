@@ -1,5 +1,78 @@
 # Bitácora de Motor City
 
+## 20-nov-2026 · 4.0.0 · El planeta y *Turno Cero*
+- **Pedido del autor:**
+  - «empieza con la creación del monstruo; nada de *family friendly*»;
+  - «combina ese mundo con Guatapé y la mejor versión de Medellín y el valle, todo en un mismo planeta, con caminos largos en medio de la nada»;
+  - y luego: «adapta todo lo nuevo que se agregó».
+- **Lo nuevo de Codex, unido a la rama:**
+  - *Turno Cero: Manhattan*, en `docs/GETAWAY-MANHATTAN-BIBLIA.md` y `docs/GETAWAY-ESPIONAJE-3D.md`;
+  - las 13 referencias;
+  - el prototipo 2D;
+  - el generador de 42 GLB, con su CI.
+- **`MC.Planeta`** (`js/13-planeta.js`):
+  - un anillo con Nueva York, la Ruta del Atlántico (16 km), Medellín y el Valle, la Autopista del Embalse (12 km), Guatapé y la Carretera del Norte (15 km);
+  - las carreteras se generan con `Generador.carretera` y tienen sus biomas;
+  - las puertas son reales (los puentes George Washington y de Brooklyn, las autopistas Norte y Medellín–Bogotá, la vía a El Peñol);
+  - vista de globo y horizonte curvo (`uCurv` en el sombreador).
+- **`MC.Busqueda`** (`js/28-busqueda.js`):
+  - búsqueda de 0 a 5 con los umbrales de Codex (15/35/55/70/85) y un tope de 4;
+  - los rivales nacen fuera de la vista y van a la última posición vista;
+  - tácticas seguir, cerrar y embestir, con empuje por masa;
+  - disparos, púas, retenes y helicóptero con reflector;
+  - cebo, pulso y disparos del jugador, y captura.
+- **`MC.Modelos`** (`js/45-glb.js`):
+  - lector GLB sin librerías;
+  - los 42 modelos de Codex, guardados en `arte/modelos/turno-cero/` (CC0);
+  - la cámara 3D los usa en carros, patrullas (con barra de luces), camionetas, guardias, retenes y contenedores.
+- **Construcción:**
+  - juegos con varios mundos (`"mundos"`; cada MC4 va en un `<script type="text/plain">`);
+  - GLB dentro del HTML (`"modelos"`).
+  - Además: `Vistas.liberar()` y el tema de interfaz «noche».
+- **Turno Cero** (`juegos/getaway/`, 25 MB, 18+):
+  - cinco actos y siete misiones por las tres ciudades;
+  - artefactos T01, T02, T03, T05, T06, T08, T09, T11 y T04;
+  - sigilo con conos de visión;
+  - el metro, los cables, el tranvía y el Metroplús de Medellín para perder a la policía;
+  - EnCicla, lancha en el embalse, robo de carros, talleres que reparan y repintan, y escondites;
+  - Calle libre con contratos;
+  - finales A, B y C según las pruebas y las decisiones;
+  - lenguaje fuerte, con opción de suavizarlo.
+  - El diseño está en `docs/TURNO-CERO.md`.
+- **Pruebas:**
+  - en Node, las secciones 19 (planeta) y 20 (búsqueda y GLB);
+  - en Chromium, Turno Cero de Manhattan a Medellín por la Ruta del Atlántico;
+  - un bot recorrió la historia completa hasta el final A en 161 s, sin errores.
+- **Corregido en el camino:**
+  - al cerrar un capítulo se saltaban capítulos (el último paso se completaba varias veces);
+  - el Muelle 4 caía sobre el agua;
+  - los subtítulos y el letrero de la carretera tapaban el joystick y las barras.
+- **Pendiente:** medir en un celular real con GPU. Los nuevos pedidos para Gemini, Codex y ChatGPT están en `TAREAS-IA.md` § 4.0.
+
+
+## 20-nov-2026 · C-M27 (parcial), dirección visual y catalogación
+- Sombras solares proyectadas sobre el suelo en WebGL1 (sin texturas de profundidad), mezcladas antes que los volúmenes, con cache por celda de cámara y posición solar; prueba sintética en `pruebas/prueba.mjs`.
+- G-H1: 14 capturas reales auditadas, avisos duplicados corregidos, HUD atenuado más legible, nombres protegidos frente a los botones y cierre real de diálogos por el capturador.
+- G-H18: `contenido/nueva-york-lugares.json` generado desde NYC CommonPlace con 50 lugares, coordenadas e IDs; excluye instalaciones municipales internas y marca accesibilidad pendiente de comprobar.
+- La tabla de estado vigente, con límites y prioridades, está en `docs/ESTADO-3.1.0.md`.
+- **C-M27 requiere CI del nuevo commit y prueba en GPU física**; no se afirma rendimiento móvil ni tilt-shift terminado.
+
+
+## 20-nov-2026 · 3.1.0 · Persecución optativa en Mandados
+- C-M26: clase pública `MC.Persecucion` con patrullas y pilotos que recomputan rutas A* por calles, un seguidor y otro que busca cortar el paso. Motor físico de `MC.Cuerpo`, sin atravesar edificios por «IA» de línea recta.
+- Reto voluntario de 90 segundos con botón para iniciar/salir; disponible en moto o carro, con huellas de vehículo en el mismo mundo 3D/2D, cámara de seguimiento sin saltos y captura si el jugador se detiene.
+- Los casi choques con tráfico no dan puntos en contacto ni a baja velocidad; bonus de turbo de duración corta y máximo una recompensa por ID de vehículo.
+- Comprobaciones deterministas de aparición fuera del jugador, física, bonos y cierre en `pruebas/prueba.mjs`. **Validado** en el commit `ff5977ec4`: CI [#44758766581](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44758766581), con 131 tests Node y 141 en Chromium, incluido E2E de persecución. La evaluación en celular real sigue pendiente.
+
+
+## 20-nov-2026 · 3.0.1 · Objetos de barrio y persistencia (ChatGPT)
+- C-M29 / G-H17 (entrega parcial): 30 tipos de mobiliario urbano en `js/32-objetos.js` y tamaños **aproximados para diseño** en `contenido/objetos-gemini.json`.
+- IDs estables por origen de los objetos: restauración de desplazamientos, velocidad, orientación y daño con `MC.GuardadoSectores`.
+- Mandados guarda cambios de Guatapé periódicamente y al ocultar/cerrar la pestaña; los mundos aleatorios no heredan esos datos.
+- Regresiones agregadas a `pruebas/prueba.mjs`. Comprobación aislada del código realizada; **batería Node/Chromium pendiente** en clon completo.
+- Falta arte individualizado de cada objeto y medición con hardware móvil.
+
+
 ## 20‑nov‑2026 · 3.0.0 · Los tres juegos actualizados y Nueva York preparado (Claude Code)
 - **EnCicla** (`src/js/97-motor30.js`):
   - la calidad automática del 3.0;

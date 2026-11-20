@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "generated": "2026-11-20",
+  "method": "Official public Google Play storefront descriptions, no direct gameplay footage or code inspection",
+  "project": "Turno Cero: Manhattan",
+  "references": [
+    {
+      "id": 1,
+      "title": "Reckless Getaway 2",
+      "package": "com.pixelbite.ga2",
+      "observed": "Persecución vehicular con policías, vehículos pesados y escalada",
+      "transfer": "Escalada 1–5 basada en evidencia visible, no aparición infinita de policías",
+      "avoid": "Escalar solo si hay contacto y testigos; IA legible",
+      "priority": "A",
+      "source": "https://play.google.com/store/apps/details?id=com.pixelbite.ga2",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 2,
+      "title": "Getaway",
+      "package": "com.MoonLightGames.Getaway",
+      "observed": "Evasión de coches y obstáculos en áreas cerradas, distintos manejos",
+      "transfer": "Microarena portuaria para tutorial de conducción y evasión",
+      "avoid": "No copiar arenas ni diseños de niveles",
+      "priority": "A",
+      "source": "https://play.google.com/store/apps/details?id=com.MoonLightGames.Getaway",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 3,
+      "title": "#DRIVE",
+      "package": "com.pixelperfectdude.htdrive",
+      "observed": "Conducción infinita y estética de cine de carretera setentero",
+      "transfer": "Iluminación cálida, imperfección editorial, autos reconocibles por silueta",
+      "avoid": "Evitar nostalgia kitsch e interfaces de neón",
+      "priority": "A",
+      "source": "https://play.google.com/store/apps/details?id=com.pixelperfectdude.htdrive",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 4,
+      "title": "Solar Smash",
+      "package": "com.paradyme.solarsmash",
+      "observed": "Simulación interactiva y retroalimentación visible de cambios",
+      "transfer": "Inspección de daños locales persistentes: señales, vitrinas, mobiliario",
+      "avoid": "No incorporar destrucción planetaria o física no viable en móvil",
+      "priority": "C",
+      "source": "https://play.google.com/store/apps/details?id=com.paradyme.solarsmash",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 5,
+      "title": "Space Frontier 2",
+      "package": "com.ketchapp.spacefrontier2",
+      "observed": "Progresión por sistemas, tecnologías y exploración",
+      "transfer": "Desbloqueos de barrios y taller por hitos narrativos",
+      "avoid": "No trasladar literalmente colonización espacial a la ciudad",
+      "priority": "C",
+      "source": "https://play.google.com/store/apps/details?id=com.ketchapp.spacefrontier2",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 6,
+      "title": "WorldBox",
+      "package": "com.mkarpenko.worldbox",
+      "observed": "Agentes y civilizaciones con evolución emergente y simulación offline",
+      "transfer": "Barrios con rutinas y tráfico local, memoria de eventos y reputación",
+      "avoid": "No simular decenas de miles de agentes al mismo tiempo",
+      "priority": "B",
+      "source": "https://play.google.com/store/apps/details?id=com.mkarpenko.worldbox",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 7,
+      "title": "Bullet Echo",
+      "package": "com.zeptolab.bulletecho.google",
+      "observed": "Sigilo táctico desde arriba con visión reducida y señales sonoras",
+      "transfer": "Señales auditivas de patrullas, visión restringida por calle y lluvia",
+      "avoid": "No duplicar el cono de linterna ni héroes y armas reconocibles",
+      "priority": "B",
+      "source": "https://play.google.com/store/apps/details?id=com.zeptolab.bulletecho.google",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 8,
+      "title": "Idle Drift: JDM Race",
+      "package": "com.idle.drift",
+      "observed": "Drift, progresión de vehículo y mejoras de componentes",
+      "transfer": "Taller basado en agarre, frenado, masa, durabilidad y pintura",
+      "avoid": "Evitar progresión clicker/grind y recompensas por anuncios",
+      "priority": "B",
+      "source": "https://play.google.com/store/apps/details?id=com.idle.drift",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 9,
+      "title": "PAKO 2",
+      "package": "com.treemengames.pako2",
+      "observed": "Conductor de fuga recoge equipo y sale por rutas bajo persecución",
+      "transfer": "Misiones con recogida/entrega, pasajeros y escapes alternativos",
+      "avoid": "No copiar formas de misión, vehículos ni recorridos existentes",
+      "priority": "A",
+      "source": "https://play.google.com/store/apps/details?id=com.treemengames.pako2",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 10,
+      "title": "PAKO Forever",
+      "package": "com.treemengames.pakoforever",
+      "observed": "Mapas regenerados, power-ups, conducción táctica simplificada",
+      "transfer": "Semillas reproducibles para desvíos/tráfico, no para alterar Manhattan real",
+      "avoid": "Realidad urbana fija; aleatorizar eventos, no trazado base",
+      "priority": "A",
+      "source": "https://play.google.com/store/apps/details?id=com.treemengames.pakoforever",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 11,
+      "title": "PAKO 3",
+      "package": "com.treemengames.pako3",
+      "observed": "Modos diferenciados, coches personalizables, niveles y jefes",
+      "transfer": "Tres arquetipos de persecución y misiones especiales con salida",
+      "avoid": "No convertir historia adulta en puro arcade de desbloqueos",
+      "priority": "B",
+      "source": "https://play.google.com/store/apps/details?id=com.treemengames.pako3",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 12,
+      "title": "PAKO Highway",
+      "package": "com.treemengames.pakohighway",
+      "observed": "Adelantamientos cercanos que llenan el boost, mejoras de coche",
+      "transfer": "Casi choque medido sin colisión y turbo controlado, ya existe MC.Persecucion",
+      "avoid": "Evitar que el turbo haga invulnerable o atraviese el tráfico",
+      "priority": "A",
+      "source": "https://play.google.com/store/apps/details?id=com.treemengames.pakohighway",
+      "evidence": "storefront-description"
+    },
+    {
+      "id": 13,
+      "title": "GTA: Chinatown Wars",
+      "package": "com.rockstargames.gtactw",
+      "observed": "Narrativa criminal urbana, traición familiar, desplazamiento y minijuegos móviles",
+      "transfer": "Poder/reputación, decisiones con consecuencias, microactividades contextuales",
+      "avoid": "No usar personajes, triadas, diálogos, misiones ni marcas GTA",
+      "priority": "A",
+      "source": "https://play.google.com/store/apps/details?id=com.rockstargames.gtactw",
+      "evidence": "storefront-description"
+    }
+  ]
+}

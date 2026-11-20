@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw
 AQUI = os.path.dirname(os.path.abspath(__file__)); RAIZ = os.path.join(AQUI, '..')
 ap = argparse.ArgumentParser()
 ap.add_argument('--id', required=True); ap.add_argument('--nombre', default=None); ap.add_argument('--bbox', required=True, help='lon0,latS,lon1,latN')
-ap.add_argument('--casilla', type=float, default=5.0); ap.add_argument('--release', default='2026-10-21.0'); ap.add_argument('--pais', default=None)
+ap.add_argument('--casilla', type=float, default=5.0); ap.add_argument('--fondo', type=int, default=-12, help='cota mínima (m): corta la batimetría'); ap.add_argument('--release', default='2026-10-21.0'); ap.add_argument('--pais', default=None)
 A = ap.parse_args()
 LON0, LATS, LON1, LATN = [float(v) for v in A.bbox.split(',')]
 T = A.casilla; LATR = (LATN + LATS) / 2
@@ -74,6 +74,8 @@ for j in range(eH):
 # huecos y picos del modelo de elevación (vacíos del radar, embalses): lo que se aparta más de 150 m de la mediana 3×3 se reemplaza
 pad = np.pad(rel.astype(np.float64), 1, mode='edge'); med = np.median(np.stack([pad[1 + dy:1 + dy + eH, 1 + dx:1 + dx + eW] for dy in (-1, 0, 1) for dx in (-1, 0, 1)]), axis=0)
 malos = np.abs(rel - med) > 150; rel[malos] = med[malos].astype(np.int16)
+# 4.0: el relieve de terrarium trae el fondo del mar (batimetría): en un mundo jugable el agua no baja de --fondo (−12 m)
+rel = np.maximum(rel, A.fondo).astype(np.int16)
 print(f'  relieve {eW}×{eH} (cada {ES * T:g} m): {rel.min()}–{rel.max()} m · {int(malos.sum())} huecos corregidos'); sys.stdout.flush()
 
 # ---------- 3. Suelo por casilla (TT) ----------

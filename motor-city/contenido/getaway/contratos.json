@@ -1,0 +1,586 @@
+{
+  "schema_version": 1,
+  "status": "plan narrativo, no juego publicado",
+  "project": "Noche de Cobro: Manhattan",
+  "currency": "créditos ficticios",
+  "characters": [
+    "mara",
+    "odessa",
+    "noor",
+    "ward",
+    "vale"
+  ],
+  "factions": [
+    {
+      "id": "taller",
+      "nombre": "Taller del Muelle",
+      "publicFaction": true,
+      "reputationStart": 12,
+      "baseInfluence": 20,
+      "role": "mecánica y red de favores",
+      "avoids": [
+        "daño a civiles"
+      ]
+    },
+    {
+      "id": "north_quay",
+      "nombre": "North Quay Freight",
+      "publicFaction": false,
+      "reputationStart": -8,
+      "baseInfluence": 72,
+      "role": "operador ficticio de cargas",
+      "avoids": [
+        "filtración del Libro Gris"
+      ]
+    },
+    {
+      "id": "coro",
+      "nombre": "El Coro",
+      "publicFaction": false,
+      "reputationStart": -5,
+      "baseInfluence": 54,
+      "role": "cobro clandestino ficticio",
+      "avoids": [
+        "incumplir promesas"
+      ]
+    },
+    {
+      "id": "garantias",
+      "nombre": "Oficina de Garantías",
+      "publicFaction": true,
+      "reputationStart": 0,
+      "baseInfluence": 41,
+      "role": "unidad ficticia investigadora",
+      "avoids": [
+        "destrucción de pruebas"
+      ]
+    },
+    {
+      "id": "vecindarios",
+      "nombre": "Vecindarios",
+      "publicFaction": true,
+      "reputationStart": 0,
+      "baseInfluence": 60,
+      "role": "confianza civil",
+      "avoids": [
+        "atropellos y daño gratuito"
+      ]
+    }
+  ],
+  "missions": [
+    {
+      "id": "c1_m1",
+      "chapter": 1,
+      "name": "El paquete equivocado",
+      "type": "courier",
+      "sector": "lower_manhattan",
+      "objective": "Recibir un paquete y llegar al taller",
+      "requires": [],
+      "durationSec": 240,
+      "reward": 260,
+      "heatDelta": 14,
+      "choices": [
+        {
+          "id": "ayudar",
+          "text": "Auxiliar a un testigo",
+          "reputation": {
+            "vecindarios": 8,
+            "taller": 3
+          },
+          "rewardDelta": -40
+        },
+        {
+          "id": "seguir",
+          "text": "Cumplir el plazo",
+          "reputation": {
+            "vecindarios": -2
+          },
+          "rewardDelta": 20
+        }
+      ],
+      "narrative": "Mara reconoce una firma en la libreta de carga."
+    },
+    {
+      "id": "c1_m2",
+      "chapter": 1,
+      "name": "Primera sirena",
+      "type": "escape",
+      "sector": "lower_manhattan",
+      "objective": "Evitar la patrulla y regresar sin dañar civiles",
+      "requires": [
+        "c1_m1"
+      ],
+      "durationSec": 210,
+      "reward": 220,
+      "heatDelta": 18,
+      "choices": [
+        {
+          "id": "cuidado",
+          "text": "Tomar calles tranquilas",
+          "reputation": {
+            "vecindarios": 6
+          },
+          "rewardDelta": 0
+        },
+        {
+          "id": "riesgo",
+          "text": "Acortar por la avenida",
+          "reputation": {
+            "taller": -2
+          },
+          "rewardDelta": 70
+        }
+      ]
+    },
+    {
+      "id": "c1_m3",
+      "chapter": 1,
+      "name": "El taller",
+      "type": "repair",
+      "sector": "lower_manhattan",
+      "objective": "Reparar el vehículo y escuchar a Odessa",
+      "requires": [
+        "c1_m2"
+      ],
+      "durationSec": 160,
+      "reward": 140,
+      "heatDelta": -20,
+      "choices": [
+        {
+          "id": "confesar",
+          "text": "Contar lo ocurrido",
+          "reputation": {
+            "taller": 9
+          },
+          "rewardDelta": -30
+        },
+        {
+          "id": "callar",
+          "text": "Omitir detalles",
+          "reputation": {
+            "taller": -4
+          },
+          "rewardDelta": 0
+        }
+      ]
+    },
+    {
+      "id": "c2_m1",
+      "chapter": 2,
+      "name": "Una deuda pequeña",
+      "type": "delivery",
+      "sector": "chinatown",
+      "objective": "Entregar un sobre a un intermediario ficticio",
+      "requires": [
+        "c1_m3"
+      ],
+      "durationSec": 260,
+      "reward": 330,
+      "heatDelta": 10,
+      "choices": [
+        {
+          "id": "aclarar",
+          "text": "Exigir explicaciones",
+          "reputation": {
+            "garantias": 2,
+            "coro": -5
+          },
+          "rewardDelta": -20
+        },
+        {
+          "id": "cobrar",
+          "text": "Aceptar el encargo",
+          "reputation": {
+            "coro": 5
+          },
+          "rewardDelta": 50
+        }
+      ]
+    },
+    {
+      "id": "c2_m2",
+      "chapter": 2,
+      "name": "No todo se cobra",
+      "type": "choice",
+      "sector": "les",
+      "objective": "Decidir el destino de una pequeña deuda",
+      "requires": [
+        "c2_m1"
+      ],
+      "durationSec": 180,
+      "reward": 220,
+      "heatDelta": 5,
+      "choices": [
+        {
+          "id": "perdonar",
+          "text": "Perdonar a la familia",
+          "reputation": {
+            "vecindarios": 14,
+            "coro": -8
+          },
+          "rewardDelta": -80
+        },
+        {
+          "id": "reportar",
+          "text": "Reportar al acreedor",
+          "reputation": {
+            "coro": 6,
+            "vecindarios": -7
+          },
+          "rewardDelta": 60
+        }
+      ]
+    },
+    {
+      "id": "c2_m3",
+      "chapter": 2,
+      "name": "La ruta del río",
+      "type": "chase",
+      "sector": "les",
+      "objective": "Huir por una ruta validada de Lower Manhattan",
+      "requires": [
+        "c2_m2"
+      ],
+      "durationSec": 300,
+      "reward": 390,
+      "heatDelta": 24,
+      "choices": [
+        {
+          "id": "ocultar",
+          "text": "Esperar a que baje la alerta",
+          "reputation": {
+            "taller": 4
+          },
+          "rewardDelta": 0
+        },
+        {
+          "id": "avanzar",
+          "text": "Seguir el contrato",
+          "reputation": {
+            "coro": 4
+          },
+          "rewardDelta": 70
+        }
+      ]
+    },
+    {
+      "id": "c3_m1",
+      "chapter": 3,
+      "name": "Los nombres",
+      "type": "evidence",
+      "sector": "soho",
+      "objective": "Recoger una copia de registros",
+      "requires": [
+        "c2_m3"
+      ],
+      "durationSec": 300,
+      "reward": 430,
+      "heatDelta": 16,
+      "choices": [
+        {
+          "id": "guardar",
+          "text": "Proteger documentos",
+          "reputation": {
+            "garantias": 10
+          },
+          "rewardDelta": -60
+        },
+        {
+          "id": "entregar",
+          "text": "Dar copia a un contacto",
+          "reputation": {
+            "coro": 6
+          },
+          "rewardDelta": 40
+        }
+      ]
+    },
+    {
+      "id": "c3_m2",
+      "chapter": 3,
+      "name": "La firma falsa",
+      "type": "investigation",
+      "sector": "midtown",
+      "objective": "Confirmar la cadena de responsables ficticios",
+      "requires": [
+        "c3_m1"
+      ],
+      "durationSec": 320,
+      "reward": 360,
+      "heatDelta": 8,
+      "choices": [
+        {
+          "id": "verificar",
+          "text": "Verificar antes de acusar",
+          "reputation": {
+            "garantias": 8
+          },
+          "rewardDelta": -20
+        },
+        {
+          "id": "difundir",
+          "text": "Divulgar sin corroborar",
+          "reputation": {
+            "garantias": -9,
+            "vecindarios": -5
+          },
+          "rewardDelta": 60
+        }
+      ]
+    },
+    {
+      "id": "c3_m3",
+      "chapter": 3,
+      "name": "La llamada de Noor",
+      "type": "escort",
+      "sector": "chelsea",
+      "objective": "Llevar a Noor a un punto seguro ficticio",
+      "requires": [
+        "c3_m2"
+      ],
+      "durationSec": 330,
+      "reward": 410,
+      "heatDelta": 16,
+      "choices": [
+        {
+          "id": "seguridad",
+          "text": "Tomar la ruta discreta",
+          "reputation": {
+            "garantias": 8
+          },
+          "rewardDelta": -20
+        },
+        {
+          "id": "atajo",
+          "text": "Apostar por el atajo",
+          "reputation": {
+            "garantias": -2
+          },
+          "rewardDelta": 70
+        }
+      ]
+    },
+    {
+      "id": "c4_m1",
+      "chapter": 4,
+      "name": "Puertas cerradas",
+      "type": "chase",
+      "sector": "midtown",
+      "objective": "Salir de un cerco de tránsito",
+      "requires": [
+        "c3_m3"
+      ],
+      "durationSec": 390,
+      "reward": 560,
+      "heatDelta": 35,
+      "choices": [
+        {
+          "id": "evitar",
+          "text": "Evitar zona concurrida",
+          "reputation": {
+            "vecindarios": 8
+          },
+          "rewardDelta": -40
+        },
+        {
+          "id": "forzar",
+          "text": "Llegar más rápido",
+          "reputation": {
+            "vecindarios": -12
+          },
+          "rewardDelta": 80
+        }
+      ]
+    },
+    {
+      "id": "c4_m2",
+      "chapter": 4,
+      "name": "La ciudad escucha",
+      "type": "stealth",
+      "sector": "east_village",
+      "objective": "Reunirse sin provocar una persecución",
+      "requires": [
+        "c4_m1"
+      ],
+      "durationSec": 260,
+      "reward": 450,
+      "heatDelta": -10,
+      "choices": [
+        {
+          "id": "escuchar",
+          "text": "Confiar en el contacto",
+          "reputation": {
+            "taller": 8
+          },
+          "rewardDelta": 0
+        },
+        {
+          "id": "desconfiar",
+          "text": "Verificar su historia",
+          "reputation": {
+            "garantias": 5
+          },
+          "rewardDelta": -20
+        }
+      ]
+    },
+    {
+      "id": "c4_m3",
+      "chapter": 4,
+      "name": "La salida",
+      "type": "escape",
+      "sector": "upper_west",
+      "objective": "Escapar por calles conectadas antes de que cierre la operación",
+      "requires": [
+        "c4_m2"
+      ],
+      "durationSec": 390,
+      "reward": 640,
+      "heatDelta": 30,
+      "choices": [
+        {
+          "id": "amigos",
+          "text": "Regresar por un aliado",
+          "reputation": {
+            "taller": 12
+          },
+          "rewardDelta": -100
+        },
+        {
+          "id": "salir",
+          "text": "Salir sin detenerse",
+          "reputation": {
+            "taller": -9
+          },
+          "rewardDelta": 100
+        }
+      ]
+    },
+    {
+      "id": "c5_m1",
+      "chapter": 5,
+      "name": "El precio de una verdad",
+      "type": "choice",
+      "sector": "financial",
+      "objective": "Decidir el destino del Libro Gris",
+      "requires": [
+        "c4_m3"
+      ],
+      "durationSec": 180,
+      "reward": 350,
+      "heatDelta": 5,
+      "choices": [
+        {
+          "id": "publicar",
+          "text": "Entregar pruebas verificadas",
+          "reputation": {
+            "garantias": 15,
+            "vecindarios": 15,
+            "north_quay": -25
+          },
+          "rewardDelta": -100
+        },
+        {
+          "id": "pactar",
+          "text": "Negociar su silencio",
+          "reputation": {
+            "north_quay": 18,
+            "garantias": -20
+          },
+          "rewardDelta": 400
+        },
+        {
+          "id": "destruir",
+          "text": "Deshacerse del Libro Gris",
+          "reputation": {
+            "taller": -10,
+            "garantias": -15
+          },
+          "rewardDelta": 0
+        }
+      ]
+    },
+    {
+      "id": "c5_m2",
+      "chapter": 5,
+      "name": "Última ruta",
+      "type": "chase",
+      "sector": "financial",
+      "objective": "Terminar la última persecución por rutas reales",
+      "requires": [
+        "c5_m1"
+      ],
+      "durationSec": 420,
+      "reward": 680,
+      "heatDelta": 30,
+      "choices": [
+        {
+          "id": "cuidar",
+          "text": "Dejar atrás sin víctimas",
+          "reputation": {
+            "vecindarios": 18
+          },
+          "rewardDelta": -40
+        },
+        {
+          "id": "huir",
+          "text": "Llegar con cualquier daño material",
+          "reputation": {
+            "vecindarios": -8
+          },
+          "rewardDelta": 100
+        }
+      ]
+    },
+    {
+      "id": "c5_m3",
+      "chapter": 5,
+      "name": "Saldo final",
+      "type": "ending",
+      "sector": "lower_manhattan",
+      "objective": "Cerrar las cuentas; el final depende del historial",
+      "requires": [
+        "c5_m2"
+      ],
+      "durationSec": 180,
+      "reward": 0,
+      "heatDelta": -90,
+      "choices": [
+        {
+          "id": "fin_justicia",
+          "text": "Colaborar con la investigación",
+          "reputation": {
+            "garantias": 14
+          },
+          "rewardDelta": 0
+        },
+        {
+          "id": "fin_pacto",
+          "text": "Salir con una deuda oculta",
+          "reputation": {
+            "north_quay": 9
+          },
+          "rewardDelta": 0
+        },
+        {
+          "id": "fin_exilio",
+          "text": "Abandonar la ciudad",
+          "reputation": {
+            "taller": -5
+          },
+          "rewardDelta": 0
+        }
+      ]
+    }
+  ],
+  "endingLogic": [
+    "fin_justicia requiere evidencia conservada y confianza alta en garantías; si no, final con pérdida",
+    "fin_pacto habilitado solo si North Quay ofrece acuerdo y el jugador conserva el libro",
+    "fin_exilio disponible siempre, reduce influencia pero conserva supervivencia"
+  ],
+  "notes": [
+    "Todos los personajes y organizaciones son ficticios.",
+    "Zonas de misión son anclajes narrativos aproximados, no polígonos GIS ni direcciones.",
+    "No se asignan crímenes ni vandalismo a memoriales reales."
+  ]
+}

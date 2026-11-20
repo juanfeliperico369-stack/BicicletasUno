@@ -1,5 +1,14 @@
 # Tareas de cada IA · Juega EnCicla
 
+> **Motor City 4.0 (20‑nov‑2026): el planeta y *Turno Cero*.**
+> - El motor une Manhattan, Medellín y el Valle y Guatapé en un planeta (`MC.Planeta`), con carreteras de la nada entre ellas.
+> - Trae la búsqueda 0–5 (`MC.Busqueda`) y lee modelos GLB (`MC.Modelos`).
+> - *Turno Cero* es el juego adulto de Motor City y vive aislado en `motor-city/juegos/getaway/`: **su violencia y su lenguaje no entran a este juego**.
+> - Lee `motor-city/docs/TURNO-CERO.md` y `motor-city/TAREAS-IA.md` § 4.0.
+>
+> **Para Juega EnCicla (Codex, C‑E40):** «Ruta a Guatapé en bici». Es un reto de cicloturismo opcional por la Autopista del Embalse de `MC.Planeta`: 12 km de montaña, bosque y lagos (`Generador.carretera`). Debe tener paradas para hidratarse, el letrero con los km y llegada al malecón de Guatapé. Es para todo público, sin búsqueda ni disparos.
+
+
 > **Motor City 3.0 (20‑nov‑2026):** antes de tu encargo, lee **las 10 reglas que dejó el feedback del autor** en `motor-city/docs/PROXIMO-NUEVA-YORK.md` §3:
 > - un solo mundo con varias cámaras;
 > - volumen en lo que se levanta;

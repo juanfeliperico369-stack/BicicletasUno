@@ -1,0 +1,459 @@
+{
+  "version": 1,
+  "cantidad": 50,
+  "fecha_consulta": "2026-11-20",
+  "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+  "nota": "Puntos oficiales aproximados a lugares, no garantía de acceso público.",
+  "lugares": [
+    {
+      "nombre": "MT SINAI PARKING GARAGE",
+      "lat": 40.7884726,
+      "lon": -73.9517742,
+      "tipo": "garaje",
+      "id": "1029460",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "ROOSEVELT ISLAND PARKING GARAGE",
+      "lat": 40.7650361,
+      "lon": -73.9466043,
+      "tipo": "garaje",
+      "id": "1028331",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "EDGE OBSERVATION DECK",
+      "lat": 40.7538359,
+      "lon": -74.0002114,
+      "tipo": "mirador",
+      "id": "1033408",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "FT PARK BILLINGS TERRACE OVERLOOK",
+      "lat": 40.8601207,
+      "lon": -73.9349507,
+      "tipo": "mirador",
+      "id": "1024225",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "HIGHBRIDGE PARK ROCKFACE OVERLOOK",
+      "lat": 40.8384645,
+      "lon": -73.9344047,
+      "tipo": "mirador",
+      "id": "1024295",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "AFRICAN BURIAL GROUND NATIONAL MONUMENT",
+      "lat": 40.714499,
+      "lon": -74.0043585,
+      "tipo": "monumento",
+      "id": "1022704",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "SEPTEMBER 11 MEMORIAL GLADE",
+      "lat": 40.7113293,
+      "lon": -74.0137438,
+      "tipo": "monumento",
+      "id": "1010587",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "24 STREET FERRY LANDING",
+      "lat": 40.7351237,
+      "lon": -73.9736964,
+      "tipo": "muelle",
+      "id": "1036153",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "BATTERY PARK CITY FERRY LANDING",
+      "lat": 40.7150749,
+      "lon": -74.0175995,
+      "tipo": "muelle",
+      "id": "1029968",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "BATTERY PARK SLIP 6 FERRY LANDING",
+      "lat": 40.7036103,
+      "lon": -74.017837,
+      "tipo": "muelle",
+      "id": "1035993",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "EAST 90 STREET FERRY LANDING",
+      "lat": 40.7773395,
+      "lon": -73.9424298,
+      "tipo": "muelle",
+      "id": "1036149",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "9/11 MEMORIAL MUSEUM",
+      "lat": 40.7114285,
+      "lon": -74.0126587,
+      "tipo": "museo",
+      "id": "1010586",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "AMERICAN MUSEUM OF NATURAL HISTORY",
+      "lat": 40.7810731,
+      "lon": -73.9735608,
+      "tipo": "museo",
+      "id": "7586",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "ANNE FRANK CENTER USA",
+      "lat": 40.7211437,
+      "lon": -73.9996322,
+      "tipo": "museo",
+      "id": "1008813",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "CHAIM GROSS STUDIO MUSEUM",
+      "lat": 40.7284847,
+      "lon": -73.9988516,
+      "tipo": "museo",
+      "id": "5427",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "DYCKMAN HOUSE MUSEUM",
+      "lat": 40.8674021,
+      "lon": -73.9228624,
+      "tipo": "museo",
+      "id": "16871",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "ELDRIDGE STREET MUSEUM",
+      "lat": 40.7147507,
+      "lon": -73.9934757,
+      "tipo": "museo",
+      "id": "5445",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "FRAUNCES TAVERN MUSEUM",
+      "lat": 40.7034175,
+      "lon": -74.0113601,
+      "tipo": "museo",
+      "id": "13926",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "MET CLOISTERS MUSEUM METROPOLITAN MUSEUM OF ART",
+      "lat": 40.8648628,
+      "lon": -73.9318657,
+      "tipo": "museo",
+      "id": "9907",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "METROPOLITAN MUSEUM OF ART",
+      "lat": 40.7788317,
+      "lon": -73.9636737,
+      "tipo": "museo",
+      "id": "5403",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "NATIONAL JAZZ MUSEUM IN HARLEM",
+      "lat": 40.8099264,
+      "lon": -73.9430797,
+      "tipo": "museo",
+      "id": "1032041",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "NICHOLAS ROERICH MUSEUM",
+      "lat": 40.8028852,
+      "lon": -73.9690473,
+      "tipo": "museo",
+      "id": "5837",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "SOLOMON R GUGGENHEIM MUSEUM",
+      "lat": 40.7829732,
+      "lon": -73.9590031,
+      "tipo": "museo",
+      "id": "5793",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "THE STUDIO MUSEUM OF HARLEM",
+      "lat": 40.8083423,
+      "lon": -73.9476449,
+      "tipo": "museo",
+      "id": "1039837",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "WHITNEY MUSEUM OF AMERICAN ART",
+      "lat": 40.7395532,
+      "lon": -74.0091602,
+      "tipo": "museo",
+      "id": "1028672",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "110 STREET BLOCK ASSOCIATION GARDEN",
+      "lat": 40.7961972,
+      "lon": -73.9473691,
+      "tipo": "parque",
+      "id": "1019804",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "14 STREET PARK",
+      "lat": 40.7427359,
+      "lon": -74.0082822,
+      "tipo": "parque",
+      "id": "1034568",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "ABRAHAM LINCOLN PLAYGROUND",
+      "lat": 40.8122758,
+      "lon": -73.9372608,
+      "tipo": "parque",
+      "id": "1035907",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "AHEARN PARK",
+      "lat": 40.7147851,
+      "lon": -73.9835349,
+      "tipo": "parque",
+      "id": "1465",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "AMELIA GORMAN PARK",
+      "lat": 40.8557732,
+      "lon": -73.9325613,
+      "tipo": "parque",
+      "id": "899",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "BATTERY PARK",
+      "lat": 40.7030529,
+      "lon": -74.0156704,
+      "tipo": "parque",
+      "id": "1512",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "BATTERY PARK CITY ESPLANADE",
+      "lat": 40.711381,
+      "lon": -74.0179792,
+      "tipo": "parque",
+      "id": "1030170",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "BRYANT PARK",
+      "lat": 40.7535049,
+      "lon": -73.982965,
+      "tipo": "parque",
+      "id": "1036072",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "CENTRAL PARK",
+      "lat": 40.7823774,
+      "lon": -73.9652398,
+      "tipo": "parque",
+      "id": "1010265",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "CENTRAL PARK CONSERVATORY GARDEN",
+      "lat": 40.7937623,
+      "lon": -73.9524524,
+      "tipo": "parque",
+      "id": "17495",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "CITY HALL PARK",
+      "lat": 40.7125466,
+      "lon": -74.0064366,
+      "tipo": "parque",
+      "id": "1038760",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "FORT WASHINGTON PARK",
+      "lat": 40.8435075,
+      "lon": -73.9459082,
+      "tipo": "parque",
+      "id": "1022448",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "FT TRYON PARK",
+      "lat": 40.8613686,
+      "lon": -73.9334909,
+      "tipo": "parque",
+      "id": "1022487",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "MADISON SQUARE PARK",
+      "lat": 40.7421611,
+      "lon": -73.9879874,
+      "tipo": "parque",
+      "id": "251",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "RIVERSIDE PARK",
+      "lat": 40.8002541,
+      "lon": -73.9733606,
+      "tipo": "parque",
+      "id": "17522",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "RIVERSIDE PARK RECREATION AREA",
+      "lat": 40.8307041,
+      "lon": -73.951805,
+      "tipo": "parque",
+      "id": "16194",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "WASHINGTON SQUARE PARK",
+      "lat": 40.7309729,
+      "lon": -73.9976471,
+      "tipo": "parque",
+      "id": "226",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "145 ST BRIDGE PED AND BIKE",
+      "lat": 40.8195897,
+      "lon": -73.9335671,
+      "tipo": "puente",
+      "id": "1026910",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "3 AV BRIDGE PED AND BIKE",
+      "lat": 40.8073956,
+      "lon": -73.933129,
+      "tipo": "puente",
+      "id": "1026929",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "BROOKLYN BRIDGE PEDESTRIAN",
+      "lat": 40.7079978,
+      "lon": -73.9992523,
+      "tipo": "puente",
+      "id": "1026932",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "CENTRAL PARK BOW BRIDGE",
+      "lat": 40.7757837,
+      "lon": -73.9717858,
+      "tipo": "puente",
+      "id": "1002127",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "GW BRIDGE BIKE AND PEDESTRIAN",
+      "lat": 40.8512672,
+      "lon": -73.9506231,
+      "tipo": "puente",
+      "id": "1026938",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "HELL GATE BRIDGE",
+      "lat": 40.7826562,
+      "lon": -73.922167,
+      "tipo": "puente",
+      "id": "1009964",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "MANHATTAN BRIDGE BIKE PATH",
+      "lat": 40.7096534,
+      "lon": -73.9917452,
+      "tipo": "puente",
+      "id": "1026944",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    },
+    {
+      "nombre": "OAK BRIDGE OVER THE LAKE",
+      "lat": 40.7787095,
+      "lon": -73.9716764,
+      "tipo": "puente",
+      "id": "1031094",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+      "acceso": "por_verificar"
+    }
+  ]
+}

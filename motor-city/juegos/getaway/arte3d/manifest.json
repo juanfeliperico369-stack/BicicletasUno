@@ -1,0 +1,934 @@
+{
+  "proyecto": "TURNO CERO: MANHATTAN",
+  "version": "0.2.0-preproduccion",
+  "licencia": "CC0-1.0 - geometria procedural original",
+  "escala": "1 unidad = 1 metro; glTF Y-up",
+  "nota": "Modelos GLB para bloqueo de escenas y adaptación; NO assets de lanzamiento ni modelos detallados / animados. Sin datos GIS oficiales.",
+  "total": 42,
+  "assets": [
+    {
+      "id": "vehiculo_sedan",
+      "categoria": "vehiculos",
+      "archivo": "vehiculo_sedan.glb",
+      "vertices": 1620,
+      "triangulos": 540,
+      "bytes": 52960,
+      "bounds_metros": [
+        [
+          -2.36,
+          0.01,
+          -1.053
+        ],
+        [
+          2.38,
+          1.42,
+          1.053
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Conducción, persecución e identidad encubierta"
+    },
+    {
+      "id": "vehiculo_suv",
+      "categoria": "vehiculos",
+      "archivo": "vehiculo_suv.glb",
+      "vertices": 1656,
+      "triangulos": 552,
+      "bytes": 54108,
+      "bounds_metros": [
+        [
+          -2.7,
+          0.01,
+          -1.15
+        ],
+        [
+          2.505,
+          2.045,
+          1.15
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Conducción, persecución e identidad encubierta"
+    },
+    {
+      "id": "vehiculo_van",
+      "categoria": "vehiculos",
+      "archivo": "vehiculo_van.glb",
+      "vertices": 1836,
+      "triangulos": 612,
+      "bytes": 59884,
+      "bounds_metros": [
+        [
+          -2.834,
+          0.01,
+          -1.193
+        ],
+        [
+          2.855,
+          2.73,
+          1.193
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Conducción, persecución e identidad encubierta"
+    },
+    {
+      "id": "vehiculo_taxi",
+      "categoria": "vehiculos",
+      "archivo": "vehiculo_taxi.glb",
+      "vertices": 1656,
+      "triangulos": 552,
+      "bytes": 54112,
+      "bounds_metros": [
+        [
+          -2.36,
+          0.01,
+          -1.053
+        ],
+        [
+          2.38,
+          1.605,
+          1.053
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Conducción, persecución e identidad encubierta"
+    },
+    {
+      "id": "vehiculo_police",
+      "categoria": "vehiculos",
+      "archivo": "vehiculo_police.glb",
+      "vertices": 1656,
+      "triangulos": 552,
+      "bytes": 54112,
+      "bounds_metros": [
+        [
+          -2.36,
+          0.01,
+          -1.085
+        ],
+        [
+          2.38,
+          1.61,
+          1.085
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Conducción, persecución e identidad encubierta"
+    },
+    {
+      "id": "vehiculo_coupe",
+      "categoria": "vehiculos",
+      "archivo": "vehiculo_coupe.glb",
+      "vertices": 1656,
+      "triangulos": 552,
+      "bytes": 54096,
+      "bounds_metros": [
+        [
+          -2.395,
+          0.01,
+          -1.042
+        ],
+        [
+          2.23,
+          1.29,
+          1.042
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Conducción, persecución e identidad encubierta"
+    },
+    {
+      "id": "vehiculo_motocicleta",
+      "categoria": "vehiculos",
+      "archivo": "vehiculo_motocicleta.glb",
+      "vertices": 924,
+      "triangulos": 308,
+      "bytes": 30656,
+      "bounds_metros": [
+        [
+          -1.31,
+          0.01,
+          -0.415
+        ],
+        [
+          1.31,
+          1.81,
+          0.415
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Movilidad ágil en corredores urbanos"
+    },
+    {
+      "id": "personaje_mara",
+      "categoria": "personajes",
+      "archivo": "personaje_mara.glb",
+      "vertices": 1776,
+      "triangulos": 592,
+      "bytes": 57924,
+      "bounds_metros": [
+        [
+          -0.435,
+          0.03,
+          -0.208
+        ],
+        [
+          0.435,
+          2.167,
+          0.26
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Bloqueo de escala y silueta, requiere rigging"
+    },
+    {
+      "id": "personaje_nadia",
+      "categoria": "personajes",
+      "archivo": "personaje_nadia.glb",
+      "vertices": 1704,
+      "triangulos": 568,
+      "bytes": 55620,
+      "bounds_metros": [
+        [
+          -0.435,
+          0.03,
+          -0.285
+        ],
+        [
+          0.435,
+          2.167,
+          0.23
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Bloqueo de escala y silueta, requiere rigging"
+    },
+    {
+      "id": "personaje_guard",
+      "categoria": "personajes",
+      "archivo": "personaje_guard.glb",
+      "vertices": 1704,
+      "triangulos": 568,
+      "bytes": 55632,
+      "bounds_metros": [
+        [
+          -0.435,
+          0.03,
+          -0.208
+        ],
+        [
+          0.435,
+          2.167,
+          0.23
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Bloqueo de escala y silueta, requiere rigging"
+    },
+    {
+      "id": "personaje_courier",
+      "categoria": "personajes",
+      "archivo": "personaje_courier.glb",
+      "vertices": 1704,
+      "triangulos": 568,
+      "bytes": 55620,
+      "bounds_metros": [
+        [
+          -0.435,
+          0.03,
+          -0.37
+        ],
+        [
+          0.435,
+          2.167,
+          0.23
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Bloqueo de escala y silueta, requiere rigging"
+    },
+    {
+      "id": "personaje_operative",
+      "categoria": "personajes",
+      "archivo": "personaje_operative.glb",
+      "vertices": 1776,
+      "triangulos": 592,
+      "bytes": 57924,
+      "bounds_metros": [
+        [
+          -0.435,
+          0.03,
+          -0.208
+        ],
+        [
+          0.435,
+          2.167,
+          0.26
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Bloqueo de escala y silueta, requiere rigging"
+    },
+    {
+      "id": "personaje_informant",
+      "categoria": "personajes",
+      "archivo": "personaje_informant.glb",
+      "vertices": 1668,
+      "triangulos": 556,
+      "bytes": 54480,
+      "bounds_metros": [
+        [
+          -0.435,
+          0.03,
+          -0.208
+        ],
+        [
+          0.435,
+          2.167,
+          0.23
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Bloqueo de escala y silueta, requiere rigging"
+    },
+    {
+      "id": "tecnologia_smartwatch",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_smartwatch.glb",
+      "vertices": 180,
+      "triangulos": 60,
+      "bytes": 6840,
+      "bounds_metros": [
+        [
+          -0.225,
+          0.03,
+          -0.66
+        ],
+        [
+          0.225,
+          0.321,
+          0.66
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_tracker",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_tracker.glb",
+      "vertices": 324,
+      "triangulos": 108,
+      "bytes": 11448,
+      "bounds_metros": [
+        [
+          -0.29,
+          0.01,
+          -0.29
+        ],
+        [
+          0.29,
+          0.226,
+          0.29
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_phone",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_phone.glb",
+      "vertices": 144,
+      "triangulos": 48,
+      "bytes": 5688,
+      "bounds_metros": [
+        [
+          -0.185,
+          0.005,
+          -0.37
+        ],
+        [
+          0.185,
+          0.182,
+          0.37
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_scanner",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_scanner.glb",
+      "vertices": 252,
+      "triangulos": 84,
+      "bytes": 9132,
+      "bounds_metros": [
+        [
+          -0.34,
+          0.015,
+          -0.175
+        ],
+        [
+          0.49,
+          0.395,
+          0.175
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_camera",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_camera.glb",
+      "vertices": 216,
+      "triangulos": 72,
+      "bytes": 7976,
+      "bounds_metros": [
+        [
+          -0.215,
+          0.0,
+          -0.135
+        ],
+        [
+          0.215,
+          0.315,
+          0.27
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_breaker",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_breaker.glb",
+      "vertices": 216,
+      "triangulos": 72,
+      "bytes": 7988,
+      "bounds_metros": [
+        [
+          -0.39,
+          0.025,
+          -0.12
+        ],
+        [
+          0.44,
+          0.225,
+          0.12
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_earpiece",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_earpiece.glb",
+      "vertices": 480,
+      "triangulos": 160,
+      "bytes": 16456,
+      "bounds_metros": [
+        [
+          -0.16,
+          -0.04,
+          -0.124
+        ],
+        [
+          0.16,
+          0.2,
+          0.16
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_case",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_case.glb",
+      "vertices": 180,
+      "triangulos": 60,
+      "bytes": 6840,
+      "bounds_metros": [
+        [
+          -0.415,
+          0.06,
+          -0.135
+        ],
+        [
+          0.415,
+          0.745,
+          0.165
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_router",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_router.glb",
+      "vertices": 360,
+      "triangulos": 120,
+      "bytes": 12588,
+      "bounds_metros": [
+        [
+          -0.295,
+          0.0,
+          -0.175
+        ],
+        [
+          0.295,
+          0.495,
+          0.19
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "tecnologia_drone",
+      "categoria": "tecnologia",
+      "archivo": "tecnologia_drone.glb",
+      "vertices": 1080,
+      "triangulos": 360,
+      "bytes": 35648,
+      "bounds_metros": [
+        [
+          -0.82,
+          0.195,
+          -0.82
+        ],
+        [
+          0.82,
+          0.76,
+          0.82
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Atrezzo 3D y lectura de estados; sin funcionalidad real"
+    },
+    {
+      "id": "edificio_office",
+      "categoria": "arquitectura",
+      "archivo": "edificio_office.glb",
+      "vertices": 1260,
+      "triangulos": 420,
+      "bytes": 41392,
+      "bounds_metros": [
+        [
+          -3.075,
+          0.0,
+          -2.58
+        ],
+        [
+          3.075,
+          14.2,
+          2.58
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Geometría genérica, sin coordenadas NYC"
+    },
+    {
+      "id": "edificio_residential",
+      "categoria": "arquitectura",
+      "archivo": "edificio_residential.glb",
+      "vertices": 1764,
+      "triangulos": 588,
+      "bytes": 57536,
+      "bounds_metros": [
+        [
+          -2.575,
+          0.0,
+          -2.08
+        ],
+        [
+          2.575,
+          11.2,
+          2.095
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Geometría genérica, sin coordenadas NYC"
+    },
+    {
+      "id": "edificio_hotel",
+      "categoria": "arquitectura",
+      "archivo": "edificio_hotel.glb",
+      "vertices": 1764,
+      "triangulos": 588,
+      "bytes": 57536,
+      "bounds_metros": [
+        [
+          -4.075,
+          0.0,
+          -2.58
+        ],
+        [
+          4.075,
+          16.69,
+          2.58
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Geometría genérica, sin coordenadas NYC"
+    },
+    {
+      "id": "edificio_depot",
+      "categoria": "arquitectura",
+      "archivo": "edificio_depot.glb",
+      "vertices": 324,
+      "triangulos": 108,
+      "bytes": 11444,
+      "bounds_metros": [
+        [
+          -4.575,
+          0.0,
+          -3.58
+        ],
+        [
+          4.575,
+          4.2,
+          3.58
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "Geometría genérica, sin coordenadas NYC"
+    },
+    {
+      "id": "escenario_asphalt",
+      "categoria": "escenarios",
+      "archivo": "escenario_asphalt.glb",
+      "vertices": 216,
+      "triangulos": 72,
+      "bytes": 7972,
+      "bounds_metros": [
+        [
+          -5.5,
+          -0.24,
+          -5.5
+        ],
+        [
+          5.5,
+          0.025,
+          5.5
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_sidewalk",
+      "categoria": "escenarios",
+      "archivo": "escenario_sidewalk.glb",
+      "vertices": 216,
+      "triangulos": 72,
+      "bytes": 7968,
+      "bounds_metros": [
+        [
+          -4.0,
+          0.0,
+          -1.51
+        ],
+        [
+          4.0,
+          0.37,
+          1.5
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_traffic_light",
+      "categoria": "escenarios",
+      "archivo": "escenario_traffic_light.glb",
+      "vertices": 648,
+      "triangulos": 216,
+      "bytes": 21804,
+      "bounds_metros": [
+        [
+          -0.095,
+          0.0,
+          -0.14
+        ],
+        [
+          0.895,
+          5.4,
+          0.182
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_street_lamp",
+      "categoria": "escenarios",
+      "archivo": "escenario_street_lamp.glb",
+      "vertices": 216,
+      "triangulos": 72,
+      "bytes": 7972,
+      "bounds_metros": [
+        [
+          -0.1,
+          0.0,
+          -0.16
+        ],
+        [
+          1.775,
+          6.8,
+          0.16
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_barrier",
+      "categoria": "escenarios",
+      "archivo": "escenario_barrier.glb",
+      "vertices": 288,
+      "triangulos": 96,
+      "bytes": 10296,
+      "bounds_metros": [
+        [
+          -1.8,
+          -0.005,
+          -0.145
+        ],
+        [
+          1.8,
+          0.945,
+          0.145
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_bollards",
+      "categoria": "escenarios",
+      "archivo": "escenario_bollards.glb",
+      "vertices": 1152,
+      "triangulos": 384,
+      "bytes": 37968,
+      "bounds_metros": [
+        [
+          -1.66,
+          0.02,
+          -0.16
+        ],
+        [
+          1.66,
+          0.845,
+          0.16
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_container",
+      "categoria": "escenarios",
+      "archivo": "escenario_container.glb",
+      "vertices": 504,
+      "triangulos": 168,
+      "bytes": 17196,
+      "bounds_metros": [
+        [
+          -3.025,
+          0.0,
+          -1.225
+        ],
+        [
+          3.025,
+          2.5,
+          1.285
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_checkpoint",
+      "categoria": "escenarios",
+      "archivo": "escenario_checkpoint.glb",
+      "vertices": 216,
+      "triangulos": 72,
+      "bytes": 7968,
+      "bounds_metros": [
+        [
+          -4.5,
+          0.0,
+          -3.0
+        ],
+        [
+          4.5,
+          2.44,
+          3.0
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_safehouse",
+      "categoria": "escenarios",
+      "archivo": "escenario_safehouse.glb",
+      "vertices": 612,
+      "triangulos": 204,
+      "bytes": 20644,
+      "bounds_metros": [
+        [
+          -4.6,
+          -0.26,
+          -3.6
+        ],
+        [
+          4.6,
+          4.2,
+          3.5
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_rooftop",
+      "categoria": "escenarios",
+      "archivo": "escenario_rooftop.glb",
+      "vertices": 576,
+      "triangulos": 192,
+      "bytes": 19492,
+      "bounds_metros": [
+        [
+          -4.5,
+          0.0,
+          -4.0
+        ],
+        [
+          4.5,
+          1.295,
+          4.0
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_subway",
+      "categoria": "escenarios",
+      "archivo": "escenario_subway.glb",
+      "vertices": 432,
+      "triangulos": 144,
+      "bytes": 14888,
+      "bounds_metros": [
+        [
+          -2.5,
+          -0.275,
+          -2.0
+        ],
+        [
+          2.5,
+          1.61,
+          2.0
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_dock",
+      "categoria": "escenarios",
+      "archivo": "escenario_dock.glb",
+      "vertices": 1008,
+      "triangulos": 336,
+      "bytes": 33328,
+      "bounds_metros": [
+        [
+          -4.5,
+          0.0,
+          -3.52
+        ],
+        [
+          4.5,
+          3.495,
+          3.52
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_server_room",
+      "categoria": "escenarios",
+      "archivo": "escenario_server_room.glb",
+      "vertices": 972,
+      "triangulos": 324,
+      "bytes": 32168,
+      "bounds_metros": [
+        [
+          -3.5,
+          -0.2,
+          -3.08
+        ],
+        [
+          3.5,
+          5.0,
+          3.0
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_stairwell",
+      "categoria": "escenarios",
+      "archivo": "escenario_stairwell.glb",
+      "vertices": 396,
+      "triangulos": 132,
+      "bytes": 13736,
+      "bounds_metros": [
+        [
+          -2.5,
+          -0.24,
+          -2.5
+        ],
+        [
+          2.5,
+          1.615,
+          2.5
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    },
+    {
+      "id": "escenario_news_kiosk",
+      "categoria": "escenarios",
+      "archivo": "escenario_news_kiosk.glb",
+      "vertices": 144,
+      "triangulos": 48,
+      "bytes": 5668,
+      "bounds_metros": [
+        [
+          -1.3,
+          0.0,
+          -0.975
+        ],
+        [
+          1.3,
+          2.475,
+          1.075
+        ]
+      ],
+      "estado": "proxy_3d_no_final",
+      "uso": "A modularizar y conectar con GIS/MC4"
+    }
+  ]
+}

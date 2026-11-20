@@ -79,3 +79,16 @@
 ---
 
 > **Nota de auditoría sobre `paletas.json`:** Al verificar duplicados, detectamos que la entrada #7 de `arte/dominio-publico/paletas.json` («Las estaciones · Alfons Mucha, 1896») apunta actualmente al archivo `Toronto - ON - Four Seasons Centre.jpg` (fotografía de un edificio en Toronto). La obra #40 de esta lista (`Alfons_Mucha_-_The_Seasons,_1896.jpg`) ofrece el archivo real de Alfons Mucha en dominio público para que Claude corrija esa paleta cuando regenere `paletas.json`.
+
+## G-H11 · Revisión de las miniaturas pendientes (20-nov-2026)
+
+Se contrastaron las fichas de Commons de las obras que faltan en `paletas.json` (números 5, 8, 13 y 15). Los enlaces son las resoluciones que Commons ofrece; **no se comprobó la descarga de los archivos** porque Wikimedia devolvió un error al intentar abrir directamente las miniaturas.
+
+| # | Obra | Enlace 250 px | Resultado |
+|---|---|---|---|
+| 5 | Manuel María Paz, acuarela 9050 | [Ficha de Commons](https://commons.wikimedia.org/wiki/File:Manuel_Mar%C3%ADa_Paz_(watercolor_9050,_1853_CE).png) | Ficha identificada, miniatura directa **sin confirmar** |
+| 8 | Manuel María Paz, acuarela 9074 | [250 px](https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Manuel_Mar%C3%ADa_Paz_%28watercolor_9074%2C_1853_CE%29.png/250px-Manuel_Mar%C3%ADa_Paz_%28watercolor_9074%2C_1853_CE%29.png) | La página confirma 250 × 327 px, dominio público de autor fallecido en 1902 |
+| 13 | Epifanio Garay, retrato de Rafael Núñez | [250 px](https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/Rafael_N%C3%BA%C3%B1ez_Moledo.jpg/250px-Rafael_N%C3%BA%C3%B1ez_Moledo.jpg) | La página confirma 250 × 333 px; está catalogado como dominio público colombiano |
+| 15 | Grabado de Francisco José de Caldas | [250 px](https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Francisco_Jos%C3%A9_de_Caldas.jpg/250px-Francisco_Jos%C3%A9_de_Caldas.jpg) | La página confirma 250 × 359 px y marca dominio público colombiano |
+
+**Control adicional:** la entrada `mucha` de `arte/dominio-publico/paletas.json` tiene un archivo incorrecto (edificio de Toronto). No se cambiaron sus colores, pues pertenecen a la fotografía equivocada: se debe obtener la obra `Alfons_Mucha_-_The_Seasons,_1896.jpg` y muestrear de nuevo antes de usar esa paleta.

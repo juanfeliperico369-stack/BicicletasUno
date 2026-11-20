@@ -163,6 +163,26 @@ console.log('13) Escala, manejo, sprites, mi casa, lugares, historias, ocurrenci
   for (let i = 0; i < 600; i++) { O.actualizar(1 / 60, i < 12 ? [{ x: q.x + i / 12 * .95, y: q.y, z: 0, r: .4, masa: 80, vx: 6, vy: 0 }, { x: q.x, y: q.y + 3 - .7 + i / 12 * .4, z: 0, r: .4, masa: 1200, vx: 0, vy: 3 }] : []); alto = Math.max(alto, b.z); }
   const sem = new MC.Objetos(M).sembrar(q.x, q.y, 300, 30);
   ok(Math.hypot(b.x - q.x - 1, b.y - q.y) > 1.5 && alto > .05 && b.dormido && c.dormido && Math.hypot(c.x - q.x, c.y - q.y - 3) > .3 && sem > 0, 'objetos físicos: el golpe los empuja y los levanta, caen, ruedan con roce y se duermen; la siembra pone conos, balones, canecas y cajas', { avanzó: +Math.hypot(b.x - q.x - 1, b.y - q.y).toFixed(1), alto: +alto.toFixed(2), sembrados: sem, duerme: [b.dormido, c.dormido], caja: +Math.hypot(c.x - q.x, c.y - q.y - 3).toFixed(2) }); }
+{ /* C-M29: persistencia de artilugios, guardados por sector original e IDs estables. */
+  const T = { meta: { nombre: 'Guatapé' }, edificioEn: () => false, cota: () => 0 };
+  const S = new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 });
+  const O = new MC.Objetos(T, { guardado: S, mundoId: 'guatape' });
+  const a = O.poner('cono', 0, 0, { clave: 'probar-cono' });
+  O.actualizar(1 / 60, [{ x: -.3, y: 0, r: .35, vx: 9, vy: 0, masa: 100 }]);
+  for (let i = 0; i < 400; i++) O.actualizar(1 / 60);
+  const movido = a.x > 0 && a.alterado, cambios = O.guardarCambios();
+  const p = O.poner('poste_alumbrado', 10, 10, { clave: 'probar-poste' });
+  O.actualizar(1 / 60, [{ x: 9.7, y: 10, r: .4, vx: 23, vy: 0, masa: 1200 }]);
+  const roto = p.roto && !p.fijo;
+  O.guardarCambios();
+  const T2 = new MC.Objetos(T, { guardado: MC.GuardadoSectores.restaurar(S.instantanea()), mundoId: 'guatape' });
+  const a2 = T2.poner('cono', 0, 0, { clave: 'probar-cono' }), p2 = T2.poner('poste_alumbrado', 10, 10, { clave: 'probar-poste' });
+  let duplicado = false; try { T2.poner('cono', 0, 0, { clave: 'probar-cono' }); } catch (e) { duplicado = true; }
+  ok(movido && cambios === 1 && a2.id === a.id && a2.x === a.x && p2.roto && roto && duplicado &&
+    Object.keys(MC.TIPOS_OBJ).length >= 35 && S.sector(-1, -1) === '-1,-1',
+    'C-M29: objetos movidos/rotos se guardan por sector, restauran posición/estado e impiden IDs duplicados',
+    { catalogo: Object.keys(MC.TIPOS_OBJ).length, cambios, roto });
+}
 { /* 2.11: densidad dinámica del lienzo: baja si va lento y bajar sirve; si no sirve vuelve y no insiste; sube con holgura */
   const sim = (D, clave, f, seg) => { let d = D.medir(0, clave); for (let t = 0; t < seg; t += 1 / 60) { const ms = f(d); d = D.medir(ms / 1000, clave); } return d; };
   const A = new MC.DensidadLienzo({ max: 2 }), lento = sim(A, 'maqueta', d => 28 * (d / 2) ** 2 + 4, 6), recupera = sim(A, 'maqueta', () => 16.7, 40);
@@ -241,6 +261,63 @@ if (fs.existsSync(gu)) {
 { const n = MC.Paisaje.plan({ hora: 23, clima: { lluvia: 0 }, verde: .6 }), m = MC.Paisaje.plan({ hora: 6.3, clima: { lluvia: 0 }, verde: .6, ruido: .2 }), ll = MC.Paisaje.plan({ hora: 14, clima: { lluvia: .8, tormenta: .5 } });
   ok(n.grillos > .3 && n.pajaros < .1 && m.pajaros > .3 && ll.lluvia > .7 && ll.truenos > .3, 'paisaje sonoro: grillos de noche, pájaros al amanecer, lluvia y truenos', { noche: n.grillos, amanecer: m.pajaros }); }
 
+{ /* G-H1: las etiquetas Canvas no deben quedar detrás de los botones de la derecha. */
+  const textos = [], g = { measureText: () => ({ width: 70 }), fillRect: () => {}, fillText: t => textos.push(t) };
+  const D = { g, pr: (x, y) => [x, y], W: 412, H: 860, z: 5, P: { k: 1 },
+    E: { mundo: { lugares: [{ nombre: 'Lugar bajo botones', x: 375, y: 420 }, { nombre: 'Lugar visible', x: 130, y: 610 }], transporte: { encicla: [] } },
+      bloqueosEtiquetas: w => [[w - 84, 0, w, 860]] } };
+  MC.Vista2D.etiquetas(D);
+  ok(!textos.includes('Lugar bajo botones') && textos.includes('Lugar visible'),
+    'G-H1: las etiquetas del mundo no se pintan debajo de los controles del juego', textos);
+}
+
+{ /* C-M26: reto optativo; nace detrás, circula por red real, bonus sin impacto. */
+  const q = M.viaCercana(col.x, col.y, 100);
+  const P = new MC.Persecucion(M, { nivel: 1, duracion: .6 });
+  const jugador = { x: q.x, y: q.y, a: q.ang, v: 12, veh: { ancho: 1.8 } };
+  const empezo = P.iniciar(jugador);
+  const tras = P.vehiculos();
+  const detras = tras.every(c => Math.hypot(c.x - jugador.x, c.y - jugador.y) > 20);
+  const t = { id: 'vehiculo-test', x: jugador.x + 2.9, y: jugador.y, v: 9, ancho: 1.8 };
+  const premio = P.casiChoques(jugador, [t]), repetido = P.casiChoques(jugador, [t]);
+  P.actualizar(1 / 30, jugador, []);
+  const fisicos = P.vehiculos().every(c => Number.isFinite(c.x) && Number.isFinite(c.y) && c.tipo === 'carro');
+  const puntos = P.puntos, turbo = P.turbo;
+  P.parar('cancelada');
+  ok(empezo && detras && premio === 1 && repetido === 0 && puntos === 100 && turbo > 0 &&
+    fisicos && P.estado === 'inactiva' && P.vehiculos().length === 0,
+    'C-M26: patrullas detrás del jugador, física, casi choques sin duplicado y cierre seguro');
+}
+
+{ /* C-M26: sin conexión vial = patrulla frena; nunca persigue en línea recta. */
+  const fuga = new MC.Persecucion(M, { duracion: 5 });
+  let orden = null;
+  const fake = { x: col.x + 50, y: col.y + 10, v: 4, a: 0,
+    actualizar: (dt, e) => { orden = e; } };
+  fuga.estado = 'activa';
+  fuga.rivales = [{ id:'patrulla-0', cuerpo:fake, ruta:null, tiempoRuta:0, tactica:'seguir' }];
+  const rutaAntes = MC.Manejo.rutaA;
+  try {
+    MC.Manejo.rutaA = () => [col.x, col.y]; // contrato: sin camino entre componentes
+    fuga.actualizar(1/60, { x: col.x, y: col.y, a:0, v:12, veh:{ ancho:1.8 } }, []);
+  } finally { MC.Manejo.rutaA = rutaAntes; }
+  ok(!!orden && orden.acel < 0 && !orden.dir && fuga.rivales[0].ruta === null,
+    'C-M26: sin conexión entre calles la patrulla frena y no atraviesa edificios');
+}
+
+{ /* C-M27: sombra procedimental de sol, geometría finita y noche sin sombras. */
+  const M0 = { cota: () => 0, edificiosEn: () => [] };
+  const casa = { x: 40, y: 40, h: 8 };
+  const arbol = { x: 43, y: 43, h: 7, r: 2 };
+  const opt = { edificios: [casa], arboles: [arbol], esquinas: () => [38,38,42,38,42,42,38,42] };
+  const dia = MC.Sombras3D.generar(M0,[0,0,0], {x:.7,y:.3,z:.6},40,40,opt);
+  const noche = MC.Sombras3D.generar(M0,[0,0,0], {x:.7,y:.3,z:-.2},40,40,opt);
+  const ejes = dia.filter((_,i) => i % 10 < 3);
+  ok(dia.length > 100 && dia.length % 30 === 0 && ejes.every(Number.isFinite) && !noche.length,
+    'C-M27: sombras WebGL 1 finitas con edificio y árbol; noche desactivada',
+    { vertices: dia.length / 10, noche: noche.length });
+}
+
 console.log('15) Terreno: agua, montañas, rocas y límites de paso');
 { /* agua real: el embalse de Guatapé es lago y se hace más hondo lejos de la orilla; Medellín tiene su río */
   const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))), AG = MC.Terreno.agua(MG), grande = AG.C.slice().sort((a, b) => b.area - a.area)[0];
@@ -316,7 +393,7 @@ console.log('18) Entrega maestra de referencias: fauna, huellas, telemetría y c
   const V = MC.Vida, mundoArena = { suelo: () => MC.TT.ARENA, edificioEn: () => null }, C = { x: 0, y: 0, a: 0, v: 3, veh: { clase: 'auto', ancho: 1.8 } }, E = { t: 0, mundo: mundoArena, jugador: { cuerpo: C } };
   V.marcas.length = 0; for (let i = 0; i < 12; i++) { C.x += .7; E.t += .1; V._huellas(E, C); } const llantas = V.marcas.length; C.veh = { clase: 'pie' }; for (let i = 0; i < 6; i++) { C.x += .7; V._huellas(E, C); } const pisadas = V.marcas.filter(m => m.pie).length;
   const llueve = V.suelo({ mundo: { suelo: () => MC.TT.GRASS }, clima: { estado: 'lluvia' } }, 0, 0), seco = V.suelo({ mundo: { suelo: () => MC.TT.GRASS }, clima: { estado: 'despejado' } }, 0, 0);
-  V.palomas.length = 0; V.aves.length = 0; V.palomas.push({ x: 4, y: 0, m: [{ dx: 0, dy: 0, a: 0, f: 0 }, { dx: 1, dy: 1, a: 0, f: 0 }], t0: 0 }); const Cp = { x: 0, y: 0, v: 5 }; V._palomas({ t: 1, mundo: { suelo: () => MC.TT.PLAZA }, jugador: { cuerpo: Cp } }, .016); const huyen = V.aves.filter(b => b.asustada).length;
+  V.palomas.length = 0; V.aves.length = 0; V.palomas.push({ x: 4, y: 0, m: [{ dx: 0, dy: 0, a: 0, f: 0 }, { dx: 1, dy: 1, a: 0, f: 0 }], t0: 0 }); const Cp = { x: 0, y: 0, v: 5 }; V._palomas({ t: 1, mundo: { suelo: () => MC.TT.PLAZA }, jugador: { cuerpo: Cp } }, 0); const huyen = V.aves.filter(b => b.asustada).length;  // delta=0 impide nuevos spawns aleatorios en el test
   const antes = MC.opciones.particulas; MC.opciones.particulas = 0; V.P.length = 0; V.emitir('polvo', 0, 0, 20); const sinParticulas = V.P.length === 0; MC.opciones.particulas = antes;
   ok(llantas >= 20 && pisadas >= 5 && llueve === 'barro' && seco === null && huyen === 1 && V.palomas.length === 0 && sinParticulas, 'vida 2.8: surcos de llantas y pisadas en suelo blando (barro con lluvia), palomas que alzan vuelo y partículas que se apagan por accesibilidad', { llantas, pisadas, llueve, huyen }); }
 { /* telemetría en percentiles y contratos de datos versionados */
@@ -361,6 +438,42 @@ console.log('18) Entrega maestra de referencias: fauna, huellas, telemetría y c
      'sectores: identidad, sueño y retorno, migración, copias y fallo de almacenamiento');
 }
 
+console.log('19) Planeta 4.0: anillo de mundos, carreteras largas en la nada y globo');
+{ /* el anillo cierra: cada mundo tiene un vecino antes y después; los tramos se generan con su vía y sus paradas */
+  const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8')));
+  const anillo = MC.Planeta.ANILLO.map(d => d.id === 'ruta_embalse' ? Object.assign({}, d, { largo: 3200 }) : d);
+  const P = new MC.Planeta({ anillo, cargar: async id => id === 'medellin' ? M : id === 'guatape' ? MG : null });
+  const cierra = P.anillo.every(d => P.vecino(P.vecino(d.id, 1).id, -1).id === d.id), ciudades = P.anillo.filter(d => d.tipo === 'ciudad').length;
+  await P.mundo('medellin'); const T = await P.mundo('ruta_embalse'), c = T.carretera, yM = c.largo / 2, xM = c.centro(yM);
+  const enVia = T.suelo(xM, yM), cotas = [.1, .5, .9].map(f => T.cota(c.centro(f * c.largo), f * c.largo));
+  const Q = P.puertas('medellin', M), sale = P.cruce('medellin', Q.siguiente.x + Math.cos(Q.siguiente.a) * 3, Q.siguiente.y + Math.sin(Q.siguiente.a) * 3, 9);
+  const L = P.llegada('ruta_embalse', 'medellin'); P.llegadaT = 0; const alFinal = P.cruce('ruta_embalse', L.x, c.largo - 10, 9);
+  await P.mundo('guatape'); const QG = P.puertas('guatape', MG), G = P.enGlobo('ruta_embalse', xM, yM);
+  ok(cierra && ciudades === 3 && (enVia === MC.TT.AVE || enVia === MC.TT.ROAD) && cotas.every(Number.isFinite) && T.lugares.length > 0 && sale && sale.a === 'ruta_embalse' && alFinal && alFinal.a === 'guatape' && QG.anterior && QG.siguiente && G && Number.isFinite(G.lon) && Number.isFinite(G.lat),
+    'planeta: el anillo cierra con 3 ciudades, el tramo tiene su autopista y paradas, se sale de Medellín al embalse y del embalse se llega a Guatapé', { lugares: T.lugares.length, cotas: cotas.map(Math.round), sale: sale && sale.a, llega: alFinal && alFinal.a, globo: G && [+G.lon.toFixed(1), +G.lat.toFixed(1)] });
+}
+
+console.log('20) Búsqueda 0–5, modelos GLB y Turno Cero (4.0)');
+{ /* MC.Busqueda: umbrales del contrato de Codex, nacen fuera de la vista, te buscan donde te vieron, cebo, pulso y disparos */
+  const q = M.viaCercana(col.x, col.y, 100), J = new MC.Cuerpo(M, { x: q.x, y: q.y, a: q.ang, veh: 'carro' }), B = new MC.Busqueda(M, { semilla: 5 });
+  const niveles = [0, 14, 15, 34, 35, 55, 70, 85, 100].map(h => B.nivelDe(h)); B.alerta(40, { causa: 'prueba' }); const nivel = B.nivel;
+  const ev = {}; let lejos = true; for (let i = 0; i < 300; i++) { B.actualizar(1 / 60, J, []); for (const e of B.sacar()) ev[e.tipo] = (ev[e.tipo] || 0) + 1; if (i === 140) { B.banda(1, { J }); } }
+  for (const r of B.rivales) if (r.bando === 'policia' && Math.hypot(r.cuerpo.x - J.x, r.cuerpo.y - J.y) < 40) lejos = false;
+  B.ultima = { x: J.x + 300, y: J.y, t: 0 }; B.visto = false; const cebo = (B.senuelo(J.x - 200, J.y, 5), !!B.cebo), pulso = B.pulso(J, 500), disparo = B.disparar(J, { alcance: 500 });
+  const V = B.vehiculos(), conSirena = V.some(v => v.sirena), obst = B.obstaculos().length;
+  ok(JSON.stringify(niveles) === '[0,0,1,1,2,3,4,5,5]' && nivel === 2 && B.rivales.length >= 1 && lejos && cebo && pulso && (disparo === null || typeof disparo.acierto === 'boolean') && conSirena && obst >= 3 && Number.isFinite(B.heat),
+    'búsqueda: umbrales 15/35/55/70/85, patrullas que nacen lejos, sirena, cebo, pulso, disparos y obstáculos', { niveles, nivel, rivales: B.rivales.length, eventos: ev, pulso, disparo: disparo && disparo.acierto });
+  B.limpiar(); ok(B.nivel === 0 && !B.rivales.length && !B.heli, 'búsqueda: limpiar deja todo en cero');
+}
+{ /* MC.Modelos: los 42 GLB de Codex se leen, la carrocería se tiñe y la malla los gira al rumbo del carro */
+  const D = path.join(RAIZ, 'arte/modelos/turno-cero'), F = fs.existsSync(D) ? fs.readdirSync(D).filter(f => f.endsWith('.glb')) : [];
+  let n = 0; for (const f of F) if (MC.Modelos.registrar(f.slice(0, -4), new Uint8Array(fs.readFileSync(path.join(D, f))))) n++;
+  const S = MC.Modelos.get('vehiculo_sedan'), Pm = MC.Modelos.get('personaje_mara'), m = new MC.Malla(); if (S) m.modelo(S, 0, 0, 0, Math.PI / 2, { largo: 4.65, tinte: '#ff0000' });
+  let rojo = 0, maxZ = -1e9; for (let i = 0; i < m.d.length; i += 10) { if (m.d[i + 6] === 1 && m.d[i + 7] === 0 && m.d[i + 8] === 0) rojo++; maxZ = Math.max(maxZ, m.d[i + 2]); }
+  ok(n === 42 && S && S.n > 300 && Pm && Pm.frente === 'z' && rojo > 50 && maxZ > 2 && MC.Modelos.vehiculo({ sirena: true }).id === 'vehiculo_police' && MC.Modelos.vehiculo({ tipo: 'taxi' }).id === 'vehiculo_taxi',
+    'modelos GLB: 42 leídos, la carrocería toma el color del carro y un rumbo de 90° pone el carro a lo largo del eje sur', { n, tris: S && S.n, rojo, largoGirado: +maxZ.toFixed(2) });
+  MC.Modelos.L.clear();
+}
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
@@ -376,6 +489,20 @@ if (process.argv.includes('--navegador')) {
     ok(Object.keys(vistas).length === 9 && Object.entries(vistas).every(([k, v]) => k === v) && !errs.length, 'las 9 vistas (con la lateral) y el pixel sin errores', vistas);
     const ras = await p.evaluate(async () => { MCS.vistas.motor3d = 'raster'; window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (MC.VISTAS.findIndex(q => q.id === 'tercera') + 1) })); await new Promise(r => setTimeout(r, 1500)); const n = MCS.vistas.raster ? MCS.vistas.raster.n : 0, gpu = MC.GPU.perfil(); MCS.vistas.motor3d = 'auto'; return { poligonos: n, nivel: gpu.nivel, webgl: gpu.webgl, software: gpu.software, escala: +MCS.vistas.res.escala.toFixed(2) }; });
     ok(ras.poligonos > 200 && !errs.length, 'GPU virtual: la 3D por software (MC.Raster) dibuja la ciudad sin WebGL', ras);
+    const glSombra = await p.evaluate(async () => {
+      const V = MCS.vistas;
+      V.motor3d = 'gl';
+      window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Digit2'}));
+      await new Promise(r => setTimeout(r, 1300));
+      const activo = V.hayGL(), R = V.gl, estado = {
+        disponible: activo, programa: !!R?.pSh, malla: R?._sombrasCache?.n ?? null,
+        dibujando: V.efectiva().tipo === 'gl', sinErroresGL: activo ? R.gl.getError() === 0 : null
+      };
+      V.motor3d = 'auto';
+      return estado;
+    });
+    ok(!glSombra.disponible || (glSombra.programa && glSombra.dibujando && glSombra.sinErroresGL && !errs.length),
+      'C-M27: WebGL 1 forzado compila el shader de sombras sin error; omitir si no hay WebGL', glSombra);
     const run = await p.evaluate(async () => { const r = MCS.mundo.red('rueda'), e = r.aristas.filter(a => a.k === MC.VIA.CICLO && a.largo > 300)[2], q = e.t.at(e.largo / 2); Object.assign(MCS.cuerpo, { x: q.x, y: q.y, a: q.a }); MCS.cuerpo.setVeh('bici'); const ant = { x: MCS.cuerpo.x, y: MCS.cuerpo.y, min: MCS.reloj.min };
       document.querySelector('#bRun').hidden = false; document.querySelector('#bRun').click(); await new Promise(r => setTimeout(r, 2500)); const dentro = MC.Run.activo, s = MC.Run.g.p.s; MC.Run.salir(); await new Promise(r => setTimeout(r, 400));
       return { dentro, s: Math.round(s), lejos: Math.round(Math.hypot(MCS.cuerpo.x - ant.x, MCS.cuerpo.y - ant.y)), enCiclo: MCS.mundo.esCiclovia(MCS.cuerpo.x, MCS.cuerpo.y, 25) || MCS.mundo.red('rueda').cercana(MCS.cuerpo.x, MCS.cuerpo.y, 10) != null, dmin: MCS.reloj.min - ant.min, clima: MCS.clima.tipo }; });
@@ -444,6 +571,49 @@ if (process.argv.includes('--navegador')) {
       const agua = { vioBoton, aPie: G.cuerpo.veh.id === 'pie', parqueada: !!G.cuerpo.estacionado, vadea: G.cuerpo.vadeando || G.cuerpo.nadando }; const U = G.darUrbe(), zon = U.zonificar('R', G.cuerpo.x, G.cuerpo.y, 200); G.ponCapa('valor'); await new Promise(q => setTimeout(q, 700)); const crec = U.avanzar(4).nuevos; G.ponCapa('zonas'); await new Promise(q => setTimeout(q, 500)); G.ponCapa(null);
       return { tapa, tapaLargo, agua, tapaDespues: MC.UI.verificar(G.ui), calidad: R.ubicacion.calidad, barra, estilo: est, ambiente: amb.slice(0, 40), lugares: MC.Lugares.en(G.mundo, 0, 0, G.mundo.ancho, G.mundo.alto).length, vista: G.vistas.actual.id, zonas: zon, crecen: crec, ocurrencias: G.ocu.resumen() }; });
     ok(r.tapa.length === 0 && r.tapaLargo.length === 0 && r.tapaDespues.length === 0 && r.agua.vioBoton && r.agua.aPie && r.agua.parqueada && r.agua.vadea && r.calidad === 'exacta' && r.barra && r.estilo && /Ambiente/.test(r.ambiente) && r.lugares > 20 && ['cenital', 'lateral'].includes(r.vista) && r.zonas > 0 && !errs.length, 'Mandados: la interfaz no tapa el centro; al agua desde la bici; mi casa con alguien que vive ahí; modo alcalde con capas de datos y crecimiento', r);
+    /* C-M26: prueba E2E real de la activación y salida del reto con el botón táctil. */
+    const chase = await p.evaluate(async () => {
+      const G = window.MANDADOS, q = G.mundo.viaCercana(G.hogar.d.x, G.hogar.d.y, 100),
+        boton = document.querySelector('.mcui button[aria-label="Persecución"]');
+      if (!q || !boton) return { boton: !!boton, via: !!q, inicio: false };
+      Object.assign(G.cuerpo, { x: q.x, y: q.y, a: q.ang, v: 0 });
+      G.cuerpo.setVeh('carro');
+      boton.click();
+      await new Promise(res => setTimeout(res, 900));
+      const inicio = G.persecucion.estado === 'activa';
+      const patrullas = G.persecucion.vehiculos();
+      const libre = MC.UI.verificar(G.ui);
+      boton.click();
+      return { boton: true, via: true, inicio, patrullas: patrullas.length,
+        fin: G.persecucion.estado === 'inactiva', atrapado: libre, id: patrullas[0] && patrullas[0].id };
+    });
+    ok(chase.boton && chase.via && chase.inicio && chase.patrullas >= 1 &&
+      chase.fin && chase.atrapado.length === 0 && !errs.length,
+      'C-M26 en Chromium móvil: botón de persecución, patrullas visibles, HUD sin invadir y salida', chase);
+    await b.close();
+  }
+  /* 4.0 · Turno Cero: el juego grande en un planeta (tres ciudades reales, carreteras de la nada, modelos GLB) */
+  const tc = path.join(RAIZ, 'dist/juegos/getaway.html');
+  if (chromium && fs.existsSync(tc)) {
+    const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 }, hasTouch: true }), errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+    await p.goto(urlPrueba(tc)); await p.waitForFunction(() => window.TURNO_LISTO, null, { timeout: 120000 });
+    const portada = await p.evaluate(() => ({ adultos: /18\+/.test(document.querySelector('.sello').textContent), modelos: MC.Modelos.L.size, mundos: Object.keys(MC_CIUDADES) }));
+    await p.click('#bHistoria'); await p.waitForFunction(() => window.TURNO && TURNO.M && !TURNO.transicion, null, { timeout: 120000 });
+    for (let i = 0; i < 120; i++) { const d = await p.$('.dialogo button'); if (d) await d.click({ timeout: 3000 }).catch(() => {}); else if (await p.evaluate(() => !!(TURNO.hist && TURNO.hist.p && !TURNO.pausa))) break; await p.waitForTimeout(150); }
+    const r = await p.evaluate(async () => {
+      const G = TURNO, H = G.hist, espera = ms => new Promise(q => setTimeout(q, ms)), paso0 = H.p && H.p.tipo, obj = !!G.objetivo, tapa = MC.UI.verificar(G.ui);
+      const m = H && H.est.meta; if (m) Object.assign(G.cuerpo, { x: m.x, y: m.y, v: 0 }); await espera(3500); const dialogo = !!document.querySelector('.dialogo');
+      /* el planeta: salir de Manhattan por el puente George Washington, recorrer la carretera y llegar a Medellín */
+      G.hist = null; if (H) H.p = null; G.busq.limpiar(); for (let k = 0; k < 8; k++) { document.querySelectorAll('.dialogo button').forEach(x => x.click()); await espera(200); } G.pausa = false;
+      const Q = G.planeta.puertas('nueva_york', G.M).siguiente; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: Q.x + Math.cos(Q.a) * 3, y: Q.y + Math.sin(Q.a) * 3 }); for (let i = 0; i < 150 && G.id !== 'ruta_atlantico'; i++) await espera(100); for (let i = 0; i < 300 && G.transicion; i++) await espera(100);
+      await espera(800); const enRuta = G.id, letrero = document.querySelector('#viaje').textContent, c = G.M.carretera; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: c.centro(c.largo - 12), y: c.largo - 12 }); for (let i = 0; i < 400 && G.id !== 'medellin'; i++) await espera(100); for (let i = 0; i < 600 && G.transicion; i++) await espera(100);
+      const medellin = G.id, metro = !!G.transporte && G.transporte.lineas.some(l => l.clase === 'metro'), modelos3d = MC.Modelos.L.size;
+      G.Artefactos.cebo(); G.busq.ponerNivel(3); await espera(1500); const persigue = G.busq.rivales.length, tapa2 = MC.UI.verificar(G.ui);
+      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, errores: MC.errores.length };
+    });
+    ok(portada.adultos && portada.modelos === 42 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && !r.errores && !errs.length,
+      'Turno Cero en Chromium móvil: aviso 18+, 42 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro y la policía persigue', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
     await b.close();
   }
 }
