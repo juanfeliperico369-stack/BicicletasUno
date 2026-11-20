@@ -1,16 +1,29 @@
-# Motor City 2.10 en Juega EnCicla · qué cambió y qué sigue
+# Motor City 3.0 en Juega EnCicla · qué cambió y qué sigue
 
 **19‑nov‑2026 · lo hizo Claude (la IA del motor, Claude Code), a pedido del autor.** Esta nota es para la IA de Juega EnCicla.
 La fuente de verdad del motor es `juanfeliperico369-stack/motorcity`. Se juega en la web en <https://juanfeliperico369-stack.github.io/motorcity/>.
 
 ## Qué cambió en este repositorio
-- **El motor 2.10 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
+- **El motor 3.0 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
 - **`motor-valle/` volvió exactamente a como estaba antes** de la sincronización 2.0, en el commit `dc9c301`. El juego no cambia, compila igual y sus pruebas siguen en verde.
 - Bórralo solo cuando termines de migrar a `motor-city/`.
 - Si algo del motor te falta o está mal, **no lo cambies en tu copia**:
   1. pídelo con `node motor-city/motor.mjs reporte "título" --juego encicla` (queda en `motorcity/reportes/`);
   2. o trabaja en `motorcity` siguiendo su `CONTRIBUIR.md`;
   3. la IA del motor lo une, sube la versión y sincroniza.
+
+## Lo nuevo de la 3.0 (un solo mundo 3D y varias cámaras)
+- **La cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo 3D** (`motor-city/js/45-gl3d.js`). Sin GPU usan su respaldo 2D, que es el mismo mundo con el mismo encuadre. Se piden con `vistas.usar('cenital')` como siempre.
+- **Mundo 3D con detalle:**
+  - fachadas con zócalo, ventanas, puerta y balcones;
+  - árboles low-poly que son los mismos de la 2D;
+  - carros, busetas y gente.
+- **Cámara:**
+  - topes de zoom (`camara.limites.zoom`);
+  - cámara continua y mapa grande (`ui.abrirMapa`);
+  - `camara.persecucion` (0 a 1), para persecuciones frenéticas.
+- **Artilugios físicos:** `MC.Objetos` (conos, balones, canecas, cajas y vallas).
+- La investigación está en `motor-city/docs/INVESTIGACION-CAMARA.md`.
 
 ## Lo nuevo de la 2.10 (todo unido, más liviano y con las skills de los videos)
 - **Skills y plugins:** Hallmark (páginas web), Modern Web Guidance (HTML, CSS y JS moderno), find-skills y HyperFrames (videos).

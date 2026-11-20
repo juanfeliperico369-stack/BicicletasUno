@@ -901,3 +901,11 @@ Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los 
 - el registro de claves del guardado;
 - migrar a `motor-city/`.
 
+## 2026-11-20 · v2.0.1 · Motor City 3.0 en `motor-city/`
+
+**Qué cambió:** el motor 3.0 trae un solo mundo 3D con varias cámaras, fachadas, árboles low-poly, artilugios físicos y el mapa grande. El juego todavía no usa `motor-city/`, así que no cambia.
+
+**Qué se probó:** `node tools/build.js` y `node tests/run.js`.
+
+**Qué falta:** migrar a `motor-city/` para que EnCicla use la cámara 3D y los objetos físicos.
+

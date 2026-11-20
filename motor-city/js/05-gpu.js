@@ -61,6 +61,36 @@ class ResDinamica {
   }
 }
 
+/* DENSIDAD DINÁMICA DEL LIENZO (2.11). En 2D lo caro es pintar píxeles (el reloj de JS no lo ve: el cuadro tarda 2 ms en JS
+   y 27 ms en total en la maqueta con densidad 2). Se mide el tiempo REAL entre cuadros y se elige la densidad del lienzo
+   (píxeles del lienzo por píxel CSS). El juego redimensiona su lienzo y multiplica el zoom de la cámara por la razón.
+   Medido en Chromium sin GPU, celular 412×860: maqueta con densidad 2 → 1,5 pasa de 21–27 ms a 16,7 ms; el cómic, de 35 a 19.
+   Reglas: escalones fijos; baja tras ~0,8 s por encima de 21 ms; solo se queda abajo si de verdad mejoró (si no, el cuello
+   no es pintar o la pantalla va a 30 Hz, y vuelve con un «piso» de 60 s); sube tras 4 s holgados; si al subir se pone lento
+   enseguida, ese escalón queda de «techo» 30 s. Un estado por clave (vista), porque cada vista cuesta distinto.
+   Uso: const D = new MC.DensidadLienzo({ max: Math.min(2, devicePixelRatio) });  cada cuadro: const d = D.medir(dt, vista.id); */
+class DensidadLienzo {
+  constructor(op = {}) { this.max = op.max || 1; this.min = op.min ?? .75; this.activa = op.activa !== false; this.pasos = this._pasos(); this.R = {}; this.d = this.max; }
+  _pasos() { const L = []; for (const m of DensidadLienzo.FACTORES) { const d = Math.max(this.min, Math.round(this.max * m * 100) / 100); if (!L.includes(d)) L.push(d); } return L; }
+  ponerMax(max) { if (Math.abs(max - this.max) < 1e-6) return; this.max = max; this.pasos = this._pasos(); this.R = {}; }
+  medir(dt, clave = 'v') {
+    const P = this.pasos; if (!this.activa) return (this.d = P[0]);
+    const R = this.R[clave] ||= { i: 0, techo: 0, techoT: 0, piso: 99, pisoT: 0, ema: null, lento: 0, holgado: 0, prueba: null, subio: 99 }, ms = dt * 1000;
+    if (!(ms > 0) || ms > 250) return (this.d = P[R.i]);   // pestaña en pausa o cuadro perdido: no cuenta
+    R.ema = R.ema == null ? ms : R.ema * .9 + ms * .1; R.subio += dt;
+    if (R.techo > 0 && (R.techoT -= dt) <= 0) { R.techo--; R.techoT = 30; } if (R.piso < 99 && (R.pisoT -= dt) <= 0) R.piso = 99;
+    if (R.prueba && (R.prueba.t += dt) > .6) {   // el primer medio segundo se hornean las losas nuevas: no cuenta
+      const Q = R.prueba; Q.m = Q.m == null ? ms : Q.m * .9 + ms * .1;
+      if (Q.t > 2.2) { if (Q.m > Q.antes * .93) { R.i = Q.i0; R.piso = R.i; R.pisoT = 60; } R.ema = Q.m; R.prueba = null; }
+    }
+    if (R.ema > 21) { R.lento += dt; R.holgado = 0; } else if (R.ema < 18.2) { R.holgado += dt; R.lento = Math.max(0, R.lento - dt); } else { R.lento = Math.max(0, R.lento - dt * .5); R.holgado = 0; }
+    if (!R.prueba && R.lento > .8 && R.i < Math.min(P.length - 1, R.piso)) { if (R.subio < 2.5) { R.techo = R.i + 1; R.techoT = 30; } R.prueba = { i0: R.i, antes: R.ema, t: 0, m: null }; R.i++; R.lento = 0; }
+    else if (!R.prueba && R.holgado > 4 && R.i > R.techo) { R.i--; R.holgado = 0; R.subio = 0; }
+    return (this.d = P[R.i]);
+  }
+}
+DensidadLienzo.FACTORES = [1, .75, .62, .5];
+
 /* bucle de juego de paso fijo con interpolación: actualizar(dt fijo) y dibujar(alfa, dtReal) */
 class Bucle {
   constructor({ actualizar, dibujar, paso = 1 / 60, maxPasos = 5 } = {}) { this.actualizar = actualizar; this.dibujar = dibujar; this.paso = paso; this.maxPasos = maxPasos; this.acum = 0; this.t0 = 0; this.corre = false; this.fps = 60; this.pasos = 0; this._f = t => this._cuadro(t); this.limiteFps = 0; this._ultDib = 0; }
@@ -89,4 +119,4 @@ function resorte(actual, objetivo, estado, t, dt) {
   return r;
 }
 function resorteAng(actual, objetivo, estado, t, dt) { return resorte(actual, actual + angDif(actual, objetivo), estado, t, dt); }
-Object.assign(MC, { GPU, ResDinamica, Bucle, resorte, resorteAng });
+Object.assign(MC, { GPU, ResDinamica, DensidadLienzo, Bucle, resorte, resorteAng });

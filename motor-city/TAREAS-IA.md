@@ -1,9 +1,15 @@
-# Tareas de cada IA · Motor City 2.10
+# Tareas de cada IA · Motor City 3.0
 
 > **Si te dijeron «mira el repositorio y haz tu parte», empieza aquí.**
 > 1. Busca abajo **quién eres** y haz **solo tu parte**, en el orden indicado.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
+
+**Novedades de la 3.0 (20‑nov‑2026): un solo mundo 3D y varias cámaras.**
+- La cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo 3D (`js/45-gl3d.js`); sin GPU usan su respaldo 2D.
+- Hay fachadas, árboles low-poly que son los mismos de la 2D, artilugios físicos (`MC.Objetos`), topes de zoom y el mapa grande.
+- Lee primero `docs/INVESTIGACION-CAMARA.md`.
+- Los videos que no se pudieron leer ya no interesan: G‑H10 se quitó.
 
 **Novedades de la 2.10 (20‑nov‑2026):**
 - **Skills y plugins de los videos del autor** (`skills-externas.json`, skill `motor-city-skills-externas`):
@@ -70,10 +76,13 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H7** | **Verifica las referencias que faltan**: los 13 enlaces de Instagram que siguen sin verificar y las 7 fichas que solo describe tu informe (R02, R03, R04, R08, R09, R13 y R18 en `docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md` §4) | Para cada uno: qué se ve, qué estilo es (cómic, manga, anime, realista…), qué da sensación de peso o de vida y qué técnica parece usar. | Una tabla en `docs/INSPIRACION-VISUAL.md` §1, una fila por reel. |
 | **G‑H8** | **40 obras de dominio público** para paletas, al menos 10 colombianas (Comisión Corográfica, Epifanio Garay, Ricardo Acevedo Bernal, grabados del *Papel Periódico Ilustrado*…) | Para cada una: el enlace en Wikimedia Commons y su licencia. Solo dominio público. | Una lista en `arte/dominio-publico/candidatas.md`. Claude saca las paletas. |
 | **G‑H9** | **Medición en un celular real**, con el autor | En Mandados, ⚙️ Ajustes → 📈 Telemetría. 5 minutos por vista (cenital, maqueta, lateral) y por calidad (baja, media, alta). Anota el modelo del celular, los fps, el p95 y si se calienta. | Una tabla en `reportes/AAAA-MM-DD-gemini-celular.md`. |
-| **G‑H10** (2.10) | **Lo que no se pudo leer de los videos nuevos**:<ul><li>los 2 Instagram (`DfVDgmclLPi`, que el autor mandó dos veces, y `DexJDYnNQ0X`; piden iniciar sesión);</li><li>el TikTok de @soyenriquerocha «Claude ahora construye bien sin basura» (`vt.tiktok.com/ZSpw3u8dH`).</li></ul>Para cada uno: qué herramienta, skill o plugin muestra, su repositorio y su licencia. | `docs/INSPIRACION-VISUAL.md` §1.2: una línea por enlace. Si es una skill útil, propónla para `skills-externas.json` sin instalarla. |
 | **G‑H11** (2.10) | **Las 4 paletas colombianas que faltan** (Wikimedia bloqueó la descarga) | Para cada obra de `arte/dominio-publico/candidatas.md` marcada «falta», da el enlace directo a una **miniatura de 250 px** en `upload.wikimedia.org` y confirma que es de dominio público. | Los enlaces en `candidatas.md`. Claude saca las paletas. |
 | **G‑H12** (2.10) | **Corre las herramientas nuevas y reporta** | `node motor.mjs publico` (anota el veredicto de cada perfil), `node motor.mjs skills` y `npx -y modern-web-guidance@latest legacy-scan js --json`. | `reportes/<fecha>-gemini-herramientas.md`, sin cambiar código. Para cada hallazgo de `legacy-scan`: archivo, línea y si aplica según su `keepWhen` y su `dropWhen`. |
 | **G‑H13** (2.10) | **Instala las skills en Antigravity** | `node motor.mjs skills --instalar --agente antigravity` y confirma que aparecen en `.agents/skills/`. Úsalas desde ahí en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
+| **G‑H14** (3.0) | **Capturas de las 3 cámaras en un celular real con GPU** (allí sí se ve el 3D) | En Mandados, prueba la cámara de juego de cerca y de lejos, la maqueta y la vista detrás del jugador, de día y de noche. Para cada una, ¿se lee el jugador? ¿Algo lo tapa? ¿Las fachadas se ven? ¿Se nota cuando carga lo lejano? | `reportes/<fecha>-gemini-camaras-3d.md` con fotos y una tabla de foto, hallazgo y gravedad, sin cambiar código. |
+| **G‑H15** (3.0) | **Los colores reales de los zócalos de Guatapé** | De 10 a 15 colores de zócalos y fachadas reales, con su fuente (foto de dominio público o con licencia libre, o una fuente oficial). | `arte/dominio-publico/zocalos-guatape.json`: `[{ "hex", "dónde", "fuente" }]`. Claude los pone en `PAL_ZOCALO`. |
+| **G‑H16** (3.0) | **Fluidez del 3D contra el 2D en tu celular** | ⚙️ Ajustes → 📈 Telemetría. 3 minutos con la cámara de juego (3D) y 3 con «Calidad: baja» (2D). Anota el modelo, la mediana y el percentil 95, y la densidad del lienzo. | Una tabla en tu reporte. |
+| **G‑H17** (3.0) | **30 objetos del mobiliario real** de Guatapé y Medellín para los artilugios físicos: bancas, materas, bolardos, postes, rejas, motos parqueadas… | Para cada uno: tamaño aproximado en metros, material, color y si se mueve o se rompe al chocar. | `contenido/objetos-gemini.json`. Codex los convierte en tipos de `MC.Objetos`. |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -95,6 +104,8 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 > 2. **C‑M21**, **C‑M20** y **C‑M22**;
 > 3. **C‑A10** y **C‑A11**;
 > 4. después, C‑M2…C‑M12 y C‑M14.
+>
+> **Nuevos de la 3.0 (mundo único 3D):** **C‑M26**, **C‑M27**, **C‑M28**, **C‑M29**, **C‑A13** y **C‑A14**, antes que todo lo demás. La maqueta ya va por debajo de 20 ms con la densidad dinámica y la capa de suelo (C‑M13 queda hecho).
 >
 > **Nuevos de la 2.10, con las skills de los videos:** **C‑M23**, **C‑M24**, **C‑M25** y **C‑A12**, justo después de C‑M13.
 >
@@ -128,6 +139,8 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A10** | **Tipografía propia** (R25) para letreros, placas, grafitis y menús: una fuente a partir de letra a mano, con 3 variantes por letra, libre para usar. | interfaz y letreros |
 | **C‑A11** | **Interfaz de libreta** (R23): el mapa de mandados, la lista de misiones y los botones como una libreta dibujada, con *squash and stretch* al tocar. | `MC.UI` (tema) |
 | **C‑A12** (2.10) | **Tráiler de Mandados con HyperFrames** (skill `hyperframes`): 30 s en vertical 9:16 y en horizontal 16:9:<ul><li>con capturas reales (`node motor.mjs capturas`) de las vistas y de los estilos (realista, cómic, 1 bit, acuarela);</li><li>con subtítulos en español y música libre de derechos;</li><li>sin cifras ni frases inventadas.</li></ul> | `videos/` (MP4 de menos de 15 MB) y el HTML de la composición |
+| **C‑A13** (3.0) | **Láminas de fachadas de Guatapé por módulos**: ventana, puerta, balcón, zócalo y cornisa, en 6 combinaciones de color reales (frente, lado y detalle). Son la guía para el atlas de fachadas del mundo 3D. | `edificio3d` (C‑M28) |
+| **C‑A14** (3.0) | **Vehículos colombianos low-poly en vistas ortográficas** (frente, lado y arriba, con medidas): buseta, chiva, taxi, moto con parrillero, camión de estacas y bici EnCicla. Codex los modela en código a partir de las láminas. | `carro3d` |
 | **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 ### Código (Codex), en orden
@@ -137,6 +150,10 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑M23** (2.10) | **La red vial de Guatapé:**<ul><li>123 de sus 385 nodos son puntas sueltas;</li><li>tiene 5 componentes;</li><li>las rutas dan rodeos de 4× en el percentil 90.</li></ul>Revisa `geo/territorio.py` y `Red` (`une`, `_partir`): que se unan los cruces y las puntas que casi tocan, sin crear calles falsas. | La prueba «rutas por la calle» con el percentil 90 por debajo de 2,5× y `node motor.mjs publico` sin perfiles atascados por el mapa. |
 | **C‑M24** (2.10) | **Ayuda de manejo para niños**: el público simulado marca que Sofía (8 años) pasa el 43 % del tiempo atascada. Agrega en ⚙️ Ajustes una ayuda opcional:<ul><li>imán a la calle;</li><li>frenado antes de chocar;</li><li>giro suave al rozar un muro.</li></ul>Va encendida por defecto en el ritmo «tranquilo». | `node motor.mjs publico --perfiles nina` con atascado por debajo del 25 %, y su prueba. |
 | **C‑M25** (2.10) | **La portada web de Motor City con Hallmark** (`/hallmark`): el `index.html` de GitHub Pages que lleva a Mandados y a los juegos.<ul><li>En español, con capturas reales.</li><li>Sin cifras, testimonios ni logos inventados.</li><li>`sloplint --render` limpio y el piso de Hallmark completo: tokens, `:focus-visible` y `prefers-reduced-motion`.</li></ul> | `index.html` y su reporte de `sloplint` |
+| **C‑M26** (3.0) | **Persecución jugable**, como Reckless Getaway: policía o rivales con `MC.IA` que cortan el paso y frenan delante. La cámara ya tiene `camara.persecucion` (0 a 1); súmale casi choques que dan turbo y un leve *hitstop*. | Un modo en Mandados («¡Te persiguen!») con su prueba. |
+| **C‑M27** (3.0) | **Luz del mundo 3D:** sombras de los edificios y los árboles con *shadow map* en WebGL 1 (si no se puede, sombras proyectadas en el suelo), y desenfoque de maqueta (*tilt-shift*) con la profundidad, como HD‑2D. Debe mantener 60 cuadros por segundo en un celular medio. | `js/45-gl.js` con su prueba. |
+| **C‑M28** (3.0) | **Atlas de fachadas con UV** para `edificio3d`, a partir de las láminas C‑A13 y del arte de ChatGPT, más **impostores lejanos** (siluetas de cerros y torres) para la vista detrás del jugador. Se hornean de lado con la Arboleda y los edificios. | `js/45-gl3d.js` |
+| **C‑M29** (3.0) | **Más física:** rampas y saltos con cámara lenta al aterrizar, destrucción ligera (vallas, conos y postes que se doblan), objetos movidos que se guardan por sector (`MC.GuardadoSectores`) y los 30 objetos de G‑H17. | `js/32-objetos.js` con su prueba. |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
 | **C‑M17** | **Lluvia y atmósfera que se ven** (R02, R03 y R09): asfalto mojado más oscuro, charcos con reflejo y salpicaduras, y niebla de distancia en la maqueta y la lateral, sin pasar de 2 ms por cuadro. |
 | **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |
@@ -163,6 +180,7 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 - **Run Scooter** (`RunRunZero`): sigue independiente.
 
 ## Claude · la IA del motor
+- **3.0:** mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, artilugios físicos, mapa grande y la investigación de cámara.
 - **2.10:**
   - unió las ramas viejas de los juegos;
   - instaló las skills de los videos;

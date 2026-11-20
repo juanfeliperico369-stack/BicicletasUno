@@ -9,7 +9,7 @@
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **2.10.0** · 20‑nov‑2026 · **134 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ## Resumen
 - **Hechos:** 76 pedidos ✅.
@@ -164,4 +164,20 @@ Versión **2.10.0** · 20‑nov‑2026 · **134 pruebas en verde** (`node motor.
 | **Skills y plugins de los videos** | Hecho | <ul><li>`skills-externas.json`, `node motor.mjs skills`, `.claude/settings.json` en los 4 repositorios y la skill `motor-city-skills-externas`.</li><li>El detalle de los 11 enlaces está en `docs/INSPIRACION-VISUAL.md` §1.2.</li></ul> |
 | **Seguir desarrollando** | Hecho | **`MC.Publico`**, el público simulado (idea de MiroFish), con `node motor.mjs publico` y su prueba. |
 | **Nuevas peticiones para Gemini y ChatGPT** | Hecho | <ul><li>Gemini: G‑H10 a G‑H13.</li><li>ChatGPT y Codex: C‑M23 (red vial), C‑M24 (ayuda para niños), C‑M25 (portada con Hallmark) y C‑A12 (tráiler con HyperFrames).</li><li>Todo en `TAREAS-IA.md`.</li></ul> |
+
+## 13. «Sigue básico: mundo único híbrido, cámara de #DRIVE y Reckless Getaway, tope de zoom, radio de vista, fachadas y artilugios físicos» (3.0, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Revisar si Gemini y ChatGPT publicaron algo | Hecho | No subieron nada nuevo después de la 2.9.1. |
+| Investigar las cámaras de referencia y GTA San Andreas | Hecho | `docs/INVESTIGACION-CAMARA.md` |
+| Que la cenital, la maqueta y la 3D sean el mismo mundo | Hecho | Cámaras aéreas sobre el mundo 3D (`js/45-gl3d.js`, perfiles de `MC.Camara`), con respaldo 2D sin GPU. |
+| Lo que estaba en 2D y debía ser 3D | Hecho | Árboles low-poly, que son los mismos de la 2D; el suelo 3D sin árboles ni techos pintados; carros y personas con volumen. |
+| Moverse en 3 dimensiones y artilugios físicos | Hecho (base) | El cuerpo ya tenía altura, saltos y buceo. Ahora están `MC.Objetos` (conos, balones, canecas, cajas y vallas). Rampas y destrucción quedan para Codex (C‑M29). |
+| Ni tan cerca ni tan lejos, con tope; mejorar el ángulo | Hecho | Zoom de 2,6 a 22 px por metro; la cámara se inclina según el zoom; cámara continua hasta la vista detrás del jugador. |
+| Un mapa en vez de alejar todo | Hecho | El mapa grande, al tocar el minimapa. |
+| Radio de vista y carga que no se note | Hecho | Radio y niebla por cámara; las regiones se cargan por cercanía. |
+| Fachadas | Hecho | Zócalo, ventanas, puerta, balcones, cornisa, alero, pretil y tanque. |
+| Jerarquía de estilos y vistas | Hecho | Una cámara de juego y «Más vistas y filtros». |
+| Fluidez | Hecho | 2.11: la densidad dinámica y la capa de suelo. |
+| Pedidos nuevos para Gemini y ChatGPT | Hecho | G‑H14 a G‑H17, y C‑M26 a C‑M29, C‑A13 y C‑A14, en `TAREAS-IA.md`. |
 

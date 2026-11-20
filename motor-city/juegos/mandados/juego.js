@@ -34,7 +34,7 @@ function jugar() {
   const lat = generado ? 6.2 : 6.234, centro = generado ? M.generado.pueblos[0] : M.geoAMetros(6.2338, -75.1592), c0 = M.viaCercana(centro.x, centro.y, 400) || { x: centro.x, y: centro.y, ang: 0 };
   /* zoom legible en cualquier pantalla: ~7 px de pantalla por metro (una persona mide ~12 px; un carro, ~30) */
   const dpr0 = Math.min(2, devicePixelRatio || 1);
-  const reloj = new MC.Reloj({ vel: 1.5 }), clima = new MC.ClimaGlobal({ lat, alt: M.cota(c0.x, c0.y) }), vistas = new MC.Vistas(M), camara = new MC.Camara({ zoom: Math.max(9, Math.min(18, Math.min(innerWidth, innerHeight) / 45)) * dpr0, mundo: M }); camara.limites.zoom = [.08 * dpr0, 18 * dpr0];
+  const reloj = new MC.Reloj({ vel: 1.5 }), clima = new MC.ClimaGlobal({ lat, alt: M.cota(c0.x, c0.y) }), vistas = new MC.Vistas(M), camara = new MC.Camara({ zoom: Math.max(9, Math.min(18, Math.min(innerWidth, innerHeight) / 45)) * dpr0, mundo: M }); camara.limites.zoom = [2.6 * dpr0, 22 * dpr0];   /* 3.0: tope de lejanía y de cercanía (para ver todo está el mapa) */
   /* MODO LIBRE (por defecto): todo desbloqueado y gratis para probar el motor; se puede apagar en ⚙️ Ajustes */
   let libre = leerG().libre ?? true; const pagar = (de, a, c, concepto) => libre || libro.mover(de, a, c, concepto);
   const yo = new MC.Seres.Persona({ edad: 24, forma: .55, semilla: (Math.random() * 1e6) | 0 }), cuerpo = new MC.Cuerpo(M, { x: c0.x, y: c0.y, a: c0.ang, veh: 'bici' }); cuerpo.clima = clima;
@@ -48,6 +48,9 @@ function jugar() {
   const ORDEN = ['pie', 'rueda', 'moto', 'auto', 'pesado', 'aire', 'agua'], GRUPO = { pie: 'A pie', rueda: 'Bicis, patinetes y tablas', moto: 'Motos', auto: 'Carros', pesado: 'Pesados', aire: 'Aire', agua: 'Agua' };
   const listaVeh = () => libre ? MC.Vehiculos.de('mandados', v => ORDEN.includes(v.clase)).sort((a, b) => ORDEN.indexOf(a.clase) - ORDEN.indexOf(b.clase)).map(v => [v.id, { n: (v.icon || '•') + ' ' + v.n + ' · ' + GRUPO[v.clase].toLowerCase(), tiene: true, agua: v.clase === 'agua' }]) : Object.entries(garaje);
   const E = { mundo: M, camara, reloj, clima, transporte: null, jugador, t: 0, vehiculos: [], trafico: [], peatones: [], extras: [], cables: [] };
+  /* 3.0: artilugios físicos (MC.Objetos): conos y vallas en las vías, balones en las plazas, canecas y cajas en los andenes */
+  const objetos = new MC.Objetos(M); objetos.sembrar(c0.x, c0.y, 340, 46); E.objetos = objetos;
+  MC.on('golpe', ev => { camara.sacudir(Math.min(.22, ev.fuerza * .025)); if (MC.Vida && MC.Vida.emitir) MC.Vida.emitir('polvo', ev.o.x, ev.o.y, 6); });
   const pobl = new MC.Poblacion(M, { n: 36, centro: c0, radio: 900, semilla: 4 }), trafico = new MC.Trafico(M, { n: 10, peatones: 0, red: 'rueda', radio: 400 });
   const perro = MC.Seres.Animal.crear('perro_criollo', 3); perro.x = c0.x - 3; perro.y = c0.y; perro.a = 0; perro.v = 0;
   E.extras.push({ get x() { return perro.x; }, get y() { return perro.y; }, dibujar(gg, pr, z, P) { const [sx, sy] = pr(perro.x, perro.y, 0); if (P.hk < .1) { gg.save(); gg.translate(sx, sy); gg.rotate(perro.a + P.yaw); gg.fillStyle = perro.colores[0]; gg.beginPath(); gg.ellipse(0, 0, z * .45, z * .17, 0, 0, MC.TAU); gg.fill(); gg.beginPath(); gg.arc(z * .45, 0, z * .13, 0, MC.TAU); gg.fill(); gg.restore(); } else MC.arte.f('animalLado')(gg, perro, sx, sy, z * P.hk * 1.4, Math.cos(perro.a + P.yaw) >= 0 ? 1 : -1, E.t, perro.v); } });
@@ -104,7 +107,10 @@ function jugar() {
     $('#casaOk').onclick = () => { const t = $('#casaTxt').value.trim(); if (!t) return; const R = MC.Hogar.desdeDireccion(M, t, { guardaDireccion: $('#casaRec').checked }); if (!R.ok) { ui.aviso('No encontré esa dirección en el mapa. Prueba con «Calle 31 # 28-15».', 3500); return; }
       hogar = R.hogar; F.hidden = true; if (!generado) escribirG({ hogar: hogar.guardar() }); const q = { exacta: 'exacta', calle: 'sobre esa calle', lugar: 'cerca de ese lugar' }[R.ubicacion.calidad] || ''; ui.aviso('🏠 Tu casa: ' + M.lugarTexto(hogar.d.x, hogar.d.y) + ' (' + q + ')', 4000); }; };
   ui.capa.querySelector('[aria-label="Mi casa"]').addEventListener('contextmenu', e => { e.preventDefault(); pedirDireccion(); });
-  ui.minimapa(vistas);
+  /* 3.0: el minimapa abre el mapa grande (ver todo sin alejar la cámara del juego); al llegar al tope de lejanía, se avisa */
+  const miniCv = ui.minimapa(vistas); miniCv.style.pointerEvents = 'auto'; miniCv.style.cursor = 'pointer'; miniCv.setAttribute('aria-label', 'Abrir el mapa');
+  const abrirMapa = () => { const P = mision && mision.actual; ui.abrirMapa(vistas, M, (P && P.x != null ? [{ x: P.x, y: P.y, color: '#ffc23a', texto: P.texto }] : []).concat(hogar ? [{ x: hogar.d.x, y: hogar.d.y, color: '#ff7a59', texto: 'Mi casa' }] : []), { x: cuerpo.x, y: cuerpo.y, a: cuerpo.a }); };
+  miniCv.addEventListener('click', abrirMapa); MC.on('zoomTope', q => { if (q === 'lejos') ui.aviso('🗺️ Para ver todo el pueblo, toca el minimapa', 2600, 'mapa'); });
   /* controles a la vista: joystick que aparece bajo el dedo y botones grandes de acción (mantener oprimido) */
   /* 2.5.1: el arte de Gemini (G‑M0…G‑M15) como piel opcional; lo que no esté o no haya cargado se dibuja procedural */
   MC.estilo = leerG().estilo || 'realista';   // 2.6: realista (texturas, desgaste y árboles de pie) o clásico (plano y limpio)
@@ -128,7 +134,12 @@ function jugar() {
   const DESC_ESTILO = { realista: 'asfalto gastado, tejas y árboles de pie', clasico: 'plano y limpio', comic: 'tinta, semitono y onomatopeyas', unbit: '1 bit: blanco y negro con trama de ruido azul, como Obra Dinn', manga: 'blanco y negro, tramado y líneas de velocidad', anime: 'cel shading y cielos de Shinkai', novela: 'noir: tinta, sombras negras y un rojo', ukiyoe: 'paleta de Hokusai sobre papel', vintage: 'foto vieja: sepia, papel y viñeta', crt: 'pantalla vieja con líneas de barrido', termica: 'el calor del mundo, como un dron térmico', acuarela: 'pigmento y papel, como la Comisión Corográfica' };
   const ponEstilo = id => { MC.estilo = id; escribirG({ estilo: id }); ui.aviso('🖌️ ' + MC.Estilo.p.n + ': ' + (DESC_ESTILO[id] || ''), 2500, 'estilo'); };
   const menuEstilo = () => ui.menu('🖌️ Estilo', MC.Estilo.lista().map(e => ({ id: e.id, texto: e.icono + ' ' + e.n + (MC.estilo === e.id ? ' ✓' : '') })), ponEstilo);
-  const menuVista = () => ui.menu('Vista', MC.VISTAS.map(v => ({ id: v.id, texto: v.icon + ' ' + v.n + (vistas.actual.id === v.id ? ' ✓' : '') })).concat([{ id: 'pixel', texto: '👾 Pixel: ' + (vistas.pixel ? 'sí' : 'no') }].concat([{ id: 'estilo', texto: '🖌️ Estilo: ' + MC.Estilo.p.icono + ' ' + MC.Estilo.p.n }], hayGemini ? [{ id: 'arte', texto: '🎨 Arte: ' + MC.arte.activa }] : []), [{ id: 'mas', texto: '🔍 Acercar' }, { id: 'menos', texto: '🔎 Alejar' }]), id => { if (id === 'pixel') vistas.pixel = !vistas.pixel; else if (id === 'arte') cambiarArte(); else if (id === 'estilo') menuEstilo(); else if (id === 'mas') camara.zoom = Math.min(camara.limites.zoom[1], camara.zoom * 1.5); else if (id === 'menos') camara.zoom = Math.max(camara.limites.zoom[0], camara.zoom / 1.5); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
+  /* 3.0: UNA cámara de juego (la cenital 3D, que se inclina al acercarse) y la de detrás del jugador; lo demás va en «Más vistas
+     y filtros». Pellizcar hasta el tope de cerca pasa a detrás del jugador, y alejarse desde ahí vuelve a la cenital: una sola cámara continua. */
+  const ACC = { mas: () => { camara.zoom = Math.min(camara.limites.zoom[1], camara.zoom * 1.5); }, menos: () => { camara.zoom = Math.max(camara.limites.zoom[0], camara.zoom / 1.5); }, mapa: () => abrirMapa() };
+  const menuVista = () => ui.menu('Cámara', [{ id: 'cenital', texto: '🎮 Cámara de juego' + (vistas.actual.id === 'cenital' ? ' ✓' : '') }, { id: 'tercera', texto: '🧍 Detrás del jugador' + (vistas.actual.id === 'tercera' ? ' ✓' : '') }, { id: 'mas', texto: '🔍 Acercar' }, { id: 'menos', texto: '🔎 Alejar' }, { id: 'mapa', texto: '🗺️ Mapa' }, { id: 'otras', texto: '➕ Más vistas y filtros…' }], id => { if (ACC[id]) ACC[id](); else if (id === 'otras') menuOtras(); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
+  const menuOtras = () => ui.menu('Más vistas y filtros', MC.VISTAS.filter(v => v.id !== 'cenital' && v.id !== 'tercera').map(v => ({ id: v.id, texto: v.icon + ' ' + v.n + (vistas.actual.id === v.id ? ' ✓' : '') })).concat([{ id: 'pixel', texto: '👾 Pixel: ' + (vistas.pixel ? 'sí' : 'no') }, { id: 'estilo', texto: '🖌️ Filtro de estilo: ' + MC.Estilo.p.icono + ' ' + MC.Estilo.p.n }], hayGemini ? [{ id: 'arte', texto: '🎨 Arte: ' + MC.arte.activa }] : []), id => { if (id === 'pixel') vistas.pixel = !vistas.pixel; else if (id === 'arte') cambiarArte(); else if (id === 'estilo') menuEstilo(); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
+  MC.on('zoomTope', q => { if (q === 'cerca' && vistas.actual.id === 'cenital') { ponVista('tercera'); camara.d.dist = 6; } else if (q === 'lejos3p' && vistas.actual.id === 'tercera') { ponVista('cenital'); camara.zoom = camara.limites.zoom[1] * .75; } });
   const ayuda = () => ui.dialogo('🎮 Cómo se juega', '<div style="text-align:left;line-height:1.5">' +
     '• <b>Moverte:</b> pon el pulgar abajo a la izquierda y arrastra (o flechas / WASD).<br>• <b>Saltar ⤒ y turbo ⚡:</b> abajo a la derecha (o espacio y Shift).<br>' +
     '• <b>Mirar:</b> arrastra a la derecha para girar la cámara; pellizca o usa la rueda para acercar.<br>• <b>Mandados:</b> sigue la <b style="color:#ffc23a">flecha amarilla</b>; al llegar, «🚪 Entrar» y entrega en la mano.<br>' +
@@ -136,7 +147,7 @@ function jugar() {
     '• <b>Agua:</b> en la orilla, «🏊 Al agua»; mantén 🔽 para bucear.<br>• <b>Más:</b> 🗺️ vistas (lateral, 3D, pixel…), 🏠 tu casa, 🏙️ alcalde, ⚙️ ajustes.</div>', ['¡A jugar!']);
   /* 2.8 · accesibilidad y medición (entrega maestra §10.3, §13 y §14): sacudida, partículas, calidad y telemetría */
   const OPC = Object.assign({ sacudida: 1, particulas: 1, calidad: 'auto', tele: false }, leerG().opciones || {}); let tele = !!OPC.tele, teleT = 0;
-  const aplicarOpc = () => { MC.opciones.sacudida = OPC.sacudida; MC.opciones.particulas = OPC.particulas; const Q = { baja: .45, media: .75, alta: 1 }[OPC.calidad]; vistas.auto = !Q; if (Q) vistas.calidad = Q; tele = !!OPC.tele; if (!tele) { const f = ui.ficha('tele', ''); f.hidden = true; } escribirG({ opciones: OPC }); };
+  const aplicarOpc = () => { MC.opciones.sacudida = OPC.sacudida; MC.opciones.particulas = OPC.particulas; const Q = { baja: .45, media: .75, alta: 1 }[OPC.calidad]; vistas.auto = !Q; MC.opciones.densidad = !Q; if (Q) vistas.calidad = Q; tele = !!OPC.tele; if (!tele) { const f = ui.ficha('tele', ''); f.hidden = true; } escribirG({ opciones: OPC }); };
   aplicarOpc();
   const NIVEL = v => v >= 1 ? 'normal' : v > 0 ? 'suave' : 'apagada', sig = (L, v) => L[(L.indexOf(v) + 1) % L.length];
   const menuAjustes = () => ui.menu('⚙️ Ajustes', [{ id: 'libre', texto: '🆓 Modo libre (todo gratis): ' + (libre ? 'sí' : 'no') }, { id: 'ayuda', texto: '❓ Cómo se juega' },
@@ -206,7 +217,11 @@ function jugar() {
     requestAnimationFrame(paso);
   }
   /* tamaño */
-  let W = 0, H = 0; const ajustar = () => { const d = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
+  /* 2.11: densidad dinámica del lienzo (MC.DensidadLienzo): si los cuadros llegan lentos, el lienzo baja de densidad
+     (el navegador lo agranda gratis) y la cámara corrige el zoom para que el mundo se vea del mismo tamaño */
+  const densidad = new MC.DensidadLienzo({ max: Math.min(2, devicePixelRatio || 1), activa: MC.opciones.densidad !== false }); let dEf = densidad.max;
+  let W = 0, H = 0; const ajustar = () => { densidad.ponerMax(Math.min(2, devicePixelRatio || 1)); const d = dEf = densidad.medir(0, vistas.actual.id); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
+  const redensificar = d => { if (d === dEf) return; const k = d / dEf; camara.zoom *= k; camara.limites.zoom = [camara.limites.zoom[0] * k, camara.limites.zoom[1] * k]; dEf = d; W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; };
   ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
   /* 2.6: el tutorial es opcional (en la portada y en ⚙️ Ajustes); al empezar solo queda la guía del joystick, que se va sola */
   /* ciclo */
@@ -220,7 +235,7 @@ function jugar() {
     cuerpo.escala = humano ? .55 + .45 * yo.rendimiento : sinGas ? .08 : 1;
     const x0 = cuerpo.x, y0 = cuerpo.y;
     if (vistas.actual.tipo === 'pano' && seguir) { seguir.paso(dt, { acel: Math.abs(ent.stick.x) > .2 ? ent.stick.x * (vistas.pano.lado < 0 ? 1 : -1) : ent.acel, salto: ent.salto, turbo: ent.turbo }); E.pano = { trazo: seguir.trazo, s: seguir.s, id: seguir.id }; }
-    else { const gl = vistas.actual.tipo === 'gl', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92; if (bucear) entrada.baja = true; if (subirT > 0) { subirT -= dt; entrada.sube = true; } if (!cuerpo.nadando) bucear = false;
+    else { const gl = vistas.actual.control === 'volante', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92; if (bucear) entrada.baja = true; if (subirT > 0) { subirT -= dt; entrada.sube = true; } if (!cuerpo.nadando) bucear = false;
       if (ruta) { const sg = MC.Manejo.seguirRuta(cuerpo, ruta); if (!sg || sg.llego) { ruta = null; ui.aviso('📍 Llegaste'); } else if (ent.stick.m > .3) ruta = null; else Object.assign(entrada, sg); }
       entrada.lluvia = clima.lluvia; cuerpo.actualizar(impacto ? 0 : dt, entrada); }
     const ds = Math.hypot(cuerpo.x - x0, cuerpo.y - y0), st = V.clase !== 'pie' ? (desg[V.id] || (desg[V.id] = MC.Desgaste.nuevo(V))) : null; if (st) { MC.Desgaste.usar(st, ds, cuerpo.eventos.includes('choque') ? 1 : 0, clima); cuerpo.escala *= .82 + .18 * st.estado; } if (tanque[V.id] != null && !libre) tanque[V.id] = Math.max(0, tanque[V.id] - ds * garaje[V.id].consumo / 100 / 1000 * 1.4);
@@ -230,7 +245,9 @@ function jugar() {
     if (cuerpo.bloqueo && cuerpo.bloqueo !== ultBloqueo) { ultBloqueo = cuerpo.bloqueo; const b = cuerpo.bloqueo; ui.aviso((/agua|quebrada|pando/.test(b) ? '🌊 ' : /empinado|barranco/.test(b) ? '⛰️ ' : /árbol|palma/.test(b) ? '🌳 ' : /roca/.test(b) ? '🪨 ' : /borde/.test(b) ? '🧭 ' : '🚧 ') + b[0].toUpperCase() + b.slice(1)); } else if (!cuerpo.bloqueo) ultBloqueo = null;
     if (cuerpo.nadando && !nadaba) ui.aviso('🏊 Nadando: cansa rápido'); nadaba = cuerpo.nadando;
     if (mision) mision.actualizar(dt, cuerpo);
-    camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z, zPaso: cuerpo.zPaso });
+    /* 3.0: contra reloj (queda menos de un cuarto del tiempo del mandado), la cámara entra en «persecución»: se aleja, se inclina y se mece */
+    camara.persecucion = mision && mision.estado === 'activa' && mision.def.limite ? MC.clamp((.3 - (mision.def.limite - mision.t) / mision.def.limite) / .3, 0, 1) : 0;
+    camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z, zPaso: cuerpo.zPaso, mundo: M });
     ocu.vigilar(dt, { cuerpo, mundo: M, libro, entrada: ent, ms: vistas.ms });
     if (urbe && urbe.zonas.size && (urbeT += dt) > 6) { urbeT = 0; const r = urbe.avanzar(1); if (r.nuevos) ui.aviso('🏗️ Se construyeron ' + r.nuevos + ' edificios nuevos · ' + r.pob.toLocaleString('es-CO') + ' habitantes'); if (capaId) E.capaInfo = urbe.capa(capaId); }
     if (ambienteOn && (sonT += dt) > 1) { sonT = 0; MC.Paisaje.actualizar(ctxSonido()); } hist.paso(dt); if (mision && mision.restante < 25 && mision.estado === 'activa') hist.director.sumar('prisa', dt * .02);
@@ -239,9 +256,11 @@ function jugar() {
     /* el perro te sigue (dirección de Reynolds: llegar con separación) */
     const f = MC.IA.llegar([perro.x, perro.y], [cuerpo.x - Math.cos(cuerpo.a) * 3, cuerpo.y - Math.sin(cuerpo.a) * 3], Math.min(perro.vmax, Math.abs(cuerpo.v) + 3), 4); perro.x += f[0] * dt; perro.y += f[1] * dt; perro.v = Math.hypot(f[0], f[1]); if (perro.v > .2) perro.a = Math.atan2(f[1], f[0]);
     E.peatones = pobl.paso(dt, reloj, cuerpo.x, cuerpo.y, 420); E.trafico = trafico.paso(dt, cuerpo.x, cuerpo.y, reloj.seg, vistas.calidad);
-    vistas.dibujar(g, W, H, E, dt); ui.pintarJoystick(); MC.Telemetria.registro(vistas.ms, dt); if (tele && (teleT -= dt) <= 0) { teleT = .25; ui.ficha('tele', MC.Telemetria.linea(E)).hidden = false; }   /* 2.8: telemetría (percentiles) */
+    { const V = cuerpo.veh, cs = [{ x: cuerpo.x, y: cuerpo.y, z: cuerpo.z, r: V.clase === 'pie' ? .35 : Math.max(.4, (V.ancho || .8) / 2), masa: V.masa || (V.clase === 'auto' ? 1200 : V.clase === 'pesado' ? 6000 : 90), vx: Math.cos(cuerpo.a) * cuerpo.v, vy: Math.sin(cuerpo.a) * cuerpo.v }]; for (const t of E.trafico) if (Math.hypot(t.x - cuerpo.x, t.y - cuerpo.y) < 160) cs.push({ x: t.x, y: t.y, z: 0, r: 1, masa: 1200, vx: Math.cos(t.a) * (t.v || 0), vy: Math.sin(t.a) * (t.v || 0) }); objetos.actualizar(dt, cs); }
+    if (!interior) { densidad.activa = MC.opciones.densidad !== false; redensificar(densidad.medir(dt, vistas.actual.id + (vistas.pixel ? '_px' : ''))); }
+    vistas.dibujar(g, W, H, E, dt); if (vistas.efectiva().tipo === '2d' && !vistas.pixel) objetos.dibujar2D(g, (x, y, z) => vistas.aPantalla(E, x, y, z), camara.zoom, cuerpo, 140); ui.pintarJoystick(); MC.Telemetria.registro(vistas.ms, dt); if (tele && (teleT -= dt) <= 0) { teleT = .25; ui.ficha('tele', MC.Telemetria.linea(E)).hidden = false; }   /* 2.8: telemetría (percentiles) */
     /* la flecha al objetivo del mandado (en las vistas 2D): pin si se ve, flecha en el borde si no */
-    const Pm = mision && mision.actual; if (Pm && Pm.x != null && E._pr && vistas.actual.tipo === '2d') { let [sx, sy] = E._pr(Pm.x, Pm.y, 0); if (vistas.pixel) { sx *= vistas.escalaPixel; sy *= vistas.escalaPixel; } const Z = ui.zonaLibre(), d2 = W / innerWidth; MC.UI.indicador(g, W, H, sx, sy, { texto: Math.round(Math.hypot(Pm.x - cuerpo.x, Pm.y - cuerpo.y)) + ' m', escala: dpr0, t: E.t, rect: [Z.x0 * d2 + 20 * dpr0, Z.y0 * d2 + 10 * dpr0, Z.x1 * d2 - 20 * dpr0, Z.y1 * d2] }); }
+    const Pm = mision && mision.actual; const spm = Pm && Pm.x != null ? vistas.aPantalla(E, Pm.x, Pm.y, 0) : null; if (spm && vistas.actual.tipo !== 'pano') { const [sx, sy] = spm; const Z = ui.zonaLibre(), d2 = W / innerWidth; MC.UI.indicador(g, W, H, sx, sy, { texto: Math.round(Math.hypot(Pm.x - cuerpo.x, Pm.y - cuerpo.y)) + ' m', escala: dEf, t: E.t, rect: [Z.x0 * d2 + 20 * dEf, Z.y0 * d2 + 10 * dEf, Z.x1 * d2 - 20 * dEf, Z.y1 * d2] }); }
     if ((adapt += dt) > 20 && tocando) { adapt = 0; const A = MC.Musica.adaptar({ velocidad: Math.abs(cuerpo.v), hora: reloj.hora, clima }); if (A.estilo !== tocando.pieza.titulo.split(' · ').pop()) tocando = MC.Musica.tocar({ estilo: A.estilo, tema: TEMAS[temaI], energia: A.energia, compases: 16 }); }
     if ((hud -= dt) <= 0) { hud = .25;
       ui.ficha('hora', '🕐 ' + reloj.texto()); ui.ficha('clima', clima.texto()); ui.ficha('plata', libre ? '🆓 ' + cop(libro.saldo('jugador')) : '💰 ' + cop(libro.saldo('jugador'))); ui.ficha('lugar', '📍 ' + (M.calle(cuerpo.x, cuerpo.y) || M.meta.nombre));

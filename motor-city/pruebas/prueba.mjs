@@ -158,6 +158,17 @@ console.log('13) Escala, manejo, sprites, mi casa, lugares, historias, ocurrenci
 { const P = MC.Manejo.PERFIL.auto, c0 = MC.Manejo.curva(.08, P), c1 = MC.Manejo.curva(.5, P), c2 = MC.Manejo.curva(1, P), g0 = MC.Manejo.giroPorVelocidad(1, 0, 40, P), g1 = MC.Manejo.giroPorVelocidad(1, 40, 40, P);
   ok(c0 === 0 && c1 > 0 && c1 < .5 && c2 === 1 && g0 === 1 && g1 < .5 && Math.abs(MC.Manejo.vSegura(1 / 50, .8) - 19.8) < .1, 'manejo: zona muerta, respuesta exponencial, giro según la velocidad y velocidad segura en curva', { medio: +c1.toFixed(2), giroRapido: +g1.toFixed(2) });
   const Cb = new MC.Cuerpo(M, { x: col.x, y: col.y, veh: 'carro' }); Cb.v = 30; const e1 = MC.Manejo.aplicar({ stick: { x: 1, y: -1, m: 1 }, acel: 0, giro: 0 }, Cb, { esquema: 'volante' }); ok(e1.giro > 0 && e1.giro < .6 && e1.acel > .9, 'manejo: el volante a 108 km/h gira menos que quieto'); }
+{ /* 3.0: objetos físicos: el que choca empuja según su masa; saltan, caen, ruedan con roce y se duermen quietos */
+  const O = new MC.Objetos(M), e0 = rr.aristas.find(q => q.largo > 40), q = e0.t.at(e0.largo / 2), b = O.poner('balon', q.x + 1, q.y), c = O.poner('caja', q.x, q.y + 3); let alto = 0;
+  for (let i = 0; i < 600; i++) { O.actualizar(1 / 60, i < 12 ? [{ x: q.x + i / 12 * .95, y: q.y, z: 0, r: .4, masa: 80, vx: 6, vy: 0 }, { x: q.x, y: q.y + 3 - .7 + i / 12 * .4, z: 0, r: .4, masa: 1200, vx: 0, vy: 3 }] : []); alto = Math.max(alto, b.z); }
+  const sem = new MC.Objetos(M).sembrar(q.x, q.y, 300, 30);
+  ok(Math.hypot(b.x - q.x - 1, b.y - q.y) > 1.5 && alto > .05 && b.dormido && c.dormido && Math.hypot(c.x - q.x, c.y - q.y - 3) > .3 && sem > 0, 'objetos físicos: el golpe los empuja y los levanta, caen, ruedan con roce y se duermen; la siembra pone conos, balones, canecas y cajas', { avanzó: +Math.hypot(b.x - q.x - 1, b.y - q.y).toFixed(1), alto: +alto.toFixed(2), sembrados: sem, duerme: [b.dormido, c.dormido], caja: +Math.hypot(c.x - q.x, c.y - q.y - 3).toFixed(2) }); }
+{ /* 2.11: densidad dinámica del lienzo: baja si va lento y bajar sirve; si no sirve vuelve y no insiste; sube con holgura */
+  const sim = (D, clave, f, seg) => { let d = D.medir(0, clave); for (let t = 0; t < seg; t += 1 / 60) { const ms = f(d); d = D.medir(ms / 1000, clave); } return d; };
+  const A = new MC.DensidadLienzo({ max: 2 }), lento = sim(A, 'maqueta', d => 28 * (d / 2) ** 2 + 4, 6), recupera = sim(A, 'maqueta', () => 16.7, 40);
+  const B = new MC.DensidadLienzo({ max: 2 }), terco = sim(B, 'x', () => 33.3, 8), C1 = new MC.DensidadLienzo({ max: 2, activa: false }), fija = sim(C1, 'x', () => 40, 3);
+  const pasos = new MC.DensidadLienzo({ max: 2 }).pasos, uno = new MC.DensidadLienzo({ max: 1 }).pasos;
+  ok(lento < 2 && recupera === 2 && terco === 2 && fija === 2 && pasos.join() === '2,1.5,1.24,1' && uno.join() === '1,0.75', 'densidad dinámica del lienzo: baja cuando pintar es el cuello, no insiste si no mejora (pantalla a 30 Hz) y vuelve a la nitidez con holgura', { lento, recupera, terco, pasos, uno }); }
 { /* 2.10: el público simulado (MC.Publico) empuja la palanca hacia donde va, relativo a la cámara, y suelta al llegar */
   const C = { x: 0, y: 0, v: 0 }, p = MC.Publico.piloto('gamer', { cuerpo: C, camara: { yaw: 0 }, objetivo: () => ({ x: 100, y: 0, radio: 10 }) }); let e; for (let i = 0; i < 30; i++) e = p.leer(1 / 30);
   const C2 = { x: 0, y: 0, v: 0 }, p2 = MC.Publico.piloto('gamer', { cuerpo: C2, camara: { yaw: Math.PI / 2 }, objetivo: () => ({ x: 100, y: 0, radio: 10 }) }); let e2; for (let i = 0; i < 30; i++) e2 = p2.leer(1 / 30);
@@ -384,7 +395,7 @@ if (process.argv.includes('--navegador')) {
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.goto(urlPrueba(mh)); await p.tap('#jugar'); await p.waitForFunction(() => window.MANDADOS && window.MANDADOS.mision, null, { timeout: 120000 }); await p.waitForTimeout(1200);
     const tuto = await p.$('.dialogo button'), opcional = !!(await p.$('#comoSe')); if (tuto) await tuto.tap(); await p.waitForTimeout(300);
-    const a = await p.evaluate(() => { const G = window.MANDADOS, P = G.mision.actual, j = document.querySelector('.joy'); return { x: G.cuerpo.x, y: G.cuerpo.y, libre: G.libre, vehiculos: G.vehiculos, pxPorMetro: +(G.camara.zoom / Math.min(2, devicePixelRatio)).toFixed(1), joystick: !!j && j.getBoundingClientRect().width > 80, primerMandado: Math.round(Math.hypot(P.x - G.cuerpo.x, P.y - G.cuerpo.y)) }; });
+    const a = await p.evaluate(() => { const G = window.MANDADOS, P = G.mision.actual, j = document.querySelector('.joy'); return { x: G.cuerpo.x, y: G.cuerpo.y, libre: G.libre, vehiculos: G.vehiculos, pxPorMetro: +(G.camara.zoom / (G.vistas.dpr || Math.min(2, devicePixelRatio))).toFixed(1), joystick: !!j && j.getBoundingClientRect().width > 80, primerMandado: Math.round(Math.hypot(P.x - G.cuerpo.x, P.y - G.cuerpo.y)) }; });
     const cdp = await ctx.newCDPSession(p), sx = 412 * .25, sy = 860 * .8;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sx, y: sy, id: 1 }] });
     for (let i = 1; i <= 10; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sx, y: sy - i * 6, id: 1 }] }); await p.waitForTimeout(30); }

@@ -9,7 +9,7 @@
 |---|---|
 | **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/> · minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
 | **Documento único** (contexto, código a usar y plan de cada IA) | [`docs/DOCUMENTO-UNICO.md`](docs/DOCUMENTO-UNICO.md) · todo junto con anexos: `dist/MOTOR-CITY-TODO.md` |
-| Versión | **2.10.0** · `VERSION.json` |
+| Versión | **3.0.0** · `VERSION.json` |
 | Referencias del autor (25 fichas) | [`docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`](docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md) |
 | Inspiración visual y motores potentes | [`docs/INSPIRACION-VISUAL.md`](docs/INSPIRACION-VISUAL.md) · [`docs/MOTORES-POTENTES.md`](docs/MOTORES-POTENTES.md) |
 | **Tareas de cada IA** («mira el repositorio y haz tu parte») | [`TAREAS-IA.md`](TAREAS-IA.md) |
@@ -98,11 +98,18 @@
   - rutas por la calle bien hechas;
   - las skills Hallmark, Modern Web Guidance, find-skills y HyperFrames (`node motor.mjs skills`);
   - el **público simulado** (`node motor.mjs publico`).
+- **2.11, fluidez:** la densidad del lienzo se ajusta sola, la capa de suelo y el camino del cómic y del 1 bit medido en cada aparato.
+- **3.0, un solo mundo 3D y varias cámaras:**
+  - la cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo 3D (respaldo 2D sin GPU);
+  - fachadas, árboles low-poly, carros y gente con detalle;
+  - topes de zoom, cámara continua y mapa grande;
+  - artilugios físicos (`MC.Objetos`).
+  La investigación está en `docs/INVESTIGACION-CAMARA.md`.
 
 ## Trabajar en el motor
 ```bash
 node motor.mjs construir            # dist/motor.js, los mundos, dist/motor-city.html y dist/juegos/*.html
-node motor.mjs prueba --navegador   # 134 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
+node motor.mjs prueba --navegador   # 137 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
 node motor.mjs documento            # dist/MOTOR-CITY-TODO.md: el documento único con todo
 node motor.mjs publico              # el público simulado (niña, abuelo, gamer y turista) juega Mandados → dist/publico.md
 node motor.mjs skills               # las skills externas y cómo instalarlas

@@ -12,7 +12,12 @@ const CAM_PERFIL = {
   tercera: { dist: 7, alto: 2.6, pitch: .22, fov: 1.0 },
   dron: { dist: 70, alto: 55, pitch: .62, fov: .95 },
   cine: { dist: 28, alto: 9, pitch: .18, fov: .8 },
-  aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 }
+  aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
+  /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
+     pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
+  cenital: { fijo: true, pitch: 1.08, pitchCerca: .74, fov: .62, dist: 0, alto: 0 },
+  oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0 },
+  maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 }
 };
 class Camara {
   constructor(op = {}) {
@@ -23,7 +28,7 @@ class Camara {
   }
   /* gesto de la pantalla (de Controles) */
   gesto(g) {
-    if (g.tipo === 'zoom') { this.zoom = clamp(this.zoom * g.k, ...this.limites.zoom); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
+    if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); if (this.perfil === 'tercera' && g.k < 1 && this.d.dist / g.k > 15) MC.emit('zoomTope', 'lejos3p'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
     else if (g.tipo === 'girar') { this.yawObj = null; this.yaw -= g.da; this.mira -= g.da; }
     else if (g.tipo === 'inclinar') { this.pitchObj = null; this.pitch = clamp(this.pitch + g.dy * .006, ...this.limites.pitch); this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); }
     else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); } }
@@ -49,7 +54,8 @@ class Camara {
       this.x = resorte(this.x, this._fx, this._vx, .2, dt); this.y = resorte(this.y, this._fy, this._vy2, .2, dt);
     }
     /* 3D en perspectiva: ojo detrás del rumbo (y lo que el jugador mire con el dedo) */
-    if (o) {
+    if (o && this.d.fijo) this._aereo(dt, o);
+    else if (o) {
       const P = this.d, M = o.mundo || this.mundo; this.orbita += dt * (this.perfil === 'cine' ? .12 : 0);
       if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0)) this.mira *= Math.pow(.25, dt);
       const ang = (o.a || 0) + this.mira + this.orbita + (this.perfil === 'cine' ? .8 : 0), z0 = o.z || 0, prim = this.perfil === 'primera';
@@ -78,6 +84,23 @@ class Camara {
     this.sacudida = Math.max(0, this.sacudida - dt * 2); this.trauma = Math.max(0, (this.trauma || 0) - dt * .9);
     const sh = (this.trauma || 0) ** 2; if (sh > 1e-4 && o) { const t = this._t, n = (a, b) => (Math.sin(t * a + b) + Math.sin(t * a * 1.7 + b * 2.3)) / 2; this.ojo = [this.ojo[0] + n(23, 1) * sh * .35, this.ojo[1] + n(19, 2) * sh * .35, this.ojo[2] + n(29, 3) * sh * .25]; this.offPantalla = [n(17, 4) * sh * 6, n(13, 5) * sh * 6]; } else this.offPantalla = [0, 0];
     if (this.tr) { this.tr.t += dt / this.tr.dur; if (this.tr.t >= 1) this.tr = null; }
+  }
+  /* 3.0: cámara aérea sobre el mundo 3D (cenital, oblicua y maqueta). Sigue el punto (x, y) que ya trae la mirada adelante
+     y la zona muerta, con el MISMO encuadre que la vista 2D: la distancia sale del zoom (px por metro) y del alto del lienzo,
+     así que pasar de 2D a 3D no salta. Más lejos, más cenital; más cerca, más oblicua (se ven las fachadas), como el mapa
+     3D de los navegadores. Con la velocidad y la persecución se aleja y se inclina hacia adelante (Reckless Getaway, #DRIVE);
+     en persecución, además, un vaivén lateral; el trauma la sacude. */
+  _aereo(dt, o) {
+    const P = this.d, M = o.mundo || this.mundo, Hp = this.pantalla ? this.pantalla[1] : 800, Zl = this.limites.zoom;
+    const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
+    this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
+    const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
+    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * .2 + this._per * .22);
+    const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
+    const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
+    let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);
+    if (this._per > .02) { const w = Math.sin(this._t * 1.7) * this._per * D * .03; ex += uy * w; ey -= ux * w; }
+    this.ojo = [ex, ey, ez]; this.blanco = [this.x, this.y, zt]; this.fov = P.fov; this.distAerea = D; this.yawAereo = yaw;
   }
   /* transición entre vistas: 0..1 (la usa el gestor de vistas para mezclar) */
   transicion(dur = .6) { this.tr = { t: 0, dur }; }

@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.10.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 3.0.0 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -8,7 +8,7 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.10.0** · 20‑nov‑2026 |
+> | Versión | **Motor City 3.0.0** · 20‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
@@ -67,12 +67,13 @@
 | **2.7** | «Necesito peso y vida en el motor, y que se pueda adaptar a motores más potentes. Estéticas de cómic, manga, anime y novela gráfica. Investiga y aprende de las mejores obras visuales, inspírate en ellas, y recopila y adapta arte de verdad.» Y 14 reels de referencia. | **Estilos gráficos** (`MC.Estilo`, `js/16-estilos.js`). Son 8: realista, clásico, **cómic** (tinta, semitono y onomatopeyas), **manga** (grises, tramado y líneas de velocidad), **anime** (*cel* y cielos de Shinkai), **novela gráfica** (noir: tres tonos y un rojo de acento), **ukiyo-e** y **acuarela**. Cada uno tiene su mapa de color, su tinta, su trama, su sombra, sus árboles y su cielo. Las paletas salen de **obras de dominio público** (Hokusai, Hiroshige, Doré, Winslow Homer, la Comisión Corográfica…; `arte/dominio-publico/`).<br>**Peso y vida** (`MC.Vida`):<ul><li>aterrizaje con aplastamiento, sacudida y polvo;</li><li>cabeceo del vehículo al acelerar y al frenar;</li><li>**hitstop** en los choques;</li><li>bandadas con su sombra, hojas que caen y salpicaduras;</li><li>el viento mece las copas.</li></ul>**Motores potentes** (`MC.Exportar`, `MC.Puente`): el mundo en **glTF 2.0** (validador de Khronos: 0 errores; abierto en three.js), alturas RAW 16 y escena JSON para Godot, Unity, Unreal y Blender; y el estado vivo para otro motor.<br>**Investigación:** `docs/INSPIRACION-VISUAL.md` y `docs/MOTORES-POTENTES.md`.<br>123 pruebas. |
 | **2.8** | La **entrega maestra de referencias** (los 14 reels, videos y el análisis de ChatGPT y de Gemini: 25 fichas, peso, vida, arquitectura y rendimiento) y «prepara todo». | La entrega quedó en `docs/referencias/` y su resumen en `docs/INSPIRACION-VISUAL.md` §1. Al motor se sumó:<ul><li>**palomas que alzan vuelo** cuando el jugador se acerca (R12);</li><li>**huellas** de llantas y pisadas en arena, tierra, nieve y barro, que con lluvia salen en el pasto (R12 y R19);</li><li>**faros y luces de freno** del jugador (R13 y R19);</li><li>los estilos **vintage**, **CRT** y **visión térmica** (R17 y R22), para 11 en total;</li><li>**accesibilidad**: sacudida y partículas ajustables (§10.3);</li><li>**telemetría en percentiles** (p95 y p99) y **calidad baja, media o alta** en Ajustes (§13 y §14);</li><li>**contratos versionados** (`schemas/` y `MC.Contratos`, §12.3);</li><li>el hitstop también en Mandados.</li></ul>Lo demás quedó repartido: C‑M20, C‑M21, C‑M22, C‑A10, C‑A11, G‑H7 y G‑H9. 125 pruebas. |
 | **2.9** | Llegaron, en paralelo, las entregas de **Gemini** (G‑H1…G‑H8) y de **ChatGPT y Codex** (2.7.1: arte C‑A, C‑M1, C‑M13, C‑M15…C‑M19). | Todo quedó unido en la rama:<ul><li>los **6 atlas de ChatGPT** (676 cuadros; Vista → Arte → ChatGPT);</li><li>el agua precalculada en los MC4;</li><li>el gancho `textura` y los charcos con lluvia;</li><li>el estilo de **1 bit**;</li><li>la caché de fachadas (la maqueta de Medellín baja a **22 ms** con la CPU 4×);</li><li>los adaptadores de **Godot y three.js** probados;</li><li>los hallazgos de Gemini, corregidos;</li><li>las paletas de las obras colombianas.</li></ul>Son 12 estilos. 132 pruebas. |
-| **2.10** (esta) | «Retoma y continúa: une todo, mejora y optimiza todo, y añade peticiones para Gemini y ChatGPT». Llegaron 11 enlaces, y después «añade las skills y plugins de los videos y sigue desarrollando». | <ul><li>Se unieron las ramas de El Metro (Motor del Valle 1.2.0) y de EnCicla (alto contraste y metro sin casas debajo).</li><li>El cómic y el 1 bit ya no leen la pantalla y no hacen muaré.</li><li>Mandados bajó de 8,2 a 5,1 MB.</li><li>Las rutas van por la calle (`rutaA`).</li><li>Skills de los videos: **Hallmark, Modern Web Guidance, find-skills y HyperFrames** (`skills-externas.json`, `node motor.mjs skills`, plugins en `.claude/settings.json`).</li><li>El **público simulado** (`MC.Publico`, `node motor.mjs publico`).</li><li>Pedidos G‑H10…G‑H13, C‑M23…C‑M25 y C‑A12.</li></ul> |
+| **2.10** | «Retoma y continúa: une todo, mejora y optimiza todo, y añade peticiones para Gemini y ChatGPT». Llegaron 11 enlaces, y después «añade las skills y plugins de los videos y sigue desarrollando». | <ul><li>Se unieron las ramas de El Metro (Motor del Valle 1.2.0) y de EnCicla (alto contraste y metro sin casas debajo).</li><li>El cómic y el 1 bit ya no leen la pantalla y no hacen muaré.</li><li>Mandados bajó de 8,2 a 5,1 MB.</li><li>Las rutas van por la calle (`rutaA`).</li><li>Skills de los videos: **Hallmark, Modern Web Guidance, find-skills y HyperFrames** (`skills-externas.json`, `node motor.mjs skills`, plugins en `.claude/settings.json`).</li><li>El **público simulado** (`MC.Publico`, `node motor.mjs publico`).</li><li>Pedidos G‑H10…G‑H13, C‑M23…C‑M25 y C‑A12.</li></ul> |
+| **3.0** (esta) | «Sigue básico: las dimensiones están mal ideadas; hay cosas en 2D que deberían ser 3D; el mundo de la cenital, la maqueta y la 3D debe ser uno solo, híbrido. Investiga #DRIVE, Pako Forever, Getaway, Reckless Getaway 2 y la distancia de GTA San Andreas; pon tope al zoom; define un radio de vista; mejora las fachadas; agrega artilugios físicos.» | <ul><li>**Un solo mundo 3D y varias cámaras**: la cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo, con respaldo 2D.</li><li>Fachadas con zócalo, ventanas, puerta y balcones; árboles low-poly que son los mismos de la 2D; carros y gente con detalle.</li><li>Topes de zoom, cámara continua y mapa grande.</li><li>Radio de vista con niebla, rayos X del jugador y persecución.</li><li>`MC.Objetos`, los artilugios físicos.</li><li>La investigación está en `docs/INVESTIGACION-CAMARA.md`.</li></ul> |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **134 en verde** (`node motor.mjs prueba --navegador`), en Node y en Chromium. Incluyen el público simulado y las rutas por la calle (2.10). Una juega Mandados en un celular táctil y otra recorre los 11 estilos. |
+| **Pruebas** | **137 en verde** (`node motor.mjs prueba --navegador`), en Node y en Chromium. Incluyen el público simulado y las rutas por la calle (2.10). Una juega Mandados en un celular táctil y otra recorre los 11 estilos. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -394,8 +395,13 @@ node motor.mjs construir && node motor.mjs prueba --navegador
 
 **No es tu rol:** el código del motor (eso es de ChatGPT y de Claude).
 
+**Nuevo en la 3.0:**
+- **G‑H14**: capturas de las 3 cámaras en un celular con GPU;
+- **G‑H15**: los colores reales de los zócalos de Guatapé;
+- **G‑H16**: la fluidez del 3D contra el 2D;
+- **G‑H17**: 30 objetos del mobiliario real.
+
 **Nuevo en la 2.10:**
-- **G‑H10**: los enlaces que no se pudieron leer;
 - **G‑H11**: las 4 paletas colombianas;
 - **G‑H12**: correr `node motor.mjs publico`, `node motor.mjs skills` y `legacy-scan`, y reportar;
 - **G‑H13**: instalar las skills en Antigravity.
@@ -424,6 +430,13 @@ node motor.mjs construir && node motor.mjs prueba --navegador
 **El código que usarás:**
 - **arte:** en `arte/chatgpt/`, con atlas y `manifiesto.json`. Debe pasar `node motor.mjs revisar-arte arte/chatgpt`. Se prueba con `MC.Pieles.instalar('chatgpt', MC_ARTE.chatgpt, { partes: [...] })` (§5.4);
 - **código:** commits en la rama con `node motor.mjs prueba --navegador` en verde, y cada mejora con su prueba `ok(condición, 'qué se prueba', datos)`.
+
+**Nuevo en la 3.0 (mundo único 3D):**
+- **C‑M26**: persecución jugable;
+- **C‑M27**: sombras y desenfoque de maqueta en WebGL;
+- **C‑M28**: atlas de fachadas e impostores lejanos;
+- **C‑M29**: rampas, destrucción y objetos guardados por sector;
+- **C‑A13** y **C‑A14**: láminas de fachadas y de vehículos.
 
 **Nuevo en la 2.10, con las skills de los videos:**
 - **C‑M23**: la red vial de Guatapé, sin puntas sueltas;
@@ -603,6 +616,12 @@ No hace falta conectar ninguna aplicación.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
 
+**Novedades de la 3.0 (20‑nov‑2026): un solo mundo 3D y varias cámaras.**
+- La cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo 3D (`js/45-gl3d.js`); sin GPU usan su respaldo 2D.
+- Hay fachadas, árboles low-poly que son los mismos de la 2D, artilugios físicos (`MC.Objetos`), topes de zoom y el mapa grande.
+- Lee primero `docs/INVESTIGACION-CAMARA.md`.
+- Los videos que no se pudieron leer ya no interesan: G‑H10 se quitó.
+
 **Novedades de la 2.10 (20‑nov‑2026):**
 - **Skills y plugins de los videos del autor** (`skills-externas.json`, skill `motor-city-skills-externas`):
   - **Hallmark**, para páginas web que no parezcan hechas por IA;
@@ -668,10 +687,13 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H7** | **Verifica las referencias que faltan**: los 13 enlaces de Instagram que siguen sin verificar y las 7 fichas que solo describe tu informe (R02, R03, R04, R08, R09, R13 y R18 en `docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md` §4) | Para cada uno: qué se ve, qué estilo es (cómic, manga, anime, realista…), qué da sensación de peso o de vida y qué técnica parece usar. | Una tabla en `docs/INSPIRACION-VISUAL.md` §1, una fila por reel. |
 | **G‑H8** | **40 obras de dominio público** para paletas, al menos 10 colombianas (Comisión Corográfica, Epifanio Garay, Ricardo Acevedo Bernal, grabados del *Papel Periódico Ilustrado*…) | Para cada una: el enlace en Wikimedia Commons y su licencia. Solo dominio público. | Una lista en `arte/dominio-publico/candidatas.md`. Claude saca las paletas. |
 | **G‑H9** | **Medición en un celular real**, con el autor | En Mandados, ⚙️ Ajustes → 📈 Telemetría. 5 minutos por vista (cenital, maqueta, lateral) y por calidad (baja, media, alta). Anota el modelo del celular, los fps, el p95 y si se calienta. | Una tabla en `reportes/AAAA-MM-DD-gemini-celular.md`. |
-| **G‑H10** (2.10) | **Lo que no se pudo leer de los videos nuevos**:<ul><li>los 2 Instagram (`DfVDgmclLPi`, que el autor mandó dos veces, y `DexJDYnNQ0X`; piden iniciar sesión);</li><li>el TikTok de @soyenriquerocha «Claude ahora construye bien sin basura» (`vt.tiktok.com/ZSpw3u8dH`).</li></ul>Para cada uno: qué herramienta, skill o plugin muestra, su repositorio y su licencia. | `docs/INSPIRACION-VISUAL.md` §1.2: una línea por enlace. Si es una skill útil, propónla para `skills-externas.json` sin instalarla. |
 | **G‑H11** (2.10) | **Las 4 paletas colombianas que faltan** (Wikimedia bloqueó la descarga) | Para cada obra de `arte/dominio-publico/candidatas.md` marcada «falta», da el enlace directo a una **miniatura de 250 px** en `upload.wikimedia.org` y confirma que es de dominio público. | Los enlaces en `candidatas.md`. Claude saca las paletas. |
 | **G‑H12** (2.10) | **Corre las herramientas nuevas y reporta** | `node motor.mjs publico` (anota el veredicto de cada perfil), `node motor.mjs skills` y `npx -y modern-web-guidance@latest legacy-scan js --json`. | `reportes/<fecha>-gemini-herramientas.md`, sin cambiar código. Para cada hallazgo de `legacy-scan`: archivo, línea y si aplica según su `keepWhen` y su `dropWhen`. |
 | **G‑H13** (2.10) | **Instala las skills en Antigravity** | `node motor.mjs skills --instalar --agente antigravity` y confirma que aparecen en `.agents/skills/`. Úsalas desde ahí en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
+| **G‑H14** (3.0) | **Capturas de las 3 cámaras en un celular real con GPU** (allí sí se ve el 3D) | En Mandados, prueba la cámara de juego de cerca y de lejos, la maqueta y la vista detrás del jugador, de día y de noche. Para cada una, ¿se lee el jugador? ¿Algo lo tapa? ¿Las fachadas se ven? ¿Se nota cuando carga lo lejano? | `reportes/<fecha>-gemini-camaras-3d.md` con fotos y una tabla de foto, hallazgo y gravedad, sin cambiar código. |
+| **G‑H15** (3.0) | **Los colores reales de los zócalos de Guatapé** | De 10 a 15 colores de zócalos y fachadas reales, con su fuente (foto de dominio público o con licencia libre, o una fuente oficial). | `arte/dominio-publico/zocalos-guatape.json`: `[{ "hex", "dónde", "fuente" }]`. Claude los pone en `PAL_ZOCALO`. |
+| **G‑H16** (3.0) | **Fluidez del 3D contra el 2D en tu celular** | ⚙️ Ajustes → 📈 Telemetría. 3 minutos con la cámara de juego (3D) y 3 con «Calidad: baja» (2D). Anota el modelo, la mediana y el percentil 95, y la densidad del lienzo. | Una tabla en tu reporte. |
+| **G‑H17** (3.0) | **30 objetos del mobiliario real** de Guatapé y Medellín para los artilugios físicos: bancas, materas, bolardos, postes, rejas, motos parqueadas… | Para cada uno: tamaño aproximado en metros, material, color y si se mueve o se rompe al chocar. | `contenido/objetos-gemini.json`. Codex los convierte en tipos de `MC.Objetos`. |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -693,6 +715,8 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 > 2. **C‑M21**, **C‑M20** y **C‑M22**;
 > 3. **C‑A10** y **C‑A11**;
 > 4. después, C‑M2…C‑M12 y C‑M14.
+>
+> **Nuevos de la 3.0 (mundo único 3D):** **C‑M26**, **C‑M27**, **C‑M28**, **C‑M29**, **C‑A13** y **C‑A14**, antes que todo lo demás. La maqueta ya va por debajo de 20 ms con la densidad dinámica y la capa de suelo (C‑M13 queda hecho).
 >
 > **Nuevos de la 2.10, con las skills de los videos:** **C‑M23**, **C‑M24**, **C‑M25** y **C‑A12**, justo después de C‑M13.
 >
@@ -726,6 +750,8 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A10** | **Tipografía propia** (R25) para letreros, placas, grafitis y menús: una fuente a partir de letra a mano, con 3 variantes por letra, libre para usar. | interfaz y letreros |
 | **C‑A11** | **Interfaz de libreta** (R23): el mapa de mandados, la lista de misiones y los botones como una libreta dibujada, con *squash and stretch* al tocar. | `MC.UI` (tema) |
 | **C‑A12** (2.10) | **Tráiler de Mandados con HyperFrames** (skill `hyperframes`): 30 s en vertical 9:16 y en horizontal 16:9:<ul><li>con capturas reales (`node motor.mjs capturas`) de las vistas y de los estilos (realista, cómic, 1 bit, acuarela);</li><li>con subtítulos en español y música libre de derechos;</li><li>sin cifras ni frases inventadas.</li></ul> | `videos/` (MP4 de menos de 15 MB) y el HTML de la composición |
+| **C‑A13** (3.0) | **Láminas de fachadas de Guatapé por módulos**: ventana, puerta, balcón, zócalo y cornisa, en 6 combinaciones de color reales (frente, lado y detalle). Son la guía para el atlas de fachadas del mundo 3D. | `edificio3d` (C‑M28) |
+| **C‑A14** (3.0) | **Vehículos colombianos low-poly en vistas ortográficas** (frente, lado y arriba, con medidas): buseta, chiva, taxi, moto con parrillero, camión de estacas y bici EnCicla. Codex los modela en código a partir de las láminas. | `carro3d` |
 | **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 #### Código (Codex), en orden
@@ -735,6 +761,10 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑M23** (2.10) | **La red vial de Guatapé:**<ul><li>123 de sus 385 nodos son puntas sueltas;</li><li>tiene 5 componentes;</li><li>las rutas dan rodeos de 4× en el percentil 90.</li></ul>Revisa `geo/territorio.py` y `Red` (`une`, `_partir`): que se unan los cruces y las puntas que casi tocan, sin crear calles falsas. | La prueba «rutas por la calle» con el percentil 90 por debajo de 2,5× y `node motor.mjs publico` sin perfiles atascados por el mapa. |
 | **C‑M24** (2.10) | **Ayuda de manejo para niños**: el público simulado marca que Sofía (8 años) pasa el 43 % del tiempo atascada. Agrega en ⚙️ Ajustes una ayuda opcional:<ul><li>imán a la calle;</li><li>frenado antes de chocar;</li><li>giro suave al rozar un muro.</li></ul>Va encendida por defecto en el ritmo «tranquilo». | `node motor.mjs publico --perfiles nina` con atascado por debajo del 25 %, y su prueba. |
 | **C‑M25** (2.10) | **La portada web de Motor City con Hallmark** (`/hallmark`): el `index.html` de GitHub Pages que lleva a Mandados y a los juegos.<ul><li>En español, con capturas reales.</li><li>Sin cifras, testimonios ni logos inventados.</li><li>`sloplint --render` limpio y el piso de Hallmark completo: tokens, `:focus-visible` y `prefers-reduced-motion`.</li></ul> | `index.html` y su reporte de `sloplint` |
+| **C‑M26** (3.0) | **Persecución jugable**, como Reckless Getaway: policía o rivales con `MC.IA` que cortan el paso y frenan delante. La cámara ya tiene `camara.persecucion` (0 a 1); súmale casi choques que dan turbo y un leve *hitstop*. | Un modo en Mandados («¡Te persiguen!») con su prueba. |
+| **C‑M27** (3.0) | **Luz del mundo 3D:** sombras de los edificios y los árboles con *shadow map* en WebGL 1 (si no se puede, sombras proyectadas en el suelo), y desenfoque de maqueta (*tilt-shift*) con la profundidad, como HD‑2D. Debe mantener 60 cuadros por segundo en un celular medio. | `js/45-gl.js` con su prueba. |
+| **C‑M28** (3.0) | **Atlas de fachadas con UV** para `edificio3d`, a partir de las láminas C‑A13 y del arte de ChatGPT, más **impostores lejanos** (siluetas de cerros y torres) para la vista detrás del jugador. Se hornean de lado con la Arboleda y los edificios. | `js/45-gl3d.js` |
+| **C‑M29** (3.0) | **Más física:** rampas y saltos con cámara lenta al aterrizar, destrucción ligera (vallas, conos y postes que se doblan), objetos movidos que se guardan por sector (`MC.GuardadoSectores`) y los 30 objetos de G‑H17. | `js/32-objetos.js` con su prueba. |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
 | **C‑M17** | **Lluvia y atmósfera que se ven** (R02, R03 y R09): asfalto mojado más oscuro, charcos con reflejo y salpicaduras, y niebla de distancia en la maqueta y la lateral, sin pasar de 2 ms por cuadro. |
 | **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |
@@ -761,6 +791,7 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 - **Run Scooter** (`RunRunZero`): sigue independiente.
 
 ### Claude · la IA del motor
+- **3.0:** mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, artilugios físicos, mapa grande y la investigación de cámara.
 - **2.10:**
   - unió las ramas viejas de los juegos;
   - instaló las skills de los videos;
@@ -771,6 +802,71 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 - Une las entregas (arte de ChatGPT en `MC.Pieles` y código de Codex).
 - Mantiene `docs/PEDIDOS.md`.
 - Sigue con *Motor City* (carreras) y *Extremo* (§9.7).
+
+
+---
+
+# ANEXO 0d. Cámara, mundo único y jugabilidad (investigación 3.0) (`docs/INVESTIGACION-CAMARA.md`)
+
+
+> Pedido del autor: «las dimensiones están mal ideadas; hay cosas que se quedan en 2D cuando deberían estar en 3D; el mundo en cenital, maqueta y 3D debe ser el mismo; investiga la cámara de #DRIVE, Pako Forever, Getaway y Reckless Getaway 2; ni tan cerca ni tan lejos, con tope; un radio de vista; carga por zonas que no se note (la niebla de GTA San Andreas); fachadas; artilugios físicos».
+
+### 1. Lo que enseñan las referencias (ingeniería inversa)
+Sobre las cámaras de esos juegos se publica poco. Lo que sigue sale de lo que se ve al jugarlos y de lo que sí está documentado; donde algo no está confirmado, se dice.
+
+| Referencia | Qué se ve | Qué se tomó |
+|---|---|---|
+| **#DRIVE** (Pixel Perfect Dude) | Mundo 3D low-poly; cámara alta que va **detrás y arriba** del carro, mirando adelante; el carro abajo de la pantalla para ver lo que viene. | El mundo 3D low-poly con luz plana por cara; la **mirada adelante** según la velocidad. |
+| **Pako Forever** / **Getaway** | Vista **isométrica fija** sobre una ciudad 3D low-poly; la cámara no gira con el carro, solo lo sigue; persecuciones con policía. | La **maqueta** como cámara 3D casi ortográfica (campo visual estrecho, giro de a 90°); la cámara aérea **no gira** con el rumbo, lo que da control estable. |
+| **Reckless Getaway 2** (Pixelbite) | La vista es elevada y en 3D, según las fichas de las tiendas. No se encontró una descripción técnica de la cámara: **sin confirmar**. Lo que el autor describe, una cámara frenética en las persecuciones, coincide con alejarse, inclinarse y sacudirse con los golpes. | El **modo persecución** (`camara.persecucion`, 0 a 1): se aleja un 22 %, se inclina hacia adelante y se mece de lado. Además, el **trauma²**, que sacude con cada golpe. |
+| **GTA San Andreas** | Poca distancia de dibujo, **modelos de bajo detalle (LOD)** a lo lejos y **niebla** ajustada por hora y clima para que no se vea lo que se carga; el mundo se carga por sectores. Los detalles internos solo están en fuentes de *modding*, no oficiales. | **Radio de vista** definido por la cámara y **niebla justo antes del borde**. Las regiones de 160 m se cargan por cercanía con un presupuesto de milisegundos (ya estaba) y bajan de detalle con la distancia. |
+| **HD‑2D** (*Octopath Traveler*) | Sprites 2D como hojas de papel dentro de un mundo **todo 3D**, con desenfoque por profundidad (efecto maqueta), luz puntual y bruma. | El **híbrido**: el suelo es la losa 2D (vías, andenes, pasto con su desgaste) puesta sobre el relieve 3D, y todo lo que se levanta es volumen. El desenfoque por profundidad queda como encargo (necesita el búfer de profundidad). |
+| **Diseño de cámaras** (zona muerta, mirada adelante, *Cinemachine*) | Zona muerta para que lo pequeño no mueva la cámara; la mirada adelante se congela al frenar; nunca saltar sin suavizado. | Ya estaba: resortes críticamente amortiguados, zona muerta y mirada adelante. Ahora también en las cámaras aéreas 3D. |
+
+### 2. Lo que quedó en el motor (3.0)
+1. **Un solo mundo 3D, varias cámaras** (`js/45-gl3d.js`, `MC.Camara` perfiles `cenital`, `oblicua` y `maqueta`):
+   - la cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo 3D;
+   - sin GPU usan su **respaldo 2D**, que es el mismo mundo con el mismo encuadre.
+2. **Encuadre igual en 2D y en 3D:** la distancia de la cámara aérea sale del zoom en px por metro y del alto del lienzo, así que cambiar de cámara no salta.
+3. **Inclinación según el zoom:** de lejos la cámara queda más cenital y de cerca más oblicua (se ven las fachadas).
+4. **Topes de zoom:** de 2,6 a 22 px por metro en Mandados.
+5. **Cámara continua:** pellizcar hasta el tope de cerca pasa a la vista detrás del jugador, y alejarse desde ahí vuelve a la cenital.
+6. **Mapa grande:** para ver todo está el mapa (se toca el minimapa), no alejar el mundo vivo.
+7. **Radio de vista y niebla:** las cámaras aéreas cargan solo hasta 2,3 veces su distancia, con niebla entre 1,55 y 2,25 veces. Lo que se carga no se ve llegar.
+8. **Fachadas:**
+   - zócalo de color (en Guatapé);
+   - ventanas con marco y vidrio, algunas encendidas de noche;
+   - puerta en el muro más largo;
+   - balcones con baranda y cornisa;
+   - techo con alero, o plancha con pretil y tanque negro.
+9. **Detalle por distancia (LOD):** las fachadas solo cerca; lejos, el prisma.
+10. **Árboles low-poly:** los **mismos** de las vistas 2D (`MC.Arboleda`), por especie: guayacanes florecidos, ceiba ancha, mango denso y monte cónico.
+11. **Vehículos y gente:** carros con cabina, vidrio, ruedas y luces; busetas con franja de ventanas; motos y bicis; personas con cabeza y pelo.
+12. **Rayos X del jugador:** si un árbol o un techo lo tapan, se ve igual.
+13. **Artilugios físicos** (`MC.Objetos`):
+    - conos, balones, canecas, cajas y vallas;
+    - impulso según la masa de quien choca;
+    - saltan, caen, ruedan con roce, chocan con los muros y se duermen quietos;
+    - se ven en todas las cámaras, y en Mandados ya están sembrados.
+14. **Jerarquía clara:** una sola **cámara de juego** y la de detrás del jugador. Lo demás (otras vistas, pixel, filtros de estilo y arte) va en «Más vistas y filtros».
+
+### 3. Mecánicas y jugabilidades recopiladas para lo que sigue
+| Idea | De dónde | Cómo encaja |
+|---|---|---|
+| Persecución con policía o rivales que **estrechan** el camino | Reckless Getaway, Pako, #DRIVE | `MC.IA` con pilotos que cortan el paso; la cámara ya tiene `persecucion`. |
+| **Casi choques** que dan puntos o turbo | #DRIVE (pasar rozando) | Distancia mínima al tráfico por cuadro; premio y un leve *hitstop*. |
+| **Destrucción ligera** del mobiliario | Reckless Getaway (vallas, postes) | `MC.Objetos` ya tiene vallas, conos y canecas. Faltan postes, bolardos y rejas de los datos del mapa. |
+| **Saltos con rampa** y cámara lenta al aterrizar | GTA, Burnout | El cuerpo ya tiene `z` y el evento `aterriza`. Falta la rampa como objeto y el *slow-mo* ya existente en `MC._pausaImpacto`. |
+| **Carga por sectores con guardado** | GTA, C‑M22 de Codex | `MC.GuardadoSectores` (2.9.1) más las regiones de `VistaGL`: los objetos movidos se guardan por sector. |
+| **Siluetas lejanas** (*impostores*) | GTA San Andreas (LOD) | Edificios lejanos como cajas sin fachada (ya está); faltan las siluetas de cerros y torres en el horizonte de la vista detrás del jugador. |
+| **Desenfoque de maqueta** (*tilt-shift*) | HD‑2D | Un pase con profundidad en WebGL; encargo para Codex. |
+
+### Fuentes
+- [HD‑2D (Wikipedia)](https://en.wikipedia.org/wiki/HD-2D) y [Octopath Traveler II, entrevista de Unreal Engine](https://www.unrealengine.com/developer-interviews/octopath-traveler-ii-builds-a-bigger-bolder-world-in-its-stunning-hd-2d-style)
+- [#DRIVE en App Store](https://apps.apple.com/us/app/drive/id1366180154?l=pt-BR) y [TouchArcade](https://toucharcade.com/games/drive)
+- [Reckless Getaway 2 en App Store](https://apps.apple.com/us/app/id1190553787), [reseña de Reckless Getaway (Pocket Gamer)](https://www.pocketgamer.com/reckless-getaway/review-4216/) y [Malavida](https://malavida.com/en/soft/reckless-getaway-2/iphone)
+- GTA San Andreas, de la comunidad y no oficial: [Project2DFX](https://libertycity.net/files/gta-san-andreas/140501-project2dfx-v4.3.html), [guía de modding](https://gtacommunitydocs.vercel.app/docs/san-andreas-modding-guide/graphics/) y [MTA: distancias LOD](https://wiki.multitheftauto.com/wiki/EngineSetModelLODDistance?oldid=82240)
+- Cámaras: [Cinemachine, guía de seguimiento](https://uhiyama-lab.com/en/notes/unity/unity-cinemachine-camera-guide/), [How to Make a Good 2D Camera (GMTK)](https://gmtk.substack.com/p/how-to-make-a-good-2d-camera) y [cámara de un juego de carreras visto desde arriba (Game Developer)](https://gamedeveloper.com/game-platforms/let-s-talk-about-top-down-view-camera-system-for-a-racing-game)
 
 
 ---
@@ -842,7 +938,7 @@ El catálogo completo, con la trazabilidad de los enlaces, está en `docs/SKILLS
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **2.10.0** · 20‑nov‑2026 · **134 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ### Resumen
 - **Hechos:** 76 pedidos ✅.
@@ -997,6 +1093,22 @@ Versión **2.10.0** · 20‑nov‑2026 · **134 pruebas en verde** (`node motor.
 | **Skills y plugins de los videos** | Hecho | <ul><li>`skills-externas.json`, `node motor.mjs skills`, `.claude/settings.json` en los 4 repositorios y la skill `motor-city-skills-externas`.</li><li>El detalle de los 11 enlaces está en `docs/INSPIRACION-VISUAL.md` §1.2.</li></ul> |
 | **Seguir desarrollando** | Hecho | **`MC.Publico`**, el público simulado (idea de MiroFish), con `node motor.mjs publico` y su prueba. |
 | **Nuevas peticiones para Gemini y ChatGPT** | Hecho | <ul><li>Gemini: G‑H10 a G‑H13.</li><li>ChatGPT y Codex: C‑M23 (red vial), C‑M24 (ayuda para niños), C‑M25 (portada con Hallmark) y C‑A12 (tráiler con HyperFrames).</li><li>Todo en `TAREAS-IA.md`.</li></ul> |
+
+### 13. «Sigue básico: mundo único híbrido, cámara de #DRIVE y Reckless Getaway, tope de zoom, radio de vista, fachadas y artilugios físicos» (3.0, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Revisar si Gemini y ChatGPT publicaron algo | Hecho | No subieron nada nuevo después de la 2.9.1. |
+| Investigar las cámaras de referencia y GTA San Andreas | Hecho | `docs/INVESTIGACION-CAMARA.md` |
+| Que la cenital, la maqueta y la 3D sean el mismo mundo | Hecho | Cámaras aéreas sobre el mundo 3D (`js/45-gl3d.js`, perfiles de `MC.Camara`), con respaldo 2D sin GPU. |
+| Lo que estaba en 2D y debía ser 3D | Hecho | Árboles low-poly, que son los mismos de la 2D; el suelo 3D sin árboles ni techos pintados; carros y personas con volumen. |
+| Moverse en 3 dimensiones y artilugios físicos | Hecho (base) | El cuerpo ya tenía altura, saltos y buceo. Ahora están `MC.Objetos` (conos, balones, canecas, cajas y vallas). Rampas y destrucción quedan para Codex (C‑M29). |
+| Ni tan cerca ni tan lejos, con tope; mejorar el ángulo | Hecho | Zoom de 2,6 a 22 px por metro; la cámara se inclina según el zoom; cámara continua hasta la vista detrás del jugador. |
+| Un mapa en vez de alejar todo | Hecho | El mapa grande, al tocar el minimapa. |
+| Radio de vista y carga que no se note | Hecho | Radio y niebla por cámara; las regiones se cargan por cercanía. |
+| Fachadas | Hecho | Zócalo, ventanas, puerta, balcones, cornisa, alero, pretil y tanque. |
+| Jerarquía de estilos y vistas | Hecho | Una cámara de juego y «Más vistas y filtros». |
+| Fluidez | Hecho | 2.11: la densidad dinámica y la capa de suelo. |
+| Pedidos nuevos para Gemini y ChatGPT | Hecho | G‑H14 a G‑H17, y C‑M26 a C‑M29, C‑A13 y C‑A14, en `TAREAS-IA.md`. |
 
 
 
@@ -1153,7 +1265,7 @@ console.log(vuelta.obtener(70, 20, id));
 # ANEXO B. Contrato técnico (`MOTOR.md`)
 
 
-**Versión 2.10.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 3.0.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -1374,6 +1486,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **3.0.0** | 20‑nov‑2026 | **Un solo mundo 3D, varias cámaras:**<ul><li>`js/45-gl3d.js`: `Malla.triF/quadF/esfera/cil/cajaF/arbol3d/edificio3d/carro3d/persona3d`;</li><li>`CAM_PERFIL` `cenital`, `oblicua` y `maqueta` (`fijo`, `pitchCerca`, `yaw45`) y `Camara._aereo`, `persecucion`, `pantalla`, evento `zoomTope`;</li><li>`VISTAS` aéreas `tipo:'gl'` con `respaldo` 2D; `Vistas.gl3d()`, `efectiva()` y `aPantalla(E, x, y, z)`;</li><li>radio y niebla por cámara y rayos X del jugador en `VistaGL`;</li><li>`ui.abrirMapa(vistas, M, puntos, yo)`;</li><li>`js/32-objetos.js`: `MC.Objetos` (`poner`, `sembrar`, `actualizar`, `malla`, `dibujar2D`) y evento `golpe`.</li></ul>2.11: `MC.DensidadLienzo`, capa de suelo de `Vista2D` y `Estilo._imprimirGPU/_imprimirCPU` medidos. |
 | **2.10.0** | 20‑nov‑2026 | <ul><li>`MC.Publico` (`js/92-publico.js`: `piloto(perfil, op)`, `informe(medidas)`, `lista()`, `PERFILES`) y `herramientas/publico.mjs`.</li><li>`Red.caminoEntre(inicios, metas)`; `Manejo.rutaA` sale por el extremo que conviene.</li><li>`Estilo._imprimirGPU`, `_filtros()` y `_umbral()`: cómic y 1 bit sin leer la pantalla, con tramado anclado al desplazamiento del mundo.</li><li>Respaldo de `toSorted`, `toReversed` y `Promise.withResolvers` en `00-nucleo.js`.</li><li>`herramientas/aligerar_arte.py` y `herramientas/skills-externas.mjs` (`node motor.mjs skills`).</li><li>Mandados: `MANDADOS.piloto`.</li></ul> |
 | **2.9.0** | 20‑nov‑2026 | Unión de la 2.8 (Claude) con la 2.7.1 de Codex:<ul><li>`arte/chatgpt/` y `vehiculoArriba` en las pieles;</li><li>`textura` en las losas y `Vista2D.charcos`;</li><li>la capa `agua` en el MC4 (`herramientas/precalcular-agua.mjs`);</li><li>el estilo `unbit` (`Estilo.imprimir`, `ruidoAzul`);</li><li>la caché de fachadas en la maqueta;</li><li>`js/90-three.js` y `adaptadores/godot` y `adaptadores/three`.</li></ul>Los faros también salen con el vehículo de piel, y la cubierta sobre columnas pasa por la caché. 132 pruebas. |
 | **2.8.0** | 20‑nov‑2026 | **De la entrega maestra de referencias** (`docs/referencias/`):<ul><li>`MC.Vida`: `palomas` y evento `fauna`, `marcas` (huellas por superficie), `suelo(E, x, y)`, `piso(D)` y `emitir` escalado por `MC.opciones.particulas`;</li><li>`MC.opciones` (`sacudida` y `particulas`; `Camara.sacudir` lo respeta);</li><li>`Vista2D.faros` y las luces de freno del jugador;</li><li>los estilos `vintage` (`tinte`, `final: 'vineta'`), `crt` (`final: 'crt'`) y `termica` (`gradiente`);</li><li>`js/90-telemetria.js` (`MC.Telemetria`: `registro`, `percentil`, `resumen`, `linea`);</li><li>`js/91-contratos.js` (`MC.Contratos.validar`) y `schemas/` (escena, puente y entidad, `schema_version: 1`);</li><li>`schema_version` en `Exportar.escena` y `Puente.instantanea`.</li></ul>125 pruebas. |
@@ -2979,6 +3092,47 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 20‑nov‑2026 · 3.0.0 · Un solo mundo 3D y varias cámaras (Claude Code)
+**Pedido:** el autor probó y lo sintió básico:
+- las dimensiones mal ideadas;
+- cosas en 2D que debían ser 3D;
+- vistas como menús separados;
+- casas sin fachada;
+- cámara muy aérea y sin tope;
+- todo el mundo cargado a la vez.
+
+Pidió investigar #DRIVE, Pako Forever, Getaway, Reckless Getaway 2 y la distancia de GTA San Andreas. La investigación está en `docs/INVESTIGACION-CAMARA.md`.
+
+**Lo que se hizo:**
+1. **Mundo único 3D** (`js/45-gl3d.js`):
+   - edificios con fachada: zócalo, ventanas con marco y vidrio encendidas de noche, puerta, balcones, cornisa, alero, pretil y tanque;
+   - árboles low-poly que son los MISMOS de las vistas 2D (`MC.Arboleda`);
+   - carros, busetas, motos y personas con detalle;
+   - el suelo en 3D ya no trae árboles ni techos pintados.
+2. **Cámaras aéreas sobre ese mundo** (`MC.Camara` perfiles `cenital`, `oblicua` y `maqueta`):
+   - el mismo encuadre que la 2D;
+   - más oblicua de cerca;
+   - mirada adelante;
+   - `persecucion` (se aleja, se inclina y se mece) y trauma.
+   Sin GPU caen a su respaldo 2D.
+3. **Periferia definida:** radio de carga y niebla según la cámara. Lo que se carga no se ve llegar.
+4. **Topes de zoom, cámara continua y mapa grande:**
+   - el zoom va de 2,6 a 22 px por metro;
+   - al tope de cerca pasa a la vista detrás del jugador;
+   - para ver todo, el mapa al tocar el minimapa.
+5. **Rayos X del jugador** en las cámaras aéreas.
+6. **Artilugios físicos** (`js/32-objetos.js`, `MC.Objetos`): conos, balones, canecas, cajas y vallas, con su prueba.
+7. **Jerarquía:** una cámara de juego y la de detrás del jugador. Lo demás va en «Más vistas y filtros».
+
+**Fluidez** (2.11, incluida aquí):
+- `MC.DensidadLienzo`;
+- la capa de suelo de la 2D;
+- `Estilo.imprimir` medido en cada aparato.
+
+Las vistas quedan entre 16,6 y 18 ms de mediana en un celular simulado sin GPU.
+
+**Pruebas:** 137 en verde. Hay pruebas nuevas de la densidad dinámica y de los objetos físicos.
 
 ### 20‑nov‑2026 · 2.10.0 · Todo unido, más liviano y con las skills de los videos (Claude Code)
 **Pedido:** «retoma y continúa, revisa los repositorios ya actualizados, une todo, mejora todo y optimiza todo, y añade nuevas peticiones para Gemini y ChatGPT». Llegaron 11 enlaces, y después «añade las skills y plugins de los videos y sigue desarrollando».

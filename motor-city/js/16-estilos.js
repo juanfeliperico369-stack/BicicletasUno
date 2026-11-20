@@ -114,16 +114,27 @@ const Estilo = {
   /* pantallas grandes (DPR 2: 1,4 millones de píxeles): el pase por píxel va a media resolución, 4 veces menos que leer y escribir.
      1 bit: el tramado queda de 1 px CSS (el mismo aspecto). Cómic: solo se calcula la máscara de puntos y se multiplica encima,
      así la imagen conserva todo su detalle. Medido en la prueba del celular: de ~30 ms a ~8 ms por cuadro. */
+  /* 2.11: cada aparato elige su camino midiendo. Con GPU de verdad los filtros no frenan (el trabajo queda en la GPU);
+     en un lienzo por software se ejecutan ahí mismo y el camino por píxel a media resolución sale más barato
+     (medido sin GPU: 1 bit en la maqueta, 22 ms con filtros contra ~6 ms por píxel). Se alternan los dos 12 cuadros,
+     se queda el más rápido y se vuelve a medir cada ~20 s. Por estilo (cómic o 1 bit), porque cuestan distinto. */
   imprimir(g, W, H, V, binario) {
-    const s = W * H > 400000 ? .5 : 1;
-    if (W * H > 4096 && this._filtros()) return this._imprimirGPU(g, W, H, V, binario, s);
+    const s = W * H > 400000 ? .5 : 1, puedeGPU = W * H > 4096 && this._filtros();
+    if (!puedeGPU) return this._imprimirCPU(g, W, H, V, binario, s);
+    const M = (this._camino ||= {})[binario ? 'b' : 'c'] ||= { n: 0, gpu: null, cpu: null };
+    const usaGPU = M.n < 12 ? M.n % 2 === 0 : M.gpu <= M.cpu, t0 = MC.ahora();
+    if (usaGPU) this._imprimirGPU(g, W, H, V, binario, s); else this._imprimirCPU(g, W, H, V, binario, s);
+    const ms = MC.ahora() - t0, k = usaGPU ? 'gpu' : 'cpu'; M[k] = M[k] == null ? ms : M[k] * .8 + ms * .2; if (++M.n > 1200) { M.n = 0; M.gpu = M.cpu = null; }
+    this.caminoImprimir = usaGPU ? 'filtros' : 'píxel';
+  },
+  _imprimirCPU(g, W, H, V, binario, s) {
     if (s === 1) return this._imprimir(g, W, H, V, binario, false);
     const w = Math.ceil(W * s), h = Math.ceil(H * s); let c = this._imp;
     if (!c || c.width !== w || c.height !== h) { c = this._imp = lienzo(w, h); this._impG = c && c.getContext('2d', { willReadFrequently: true }); }
     const q = this._impG; if (!q) return this._imprimir(g, W, H, V, binario, false);
     q.globalCompositeOperation = 'copy'; q.imageSmoothingEnabled = true; q.drawImage(g.canvas, 0, 0, w, h); q.globalCompositeOperation = 'source-over';
     this._imprimir(q, w, h, { a: V.a * s, b: V.b * s, c: V.c * s, d: V.d * s, e: V.e * s, f: V.f * s, z: V.z * s }, binario, !binario);
-    g.save(); g.imageSmoothingEnabled = !binario; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(c, 0, 0, W, H); g.restore();
+    g.save(); g.imageSmoothingEnabled = false; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(c, 0, 0, W, H); g.restore();   // igual que el camino con filtros
   },
   /* Sin leer la pantalla (lo que más cuesta: obliga a terminar todo el dibujo pendiente): con los filtros del lienzo.
      gris(imagen)·½ + patrón de umbrales·½ y luego contraste extremo = blanco si la luz pasa el umbral de esa celda, negro si no.

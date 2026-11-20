@@ -20,7 +20,7 @@ const Vista2D = {
   dibujar(g, W, H, E, op = {}) {
     const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw); Ondas.presupuesto = 12;
     /* matriz mundo → pantalla (sin altura) */
-    const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
+    const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, SN = op.pixel ? (v => v) : Math.round, e = SN(W / 2 - a * C.x - c * C.y), f = SN(H / 2 + oy - b * C.x - d * C.y);   // de lado, el piso baja: más cielo y menos tierra. 2.11: el desplazamiento va en píxeles enteros (la capa de suelo se corre sin temblar contra los objetos)
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
     const inv = (sx, sy) => { const det = a * d - b * c, X = sx - e, Y = sy - f; return [(d * X - c * Y) / det, (-b * X + a * Y) / det]; };
     E._pr = pr; E._vista = { modo, P, W, H, z, a, b, c, d, e, f };
@@ -32,7 +32,10 @@ const Vista2D = {
     /* ---------- suelo ---------- */
     const sinTechos = modo !== 'cenital', pixel = !!op.pixel, dePie = sinTechos && z >= ((E.calidad ?? 1) >= .9 ? 3.2 : 4.2) && op.arboles !== false,   /* árboles de pie de cerca; con calidad media, desde un poco más cerca */ Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
     let res = z; const RES = [.0625, .125, .25, .5, 1, 2, 3, 4, 6]; res = RES.find(r => r >= res * (pixel ? .9 : .7)) || 6;   /* z ya está en píxeles del lienzo por metro; de cerca, losas de hasta 6 px/m */ if (Ls === E.losasLejos) res = Math.min(res, .25);
-    g.save(); g.fillStyle = Estilo.col('#5e8c4a'); g.fillRect(0, 0, W, H);
+    const S = this._suelo ||= { cv: null, clave: '', ult: '', estable: 0, e: 0, f: 0, ver: -1, faltan: 1 }, mS = Math.round(Math.min(W, H) * .35), fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0) | (E.clima?.lluvia > .12 ? 4 : 0);
+    const claveS = [W + 2 * mS, H + 2 * mS, a, b, c, d, res, fl, MC.estilo, MC.arte.activa, Ls === E.losasLejos ? 1 : 0, Estilo.col('#5e8c4a')].join('|'); S.estable = claveS === S.ult ? S.estable + 1 : 0; S.ult = claveS;
+    const usaCapa = !pixel && !E._franja && MC.opciones.capaSuelo !== false && W * H > 40000 && S.estable >= 3;   // si gira o hace zoom seguido, mejor pintar directo
+    g.save(); if (!usaCapa) { g.fillStyle = Estilo.col('#5e8c4a'); g.fillRect(0, 0, W, H); }
     if (E._franja) {   /* de lado: cielo arriba de la franja y el corte de la tierra abajo (casa de muñecas) */
       const Rp = E._franja.Rp, yF = H / 2 + oy - Rp * z * P.k, yC = H / 2 + oy + Rp * z * P.k, ES0 = Estilo.p, cie = ES0.cielo ? { top: mez3(ES0.cielo[0], (E.cielo || {}).top || ES0.cielo[0], .25), hor: mez3(ES0.cielo[1], (E.cielo || {}).hor || ES0.cielo[1], .25) } : (E.cielo || { top: [.4, .6, .9], hor: [.8, .88, .95] });   /* el cielo del estilo (de Shinkai en el anime), con algo de la hora */
       const gs = g.createLinearGradient(0, 0, 0, Math.max(1, yF)); gs.addColorStop(0, css3(cie.top)); gs.addColorStop(1, css3(cie.hor)); g.fillStyle = gs; g.fillRect(0, 0, W, Math.max(0, yF));
@@ -40,14 +43,32 @@ const Vista2D = {
       g.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 40; i++) g.fillRect(h2(i, 1, 9) * W, yC + 6 + h2(i, 2, 9) * (H - yC), 2 + h2(i, 3, 9) * 4, 2);
       g.beginPath(); g.rect(0, yF, W, yC - yF); g.clip();
     }
-    g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
-    const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
-    for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
-      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0) | (E.clima?.lluvia > .12 ? 4 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
-      if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
-      if (L) g.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
-    }
-    g.restore();
+    let faltan = 0;
+    const pintarSuelo = (gg, ox, oy, X0, Y0, X1, Y1) => {   // las losas de la caja [X0..X1]×[Y0..Y1] con la matriz corrida (ox, oy)
+      gg.setTransform(a, b, c, d, e + ox, f + oy); gg.imageSmoothingEnabled = !pixel; let faltan = 0;   // (las que faltan en esta pasada)
+      const gx0 = Math.floor(X0 / Ld), gx1 = Math.floor(X1 / Ld), gy0 = Math.floor(Y0 / Ld), gy1 = Math.floor(Y1 / Ld);
+      for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
+        let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
+        if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
+        if (L) gg.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
+      }
+      return faltan;
+    };
+    /* 2.11: CAPA DE SUELO. El suelo se pinta una vez en una capa con margen y, mientras la cámara solo se desplace (mismo zoom,
+       giro, estilo, arte, lluvia y tamaño), cada cuadro se corre con un blit en píxeles enteros: sin giro ni escala, que es lo
+       que más cuesta pintar en la maqueta. Se rehace si faltan losas, si cambió algo o si la cámara salió del margen. */
+    if (usaCapa) {
+      const m = mS, CW = W + 2 * m, CH = H + 2 * m, clave = claveS, dx = e - S.e, dy = f - S.f;
+      if (!S.cv || S.cv.width !== CW || S.cv.height !== CH) { S.cv = lienzo(CW, CH); S.clave = ''; }
+      if (S.cv && (S.clave !== clave || S.faltan > 0 || S.ver !== Ls.version || Math.abs(dx) > m - 2 || Math.abs(dy) > m - 2)) {
+        const q = S.cv.getContext('2d'); q.setTransform(1, 0, 0, 1, 0, 0); q.fillStyle = Estilo.col('#5e8c4a'); q.fillRect(0, 0, CW, CH);
+        let X0 = 1e9, Y0 = 1e9, X1 = -1e9, Y1 = -1e9; for (const [sx, sy] of [[-m, -m], [W + m, -m], [-m, H + m], [W + m, H + m]]) { const [wx, wy] = inv(sx, sy); X0 = Math.min(X0, wx); X1 = Math.max(X1, wx); Y0 = Math.min(Y0, wy); Y1 = Math.max(Y1, wy); }
+        if (P.k < .55) { const RR = Math.max(W, H) / z * .6 + 60 + m / z; X0 = Math.max(X0, C.x - RR); X1 = Math.min(X1, C.x + RR); Y0 = Math.max(Y0, C.y - RR); Y1 = Math.min(Y1, C.y + RR); }
+        faltan = S.faltan = pintarSuelo(q, m, m, X0, Y0, X1, Y1); S.clave = clave; S.e = e; S.f = f; S.ver = Ls.version; this.capasSuelo = (this.capasSuelo || 0) + 1;
+      }
+      if (S.cv) { g.drawImage(S.cv, e - S.e - m, f - S.f - m); g.restore(); }
+      else { g.fillStyle = Estilo.col('#5e8c4a'); g.fillRect(0, 0, W, H); faltan = pintarSuelo(g, 0, 0, x0, y0, x1, y1); g.restore(); }
+    } else { faltan = pintarSuelo(g, 0, 0, x0, y0, x1, y1); g.restore(); }
     const noche0 = E.cielo ? E.cielo.noche : 0; if (noche0 > .02) { g.fillStyle = 'rgba(8,18,52,' + (noche0 * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     /* ---------- lo que se levanta: edificios, pasos elevados, vehículos y gente, en orden de profundidad ---------- */
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;

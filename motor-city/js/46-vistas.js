@@ -9,9 +9,11 @@
    - Calidad automática: mide el tiempo de cada cuadro y sube o baja el detalle (tráfico, edificios, resolución).
    ===================================================================== */
 const VISTAS = [
-  { id: 'cenital', n: 'Cenital', icon: '🗺️', tipo: '2d', modo: 'cenital', control: 'mundo' },
-  { id: 'ciudad3d', n: 'Ciudad 3D', icon: '🏙️', tipo: '2d', modo: 'oblicua', control: 'mundo' },
-  { id: 'maqueta', n: 'Maqueta 2:1', icon: '🧊', tipo: '2d', modo: 'maqueta', control: 'mundo' },
+  /* 3.0: un solo mundo 3D y varias cámaras. Cenital, ciudad y maqueta son cámaras aéreas sobre el mundo 3D; si el aparato
+     no tiene GPU (WebGL por software o ninguno), se dibujan con su respaldo 2D (el mismo mundo, el mismo encuadre). */
+  { id: 'cenital', n: 'Juego (cenital 3D)', icon: '🗺️', tipo: 'gl', perfil: 'cenital', respaldo: 'cenital', control: 'mundo' },
+  { id: 'ciudad3d', n: 'Ciudad 3D', icon: '🏙️', tipo: 'gl', perfil: 'oblicua', respaldo: 'oblicua', control: 'mundo' },
+  { id: 'maqueta', n: 'Maqueta', icon: '🧊', tipo: 'gl', perfil: 'maqueta', respaldo: 'maqueta', control: 'mundo' },
   { id: 'lateral', n: 'Lateral', icon: '↔️', tipo: '2d', modo: 'lateral', control: 'mundo' },
   { id: 'pano', n: 'Panorámica', icon: '🎬', tipo: 'pano', control: 'pano' },
   { id: 'tercera', n: 'Tercera persona', icon: '🎮', tipo: 'gl', perfil: 'tercera', control: 'volante' },
@@ -34,14 +36,19 @@ class Vistas {
     let v = VISTAS.find(q => q.id === id) || VISTAS[0];
     if (v === this.actual) return v; this.anterior = this.actual; this.actual = v;
     if (this._ultimo) { this.fundido = { cv: this._copia(this._ultimo), t: 0 }; }
-    if (E && E.camara) { if (v.perfil) E.camara.usarPerfil(v.perfil); if (v.modo === 'oblicua' && (E.camara.pitch < .3 || E.camara.pitch > 1.2)) E.camara.pitch = .62; if (v.id === 'maqueta') E.camara.zoom = Math.max(E.camara.zoom, 1.2); if (v.id === 'lateral') { E.camara.pitch = 1.38; E.camara.girarA(Math.round(E.camara.yaw / (Math.PI / 2)) * Math.PI / 2); E.camara.zoom = Math.max(E.camara.zoom, 2); } }
+    if (E && E.camara) { if (v.perfil) E.camara.usarPerfil(v.perfil); if ((v.modo || v.respaldo) === 'oblicua' && (E.camara.pitch < .3 || E.camara.pitch > 1.2)) E.camara.pitch = .62; if (v.id === 'maqueta') E.camara.zoom = Math.max(E.camara.zoom, 1.2); if (v.id === 'lateral') { E.camara.pitch = 1.38; E.camara.girarA(Math.round(E.camara.yaw / (Math.PI / 2)) * Math.PI / 2); E.camara.zoom = Math.max(E.camara.zoom, 2); } }
     MC.emit('vista', v); return v;
   }
   siguiente(E, paso = 1) { const L = this.lista().filter(v => v.disponible), i = L.findIndex(v => v.id === this.actual.id); return this.usar(L[(i + paso + L.length) % L.length].id, E); }
   _copia(src) { const c = lienzo(src.width, src.height); if (c) c.getContext('2d').drawImage(src, 0, 0); return c; }
   /* dibuja la escena E en el contexto g (W × H en px de pantalla) */
+  /* ¿hay 3D de verdad (GPU)? Si no, las cámaras aéreas usan su respaldo 2D. motor3d: 'auto' | 'gl' | 'raster' | '2d' */
+  gl3d() { return this.motor3d !== '2d' && this.motor3d !== 'raster' && this.hayGL() && !this.usaRaster(); }
+  efectiva() { const v = this.actual; return v.respaldo && !this.gl3d() ? (v._r2d ||= Object.assign({}, v, { tipo: '2d', modo: v.respaldo })) : v; }
+  /* metros → pantalla con la vista que esté (2D, pixel o 3D): para la flecha al objetivo, globos y etiquetas */
+  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual; if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, z, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
   dibujar(g, W, H, E, dt = 1 / 60) {
-    const t0 = MC.ahora(), v = this.actual, px = this.pixel; E.losas = this.losas; E.losasLejos = this.losasLejos; E.calidad = this.calidad;
+    const t0 = MC.ahora(), v = this._ef = this.efectiva(), px = this.pixel; this._W = W; this._H = H; if (E.camara) { E.camara.pantalla = [W, H]; if (this.actual.perfil && E.camara.perfil !== this.actual.perfil) E.camara.usarPerfil(this.actual.perfil); } E.losas = this.losas; E.losasLejos = this.losasLejos; E.calidad = this.calidad;
     let dst = g, w = W, h = H;
     if (px) { w = Math.max(80, Math.round(W / this.escalaPixel)); h = Math.max(60, Math.round(H / this.escalaPixel)); if (!this._buf || this._buf.width !== w || this._buf.height !== h) this._buf = lienzo(w, h); dst = this._buf.getContext('2d'); }
     const zoomReal = E.camara.zoom; if (px) E.camara.zoom = zoomReal / this.escalaPixel;

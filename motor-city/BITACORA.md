@@ -1,5 +1,46 @@
 # Bitácora de Motor City
 
+## 20‑nov‑2026 · 3.0.0 · Un solo mundo 3D y varias cámaras (Claude Code)
+**Pedido:** el autor probó y lo sintió básico:
+- las dimensiones mal ideadas;
+- cosas en 2D que debían ser 3D;
+- vistas como menús separados;
+- casas sin fachada;
+- cámara muy aérea y sin tope;
+- todo el mundo cargado a la vez.
+
+Pidió investigar #DRIVE, Pako Forever, Getaway, Reckless Getaway 2 y la distancia de GTA San Andreas. La investigación está en `docs/INVESTIGACION-CAMARA.md`.
+
+**Lo que se hizo:**
+1. **Mundo único 3D** (`js/45-gl3d.js`):
+   - edificios con fachada: zócalo, ventanas con marco y vidrio encendidas de noche, puerta, balcones, cornisa, alero, pretil y tanque;
+   - árboles low-poly que son los MISMOS de las vistas 2D (`MC.Arboleda`);
+   - carros, busetas, motos y personas con detalle;
+   - el suelo en 3D ya no trae árboles ni techos pintados.
+2. **Cámaras aéreas sobre ese mundo** (`MC.Camara` perfiles `cenital`, `oblicua` y `maqueta`):
+   - el mismo encuadre que la 2D;
+   - más oblicua de cerca;
+   - mirada adelante;
+   - `persecucion` (se aleja, se inclina y se mece) y trauma.
+   Sin GPU caen a su respaldo 2D.
+3. **Periferia definida:** radio de carga y niebla según la cámara. Lo que se carga no se ve llegar.
+4. **Topes de zoom, cámara continua y mapa grande:**
+   - el zoom va de 2,6 a 22 px por metro;
+   - al tope de cerca pasa a la vista detrás del jugador;
+   - para ver todo, el mapa al tocar el minimapa.
+5. **Rayos X del jugador** en las cámaras aéreas.
+6. **Artilugios físicos** (`js/32-objetos.js`, `MC.Objetos`): conos, balones, canecas, cajas y vallas, con su prueba.
+7. **Jerarquía:** una cámara de juego y la de detrás del jugador. Lo demás va en «Más vistas y filtros».
+
+**Fluidez** (2.11, incluida aquí):
+- `MC.DensidadLienzo`;
+- la capa de suelo de la 2D;
+- `Estilo.imprimir` medido en cada aparato.
+
+Las vistas quedan entre 16,6 y 18 ms de mediana en un celular simulado sin GPU.
+
+**Pruebas:** 137 en verde. Hay pruebas nuevas de la densidad dinámica y de los objetos físicos.
+
 ## 20‑nov‑2026 · 2.10.0 · Todo unido, más liviano y con las skills de los videos (Claude Code)
 **Pedido:** «retoma y continúa, revisa los repositorios ya actualizados, une todo, mejora todo y optimiza todo, y añade nuevas peticiones para Gemini y ChatGPT». Llegaron 11 enlaces, y después «añade las skills y plugins de los videos y sigue desarrollando».
 

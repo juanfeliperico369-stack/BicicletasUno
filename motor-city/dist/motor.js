@@ -1,4 +1,4 @@
-/* Motor City 2.10.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 3.0.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '2.10.0',
+  version: '3.0.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -497,6 +497,36 @@ class ResDinamica {
   }
 }
 
+/* DENSIDAD DINÁMICA DEL LIENZO (2.11). En 2D lo caro es pintar píxeles (el reloj de JS no lo ve: el cuadro tarda 2 ms en JS
+   y 27 ms en total en la maqueta con densidad 2). Se mide el tiempo REAL entre cuadros y se elige la densidad del lienzo
+   (píxeles del lienzo por píxel CSS). El juego redimensiona su lienzo y multiplica el zoom de la cámara por la razón.
+   Medido en Chromium sin GPU, celular 412×860: maqueta con densidad 2 → 1,5 pasa de 21–27 ms a 16,7 ms; el cómic, de 35 a 19.
+   Reglas: escalones fijos; baja tras ~0,8 s por encima de 21 ms; solo se queda abajo si de verdad mejoró (si no, el cuello
+   no es pintar o la pantalla va a 30 Hz, y vuelve con un «piso» de 60 s); sube tras 4 s holgados; si al subir se pone lento
+   enseguida, ese escalón queda de «techo» 30 s. Un estado por clave (vista), porque cada vista cuesta distinto.
+   Uso: const D = new MC.DensidadLienzo({ max: Math.min(2, devicePixelRatio) });  cada cuadro: const d = D.medir(dt, vista.id); */
+class DensidadLienzo {
+  constructor(op = {}) { this.max = op.max || 1; this.min = op.min ?? .75; this.activa = op.activa !== false; this.pasos = this._pasos(); this.R = {}; this.d = this.max; }
+  _pasos() { const L = []; for (const m of DensidadLienzo.FACTORES) { const d = Math.max(this.min, Math.round(this.max * m * 100) / 100); if (!L.includes(d)) L.push(d); } return L; }
+  ponerMax(max) { if (Math.abs(max - this.max) < 1e-6) return; this.max = max; this.pasos = this._pasos(); this.R = {}; }
+  medir(dt, clave = 'v') {
+    const P = this.pasos; if (!this.activa) return (this.d = P[0]);
+    const R = this.R[clave] ||= { i: 0, techo: 0, techoT: 0, piso: 99, pisoT: 0, ema: null, lento: 0, holgado: 0, prueba: null, subio: 99 }, ms = dt * 1000;
+    if (!(ms > 0) || ms > 250) return (this.d = P[R.i]);   // pestaña en pausa o cuadro perdido: no cuenta
+    R.ema = R.ema == null ? ms : R.ema * .9 + ms * .1; R.subio += dt;
+    if (R.techo > 0 && (R.techoT -= dt) <= 0) { R.techo--; R.techoT = 30; } if (R.piso < 99 && (R.pisoT -= dt) <= 0) R.piso = 99;
+    if (R.prueba && (R.prueba.t += dt) > .6) {   // el primer medio segundo se hornean las losas nuevas: no cuenta
+      const Q = R.prueba; Q.m = Q.m == null ? ms : Q.m * .9 + ms * .1;
+      if (Q.t > 2.2) { if (Q.m > Q.antes * .93) { R.i = Q.i0; R.piso = R.i; R.pisoT = 60; } R.ema = Q.m; R.prueba = null; }
+    }
+    if (R.ema > 21) { R.lento += dt; R.holgado = 0; } else if (R.ema < 18.2) { R.holgado += dt; R.lento = Math.max(0, R.lento - dt); } else { R.lento = Math.max(0, R.lento - dt * .5); R.holgado = 0; }
+    if (!R.prueba && R.lento > .8 && R.i < Math.min(P.length - 1, R.piso)) { if (R.subio < 2.5) { R.techo = R.i + 1; R.techoT = 30; } R.prueba = { i0: R.i, antes: R.ema, t: 0, m: null }; R.i++; R.lento = 0; }
+    else if (!R.prueba && R.holgado > 4 && R.i > R.techo) { R.i--; R.holgado = 0; R.subio = 0; }
+    return (this.d = P[R.i]);
+  }
+}
+DensidadLienzo.FACTORES = [1, .75, .62, .5];
+
 /* bucle de juego de paso fijo con interpolación: actualizar(dt fijo) y dibujar(alfa, dtReal) */
 class Bucle {
   constructor({ actualizar, dibujar, paso = 1 / 60, maxPasos = 5 } = {}) { this.actualizar = actualizar; this.dibujar = dibujar; this.paso = paso; this.maxPasos = maxPasos; this.acum = 0; this.t0 = 0; this.corre = false; this.fps = 60; this.pasos = 0; this._f = t => this._cuadro(t); this.limiteFps = 0; this._ultDib = 0; }
@@ -525,7 +555,7 @@ function resorte(actual, objetivo, estado, t, dt) {
   return r;
 }
 function resorteAng(actual, objetivo, estado, t, dt) { return resorte(actual, actual + angDif(actual, objetivo), estado, t, dt); }
-Object.assign(MC, { GPU, ResDinamica, Bucle, resorte, resorteAng });
+Object.assign(MC, { GPU, ResDinamica, DensidadLienzo, Bucle, resorte, resorteAng });
 
 /* ---- js/10-mundo.js ---- */
 /* =====================================================================
@@ -1572,16 +1602,27 @@ const Estilo = {
   /* pantallas grandes (DPR 2: 1,4 millones de píxeles): el pase por píxel va a media resolución, 4 veces menos que leer y escribir.
      1 bit: el tramado queda de 1 px CSS (el mismo aspecto). Cómic: solo se calcula la máscara de puntos y se multiplica encima,
      así la imagen conserva todo su detalle. Medido en la prueba del celular: de ~30 ms a ~8 ms por cuadro. */
+  /* 2.11: cada aparato elige su camino midiendo. Con GPU de verdad los filtros no frenan (el trabajo queda en la GPU);
+     en un lienzo por software se ejecutan ahí mismo y el camino por píxel a media resolución sale más barato
+     (medido sin GPU: 1 bit en la maqueta, 22 ms con filtros contra ~6 ms por píxel). Se alternan los dos 12 cuadros,
+     se queda el más rápido y se vuelve a medir cada ~20 s. Por estilo (cómic o 1 bit), porque cuestan distinto. */
   imprimir(g, W, H, V, binario) {
-    const s = W * H > 400000 ? .5 : 1;
-    if (W * H > 4096 && this._filtros()) return this._imprimirGPU(g, W, H, V, binario, s);
+    const s = W * H > 400000 ? .5 : 1, puedeGPU = W * H > 4096 && this._filtros();
+    if (!puedeGPU) return this._imprimirCPU(g, W, H, V, binario, s);
+    const M = (this._camino ||= {})[binario ? 'b' : 'c'] ||= { n: 0, gpu: null, cpu: null };
+    const usaGPU = M.n < 12 ? M.n % 2 === 0 : M.gpu <= M.cpu, t0 = MC.ahora();
+    if (usaGPU) this._imprimirGPU(g, W, H, V, binario, s); else this._imprimirCPU(g, W, H, V, binario, s);
+    const ms = MC.ahora() - t0, k = usaGPU ? 'gpu' : 'cpu'; M[k] = M[k] == null ? ms : M[k] * .8 + ms * .2; if (++M.n > 1200) { M.n = 0; M.gpu = M.cpu = null; }
+    this.caminoImprimir = usaGPU ? 'filtros' : 'píxel';
+  },
+  _imprimirCPU(g, W, H, V, binario, s) {
     if (s === 1) return this._imprimir(g, W, H, V, binario, false);
     const w = Math.ceil(W * s), h = Math.ceil(H * s); let c = this._imp;
     if (!c || c.width !== w || c.height !== h) { c = this._imp = lienzo(w, h); this._impG = c && c.getContext('2d', { willReadFrequently: true }); }
     const q = this._impG; if (!q) return this._imprimir(g, W, H, V, binario, false);
     q.globalCompositeOperation = 'copy'; q.imageSmoothingEnabled = true; q.drawImage(g.canvas, 0, 0, w, h); q.globalCompositeOperation = 'source-over';
     this._imprimir(q, w, h, { a: V.a * s, b: V.b * s, c: V.c * s, d: V.d * s, e: V.e * s, f: V.f * s, z: V.z * s }, binario, !binario);
-    g.save(); g.imageSmoothingEnabled = !binario; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(c, 0, 0, W, H); g.restore();
+    g.save(); g.imageSmoothingEnabled = false; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(c, 0, 0, W, H); g.restore();   // igual que el camino con filtros
   },
   /* Sin leer la pantalla (lo que más cuesta: obliga a terminar todo el dibujo pendiente): con los filtros del lienzo.
      gris(imagen)·½ + patrón de umbrales·½ y luego contraste extremo = blanco si la luz pasa el umbral de esa celda, negro si no.
@@ -2852,6 +2893,85 @@ class Cuerpo {
 }
 Object.assign(MC, { Cuerpo, GRAV });
 
+/* ---- js/32-objetos.js ---- */
+/* =====================================================================
+   OBJETOS FÍSICOS (3.0) · los artilugios del mundo: conos, balones, canecas, cajas y vallas
+   Todo en 3 dimensiones (x, y y la altura z): se empujan con impulso según la masa de quien choca, saltan un poco
+   con el golpe, caen por gravedad, rebotan, ruedan con roce, chocan con los muros y se duermen quietos (no cuestan).
+   Los mismos objetos en todas las cámaras: la 3D los pone en su malla y las vistas 2D los dibujan encima del suelo.
+   Uso:
+     const O = new MC.Objetos(mundo); O.poner('cono', x, y); O.sembrar(x, y, 260, 40);   // conos en vías, balones en plazas…
+     cada cuadro: O.actualizar(dt, [{ x, y, z, r, masa, vx, vy }]); E.objetos = O;
+     evento: MC.on('golpe', { o, fuerza }) para sonido, partículas y peso.
+   ===================================================================== */
+const TIPOS_OBJ = {
+  cono: { r: .22, h: .7, masa: 2, rebote: .35, roce: 2.4, col: '#ff6a13', col2: '#f4f4f4' },
+  balon: { r: .12, h: .24, masa: .45, rebote: .72, roce: 1.4, col: '#f5f5f5', col2: '#1b1b1b', rueda: true },
+  caneca: { r: .32, h: .9, masa: 7, rebote: .2, roce: 3.2, col: '#2e7d32', col2: '#1b4d20' },
+  caja: { r: .33, h: .6, masa: 4, rebote: .25, roce: 3.6, col: '#b07a43', col2: '#7a5129' },
+  valla: { r: .55, h: 1, masa: 14, rebote: .15, roce: 4.5, col: '#e8e8e8', col2: '#d62828' }
+};
+class Objetos {
+  constructor(mundo) { this.M = mundo; this.L = []; }
+  poner(tipo, x, y, op = {}) { const T = TIPOS_OBJ[tipo] || TIPOS_OBJ.cono, o = Object.assign({ tipo, x, y, z: 0, vx: 0, vy: 0, vz: 0, a: op.a ?? h2(x | 0, y | 0, 91) * TAU, va: 0, vuelco: 0, dormido: true }, T, op); this.L.push(o); return o; }
+  /* siembra objetos que tengan sentido donde caen: conos y vallas en las vías, balones en plazas, canecas y cajas en andenes */
+  sembrar(cx, cy, radio = 260, n = 40, sem = 7) {
+    const M = this.M, VIAS = new Set([TT.ROAD, TT.AVE]); let k = 0;
+    for (let i = 0; i < n * 8 && k < n; i++) {
+      const a = h2(i, sem, 92) * TAU, d = Math.sqrt(h2(i, sem, 93)) * radio, x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d, t = M.suelo(x, y);
+      if (M.edificioEn && M.edificioEn(x, y, .6)) continue; const s = h2(i, sem, 94);
+      if (t === TT.PLAZA) { this.poner(s < .6 ? 'balon' : 'caneca', x, y); k++; }
+      else if (t === TT.WALK) { this.poner(s < .55 ? 'caneca' : 'caja', x, y); k++; }
+      else if (VIAS.has(t) && s < .35) { for (let j = 0; j < 3; j++) this.poner('cono', x + j * 1.2, y + j * .4); this.poner('valla', x - 1.6, y - .5); k += 4; }
+    }
+    return k;
+  }
+  en(x0, y0, x1, y1) { return this.L.filter(o => o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1); }
+  /* cuerpos: [{ x, y, z, r, masa, vx, vy }] (el jugador, el tráfico): los que chocan empujan */
+  actualizar(dt, cuerpos = []) {
+    dt = Math.min(dt, .05); const M = this.M, G = 9.81;
+    for (const o of this.L) {
+      for (const c of cuerpos) {
+        const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy), R = o.r + (c.r || .4); if (d >= R || d < 1e-4 || Math.abs((c.z || 0) - o.z) > o.h + 1.5) continue;
+        const nx = dx / d, ny = dy / d, rel = ((c.vx || 0) - o.vx) * nx + ((c.vy || 0) - o.vy) * ny;
+        o.x += nx * (R - d); o.y += ny * (R - d);   // que no se metan
+        if (rel > .2) { const mc = c.masa || 70, J = rel * (1 + o.rebote) * mc / (mc + o.masa); o.vx += nx * J; o.vy += ny * J; o.vz = Math.max(o.vz, Math.min(4.5, J * (o.tipo === 'balon' ? .3 : .18))); o.va += (h2(o.x | 0, o.y | 0, 95) - .5) * J * 2; if (o.tipo === 'cono' || o.tipo === 'valla' || o.tipo === 'caneca') o.vuelco = Math.min(1, o.vuelco + J * .15); o.dormido = false; if (J > 2) MC.emit('golpe', { o, fuerza: J }); }
+      }
+      if (o.dormido) continue;
+      o.vz -= G * dt; o.z += o.vz * dt;
+      if (o.z <= 0) { o.z = 0; o.vz = Math.abs(o.vz) > 1 ? -o.vz * o.rebote : 0; const f = Math.max(0, 1 - o.roce * dt); o.vx *= f; o.vy *= f; o.va *= f; }
+      const nx = o.x + o.vx * dt, ny = o.y + o.vy * dt;
+      if (M.edificioEn && M.edificioEn(nx, ny, o.r * .5)) { o.vx *= -o.rebote; o.vy *= -o.rebote; } else { o.x = nx; o.y = ny; }
+      o.a += o.va * dt;
+      if (o.z === 0 && Math.hypot(o.vx, o.vy) < .05 && Math.abs(o.va) < .05) { o.vx = o.vy = o.va = 0; o.dormido = true; }
+    }
+  }
+  /* 3D: la malla de cada objeto (rel: metros del mundo → GL) */
+  malla(m, rel, cerca = null, rango = 160) {
+    for (const o of this.L) {
+      if (cerca && Math.hypot(o.x - cerca.x, o.y - cerca.y) > rango) continue;
+      const p = rel(o.x, o.y, this.M.cota(o.x, o.y) + o.z), c = hex3(o.col), c2 = hex3(o.col2), tumb = o.vuelco > .6;
+      if (o.tipo === 'balon') m.esfera(p[0], p[1] + o.r, p[2], o.r, o.r, o.r, c, c2, 9, 0);
+      else if (o.tipo === 'cono') { if (tumb) m.cajaF(p[0], p[1], p[2], o.a, o.h, o.r * 1.6, o.r * 1.4, c); else { m.cajaF(p[0], p[1], p[2], o.a, o.r * 2.2, o.r * 2.2, .05, hex3('#222')); m.cil(p[0], p[1] + .05, p[2], o.r, o.h, 6, c, 0); m.cil(p[0], p[1] + o.h * .45, p[2], o.r * .55, o.h * .14, 6, c2, o.r * .45); } }
+      else if (o.tipo === 'caneca') { if (tumb) m.cajaF(p[0], p[1], p[2], o.a, o.h, o.r * 2, o.r * 2, c); else { m.cil(p[0], p[1], p[2], o.r, o.h, 7, c, o.r * 1.06, c2); } }
+      else if (o.tipo === 'valla') { const h = tumb ? .25 : o.h; m.cajaF(p[0], p[1] + (tumb ? 0 : h * .55), p[2], o.a, o.r * 2, .08, h * .4, c2); m.cajaF(p[0], p[1], p[2], o.a, o.r * 2.1, .5, .08, c); }
+      else m.cajaF(p[0], p[1], p[2], o.a, o.r * 2, o.r * 2, o.h, c, 0, c2);
+    }
+  }
+  /* 2D: encima del suelo con la proyección de la vista (aPantalla) y su escala en px por metro */
+  dibujar2D(g, aP, z, cerca = null, rango = 120) {
+    for (const o of this.L) {
+      if (cerca && Math.hypot(o.x - cerca.x, o.y - cerca.y) > rango) continue; const p = aP(o.x, o.y, o.z); if (!p) continue; const r = Math.max(2, o.r * z), [sx, sy] = p;
+      g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(sx + r * .3, sy + r * .4 + o.z * z * .3, r * 1.1, r * .7, 0, 0, TAU); g.fill();
+      g.fillStyle = o.col; g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = Math.max(1, z * .04);
+      if (o.tipo === 'balon') { g.beginPath(); g.arc(sx, sy - r, r, 0, TAU); g.fill(); g.stroke(); g.fillStyle = o.col2; g.beginPath(); g.arc(sx, sy - r, r * .35, 0, TAU); g.fill(); }
+      else if (o.tipo === 'cono' && o.vuelco < .6) { g.beginPath(); g.moveTo(sx - r, sy); g.lineTo(sx, sy - o.h * z); g.lineTo(sx + r, sy); g.closePath(); g.fill(); g.stroke(); g.fillStyle = o.col2; g.fillRect(sx - r * .45, sy - o.h * z * .55, r * .9, Math.max(1, o.h * z * .12)); }
+      else { g.save(); g.translate(sx, sy - r * .6); g.rotate(o.a); g.fillRect(-r, -r * .7, r * 2, r * 1.4); g.strokeRect(-r, -r * .7, r * 2, r * 1.4); g.restore(); }
+    }
+  }
+}
+Object.assign(MC, { Objetos, TIPOS_OBJ });
+
 /* ---- js/33-controles.js ---- */
 /* =====================================================================
    CONTROLES · teclado, pantalla táctil (joystick virtual y gestos) y control de juegos (gamepad)
@@ -2926,7 +3046,12 @@ const CAM_PERFIL = {
   tercera: { dist: 7, alto: 2.6, pitch: .22, fov: 1.0 },
   dron: { dist: 70, alto: 55, pitch: .62, fov: .95 },
   cine: { dist: 28, alto: 9, pitch: .18, fov: .8 },
-  aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 }
+  aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
+  /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
+     pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
+  cenital: { fijo: true, pitch: 1.08, pitchCerca: .74, fov: .62, dist: 0, alto: 0 },
+  oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0 },
+  maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 }
 };
 class Camara {
   constructor(op = {}) {
@@ -2937,7 +3062,7 @@ class Camara {
   }
   /* gesto de la pantalla (de Controles) */
   gesto(g) {
-    if (g.tipo === 'zoom') { this.zoom = clamp(this.zoom * g.k, ...this.limites.zoom); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
+    if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); if (this.perfil === 'tercera' && g.k < 1 && this.d.dist / g.k > 15) MC.emit('zoomTope', 'lejos3p'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
     else if (g.tipo === 'girar') { this.yawObj = null; this.yaw -= g.da; this.mira -= g.da; }
     else if (g.tipo === 'inclinar') { this.pitchObj = null; this.pitch = clamp(this.pitch + g.dy * .006, ...this.limites.pitch); this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); }
     else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); } }
@@ -2963,7 +3088,8 @@ class Camara {
       this.x = resorte(this.x, this._fx, this._vx, .2, dt); this.y = resorte(this.y, this._fy, this._vy2, .2, dt);
     }
     /* 3D en perspectiva: ojo detrás del rumbo (y lo que el jugador mire con el dedo) */
-    if (o) {
+    if (o && this.d.fijo) this._aereo(dt, o);
+    else if (o) {
       const P = this.d, M = o.mundo || this.mundo; this.orbita += dt * (this.perfil === 'cine' ? .12 : 0);
       if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0)) this.mira *= Math.pow(.25, dt);
       const ang = (o.a || 0) + this.mira + this.orbita + (this.perfil === 'cine' ? .8 : 0), z0 = o.z || 0, prim = this.perfil === 'primera';
@@ -2992,6 +3118,23 @@ class Camara {
     this.sacudida = Math.max(0, this.sacudida - dt * 2); this.trauma = Math.max(0, (this.trauma || 0) - dt * .9);
     const sh = (this.trauma || 0) ** 2; if (sh > 1e-4 && o) { const t = this._t, n = (a, b) => (Math.sin(t * a + b) + Math.sin(t * a * 1.7 + b * 2.3)) / 2; this.ojo = [this.ojo[0] + n(23, 1) * sh * .35, this.ojo[1] + n(19, 2) * sh * .35, this.ojo[2] + n(29, 3) * sh * .25]; this.offPantalla = [n(17, 4) * sh * 6, n(13, 5) * sh * 6]; } else this.offPantalla = [0, 0];
     if (this.tr) { this.tr.t += dt / this.tr.dur; if (this.tr.t >= 1) this.tr = null; }
+  }
+  /* 3.0: cámara aérea sobre el mundo 3D (cenital, oblicua y maqueta). Sigue el punto (x, y) que ya trae la mirada adelante
+     y la zona muerta, con el MISMO encuadre que la vista 2D: la distancia sale del zoom (px por metro) y del alto del lienzo,
+     así que pasar de 2D a 3D no salta. Más lejos, más cenital; más cerca, más oblicua (se ven las fachadas), como el mapa
+     3D de los navegadores. Con la velocidad y la persecución se aleja y se inclina hacia adelante (Reckless Getaway, #DRIVE);
+     en persecución, además, un vaivén lateral; el trauma la sacude. */
+  _aereo(dt, o) {
+    const P = this.d, M = o.mundo || this.mundo, Hp = this.pantalla ? this.pantalla[1] : 800, Zl = this.limites.zoom;
+    const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
+    this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
+    const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
+    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * .2 + this._per * .22);
+    const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
+    const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
+    let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);
+    if (this._per > .02) { const w = Math.sin(this._t * 1.7) * this._per * D * .03; ex += uy * w; ey -= ux * w; }
+    this.ojo = [ex, ey, ez]; this.blanco = [this.x, this.y, zt]; this.fov = P.fov; this.distAerea = D; this.yawAereo = yaw;
   }
   /* transición entre vistas: 0..1 (la usa el gestor de vistas para mezclar) */
   transicion(dur = .6) { this.tr = { t: 0, dur }; }
@@ -3677,7 +3820,7 @@ const Vista2D = {
   dibujar(g, W, H, E, op = {}) {
     const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw); Ondas.presupuesto = 12;
     /* matriz mundo → pantalla (sin altura) */
-    const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
+    const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, SN = op.pixel ? (v => v) : Math.round, e = SN(W / 2 - a * C.x - c * C.y), f = SN(H / 2 + oy - b * C.x - d * C.y);   // de lado, el piso baja: más cielo y menos tierra. 2.11: el desplazamiento va en píxeles enteros (la capa de suelo se corre sin temblar contra los objetos)
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
     const inv = (sx, sy) => { const det = a * d - b * c, X = sx - e, Y = sy - f; return [(d * X - c * Y) / det, (-b * X + a * Y) / det]; };
     E._pr = pr; E._vista = { modo, P, W, H, z, a, b, c, d, e, f };
@@ -3689,7 +3832,10 @@ const Vista2D = {
     /* ---------- suelo ---------- */
     const sinTechos = modo !== 'cenital', pixel = !!op.pixel, dePie = sinTechos && z >= ((E.calidad ?? 1) >= .9 ? 3.2 : 4.2) && op.arboles !== false,   /* árboles de pie de cerca; con calidad media, desde un poco más cerca */ Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
     let res = z; const RES = [.0625, .125, .25, .5, 1, 2, 3, 4, 6]; res = RES.find(r => r >= res * (pixel ? .9 : .7)) || 6;   /* z ya está en píxeles del lienzo por metro; de cerca, losas de hasta 6 px/m */ if (Ls === E.losasLejos) res = Math.min(res, .25);
-    g.save(); g.fillStyle = Estilo.col('#5e8c4a'); g.fillRect(0, 0, W, H);
+    const S = this._suelo ||= { cv: null, clave: '', ult: '', estable: 0, e: 0, f: 0, ver: -1, faltan: 1 }, mS = Math.round(Math.min(W, H) * .35), fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0) | (E.clima?.lluvia > .12 ? 4 : 0);
+    const claveS = [W + 2 * mS, H + 2 * mS, a, b, c, d, res, fl, MC.estilo, MC.arte.activa, Ls === E.losasLejos ? 1 : 0, Estilo.col('#5e8c4a')].join('|'); S.estable = claveS === S.ult ? S.estable + 1 : 0; S.ult = claveS;
+    const usaCapa = !pixel && !E._franja && MC.opciones.capaSuelo !== false && W * H > 40000 && S.estable >= 3;   // si gira o hace zoom seguido, mejor pintar directo
+    g.save(); if (!usaCapa) { g.fillStyle = Estilo.col('#5e8c4a'); g.fillRect(0, 0, W, H); }
     if (E._franja) {   /* de lado: cielo arriba de la franja y el corte de la tierra abajo (casa de muñecas) */
       const Rp = E._franja.Rp, yF = H / 2 + oy - Rp * z * P.k, yC = H / 2 + oy + Rp * z * P.k, ES0 = Estilo.p, cie = ES0.cielo ? { top: mez3(ES0.cielo[0], (E.cielo || {}).top || ES0.cielo[0], .25), hor: mez3(ES0.cielo[1], (E.cielo || {}).hor || ES0.cielo[1], .25) } : (E.cielo || { top: [.4, .6, .9], hor: [.8, .88, .95] });   /* el cielo del estilo (de Shinkai en el anime), con algo de la hora */
       const gs = g.createLinearGradient(0, 0, 0, Math.max(1, yF)); gs.addColorStop(0, css3(cie.top)); gs.addColorStop(1, css3(cie.hor)); g.fillStyle = gs; g.fillRect(0, 0, W, Math.max(0, yF));
@@ -3697,14 +3843,32 @@ const Vista2D = {
       g.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 40; i++) g.fillRect(h2(i, 1, 9) * W, yC + 6 + h2(i, 2, 9) * (H - yC), 2 + h2(i, 3, 9) * 4, 2);
       g.beginPath(); g.rect(0, yF, W, yC - yF); g.clip();
     }
-    g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
-    const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
-    for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
-      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0) | (E.clima?.lluvia > .12 ? 4 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
-      if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
-      if (L) g.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
-    }
-    g.restore();
+    let faltan = 0;
+    const pintarSuelo = (gg, ox, oy, X0, Y0, X1, Y1) => {   // las losas de la caja [X0..X1]×[Y0..Y1] con la matriz corrida (ox, oy)
+      gg.setTransform(a, b, c, d, e + ox, f + oy); gg.imageSmoothingEnabled = !pixel; let faltan = 0;   // (las que faltan en esta pasada)
+      const gx0 = Math.floor(X0 / Ld), gx1 = Math.floor(X1 / Ld), gy0 = Math.floor(Y0 / Ld), gy1 = Math.floor(Y1 / Ld);
+      for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
+        let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
+        if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
+        if (L) gg.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
+      }
+      return faltan;
+    };
+    /* 2.11: CAPA DE SUELO. El suelo se pinta una vez en una capa con margen y, mientras la cámara solo se desplace (mismo zoom,
+       giro, estilo, arte, lluvia y tamaño), cada cuadro se corre con un blit en píxeles enteros: sin giro ni escala, que es lo
+       que más cuesta pintar en la maqueta. Se rehace si faltan losas, si cambió algo o si la cámara salió del margen. */
+    if (usaCapa) {
+      const m = mS, CW = W + 2 * m, CH = H + 2 * m, clave = claveS, dx = e - S.e, dy = f - S.f;
+      if (!S.cv || S.cv.width !== CW || S.cv.height !== CH) { S.cv = lienzo(CW, CH); S.clave = ''; }
+      if (S.cv && (S.clave !== clave || S.faltan > 0 || S.ver !== Ls.version || Math.abs(dx) > m - 2 || Math.abs(dy) > m - 2)) {
+        const q = S.cv.getContext('2d'); q.setTransform(1, 0, 0, 1, 0, 0); q.fillStyle = Estilo.col('#5e8c4a'); q.fillRect(0, 0, CW, CH);
+        let X0 = 1e9, Y0 = 1e9, X1 = -1e9, Y1 = -1e9; for (const [sx, sy] of [[-m, -m], [W + m, -m], [-m, H + m], [W + m, H + m]]) { const [wx, wy] = inv(sx, sy); X0 = Math.min(X0, wx); X1 = Math.max(X1, wx); Y0 = Math.min(Y0, wy); Y1 = Math.max(Y1, wy); }
+        if (P.k < .55) { const RR = Math.max(W, H) / z * .6 + 60 + m / z; X0 = Math.max(X0, C.x - RR); X1 = Math.min(X1, C.x + RR); Y0 = Math.max(Y0, C.y - RR); Y1 = Math.min(Y1, C.y + RR); }
+        faltan = S.faltan = pintarSuelo(q, m, m, X0, Y0, X1, Y1); S.clave = clave; S.e = e; S.f = f; S.ver = Ls.version; this.capasSuelo = (this.capasSuelo || 0) + 1;
+      }
+      if (S.cv) { g.drawImage(S.cv, e - S.e - m, f - S.f - m); g.restore(); }
+      else { g.fillStyle = Estilo.col('#5e8c4a'); g.fillRect(0, 0, W, H); faltan = pintarSuelo(g, 0, 0, x0, y0, x1, y1); g.restore(); }
+    } else { faltan = pintarSuelo(g, 0, 0, x0, y0, x1, y1); g.restore(); }
     const noche0 = E.cielo ? E.cielo.noche : 0; if (noche0 > .02) { g.fillStyle = 'rgba(8,18,52,' + (noche0 * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     /* ---------- lo que se levanta: edificios, pasos elevados, vehículos y gente, en orden de profundidad ---------- */
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
@@ -4453,18 +4617,20 @@ class VistaGL {
     const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = 8, st = R / n, suelo = [];
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const P = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([u, v]) => { const x = x0 + u * st, y = y0 + v * st, nn = M.normal(x, y, 10); return [x - O[0], M.cota(x, y) - O[2], y - O[1], nn[0], nn[1], nn[2], u / n, v / n]; }); for (const q of [P[0], P[2], P[1], P[0], P[3], P[2]]) suelo.push(...q); }
     /* texturas de lado potencia de 2 (512, 256 o 128 px por losa de 160 m) para tener mipmaps y filtro anisótropo: el piso se ve nítido a lo lejos */
-    const res = (detalle > 3 ? 1024 : detalle > 2 ? 512 : detalle > 1 ? 256 : 128) / R, L = this.losas.losa(gx, gy, res, false, false), tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    const res = (detalle > 3 ? 1024 : detalle > 2 ? 512 : detalle > 1 ? 256 : 128) / R, L = this.losas.losa(gx, gy, res, false, 3), tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
     if (L) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, L); else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([94, 140, 74]));
     const pot = L && (L.width & (L.width - 1)) === 0; if (pot) gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, pot ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     if (pot && this.aniso) gl.texParameterf(gl.TEXTURE_2D, this.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(this.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     const m = new Malla(), minH = detalle >= 2 ? 0 : detalle === 1 ? 10 : 24;
-    for (const e of M.edificiosEn(x0, y0, x0 + R, y0 + R)) { if (e.x < x0 || e.x >= x0 + R || e.y < y0 || e.y >= y0 + R || e.h < minH) continue; const st2 = estiloEdificio(M, e), P = Mundo.esquinas(e); let zb = 1e9; for (let i = 0; i < P.length; i += 2) zb = Math.min(zb, M.cota(P[i], P[i + 1])); zb -= O[2] + .3; m.prisma(P, O, zb, zb + e.h + .3, hex3(st2.muro), hex3(st2.techo), { ventanas: detalle >= 2 && e.h > 6 ? (e.s * 1e4 | 0) + 1 : 0, dosAguas: !st2.plano && !e.P && detalle >= 2 ? { ancho: Math.min(e.hw, e.hd) * 2 } : null }); }
+    for (const e of M.edificiosEn(x0, y0, x0 + R, y0 + R)) { if (e.x < x0 || e.x >= x0 + R || e.y < y0 || e.y >= y0 + R || e.h < minH) continue; const st2 = estiloEdificio(M, e), P = Mundo.esquinas(e); let zb = 1e9; for (let i = 0; i < P.length; i += 2) zb = Math.min(zb, M.cota(P[i], P[i + 1])); zb -= O[2] + .3; m.edificio3d(P, O, zb, e, st2, detalle, M.estilo(e.x, e.y)); }   /* 3.0: con fachada (js/45b-mundo3d.js) */
     for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0 }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
     for (const P of M.pasosEn(x0, y0, x0 + R, y0 + R)) { if (P.nivel <= 0) continue; const T = P.trazo || (P.trazo = new Trazo(P.p)), vi = P.tipo === 'viaducto', rampa = vi ? 0 : Math.min(P.largo * .4, P.peatonal ? 9 : 22), h = s => P.nivel * NIVEL_M * (vi ? 1 : suave(Math.min(s, P.largo - s) / rampa)), paso = 6;
       for (let s = 0; s < P.largo; s += paso) { const a = T.at(s), b = T.at(Math.min(P.largo, s + paso)); if (a.x < x0 || a.x >= x0 + R || a.y < y0 || a.y >= y0 + R) continue; const ha = M.cota(a.x, a.y) + h(s) - O[2], hb = M.cota(b.x, b.y) + h(Math.min(P.largo, s + paso)) - O[2], w = P.ancho / 2, nx = -Math.sin(a.a) * w, ny = Math.cos(a.a) * w, A = [a.x - O[0], a.y - O[1]], Bq = [b.x - O[0], b.y - O[1]], c = hex3(vi ? '#c9cfd8' : P.peatonal ? '#d8cfbd' : '#6a6f79'); m.quad([A[0] + nx, ha, A[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [Bq[0] - nx, hb, Bq[1] - ny], [A[0] - nx, ha, A[1] - ny], c); m.quad([A[0] - nx, ha - 1, A[1] - ny], [A[0] - nx, ha, A[1] - ny], [Bq[0] - nx, hb, Bq[1] - ny], [Bq[0] - nx, hb - 1, Bq[1] - ny], hex3('#8e8a80')); m.quad([A[0] + nx, ha - 1, A[1] + ny], [Bq[0] + nx, hb - 1, Bq[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [A[0] + nx, ha, A[1] + ny], hex3('#8e8a80'));
         if ((s % (vi ? 30 : 24)) < paso && h(s) > 3) m.caja(A[0], M.cota(a.x, a.y) - O[2], A[1], a.a, 1.4, vi ? 2.2 : 1, h(s) - 1, hex3('#9aa3ad')); } }
-    if (detalle >= 1) for (let y = Math.ceil(y0 / 9) * 9; y < y0 + R; y += 9) for (let x = Math.ceil(x0 / 9) * 9; x < x0 + R; x += 9) { const tt = M.suelo(x, y); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const hv = h2(x, y, 41), Z = M.estilo(x, y); if (hv > (tt === TT.MOUNT ? .45 : (Z.arboles || .4) * .5)) continue; const tx = x + h2(x, y, 42) * 6 - O[0], ty = y + h2(x, y, 43) * 6 - O[1], zb = M.cota(x, y) - O[2], r = 2 + h2(x, y, 44) * 2.4, c = hex3(['#3f8a3f', '#4a9444', '#357a38', '#5a9e48'][(hv * 40 | 0) % 4]); m.caja(tx, zb, ty, 0, .5, .5, r, hex3('#6e4a2a')); m.caja(tx, zb + r * .8, ty, hv * 6, r * 1.7, r * 1.7, r * 1.5, c); }
+    /* 3.0: los MISMOS árboles de las vistas 2D (MC.Arboleda), low-poly y por especie */
+    if (detalle >= 1) for (const t of Arboleda.en(M, x0, y0, x0 + R, y0 + R, 3000)) { if (t.x < x0 || t.x >= x0 + R || t.y < y0 || t.y >= y0 + R) continue; m.arbol3d(t.x - O[0], M.cota(t.x, t.y) - O[2] - .1, t.y - O[1], t, detalle); }
+    if (false) for (let y = Math.ceil(y0 / 9) * 9; y < y0 + R; y += 9) for (let x = Math.ceil(x0 / 9) * 9; x < x0 + R; x += 9) { const tt = M.suelo(x, y); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const hv = h2(x, y, 41), Z = M.estilo(x, y); if (hv > (tt === TT.MOUNT ? .45 : (Z.arboles || .4) * .5)) continue; const tx = x + h2(x, y, 42) * 6 - O[0], ty = y + h2(x, y, 43) * 6 - O[1], zb = M.cota(x, y) - O[2], r = 2 + h2(x, y, 44) * 2.4, c = hex3(['#3f8a3f', '#4a9444', '#357a38', '#5a9e48'][(hv * 40 | 0) % 4]); m.caja(tx, zb, ty, 0, .5, .5, r, hex3('#6e4a2a')); m.caja(tx, zb + r * .8, ty, hv * 6, r * 1.7, r * 1.7, r * 1.5, c); }
     return { gx, gy, suelo: this._vbo(suelo), tex, cosas: m.d.length ? this._vbo(m.d) : null, detalle };
   }
   /* las cosas que se mueven, en una sola malla por cuadro */
@@ -4472,11 +4638,13 @@ class VistaGL {
     const m = new Malla(), M = this.mundo, O = this.O, rel = (x, y, z) => [x - O[0], z - O[2], y - O[1]];
     const pj = E.jugador; if (pj && !E._sinJugador) { const C = pj.cuerpo, A = pj.aspecto, zb = M.cota(C.x, C.y) + C.zPaso + C.z, J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: C.veh.manubrio }), ca = Math.cos(C.a), sa = Math.sin(C.a), P = j => rel(C.x + ca * j[0], C.y + sa * j[0], zb + j[1]), Lp = (j, l) => { const p = P(j); return [p[0] - sa * l, p[1], p[2] + ca * l]; };
       const piel = hex3(A.cPiel), cam = hex3(A.cCamisa), pan = hex3(A.cPantalon);
-      if (C.veh.clase !== 'pie') { const V = C.veh; if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb); m.caja(r[0], r[1] + .3, r[2], C.a, V.largo, V.ancho, V.clase === 'pesado' ? 2.8 : 1.1, hex3(V.color)); m.caja(r[0] - ca * V.largo * .05, r[1] + 1.3, r[2] - sa * V.largo * .05, C.a, V.largo * .5, V.ancho * .9, .55, hex3('#8cbedc')); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
+      if (C.veh.clase !== 'pie') { const V = C.veh; if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb); m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
       if (!(C.veh.clase === 'auto' || C.veh.clase === 'pesado')) { m.hueso(Lp(J.cadera, .12), Lp(J.rodI, .12), .07, pan); m.hueso(Lp(J.rodI, .12), Lp(J.pieI, .12), .06, pan); m.hueso(Lp(J.cadera, -.12), Lp(J.rodD, -.12), .07, pan); m.hueso(Lp(J.rodD, -.12), Lp(J.pieD, -.12), .06, pan); if (!this._sinCabeza) m.hueso(P(J.cadera), P(J.pecho), .17, cam); m.hueso(Lp(J.pecho, .2), Lp(J.codoI, .22), .05, cam); m.hueso(Lp(J.codoI, .22), Lp(J.manoI, .2), .045, A.manga ? cam : piel); m.hueso(Lp(J.pecho, -.2), Lp(J.codoD, -.22), .05, cam); m.hueso(Lp(J.codoD, -.22), Lp(J.manoD, -.2), .045, A.manga ? cam : piel); const h = P(J.cabeza); if (!this._sinCabeza) m.caja(h[0], h[1] - .13, h[2], C.a, .24, .22, .26, piel); if (this._sinCabeza) { /* en primera persona se ven las manos y el manubrio */ } else if (A.cCasco) m.caja(h[0], h[1] + .06, h[2], C.a, .3, .27, .12, hex3(A.cCasco)); else m.caja(h[0] - ca * .03, h[1] + .07, h[2] - sa * .03, C.a, .26, .24, .08, hex3(A.cPelo)); }
     }
-    for (const v of E.trafico || []) { const T2 = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, r = rel(v.x, v.y, M.cota(v.x, v.y)), h = v.tipo === 'buseta' || v.tipo === 'camion' ? 2.9 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.1; m.caja(r[0], r[1] + .25, r[2], v.a, T2.largo, T2.ancho, h, hex3(v.color), E.cielo && E.cielo.noche > .4 ? .25 : 0); if (h < 2 && v.tipo !== 'moto' && v.tipo !== 'bici') m.caja(r[0], r[1] + 1.35, r[2], v.a, T2.largo * .55, T2.ancho * .92, .5, hex3('#8cbedc')); }
-    for (const p of E.peatones || []) { const r = rel(p.x, p.y, M.cota(p.x, p.y)), A = p.aspecto || (p.aspecto = Personaje.azar(p.semilla || 1)), sw = Math.sin(p.fase) * .25; m.caja(r[0], r[1], r[2], p.a, .25 + Math.abs(sw) * .3, .3, .9, hex3(A.cPantalon)); m.caja(r[0], r[1] + .9, r[2], p.a, .3, .42, .62, hex3(A.cCamisa)); m.caja(r[0], r[1] + 1.52, r[2], p.a, .22, .2, .24, hex3(A.cPiel)); }
+    this._njug = m.d.length;   // 3.0: lo del jugador va primero (se repinta encima en las cámaras aéreas)
+    for (const v of E.trafico || []) { const T2 = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, r = rel(v.x, v.y, M.cota(v.x, v.y)), h = v.tipo === 'buseta' || v.tipo === 'camion' ? 2.9 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.1; m.carro3d(r[0], r[1], r[2], v.a, T2.largo, T2.ancho, v.color, v.tipo === 'buseta' || v.tipo === 'camion' || v.tipo === 'moto' || v.tipo === 'bici' ? v.tipo : 'carro', E.cielo ? E.cielo.noche : 0); }
+    for (const p of E.peatones || []) { const r = rel(p.x, p.y, M.cota(p.x, p.y)), A = p.aspecto || (p.aspecto = Personaje.azar(p.semilla || 1)), sw = Math.sin(p.fase) * .25; m.persona3d(r[0], r[1], r[2], p.a, A, p.fase || 0, A.alto || 1.7); }
+    if (E.objetos) E.objetos.malla(m, rel, pj ? pj.cuerpo : null, 170);   // 3.0: artilugios físicos (MC.Objetos)
     for (const v of E.vehiculos || []) { const zt = M.cota(v.x, v.y) + (v.z || 0); if (v.clase === 'cable') { const r = rel(v.x, v.y, zt); m.caja(r[0], r[1] - 2.2, r[2], v.a, 2.2, 2, 2, hex3(v.color), .5); m.caja(r[0], r[1] - .2, r[2], v.a, .15, .15, .4, hex3('#2d3138')); continue; } const L = E.transporte && E.transporte.lineas.find(l => l.id === v.linea); if (!L) continue; const n = v.clase === 'metro' ? 6 : v.clase === 'tram' ? 2 : 1, coche = v.largo / n; for (let i = 0; i < n; i++) { const sc = v.s - v.dir * (i + .5) * coche, c = L.T.at(sc), r = rel(c.x, c.y, M.cota(c.x, c.y) + (v.z || 0)); m.caja(r[0], r[1] + .4, r[2], c.a, coche - .6, v.clase === 'brt' || v.clase === 'feeder' ? 2.5 : 3, 3.2, hex3('#e6e9ee'), .35); m.caja(r[0], r[1] + 1.4, r[2], c.a, coche - .5, (v.clase === 'brt' ? 2.5 : 3) + .04, .5, hex3(v.color)); } }
     return m.d;
   }
@@ -4488,7 +4656,10 @@ class VistaGL {
     if (!this.O || Math.abs(this.O[0] - ox) > 2500 || Math.abs(this.O[1] - oy) > 2500) { this.liberar(); this.O = [ox, oy, M.cota(ox, oy)]; }
     if (!this.lejos) this._lejos();
     /* regiones a la vista por distancia, con presupuesto de tiempo para construir */
-    this._sinCabeza = C.perfil === 'primera'; const R = this.R, radio = 380 + 520 * cal, cx = C.ojo[0], cy = C.ojo[1], quiero = new Map();
+    /* 3.0: radio de vista definido por la cámara (la periferia del jugador). Las aéreas cargan solo lo que cabe en su encuadre
+       y un poco más, con la niebla justo antes del borde: lo que se va cargando no se ve llegar (como la bruma de GTA San Andreas) */
+    const aerea = C.d && C.d.fijo, Da = aerea ? (C.distAerea || 60) : 0;
+    this._sinCabeza = C.perfil === 'primera'; const R = this.R, radio = aerea ? clamp(Da * 2.3 + 50, 140, 640) : 380 + 520 * cal, cx = aerea ? C.blanco[0] : C.ojo[0], cy = aerea ? C.blanco[1] : C.ojo[1], quiero = new Map();
     for (let gy = Math.floor((cy - radio) / R); gy <= Math.floor((cy + radio) / R); gy++) for (let gx = Math.floor((cx - radio) / R); gx <= Math.floor((cx + radio) / R); gx++) { const d = Math.hypot((gx + .5) * R - cx, (gy + .5) * R - cy); if (d > radio + R) continue; quiero.set(gx + ',' + gy, d < 100 && cal > .7 ? 4 : d < 170 && cal > .5 ? 3 : d < 300 ? 2 : d < 600 ? 1 : 0); }
     for (const [k, r] of this.regiones) if (!quiero.has(k)) { this._borrar(r); this.regiones.delete(k); }
     const t0 = MC.ahora(), faltan = [...quiero].filter(([k, d]) => { const r = this.regiones.get(k); return !r || r.detalle < d; }).sort((a, b) => { const [ax, ay] = a[0].split(',').map(Number), [bx, by] = b[0].split(',').map(Number); return Math.hypot((ax + .5) * R - cx, (ay + .5) * R - cy) - Math.hypot((bx + .5) * R - cx, (by + .5) * R - cy); });
@@ -4498,7 +4669,7 @@ class VistaGL {
     const O = this.O, e = [C.ojo[0] - O[0], C.ojo[2] - O[2], C.ojo[1] - O[1]], b = [C.blanco[0] - O[0], C.blanco[2] - O[2], C.blanco[1] - O[1]];
     const P = M4.persp(new Float32Array(16), C.fov, W / H, .3, 9000), V = M4.mirar(new Float32Array(16), e, b), MVP = M4.mul(new Float32Array(16), P, V);
     const S = E.cielo, sol = S.sol, luz = sol.alt > -.05 ? [sol.x, Math.max(.15, sol.z), sol.y] : [.3, .8, .2], ll = Math.hypot(...luz), L = luz.map(v => v / ll), niebla = E.clima ? E.clima.niebla : 0, lluvia = E.clima ? E.clima.lluvia : 0;
-    const fog = S.bruma, fr = [radio * (.45 - niebla * .35), radio * (1.05 - niebla * .5) + 1500 * (1 - niebla) * (1 - lluvia * .5)];
+    const fog = S.bruma, fr = aerea ? [Da * (1.55 - niebla * .5), Da * (2.25 - niebla * .6) + 40] : [radio * (.45 - niebla * .35), radio * (1.05 - niebla * .5) + 1500 * (1 - niebla) * (1 - lluvia * .5)];
     gl.viewport(0, 0, W, H); gl.clearColor(fog[0], fog[1], fog[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     /* cielo: degradado de pantalla del cénit al horizonte (el horizonte sigue la inclinación de la cámara) */
     gl.disable(gl.DEPTH_TEST); gl.useProgram(this.pS.p); const dy = b[1] - e[1], dh = Math.hypot(b[0] - e[0], b[2] - e[2]) || 1, hz = clamp(-Math.atan2(dy, dh) / (C.fov / 2), -1, 1), t = S.top, hc = S.hor;
@@ -4514,7 +4685,9 @@ class VistaGL {
     for (const r of this.regiones.values()) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
     gl.useProgram(this.pC.p); uni(this.pC);
     for (const r of this.regiones.values()) if (r.cosas) { gl.bindBuffer(gl.ARRAY_BUFFER, r.cosas.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, r.cosas.n / 10); }
-    const D = this._dinamico(E); if (D.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(D), gl.DYNAMIC_DRAW); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, D.length / 10); }
+    const D = this._dinamico(E); if (D.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(D), gl.DYNAMIC_DRAW); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, D.length / 10);
+      /* 3.0: rayos X del jugador en las cámaras aéreas: si un árbol o un techo lo tapan, se ve igual (encima de todo) */
+      if (aerea && this._njug > 0) { gl.disable(gl.DEPTH_TEST); gl.drawArrays(gl.TRIANGLES, 0, this._njug / 10); gl.enable(gl.DEPTH_TEST); } }
     this.mvp = MVP; return this.cv;
   }
   _attr(p, L, paso) { const gl = this.gl; let o = 0; for (const [n, k] of L) { const a = p.a[n]; if (a !== undefined && a >= 0) { gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, k, gl.FLOAT, false, paso * 4, o * 4); } o += k; } }
@@ -4522,6 +4695,124 @@ class VistaGL {
   aPantalla(x, y, z, W, H) { if (!this.mvp || !this.O) return null; const m = this.mvp, X = x - this.O[0], Y = z - this.O[2], Z = y - this.O[1], cw = m[3] * X + m[7] * Y + m[11] * Z + m[15]; if (cw <= .1) return null; return [(m[0] * X + m[4] * Y + m[8] * Z + m[12]) / cw * W / 2 + W / 2, -(m[1] * X + m[5] * Y + m[9] * Z + m[13]) / cw * H / 2 + H / 2]; }
 }
 Object.assign(MC, { VistaGL, Malla, M4 });
+
+/* ---- js/45-gl3d.js ---- */
+/* =====================================================================
+   MUNDO ÚNICO 3D (3.0) · un solo mundo, varias cámaras
+   Antes cada vista dibujaba su propio mundo (cenital y maqueta en 2D, la 3D aparte, con cubos por árboles y cajas
+   por casas). Ahora el mundo es UNO, en 3D (como #DRIVE, Pako Forever o Reckless Getaway: cámara de arriba, mundo en 3D),
+   y las vistas son cámaras sobre él. El suelo sigue siendo la losa 2D (vías, andenes, pasto con su desgaste), pero ya
+   sin los árboles ni los techos pintados: esos son volumen. Lo que sale aquí:
+   - Edificios con fachada: zócalo de color (Guatapé), ventanas con marco y vidrio (algunas encendidas de noche), puerta,
+     balcones con baranda, cornisa, techo a dos aguas con alero o plancha con pretil y tanque. Detalle por distancia (LOD).
+   - Árboles low-poly facetados, los MISMOS de las vistas 2D (MC.Arboleda: posición, especie, radio y alto):
+     guayacanes florecidos, ceiba ancha, mango denso, monte cónico.
+   - Carros con cabina, vidrio, ruedas y luces; busetas con su franja de ventanas; motos y bicis con ruedas;
+     personas con cabeza, pelo, torso y piernas.
+   Todas las caras se orientan «hacia afuera» respecto a un centro (la luz plana por cara da el aspecto low-poly).
+   ===================================================================== */
+const PAL_ZOCALO = ['#c0392b', '#1f6fb2', '#e2b31b', '#2a9d5c', '#7d3c98', '#e0782a', '#138d75', '#d6336c', '#2c3e50'];
+const osc3 = (c, k) => [c[0] * k, c[1] * k, c[2] * k], acl3 = (c, k) => [c[0] + (1 - c[0]) * k, c[1] + (1 - c[1]) * k, c[2] + (1 - c[2]) * k];
+Object.assign(Malla.prototype, {
+  /* triángulo y cuadro con la cara hacia afuera de ctr */
+  triF(a, b, c, col, e, ctr) { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, mx = (a[0] + b[0] + c[0]) / 3 - ctr[0], my = (a[1] + b[1] + c[1]) / 3 - ctr[1], mz = (a[2] + b[2] + c[2]) / 3 - ctr[2]; if (nx * mx + ny * my + nz * mz < 0) this.tri(a, c, b, col, e); else this.tri(a, b, c, col, e); },
+  quadF(a, b, c, d, col, e, ctr) { this.triF(a, b, c, col, e, ctr); this.triF(a, c, d, col, e, ctr); },
+  /* esfera low-poly (icosaedro, con temblor fijo en los vértices): color arriba y abajo según la cara */
+  esfera(cx, cy, cz, rx, ry, rz, col, colB, sem = 1, sub = 0) {
+    const t = (1 + Math.sqrt(5)) / 2; let V = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]].map(v => { const l = Math.hypot(...v); return v.map(q => q / l); });
+    let F = [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
+    if (sub) { const C = new Map(), mid = (a, b) => { const k = a < b ? a + ',' + b : b + ',' + a; let i = C.get(k); if (i == null) { const m = V[a].map((q, j) => (q + V[b][j]) / 2), l = Math.hypot(...m); i = V.length; V.push(m.map(q => q / l)); C.set(k, i); } return i; }; const F2 = []; for (const [a, b, c] of F) { const ab = mid(a, b), bc = mid(b, c), ca = mid(c, a); F2.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]); } F = F2; }
+    const P = V.map((v, i) => { const j = 1 + (h2(i, sem, 71) - .5) * .28; return [cx + v[0] * rx * j, cy + v[1] * ry * j, cz + v[2] * rz * j]; }), ctr = [cx, cy, cz];
+    for (const [a, b, c] of F) { const ny = (V[a][1] + V[b][1] + V[c][1]) / 3, k = clamp(ny * .5 + .5, 0, 1), cc = [colB[0] + (col[0] - colB[0]) * k, colB[1] + (col[1] - colB[1]) * k, colB[2] + (col[2] - colB[2]) * k], v = .92 + h2(a + b * 7, c + sem, 72) * .16; this.triF(P[a], P[b], P[c], osc3(cc, v), 0, ctr); }
+  },
+  /* cilindro (o cono si rTop = 0) vertical de n lados, con tapa */
+  cil(x, y, z, r, h, n, col, rTop = r, colTapa = col) {
+    const ctr = [x, y + h / 2, z], A = [], B = []; for (let i = 0; i < n; i++) { const t = i / n * TAU; A.push([x + Math.cos(t) * r, y, z + Math.sin(t) * r]); B.push([x + Math.cos(t) * rTop, y + h, z + Math.sin(t) * rTop]); }
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; if (rTop > 1e-3) this.quadF(A[i], A[j], B[j], B[i], col, 0, ctr); else this.triF(A[i], A[j], B[i], col, 0, ctr); }
+    if (rTop > 1e-3) for (let i = 1; i < n - 1; i++) this.triF(B[0], B[i], B[i + 1], colTapa, 0, [x, y, z]);
+  },
+  /* caja orientada con caras hacia afuera (la caja() vieja se queda para lo que ya la usa) */
+  cajaF(x, y, z, a, L, W, Hh, col, e = 0, colTapa = col) { const c = Math.cos(a), s = Math.sin(a), hx = L / 2, hz = W / 2, P = [[-hx, -hz], [hx, -hz], [hx, hz], [-hx, hz]].map(([u, v]) => [x + u * c - v * s, z + u * s + v * c]), b = P.map(p => [p[0], y, p[1]]), t = P.map(p => [p[0], y + Hh, p[1]]), ctr = [x, y + Hh / 2, z]; for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; this.quadF(b[i], b[j], t[j], t[i], col, e, ctr); } this.quadF(t[0], t[1], t[2], t[3], colTapa, e, ctr); this.quadF(b[0], b[1], b[2], b[3], osc3(col, .6), 0, ctr); },
+  /* un árbol de MC.Arboleda (x, z en GL relativos a O; y = pie) */
+  arbol3d(x, y, z, t, detalle = 3) {
+    const E = Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan, hx = h2(t.x | 0, t.y | 0, 81), r = t.r, H = t.h, cop = E.copa.map(hex3), flor = E.flor && hx < (E.flores || 0) + .25 ? E.flor.map(hex3) : null, tronco = hex3(t.e === 'ceiba' ? '#8a7f6c' : '#5b4430'), sub = detalle >= 3 ? 1 : 0, sem = (t.x * 13 + t.y * 7) | 0;
+    const alto = Math.max(1.6, H * (E.forma === 'ancha' ? .55 : E.forma === 'conica' ? .25 : .42));
+    this.cil(x, y, z, Math.max(.16, r * .09), alto + r * .3, 5, tronco, Math.max(.1, r * .06));
+    if (E.forma === 'conica') { for (let i = 0; i < 3; i++) { const yb = y + alto + i * (H - alto) * .26, rr = r * (1.05 - i * .26); this.cil(x, yb, z, rr, (H - alto) * .5, 7, osc3(cop[1 + (i > 0)], .9 + i * .06), 0); } return; }
+    const C1 = flor ? flor[1] : cop[1], C2 = flor ? flor[0] : cop[0], top = flor ? flor[2] : cop[2], yc = y + alto + (H - alto) * .5, rv = (H - alto) * .55;
+    const ancho = E.forma === 'ancha' ? 1.45 : E.forma === 'densa' ? 1.15 : 1;
+    this.esfera(x, yc, z, r * ancho, rv * (E.forma === 'ancha' ? .62 : 1), r * ancho, acl3(C1, .08), osc3(C2, .75), sem, sub);
+    if (detalle >= 2) for (let i = 0; i < (E.forma === 'ancha' ? 3 : 2); i++) { const a = hx * 6.28 + i * 2.2, d = r * ancho * .62; this.esfera(x + Math.cos(a) * d, yc + rv * (.15 - i * .12), z + Math.sin(a) * d, r * .62, rv * .55, r * .62, i ? top : C1, osc3(C2, .7), sem + i + 1, 0); }
+  },
+  /* edificio con fachada (P: huella del mapa; O: origen GL; zb: pie en GL; e: el edificio del mundo; st: su estilo) */
+  edificio3d(P, O, zb, e, st, detalle, Z, noche = 0) {
+    const muro = hex3(st.muro), techo = hex3(st.techo), H = e.h, zt = zb + H + .3, sem = (e.s * 1e5) | 0, casa = H <= 10.5;
+    if (detalle < 2) { this.prisma(P, O, zb, zt, muro, techo, {}); return; }
+    const n = P.length >> 1, V = []; let A = 0, cx = 0, cz = 0; for (let i = 0; i < n; i++) { V.push([P[2 * i] - O[0], P[2 * i + 1] - O[1]]); cx += V[i][0] / n; cz += V[i][1] / n; }
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; A += V[i][0] * V[j][1] - V[j][0] * V[i][1]; }
+    const sg = A > 0 ? 1 : -1, ctr = [cx, zb + H / 2, cz];   // normal hacia afuera: (dz, −dx) si la huella va antihoraria (A > 0)
+    /* cuerpo y techo (a dos aguas con alero en casas rectangulares; plancha con pretil y tanque en el resto) */
+    const dos = !st.plano && !e.P && n === 4;
+    this.prisma(P, O, zb, zt, muro, techo, dos ? { dosAguas: { ancho: Math.min(e.hw, e.hd) * 2 } } : {});
+    if (dos) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
+    else if (detalle >= 3 || !casa) {
+      for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < .8) continue; const nx = (b[1] - a[1]) / L * sg * .18, nz = -(b[0] - a[0]) / L * sg * .18, a2 = [a[0] - nx, a[1] - nz], b2 = [b[0] - nx, b[1] - nz]; this.quadF([a[0], zt, a[1]], [b[0], zt, b[1]], [b[0], zt + .55, b[1]], [a[0], zt + .55, a[1]], osc3(muro, .93), 0, ctr); this.quadF([a2[0], zt, a2[1]], [b2[0], zt, b2[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], osc3(muro, .8), 0, [cx, zt + 5, cz]); this.quadF([a[0], zt + .55, a[1]], [b[0], zt + .55, b[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], acl3(muro, .2), 0, [cx, zt - 5, cz]); }
+      if (st.tanque || h2(sem, 3, 82) < .35) this.cil(cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), zt, cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4), .62, 1.25, 7, hex3('#1d2228'), .62, hex3('#2b3138'));
+    }
+    if (detalle < 3 && !casa) return;
+    /* fachada por cada muro: zócalo, ventanas con marco y vidrio, puerta, balcones y cornisa */
+    const zoc = casa && h2(sem, 6, 84) < (Z.zocalos ?? .6) ? hex3(PAL_ZOCALO[(sem >>> 3) % PAL_ZOCALO.length]) : osc3(muro, .72), marco = acl3(muro, .55), vidrio = [.16, .2, .26], luz = [1, .84, .5], puerta = hex3(['#6b3e26', '#2f5d8a', '#8a2f2f', '#2f6b45'][sem % 4]), cor = acl3(muro, .3);
+    const pisos = Math.max(1, Math.floor((H - .4) / 3)); let largo = -1, iL = 0; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L > largo) { largo = L; iL = i; } }
+    const pared = (a, b, u0, u1, y0, y1, off, col, em = 0) => { const L = Math.hypot(b[0] - a[0], b[1] - a[1]), nx = (b[1] - a[1]) / L * sg * off, nz = -(b[0] - a[0]) / L * sg * off, A1 = [a[0] + (b[0] - a[0]) * u0 + nx, a[1] + (b[1] - a[1]) * u0 + nz], B1 = [a[0] + (b[0] - a[0]) * u1 + nx, a[1] + (b[1] - a[1]) * u1 + nz]; this.quadF([A1[0], y0, A1[1]], [B1[0], y0, B1[1]], [B1[0], y1, B1[1]], [A1[0], y1, A1[1]], col, em, ctr); };
+    for (let i = 0; i < n; i++) {
+      const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 2) continue;
+      pared(a, b, 0, 1, zb, zb + .95, .03, zoc);                                   // zócalo
+      if (!dos) pared(a, b, 0, 1, zt - .38, zt, .05, cor);                      // cornisa
+      const cols = Math.max(1, Math.floor(L / 2.7)), pta = i === iL ? Math.floor(cols / 2) : -1;
+      for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) {
+        const um = (q + .5) / cols, w = Math.min(1.1, L / cols * .45) / L, y0 = zb + (p === 0 ? 1.15 : 1.0 + p * 3), y1 = y0 + (p === 0 ? 1.15 : 1.3);
+        if (p === 0 && q === pta) { const wd = Math.min(1.2, L / cols * .5) / L; pared(a, b, um - wd / 2 - .08 / L, um + wd / 2 + .08 / L, zb + .1, zb + 2.35, .04, marco); pared(a, b, um - wd / 2, um + wd / 2, zb + .1, zb + 2.25, .06, puerta); continue; }
+        if (h2(sem + i * 31 + q, p, 85) < .12) continue;
+        const enc = h2(sem + q * 7, p + i * 13, 86) < .45 ? 1 : 0;
+        pared(a, b, um - w / 2 - .1 / L, um + w / 2 + .1 / L, y0 - .1, y1 + .1, .04, marco);
+        pared(a, b, um - w / 2, um + w / 2, y0, y1, .065, enc ? luz : vidrio, enc);
+        if (p > 0 && (q + p) % 2 === 0 && h2(sem, q + p * 5, 87) < .55) {         // balcón con baranda
+          const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), bx = a[0] + (b[0] - a[0]) * um + (b[1] - a[1]) / L * sg * .38, bz = a[1] + (b[1] - a[1]) * um - (b[0] - a[0]) / L * sg * .38, bw = (w * L) + .7;
+          this.cajaF(bx, y0 - .25, bz, ang, bw, .75, .12, acl3(muro, .15)); pared(a, b, um - (bw / 2) / L, um + (bw / 2) / L, y0 - .13, y0 + .62, .76, hex3('#2a2d33'));
+        }
+      }
+    }
+  },
+  /* carro low-poly (o buseta, camión, moto o bici) en (x, y, z) GL con rumbo a */
+  carro3d(x, y, z, a, L, W, col, tipo = 'carro', noche = 0) {
+    const c = hex3(col), ca = Math.cos(a), sa = Math.sin(a), pt = (u, v, h) => [x + u * ca - v * sa, y + h, z + u * sa + v * ca], rueda = hex3('#16181c');
+    if (tipo === 'moto' || tipo === 'bici') { this.cajaF(x, y + .45, z, a, L * .55, .22, .35, c); for (const u of [-L * .36, L * .36]) { const p = pt(u, 0, 0); this.cajaF(p[0], y + .02, p[2], a, .62, .12, .62, rueda); } if (noche > .3) { const f = pt(L * .45, 0, .75); this.cajaF(f[0], f[1], f[2], a, .1, .14, .12, [1, .95, .7], 1); } return; }
+    const alto = tipo === 'buseta' || tipo === 'camion' || tipo === 'bus' ? 2.6 : 1.0, bajo = .34;
+    for (const [u, v] of [[L * .32, W * .44], [L * .32, -W * .44], [-L * .32, W * .44], [-L * .32, -W * .44]]) { const p = pt(u, v, 0); this.cajaF(p[0], y + .02, p[2], a, .66, .26, .64, rueda); }
+    if (alto > 2) {                                                          // buseta, bus o camión: caja con franja de ventanas
+      this.cajaF(x, y + bajo, z, a, L, W, alto, c, 0, acl3(c, .25));
+      if (tipo !== 'camion') for (const s of [1, -1]) { const p = pt(-L * .05, s * (W / 2 + .02), 1.55 + bajo); this.cajaF(p[0], p[1], p[2], a, L * .78, .04, .8, [.12, .16, .2]); }
+      else { const p = pt(L * .38, 0, bajo + 1.0); this.cajaF(p[0], p[1], p[2], a, L * .18, W * .96, .7, [.12, .16, .2]); }
+    } else {                                                                 // carro: chasis, capó y cabina de vidrio
+      this.cajaF(x, y + bajo, z, a, L, W, .55, c, 0, acl3(c, .12));
+      const cb = pt(-L * .06, 0, bajo + .55); this.cajaF(cb[0], cb[1], cb[2], a, L * .5, W * .84, .5, [.14, .19, .24], 0, c);
+    }
+    const fl = pt(L / 2 + .01, W * .32, bajo + .32), fr = pt(L / 2 + .01, -W * .32, bajo + .32), bl = pt(-L / 2 - .01, W * .32, bajo + .32), br = pt(-L / 2 - .01, -W * .32, bajo + .32), on = noche > .3 ? 1 : 0;
+    for (const p of [fl, fr]) this.cajaF(p[0], p[1], p[2], a, .06, .32, .14, on ? [1, .95, .75] : [.85, .85, .8], on);
+    for (const p of [bl, br]) this.cajaF(p[0], p[1], p[2], a, .06, .3, .14, [.75, .08, .08], on);
+  },
+  /* persona (peatón): piernas, torso, brazos, cabeza y pelo */
+  persona3d(x, y, z, a, A, fase = 0, alto = 1.7) {
+    const k = alto / 1.7, ca = Math.cos(a), sa = Math.sin(a), sw = Math.sin(fase) * .22, pt = (u, v, h) => [x + u * ca - v * sa, y + h * k, z + u * sa + v * ca];
+    const pan = hex3(A.cPantalon), cam = hex3(A.cCamisa), piel = hex3(A.cPiel), pelo = hex3(A.cPelo || '#2b1d14');
+    for (const [s, f] of [[.1, sw], [-.1, -sw]]) { const p = pt(f * .35, s, 0); this.cajaF(p[0], p[1], p[2], a + f * .4, .2, .17, .86 * k, pan); }
+    const t = pt(0, 0, .86); this.cajaF(t[0], t[1], t[2], a, .26, .44, .6 * k, cam);
+    for (const [s, f] of [[.27, -sw], [-.27, sw]]) { const p = pt(f * .3, s, .9); this.cajaF(p[0], p[1], p[2], a, .13, .12, .55 * k, A.manga ? cam : piel); }
+    const h = pt(0, 0, 1.62); this.esfera(h[0], h[1], h[2], .14 * k, .16 * k, .14 * k, piel, osc3(piel, .85), 3, 0);
+    const pl = pt(-.03, 0, 1.69); this.esfera(pl[0], pl[1], pl[2], .15 * k, .1 * k, .15 * k, pelo, osc3(pelo, .8), 5, 0);
+  }
+});
+MC.Mundo3D = { PAL_ZOCALO };
 
 /* ---- js/46-vistas.js ---- */
 /* =====================================================================
@@ -4535,9 +4826,11 @@ Object.assign(MC, { VistaGL, Malla, M4 });
    - Calidad automática: mide el tiempo de cada cuadro y sube o baja el detalle (tráfico, edificios, resolución).
    ===================================================================== */
 const VISTAS = [
-  { id: 'cenital', n: 'Cenital', icon: '🗺️', tipo: '2d', modo: 'cenital', control: 'mundo' },
-  { id: 'ciudad3d', n: 'Ciudad 3D', icon: '🏙️', tipo: '2d', modo: 'oblicua', control: 'mundo' },
-  { id: 'maqueta', n: 'Maqueta 2:1', icon: '🧊', tipo: '2d', modo: 'maqueta', control: 'mundo' },
+  /* 3.0: un solo mundo 3D y varias cámaras. Cenital, ciudad y maqueta son cámaras aéreas sobre el mundo 3D; si el aparato
+     no tiene GPU (WebGL por software o ninguno), se dibujan con su respaldo 2D (el mismo mundo, el mismo encuadre). */
+  { id: 'cenital', n: 'Juego (cenital 3D)', icon: '🗺️', tipo: 'gl', perfil: 'cenital', respaldo: 'cenital', control: 'mundo' },
+  { id: 'ciudad3d', n: 'Ciudad 3D', icon: '🏙️', tipo: 'gl', perfil: 'oblicua', respaldo: 'oblicua', control: 'mundo' },
+  { id: 'maqueta', n: 'Maqueta', icon: '🧊', tipo: 'gl', perfil: 'maqueta', respaldo: 'maqueta', control: 'mundo' },
   { id: 'lateral', n: 'Lateral', icon: '↔️', tipo: '2d', modo: 'lateral', control: 'mundo' },
   { id: 'pano', n: 'Panorámica', icon: '🎬', tipo: 'pano', control: 'pano' },
   { id: 'tercera', n: 'Tercera persona', icon: '🎮', tipo: 'gl', perfil: 'tercera', control: 'volante' },
@@ -4560,14 +4853,19 @@ class Vistas {
     let v = VISTAS.find(q => q.id === id) || VISTAS[0];
     if (v === this.actual) return v; this.anterior = this.actual; this.actual = v;
     if (this._ultimo) { this.fundido = { cv: this._copia(this._ultimo), t: 0 }; }
-    if (E && E.camara) { if (v.perfil) E.camara.usarPerfil(v.perfil); if (v.modo === 'oblicua' && (E.camara.pitch < .3 || E.camara.pitch > 1.2)) E.camara.pitch = .62; if (v.id === 'maqueta') E.camara.zoom = Math.max(E.camara.zoom, 1.2); if (v.id === 'lateral') { E.camara.pitch = 1.38; E.camara.girarA(Math.round(E.camara.yaw / (Math.PI / 2)) * Math.PI / 2); E.camara.zoom = Math.max(E.camara.zoom, 2); } }
+    if (E && E.camara) { if (v.perfil) E.camara.usarPerfil(v.perfil); if ((v.modo || v.respaldo) === 'oblicua' && (E.camara.pitch < .3 || E.camara.pitch > 1.2)) E.camara.pitch = .62; if (v.id === 'maqueta') E.camara.zoom = Math.max(E.camara.zoom, 1.2); if (v.id === 'lateral') { E.camara.pitch = 1.38; E.camara.girarA(Math.round(E.camara.yaw / (Math.PI / 2)) * Math.PI / 2); E.camara.zoom = Math.max(E.camara.zoom, 2); } }
     MC.emit('vista', v); return v;
   }
   siguiente(E, paso = 1) { const L = this.lista().filter(v => v.disponible), i = L.findIndex(v => v.id === this.actual.id); return this.usar(L[(i + paso + L.length) % L.length].id, E); }
   _copia(src) { const c = lienzo(src.width, src.height); if (c) c.getContext('2d').drawImage(src, 0, 0); return c; }
   /* dibuja la escena E en el contexto g (W × H en px de pantalla) */
+  /* ¿hay 3D de verdad (GPU)? Si no, las cámaras aéreas usan su respaldo 2D. motor3d: 'auto' | 'gl' | 'raster' | '2d' */
+  gl3d() { return this.motor3d !== '2d' && this.motor3d !== 'raster' && this.hayGL() && !this.usaRaster(); }
+  efectiva() { const v = this.actual; return v.respaldo && !this.gl3d() ? (v._r2d ||= Object.assign({}, v, { tipo: '2d', modo: v.respaldo })) : v; }
+  /* metros → pantalla con la vista que esté (2D, pixel o 3D): para la flecha al objetivo, globos y etiquetas */
+  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual; if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, z, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
   dibujar(g, W, H, E, dt = 1 / 60) {
-    const t0 = MC.ahora(), v = this.actual, px = this.pixel; E.losas = this.losas; E.losasLejos = this.losasLejos; E.calidad = this.calidad;
+    const t0 = MC.ahora(), v = this._ef = this.efectiva(), px = this.pixel; this._W = W; this._H = H; if (E.camara) { E.camara.pantalla = [W, H]; if (this.actual.perfil && E.camara.perfil !== this.actual.perfil) E.camara.usarPerfil(this.actual.perfil); } E.losas = this.losas; E.losasLejos = this.losasLejos; E.calidad = this.calidad;
     let dst = g, w = W, h = H;
     if (px) { w = Math.max(80, Math.round(W / this.escalaPixel)); h = Math.max(60, Math.round(H / this.escalaPixel)); if (!this._buf || this._buf.width !== w || this._buf.height !== h) this._buf = lienzo(w, h); dst = this._buf.getContext('2d'); }
     const zoomReal = E.camara.zoom; if (px) E.camara.zoom = zoomReal / this.escalaPixel;
@@ -5265,6 +5563,7 @@ const UI = {
 #${id} .mision{max-width:min(320px,70vw);padding:8px 12px;border-radius:var(--r);background:var(--f);border-left:4px solid var(--a)}
 #${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
+#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaG button{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:12px;width:48px;height:48px;border-radius:50%;border:0;background:#fff;color:#111;font:800 20px system-ui}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
 #${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.38}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
 @media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:66px}#${id} .ficha{max-width:23vw}#${id} .mision .d{-webkit-line-clamp:1}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
@@ -5304,6 +5603,26 @@ const UI = {
       /* minimapa redondo con las losas del motor, girado con la cámara */
       minimapa(vistas) { const c = document.createElement('canvas'); c.className = 'mini'; c.width = c.height = 240; capa.appendChild(c); ui._mini = { c, vistas }; return c; },
       pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } for (const p of puntos) { g.fillStyle = p.color || '#ffc23a'; g.beginPath(); g.arc(p.x, p.y, 12, 0, TAU); g.fill(); } g.restore(); g.fillStyle = '#39ffb3'; g.beginPath(); g.moveTo(R, R - 9); g.lineTo(R + 6, R + 7); g.lineTo(R - 6, R + 7); g.fill(); },
+      /* 3.0: el MAPA GRANDE (al tocar el minimapa). Ver todo el mundo ya no es alejar la cámara del juego (eso lo pone lento):
+         es una hoja aparte, que se pinta solo al abrirla y al moverla. Arrastrar = mover; pellizco o rueda = zoom; ✕ = cerrar. */
+      abrirMapa(vistas, M, puntos = [], yo = null) {
+        if (ui._mapa) return ui._mapa; const o = div('mapaG'), c = document.createElement('canvas'), x = document.createElement('button'), t = document.createElement('small'); o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Mapa');
+        x.textContent = '✕'; x.setAttribute('aria-label', 'Cerrar el mapa'); t.textContent = 'Arrastra para mover · pellizca para acercar'; o.append(c, x, t); capa.appendChild(o);
+        const L = vistas.losasLejos || vistas.losas, s = L.L, d = Math.min(2, devicePixelRatio || 1); let k = Math.min(innerWidth / M.ancho, innerHeight / M.alto) * 1.6, cx = yo ? yo.x : M.ancho / 2, cy = yo ? yo.y : M.alto / 2;
+        const RES = [.0625, .125, .25, .5], pintar = () => { const W = c.width = Math.round(innerWidth * d), H = c.height = Math.round(innerHeight * d), g = c.getContext('2d'), z = k * d, res = RES.find(r => r >= z) || .5;
+          g.fillStyle = '#1d3b4f'; g.fillRect(0, 0, W, H); g.setTransform(z, 0, 0, z, W / 2 - cx * z, H / 2 - cy * z); g.imageSmoothingEnabled = true;
+          const x0 = cx - W / 2 / z, x1 = cx + W / 2 / z, y0 = cy - H / 2 / z, y1 = cy + H / 2 / z;
+          for (let gy = Math.floor(Math.max(0, y0) / s); gy <= Math.floor(Math.min(M.alto, y1) / s); gy++) for (let gx = Math.floor(Math.max(0, x0) / s); gx <= Math.floor(Math.min(M.ancho, x1) / s); gx++) { const q = L.losa(gx, gy, res, false, 0); if (q) g.drawImage(q, gx * s, gy * s, s + .5 / z, s + .5 / z); }
+          g.setTransform(1, 0, 0, 1, 0, 0); const P = (wx, wy) => [W / 2 + (wx - cx) * z, H / 2 + (wy - cy) * z];
+          for (const p of puntos) { const [px, py] = P(p.x, p.y); g.fillStyle = p.color || '#ffc23a'; g.strokeStyle = '#000'; g.lineWidth = 2 * d; g.beginPath(); g.arc(px, py, 7 * d, 0, TAU); g.fill(); g.stroke(); if (p.texto) { g.font = '700 ' + 12 * d + 'px system-ui'; g.fillStyle = '#fff'; g.fillText(p.texto, px + 10 * d, py + 4 * d); } }
+          if (yo) { const [px, py] = P(yo.x, yo.y); g.save(); g.translate(px, py); g.rotate((yo.a || 0) + Math.PI / 2); g.fillStyle = '#2ee6a6'; g.strokeStyle = '#06261c'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(0, -11 * d); g.lineTo(8 * d, 9 * d); g.lineTo(0, 4 * d); g.lineTo(-8 * d, 9 * d); g.closePath(); g.fill(); g.stroke(); g.restore(); } };
+        const dedos = new Map(); let base = null;
+        c.addEventListener('pointerdown', e => { c.setPointerCapture(e.pointerId); dedos.set(e.pointerId, [e.clientX, e.clientY]); base = dedos.size === 2 ? [...dedos.values()] : null; });
+        c.addEventListener('pointermove', e => { const a = dedos.get(e.pointerId); if (!a) return; if (dedos.size === 1) { cx -= (e.clientX - a[0]) / k; cy -= (e.clientY - a[1]) / k; } dedos.set(e.pointerId, [e.clientX, e.clientY]); if (dedos.size === 2 && base) { const v = [...dedos.values()], d0 = Math.hypot(base[0][0] - base[1][0], base[0][1] - base[1][1]), d1 = Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1]); if (d0 > 10) k = clamp(k * d1 / d0, .03, 3); base = v; } pintar(); });
+        const fin = e => { dedos.delete(e.pointerId); base = null; }; c.addEventListener('pointerup', fin); c.addEventListener('pointercancel', fin);
+        c.addEventListener('wheel', e => { e.preventDefault(); k = clamp(k * Math.exp(-e.deltaY * .0015), .03, 3); pintar(); }, { passive: false });
+        x.onclick = () => { o.remove(); ui._mapa = null; }; pintar(); return (ui._mapa = { o, pintar });
+      },
       /* joystick visible: donde se pone el dedo aparece la base y la perilla; quieto, una guía abajo a la izquierda */
       joystick(ctl, op = {}) { const j = div('joy'), k = document.createElement('i'), t = document.createElement('small'); j.appendChild(k); j.appendChild(t); t.textContent = op.texto ?? 'Arrastra para moverte'; ui._joy = { j, k, t, ctl, usado: false, t0: Date.now() }; return j; },
       pintarJoystick() { const J = ui._joy; if (!J) return; const S = J.ctl.stick, r = J.ctl.el.getBoundingClientRect();
@@ -6350,7 +6669,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;
