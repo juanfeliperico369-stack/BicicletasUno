@@ -1,5 +1,16 @@
 # Tareas de cada IA · Juega EnCicla
 
+> **Motor City 3.0 (20‑nov‑2026):** antes de tu encargo, lee **las 10 reglas que dejó el feedback del autor** en `motor-city/docs/PROXIMO-NUEVA-YORK.md` §3:
+> - un solo mundo con varias cámaras;
+> - volumen en lo que se levanta;
+> - fachadas con detalle;
+> - cámara con topes y un mapa para ver todo;
+> - tutoriales opcionales;
+> - fluidez medida;
+> - probar en un celular real con GPU.
+>
+> Lo que sigue después de los encargos de Gemini y ChatGPT es «Getaway Nueva York».
+
 > **Si te dijeron «mira el repositorio y haz tu parte», empieza aquí.** Haz solo tu parte, en orden.
 > - El contexto del motor está en `motor-city/docs/DOCUMENTO-UNICO.md`, y lo que cambió en `docs/CONTEXTO-MOTOR-CITY.md`.
 > - Al terminar: actualiza `docs/BITACORA.md` e informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.

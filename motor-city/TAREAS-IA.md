@@ -5,6 +5,8 @@
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
 
+**Lo que sigue después de la 3.0:** la prueba en grande, «Getaway Nueva York». El plan, el orden y **las 10 reglas que dejó el feedback del autor para todas las IA** están en `docs/PROXIMO-NUEVA-YORK.md`. Léelas antes de tu encargo.
+
 **Novedades de la 3.0 (20‑nov‑2026): un solo mundo 3D y varias cámaras.**
 - La cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo 3D (`js/45-gl3d.js`); sin GPU usan su respaldo 2D.
 - Hay fachadas, árboles low-poly que son los mismos de la 2D, artilugios físicos (`MC.Objetos`), topes de zoom y el mapa grande.
@@ -83,6 +85,8 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H15** (3.0) | **Los colores reales de los zócalos de Guatapé** | De 10 a 15 colores de zócalos y fachadas reales, con su fuente (foto de dominio público o con licencia libre, o una fuente oficial). | `arte/dominio-publico/zocalos-guatape.json`: `[{ "hex", "dónde", "fuente" }]`. Claude los pone en `PAL_ZOCALO`. |
 | **G‑H16** (3.0) | **Fluidez del 3D contra el 2D en tu celular** | ⚙️ Ajustes → 📈 Telemetría. 3 minutos con la cámara de juego (3D) y 3 con «Calidad: baja» (2D). Anota el modelo, la mediana y el percentil 95, y la densidad del lienzo. | Una tabla en tu reporte. |
 | **G‑H17** (3.0) | **30 objetos del mobiliario real** de Guatapé y Medellín para los artilugios físicos: bancas, materas, bolardos, postes, rejas, motos parqueadas… | Para cada uno: tamaño aproximado en metros, material, color y si se mueve o se rompe al chocar. | `contenido/objetos-gemini.json`. Codex los convierte en tipos de `MC.Objetos`. |
+| **G‑H18** (Nueva York) | **50 lugares de Manhattan** para el juego: museos, puentes, parques, garajes y miradores. | Para cada uno: nombre, latitud y longitud, tipo y una fuente. | `contenido/nueva-york-lugares.json` |
+| **G‑H19** (Nueva York) | **Análisis de persecuciones** en videos de *Reckless Getaway 2*, *Pako Forever* y *#DRIVE*. | Qué hace la cámara, cuántos perseguidores hay, cómo sube la dificultad y qué premia. Una tabla por juego, con minuto y segundo. | `reportes/<fecha>-gemini-persecuciones.md` |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -141,6 +145,7 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A12** (2.10) | **Tráiler de Mandados con HyperFrames** (skill `hyperframes`): 30 s en vertical 9:16 y en horizontal 16:9:<ul><li>con capturas reales (`node motor.mjs capturas`) de las vistas y de los estilos (realista, cómic, 1 bit, acuarela);</li><li>con subtítulos en español y música libre de derechos;</li><li>sin cifras ni frases inventadas.</li></ul> | `videos/` (MP4 de menos de 15 MB) y el HTML de la composición |
 | **C‑A13** (3.0) | **Láminas de fachadas de Guatapé por módulos**: ventana, puerta, balcón, zócalo y cornisa, en 6 combinaciones de color reales (frente, lado y detalle). Son la guía para el atlas de fachadas del mundo 3D. | `edificio3d` (C‑M28) |
 | **C‑A14** (3.0) | **Vehículos colombianos low-poly en vistas ortográficas** (frente, lado y arriba, con medidas): buseta, chiva, taxi, moto con parrillero, camión de estacas y bici EnCicla. Codex los modela en código a partir de las láminas. | `carro3d` |
+| **C‑A15** (Nueva York) | **Arte de Nueva York**, todo público: taxi amarillo, patrulla, carros de «la mafia» (sedanes negros de los 70), módulos de fachada de *brownstone* con escalera de incendios, rascacielos (3 estilos), puentes, el muelle y el *skyline* para los impostores. Sin marcas ni logos. | `carro3d`, `edificio3d` e impostores |
 | **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 ### Código (Codex), en orden
@@ -154,6 +159,8 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑M27** (3.0) | **Luz del mundo 3D:** sombras de los edificios y los árboles con *shadow map* en WebGL 1 (si no se puede, sombras proyectadas en el suelo), y desenfoque de maqueta (*tilt-shift*) con la profundidad, como HD‑2D. Debe mantener 60 cuadros por segundo en un celular medio. | `js/45-gl.js` con su prueba. |
 | **C‑M28** (3.0) | **Atlas de fachadas con UV** para `edificio3d`, a partir de las láminas C‑A13 y del arte de ChatGPT, más **impostores lejanos** (siluetas de cerros y torres) para la vista detrás del jugador. Se hornean de lado con la Arboleda y los edificios. | `js/45-gl3d.js` |
 | **C‑M29** (3.0) | **Más física:** rampas y saltos con cámara lenta al aterrizar, destrucción ligera (vallas, conos y postes que se doblan), objetos movidos que se guardan por sector (`MC.GuardadoSectores`) y los 30 objetos de G‑H17. | `js/32-objetos.js` con su prueba. |
+| **C‑M30** (Nueva York) | **Craquear Manhattan:** `geo/territorio.py --id nueva_york --bbox=-74.03,40.68,-73.90,40.88`, partido en **sectores de 1 km** que se cargan alrededor del jugador (MC4 por sectores), con su prueba de memoria en un celular medio. | `datos/nueva_york/` y `ciudades/nueva_york.json` |
+| **C‑M31** (Nueva York) | **Mundo redondo:** curvatura en el sombreador (d²/2R) y vista de planeta con atmósfera (dispersión de Rayleigh simple) y estrellas al alejarse del mapa. | `js/45-gl.js` |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
 | **C‑M17** | **Lluvia y atmósfera que se ven** (R02, R03 y R09): asfalto mojado más oscuro, charcos con reflejo y salpicaduras, y niebla de distancia en la maqueta y la lateral, sin pasar de 2 ms por cuadro. |
 | **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |

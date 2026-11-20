@@ -616,6 +616,8 @@ No hace falta conectar ninguna aplicación.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
 
+**Lo que sigue después de la 3.0:** la prueba en grande, «Getaway Nueva York». El plan, el orden y **las 10 reglas que dejó el feedback del autor para todas las IA** están en `docs/PROXIMO-NUEVA-YORK.md`. Léelas antes de tu encargo.
+
 **Novedades de la 3.0 (20‑nov‑2026): un solo mundo 3D y varias cámaras.**
 - La cenital, la ciudad y la maqueta son cámaras sobre el mismo mundo 3D (`js/45-gl3d.js`); sin GPU usan su respaldo 2D.
 - Hay fachadas, árboles low-poly que son los mismos de la 2D, artilugios físicos (`MC.Objetos`), topes de zoom y el mapa grande.
@@ -694,6 +696,8 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H15** (3.0) | **Los colores reales de los zócalos de Guatapé** | De 10 a 15 colores de zócalos y fachadas reales, con su fuente (foto de dominio público o con licencia libre, o una fuente oficial). | `arte/dominio-publico/zocalos-guatape.json`: `[{ "hex", "dónde", "fuente" }]`. Claude los pone en `PAL_ZOCALO`. |
 | **G‑H16** (3.0) | **Fluidez del 3D contra el 2D en tu celular** | ⚙️ Ajustes → 📈 Telemetría. 3 minutos con la cámara de juego (3D) y 3 con «Calidad: baja» (2D). Anota el modelo, la mediana y el percentil 95, y la densidad del lienzo. | Una tabla en tu reporte. |
 | **G‑H17** (3.0) | **30 objetos del mobiliario real** de Guatapé y Medellín para los artilugios físicos: bancas, materas, bolardos, postes, rejas, motos parqueadas… | Para cada uno: tamaño aproximado en metros, material, color y si se mueve o se rompe al chocar. | `contenido/objetos-gemini.json`. Codex los convierte en tipos de `MC.Objetos`. |
+| **G‑H18** (Nueva York) | **50 lugares de Manhattan** para el juego: museos, puentes, parques, garajes y miradores. | Para cada uno: nombre, latitud y longitud, tipo y una fuente. | `contenido/nueva-york-lugares.json` |
+| **G‑H19** (Nueva York) | **Análisis de persecuciones** en videos de *Reckless Getaway 2*, *Pako Forever* y *#DRIVE*. | Qué hace la cámara, cuántos perseguidores hay, cómo sube la dificultad y qué premia. Una tabla por juego, con minuto y segundo. | `reportes/<fecha>-gemini-persecuciones.md` |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -752,6 +756,7 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A12** (2.10) | **Tráiler de Mandados con HyperFrames** (skill `hyperframes`): 30 s en vertical 9:16 y en horizontal 16:9:<ul><li>con capturas reales (`node motor.mjs capturas`) de las vistas y de los estilos (realista, cómic, 1 bit, acuarela);</li><li>con subtítulos en español y música libre de derechos;</li><li>sin cifras ni frases inventadas.</li></ul> | `videos/` (MP4 de menos de 15 MB) y el HTML de la composición |
 | **C‑A13** (3.0) | **Láminas de fachadas de Guatapé por módulos**: ventana, puerta, balcón, zócalo y cornisa, en 6 combinaciones de color reales (frente, lado y detalle). Son la guía para el atlas de fachadas del mundo 3D. | `edificio3d` (C‑M28) |
 | **C‑A14** (3.0) | **Vehículos colombianos low-poly en vistas ortográficas** (frente, lado y arriba, con medidas): buseta, chiva, taxi, moto con parrillero, camión de estacas y bici EnCicla. Codex los modela en código a partir de las láminas. | `carro3d` |
+| **C‑A15** (Nueva York) | **Arte de Nueva York**, todo público: taxi amarillo, patrulla, carros de «la mafia» (sedanes negros de los 70), módulos de fachada de *brownstone* con escalera de incendios, rascacielos (3 estilos), puentes, el muelle y el *skyline* para los impostores. Sin marcas ni logos. | `carro3d`, `edificio3d` e impostores |
 | **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 #### Código (Codex), en orden
@@ -765,6 +770,8 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑M27** (3.0) | **Luz del mundo 3D:** sombras de los edificios y los árboles con *shadow map* en WebGL 1 (si no se puede, sombras proyectadas en el suelo), y desenfoque de maqueta (*tilt-shift*) con la profundidad, como HD‑2D. Debe mantener 60 cuadros por segundo en un celular medio. | `js/45-gl.js` con su prueba. |
 | **C‑M28** (3.0) | **Atlas de fachadas con UV** para `edificio3d`, a partir de las láminas C‑A13 y del arte de ChatGPT, más **impostores lejanos** (siluetas de cerros y torres) para la vista detrás del jugador. Se hornean de lado con la Arboleda y los edificios. | `js/45-gl3d.js` |
 | **C‑M29** (3.0) | **Más física:** rampas y saltos con cámara lenta al aterrizar, destrucción ligera (vallas, conos y postes que se doblan), objetos movidos que se guardan por sector (`MC.GuardadoSectores`) y los 30 objetos de G‑H17. | `js/32-objetos.js` con su prueba. |
+| **C‑M30** (Nueva York) | **Craquear Manhattan:** `geo/territorio.py --id nueva_york --bbox=-74.03,40.68,-73.90,40.88`, partido en **sectores de 1 km** que se cargan alrededor del jugador (MC4 por sectores), con su prueba de memoria en un celular medio. | `datos/nueva_york/` y `ciudades/nueva_york.json` |
+| **C‑M31** (Nueva York) | **Mundo redondo:** curvatura en el sombreador (d²/2R) y vista de planeta con atmósfera (dispersión de Rayleigh simple) y estrellas al alejarse del mapa. | `js/45-gl.js` |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
 | **C‑M17** | **Lluvia y atmósfera que se ven** (R02, R03 y R09): asfalto mojado más oscuro, charcos con reflejo y salpicaduras, y niebla de distancia en la maqueta y la lateral, sin pasar de 2 ms por cuadro. |
 | **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |
@@ -867,6 +874,66 @@ Sobre las cámaras de esos juegos se publica poco. Lo que sigue sale de lo que s
 - [Reckless Getaway 2 en App Store](https://apps.apple.com/us/app/id1190553787), [reseña de Reckless Getaway (Pocket Gamer)](https://www.pocketgamer.com/reckless-getaway/review-4216/) y [Malavida](https://malavida.com/en/soft/reckless-getaway-2/iphone)
 - GTA San Andreas, de la comunidad y no oficial: [Project2DFX](https://libertycity.net/files/gta-san-andreas/140501-project2dfx-v4.3.html), [guía de modding](https://gtacommunitydocs.vercel.app/docs/san-andreas-modding-guide/graphics/) y [MTA: distancias LOD](https://wiki.multitheftauto.com/wiki/EngineSetModelLODDistance?oldid=82240)
 - Cámaras: [Cinemachine, guía de seguimiento](https://uhiyama-lab.com/en/notes/unity/unity-cinemachine-camera-guide/), [How to Make a Good 2D Camera (GMTK)](https://gmtk.substack.com/p/how-to-make-a-good-2d-camera) y [cámara de un juego de carreras visto desde arriba (Game Developer)](https://gamedeveloper.com/game-platforms/let-s-talk-about-top-down-view-camera-system-for-a-racing-game)
+
+
+---
+
+# ANEXO 0e. Lo que sigue: Getaway Nueva York y las reglas del feedback (`docs/PROXIMO-NUEVA-YORK.md`)
+
+
+> **Pedido del autor (20‑nov‑2026)**, para después de las mejoras de Gemini y ChatGPT:
+> - craquear Nueva York, en especial Manhattan;
+> - alrededor, llanuras, montañas, lagos, playas y todos los tipos de terreno, para exprimir el motor;
+> - un juego como *Getaway*: persecuciones en carro con una trama breve de mafia, que funcione en grande;
+> - todo en un mundo que se pueda ver redondo, con la atmósfera y el espacio.
+>
+> Este documento lo deja listo. **Nadie empieza el juego antes de cerrar los encargos 3.0** (`TAREAS-IA.md`).
+
+### 1. El mundo
+| Parte | Cómo | Quién |
+|---|---|---|
+| **Manhattan real** | `python3 geo/territorio.py --id nueva_york --bbox=-74.03,40.68,-73.90,40.88`, de Overture/OSM más el relieve SRTM. Se cuentan unos 45.000 edificios con su altura, la cuadrícula, Central Park, los muelles y los puentes de Brooklyn, Manhattan, Williamsburg y Queensboro. La atribución es ODbL. | Codex (C‑M30) |
+| **El resto del mundo** | `MC.Generador` alrededor de la isla, a escala real. Hay llanuras con pueblos, montañas con nieve, lagos, playas con mar, desierto y bosque, con las carreteras que los unen. | Claude |
+| **Carga por sectores** | El MC4 de Manhattan no puede ir entero en memoria en un celular. Hay que partirlo en sectores de 1 km que se cargan alrededor del jugador, con la niebla y el radio de vista de la 3.0, y guardar los cambios con `MC.GuardadoSectores`. | Claude, y Codex (C‑M22) |
+| **Rascacielos que se ven a lo lejos** | Impostores (siluetas horneadas) para lo que está a más de 600 m, como el LOD de GTA San Andreas. En el borde, la niebla. | Codex (C‑M28) |
+| **Mundo redondo, atmósfera y espacio** | Se hace en tres pasos:<ol><li>**Curvatura en el sombreador:** la altura baja con d²/2R, así que el horizonte se curva al subir.</li><li>**Vista de planeta:** al alejarse más allá del mapa, el mundo pasa a ser una esfera con la textura de `losasLejos`, con un halo de atmósfera (dispersión de Rayleigh simple) y estrellas.</li><li>**El espacio:** con `MC.Cosmos` (ya existe) pone el Sol y la Luna en su lugar y las estrellas de la hora.</li></ol> | Claude (C‑M31 para el sombreador de atmósfera, si Codex llega antes) |
+
+### 2. El juego (*Getaway*, todo público)
+- **Trama breve, cinco capítulos:**
+  - un conductor novato hereda el taxi de su tío y descubre que una familia de «la mafia» le debe al barrio;
+  - escapes, rescates de mercancía robada (cuadros de un museo) y una última persecución por el puente de Brooklyn.
+  - Sin sangre ni armas a la vista: los «golpes» son choques de carros y la policía persigue, como en Reckless Getaway.
+- **Persecución:**
+  - nivel de búsqueda de 1 a 5;
+  - pilotos de `MC.IA` que cortan el paso;
+  - casi choques que dan turbo;
+  - daño del carro (`MC.Desgaste`);
+  - rampas y destrucción ligera (`MC.Objetos`);
+  - escondites (garajes) para perderlos.
+  La cámara ya tiene `camara.persecucion`: se aleja, se inclina y se mece.
+- **Cámaras:** la cámara de juego (cenital 3D, que se inclina al acercarse), la de detrás del carro y la maqueta para las repeticiones. El mapa grande sirve para planear la ruta.
+- **Mapa:** las calles reales con su nombre, las avenidas con semáforos, el tráfico denso de Midtown y los taxis amarillos.
+
+### 3. Lo que aprendió el motor del feedback del autor (reglas para TODAS las IA)
+1. **Un solo mundo, varias cámaras.** Nunca se hace un contenido distinto para 2D y otro para 3D: el 2D es el respaldo del mismo mundo.
+2. **Lo que se levanta es volumen:** árboles, casas, carros y gente. El suelo puede ser losa 2D, sin nada pintado encima que también exista en 3D.
+3. **Fachadas con detalle:** zócalo, ventanas, puerta, balcones y techo, con detalle por distancia.
+4. **Cámara:**
+   - ni tan cerca ni tan lejos, con topes;
+   - para ver todo, el mapa, no alejar el mundo vivo;
+   - una cámara continua, no un menú de vistas.
+5. **Jerarquía:** lo principal a la vista. Las demás vistas y los filtros de estilo van en un submenú.
+6. **Periferia definida:** cada cámara carga solo su radio, con niebla en el borde, y la carga no se nota.
+7. **Tutoriales opcionales:** un botón, nunca una ventana que salga sola.
+8. **Fluidez antes que peso:** medir el tiempo real entre cuadros (lo que cuesta pintar no lo ve el reloj de JS) y bajar la densidad solo si sirve.
+9. **Probar en un celular real con GPU**, no solo en el navegador de pruebas sin GPU.
+10. **Física con peso:** el que choca empuja según su masa; nada atraviesa nada.
+
+### 4. Orden de trabajo
+1. Cerrar los encargos 3.0: G‑H14…G‑H17, C‑M26…C‑M29, C‑A13 y C‑A14.
+2. Gemini: G‑H18 y G‑H19. ChatGPT: C‑A15. Codex: C‑M30. Claude: los sectores, el mundo de alrededor y el planeta.
+3. Claude arma el juego «Getaway Nueva York» (`juegos/getaway/`), con sus pruebas y el público simulado (`node motor.mjs publico`).
+4. Se prueba en grande con un celular medio y uno alto: la telemetría de Gemini y el público simulado.
 
 
 ---
@@ -3092,6 +3159,14 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 20‑nov‑2026 · 3.0.0 · Los tres juegos actualizados y Nueva York preparado (Claude Code)
+- **EnCicla** (`src/js/97-motor30.js`):
+  - la calidad automática del 3.0;
+  - artilugios físicos a escala de sprite: conos de obra en las ciclorrutas y balones en las plazas, con su prueba.
+- **El Metro** (`src/js/69-tutorial.js`): tutorial opcional «❓ Cómo se juega», que nunca sale solo y se puede saltar o apagar.
+- **Run Scooter:** el tutorial ya no se impone en la primera partida; se pide en Ajustes.
+- **Lo que sigue:** `docs/PROXIMO-NUEVA-YORK.md`, con «Getaway Nueva York» (Manhattan, el mundo de alrededor, el planeta redondo y la persecución) y las 10 reglas del feedback para todas las IA. Pedidos G‑H18, G‑H19, C‑A15, C‑M30 y C‑M31.
 
 ### 20‑nov‑2026 · 3.0.0 · Un solo mundo 3D y varias cámaras (Claude Code)
 **Pedido:** el autor probó y lo sintió básico:

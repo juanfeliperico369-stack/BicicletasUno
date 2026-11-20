@@ -1,5 +1,13 @@
 # Bitácora de Motor City
 
+## 20‑nov‑2026 · 3.0.0 · Los tres juegos actualizados y Nueva York preparado (Claude Code)
+- **EnCicla** (`src/js/97-motor30.js`):
+  - la calidad automática del 3.0;
+  - artilugios físicos a escala de sprite: conos de obra en las ciclorrutas y balones en las plazas, con su prueba.
+- **El Metro** (`src/js/69-tutorial.js`): tutorial opcional «❓ Cómo se juega», que nunca sale solo y se puede saltar o apagar.
+- **Run Scooter:** el tutorial ya no se impone en la primera partida; se pide en Ajustes.
+- **Lo que sigue:** `docs/PROXIMO-NUEVA-YORK.md`, con «Getaway Nueva York» (Manhattan, el mundo de alrededor, el planeta redondo y la persecución) y las 10 reglas del feedback para todas las IA. Pedidos G‑H18, G‑H19, C‑A15, C‑M30 y C‑M31.
+
 ## 20‑nov‑2026 · 3.0.0 · Un solo mundo 3D y varias cámaras (Claude Code)
 **Pedido:** el autor probó y lo sintió básico:
 - las dimensiones mal ideadas;
