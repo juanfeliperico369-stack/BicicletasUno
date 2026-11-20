@@ -330,6 +330,26 @@ console.log('18) Entrega maestra de referencias: fauna, huellas, telemetría y c
   ok(!otro._squash,'Cambiar de personaje no produce un aterrizaje del anterior');
 }
 
+{
+  const S = new MC.GuardadoSectores({ mundo: 'guatape', lado: 100 });
+  const id = MC.GuardadoSectores.id('guatape', 'valla', 'cruce/1');
+  S.cambiar(-1, 20, id, { rota: true, huellas: [1, 2] });
+  const primera = S.actualizar(-1, 20, 0), segunda = S.actualizar(101, 20, 0);
+  const valores = new Map(), storage = { setItem: (k, v) => valores.set(k, v), getItem: k => valores.get(k) ?? null };
+  const escrito = S.guardar('partida', storage), restaurado = MC.GuardadoSectores.leer('partida', storage);
+  const dato = restaurado.obtener(-1, 20, id); dato.huellas.push(3);
+  const migrado = MC.GuardadoSectores.restaurar({ mundo: 'guatape', cambios: {} }, {
+    0: d => ({ schema_version: 1, mundo: d.mundo, lado: 100, sectores: d.cambios })
+  });
+  let versionRechazada = false;
+  try { MC.GuardadoSectores.restaurar({ schema_version: 2 }); } catch (e) { versionRechazada = true; }
+  const fallo = S.guardar('partida', { setItem() { throw new Error('cuota'); } });
+  ok(escrito && primera.despiertan.includes('-1,0') && segunda.duermen.includes('-1,0') &&
+     restaurado.obtener(-1, 20, id).huellas.length === 2 && migrado.mundo === 'guatape' &&
+     versionRechazada && fallo === false && valores.has('partida'),
+     'sectores: identidad, sueño y retorno, migración, copias y fallo de almacenamiento');
+}
+
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }

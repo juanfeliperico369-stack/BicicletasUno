@@ -14,6 +14,14 @@ Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas 
 | `motor-city-ciencia` | Números reales |
 | `motor-city-arte` | Arte |
 | `motor-city-skills-externas` | Skills y plugins de terceros: Hallmark (páginas web), Modern Web Guidance (HTML/CSS/JS moderno), find-skills, HyperFrames (videos) y el público simulado |
+| `motor-city-web-moderna` | Plataforma web moderna y Baseline (basada en Modern Web Guidance) |
+| `motor-city-diseno-ui` | Auditoría anti-clichés de IA para HUD y portadas (basada en Hallmark) |
+| `motor-city-qa-playwright` | QA táctil `412 × 860`, inspección visual y telemetría con Playwright |
+| `motor-city-revision-ia` | Revisión de PRs IA, procedencia de plugins y simulación como hipótesis |
+
+Catálogo de plugins externos verificados y sus comandos de instalación:
+- `docs/SKILLS-Y-PLUGINS.md`, de Gemini;
+- `skills-externas.json`, la lista que lee `node motor.mjs skills`.
 
 **Skills externas:**
 - Claude Code las recibe como plugins por `.claude/settings.json`.

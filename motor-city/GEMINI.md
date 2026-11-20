@@ -13,5 +13,11 @@ Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas 
 | `motor-city-juegos` | Hacer juegos |
 | `motor-city-ciencia` | Números reales |
 | `motor-city-arte` | Arte |
+| `motor-city-web-moderna` | Plataforma web moderna y Baseline (basada en Modern Web Guidance) |
+| `motor-city-diseno-ui` | Auditoría anti-clichés de IA para HUD y portadas (basada en Hallmark) |
+| `motor-city-qa-playwright` | QA táctil `412 × 860`, inspección visual y telemetría con Playwright |
+| `motor-city-revision-ia` | Revisión de PRs IA, procedencia de plugins y simulación como hipótesis |
+
+Catálogo de plugins externos verificados y sus comandos de instalación: `docs/SKILLS-Y-PLUGINS.md`.
 
 **Comandos:** `node motor.mjs construir` · `node motor.mjs prueba --navegador` (todo en verde) · `node motor.mjs reporte "título" --juego X` (obligatorio si cambias el motor desde otro juego) · `node motor.mjs documento`.

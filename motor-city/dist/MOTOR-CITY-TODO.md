@@ -791,6 +791,15 @@ El catálogo está en `skills-externas.json` (repositorio, commit revisado, lice
 - **Codex, Antigravity, Gemini CLI y Claude (find-skills):** `node motor.mjs skills --instalar --agente codex`. También sirve con `antigravity`, `gemini-cli` o `claude-code`. Usa el instalador oficial (`npx skills add …`) y deja las skills en `.agents/skills/` o `.claude/skills/`, que **no se suben** (están en `.gitignore`).
 - Necesitan internet y Node 22. Se instalan **en la máquina de la IA**. Nunca van dentro del HTML de un juego.
 
+### Las skills propias del proyecto que salieron de los mismos videos (entrega de Gemini 2.9.1)
+Úsalas primero, porque no necesitan instalar nada:
+- `motor-city-web-moderna`: Baseline y Modern Web Guidance;
+- `motor-city-diseno-ui`: el piso anti-clichés de Hallmark para el HUD y las portadas;
+- `motor-city-qa-playwright`: pruebas táctiles en 412 × 860;
+- `motor-city-revision-ia`: revisión de cambios hechos por IA, procedencia de los plugins y la simulación como hipótesis.
+
+El catálogo completo, con la trazabilidad de los enlaces, está en `docs/SKILLS-Y-PLUGINS.md`.
+
 ### Cuál usar
 | Tarea | Skill | Regla de Motor City encima |
 |---|---|---|
@@ -1121,6 +1130,22 @@ new MC.Bucle({
 | `node motor.mjs reporte "título" --juego X` | Deja el reporte de un cambio hecho desde otro juego. |
 | `node motor.mjs sincronizar ../Juego` | Copia el motor a `Juego/motor-city/`. |
 | `python3 geo/territorio.py …` | Craquea un lugar real. |
+
+### Guardado por sectores
+
+`MC.GuardadoSectores` guarda cambios JSON asociados a IDs estables y a sectores del mundo. La aplicación decide qué objetos crear o retirar cuando `actualizar` informa las claves que despiertan y duermen. Cada instantánea tiene `schema_version`, identificador del mundo y lado del sector en metros.
+
+```js
+const sectores = new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 });
+const id = MC.GuardadoSectores.id('guatape', 'valla', 'calle-27-valla-1');
+sectores.cambiar(70, 20, id, { rota: true });
+const actividad = sectores.actualizar(70, 20, 1);
+sectores.guardar('mi-juego.sectores');
+const vuelta = MC.GuardadoSectores.leer('mi-juego.sectores');
+console.log(vuelta.obtener(70, 20, id));
+```
+
+`guardar` devuelve `false` si el almacenamiento falla. `leer` devuelve `null` si no existe el dato y lanza un error para datos inválidos o versiones futuras. Para migrar una versión previa se pasa a `leer` o `restaurar` un objeto de funciones por número de versión. Cada función recibe una copia y debe aumentar `schema_version` exactamente en uno. El administrador conserva cambios, mientras el juego debe conectar los eventos y aplicar los datos al despertar cada sector.
 
 
 ---
@@ -1925,6 +1950,23 @@ En la entrega maestra del autor se inspeccionaron directamente 17 clips MP4 (`R0
 | `R20–R25` (Laboratorio 3D, mapa térmico, cuaderno ilustrado, haikus JS, tipografía) | Campos 3D, vista rayos X, propagación de incendio sobre relieve, ajedrez de cuaderno, haikus en Canvas y fuente manuscrita | Técnico 3D / ilustración de cuaderno / Canvas 2D generativo | Inercia en controles, capas de datos sincronizadas, *squash & stretch* 2D y ondas procedurales | Capas de ciudad (`MC.Urbe`), efectos de lluvia/ondas ligeros en Canvas y depurador de físicas |
 
 > **Para cerrar el mapa 1:1:** basta con que el autor indique qué `.mp4` corresponde a cada uno de los 9 shortcodes bloqueados (sin intentar evadir el inicio de sesión de Instagram).
+
+#### 1.2 Verificación en fuentes públicas primarias de las 7 fichas «Solo Gemini» (G‑H7 · 20‑nov‑2026)
+En `MOTOR-CITY-ENTREGA-MAESTRA.md` §4 había **7 fichas sin clip MP4** (`R02`, `R03`, `R04`, `R08`, `R09`, `R13` y `R18`). Se contrastaron de forma independiente contra sus **repositorios, páginas oficiales de Steam y artículos técnicos primarios**, separando hechos verificados de hipótesis no probadas:
+
+| Ficha | Proyecto / autor | Nivel actualizado | Fuente primaria verificada | Qué se confirmó (y qué sigue sin comprobarse) |
+|---|---|---|---|---|
+| **R02** | **Josh White** (`@joshwhite_artist`) | **Verificado en portafolio** (sin vídeo del reel) | [ArtStation (`jdwatx`)](https://www.artstation.com/jdwatx) · [Reddit `u/Joshwhite_art`](https://www.reddit.com/user/Joshwhite_art/) · [FreeYork (sep‑2026)](https://freeyork.org/art/josh-white-digital-3d-sculpts/) | Confirmado el autor, el handle `@joshwhite_artist` y sus megaestructuras sci-fi (*Sector 8*, *M.E.C.*). **Corrección técnica:** FreeYork documenta un flujo de **esculpido 3D en Nomad Sculpt (iPad) + sobrepintado en Procreate**, no un *shader* volumétrico en tiempo real. El movimiento/paralaje del reel no se inspeccionó. |
+| **R03** | **Maciej Drabik** (`@maciejdrabik_art`) | **Verificado en prensa técnica** (sin vídeo del reel) | [80.lv · *Rainy Autumn Nights* (sep‑2024)](https://80.lv/articles/digital-artist-achieves-pixelated-perfection-with-this-3d-rainy-scene) · [80.lv · animación cyberpunk (oct‑2024)](https://80.lv/articles/relax-your-mind-with-maciej-drabik-s-cyberpunk-style-3d-animation) | Confirmado su estilo 3D pixelado/pictórico con calles urbanas lluviosas, iluminación neón y paralaje (*Rainy Autumn Nights* y secuencia cyberpunk). **Distinción clave:** son piezas **prerrenderizadas en Blender + DaVinci Resolve**, no un filtro móvil en tiempo real (en Motor City la versión ligera son `vistas.pixel` + charcos `C‑M17`). |
+| **R04** | ***KnoxMap*** (OSM → *Project Zomboid* Build 42) | **Verificado directamente en GitHub** | [`github.com/spytheeuclidean-a11y/knoxmap`](https://github.com/spytheeuclidean-a11y/knoxmap) (v1.8.6.3, MIT/GPL) · [Steam Workshop 3806764280](https://steamcommunity.com/sharedfiles/filedetails/?id=3806764280) | Confirmado: escrito en Python/Rust/JS por `euclid80tr` sobre *Knoxify*. Lee calles, huellas de edificios, agua, parques, vías férreas y alturas (hasta 31 pisos) de OpenStreetMap (y opcionalmente Overture Maps / ESA WorldCover), genera interiores amoblados según tipo de local y estima población. **Aclaración:** es un **compilador de escritorio fuera de línea** que tarda minutos por bloque de 600 × 600 m, no *streaming* en móvil. |
+| **R08** | ***MythicTale*** (STUDIO GENKI) | **Verificado en tienda oficial** (sin vídeo del reel) | [Steam · *MythicTale* (App 4451310)](https://store.steampowered.com/app/4451310/MythicTale/) | Confirmado: Action RPG cenital estilizado en un mundo **2.5D vibrante** inspirado en clásicos portátiles, con combate rápido de artes marciales, técnicas de energía, exploración y plataformas (Windows/macOS). Los detalles concretos de *hitstop* y torneo del reel no se inspeccionaron en vídeo. |
+| **R09** | ***Motor Town: Behind The Wheel*** (P3 Games) | **Verificado en tienda oficial** | [Steam · *Motor Town* (App 1369670)](https://store.steampowered.com/app/1369670/Motor_Town_Behind_The_Wheel/) · [Noticias Steam](https://steamcommunity.com/app/1369670/allnews/) | Confirmado: mundo abierto (24 × 16 km) en Acceso Anticipado para PC con ciclo día/noche, nubes volumétricas y clima dinámico, más de 50 vehículos, física realista de llantas/derrape, peso y sujeción de carga, trabajos (taxi, bus, camión, entregas) y compra/amoblado de propiedades. Es un título de escritorio (no móvil). |
+| **R13** | ***Holstin*** (Sonka / Team17) — *coincidencia probable* | **Identificación probable verificada** (pendiente confirmar 1:1 con el MP4) | [Steam Demo *Holstin* (App 2443020)](https://store.steampowered.com/app/2443020) · [Rely on Horror (abr‑2025)](https://www.relyonhorror.com/latest-news/psychological-survival-horror-game-holstin-shows-off-arsenal-of-weapons-and-new-gameplay-footage/) · [WindowsForum (dic‑2025)](https://windowsforum.com/news/holstin-polish-survival-horror-with-a-dynamic-camera-now-published-by-team17.393101/) | La descripción de `R13` (urbano oscuro de Europa del Este en pixel 3D con cambio sin cortes entre vista isométrica, plano lateral, disparos sobre el hombro y conducción en primera persona) coincide punto por punto con ***Holstin*** (Polonia años 90, tecnología *2XD Rendering* de Sonka). Al no haberse visto el reel original de `@indie.gamesdaily`, se marca como **atribución probable pendiente de confirmación con el MP4**. |
+| **R18** | ***VoxPix*** (Andres Wong) | **Verificado directamente en GitHub** | [`github.com/andyeswong/voxpix`](https://github.com/andyeswong/voxpix) · [`docs/api-agentes.md`](https://github.com/andyeswong/voxpix/blob/main/docs/api-agentes.md) | Confirmado vía API de GitHub: repositorio público **MIT** en TypeScript + Vue 3 + WebGL2, motor de vóxeles a pixel art 2.5D con luz dinámica y agua, expuesto sin ratón en `window.voxpix` (`box`, `water`, `foliage`, `voxels`, `batch`, `save/load`). La cifra «paisaje de 128 × 128 en 0,08 s de ediciones» aparece textualmente en el README del autor (marca declarada por el proyecto, no perfilada en nuestro móvil). |
+
+#### 1.3 Enlaces de skills, plugins y herramientas de agentes (20‑nov‑2026)
+Los 10 enlaces nuevos compartidos por el autor (8 de TikTok y 2 de Instagram) sobre skills y plugins de IA se auditaron combinando los fotogramas revisados por Codex en `ENTREGA-CHATGPT-MOTOR-CITY-2.6.md` (2.9.1) con la verificación directa de repositorios y licencias en GitHub. Sus principios quedaron incorporados en **4 skills nuevas** en `.claude/skills/` (`motor-city-web-moderna`, `motor-city-diseno-ui`, `motor-city-qa-playwright` y `motor-city-revision-ia`) y el catálogo completo con comandos de instalación opcionales vive en **`docs/SKILLS-Y-PLUGINS.md`**. Las 2 publicaciones de Instagram (`DfVDgmclLPi/?img_index=6` y `DexJDYnNQ0X`) siguen bloqueadas detrás de inicio de sesión y permanecen abiertas hasta recibir capturas o nombres.
+
 
 
 #### 1.2 Los 11 enlaces del 20‑nov‑2026: skills y plugins para las IA (2.10)
@@ -2964,6 +3006,13 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 - la niña: «revisar», atascada el 43 %. De ahí sale el encargo C‑M24.
 
 **Lo que sigue:** G‑H10 a G‑H13, C‑M23 a C‑M25 y C‑A12 (`TAREAS-IA.md`).
+
+### 20 de noviembre de 2026 · 2.9.1 · Persistencia por sectores
+
+Se añadió `MC.GuardadoSectores`, con claves estables, cambios JSON por sector, transición entre sectores activos y dormidos, guardado atómico y migradores versionados. Las pruebas verifican retorno, migración y fallo de almacenamiento. La integración de esos cambios con los objetos y huellas de Mandados sigue pendiente.
+
+La auditoría de los enlaces nuevos y las tareas abiertas está en `ENTREGA-CHATGPT-MOTOR-CITY-2.6.md`.
+
 
 ### 20‑nov‑2026 · 2.9.0 · Unión de la 2.8 (Claude) con la 2.7.1 (ChatGPT/Codex) (Claude Code)
 Codex entregó la 2.7.1 en paralelo con la 2.8:

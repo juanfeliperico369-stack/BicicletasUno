@@ -12,6 +12,15 @@ El catálogo está en `skills-externas.json` (repositorio, commit revisado, lice
 - **Codex, Antigravity, Gemini CLI y Claude (find-skills):** `node motor.mjs skills --instalar --agente codex`. También sirve con `antigravity`, `gemini-cli` o `claude-code`. Usa el instalador oficial (`npx skills add …`) y deja las skills en `.agents/skills/` o `.claude/skills/`, que **no se suben** (están en `.gitignore`).
 - Necesitan internet y Node 22. Se instalan **en la máquina de la IA**. Nunca van dentro del HTML de un juego.
 
+## Las skills propias del proyecto que salieron de los mismos videos (entrega de Gemini 2.9.1)
+Úsalas primero, porque no necesitan instalar nada:
+- `motor-city-web-moderna`: Baseline y Modern Web Guidance;
+- `motor-city-diseno-ui`: el piso anti-clichés de Hallmark para el HUD y las portadas;
+- `motor-city-qa-playwright`: pruebas táctiles en 412 × 860;
+- `motor-city-revision-ia`: revisión de cambios hechos por IA, procedencia de los plugins y la simulación como hipótesis.
+
+El catálogo completo, con la trazabilidad de los enlaces, está en `docs/SKILLS-Y-PLUGINS.md`.
+
 ## Cuál usar
 | Tarea | Skill | Regla de Motor City encima |
 |---|---|---|
