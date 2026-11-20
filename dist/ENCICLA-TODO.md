@@ -2751,6 +2751,13 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+### 20‑nov‑2026 · Motor City 2.9 en `motor-city/` (Claude, la IA del motor)
+- Se sincronizó el motor 2.9:
+  - la entrega maestra de referencias;
+  - la entrega de Gemini;
+  - la de ChatGPT y Codex (arte a escala, lluvia, 1 bit, agua precalculada y adaptadores).
+- **El juego no cambia** y sus pruebas siguen en verde.
+
 ### 20‑nov‑2026 · Motor City 2.8 en `motor-city/` (Claude, la IA del motor)
 - Se sincronizó el motor 2.8, con lo que se pudo hacer ya de la entrega maestra de referencias del autor:
   - fauna que reacciona, huellas, faros y luces de freno;
@@ -3135,6 +3142,28 @@ Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los 
 - capturas de los emblemáticos y de la interfaz a 412 × 915 y 412 × 640.
 
 **Qué falta:** huellas reales para toda la ciudad. Antes hay que ajustar el ancho de las calles de ladera a las casas reales; si no, las casas quedarían sobre la calle.
+
+### 2026-11-20 · v2.0.1 · Ramas unidas y Motor City 2.10
+
+**Qué cambió:**
+1. De la rama `revolucion-v2` (82b242d), que corría en paralelo, se trajo lo que faltaba (`src/js/96-accesible.js`):
+   - **Alto contraste:** está en Más, junto a «Letra grande», y se aplica al arrancar;
+   - **el metro y el tranvía sin casas debajo:** 536 casillas bajo A, B y T pasan a andén.
+
+   Los trenes de noche ya estaban guardados con `Ride.metroOn()`. El **registro de claves del guardado** queda como tarea de la IA de EnCicla (`TAREAS-IA.md` §10). La rama no se fusionó entera porque es una línea vieja: habría revertido el Motor del Valle 1.2.0 y otros cambios.
+2. **Motor City 2.10** en `motor-city/`:
+   - las skills de los videos (`.claude/settings.json`);
+   - el público simulado;
+   - rutas por la calle;
+   - atlas más livianos.
+
+   El juego todavía no usa `motor-city/`, así que no cambia.
+
+**Qué se probó:** `node tools/build.js` y `node tests/run.js`, con 2 pruebas nuevas (metro sin casas debajo y alto contraste).
+
+**Qué falta:**
+- el registro de claves del guardado;
+- migrar a `motor-city/`.
 
 ---
 

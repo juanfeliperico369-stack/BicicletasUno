@@ -1,9 +1,21 @@
-# Tareas de cada IA · Motor City 2.9
+# Tareas de cada IA · Motor City 2.10
 
 > **Si te dijeron «mira el repositorio y haz tu parte», empieza aquí.**
 > 1. Busca abajo **quién eres** y haz **solo tu parte**, en el orden indicado.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
+
+**Novedades de la 2.10 (20‑nov‑2026):**
+- **Skills y plugins de los videos del autor** (`skills-externas.json`, skill `motor-city-skills-externas`):
+  - **Hallmark**, para páginas web que no parezcan hechas por IA;
+  - **Modern Web Guidance** (Google Chrome), para HTML, CSS y JS moderno;
+  - **find-skills** (Vercel), para buscar skills;
+  - **HyperFrames**, para videos de lanzamiento.
+- **Cómo se instalan:**
+  - Claude Code las recibe como plugins por `.claude/settings.json`;
+  - las demás IA corren `node motor.mjs skills --instalar --agente codex` (o `antigravity`, `gemini-cli`).
+- **Público simulado:** `node motor.mjs publico`. Una niña, un abuelo, una gamer y un turista juegan solos Mandados, y el informe queda en `dist/publico.md`.
+- **Política de navegadores:** está en `CLAUDE.md`.
 
 **Reparto desde noviembre de 2026, por decisión del autor:**
 - **Gemini con Antigravity** trabaja por ahora con **«hydrogen»** (ya no con «argon»). Le tocan las **tareas fáciles**: revisar, medir, reunir datos y referencias.
@@ -58,6 +70,10 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H7** | **Verifica las referencias que faltan**: los 13 enlaces de Instagram que siguen sin verificar y las 7 fichas que solo describe tu informe (R02, R03, R04, R08, R09, R13 y R18 en `docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md` §4) | Para cada uno: qué se ve, qué estilo es (cómic, manga, anime, realista…), qué da sensación de peso o de vida y qué técnica parece usar. | Una tabla en `docs/INSPIRACION-VISUAL.md` §1, una fila por reel. |
 | **G‑H8** | **40 obras de dominio público** para paletas, al menos 10 colombianas (Comisión Corográfica, Epifanio Garay, Ricardo Acevedo Bernal, grabados del *Papel Periódico Ilustrado*…) | Para cada una: el enlace en Wikimedia Commons y su licencia. Solo dominio público. | Una lista en `arte/dominio-publico/candidatas.md`. Claude saca las paletas. |
 | **G‑H9** | **Medición en un celular real**, con el autor | En Mandados, ⚙️ Ajustes → 📈 Telemetría. 5 minutos por vista (cenital, maqueta, lateral) y por calidad (baja, media, alta). Anota el modelo del celular, los fps, el p95 y si se calienta. | Una tabla en `reportes/AAAA-MM-DD-gemini-celular.md`. |
+| **G‑H10** (2.10) | **Lo que no se pudo leer de los videos nuevos**:<ul><li>los 2 Instagram (`DfVDgmclLPi`, que el autor mandó dos veces, y `DexJDYnNQ0X`; piden iniciar sesión);</li><li>el TikTok de @soyenriquerocha «Claude ahora construye bien sin basura» (`vt.tiktok.com/ZSpw3u8dH`).</li></ul>Para cada uno: qué herramienta, skill o plugin muestra, su repositorio y su licencia. | `docs/INSPIRACION-VISUAL.md` §1.2: una línea por enlace. Si es una skill útil, propónla para `skills-externas.json` sin instalarla. |
+| **G‑H11** (2.10) | **Las 4 paletas colombianas que faltan** (Wikimedia bloqueó la descarga) | Para cada obra de `arte/dominio-publico/candidatas.md` marcada «falta», da el enlace directo a una **miniatura de 250 px** en `upload.wikimedia.org` y confirma que es de dominio público. | Los enlaces en `candidatas.md`. Claude saca las paletas. |
+| **G‑H12** (2.10) | **Corre las herramientas nuevas y reporta** | `node motor.mjs publico` (anota el veredicto de cada perfil), `node motor.mjs skills` y `npx -y modern-web-guidance@latest legacy-scan js --json`. | `reportes/<fecha>-gemini-herramientas.md`, sin cambiar código. Para cada hallazgo de `legacy-scan`: archivo, línea y si aplica según su `keepWhen` y su `dropWhen`. |
+| **G‑H13** (2.10) | **Instala las skills en Antigravity** | `node motor.mjs skills --instalar --agente antigravity` y confirma que aparecen en `.agents/skills/`. Úsalas desde ahí en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -69,13 +85,20 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 > - el arte C‑A1…C‑A9 (`arte/chatgpt/`);
 > - el código C‑M1, C‑M13 (la maqueta va en 22 ms; la meta de 20 sigue abierta), C‑M15, C‑M16, C‑M17, C‑M18 y C‑M19.
 >
+> **2.10:**
+> - el cómic y el 1 bit ya no leen la pantalla (filtros del lienzo y media resolución): cenital 21 y 18 ms, maqueta 31 y 28 ms (antes 26/25 y 43/42) en Chromium sin GPU;
+> - el 1 bit ya no hace muaré en la maqueta;
+> - Mandados pasó de 8,2 a 5,1 MB (`herramientas/aligerar_arte.py`).
+>
 > **Lo que sigue, en orden:**
-> 1. **C‑M13**: bajar de 20 ms, también en los estilos cómic y 1 bit (hoy 28 y 37 ms en Mandados);
+> 1. **C‑M13**: la maqueta por debajo de 20 ms;
 > 2. **C‑M21**, **C‑M20** y **C‑M22**;
 > 3. **C‑A10** y **C‑A11**;
 > 4. después, C‑M2…C‑M12 y C‑M14.
 >
-> Mandados pesa 8,2 MB con los atlas adentro: conviene un atlas más liviano para celulares, por ejemplo WebP a menor calidad o cargar los atlas por partes.
+> **Nuevos de la 2.10, con las skills de los videos:** **C‑M23**, **C‑M24**, **C‑M25** y **C‑A12**, justo después de C‑M13.
+>
+> Cuando entregues un atlas nuevo, corre `python3 herramientas/aligerar_arte.py`. Así queda WebP con pérdida, calidad 88 y alfa sin pérdida.
 
 **Primero el arte** (lo genera ChatGPT) y **después el código** (lo hace Codex). Detalle y reglas en el documento único, §10.
 
@@ -104,12 +127,16 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A8** | **Láminas guía de los estilos 2.7**: la misma cuadra de Guatapé en cómic (*Spider‑Verse* y Lichtenstein), manga (tramado y líneas), anime (Shinkai y Ghibli), novela gráfica (noir con un rojo), ukiyo-e (Hokusai) y acuarela (Comisión Corográfica). Solo la técnica, nunca personajes ni marcas. | guía de `MC.Estilo` |
 | **C‑A10** | **Tipografía propia** (R25) para letreros, placas, grafitis y menús: una fuente a partir de letra a mano, con 3 variantes por letra, libre para usar. | interfaz y letreros |
 | **C‑A11** | **Interfaz de libreta** (R23): el mapa de mandados, la lista de misiones y los botones como una libreta dibujada, con *squash and stretch* al tocar. | `MC.UI` (tema) |
+| **C‑A12** (2.10) | **Tráiler de Mandados con HyperFrames** (skill `hyperframes`): 30 s en vertical 9:16 y en horizontal 16:9:<ul><li>con capturas reales (`node motor.mjs capturas`) de las vistas y de los estilos (realista, cómic, 1 bit, acuarela);</li><li>con subtítulos en español y música libre de derechos;</li><li>sin cifras ni frases inventadas.</li></ul> | `videos/` (MP4 de menos de 15 MB) y el HTML de la composición |
 | **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 ### Código (Codex), en orden
 | Id | Encargo |
 |---|---|
 | **C‑M13** | **Maqueta por debajo de 20 ms** con la CPU 4× más lenta, con todo el detalle 2.6: árboles de pie, desgaste y fachadas. Hoy da 30–38 ms aquí y 44,7 ms en la máquina de Codex. |
+| **C‑M23** (2.10) | **La red vial de Guatapé:**<ul><li>123 de sus 385 nodos son puntas sueltas;</li><li>tiene 5 componentes;</li><li>las rutas dan rodeos de 4× en el percentil 90.</li></ul>Revisa `geo/territorio.py` y `Red` (`une`, `_partir`): que se unan los cruces y las puntas que casi tocan, sin crear calles falsas. | La prueba «rutas por la calle» con el percentil 90 por debajo de 2,5× y `node motor.mjs publico` sin perfiles atascados por el mapa. |
+| **C‑M24** (2.10) | **Ayuda de manejo para niños**: el público simulado marca que Sofía (8 años) pasa el 43 % del tiempo atascada. Agrega en ⚙️ Ajustes una ayuda opcional:<ul><li>imán a la calle;</li><li>frenado antes de chocar;</li><li>giro suave al rozar un muro.</li></ul>Va encendida por defecto en el ritmo «tranquilo». | `node motor.mjs publico --perfiles nina` con atascado por debajo del 25 %, y su prueba. |
+| **C‑M25** (2.10) | **La portada web de Motor City con Hallmark** (`/hallmark`): el `index.html` de GitHub Pages que lleva a Mandados y a los juegos.<ul><li>En español, con capturas reales.</li><li>Sin cifras, testimonios ni logos inventados.</li><li>`sloplint --render` limpio y el piso de Hallmark completo: tokens, `:focus-visible` y `prefers-reduced-motion`.</li></ul> | `index.html` y su reporte de `sloplint` |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
 | **C‑M17** | **Lluvia y atmósfera que se ven** (R02, R03 y R09): asfalto mojado más oscuro, charcos con reflejo y salpicaduras, y niebla de distancia en la maqueta y la lateral, sin pasar de 2 ms por cuadro. |
 | **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |
@@ -136,6 +163,13 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 - **Run Scooter** (`RunRunZero`): sigue independiente.
 
 ## Claude · la IA del motor
+- **2.10:**
+  - unió las ramas viejas de los juegos;
+  - instaló las skills de los videos;
+  - quitó el leer la pantalla en el cómic y el 1 bit;
+  - aligeró los atlas;
+  - arregló `rutaA`;
+  - creó el público simulado.
 - Une las entregas (arte de ChatGPT en `MC.Pieles` y código de Codex).
 - Mantiene `docs/PEDIDOS.md`.
 - Sigue con *Motor City* (carreras) y *Extremo* (§9.7).

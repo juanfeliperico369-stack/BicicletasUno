@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.9.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 2.10.0 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -8,7 +8,7 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.9.0** · 20‑nov‑2026 |
+> | Versión | **Motor City 2.10.0** · 20‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
@@ -66,12 +66,13 @@
 | **2.6** | «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo. Deja el estilo *family friendly*, pero con más realismo, rudeza y crudeza. Los tutoriales deben ser opcionales. Copia todos los pedidos en los repositorios. Gemini con Antigravity pasa a *hydrogen*: déjale lo fácil. ChatGPT con Codex sigue con *astra*: encárgale lo mejor; GPT genera mejores imágenes.» | **Estilo realista familiar** (`MC.estilo = 'realista'`; el clásico sigue disponible):<ul><li>**`MC.Arboleda`**: los árboles se levantan en la maqueta, la oblicua y la lateral (tronco, ramas, copa con luz y sombra según el sol). Desde arriba tienen volumen. Hay 6 especies del trópico: guayacanes florecidos, ceiba, mango, urapán y monte. Son los mismos con que se choca;</li><li>**`Rudeza`**, horneada en las losas:<ul><li>asfalto con parches, grietas, manchas de aceite y alcantarillas;</li><li>andén de baldosa con bordillo;</li><li>pasto con parches secos;</li><li>tejas de barro en hileras y planchas con humedad;</li><li>grano;</li><li>paleta menos saturada;</li></ul></li><li>los muros con la base sucia y sombra bajo el alero;</li><li>el **tutorial es opcional** (en la portada y en Ajustes);</li><li>el gancho de arte `arbol`;</li><li>`node motor.mjs capturas` y `node motor.mjs revisar-arte`;</li><li>**`TAREAS-IA.md`** en los cuatro repositorios, con el reparto nuevo.</li></ul>119 pruebas. La maqueta de Medellín queda por debajo de 40 ms con la CPU 4× más lenta. |
 | **2.7** | «Necesito peso y vida en el motor, y que se pueda adaptar a motores más potentes. Estéticas de cómic, manga, anime y novela gráfica. Investiga y aprende de las mejores obras visuales, inspírate en ellas, y recopila y adapta arte de verdad.» Y 14 reels de referencia. | **Estilos gráficos** (`MC.Estilo`, `js/16-estilos.js`). Son 8: realista, clásico, **cómic** (tinta, semitono y onomatopeyas), **manga** (grises, tramado y líneas de velocidad), **anime** (*cel* y cielos de Shinkai), **novela gráfica** (noir: tres tonos y un rojo de acento), **ukiyo-e** y **acuarela**. Cada uno tiene su mapa de color, su tinta, su trama, su sombra, sus árboles y su cielo. Las paletas salen de **obras de dominio público** (Hokusai, Hiroshige, Doré, Winslow Homer, la Comisión Corográfica…; `arte/dominio-publico/`).<br>**Peso y vida** (`MC.Vida`):<ul><li>aterrizaje con aplastamiento, sacudida y polvo;</li><li>cabeceo del vehículo al acelerar y al frenar;</li><li>**hitstop** en los choques;</li><li>bandadas con su sombra, hojas que caen y salpicaduras;</li><li>el viento mece las copas.</li></ul>**Motores potentes** (`MC.Exportar`, `MC.Puente`): el mundo en **glTF 2.0** (validador de Khronos: 0 errores; abierto en three.js), alturas RAW 16 y escena JSON para Godot, Unity, Unreal y Blender; y el estado vivo para otro motor.<br>**Investigación:** `docs/INSPIRACION-VISUAL.md` y `docs/MOTORES-POTENTES.md`.<br>123 pruebas. |
 | **2.8** | La **entrega maestra de referencias** (los 14 reels, videos y el análisis de ChatGPT y de Gemini: 25 fichas, peso, vida, arquitectura y rendimiento) y «prepara todo». | La entrega quedó en `docs/referencias/` y su resumen en `docs/INSPIRACION-VISUAL.md` §1. Al motor se sumó:<ul><li>**palomas que alzan vuelo** cuando el jugador se acerca (R12);</li><li>**huellas** de llantas y pisadas en arena, tierra, nieve y barro, que con lluvia salen en el pasto (R12 y R19);</li><li>**faros y luces de freno** del jugador (R13 y R19);</li><li>los estilos **vintage**, **CRT** y **visión térmica** (R17 y R22), para 11 en total;</li><li>**accesibilidad**: sacudida y partículas ajustables (§10.3);</li><li>**telemetría en percentiles** (p95 y p99) y **calidad baja, media o alta** en Ajustes (§13 y §14);</li><li>**contratos versionados** (`schemas/` y `MC.Contratos`, §12.3);</li><li>el hitstop también en Mandados.</li></ul>Lo demás quedó repartido: C‑M20, C‑M21, C‑M22, C‑A10, C‑A11, G‑H7 y G‑H9. 125 pruebas. |
-| **2.9** (esta) | Llegaron, en paralelo, las entregas de **Gemini** (G‑H1…G‑H8) y de **ChatGPT y Codex** (2.7.1: arte C‑A, C‑M1, C‑M13, C‑M15…C‑M19). | Todo quedó unido en la rama:<ul><li>los **6 atlas de ChatGPT** (676 cuadros; Vista → Arte → ChatGPT);</li><li>el agua precalculada en los MC4;</li><li>el gancho `textura` y los charcos con lluvia;</li><li>el estilo de **1 bit**;</li><li>la caché de fachadas (la maqueta de Medellín baja a **22 ms** con la CPU 4×);</li><li>los adaptadores de **Godot y three.js** probados;</li><li>los hallazgos de Gemini, corregidos;</li><li>las paletas de las obras colombianas.</li></ul>Son 12 estilos. 132 pruebas. |
+| **2.9** | Llegaron, en paralelo, las entregas de **Gemini** (G‑H1…G‑H8) y de **ChatGPT y Codex** (2.7.1: arte C‑A, C‑M1, C‑M13, C‑M15…C‑M19). | Todo quedó unido en la rama:<ul><li>los **6 atlas de ChatGPT** (676 cuadros; Vista → Arte → ChatGPT);</li><li>el agua precalculada en los MC4;</li><li>el gancho `textura` y los charcos con lluvia;</li><li>el estilo de **1 bit**;</li><li>la caché de fachadas (la maqueta de Medellín baja a **22 ms** con la CPU 4×);</li><li>los adaptadores de **Godot y three.js** probados;</li><li>los hallazgos de Gemini, corregidos;</li><li>las paletas de las obras colombianas.</li></ul>Son 12 estilos. 132 pruebas. |
+| **2.10** (esta) | «Retoma y continúa: une todo, mejora y optimiza todo, y añade peticiones para Gemini y ChatGPT». Llegaron 11 enlaces, y después «añade las skills y plugins de los videos y sigue desarrollando». | <ul><li>Se unieron las ramas de El Metro (Motor del Valle 1.2.0) y de EnCicla (alto contraste y metro sin casas debajo).</li><li>El cómic y el 1 bit ya no leen la pantalla y no hacen muaré.</li><li>Mandados bajó de 8,2 a 5,1 MB.</li><li>Las rutas van por la calle (`rutaA`).</li><li>Skills de los videos: **Hallmark, Modern Web Guidance, find-skills y HyperFrames** (`skills-externas.json`, `node motor.mjs skills`, plugins en `.claude/settings.json`).</li><li>El **público simulado** (`MC.Publico`, `node motor.mjs publico`).</li><li>Pedidos G‑H10…G‑H13, C‑M23…C‑M25 y C‑A12.</li></ul> |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **132 en verde** (`node motor.mjs prueba --navegador`): 117 en Node y 8 en Chromium. Una juega Mandados en un celular táctil y otra recorre los 11 estilos. |
+| **Pruebas** | **134 en verde** (`node motor.mjs prueba --navegador`), en Node y en Chromium. Incluyen el público simulado y las rutas por la calle (2.10). Una juega Mandados en un celular táctil y otra recorre los 11 estilos. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -309,7 +310,7 @@ MC.Terreno.aguaHonda(M, x, y, r, min); MC.Terreno.tierraFirme(M, x, y, r);
 
 ### 5.10 Probar y medir
 ```bash
-node motor.mjs construir && node motor.mjs prueba --navegador     # 132 en verde
+node motor.mjs construir && node motor.mjs prueba --navegador     # 134 en verde
 node motor.mjs exportar guatape                                   # el mundo en glTF, alturas RAW 16 y escena JSON (dist/exportar/)
 node motor.mjs capturas                                           # 14 fotos estándar de Mandados en dist/capturas/
 node motor.mjs revisar-arte arte/chatgpt                          # revisa un paquete de arte contra las reglas
@@ -393,6 +394,12 @@ node motor.mjs construir && node motor.mjs prueba --navegador
 
 **No es tu rol:** el código del motor (eso es de ChatGPT y de Claude).
 
+**Nuevo en la 2.10:**
+- **G‑H10**: los enlaces que no se pudieron leer;
+- **G‑H11**: las 4 paletas colombianas;
+- **G‑H12**: correr `node motor.mjs publico`, `node motor.mjs skills` y `legacy-scan`, y reportar;
+- **G‑H13**: instalar las skills en Antigravity.
+
 ### 9.2 ChatGPT (imágenes) y Codex («astra») · TAREAS FUERTES: arte realista a escala y código difícil
 **Cambio del autor (nov‑2026):** Codex sigue con **«astra»** y ChatGPT genera mejores imágenes, así que le tocan el arte importante y el código difícil. **La lista exacta está en `TAREAS-IA.md`.**
 
@@ -417,6 +424,14 @@ node motor.mjs construir && node motor.mjs prueba --navegador
 **El código que usarás:**
 - **arte:** en `arte/chatgpt/`, con atlas y `manifiesto.json`. Debe pasar `node motor.mjs revisar-arte arte/chatgpt`. Se prueba con `MC.Pieles.instalar('chatgpt', MC_ARTE.chatgpt, { partes: [...] })` (§5.4);
 - **código:** commits en la rama con `node motor.mjs prueba --navegador` en verde, y cada mejora con su prueba `ok(condición, 'qué se prueba', datos)`.
+
+**Nuevo en la 2.10, con las skills de los videos:**
+- **C‑M23**: la red vial de Guatapé, sin puntas sueltas;
+- **C‑M24**: la ayuda de manejo para niños, que pidió el público simulado;
+- **C‑M25**: la portada web con **Hallmark**;
+- **C‑A12**: el tráiler de Mandados con **HyperFrames**.
+
+Antes de escribir HTML, CSS o JS, consulta **Modern Web Guidance**. Las skills se instalan con `node motor.mjs skills --instalar --agente codex`.
 
 ### 9.3 IA de Juega EnCicla (`BicicletasUno`)
 1. Migrar a `motor-city/` (`motor-city/docs/MIGRACION-ENCICLA.md`) sin perder sus 97 pruebas.
@@ -588,6 +603,18 @@ No hace falta conectar ninguna aplicación.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
 
+**Novedades de la 2.10 (20‑nov‑2026):**
+- **Skills y plugins de los videos del autor** (`skills-externas.json`, skill `motor-city-skills-externas`):
+  - **Hallmark**, para páginas web que no parezcan hechas por IA;
+  - **Modern Web Guidance** (Google Chrome), para HTML, CSS y JS moderno;
+  - **find-skills** (Vercel), para buscar skills;
+  - **HyperFrames**, para videos de lanzamiento.
+- **Cómo se instalan:**
+  - Claude Code las recibe como plugins por `.claude/settings.json`;
+  - las demás IA corren `node motor.mjs skills --instalar --agente codex` (o `antigravity`, `gemini-cli`).
+- **Público simulado:** `node motor.mjs publico`. Una niña, un abuelo, una gamer y un turista juegan solos Mandados, y el informe queda en `dist/publico.md`.
+- **Política de navegadores:** está en `CLAUDE.md`.
+
 **Reparto desde noviembre de 2026, por decisión del autor:**
 - **Gemini con Antigravity** trabaja por ahora con **«hydrogen»** (ya no con «argon»). Le tocan las **tareas fáciles**: revisar, medir, reunir datos y referencias.
 - **ChatGPT con Codex** sigue con **«astra»** y genera mejores imágenes. Le tocan las **tareas fuertes**: el arte realista a escala y el código difícil.
@@ -641,6 +668,10 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H7** | **Verifica las referencias que faltan**: los 13 enlaces de Instagram que siguen sin verificar y las 7 fichas que solo describe tu informe (R02, R03, R04, R08, R09, R13 y R18 en `docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md` §4) | Para cada uno: qué se ve, qué estilo es (cómic, manga, anime, realista…), qué da sensación de peso o de vida y qué técnica parece usar. | Una tabla en `docs/INSPIRACION-VISUAL.md` §1, una fila por reel. |
 | **G‑H8** | **40 obras de dominio público** para paletas, al menos 10 colombianas (Comisión Corográfica, Epifanio Garay, Ricardo Acevedo Bernal, grabados del *Papel Periódico Ilustrado*…) | Para cada una: el enlace en Wikimedia Commons y su licencia. Solo dominio público. | Una lista en `arte/dominio-publico/candidatas.md`. Claude saca las paletas. |
 | **G‑H9** | **Medición en un celular real**, con el autor | En Mandados, ⚙️ Ajustes → 📈 Telemetría. 5 minutos por vista (cenital, maqueta, lateral) y por calidad (baja, media, alta). Anota el modelo del celular, los fps, el p95 y si se calienta. | Una tabla en `reportes/AAAA-MM-DD-gemini-celular.md`. |
+| **G‑H10** (2.10) | **Lo que no se pudo leer de los videos nuevos**:<ul><li>los 2 Instagram (`DfVDgmclLPi`, que el autor mandó dos veces, y `DexJDYnNQ0X`; piden iniciar sesión);</li><li>el TikTok de @soyenriquerocha «Claude ahora construye bien sin basura» (`vt.tiktok.com/ZSpw3u8dH`).</li></ul>Para cada uno: qué herramienta, skill o plugin muestra, su repositorio y su licencia. | `docs/INSPIRACION-VISUAL.md` §1.2: una línea por enlace. Si es una skill útil, propónla para `skills-externas.json` sin instalarla. |
+| **G‑H11** (2.10) | **Las 4 paletas colombianas que faltan** (Wikimedia bloqueó la descarga) | Para cada obra de `arte/dominio-publico/candidatas.md` marcada «falta», da el enlace directo a una **miniatura de 250 px** en `upload.wikimedia.org` y confirma que es de dominio público. | Los enlaces en `candidatas.md`. Claude saca las paletas. |
+| **G‑H12** (2.10) | **Corre las herramientas nuevas y reporta** | `node motor.mjs publico` (anota el veredicto de cada perfil), `node motor.mjs skills` y `npx -y modern-web-guidance@latest legacy-scan js --json`. | `reportes/<fecha>-gemini-herramientas.md`, sin cambiar código. Para cada hallazgo de `legacy-scan`: archivo, línea y si aplica según su `keepWhen` y su `dropWhen`. |
+| **G‑H13** (2.10) | **Instala las skills en Antigravity** | `node motor.mjs skills --instalar --agente antigravity` y confirma que aparecen en `.agents/skills/`. Úsalas desde ahí en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -652,13 +683,20 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 > - el arte C‑A1…C‑A9 (`arte/chatgpt/`);
 > - el código C‑M1, C‑M13 (la maqueta va en 22 ms; la meta de 20 sigue abierta), C‑M15, C‑M16, C‑M17, C‑M18 y C‑M19.
 >
+> **2.10:**
+> - el cómic y el 1 bit ya no leen la pantalla (filtros del lienzo y media resolución): cenital 21 y 18 ms, maqueta 31 y 28 ms (antes 26/25 y 43/42) en Chromium sin GPU;
+> - el 1 bit ya no hace muaré en la maqueta;
+> - Mandados pasó de 8,2 a 5,1 MB (`herramientas/aligerar_arte.py`).
+>
 > **Lo que sigue, en orden:**
-> 1. **C‑M13**: bajar de 20 ms, también en los estilos cómic y 1 bit (hoy 28 y 37 ms en Mandados);
+> 1. **C‑M13**: la maqueta por debajo de 20 ms;
 > 2. **C‑M21**, **C‑M20** y **C‑M22**;
 > 3. **C‑A10** y **C‑A11**;
 > 4. después, C‑M2…C‑M12 y C‑M14.
 >
-> Mandados pesa 8,2 MB con los atlas adentro: conviene un atlas más liviano para celulares, por ejemplo WebP a menor calidad o cargar los atlas por partes.
+> **Nuevos de la 2.10, con las skills de los videos:** **C‑M23**, **C‑M24**, **C‑M25** y **C‑A12**, justo después de C‑M13.
+>
+> Cuando entregues un atlas nuevo, corre `python3 herramientas/aligerar_arte.py`. Así queda WebP con pérdida, calidad 88 y alfa sin pérdida.
 
 **Primero el arte** (lo genera ChatGPT) y **después el código** (lo hace Codex). Detalle y reglas en el documento único, §10.
 
@@ -687,12 +725,16 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A8** | **Láminas guía de los estilos 2.7**: la misma cuadra de Guatapé en cómic (*Spider‑Verse* y Lichtenstein), manga (tramado y líneas), anime (Shinkai y Ghibli), novela gráfica (noir con un rojo), ukiyo-e (Hokusai) y acuarela (Comisión Corográfica). Solo la técnica, nunca personajes ni marcas. | guía de `MC.Estilo` |
 | **C‑A10** | **Tipografía propia** (R25) para letreros, placas, grafitis y menús: una fuente a partir de letra a mano, con 3 variantes por letra, libre para usar. | interfaz y letreros |
 | **C‑A11** | **Interfaz de libreta** (R23): el mapa de mandados, la lista de misiones y los botones como una libreta dibujada, con *squash and stretch* al tocar. | `MC.UI` (tema) |
+| **C‑A12** (2.10) | **Tráiler de Mandados con HyperFrames** (skill `hyperframes`): 30 s en vertical 9:16 y en horizontal 16:9:<ul><li>con capturas reales (`node motor.mjs capturas`) de las vistas y de los estilos (realista, cómic, 1 bit, acuarela);</li><li>con subtítulos en español y música libre de derechos;</li><li>sin cifras ni frases inventadas.</li></ul> | `videos/` (MP4 de menos de 15 MB) y el HTML de la composición |
 | **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 #### Código (Codex), en orden
 | Id | Encargo |
 |---|---|
 | **C‑M13** | **Maqueta por debajo de 20 ms** con la CPU 4× más lenta, con todo el detalle 2.6: árboles de pie, desgaste y fachadas. Hoy da 30–38 ms aquí y 44,7 ms en la máquina de Codex. |
+| **C‑M23** (2.10) | **La red vial de Guatapé:**<ul><li>123 de sus 385 nodos son puntas sueltas;</li><li>tiene 5 componentes;</li><li>las rutas dan rodeos de 4× en el percentil 90.</li></ul>Revisa `geo/territorio.py` y `Red` (`une`, `_partir`): que se unan los cruces y las puntas que casi tocan, sin crear calles falsas. | La prueba «rutas por la calle» con el percentil 90 por debajo de 2,5× y `node motor.mjs publico` sin perfiles atascados por el mapa. |
+| **C‑M24** (2.10) | **Ayuda de manejo para niños**: el público simulado marca que Sofía (8 años) pasa el 43 % del tiempo atascada. Agrega en ⚙️ Ajustes una ayuda opcional:<ul><li>imán a la calle;</li><li>frenado antes de chocar;</li><li>giro suave al rozar un muro.</li></ul>Va encendida por defecto en el ritmo «tranquilo». | `node motor.mjs publico --perfiles nina` con atascado por debajo del 25 %, y su prueba. |
+| **C‑M25** (2.10) | **La portada web de Motor City con Hallmark** (`/hallmark`): el `index.html` de GitHub Pages que lleva a Mandados y a los juegos.<ul><li>En español, con capturas reales.</li><li>Sin cifras, testimonios ni logos inventados.</li><li>`sloplint --render` limpio y el piso de Hallmark completo: tokens, `:focus-visible` y `prefers-reduced-motion`.</li></ul> | `index.html` y su reporte de `sloplint` |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
 | **C‑M17** | **Lluvia y atmósfera que se ven** (R02, R03 y R09): asfalto mojado más oscuro, charcos con reflejo y salpicaduras, y niebla de distancia en la maqueta y la lateral, sin pasar de 2 ms por cuadro. |
 | **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |
@@ -719,9 +761,62 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 - **Run Scooter** (`RunRunZero`): sigue independiente.
 
 ### Claude · la IA del motor
+- **2.10:**
+  - unió las ramas viejas de los juegos;
+  - instaló las skills de los videos;
+  - quitó el leer la pantalla en el cómic y el 1 bit;
+  - aligeró los atlas;
+  - arregló `rutaA`;
+  - creó el público simulado.
 - Une las entregas (arte de ChatGPT en `MC.Pieles` y código de Codex).
 - Mantiene `docs/PEDIDOS.md`.
 - Sigue con *Motor City* (carreras) y *Extremo* (§9.7).
+
+
+---
+
+# ANEXO 0c. Skills y plugins externos (Hallmark, Modern Web Guidance, find-skills, HyperFrames) y público simulado (`.claude/skills/motor-city-skills-externas/SKILL.md`)
+
+---
+name: motor-city-skills-externas
+description: Cuándo y cómo usar en Motor City las skills y plugins de terceros que pidió el autor (Hallmark para páginas web, Modern Web Guidance para HTML/CSS/JS moderno, find-skills para buscar skills, HyperFrames para videos de lanzamiento) y el público simulado (MC.Publico, idea de MiroFish). Úsala antes de hacer una página web de un juego, un tráiler, al escribir código del navegador o al buscar una skill nueva.
+---
+
+## Skills externas en Motor City
+
+El catálogo está en `skills-externas.json` (repositorio, commit revisado, licencia, para qué sí y para qué no). `node motor.mjs skills` lo muestra.
+
+### Instalarlas
+- **Claude Code:** vienen como plugins en `.claude/settings.json`. Al abrir el proyecto se aceptan una vez: Hallmark, Modern Web Guidance y HyperFrames.
+- **Codex, Antigravity, Gemini CLI y Claude (find-skills):** `node motor.mjs skills --instalar --agente codex`. También sirve con `antigravity`, `gemini-cli` o `claude-code`. Usa el instalador oficial (`npx skills add …`) y deja las skills en `.agents/skills/` o `.claude/skills/`, que **no se suben** (están en `.gitignore`).
+- Necesitan internet y Node 22. Se instalan **en la máquina de la IA**. Nunca van dentro del HTML de un juego.
+
+### Cuál usar
+| Tarea | Skill | Regla de Motor City encima |
+|---|---|---|
+| Portada web de un juego, prensa o landing (GitHub Pages) | **Hallmark** (`/hallmark`, `/hallmark audit <archivo>`) | Español de Colombia y todo público. Nada inventado: ni cifras, ni testimonios, ni logos. Las capturas son reales (`node motor.mjs capturas`). |
+| Cualquier HTML, CSS o JS del navegador (menús, diálogos, accesibilidad, rendimiento) | **Modern Web Guidance** (`npx -y modern-web-guidance@latest search "…"`, `retrieve`, `legacy-scan`) | La **política de navegadores** de abajo. Un solo HTML, sin librerías. |
+| Tráiler o video de lanzamiento | **HyperFrames** | Se hace con capturas reales del juego. El video es aparte; el juego no cambia. |
+| «¿Hay una skill para…?» | **find-skills** (`npx skills find …`) | Solo de fuentes conocidas y con más de 1.000 instalaciones. Se revisa y se anota en `skills-externas.json` antes de usarla. |
+| Probar con gente antes de publicar | **MC.Publico** (`node motor.mjs publico`) | Es una prueba de humo, no reemplaza a la gente de verdad. Mira el informe `dist/publico.md`. |
+| Probar la web en un navegador | `webapp-testing` (Playwright) | Ya está en las pruebas: `node motor.mjs prueba --navegador`. |
+
+### Política de navegadores (pedida por Modern Web Guidance)
+- **Baseline ampliamente disponible.** Eso incluye ES2023: `toSorted`, `toReversed`, `structuredClone` y `replaceChildren`.
+- **Lo más nuevo** (Baseline 2024 en adelante, `Promise.withResolvers`, `ctx.filter` en Safari menor a 18…) solo con detección y un respaldo de **20 líneas o menos, sin dependencias**. Ejemplo: el respaldo de `js/00-nucleo.js` y `Estilo._filtros()` en `js/16-estilos.js`.
+- Celulares de referencia:
+  - Android 7 con WebView 119 o más;
+  - iPhone 8 o X con iOS 16 (Safari 16).
+- El guardado se copia con JSON a propósito: así cada valor por defecto es serializable igual que un guardado. No lo cambies por `structuredClone`.
+
+### Lo que no se usa
+- **MiroFish** (AGPL, aplicación aparte con servidor y llaves). Solo se tomó la idea: `MC.Publico`.
+- Material filtrado de terceros, por ejemplo «system prompts» filtrados. No se copia ni se usa.
+- Una skill que no esté en el catálogo. Primero se revisa (lee su SKILL.md y sus scripts) y se anota.
+
+### Reglas aprendidas
+- `legacy-scan` revisa solo ~20 % de las guías. Verifica cada hallazgo con su `keepWhen` y su `dropWhen` antes de cambiar código.
+- La salida de Hallmark se revisa con `sloplint`. En Motor City aplica a páginas web, no al lienzo del juego.
 
 
 ---
@@ -738,7 +833,7 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **2.9.0** · 20‑nov‑2026 · **132 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **2.10.0** · 20‑nov‑2026 · **134 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ### Resumen
 - **Hechos:** 76 pedidos ✅.
@@ -884,6 +979,17 @@ Versión **2.9.0** · 20‑nov‑2026 · **132 pruebas en verde** (`node motor.m
 | Maqueta por debajo de 40 ms en cualquier máquina (Codex midió 44,7 ms en la suya; aquí da 27–29 ms) | ⏳ | A Claude: caché por región y fachadas horneadas (§9.7). |
 | El test de WebRTC de EnCicla (ventana fija de 900 ms) | ⏳ | A la IA de EnCicla (lo señalaron Gemini y Codex). |
 
+### 12. «Retoma, une todo, mejora y optimiza todo; añade las skills y plugins de los videos y sigue desarrollando» (2.10, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Revisar los repositorios ya actualizados y **unir todo** | Hecho | <ul><li>El Metro: Motor del Valle 1.2.0 desde EnCicla.</li><li>`plan-unico-el-metro` ya estaba dentro de la v2.0.0, así que no se fusionó: habría devuelto 14 archivos a su estado anterior.</li><li>EnCicla: de `revolucion-v2` (2.0.1) se trajo el **alto contraste** y el **metro sin casas debajo** (`src/js/96-accesible.js`, con 2 pruebas). El registro de claves del guardado queda para su IA.</li></ul> |
+| **Optimizar todo** | Hecho | <ul><li>El cómic y el 1 bit sin leer la pantalla (`Estilo._imprimirGPU`), a media resolución en pantallas densas.</li><li>Cuadro real en la cenital: el cómic pasó de 25,5 a 20,8 ms y el 1 bit de 25,1 a 17,9 ms. En la maqueta: el cómic pasó de 42,9 a 30,9 ms y el 1 bit de 42,4 a 27,7 ms.</li><li>Atlas más livianos: Mandados pasó de 8,2 a 5,1 MB y se ve igual (`herramientas/aligerar_arte.py`).</li></ul> |
+| **Mejorar todo** | Hecho | <ul><li>El 1 bit ya no hace muaré en la maqueta.</li><li>`rutaA` sale por el extremo de la calle que conviene: mediana de 1,29× la línea recta, y a veces mucho más corta. Arregla también «tocar para ir».</li><li>Modern Web Guidance sobre el motor, con respaldo para celulares viejos.</li></ul> |
+| **Skills y plugins de los videos** | Hecho | <ul><li>`skills-externas.json`, `node motor.mjs skills`, `.claude/settings.json` en los 4 repositorios y la skill `motor-city-skills-externas`.</li><li>El detalle de los 11 enlaces está en `docs/INSPIRACION-VISUAL.md` §1.2.</li></ul> |
+| **Seguir desarrollando** | Hecho | **`MC.Publico`**, el público simulado (idea de MiroFish), con `node motor.mjs publico` y su prueba. |
+| **Nuevas peticiones para Gemini y ChatGPT** | Hecho | <ul><li>Gemini: G‑H10 a G‑H13.</li><li>ChatGPT y Codex: C‑M23 (red vial), C‑M24 (ayuda para niños), C‑M25 (portada con Hallmark) y C‑A12 (tráiler con HyperFrames).</li><li>Todo en `TAREAS-IA.md`.</li></ul> |
+
+
 
 ---
 
@@ -1006,7 +1112,7 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 132 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 134 pruebas, también en Chromium. |
 | `node motor.mjs exportar ID [--centro x,y --lado m]` | El mundo en glTF 2.0, alturas RAW 16 y escena JSON (Godot, Unity, Unreal, Blender, three.js). |
 | `node motor.mjs capturas [--web]` | 14 fotos estándar de Mandados en `dist/capturas/` (revisión visual). |
 | `node motor.mjs revisar-arte arte/ID` | Revisa un paquete de arte contra las reglas. |
@@ -1022,7 +1128,7 @@ new MC.Bucle({
 # ANEXO B. Contrato técnico (`MOTOR.md`)
 
 
-**Versión 2.9.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 2.10.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -1243,6 +1349,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.10.0** | 20‑nov‑2026 | <ul><li>`MC.Publico` (`js/92-publico.js`: `piloto(perfil, op)`, `informe(medidas)`, `lista()`, `PERFILES`) y `herramientas/publico.mjs`.</li><li>`Red.caminoEntre(inicios, metas)`; `Manejo.rutaA` sale por el extremo que conviene.</li><li>`Estilo._imprimirGPU`, `_filtros()` y `_umbral()`: cómic y 1 bit sin leer la pantalla, con tramado anclado al desplazamiento del mundo.</li><li>Respaldo de `toSorted`, `toReversed` y `Promise.withResolvers` en `00-nucleo.js`.</li><li>`herramientas/aligerar_arte.py` y `herramientas/skills-externas.mjs` (`node motor.mjs skills`).</li><li>Mandados: `MANDADOS.piloto`.</li></ul> |
 | **2.9.0** | 20‑nov‑2026 | Unión de la 2.8 (Claude) con la 2.7.1 de Codex:<ul><li>`arte/chatgpt/` y `vehiculoArriba` en las pieles;</li><li>`textura` en las losas y `Vista2D.charcos`;</li><li>la capa `agua` en el MC4 (`herramientas/precalcular-agua.mjs`);</li><li>el estilo `unbit` (`Estilo.imprimir`, `ruidoAzul`);</li><li>la caché de fachadas en la maqueta;</li><li>`js/90-three.js` y `adaptadores/godot` y `adaptadores/three`.</li></ul>Los faros también salen con el vehículo de piel, y la cubierta sobre columnas pasa por la caché. 132 pruebas. |
 | **2.8.0** | 20‑nov‑2026 | **De la entrega maestra de referencias** (`docs/referencias/`):<ul><li>`MC.Vida`: `palomas` y evento `fauna`, `marcas` (huellas por superficie), `suelo(E, x, y)`, `piso(D)` y `emitir` escalado por `MC.opciones.particulas`;</li><li>`MC.opciones` (`sacudida` y `particulas`; `Camara.sacudir` lo respeta);</li><li>`Vista2D.faros` y las luces de freno del jugador;</li><li>los estilos `vintage` (`tinte`, `final: 'vineta'`), `crt` (`final: 'crt'`) y `termica` (`gradiente`);</li><li>`js/90-telemetria.js` (`MC.Telemetria`: `registro`, `percentil`, `resumen`, `linea`);</li><li>`js/91-contratos.js` (`MC.Contratos.validar`) y `schemas/` (escena, puente y entidad, `schema_version: 1`);</li><li>`schema_version` en `Exportar.escena` y `Puente.instantanea`.</li></ul>125 pruebas. |
 | **2.7.0** | 20‑nov‑2026 | **Estilos gráficos:** `js/16-estilos.js` (`MC.Estilo`: `p`, `rgb`, `col`, `luz`, `trama`, `final`, `lineas`, `lista`; `MC.ESTILOS_GRAF` con 8 estilos de datos; paletas de dominio público en `PAL_DP`). Las losas, los muros, los techos, las sombras (`MC.Sombras` usa `estilo.sombra`), el cielo lateral y los árboles (`Arboleda._copaEstilo`, un horneado por estilo) pasan por el estilo. **Vida:** `js/88-vida.js` (`MC.Vida.emitir`, `onomatopeya`, `impacto`, `dibujar`; bandadas, aterrizaje con `_squash` y evento `aterriza`, frenazos y agua) y `MC.Bucle` con `MC._pausaImpacto` (hitstop). El vehículo cabecea con `C._acel` y las copas se mecen de cerca (`E.viento`). **Exportar:** `js/89-exportar.js` (`MC.Exportar.glb`, `escena`, `alturas`, `r16`; `MC.Puente.instantanea`, `aGltf`) y `node motor.mjs exportar`. 123 pruebas. |
@@ -1360,7 +1467,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 132 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 134 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»
@@ -1819,6 +1926,22 @@ En la entrega maestra del autor se inspeccionaron directamente 17 clips MP4 (`R0
 
 > **Para cerrar el mapa 1:1:** basta con que el autor indique qué `.mp4` corresponde a cada uno de los 9 shortcodes bloqueados (sin intentar evadir el inicio de sesión de Instagram).
 
+
+#### 1.2 Los 11 enlaces del 20‑nov‑2026: skills y plugins para las IA (2.10)
+El autor mandó 2 Instagram (uno dos veces) y 8 TikTok, y pidió «añade las skills y plugins de los videos y sigue desarrollando». Los TikTok se leyeron por su descripción pública. Los Instagram piden iniciar sesión, y quedan para Gemini (G‑H10).
+
+| Enlace | Qué muestra | Qué se hizo |
+|---|---|---|
+| TikTok @midudev (`ZSpw3MBBy`) | **Modern Web Guidance**, de Google Chrome (Apache‑2.0): una skill que evita que la IA escriba HTML, CSS o JS viejo | Plugin de Claude Code. Se corrió `legacy-scan` sobre el motor: 11 hallazgos, se aplicaron 9 con su respaldo y se dejaron 2 a propósito (la copia JSON del guardado). Se fijó la **política de navegadores** en `CLAUDE.md`. |
+| TikTok @xabatzz (`ZSpw3DhsN`) | **Hallmark** (`Nutlope/hallmark`, MIT): una skill de diseño web «que no parezca hecho por IA», con 50 temas y revisión en 8 tamaños | Plugin de Claude Code. Encargo **C‑M25**: la portada de GitHub Pages. |
+| TikTok @morenazogutierrez (`ZSpw3ESfu`) | Tres herramientas: skills de diseño y de animación, y **Playwright** para que la IA pruebe la web | El diseño y la animación son Hallmark y HyperFrames. Playwright ya está (`webapp-testing` y `prueba --navegador`). |
+| TikTok @revolutia.ai (`ZSpw3hjS4`) | **find-skills** (`vercel-labs/skills`, MIT): busca e instala la skill justa para cada tarea | En el catálogo. Se instala con `node motor.mjs skills --instalar`. |
+| TikTok @revolutia.ai (`ZSpw3yj9x`) | Una skill que convierte una web en un **video de lanzamiento** con música y subtítulos | Es **HyperFrames** (`heygen-com/hyperframes`, Apache‑2.0, skills `website-to-video` y `product-launch-video`). Plugin de Claude Code y encargo **C‑A12** (tráiler de Mandados). |
+| TikTok @revolutia.ai (`ZSpw3ah5Q`) | **MiroFish** (`666ghj/MiroFish`, AGPL‑3.0): miles de clientes simulados que opinan antes del lanzamiento | Es una aplicación aparte, con servidor y llaves, así que no se instala. Se tomó la idea: **`MC.Publico`** y `node motor.mjs publico` (niña, abuelo, gamer y turista juegan solos y dan su veredicto). |
+| TikTok @migue.baena (`ZSpw36ySn`) | Un supuesto «system prompt» filtrado de otra empresa | **Descartado.** Es material filtrado y confidencial de un tercero, así que no se copia ni se usa. |
+| TikTok @soyenriquerocha (`ZSpw3u8dH`) | «Claude ahora construye bien sin basura» (la descripción no dice más) | Para Gemini (G‑H10): averiguar qué herramienta es. |
+| Instagram `DfVDgmclLPi` (enviado dos veces) | No se pudo leer: pide iniciar sesión | Para Gemini (G‑H10). |
+| Instagram `DexJDYnNQ0X` | No se pudo leer: pide iniciar sesión | Para Gemini (G‑H10). |
 
 ### 2. Peso y vida («game feel»)
 | Fuente | La técnica | En el motor |
@@ -2814,6 +2937,33 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 20‑nov‑2026 · 2.10.0 · Todo unido, más liviano y con las skills de los videos (Claude Code)
+**Pedido:** «retoma y continúa, revisa los repositorios ya actualizados, une todo, mejora todo y optimiza todo, y añade nuevas peticiones para Gemini y ChatGPT». Llegaron 11 enlaces, y después «añade las skills y plugins de los videos y sigue desarrollando».
+
+**Unir:**
+- El Metro recibió el Motor del Valle 1.2.0 desde EnCicla. Su rama `plan-unico-el-metro` ya estaba dentro de la v2.0.0, así que no se fusionó.
+- EnCicla recibió de `revolucion-v2` el alto contraste y el metro sin casas debajo (`src/js/96-accesible.js`).
+
+**Optimizar:**
+- `Estilo.imprimir` ya no lee la pantalla: usa `grayscale`, un patrón de umbrales al 50 % y `contrast(1000)`, con el respaldo por píxel a media resolución.
+- Los atlas sin pérdida pasaron a WebP con calidad 88 y alfa sin pérdida. Mandados bajó de 8,2 a 5,1 MB.
+
+**Mejorar:**
+- El tramado del 1 bit y del cómic se ancla al desplazamiento del mundo con celdas de 1 px. Así se acaba el muaré de la maqueta.
+- `Red.caminoEntre` (A* con varias salidas y metas) y `rutaA` corregido.
+- `legacy-scan` de Modern Web Guidance: `toSorted`, `toReversed`, `replaceChildren` y `Promise.withResolvers`, con respaldo en `00-nucleo.js`.
+
+**Skills:**
+- `skills-externas.json` (Hallmark, Modern Web Guidance, find-skills y HyperFrames), con el commit revisado y la licencia de cada una.
+- `node motor.mjs skills [--instalar --agente …]` y `.claude/settings.json` con los plugins.
+- La skill `motor-city-skills-externas` y la política de navegadores.
+
+**Desarrollar:** `MC.Publico` (`js/92-publico.js`) y `node motor.mjs publico`. Hay 4 perfiles con puntería, reacción, fuerza y paciencia propias, que siguen las calles con `rutaA`; el informe sale en `dist/publico.md`. Primer resultado:
+- el abuelo, la gamer y el turista: «bien»;
+- la niña: «revisar», atascada el 43 %. De ahí sale el encargo C‑M24.
+
+**Lo que sigue:** G‑H10 a G‑H13, C‑M23 a C‑M25 y C‑A12 (`TAREAS-IA.md`).
 
 ### 20‑nov‑2026 · 2.9.0 · Unión de la 2.8 (Claude) con la 2.7.1 (ChatGPT/Codex) (Claude Code)
 Codex entregó la 2.7.1 en paralelo con la 2.8:

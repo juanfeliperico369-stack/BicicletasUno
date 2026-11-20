@@ -376,6 +376,14 @@ body.big .turnos button{font-size:18px}
 .tlVeh{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:6px 0 4px}
 .tlVeh .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:14px}
 .tlVeh canvas{width:96px;height:54px;background:#eef3e6;border-radius:8px}
+
+/* alto contraste (Más > Alto contraste): textos y bordes marcados y el mapa del juego con más contraste */
+body.contraste #cv{filter:contrast(1.25) saturate(1.15)}
+body.contraste .chip,body.contraste .btn,body.contraste .sw,body.contraste .seg button,body.contraste .paper,body.contraste #toast{outline:3px solid #000;outline-offset:0}
+body.contraste .m,body.contraste small,body.contraste .pag{color:inherit!important;opacity:1!important}
+body.contraste #toast{background:#fff200;color:#000;font-weight:800}
+body.contraste #modal{background:#000000e6}
+body.contraste .paper{background:#fff;color:#000}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -12539,6 +12547,35 @@ Art.shareImage = function (w = 1200, h = 630) {
   x.fillStyle = PAL.crema; x.fillRect(0, h - 90, w, 90); x.fillStyle = PAL.vd; x.fillRect(0, h - 96, w, 6); x.fillStyle = PAL.az; x.font = '700 44px Titulos, Impact, sans-serif'; x.textAlign = 'left'; x.fillText('LA REVISTA ARCADE MÁS PEDALEADA', 40, h - 30); const tw = x.measureText('LA REVISTA ARCADE MÁS PEDALEADA').width;
   x.font = '700 22px Cuerpo, sans-serif'; x.textAlign = 'right'; if (w - 40 - x.measureText('Juega sin internet · Web y Android').width > 40 + tw + 30) x.fillText('Juega sin internet · Web y Android', w - 40, h - 36);
   return c;
+};
+
+/* ---- 96-accesible.js ---- */
+/* =====================================================================
+   ACCESIBLE Y FIEL (traído de la rama revolucion-v2, 2.0.1, al unir las ramas el 20-nov-2026)
+   - Alto contraste: opción en Más, junto a «Letra grande»; se aplica al arrancar.
+   - El viaducto del metro y el tranvía no pasan sobre casas: bajo su trazado, las casas o edificios pasan a andén
+     (se mide con tools/auditoria-mapa.js; antes A 7,8 %, B 5,9 % y T 7 % del trazado iban sobre casas).
+   Los trenes de noche ya quedan guardados con Ride.metroOn() (30-ride.js).
+   ===================================================================== */
+const _init96 = UI.init; UI.init = function () { _init96.apply(this, arguments); document.body.classList.toggle('contraste', !!(Save.data && Save.data.settings && Save.data.settings.contraste)); };
+const _mas96 = UI.renderMas;
+UI.renderMas = function () {
+  _mas96.apply(this, arguments); const S = Save.data.settings, big = document.querySelector('#tab-mas [data-sw="big"]'); if (!big || document.querySelector('#tab-mas [data-sw="contraste"]')) return;
+  const o = document.createElement('div'); o.className = 'opt'; o.innerHTML = `<span>Alto contraste<br><small class="m">Textos y bordes marcados, mapa más nítido</small></span><button class="sw ${S.contraste ? 'on' : ''}" data-sw="contraste" aria-label="Alto contraste"></button>`;
+  big.closest('.opt').after(o); const b = o.querySelector('button');
+  b.onclick = () => { S.contraste = !S.contraste; Save.save(); b.classList.toggle('on', S.contraste); document.body.classList.toggle('contraste', S.contraste); Snd.sfx('tap'); };
+};
+const _rail96 = CityMap.buildRail;
+CityMap.buildRail = function () {
+  _rail96.apply(this, arguments); const casa = v => v === TT.BRICK || v === TT.BLDG; let n = 0;
+  for (const [P, r] of [[this.lineA, 7], [this.lineB, 7], [this.tram, 5]]) {
+    if (!P) continue; const paso = 4 / M_PER_PX, R = r / M_PER_PX;
+    for (let s = 0; s <= P.len; s += paso) {
+      const q = this.at(P, s), tx0 = Math.floor((q.x - R) / TS), tx1 = Math.floor((q.x + R) / TS), ty0 = Math.floor((q.y - R) / TS), ty1 = Math.floor((q.y + R) / TS);
+      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) if (Math.hypot((tx + .5) * TS - q.x, (ty + .5) * TS - q.y) <= R + TS / 2 && casa(this.get(tx, ty))) { this.set(tx, ty, TT.WALK); n++; }
+    }
+  }
+  this.corredorRiel = n;
 };
 
 /* ---- 99-boot.js ---- */

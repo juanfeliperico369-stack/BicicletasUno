@@ -1,4 +1,4 @@
-/* Motor City 2.9.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.10.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -10,8 +10,13 @@
    Todo el motor vive en un solo cierre y solo publica MC (y, por compatibilidad con los juegos 1.x, Valle/MotorValle).
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
+/* respaldo para celulares viejos (política de navegadores en CLAUDE.md: Baseline ampliamente disponible y, para lo más nuevo,
+   respaldo de pocas líneas sin dependencias). iOS 16 (iPhone 8 y X) no trae Promise.withResolvers; Android 6 no trae toSorted ni toReversed. */
+if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted', { value(f) { return this.slice().sort(f); }, writable: true, configurable: true });
+if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
+if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '2.9.0',
+  version: '2.10.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -228,7 +233,7 @@ const Integra = {
 const Est = {
   media: L => L.reduce((a, b) => a + b, 0) / (L.length || 1),
   desv: L => { const m = Est.media(L); return Math.sqrt(L.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, L.length - 1)); },
-  percentil: (L, p) => { const s = L.slice().sort((a, b) => a - b), i = (s.length - 1) * p, lo = Math.floor(i); return s[lo] + (s[Math.min(s.length - 1, lo + 1)] - s[lo]) * (i - lo); },
+  percentil: (L, p) => { const s = L.toSorted((a, b) => a - b), i = (s.length - 1) * p, lo = Math.floor(i); return s[lo] + (s[Math.min(s.length - 1, lo + 1)] - s[lo]) * (i - lo); },
   normal: (r, m = 0, s = 1) => { const u = Math.max(1e-12, r()), v = r(); return m + s * Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); },
   exponencial: (r, lam) => -Math.log(1 - r()) / lam,
   poisson: (r, lam) => { const L = Math.exp(-lam); let k = 0, p = 1; do { k++; p *= r(); } while (p > L); return k - 1; },
@@ -950,6 +955,26 @@ class Red {
     }
     if (de[b] < 0) return null; const R = []; for (let v = b; v !== a;) { const e = this.aristas[de[v]], u = e.a === v ? e.b : e.a; R.push({ arista: e, adelante: e.a === u }); v = u; } return R.reverse();
   }
+  /* A* con varios inicios y varias metas (2.10): los dos extremos de la calle donde estoy y los dos de la calle de destino,
+     cada uno con lo que cuesta llegar a él. Antes rutaA salía siempre por un extremo fijo y podía dar la vuelta a la manzana
+     (62 m en línea recta se volvían 290 m). inicios y metas: [[nodo, costo]]. Devuelve { C, ini, fin } o null. */
+  caminoEntre(inicios, metas, filtro) {
+    const N = this.nodos, ex = new Map(), h = i => { let m = Infinity; for (const [j] of metas) m = Math.min(m, Math.hypot(N[i].x - N[j].x, N[i].y - N[j].y)); return m; };
+    for (const [i, c] of metas) if (!ex.has(i) || c < ex.get(i)) ex.set(i, c);
+    const g = new Float64Array(N.length).fill(Infinity), de = new Int32Array(N.length).fill(-1), cerr = new Uint8Array(N.length), ab = [];
+    for (const [i, c] of inicios) if (c < g[i]) { g[i] = c; ab.push([c + h(i), i]); }
+    let mejor = Infinity, fin = -1;
+    while (ab.length) {
+      let mi = 0; for (let k = 1; k < ab.length; k++) if (ab[k][0] < ab[mi][0]) mi = k; const [f, u] = ab.splice(mi, 1)[0];
+      if (f >= mejor) break; if (cerr[u]) continue; cerr[u] = 1;
+      if (ex.has(u) && g[u] + ex.get(u) < mejor) { mejor = g[u] + ex.get(u); fin = u; }
+      for (const ei of N[u].ar) { const e = this.aristas[ei]; if (filtro && !filtro(e)) continue; const v = e.a === u ? e.b : e.a, ng = g[u] + e.largo; if (ng < g[v]) { g[v] = ng; de[v] = ei; ab.push([ng + h(v), v]); } }
+      if (ab.length > 60000) break;
+    }
+    if (fin < 0) return null; const R = []; let v = fin;
+    while (de[v] >= 0) { const e = this.aristas[de[v]], u = e.a === v ? e.b : e.a; R.push({ arista: e, adelante: e.a === u }); v = u; }
+    return { C: R.reverse(), ini: v, fin, largo: mejor };
+  }
   /* componentes conexas (para medir la red) */
   componentes() { const c = new Int32Array(this.nodos.length).fill(-1); let k = 0; const tam = []; for (let s = 0; s < c.length; s++) { if (c[s] >= 0) continue; let n = 0; const pila = [s]; c[s] = k; while (pila.length) { const u = pila.pop(); n++; for (const ei of this.nodos[u].ar) { const e = this.aristas[ei], v = e.a === u ? e.b : e.a; if (c[v] < 0) { c[v] = k; pila.push(v); } } } tam.push(n); k++; } return { n: k, tam: tam.sort((a, b) => b - a) }; }
 }
@@ -1544,11 +1569,55 @@ const Estilo = {
     }
     return this._azul = rango;
   },
+  /* pantallas grandes (DPR 2: 1,4 millones de píxeles): el pase por píxel va a media resolución, 4 veces menos que leer y escribir.
+     1 bit: el tramado queda de 1 px CSS (el mismo aspecto). Cómic: solo se calcula la máscara de puntos y se multiplica encima,
+     así la imagen conserva todo su detalle. Medido en la prueba del celular: de ~30 ms a ~8 ms por cuadro. */
   imprimir(g, W, H, V, binario) {
+    const s = W * H > 400000 ? .5 : 1;
+    if (W * H > 4096 && this._filtros()) return this._imprimirGPU(g, W, H, V, binario, s);
+    if (s === 1) return this._imprimir(g, W, H, V, binario, false);
+    const w = Math.ceil(W * s), h = Math.ceil(H * s); let c = this._imp;
+    if (!c || c.width !== w || c.height !== h) { c = this._imp = lienzo(w, h); this._impG = c && c.getContext('2d', { willReadFrequently: true }); }
+    const q = this._impG; if (!q) return this._imprimir(g, W, H, V, binario, false);
+    q.globalCompositeOperation = 'copy'; q.imageSmoothingEnabled = true; q.drawImage(g.canvas, 0, 0, w, h); q.globalCompositeOperation = 'source-over';
+    this._imprimir(q, w, h, { a: V.a * s, b: V.b * s, c: V.c * s, d: V.d * s, e: V.e * s, f: V.f * s, z: V.z * s }, binario, !binario);
+    g.save(); g.imageSmoothingEnabled = !binario; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(c, 0, 0, W, H); g.restore();
+  },
+  /* Sin leer la pantalla (lo que más cuesta: obliga a terminar todo el dibujo pendiente): con los filtros del lienzo.
+     gris(imagen)·½ + patrón de umbrales·½ y luego contraste extremo = blanco si la luz pasa el umbral de esa celda, negro si no.
+     Es el mismo tramado anclado al mundo del camino por píxel (ruido azul 16×16 en 1 bit; puntos 8×8 en cómic). */
+  _filtros() {
+    if (this._gpu != null) return this._gpu; let ok = false;
+    try { const c = lienzo(2, 2), q = c && c.getContext('2d'); if (q && 'filter' in q && typeof DOMMatrix !== 'undefined') { q.filter = 'contrast(1000)'; ok = q.filter === 'contrast(1000)'; } } catch (e) { ok = false; }
+    return (this._gpu = ok);
+  },
+  _umbral(binario) {
+    const k = binario ? 'azul' : 'puntos'; this._um = this._um || {}; if (this._um[k]) return this._um[k];
+    const n = binario ? 16 : 8, c = lienzo(n, n), q = c.getContext('2d'), img = q.createImageData(n, n), az = binario ? this.ruidoAzul() : null;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const o = (y * n + x) * 4; let v;
+      if (binario) v = 255 - az[x + (y << 4)];   // blanco si luz > rango
+      else { const dx = (x - 3.5) / 4, dy = (y - 3.5) / 4, T = 160 * (1 - dx * dx - dy * dy); v = T <= 0 ? 255 : Math.round(255 - T); }   // punto si luz < T
+      img.data[o] = img.data[o + 1] = img.data[o + 2] = v; img.data[o + 3] = 255;
+    }
+    q.putImageData(img, 0, 0); return (this._um[k] = c);
+  },
+  _imprimirGPU(g, W, H, V, binario, s) {
+    const w = Math.ceil(W * s), h = Math.ceil(H * s);
+    if (!this._gq || this._gq.width !== w || this._gq.height !== h) { this._gq = lienzo(w, h); this._gq2 = lienzo(w, h); }
+    const q = this._gq.getContext('2d'), q2 = this._gq2.getContext('2d');
+    q.save(); q.globalCompositeOperation = 'copy'; q.filter = 'grayscale(1)'; q.imageSmoothingEnabled = true; q.drawImage(g.canvas, 0, 0, w, h); q.restore();
+    const pat = q.createPattern(this._umbral(binario), 'repeat'); pat.setTransform(new DOMMatrix([1, 0, 0, 1, Math.round(V.e * s), Math.round(V.f * s)]));   // anclado al desplazamiento del mundo, celdas de 1 px (sin muaré en la maqueta 2:1)
+    q.save(); q.imageSmoothingEnabled = false; q.globalAlpha = .5; q.fillStyle = pat; q.fillRect(0, 0, w, h); q.restore();
+    q2.save(); q2.globalCompositeOperation = 'copy'; q2.filter = 'contrast(1000)'; q2.drawImage(this._gq, 0, 0); q2.restore();
+    if (!binario) { q2.save(); q2.globalCompositeOperation = 'lighten'; q2.fillStyle = 'rgb(133,122,148)'; q2.fillRect(0, 0, w, h); q2.restore(); }
+    g.save(); g.imageSmoothingEnabled = false; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(this._gq2, 0, 0, W, H); g.restore();
+  },
+  _imprimir(g, W, H, V, binario, mascara) {
     const img = g.getImageData(0, 0, W, H), rgba = img.data;
-    const {a,b,c,d,e,f} = V, det = a*d-b*c;
-    const paso = Math.max(.08, 1 / Math.max(.1,V.z));
-    const ux = d/det/paso, uy = -b/det/paso, vx = -c/det/paso, vy = a/det/paso;
+    /* el tramado se ancla al desplazamiento del mundo (no se «nada» al moverse la cámara) con celdas de 1 píxel alineadas a la pantalla:
+       anclarlo también al giro y al aplastado 2:1 de la maqueta hacía muaré (rombos) y el 1 bit no se leía */
+    const e = Math.round(V.e), f = Math.round(V.f), ux = 1, uy = 0, vx = 0, vy = 1;
     const azul = binario ? this.ruidoAzul() : null;
     for (let y = 0, i = 0; y < H; y++) {
       let xw = (.5-e)*ux+(y+.5-f)*vx, yw = (.5-e)*uy+(y+.5-f)*vy;
@@ -1557,9 +1626,11 @@ const Estilo = {
         if (binario) {
           const rango = azul[(Math.floor(xw)&15) + ((Math.floor(yw)&15)<<4)];
           rgba[i] = rgba[i+1] = rgba[i+2] = lum > rango+.5 || lum === 255 ? 255 : 0;
-        } else if (lum < 160) {
-          const dx = ((Math.floor(xw)&7)-3.5)/4, dy = ((Math.floor(yw)&7)-3.5)/4;
-          if (dx*dx+dy*dy < (160-lum)/160) { rgba[i]*=.52; rgba[i+1]*=.48; rgba[i+2]*=.58; }
+        } else {
+          let punto = false;
+          if (lum < 160) { const dx = ((Math.floor(xw)&7)-3.5)/4, dy = ((Math.floor(yw)&7)-3.5)/4; punto = dx*dx+dy*dy < (160-lum)/160; }
+          if (mascara) { rgba[i] = punto ? 133 : 255; rgba[i+1] = punto ? 122 : 255; rgba[i+2] = punto ? 148 : 255; rgba[i+3] = 255; }
+          else if (punto) { rgba[i]*=.52; rgba[i+1]*=.48; rgba[i+2]*=.58; }
         }
       }
     }
@@ -3197,7 +3268,9 @@ const Manejo = {
   /* tocar para ir: el camino por la red (A*) hasta el punto tocado; cada cuadro, la dirección al siguiente punto */
   rutaA(mundo, desde, hasta, red = 'peaton') {
     try { const R = mundo.red(red), a = R.cercana(desde.x, desde.y, 120), b = R.cercana(hasta.x, hasta.y, 120); if (!a || !b) return [hasta.x, hasta.y];
-      const na = a.arista.a, nb = b.arista.b, C = R.camino(na, nb); if (!C) return [hasta.x, hasta.y]; const P = [desde.x, desde.y];
+      const ea = a.arista, eb = b.arista; if (ea === eb) return [desde.x, desde.y, hasta.x, hasta.y];   // la misma calle: derecho
+      const d = (i, p) => Math.hypot(R.nodos[i].x - p.x, R.nodos[i].y - p.y), r = R.caminoEntre([[ea.a, d(ea.a, desde)], [ea.b, d(ea.b, desde)]], [[eb.a, d(eb.a, hasta)], [eb.b, d(eb.b, hasta)]]);
+      if (!r) return [hasta.x, hasta.y]; const C = r.C, P = [desde.x, desde.y, R.nodos[r.ini].x, R.nodos[r.ini].y];
       for (const { arista: e, adelante } of C) { const p = e.t.p, n = p.length; if (adelante) for (let i = 0; i < n; i += 2) P.push(p[i], p[i + 1]); else for (let i = n - 2; i >= 0; i -= 2) P.push(p[i], p[i + 1]); }
       P.push(hasta.x, hasta.y); return P; } catch (e) { return [hasta.x, hasta.y]; }
   },
@@ -3233,8 +3306,7 @@ const Sprites = {
   /* registra un atlas; imagen: dataURL, URL local, <img> o <canvas> */
   atlas(id, def) {
     const A = { id, cuadros: def.cuadros || {}, anim: def.anim || {}, metros: def.metros || {}, img: null, listo: false, magenta: def.magenta !== false };
-    let terminar;
-    A.carga = new Promise(resolver => { terminar = resolver; });
+    const { promise, resolve: terminar } = Promise.withResolvers(); A.carga = promise;
     const fin = img => { A.img = A.magenta ? Sprites._sinMagenta(img) : img; A.listo = true; terminar(true); MC.emit('sprites', id); };
     if (def.imagen && typeof def.imagen === 'object') fin(def.imagen);
     else if (def.imagen && typeof Image !== 'undefined') { const im = new Image(); im.onload = () => fin(im); im.onerror = () => { terminar(false); MC.falla('sprites', 'no cargó ' + id); }; im.src = def.imagen; }
@@ -3316,7 +3388,7 @@ const Sombras = {
   },
   /* casco convexo (cadena monótona) de una lista de puntos [[x, y], …] */
   casco(pts) {
-    const P = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]); if (P.length < 3) return P; const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const P = pts.toSorted((a, b) => a[0] - b[0] || a[1] - b[1]); if (P.length < 3) return P; const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
     const lo = []; for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
     const up = []; for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
     up.pop(); lo.pop(); return lo.concat(up);
@@ -3806,9 +3878,9 @@ const Vista2D = {
     const rampa = vi ? 0 : Math.min(q.largo * .4, q.peatonal ? 9 : 22), alt = s => h * (vi ? 1 : suave(Math.min(s, q.largo - s) / rampa));
     if (!D.cen) { g.fillStyle = vi ? '#9aa3ad' : '#a9a49a'; for (let s = 12; s < q.largo - 6; s += vi ? 30 : 24) { const c = T.at(s), [x, y] = pr(c.x, c.y, 0), [, y2] = pr(c.x, c.y, alt(s)); const w = Math.max(1, z * 1.4); g.fillRect(x - w / 2, y2, w, y - y2); } }
     const izq = [], der = []; for (let s = 0; s <= q.largo; s += Math.max(2, 8 / Math.max(.3, z))) { const c = T.at(s), nx = -Math.sin(c.a), ny = Math.cos(c.a), hh = D.cen ? 0 : alt(s); izq.push(pr(c.x + nx * L, c.y + ny * L, hh)); der.push(pr(c.x - nx * L, c.y - ny * L, hh)); }
-    if (D.cen) { g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); izq.forEach(([x, y], i) => i ? g.lineTo(x + z * 2, y + z * 3) : g.moveTo(x + z * 2, y + z * 3)); der.slice().reverse().forEach(([x, y]) => g.lineTo(x + z * 2, y + z * 3)); g.fill(); }
-    if (!D.cen) { g.fillStyle = vi ? '#7f8891' : '#8e8a80'; g.beginPath(); der.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); der.slice().reverse().forEach(([x, y]) => g.lineTo(x, y + z * 1.1)); g.fill(); }
-    g.fillStyle = vi ? '#c9cfd8' : q.peatonal ? '#d8cfbd' : '#5a5f69'; g.beginPath(); izq.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); der.slice().reverse().forEach(([x, y]) => g.lineTo(x, y)); g.closePath(); g.fill();
+    if (D.cen) { g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); izq.forEach(([x, y], i) => i ? g.lineTo(x + z * 2, y + z * 3) : g.moveTo(x + z * 2, y + z * 3)); der.toReversed().forEach(([x, y]) => g.lineTo(x + z * 2, y + z * 3)); g.fill(); }
+    if (!D.cen) { g.fillStyle = vi ? '#7f8891' : '#8e8a80'; g.beginPath(); der.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); der.toReversed().forEach(([x, y]) => g.lineTo(x, y + z * 1.1)); g.fill(); }
+    g.fillStyle = vi ? '#c9cfd8' : q.peatonal ? '#d8cfbd' : '#5a5f69'; g.beginPath(); izq.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); der.toReversed().forEach(([x, y]) => g.lineTo(x, y)); g.closePath(); g.fill();
     if (vi) { g.strokeStyle = '#6f7177'; g.lineWidth = Math.max(.5, z * .25); for (const lado of [-1.3, 1.3]) { g.beginPath(); for (let s = 0; s <= q.largo; s += 6) { const c = T.at(s, lado), [x, y] = pr(c.x, c.y, h + .1); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } }
     g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = Math.max(.4, z * .2); for (const B of [izq, der]) { g.beginPath(); B.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); }
   },
@@ -4584,7 +4656,7 @@ class SeguirRuta {
     /* se corta el camino en el cruce y se vuelve a alargar con la salida elegida */
     const s0 = R.tramos[i].s0, T = R.trazo; let k = 0; while (k < T.cum.length && T.cum[k] <= s0 + .01) k++;
     R.pts = R.pts.slice(0, 2 * k); R.largo = s0; R.tramos = R.tramos.slice(0, i); R.cruces = R.cruces.filter(q => q.s < c.s - .5); R._t = null; const ult = R.tramos[i - 1]; R.fin = ult.adelante ? ult.arista.b : ult.arista.a; R.cerrado = false;
-    R.alargar(R.largo + 1, (ops) => { if (!lado || ops.length < 2) return null; const L = ops.slice().sort((a, b) => a.giro - b.giro), o = lado < 0 ? L[0] : L[L.length - 1]; return Math.abs(o.giro) > .25 ? o : null; });
+    R.alargar(R.largo + 1, (ops) => { if (!lado || ops.length < 2) return null; const L = ops.toSorted((a, b) => a.giro - b.giro), o = lado < 0 ? L[0] : L[L.length - 1]; return Math.abs(o.giro) > .25 ? o : null; });
     R.alargar((this.op.adelante || 500) + (this.s - this.base)); this._t = null; this.eventos.push('gira'); return true;
   }
   /* un paso: E = { acel (−1 frena … 1), salto, turbo } · vel0: acelerador de crucero (la bici sigue sola) */
@@ -4976,7 +5048,7 @@ const Run = {
       if (!this.activo) return; this.activo = false; cancelAnimationFrame(raf); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); capa.removeEventListener('pointerdown', pdn); capa.removeEventListener('pointerup', pup);
       try { RS.AU.music(false); } catch (e) { /* sin audio */ }
       for (const k of ['hr', 'bend', 'esquina', 'gira', 'cielo', 'lluvia']) V[k] = undefined;
-      C.v = 0; C.z = 0; C.enAire = false; C.paso = null; C.zPaso = 0; hud.innerHTML = ''; capa.hidden = true;
+      C.v = 0; C.z = 0; C.enAire = false; C.paso = null; C.zPaso = 0; hud.replaceChildren(); capa.hidden = true;
       const r = { metros, puntos: Math.round(g.score), monedas: g.coinsRun, saltos: g.jumps, trucos: g.tricks, calle: M.calle(C.x, C.y), x: C.x, y: C.y };
       MC.emit('run', Object.assign({ entra: false }, r)); if (op.alSalir) op.alSalir(r);
     };
@@ -6028,7 +6100,7 @@ const Telemetria = {
     if (dt > 0 && dt < 1) { this.cuadro.push(dt * 1000); if (this.cuadro.length > this.N) this.cuadro.shift(); }
     if (msDibujo >= 0) { this.dibujo.push(msDibujo); if (this.dibujo.length > this.N) this.dibujo.shift(); }
   },
-  percentil(L, p) { if (!L.length) return 0; const S = L.slice().sort((a, b) => a - b); return S[Math.min(S.length - 1, Math.floor(p * (S.length - 1) + .5))]; },
+  percentil(L, p) { if (!L.length) return 0; const S = L.toSorted((a, b) => a - b); return S[Math.min(S.length - 1, Math.floor(p * (S.length - 1) + .5))]; },
   resumen() {
     const c = this.cuadro, d = this.dibujo, r1 = v => Math.round(v * 10) / 10, p50 = this.percentil(c, .5);
     return { n: c.length, fps: p50 ? Math.round(1000 / p50) : 0, cuadro_p50: r1(p50), cuadro_p95: r1(this.percentil(c, .95)), cuadro_p99: r1(this.percentil(c, .99)), dibujo_p50: r1(this.percentil(d, .5)), dibujo_p95: r1(this.percentil(d, .95)), gpu: MC.GPU && MC.GPU.perfil ? (MC.GPU.perfil().nivel || '?') : '?' };
@@ -6120,7 +6192,76 @@ const Contratos = {
 };
 MC.Contratos = Contratos;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js"];
+/* ---- js/92-publico.js ---- */
+/* =====================================================================
+   PÚBLICO SIMULADO (2.10) · jugadores con perfiles distintos que juegan solos
+   La idea viene de MiroFish (un público falso que opina antes del lanzamiento); aquí sin su código (AGPL, servidor
+   y llaves de IA): cada perfil maneja con la palanca como lo haría esa persona (puntería, reacción, fuerza, paciencia)
+   y se mide lo que sentiría: cuánto tarda en llegar, cuánto se atasca, cuántas veces choca y si el juego va fluido.
+   Uso:
+     const p = MC.Publico.piloto('nina', { cuerpo, camara, objetivo: () => ({ x, y, radio, quieto }), ruta: (desde, hasta) => MC.Manejo.rutaA(mundo, desde, hasta, 'rueda') });
+     (quien conoce el pueblo va por las calles con la ruta; el turista sigue la flecha en línea recta)
+     const ent = p.leer(dt);            // la misma forma que MC.Controles.leer()
+     MC.Publico.informe(p.medidas)      // { perfil, veredicto: 'bien'|'revisar'|'mal', frases: [...] }
+   En consola: node motor.mjs publico   (los cuatro perfiles juegan Mandados en un celular simulado; informe en dist/publico.md)
+   ===================================================================== */
+const PERFILES_PUBLICO = {
+  nina: { n: 'Sofía, 8 años', icono: '🧒', calles: true, error: 35, reaccion: .6, fuerza: .85, suelta: .25, turbo: false, paciencia: 25, nota: 'toca con todo el dedo, se distrae y suelta la palanca' },
+  abuelo: { n: 'Don Gilberto, 70 años', icono: '👴', calles: true, error: 14, reaccion: 1.4, fuerza: .55, suelta: .08, turbo: false, paciencia: 40, nota: 'va despacio, lee todo, no le gustan los movimientos bruscos' },
+  gamer: { n: 'Valentina, 17 años', icono: '🎮', calles: true, error: 5, reaccion: .22, fuerza: 1, suelta: 0, turbo: true, paciencia: 15, nota: 'va a fondo y con turbo, se aburre si no pasa nada' },
+  turista: { n: 'Mark, turista', icono: '🧳', calles: false, error: 22, reaccion: .9, fuerza: .7, suelta: .05, turbo: false, paciencia: 30, nota: 'no conoce el pueblo y lee poco español: se guía por la flecha' }
+};
+const Publico = {
+  PERFILES: PERFILES_PUBLICO,
+  lista() { return Object.entries(PERFILES_PUBLICO).map(([id, p]) => ({ id, n: p.n, icono: p.icono, nota: p.nota })); },
+  /* un piloto: decide cada «reaccion» segundos hacia dónde empujar, con su error de puntería; si se atasca, prueba otro rumbo */
+  piloto(id, op = {}) {
+    const P = PERFILES_PUBLICO[id] || PERFILES_PUBLICO.turista, rnd = mulberry32(op.semilla || (id.length * 7919 + 13));
+    const M = { perfil: id, t: 0, metros: 0, atascado: 0, choques: 0, pasos: 0, llegadas: [], solto: 0, desvio: 0, cuadros: 0 };
+    let rumbo = 0, prox = 0, suelta = 0, atasco = 0, x0 = null, y0 = null, desvio = 0, ruta = null, clave = '';
+    const gauss = () => { let s = 0; for (let i = 0; i < 6; i++) s += rnd(); return (s - 3) / 1.22; };
+    const quitar = MC.on ? MC.on('choque', c => { if (!op.cuerpo || c === op.cuerpo) M.choques++; }) : null;
+    return {
+      perfil: P, medidas: M,
+      paso() { M.pasos++; M.llegadas.push(+M.t.toFixed(1)); },
+      soltar() { if (quitar) quitar(); },
+      leer(dt) {
+        const C = op.cuerpo, ob = op.objetivo ? op.objetivo() : null; M.t += dt; M.cuadros++;
+        const E = { stick: { x: 0, y: 0, m: 0 }, teclado: false, acel: 0, giro: 0, salto: false, turbo: false, correr: false, sube: false, baja: false, accion: false, pulsos: new Set() };
+        if (!C) return E;
+        if (x0 != null) { const d = Math.hypot(C.x - x0, C.y - y0); M.metros += d; } x0 = C.x; y0 = C.y;
+        if (!ob) return E;
+        const dist = Math.hypot(ob.x - C.x, ob.y - C.y);
+        if (dist < (ob.radio || 20) * (ob.quieto ? .6 : .8)) return E;   // llegó: suelta (y espera si el paso lo pide)
+        const k = Math.round(ob.x) + ',' + Math.round(ob.y); if (P.calles && op.ruta && k !== clave) { clave = k; ruta = op.ruta({ x: C.x, y: C.y }, { x: ob.x, y: ob.y }); if (ruta) ruta._i = 0; }
+        let tx = ob.x, ty = ob.y; if (ruta && ruta.length >= 4) { let i = ruta._i || 0; while (i + 3 < ruta.length && Math.hypot(ruta[i] - C.x, ruta[i + 1] - C.y) < 6) i += 2; ruta._i = i; tx = ruta[i]; ty = ruta[i + 1]; }
+        prox -= dt; if (prox <= 0) { prox = P.reaccion * (.7 + rnd() * .6); rumbo = Math.atan2(ty - C.y, tx - C.x) + gauss() * P.error * Math.PI / 180 * .5 + desvio; desvio *= .5; }
+        if (suelta > 0) { suelta -= dt; return E; } if (rnd() < P.suelta * dt) { suelta = .4 + rnd() * .8; M.solto++; return E; }
+        const v = Math.abs(C.v || 0); if (v < .3) { atasco += dt; M.atascado += dt; if (atasco > 1.5) { desvio = (rnd() < .5 ? -1 : 1) * (.8 + rnd() * 1.2); prox = 0; atasco = 0; M.desvio++; clave = ''; } } else atasco = Math.max(0, atasco - dt);
+        const yaw = op.camara ? op.camara.yaw || 0 : 0, c = Math.cos(yaw), s = Math.sin(yaw), wx = Math.cos(rumbo), wy = Math.sin(rumbo), f = P.fuerza;
+        E.stick = { x: (wx * c - wy * s) * f, y: (wx * s + wy * c) * f, m: f }; E.turbo = E.correr = !!P.turbo && dist > 60;
+        return E;
+      }
+    };
+  },
+  /* el informe de un perfil: lo que esa persona «diría» del juego, con umbrales simples y explicados */
+  informe(M, extra = {}) {
+    const P = PERFILES_PUBLICO[M.perfil] || PERFILES_PUBLICO.turista, fr = [], primera = M.llegadas[0];
+    let malos = 0;
+    if (primera == null) { fr.push('No logró llegar al primer punto en ' + Math.round(M.t) + ' s: el camino no se entiende o algo lo bloquea.'); malos += 2; }
+    else if (primera > P.paciencia * 2) { fr.push('Tardó ' + primera + ' s en llegar al primer punto (su paciencia es de ~' + P.paciencia + ' s): el primer mandado está lejos o es confuso.'); malos++; }
+    else fr.push('Llegó al primer punto en ' + primera + ' s.');
+    const pa = M.t > 0 ? M.atascado / M.t : 0; if (pa > .25) { fr.push('Pasó el ' + Math.round(pa * 100) + ' % del tiempo quieto o atascado contra algo.'); malos++; }
+    if (M.choques > Math.max(3, M.t / 10)) { fr.push('Chocó ' + M.choques + ' veces: las calles o los obstáculos no se leen bien a su ritmo.'); malos++; }
+    if (extra.fps != null && extra.fps < 24) { fr.push('El juego le iba a ' + Math.round(extra.fps) + ' cuadros por segundo: se siente lento.'); malos++; }
+    if (extra.errores) { fr.push('Hubo ' + extra.errores + ' errores en la consola.'); malos += 2; }
+    if (!malos) fr.push('Lo disfrutó: llegó, casi no se atascó y el juego fue fluido.');
+    return { perfil: M.perfil, n: P.n, icono: P.icono, veredicto: malos === 0 ? 'bien' : malos === 1 ? 'revisar' : 'mal', frases: fr, medidas: M };
+  }
+};
+MC.Publico = Publico;
+
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

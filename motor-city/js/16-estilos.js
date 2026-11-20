@@ -111,11 +111,55 @@ const Estilo = {
     }
     return this._azul = rango;
   },
+  /* pantallas grandes (DPR 2: 1,4 millones de píxeles): el pase por píxel va a media resolución, 4 veces menos que leer y escribir.
+     1 bit: el tramado queda de 1 px CSS (el mismo aspecto). Cómic: solo se calcula la máscara de puntos y se multiplica encima,
+     así la imagen conserva todo su detalle. Medido en la prueba del celular: de ~30 ms a ~8 ms por cuadro. */
   imprimir(g, W, H, V, binario) {
+    const s = W * H > 400000 ? .5 : 1;
+    if (W * H > 4096 && this._filtros()) return this._imprimirGPU(g, W, H, V, binario, s);
+    if (s === 1) return this._imprimir(g, W, H, V, binario, false);
+    const w = Math.ceil(W * s), h = Math.ceil(H * s); let c = this._imp;
+    if (!c || c.width !== w || c.height !== h) { c = this._imp = lienzo(w, h); this._impG = c && c.getContext('2d', { willReadFrequently: true }); }
+    const q = this._impG; if (!q) return this._imprimir(g, W, H, V, binario, false);
+    q.globalCompositeOperation = 'copy'; q.imageSmoothingEnabled = true; q.drawImage(g.canvas, 0, 0, w, h); q.globalCompositeOperation = 'source-over';
+    this._imprimir(q, w, h, { a: V.a * s, b: V.b * s, c: V.c * s, d: V.d * s, e: V.e * s, f: V.f * s, z: V.z * s }, binario, !binario);
+    g.save(); g.imageSmoothingEnabled = !binario; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(c, 0, 0, W, H); g.restore();
+  },
+  /* Sin leer la pantalla (lo que más cuesta: obliga a terminar todo el dibujo pendiente): con los filtros del lienzo.
+     gris(imagen)·½ + patrón de umbrales·½ y luego contraste extremo = blanco si la luz pasa el umbral de esa celda, negro si no.
+     Es el mismo tramado anclado al mundo del camino por píxel (ruido azul 16×16 en 1 bit; puntos 8×8 en cómic). */
+  _filtros() {
+    if (this._gpu != null) return this._gpu; let ok = false;
+    try { const c = lienzo(2, 2), q = c && c.getContext('2d'); if (q && 'filter' in q && typeof DOMMatrix !== 'undefined') { q.filter = 'contrast(1000)'; ok = q.filter === 'contrast(1000)'; } } catch (e) { ok = false; }
+    return (this._gpu = ok);
+  },
+  _umbral(binario) {
+    const k = binario ? 'azul' : 'puntos'; this._um = this._um || {}; if (this._um[k]) return this._um[k];
+    const n = binario ? 16 : 8, c = lienzo(n, n), q = c.getContext('2d'), img = q.createImageData(n, n), az = binario ? this.ruidoAzul() : null;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const o = (y * n + x) * 4; let v;
+      if (binario) v = 255 - az[x + (y << 4)];   // blanco si luz > rango
+      else { const dx = (x - 3.5) / 4, dy = (y - 3.5) / 4, T = 160 * (1 - dx * dx - dy * dy); v = T <= 0 ? 255 : Math.round(255 - T); }   // punto si luz < T
+      img.data[o] = img.data[o + 1] = img.data[o + 2] = v; img.data[o + 3] = 255;
+    }
+    q.putImageData(img, 0, 0); return (this._um[k] = c);
+  },
+  _imprimirGPU(g, W, H, V, binario, s) {
+    const w = Math.ceil(W * s), h = Math.ceil(H * s);
+    if (!this._gq || this._gq.width !== w || this._gq.height !== h) { this._gq = lienzo(w, h); this._gq2 = lienzo(w, h); }
+    const q = this._gq.getContext('2d'), q2 = this._gq2.getContext('2d');
+    q.save(); q.globalCompositeOperation = 'copy'; q.filter = 'grayscale(1)'; q.imageSmoothingEnabled = true; q.drawImage(g.canvas, 0, 0, w, h); q.restore();
+    const pat = q.createPattern(this._umbral(binario), 'repeat'); pat.setTransform(new DOMMatrix([1, 0, 0, 1, Math.round(V.e * s), Math.round(V.f * s)]));   // anclado al desplazamiento del mundo, celdas de 1 px (sin muaré en la maqueta 2:1)
+    q.save(); q.imageSmoothingEnabled = false; q.globalAlpha = .5; q.fillStyle = pat; q.fillRect(0, 0, w, h); q.restore();
+    q2.save(); q2.globalCompositeOperation = 'copy'; q2.filter = 'contrast(1000)'; q2.drawImage(this._gq, 0, 0); q2.restore();
+    if (!binario) { q2.save(); q2.globalCompositeOperation = 'lighten'; q2.fillStyle = 'rgb(133,122,148)'; q2.fillRect(0, 0, w, h); q2.restore(); }
+    g.save(); g.imageSmoothingEnabled = false; if (!binario) g.globalCompositeOperation = 'multiply'; g.drawImage(this._gq2, 0, 0, W, H); g.restore();
+  },
+  _imprimir(g, W, H, V, binario, mascara) {
     const img = g.getImageData(0, 0, W, H), rgba = img.data;
-    const {a,b,c,d,e,f} = V, det = a*d-b*c;
-    const paso = Math.max(.08, 1 / Math.max(.1,V.z));
-    const ux = d/det/paso, uy = -b/det/paso, vx = -c/det/paso, vy = a/det/paso;
+    /* el tramado se ancla al desplazamiento del mundo (no se «nada» al moverse la cámara) con celdas de 1 píxel alineadas a la pantalla:
+       anclarlo también al giro y al aplastado 2:1 de la maqueta hacía muaré (rombos) y el 1 bit no se leía */
+    const e = Math.round(V.e), f = Math.round(V.f), ux = 1, uy = 0, vx = 0, vy = 1;
     const azul = binario ? this.ruidoAzul() : null;
     for (let y = 0, i = 0; y < H; y++) {
       let xw = (.5-e)*ux+(y+.5-f)*vx, yw = (.5-e)*uy+(y+.5-f)*vy;
@@ -124,9 +168,11 @@ const Estilo = {
         if (binario) {
           const rango = azul[(Math.floor(xw)&15) + ((Math.floor(yw)&15)<<4)];
           rgba[i] = rgba[i+1] = rgba[i+2] = lum > rango+.5 || lum === 255 ? 255 : 0;
-        } else if (lum < 160) {
-          const dx = ((Math.floor(xw)&7)-3.5)/4, dy = ((Math.floor(yw)&7)-3.5)/4;
-          if (dx*dx+dy*dy < (160-lum)/160) { rgba[i]*=.52; rgba[i+1]*=.48; rgba[i+2]*=.58; }
+        } else {
+          let punto = false;
+          if (lum < 160) { const dx = ((Math.floor(xw)&7)-3.5)/4, dy = ((Math.floor(yw)&7)-3.5)/4; punto = dx*dx+dy*dy < (160-lum)/160; }
+          if (mascara) { rgba[i] = punto ? 133 : 255; rgba[i+1] = punto ? 122 : 255; rgba[i+2] = punto ? 148 : 255; rgba[i+3] = 255; }
+          else if (punto) { rgba[i]*=.52; rgba[i+1]*=.48; rgba[i+2]*=.58; }
         }
       }
     }

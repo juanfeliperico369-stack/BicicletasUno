@@ -66,7 +66,9 @@ const Manejo = {
   /* tocar para ir: el camino por la red (A*) hasta el punto tocado; cada cuadro, la dirección al siguiente punto */
   rutaA(mundo, desde, hasta, red = 'peaton') {
     try { const R = mundo.red(red), a = R.cercana(desde.x, desde.y, 120), b = R.cercana(hasta.x, hasta.y, 120); if (!a || !b) return [hasta.x, hasta.y];
-      const na = a.arista.a, nb = b.arista.b, C = R.camino(na, nb); if (!C) return [hasta.x, hasta.y]; const P = [desde.x, desde.y];
+      const ea = a.arista, eb = b.arista; if (ea === eb) return [desde.x, desde.y, hasta.x, hasta.y];   // la misma calle: derecho
+      const d = (i, p) => Math.hypot(R.nodos[i].x - p.x, R.nodos[i].y - p.y), r = R.caminoEntre([[ea.a, d(ea.a, desde)], [ea.b, d(ea.b, desde)]], [[eb.a, d(eb.a, hasta)], [eb.b, d(eb.b, hasta)]]);
+      if (!r) return [hasta.x, hasta.y]; const C = r.C, P = [desde.x, desde.y, R.nodos[r.ini].x, R.nodos[r.ini].y];
       for (const { arista: e, adelante } of C) { const p = e.t.p, n = p.length; if (adelante) for (let i = 0; i < n; i += 2) P.push(p[i], p[i + 1]); else for (let i = n - 2; i >= 0; i -= 2) P.push(p[i], p[i + 1]); }
       P.push(hasta.x, hasta.y); return P; } catch (e) { return [hasta.x, hasta.y]; }
   },

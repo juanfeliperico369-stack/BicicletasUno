@@ -19,8 +19,7 @@ const Sprites = {
   /* registra un atlas; imagen: dataURL, URL local, <img> o <canvas> */
   atlas(id, def) {
     const A = { id, cuadros: def.cuadros || {}, anim: def.anim || {}, metros: def.metros || {}, img: null, listo: false, magenta: def.magenta !== false };
-    let terminar;
-    A.carga = new Promise(resolver => { terminar = resolver; });
+    const { promise, resolve: terminar } = Promise.withResolvers(); A.carga = promise;
     const fin = img => { A.img = A.magenta ? Sprites._sinMagenta(img) : img; A.listo = true; terminar(true); MC.emit('sprites', id); };
     if (def.imagen && typeof def.imagen === 'object') fin(def.imagen);
     else if (def.imagen && typeof Image !== 'undefined') { const im = new Image(); im.onload = () => fin(im); im.onerror = () => { terminar(false); MC.falla('sprites', 'no cargó ' + id); }; im.src = def.imagen; }

@@ -56,6 +56,7 @@ function jugar() {
   if (sitios.length < 4) for (const e of M.edificiosEn(c0.x - 800, c0.y - 800, c0.x + 800, c0.y + 800).slice(0, 60)) sitios.push({ nombre: 'Casa ' + (sitios.length + 1), x: e.x, y: e.y, dibujo: 'casa' });
   const tiendas = M.lugares.filter(l => /store|shop|super|market|tienda|restaurant|cafe|bakery|food/i.test(l.dibujo || '')), gasolineras = M.lugares.filter(l => /gas|fuel/i.test(l.dibujo || ''));
   let mision = null, entregado = false, interior = null, dinero0 = 0, hechos = 0;
+  let piloto = null;   // 2.10: un jugador del público simulado (MC.Publico) maneja en vez de los controles
   /* 2.2: historias, ocurrencias, desgaste, manejo y mi casa */
   const hist = new MC.Historias({ semilla: 11 }), ocu = new MC.Ocurrencias({ juego: 'mandados' }), desg = {}, banderas = {}; let esquema = leerG().esquema || 'joystick', ruta = null, hogar = null;
   if (!generado && leerG().hogar) { try { hogar = new MC.Hogar(M, leerG().hogar); } catch (e) { hogar = null; } }
@@ -215,7 +216,7 @@ function jugar() {
   const cuadro = ahora => {
     requestAnimationFrame(cuadro); const dt = Math.min(.1, (ahora - t0) / 1000); t0 = ahora; if (interior) return; E.t += dt; const impacto = MC._pausaImpacto > 0; if (impacto) MC._pausaImpacto -= dt;   /* 2.8: hitstop (el golpe pesa un instante) */
     reloj.avanzar(dt); clima.actualizar(reloj, dt); E.cielo = MC.Cielo.en(reloj.fecha, reloj.hora, clima);
-    const ent = ctl.leer(), V = cuerpo.veh, humano = V.clase === 'pie' || (V.clase === 'rueda' && !V.electrico), sinGas = tanque[V.id] != null && tanque[V.id] <= 0;
+    const ent = piloto ? piloto.leer(dt) : ctl.leer(), V = cuerpo.veh, humano = V.clase === 'pie' || (V.clase === 'rueda' && !V.electrico), sinGas = tanque[V.id] != null && tanque[V.id] <= 0;
     cuerpo.escala = humano ? .55 + .45 * yo.rendimiento : sinGas ? .08 : 1;
     const x0 = cuerpo.x, y0 = cuerpo.y;
     if (vistas.actual.tipo === 'pano' && seguir) { seguir.paso(dt, { acel: Math.abs(ent.stick.x) > .2 ? ent.stick.x * (vistas.pano.lado < 0 ? 1 : -1) : ent.acel, salto: ent.salto, turbo: ent.turbo }); E.pano = { trazo: seguir.trazo, s: seguir.s, id: seguir.id }; }
@@ -254,7 +255,7 @@ function jugar() {
       bMontar.hidden = !cuerpo.puedeMontar(3.5); if (!bMontar.hidden) bMontar.firstChild.textContent = MC.Vehiculos.get(cuerpo.estacionado.veh).icon || '🚲';
       ui.barra('aire', '🫧 Aire', cuerpo.aire); ui.barraVisible('aire', cuerpo.buceando || cuerpo.aire < .999); bComprar.hidden = !(cercaDe(tiendas, 30) || (tanque[V.id] != null && cercaDe(gasolineras, 40))); bComprar.firstChild.textContent = tanque[V.id] != null && cercaDe(gasolineras, 40) ? '⛽' : '💧';
       ui.pintarMinimapa(cuerpo.x, cuerpo.y, camara.yaw, (P && P.x != null ? [{ x: P.x, y: P.y, color: '#ffc23a' }] : []).concat(hogar ? [{ x: hogar.d.x, y: hogar.d.y, color: '#39ffb3' }] : []));
-      window.MANDADOS = { mundo: M, cuerpo, yo, libro, get mision() { return mision; }, get vehiculos() { return listaVeh().length; }, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, get botones() { return { bAgua, bMontar, bTierra, bBaja, bSube }; }, get libre() { return libre; }, cambiarArte, ponEstilo, opciones: OPC, aplicarOpc, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
+      window.MANDADOS = { mundo: M, cuerpo, yo, libro, get mision() { return mision; }, get piloto() { return piloto; }, set piloto(p) { piloto = p; }, get vehiculos() { return listaVeh().length; }, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, get botones() { return { bAgua, bMontar, bTierra, bBaja, bSube }; }, get libre() { return libre; }, cambiarArte, ponEstilo, opciones: OPC, aplicarOpc, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
   };
   requestAnimationFrame(cuadro);
 }

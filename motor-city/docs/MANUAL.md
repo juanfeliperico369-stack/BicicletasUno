@@ -116,7 +116,7 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 132 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 134 pruebas, también en Chromium. |
 | `node motor.mjs exportar ID [--centro x,y --lado m]` | El mundo en glTF 2.0, alturas RAW 16 y escena JSON (Godot, Unity, Unreal, Blender, three.js). |
 | `node motor.mjs capturas [--web]` | 14 fotos estándar de Mandados en `dist/capturas/` (revisión visual). |
 | `node motor.mjs revisar-arte arte/ID` | Revisa un paquete de arte contra las reglas. |

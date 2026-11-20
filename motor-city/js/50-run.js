@@ -89,7 +89,7 @@ const Run = {
       if (!this.activo) return; this.activo = false; cancelAnimationFrame(raf); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); capa.removeEventListener('pointerdown', pdn); capa.removeEventListener('pointerup', pup);
       try { RS.AU.music(false); } catch (e) { /* sin audio */ }
       for (const k of ['hr', 'bend', 'esquina', 'gira', 'cielo', 'lluvia']) V[k] = undefined;
-      C.v = 0; C.z = 0; C.enAire = false; C.paso = null; C.zPaso = 0; hud.innerHTML = ''; capa.hidden = true;
+      C.v = 0; C.z = 0; C.enAire = false; C.paso = null; C.zPaso = 0; hud.replaceChildren(); capa.hidden = true;
       const r = { metros, puntos: Math.round(g.score), monedas: g.coinsRun, saltos: g.jumps, trucos: g.tricks, calle: M.calle(C.x, C.y), x: C.x, y: C.y };
       MC.emit('run', Object.assign({ entra: false }, r)); if (op.alSalir) op.alSalir(r);
     };

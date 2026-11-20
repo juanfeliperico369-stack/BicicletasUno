@@ -6,3 +6,16 @@ salida/
 __pycache__/
 node_modules/
 .DS_Store
+# skills externas instaladas por cada IA (node motor.mjs skills --instalar): no se suben
+.agents/skills/hallmark/
+.agents/skills/modern-web-guidance/
+.agents/skills/hyperframes/
+.agents/skills/find-skills/
+.claude/skills/hallmark/
+.claude/skills/modern-web-guidance/
+.claude/skills/hyperframes/
+.skill-lock.json
+.hallmark/
+skills-lock.json
+dist/publico.md
+dist/publico.json

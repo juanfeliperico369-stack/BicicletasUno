@@ -365,3 +365,11 @@ body.big .turnos button{font-size:18px}
 .tlVeh{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:6px 0 4px}
 .tlVeh .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:14px}
 .tlVeh canvas{width:96px;height:54px;background:#eef3e6;border-radius:8px}
+
+/* alto contraste (Más > Alto contraste): textos y bordes marcados y el mapa del juego con más contraste */
+body.contraste #cv{filter:contrast(1.25) saturate(1.15)}
+body.contraste .chip,body.contraste .btn,body.contraste .sw,body.contraste .seg button,body.contraste .paper,body.contraste #toast{outline:3px solid #000;outline-offset:0}
+body.contraste .m,body.contraste small,body.contraste .pag{color:inherit!important;opacity:1!important}
+body.contraste #toast{background:#fff200;color:#000;font-weight:800}
+body.contraste #modal{background:#000000e6}
+body.contraste .paper{background:#fff;color:#000}

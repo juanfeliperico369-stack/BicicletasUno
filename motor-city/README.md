@@ -9,7 +9,7 @@
 |---|---|
 | **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/> · minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
 | **Documento único** (contexto, código a usar y plan de cada IA) | [`docs/DOCUMENTO-UNICO.md`](docs/DOCUMENTO-UNICO.md) · todo junto con anexos: `dist/MOTOR-CITY-TODO.md` |
-| Versión | **2.9.0** · `VERSION.json` |
+| Versión | **2.10.0** · `VERSION.json` |
 | Referencias del autor (25 fichas) | [`docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`](docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md) |
 | Inspiración visual y motores potentes | [`docs/INSPIRACION-VISUAL.md`](docs/INSPIRACION-VISUAL.md) · [`docs/MOTORES-POTENTES.md`](docs/MOTORES-POTENTES.md) |
 | **Tareas de cada IA** («mira el repositorio y haz tu parte») | [`TAREAS-IA.md`](TAREAS-IA.md) |
@@ -92,12 +92,20 @@
   - charcos con lluvia, el estilo de 1 bit y el agua precalculada;
   - adaptadores de Godot y three.js;
   - la maqueta a 22 ms.
+- **2.10, todo unido, más liviano y con las skills de los videos:**
+  - el cómic y el 1 bit sin leer la pantalla;
+  - Mandados de 5,1 MB (antes 8,2);
+  - rutas por la calle bien hechas;
+  - las skills Hallmark, Modern Web Guidance, find-skills y HyperFrames (`node motor.mjs skills`);
+  - el **público simulado** (`node motor.mjs publico`).
 
 ## Trabajar en el motor
 ```bash
 node motor.mjs construir            # dist/motor.js, los mundos, dist/motor-city.html y dist/juegos/*.html
-node motor.mjs prueba --navegador   # 132 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
+node motor.mjs prueba --navegador   # 134 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
 node motor.mjs documento            # dist/MOTOR-CITY-TODO.md: el documento único con todo
+node motor.mjs publico              # el público simulado (niña, abuelo, gamer y turista) juega Mandados → dist/publico.md
+node motor.mjs skills               # las skills externas y cómo instalarlas
 node motor.mjs nuevo juego nombre   # un juego nuevo desde la plantilla
 node motor.mjs reporte "título" --juego encicla   # obligatorio si otra IA cambia el motor
 node motor.mjs sincronizar ../BicicletasUno       # copia el motor a BicicletasUno/motor-city/

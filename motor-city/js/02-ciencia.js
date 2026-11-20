@@ -72,7 +72,7 @@ const Integra = {
 const Est = {
   media: L => L.reduce((a, b) => a + b, 0) / (L.length || 1),
   desv: L => { const m = Est.media(L); return Math.sqrt(L.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, L.length - 1)); },
-  percentil: (L, p) => { const s = L.slice().sort((a, b) => a - b), i = (s.length - 1) * p, lo = Math.floor(i); return s[lo] + (s[Math.min(s.length - 1, lo + 1)] - s[lo]) * (i - lo); },
+  percentil: (L, p) => { const s = L.toSorted((a, b) => a - b), i = (s.length - 1) * p, lo = Math.floor(i); return s[lo] + (s[Math.min(s.length - 1, lo + 1)] - s[lo]) * (i - lo); },
   normal: (r, m = 0, s = 1) => { const u = Math.max(1e-12, r()), v = r(); return m + s * Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); },
   exponencial: (r, lam) => -Math.log(1 - r()) / lam,
   poisson: (r, lam) => { const L = Math.exp(-lam); let k = 0, p = 1; do { k++; p *= r(); } while (p > L); return k - 1; },

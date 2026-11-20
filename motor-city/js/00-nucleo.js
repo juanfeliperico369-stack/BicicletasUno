@@ -4,8 +4,13 @@
    Todo el motor vive en un solo cierre y solo publica MC (y, por compatibilidad con los juegos 1.x, Valle/MotorValle).
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
+/* respaldo para celulares viejos (política de navegadores en CLAUDE.md: Baseline ampliamente disponible y, para lo más nuevo,
+   respaldo de pocas líneas sin dependencias). iOS 16 (iPhone 8 y X) no trae Promise.withResolvers; Android 6 no trae toSorted ni toReversed. */
+if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted', { value(f) { return this.slice().sort(f); }, writable: true, configurable: true });
+if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
+if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '2.9.0',
+  version: '2.10.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…

@@ -22,10 +22,15 @@
 8. **Tutoriales siempre opcionales:** un botón, nunca una ventana que salga sola.
 9. **Publicar** en `gh-pages` conservando `/metro/`, con APK de `versionCode` > 20003. Nunca subas llaves.
 
+10. **(2.10) Registro de claves del guardado:** traer `Save.CLAVES` y `Save.revisarClaves()` de la rama `revolucion-v2` (commit 82b242d), con su prueba. Cada clave nueva del guardado se declara con su tipo y su dueño, y la prueba falla si aparece una clave sin registrar. Antes, registra las claves de hoy (corre el juego y mira `Object.keys(Save.data)`).
+   - El alto contraste y el metro sin casas debajo de esa rama ya están en `src/js/96-accesible.js`.
+11. **(2.10) Modern Web Guidance:** antes de tocar la interfaz (`src/js/60-ui.js`, `src/style.css`), busca la guía (`npx -y modern-web-guidance@latest search "…"`). Corre también `legacy-scan src/js --json` y aplica solo lo verificado, respetando la política de navegadores del motor.
+
 ## Gemini con Antigravity («hydrogen»): lo fácil
 1. `node tools/build.js` y `node tests/run.js`: pega el resultado en `docs/BITACORA.md` (qué pasó y qué falló), sin cambiar código.
 2. Capturas del juego en 412 × 860 (portada, carrera, mundo libre y minijuegos) y una tabla foto → hallazgo → gravedad.
 3. 20 datos verificables de movilidad en bici en Medellín, con fuente: `contenido/datos-gemini.json`.
+4. **(2.10)** Prueba el **alto contraste** (Más → Alto contraste) en 412 × 860 y anota qué no se lee bien todavía, con su captura.
 
 ## ChatGPT (imágenes): el arte
 Lo de arte se pide en el motor: `motorcity/TAREAS-IA.md`, C‑A1…C‑A7 (personaje, bicis y vehículos a escala, y árboles y texturas realistas). Si haces una piel solo para EnCicla, usa las mismas reglas (§10 del documento único) y ponla en `arte/` con su `manifiesto.json`.

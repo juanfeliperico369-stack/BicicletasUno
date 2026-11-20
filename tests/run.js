@@ -234,6 +234,15 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true, bici: 'encicla' }); out.own = JE.game.mode.ownBike && JE.game.mode.rate === .9; JE.game.stop();
     JE.fecha = null; JE.headless = false; const k = JSON.parse(keep); if (k) Save.data.encicla = k; else delete Save.data.encicla; UI.go('sHome'); return out; });
   ok(pr.slow && pr.btn && pr.strike && pr.susp && pr.rep && pr.own, 'préstamo: reloj más lento, Renovar, strike por renovar tarde, suspensión sin strikes, reporte por abandono y bici propia si estás suspendido ' + JSON.stringify(pr));
+  console.log('3h2) Unido de revolucion-v2: metro sin casas debajo y alto contraste');
+  const ac = await p.evaluate(() => { const out = {}, M = JE.map, casa = v => v === TT.BRICK || v === TT.BLDG; let sob = 0;
+    for (const P of [M.lineA, M.lineB, M.tram]) for (let s = 0; s <= P.len; s += 6) { const q = M.at(P, s); if (casa(M.get(Math.floor(q.x / TS), Math.floor(q.y / TS)))) sob++; }
+    out.corredor = sob === 0 && M.corredorRiel > 0; out.n = M.corredorRiel; const was = Save.data.settings.contraste;
+    UI.renderMas(); const sw = document.querySelector('#tab-mas [data-sw="contraste"]'); out.contraste = !!sw;
+    if (sw) { sw.click(); out.contraste = document.body.classList.contains('contraste'); sw.click(); out.contraste = out.contraste && !document.body.classList.contains('contraste'); }
+    Save.data.settings.contraste = was; return out; });
+  ok(ac.corredor, 'metro y tranvía sin casas bajo su trazado (A, B y T; ' + ac.n + ' casillas pasan a andén)');
+  ok(ac.contraste, 'opción de alto contraste en Más (se enciende y se apaga)');
   console.log('3i) Guion C-99: Un día del valle, ciudad que habla, tutor, fiestas, huevos del Metro y horario especial');
   const gi = await p.evaluate(() => {
     const out = {}, keep = { dia: JSON.stringify(Save.data.diaValle || []), flags: JSON.stringify(Save.data.flags), logros: JSON.stringify(Save.data.logros), cine: Save.data.settings.cine }, T = [], _toast = UI.toast;

@@ -12,7 +12,7 @@ const Telemetria = {
     if (dt > 0 && dt < 1) { this.cuadro.push(dt * 1000); if (this.cuadro.length > this.N) this.cuadro.shift(); }
     if (msDibujo >= 0) { this.dibujo.push(msDibujo); if (this.dibujo.length > this.N) this.dibujo.shift(); }
   },
-  percentil(L, p) { if (!L.length) return 0; const S = L.slice().sort((a, b) => a - b); return S[Math.min(S.length - 1, Math.floor(p * (S.length - 1) + .5))]; },
+  percentil(L, p) { if (!L.length) return 0; const S = L.toSorted((a, b) => a - b); return S[Math.min(S.length - 1, Math.floor(p * (S.length - 1) + .5))]; },
   resumen() {
     const c = this.cuadro, d = this.dibujo, r1 = v => Math.round(v * 10) / 10, p50 = this.percentil(c, .5);
     return { n: c.length, fps: p50 ? Math.round(1000 / p50) : 0, cuadro_p50: r1(p50), cuadro_p95: r1(this.percentil(c, .95)), cuadro_p99: r1(this.percentil(c, .99)), dibujo_p50: r1(this.percentil(d, .5)), dibujo_p95: r1(this.percentil(d, .95)), gpu: MC.GPU && MC.GPU.perfil ? (MC.GPU.perfil().nivel || '?') : '?' };

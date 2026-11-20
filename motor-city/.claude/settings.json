@@ -1,0 +1,12 @@
+{
+  "extraKnownMarketplaces": {
+    "hallmark": { "source": { "source": "github", "repo": "Nutlope/hallmark" } },
+    "googlechrome": { "source": { "source": "github", "repo": "GoogleChrome/modern-web-guidance" } },
+    "hyperframes": { "source": { "source": "github", "repo": "heygen-com/hyperframes" } }
+  },
+  "enabledPlugins": {
+    "hallmark@hallmark": true,
+    "modern-web-guidance@googlechrome": true,
+    "hyperframes@hyperframes": true
+  }
+}

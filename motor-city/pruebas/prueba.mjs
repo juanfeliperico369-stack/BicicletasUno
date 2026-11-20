@@ -158,6 +158,23 @@ console.log('13) Escala, manejo, sprites, mi casa, lugares, historias, ocurrenci
 { const P = MC.Manejo.PERFIL.auto, c0 = MC.Manejo.curva(.08, P), c1 = MC.Manejo.curva(.5, P), c2 = MC.Manejo.curva(1, P), g0 = MC.Manejo.giroPorVelocidad(1, 0, 40, P), g1 = MC.Manejo.giroPorVelocidad(1, 40, 40, P);
   ok(c0 === 0 && c1 > 0 && c1 < .5 && c2 === 1 && g0 === 1 && g1 < .5 && Math.abs(MC.Manejo.vSegura(1 / 50, .8) - 19.8) < .1, 'manejo: zona muerta, respuesta exponencial, giro según la velocidad y velocidad segura en curva', { medio: +c1.toFixed(2), giroRapido: +g1.toFixed(2) });
   const Cb = new MC.Cuerpo(M, { x: col.x, y: col.y, veh: 'carro' }); Cb.v = 30; const e1 = MC.Manejo.aplicar({ stick: { x: 1, y: -1, m: 1 }, acel: 0, giro: 0 }, Cb, { esquema: 'volante' }); ok(e1.giro > 0 && e1.giro < .6 && e1.acel > .9, 'manejo: el volante a 108 km/h gira menos que quieto'); }
+{ /* 2.10: el público simulado (MC.Publico) empuja la palanca hacia donde va, relativo a la cámara, y suelta al llegar */
+  const C = { x: 0, y: 0, v: 0 }, p = MC.Publico.piloto('gamer', { cuerpo: C, camara: { yaw: 0 }, objetivo: () => ({ x: 100, y: 0, radio: 10 }) }); let e; for (let i = 0; i < 30; i++) e = p.leer(1 / 30);
+  const C2 = { x: 0, y: 0, v: 0 }, p2 = MC.Publico.piloto('gamer', { cuerpo: C2, camara: { yaw: Math.PI / 2 }, objetivo: () => ({ x: 100, y: 0, radio: 10 }) }); let e2; for (let i = 0; i < 30; i++) e2 = p2.leer(1 / 30);
+  const llego = MC.Publico.piloto('nina', { cuerpo: { x: 99, y: 0, v: 0 }, objetivo: () => ({ x: 100, y: 0, radio: 10 }) }).leer(.1).stick.m === 0;
+  const malo = MC.Publico.informe({ perfil: 'abuelo', t: 60, atascado: 30, choques: 0, llegadas: [], metros: 10 }, { fps: 50 }), bueno = MC.Publico.informe({ perfil: 'gamer', t: 60, atascado: 2, choques: 1, llegadas: [8], metros: 300 }, { fps: 58 });
+  ok(e.stick.x > .9 && Math.abs(e.stick.y) < .25 && Math.abs(e2.stick.y) > .9 && Math.abs(e2.stick.x) < .25 && llego && malo.veredicto === 'mal' && bueno.veredicto === 'bien' && MC.Publico.lista().length === 4, 'público simulado: cada perfil empuja hacia su meta (también con la cámara girada), suelta al llegar y da su veredicto', { malo: malo.frases[0] });
+  p.soltar(); p2.soltar(); }
+if (fs.existsSync(gu)) { /* 2.10: rutaA sale por el extremo de la calle que conviene (antes uno fijo: daba la vuelta a la manzana; y si los dos extremos coincidían, cortaba derecho por encima de las casas) */
+  const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))), R = MG.red('rueda'), A = R.aristas;
+  let sem = 7; const rnd = () => (sem = (sem * 16807) % 2147483647) / 2147483647, largo = P => { let L = 0; for (let k = 2; k < P.length; k += 2) L += Math.hypot(P[k] - P[k - 2], P[k + 1] - P[k - 1]); return L; };
+  let n = 0, peor = 0, mejora = 0; const r = [];
+  for (let i = 0; i < 3000 && n < 40; i++) { const e = A[(rnd() * A.length) | 0], f = A[(rnd() * A.length) | 0], p1 = e.t.at(rnd() * e.largo), p2 = f.t.at(rnd() * f.largo), d = Math.hypot(p1.x - p2.x, p1.y - p2.y); if (d < 30 || d > 120) continue;
+    const a = R.cercana(p1.x, p1.y, 120), b = R.cercana(p2.x, p2.y, 120), C = a && b && R.camino(a.arista.a, b.arista.b); if (!C) continue;
+    const V = [p1.x, p1.y]; for (const { arista: q, adelante } of C) { const pp = q.t.p, m = pp.length; if (adelante) for (let j = 0; j < m; j += 2) V.push(pp[j], pp[j + 1]); else for (let j = m - 2; j >= 0; j -= 2) V.push(pp[j], pp[j + 1]); } V.push(p2.x, p2.y);
+    const nuevo = largo(MC.Manejo.rutaA(MG, p1, p2, 'rueda')), viejo = largo(V); n++; if (C.length && nuevo > viejo * 1.001 + .5) peor++; if (nuevo < viejo * .9) mejora++; r.push(nuevo / d); }
+  r.sort((x, y) => x - y);
+  ok(n >= 30 && peor === 0 && mejora > 0 && r[r.length >> 1] < 2, 'rutas por la calle: rutaA nunca es más larga que antes y a veces mucho más corta (mediana ' + (r[r.length >> 1] || 0).toFixed(2) + '× la línea recta)', { muestras: n, mejores: mejora }); }
 { let resp = 0; const r = MC.Sprites.dibujar(null, 'noexiste/bici', 0, 0, 10, { respaldo: () => resp++ }); ok(r === false && resp === 1 && MC.Sprites.faltan.has('noexiste/bici'), 'sprites: si falta el arte, dibuja el respaldo del motor y lo anota'); }
 if (fs.existsSync(gu)) {
   const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8')));

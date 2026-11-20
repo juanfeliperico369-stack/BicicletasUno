@@ -100,6 +100,26 @@ class Red {
     }
     if (de[b] < 0) return null; const R = []; for (let v = b; v !== a;) { const e = this.aristas[de[v]], u = e.a === v ? e.b : e.a; R.push({ arista: e, adelante: e.a === u }); v = u; } return R.reverse();
   }
+  /* A* con varios inicios y varias metas (2.10): los dos extremos de la calle donde estoy y los dos de la calle de destino,
+     cada uno con lo que cuesta llegar a él. Antes rutaA salía siempre por un extremo fijo y podía dar la vuelta a la manzana
+     (62 m en línea recta se volvían 290 m). inicios y metas: [[nodo, costo]]. Devuelve { C, ini, fin } o null. */
+  caminoEntre(inicios, metas, filtro) {
+    const N = this.nodos, ex = new Map(), h = i => { let m = Infinity; for (const [j] of metas) m = Math.min(m, Math.hypot(N[i].x - N[j].x, N[i].y - N[j].y)); return m; };
+    for (const [i, c] of metas) if (!ex.has(i) || c < ex.get(i)) ex.set(i, c);
+    const g = new Float64Array(N.length).fill(Infinity), de = new Int32Array(N.length).fill(-1), cerr = new Uint8Array(N.length), ab = [];
+    for (const [i, c] of inicios) if (c < g[i]) { g[i] = c; ab.push([c + h(i), i]); }
+    let mejor = Infinity, fin = -1;
+    while (ab.length) {
+      let mi = 0; for (let k = 1; k < ab.length; k++) if (ab[k][0] < ab[mi][0]) mi = k; const [f, u] = ab.splice(mi, 1)[0];
+      if (f >= mejor) break; if (cerr[u]) continue; cerr[u] = 1;
+      if (ex.has(u) && g[u] + ex.get(u) < mejor) { mejor = g[u] + ex.get(u); fin = u; }
+      for (const ei of N[u].ar) { const e = this.aristas[ei]; if (filtro && !filtro(e)) continue; const v = e.a === u ? e.b : e.a, ng = g[u] + e.largo; if (ng < g[v]) { g[v] = ng; de[v] = ei; ab.push([ng + h(v), v]); } }
+      if (ab.length > 60000) break;
+    }
+    if (fin < 0) return null; const R = []; let v = fin;
+    while (de[v] >= 0) { const e = this.aristas[de[v]], u = e.a === v ? e.b : e.a; R.push({ arista: e, adelante: e.a === u }); v = u; }
+    return { C: R.reverse(), ini: v, fin, largo: mejor };
+  }
   /* componentes conexas (para medir la red) */
   componentes() { const c = new Int32Array(this.nodos.length).fill(-1); let k = 0; const tam = []; for (let s = 0; s < c.length; s++) { if (c[s] >= 0) continue; let n = 0; const pila = [s]; c[s] = k; while (pila.length) { const u = pila.pop(); n++; for (const ei of this.nodos[u].ar) { const e = this.aristas[ei], v = e.a === u ? e.b : e.a; if (c[v] < 0) { c[v] = k; pila.push(v); } } } tam.push(n); k++; } return { n: k, tam: tam.sort((a, b) => b - a) }; }
 }

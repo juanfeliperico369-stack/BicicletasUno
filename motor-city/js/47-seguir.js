@@ -26,7 +26,7 @@ class SeguirRuta {
     /* se corta el camino en el cruce y se vuelve a alargar con la salida elegida */
     const s0 = R.tramos[i].s0, T = R.trazo; let k = 0; while (k < T.cum.length && T.cum[k] <= s0 + .01) k++;
     R.pts = R.pts.slice(0, 2 * k); R.largo = s0; R.tramos = R.tramos.slice(0, i); R.cruces = R.cruces.filter(q => q.s < c.s - .5); R._t = null; const ult = R.tramos[i - 1]; R.fin = ult.adelante ? ult.arista.b : ult.arista.a; R.cerrado = false;
-    R.alargar(R.largo + 1, (ops) => { if (!lado || ops.length < 2) return null; const L = ops.slice().sort((a, b) => a.giro - b.giro), o = lado < 0 ? L[0] : L[L.length - 1]; return Math.abs(o.giro) > .25 ? o : null; });
+    R.alargar(R.largo + 1, (ops) => { if (!lado || ops.length < 2) return null; const L = ops.toSorted((a, b) => a.giro - b.giro), o = lado < 0 ? L[0] : L[L.length - 1]; return Math.abs(o.giro) > .25 ? o : null; });
     R.alargar((this.op.adelante || 500) + (this.s - this.base)); this._t = null; this.eventos.push('gira'); return true;
   }
   /* un paso: E = { acel (−1 frena … 1), salto, turbo } · vel0: acelerador de crucero (la bici sigue sola) */

@@ -95,7 +95,8 @@
    "zinc": 4
   },
   "anim": {},
-  "magenta": false
+  "magenta": false,
+  "sin_perdida": true
  },
  "chatgpt_a": {
   "cuadros": {

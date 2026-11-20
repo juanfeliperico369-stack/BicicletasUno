@@ -13,5 +13,15 @@ Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas 
 | `motor-city-juegos` | Hacer juegos |
 | `motor-city-ciencia` | Números reales |
 | `motor-city-arte` | Arte |
+| `motor-city-skills-externas` | Skills y plugins de terceros: Hallmark (páginas web), Modern Web Guidance (HTML/CSS/JS moderno), find-skills, HyperFrames (videos) y el público simulado |
 
-**Comandos:** `node motor.mjs construir` · `node motor.mjs prueba --navegador` (todo en verde) · `node motor.mjs reporte "título" --juego X` (obligatorio si cambias el motor desde otro juego) · `node motor.mjs documento`.
+**Skills externas:**
+- Claude Code las recibe como plugins por `.claude/settings.json`.
+- Las demás IA las instalan con `node motor.mjs skills --instalar --agente codex` (o `antigravity`, `gemini-cli`).
+
+**Navegadores:**
+- Baseline ampliamente disponible (incluye ES2023).
+- Lo más nuevo solo con detección y un respaldo de 20 líneas o menos, sin dependencias.
+- Celulares de referencia: Android 7 (WebView 119 o más) e iPhone 8/X (iOS 16).
+
+**Comandos:** `node motor.mjs construir` · `node motor.mjs prueba --navegador` (todo en verde) · `node motor.mjs publico` (el público simulado juega Mandados) · `python3 herramientas/aligerar_arte.py` (atlas más livianos) · `node motor.mjs reporte "título" --juego X` (obligatorio si cambias el motor desde otro juego) · `node motor.mjs documento`.

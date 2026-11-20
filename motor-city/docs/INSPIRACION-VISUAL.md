@@ -88,6 +88,22 @@ En la entrega maestra del autor se inspeccionaron directamente 17 clips MP4 (`R0
 > **Para cerrar el mapa 1:1:** basta con que el autor indique qué `.mp4` corresponde a cada uno de los 9 shortcodes bloqueados (sin intentar evadir el inicio de sesión de Instagram).
 
 
+### 1.2 Los 11 enlaces del 20‑nov‑2026: skills y plugins para las IA (2.10)
+El autor mandó 2 Instagram (uno dos veces) y 8 TikTok, y pidió «añade las skills y plugins de los videos y sigue desarrollando». Los TikTok se leyeron por su descripción pública. Los Instagram piden iniciar sesión, y quedan para Gemini (G‑H10).
+
+| Enlace | Qué muestra | Qué se hizo |
+|---|---|---|
+| TikTok @midudev (`ZSpw3MBBy`) | **Modern Web Guidance**, de Google Chrome (Apache‑2.0): una skill que evita que la IA escriba HTML, CSS o JS viejo | Plugin de Claude Code. Se corrió `legacy-scan` sobre el motor: 11 hallazgos, se aplicaron 9 con su respaldo y se dejaron 2 a propósito (la copia JSON del guardado). Se fijó la **política de navegadores** en `CLAUDE.md`. |
+| TikTok @xabatzz (`ZSpw3DhsN`) | **Hallmark** (`Nutlope/hallmark`, MIT): una skill de diseño web «que no parezca hecho por IA», con 50 temas y revisión en 8 tamaños | Plugin de Claude Code. Encargo **C‑M25**: la portada de GitHub Pages. |
+| TikTok @morenazogutierrez (`ZSpw3ESfu`) | Tres herramientas: skills de diseño y de animación, y **Playwright** para que la IA pruebe la web | El diseño y la animación son Hallmark y HyperFrames. Playwright ya está (`webapp-testing` y `prueba --navegador`). |
+| TikTok @revolutia.ai (`ZSpw3hjS4`) | **find-skills** (`vercel-labs/skills`, MIT): busca e instala la skill justa para cada tarea | En el catálogo. Se instala con `node motor.mjs skills --instalar`. |
+| TikTok @revolutia.ai (`ZSpw3yj9x`) | Una skill que convierte una web en un **video de lanzamiento** con música y subtítulos | Es **HyperFrames** (`heygen-com/hyperframes`, Apache‑2.0, skills `website-to-video` y `product-launch-video`). Plugin de Claude Code y encargo **C‑A12** (tráiler de Mandados). |
+| TikTok @revolutia.ai (`ZSpw3ah5Q`) | **MiroFish** (`666ghj/MiroFish`, AGPL‑3.0): miles de clientes simulados que opinan antes del lanzamiento | Es una aplicación aparte, con servidor y llaves, así que no se instala. Se tomó la idea: **`MC.Publico`** y `node motor.mjs publico` (niña, abuelo, gamer y turista juegan solos y dan su veredicto). |
+| TikTok @migue.baena (`ZSpw36ySn`) | Un supuesto «system prompt» filtrado de otra empresa | **Descartado.** Es material filtrado y confidencial de un tercero, así que no se copia ni se usa. |
+| TikTok @soyenriquerocha (`ZSpw3u8dH`) | «Claude ahora construye bien sin basura» (la descripción no dice más) | Para Gemini (G‑H10): averiguar qué herramienta es. |
+| Instagram `DfVDgmclLPi` (enviado dos veces) | No se pudo leer: pide iniciar sesión | Para Gemini (G‑H10). |
+| Instagram `DexJDYnNQ0X` | No se pudo leer: pide iniciar sesión | Para Gemini (G‑H10). |
+
 ## 2. Peso y vida («game feel»)
 | Fuente | La técnica | En el motor |
 |---|---|---|
