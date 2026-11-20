@@ -145,6 +145,10 @@ class Busqueda {
           J.v *= 1 - clamp(golpe * .025 * kJ, 0, .5); C.v *= 1 - clamp(golpe * .03 * kR, 0, .7);
           const quien = rel > 0 ? 'rival' : 'jugador', aJ = golpe * .012 * kJ * (quien === 'rival' ? r.B.agresion : .6);   /* quien embiste recibe menos */
           this.danio += aJ; r.salud -= golpe * .045 * kR * (quien === 'jugador' ? 1.3 : .6);
+          /* dónde se abolló cada uno (para los modelos 3D): el punto de contacto visto desde cada carro */
+          const zona = (ax, ay, aa) => { const f = Math.cos(aa) * ax + Math.sin(aa) * ay, l = -Math.sin(aa) * ax + Math.cos(aa) * ay; return Math.abs(f) > Math.abs(l) ? (f > 0 ? 'f' : 'b') : (l > 0 ? 'l' : 'r'); };
+          const zr = zona(dx, dy, C.a), zj = zona(-dx, -dy, J.a || 0); r.golpes = r.golpes || { f: 0, b: 0, l: 0, r: 0 }; r.golpes[zr] = Math.min(1, r.golpes[zr] + golpe * .03);
+          this._ev('abolladura', { zona: zj, fuerza: golpe });
           this._ev('embestida', { id: r.id, bando: r.bando, quien, fuerza: golpe, x: (J.x + C.x) / 2, y: (J.y + C.y) / 2 });
           if (r.bando === 'policia' && quien === 'jugador') this.alerta(4, { causa: '' });
           if (r.salud <= 0) { r.roto = true; this._ev('fuera', { id: r.id, bando: r.bando, x: C.x, y: C.y }); if (r.bando === 'policia') this.alerta(8, { causa: 'patrulla destrozada' }); } }
@@ -170,7 +174,7 @@ class Busqueda {
   }
   /* los rivales como vehículos de tráfico (las vistas 2D y 3D ya los dibujan; sirena y destrozo como banderas) */
   vehiculos() {
-    return this.rivales.map(r => { const c = r.cuerpo; return { id: r.id, tipo: 'carro', clase: 'auto', x: c.x, y: c.y, a: c.a, v: c.v, largo: c.veh.largo || 4.6, ancho: c.veh.ancho || 1.85, color: r.roto ? '#2a2420' : r.B.color, sirena: r.B.sirena && !r.roto && !r.retirada, roto: r.roto, humo: r.roto ? r.humo : 0, bando: r.bando, frena: 0 }; });
+    return this.rivales.map(r => { const c = r.cuerpo; return { id: r.id, tipo: 'carro', clase: 'auto', x: c.x, y: c.y, a: c.a, v: c.v, largo: c.veh.largo || 4.6, ancho: c.veh.ancho || 1.85, color: r.roto ? '#2a2420' : r.B.color, sirena: r.B.sirena && !r.roto && !r.retirada && !(r.aturdido > 0), roto: r.roto, humo: r.roto ? r.humo : 0, bando: r.bando, frena: 0, dano: r.golpes || null }; });
   }
   /* para cuerpo.obstaculos: nadie atraviesa a nadie */
   obstaculos() { const L = []; for (const r of this.rivales) { const c = r.cuerpo, l = (c.veh.largo || 4.6) / 3, cs = Math.cos(c.a), sn = Math.sin(c.a); for (const k of [-1, 0, 1]) L.push({ x: c.x + cs * l * k, y: c.y + sn * l * k, r: (c.veh.ancho || 1.85) / 2 + .1, motivo: 'rival:' + r.id }); } return L; }

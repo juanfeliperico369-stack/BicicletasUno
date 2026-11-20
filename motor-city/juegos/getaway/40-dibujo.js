@@ -12,6 +12,8 @@ function dibujar(dt) {
   const g = G.g, E = G.E, V = G.vistas, W = G.W, H = G.H; if (!E) return;
   if (!G.pausa && densidad) { densidad.activa = MC.opciones.densidad !== false; redensificar(densidad.medir(dt, V.actual.id)); }
   if (G.seguido) { const B = G.seguido.cuerpo; E.trafico = E.trafico.concat([{ id: 'contador', tipo: 'carro', clase: 'auto', x: B.x, y: B.y, a: B.a, v: B.v, largo: 4.9, ancho: 2, color: '#0d0d0f', modelo: 'vehiculo_suv', frena: 0 }]); }
+  /* el dron policial (nivel 5) en 3D: el modelo de Codex, grande, a 32 m del suelo */
+  { const Hh = G.busq.heli, i = G.modelos3d.findIndex(q => q.heli); if (Hh) { const q = i >= 0 ? G.modelos3d[i] : (G.modelos3d.push({ heli: true, id: 'tecnologia_drone', k: 4.2, z: 32, lejos: 600 }), G.modelos3d[G.modelos3d.length - 1]); q.x = Hh.x; q.y = Hh.y; q.a = Hh.a * .05; } else if (i >= 0) G.modelos3d.splice(i, 1); }
   V.dibujar(g, W, H, E, dt);
   const es2D = V.efectiva().tipo === '2d'; if (es2D && !V.pixel && G.objetos) G.objetos.dibujar2D(g, (x, y, z) => V.aPantalla(E, x, y, z), G.camara.zoom, G.cuerpo, 140);
   try { capas(g, es2D); } catch (e) { MC.falla('capas', e); }
@@ -50,7 +52,7 @@ function capas(g, es2D) {
   if (G.ceboVis) { G.ceboVis.t -= 1 / 60; const p = pr(G.ceboVis.x, G.ceboVis.y, .2); if (p) { const k = escalaEn(G.ceboVis.x, G.ceboVis.y); for (let i = 0; i < 3; i++) { const fr = (t * 1.2 + i / 3) % 1; g.strokeStyle = 'rgba(219,166,95,' + (1 - fr) + ')'; g.lineWidth = 2 * d; g.beginPath(); g.arc(p[0], p[1], k * (1 + fr * 12), 0, TAU); g.stroke(); } } if (G.ceboVis.t <= 0) G.ceboVis = null; }
   /* el helicóptero y su reflector */
   if (B.heli) { const Hh = B.heli, L = pr(Hh.lx, Hh.ly, 0), k = escalaEn(Hh.lx, Hh.ly); if (L && !(Hh.aturdido > 0)) { const gr = g.createRadialGradient(L[0], L[1], 0, L[0], L[1], k * 16); gr.addColorStop(0, 'rgba(255,250,215,.42)'); gr.addColorStop(.75, 'rgba(255,250,215,.18)'); gr.addColorStop(1, 'rgba(255,250,215,0)'); g.fillStyle = gr; g.beginPath(); g.arc(L[0], L[1], k * 16, 0, TAU); g.fill(); }
-    const P = pr(Hh.x, Hh.y, Hh.z); if (P) { const kk = Math.max(6, escalaEn(Hh.x, Hh.y) * 1.2); g.fillStyle = '#1d2833'; g.beginPath(); g.ellipse(P[0], P[1], kk * 2.2, kk, 0, 0, TAU); g.fill(); g.fillRect(P[0] - kk * 4, P[1] - kk * .25, kk * 2.2, kk * .5); g.strokeStyle = 'rgba(200,200,200,.55)'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(P[0] + Math.cos(Hh.a) * kk * 4, P[1] + Math.sin(Hh.a) * kk * 1.4); g.lineTo(P[0] - Math.cos(Hh.a) * kk * 4, P[1] - Math.sin(Hh.a) * kk * 1.4); g.stroke(); g.fillStyle = f ? '#ff3030' : '#ffffff'; g.beginPath(); g.arc(P[0] - kk * 3.8, P[1], 2.5 * d, 0, TAU); g.fill(); } }
+    const P = es2D ? pr(Hh.x, Hh.y, Hh.z) : null; if (P) { const kk = Math.max(6, escalaEn(Hh.x, Hh.y) * 1.2); g.fillStyle = '#1d2833'; g.beginPath(); g.ellipse(P[0], P[1], kk * 2.2, kk, 0, 0, TAU); g.fill(); g.fillRect(P[0] - kk * 4, P[1] - kk * .25, kk * 2.2, kk * .5); g.strokeStyle = 'rgba(200,200,200,.55)'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(P[0] + Math.cos(Hh.a) * kk * 4, P[1] + Math.sin(Hh.a) * kk * 1.4); g.lineTo(P[0] - Math.cos(Hh.a) * kk * 4, P[1] - Math.sin(Hh.a) * kk * 1.4); g.stroke(); g.fillStyle = f ? '#ff3030' : '#ffffff'; g.beginPath(); g.arc(P[0] - kk * 3.8, P[1], 2.5 * d, 0, TAU); g.fill(); } }
   /* el dron: la mira en el suelo y el alcance alrededor del carro */
   if (G.dron) { const D = G.dron, p = pr(D.x, D.y, 0), c = pr(G.cuerpo.x, G.cuerpo.y, 0), k = escalaEn(D.x, D.y); if (c) { g.strokeStyle = 'rgba(75,154,171,.5)'; g.setLineDash([6 * d, 6 * d]); g.lineWidth = 1.5 * d; g.beginPath(); g.arc(c[0], c[1], k * TC.ARTEFACTOS.dron.alcance, 0, TAU); g.stroke(); g.setLineDash([]); }
     if (p) { g.strokeStyle = '#4b9aab'; g.lineWidth = 2 * d; g.beginPath(); g.arc(p[0], p[1], k * 6, 0, TAU); g.moveTo(p[0] - k * 9, p[1]); g.lineTo(p[0] + k * 9, p[1]); g.moveTo(p[0], p[1] - k * 9); g.lineTo(p[0], p[1] + k * 9); g.stroke(); g.fillStyle = '#4b9aab'; g.font = '800 ' + 12 * d + 'px system-ui'; g.textAlign = 'center'; g.fillText('🛸 ' + Math.ceil(D.bat) + ' s', p[0], p[1] - k * 7 - 6 * d); } }
@@ -82,7 +84,7 @@ function hud() {
   const vis = (k, v) => { if (BOT[k]) BOT[k].hidden = !v; };
   vis('taller', !!tallerCerca()); vis('metro', !!estacionCerca() && Math.abs(C.v) < 6); vis('encicla', V.clase === 'pie' && !!enciclaCerca());
   const agua = V.clase !== 'agua' && !!MC.Terreno.aguaHonda(M, C.x, C.y, 30, .8); vis('lancha', agua && Math.abs(C.v) < 5); vis('tierra', V.clase === 'agua' && !!MC.Terreno.tierraFirme(M, C.x, C.y, 16));
-  vis('bajar', V.clase !== 'pie' && V.clase !== 'agua' && Math.abs(C.v) < 3); vis('robar', V.clase === 'pie' && !!carroCerca()); vis('montar', !!C.puedeMontar(4)); vis('foto', !!G.puedeFoto);
+  vis('bajar', V.clase !== 'pie' && V.clase !== 'agua' && Math.abs(C.v) < 3); vis('robar', V.clase === 'pie' && !!carroCerca()); vis('montar', !!C.puedeMontar(4)); vis('foto', !!G.puedeFoto); vis('reducir', !!G.puedeReducir);
   vis('rapido', tramo && B.nivel === 0 && !banda); if (BOT.rapido) BOT.rapido.classList.toggle('on', G.rapido); if (!tramo || B.nivel || banda) G.rapido = false;
   vis('contratos', G.modo === 'libre' && !tramo);
   /* artefactos: listo o cuánto falta */
@@ -92,7 +94,10 @@ function hud() {
   if (B.nivel) for (const s of sitiosEspeciales()) pts.push({ x: s.x, y: s.y, color: s.taller ? '#4b9aab' : '#7fc8a9' });
   for (const r of B.rivales) if (!r.roto && (r.marcado > G.t || r.ve)) pts.push({ x: r.cuerpo.x, y: r.cuerpo.y, color: r.bando === 'banda' ? '#c25542' : '#476e8a' });
   U.pintarMinimapa(C.x, C.y, G.camara.yaw, pts); mapaPts = pts;
-  Snd.sirenaVol(B.rivales.some(r => r.bando === 'policia' && !r.roto && !r.retirada && Math.hypot(r.cuerpo.x - C.x, r.cuerpo.y - C.y) < 160) ? .9 : 0);
+  /* la sirena más cercana suena con Doppler (se acerca: más aguda; se aleja: más grave) y el motor sigue las rpm */
+  let pol = null, dp = 160; for (const r of B.rivales) if (r.bando === 'policia' && !r.roto && !r.retirada) { const d = Math.hypot(r.cuerpo.x - C.x, r.cuerpo.y - C.y); if (d < dp) { dp = d; pol = r; } }
+  Snd.sirenaVol(pol ? clamp(1.1 - dp / 160, .15, 1) : 0); if (pol) { const vr = G._dpol != null && G._polId === pol.id ? (dp - G._dpol) / .25 : 0; Snd.doppler(vr); G._dpol = dp; G._polId = pol.id; } else G._dpol = null;
+  Snd.motor(C.v, enCarro && G.carro > 0, G.ctl.botones.has('freno') ? -1 : 1);
   /* la música sigue la tensión (MC.Musica, compuesta en el momento) */
   if ((musT -= .25) <= 0 && Snd.on && Snd.ac) { musT = 20; const tension = clamp(B.nivel / 5 + (banda ? .4 : 0), 0, 1), A = MC.Musica.adaptar({ velocidad: Math.abs(C.v), hora: G.reloj.hora, clima: G.clima, tension }); if (!tocando || A.estilo !== G._estiloMus) { G._estiloMus = A.estilo; tocando = MC.Musica.tocar({ estilo: A.estilo, energia: A.energia, compases: 16 }); MC.Musica.volumen(.32); } }
 }
@@ -100,7 +105,7 @@ function hud() {
 /* ---------- el planeta entero (MC.Planeta.globo): se arrastra para girarlo ---------- */
 const Globo = {
   lon0: null, inc: .32,
-  abrir() { const P = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y); this.lon0 = P.lon; G.globo = true; G.pausa = true; $('#globo').hidden = false; const c = $('#gcv'); let x0 = null; c.onpointerdown = e => { x0 = e.clientX; c.setPointerCapture(e.pointerId); }; c.onpointermove = e => { if (x0 == null) return; this.lon0 -= (e.clientX - x0) * .35; x0 = e.clientX; }; c.onpointerup = () => { x0 = null; };
+  abrir(desdeZoom) { const P = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y); this.lon0 = P.lon; G.globo = true; G.pausa = true; $('#globo').hidden = false; const cv0 = $('#gcv'); cv0.classList.remove('llega'); void cv0.offsetWidth; cv0.classList.add('llega'); if (desdeZoom) G.ui.aviso('🌍 Te alejaste hasta ver el planeta entero', 2200, 'globo'); const c = $('#gcv'); let x0 = null; c.onpointerdown = e => { x0 = e.clientX; c.setPointerCapture(e.pointerId); }; c.onpointermove = e => { if (x0 == null) return; this.lon0 -= (e.clientX - x0) * .35; x0 = e.clientX; }; c.onpointerup = () => { x0 = null; };
     const d = planeta.def(G.id), C = G.cuerpo, txt = d.tipo === 'tramo' ? 'Vas por la <b>' + d.nombre + '</b>, km ' + (C.y / 1000).toFixed(1) + ' de ' + (d.largo / 1000).toFixed(0) + ' · Sigue: <b>' + planeta.vecino(G.id, 1).nombre + '</b>' : 'Estás en <b>' + d.nombre + '</b> · Siguiente parada: <b>' + planeta.vecino(G.id, 1).nombre + '</b> · Anterior: ' + planeta.vecino(G.id, -1).nombre;
     $('#gInfo').innerHTML = txt + '<br><small>Un planeta: tres ciudades reales y kilómetros de nada entre ellas. Arrastra para girarlo.</small>'; },
   cerrar() { G.globo = false; G.pausa = false; $('#globo').hidden = true; }

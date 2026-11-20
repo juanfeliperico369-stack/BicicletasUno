@@ -5,6 +5,8 @@
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
 
+**Primero lee `CONTEXTO-RELEVO.md`** (el relevo entre IAs) y, al terminar, deja tu entrada en su § 8 y tu ficha en `coord/agentes/`.
+
 **Novedades de la 4.0 (20‑nov‑2026): el planeta y *Turno Cero*.** Lee `docs/TURNO-CERO.md`.
 - **El planeta** (`MC.Planeta`): Manhattan, Medellín y el Valle y Guatapé, unidos por carreteras de 12 a 16 km «en medio de la nada». Tiene horizonte curvo y vista de globo.
 - **El juego adulto *Turno Cero*** (`juegos/getaway/`) toma el canon de Codex y lo lleva a las tres ciudades.
@@ -78,12 +80,12 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 ### ChatGPT · Codex («astra») · fuertes
 | Id | Tarea | Contrato | Entrega |
 |---|---|---|---|
-| **C‑M31** | **El globo en WebGL y la transición continua** | Al alejar la cámara más allá del mapa, el mundo se vuelve esfera sin corte. Debe tener:<ul><li>biomas de `MC.Planeta.BIOMAS`;</li><li>dispersión de Rayleigh simple;</li><li>las estrellas de `MC.Cosmos`.</li></ul>Con respaldo al lienzo actual (`Planeta.globo`). | `js/` + prueba |
+| **C‑M31** | **El globo en WebGL y la transición continua**. Alejar hasta el globo ya funciona, con animación (4.0.1); falta la esfera WebGL dentro de la misma escena. | Al alejar la cámara más allá del mapa, el mundo se vuelve esfera sin corte. Debe tener:<ul><li>biomas de `MC.Planeta.BIOMAS`;</li><li>dispersión de Rayleigh simple;</li><li>las estrellas de `MC.Cosmos`.</li></ul>Con respaldo al lienzo actual (`Planeta.globo`). | `js/` + prueba |
 | **C‑M32** | **Pasa tu escena 3D de acción** (`turno-cero-accion-3d.html`) **al motor**: a pie, cobertura tras `MC.Objetos`, guardias que patrullan y van a la última posición vista, combate no letal | Reusa `MC.Busqueda` (rivales a pie), `MC.Modelos.posar` (tus rigs ya se animan) y los conos del sigilo de `juegos/getaway/30-historia.js`, para que funcione en Manhattan, Medellín y Guatapé reales. Sin gore y sin instrucciones reales. | `js/` + paso «a pie» en Turno Cero |
 | **C‑M33** | **LOD de los GLB y más actores con esqueleto** | **Ya hecho por Claude:** `MC.Modelos.posar` reproduce tus rigs (12 huesos y 8 clips) en el juego.<br>**Falta:**<ul><li>LOD1 y LOD2 de vehículos y actores;</li><li>Nadia, Noah, Cross, El Contador y transeúntes con esqueleto;</li><li>pesos suaves en codos y rodillas.</li></ul> | `arte/modelos/turno-cero/` + `js/45-glb.js` |
 | **C‑M34** | **Manhattan por sectores de 1 km** (era C‑M22) | El MC4 de 10 MB por sectores alrededor del jugador, con `MC.GuardadoSectores` | Herramienta + prueba de memoria |
-| **C‑M35** | **Daño por piezas en los carros GLB**: capó, puertas y llantas | Deformar vértices por zona según `Busqueda` y los choques. Humo y fuego en 3D. | `js/45-glb.js` |
-| **C‑M36** | **Audio de persecución**: motor por capas de rpm y sirena con Doppler y oclusión aproximada | Sin samples con derechos; Web Audio | `js/61-sonido.js` |
+| **C‑M35** | **Daño por piezas en los carros GLB**: capó, puertas y llantas. **Ya hecho por Claude (4.0.1):** abolladuras por zona y faro roto (`op.dano`). Falta que las piezas se suelten, y humo y fuego en 3D. | Deformar vértices por zona según `Busqueda` y los choques. Humo y fuego en 3D. | `js/45-glb.js` |
+| **C‑M36** | **Audio de persecución**: motor por capas de rpm y sirena con Doppler y oclusión aproximada. **Ya hecho por Claude (4.0.1)** en Turno Cero; falta la oclusión y pasarlo a `js/61-sonido.js` para todos los juegos. | Sin samples con derechos; Web Audio | `js/61-sonido.js` |
 | **C‑A16** | **Texturas PBR de bajo polígono** para 6 vehículos y 6 personajes | UV más un atlas de 1024 px por familia, sin marcas, con la paleta de tu biblia | `arte/modelos/turno-cero/texturas/` |
 | **C‑A17** | **Portada vertical de Turno Cero** (1080×1920) y **5 láminas de acto** | Sin texto (la tipografía la pone el juego): Manhattan de noche, la carretera del desierto, Medellín desde el metro, la autopista con helicóptero y el embalse al amanecer | `arte/chatgpt/turno-cero/` |
 

@@ -20,7 +20,7 @@ const Historia = {
   empezarPaso(i) {
     const P = this.pasosDe(); if (i >= P.length) return this.finCapitulo();
     this.i = i; const p = this.p = P[i]; this.est = { t: 0, fuera: 0, vistoT: 0, alarma: false, ultimo: 0 }; this.ocupado = false;
-    G.guardias = []; G.modelos3d.length = 0; G.seguido = null; G.puedeFoto = false; G.rutaEventos = []; G.rutaHecha = {};
+    G.guardias = []; G.modelos3d.length = 0; G.seguido = null; G.puedeFoto = false; G.puedeReducir = null; G.rutaEventos = []; G.rutaHecha = {};
     const C = G.cuerpo; G.check = { cap: this.cap, i, sub: !!this.sub, mundo: G.id, x: C.x, y: C.y, a: C.a, dinero: G.dinero, rep: Object.assign({}, G.rep), flags: Object.assign({}, G.flags), veh: G.veh, tengo: G.tengo.slice(), evidencia: G.evidencia, municion: G.municion, carro: Math.max(.6, G.carro), vida: Math.max(.7, G.vida) };
     escribirG({ hist: G.check });
     if (p.heatInicio != null) G.busq.ponerNivel(p.heatInicio);
@@ -99,11 +99,21 @@ const Historia = {
   sigilo(dt, d) {
     const C = G.cuerpo, E = this.est; let visto = false;
     for (const q of G.guardias) { q.fase += dt; if (q.distraido > 0) { q.distraido -= dt; q.a = Math.atan2((G.ceboVis ? G.ceboVis.y : q.y) - q.y, (G.ceboVis ? G.ceboVis.x : q.x) - q.x); } else q.a = q.a0 + Math.sin(q.fase * .6) * .9; if (q.m3) { q.m3.a = q.a; q.m3.clip = q.distraido > 0 ? 'interact_device' : q.alerta > 0 || E.alarma ? 'sprint_loop' : 'idle_breath'; }
-      if (q.distraido > 0 || E.alarma) continue; const dx = C.x - q.x, dy = C.y - q.y, dd = Math.hypot(dx, dy); if (dd < q.vista && Math.abs(angDif(Math.atan2(dy, dx), q.a)) < q.cono && G.busq.vista(q.x, q.y, C.x, C.y)) { visto = true; q.alerta = 1; } else q.alerta = Math.max(0, (q.alerta || 0) - dt); }
+      if (q.fuera) continue; if (q.distraido > 0 || E.alarma) continue; const dx = C.x - q.x, dy = C.y - q.y, dd = Math.hypot(dx, dy); if (dd < q.vista && Math.abs(angDif(Math.atan2(dy, dx), q.a)) < q.cono && G.busq.vista(q.x, q.y, C.x, C.y)) { visto = true; q.alerta = 1; } else q.alerta = Math.max(0, (q.alerta || 0) - dt); }
     E.vistoT = visto ? E.vistoT + dt : Math.max(0, E.vistoT - dt * .5);
+    /* a pie y pegada a un guardia: ✊ reducirlo sin matarlo (la animación de golpe no letal de Codex) */
+    G.puedeReducir = C.veh.clase === 'pie' ? G.guardias.find(q => !q.fuera && Math.hypot(q.x - C.x, q.y - C.y) < 2.6) || null : null;
+    if (!E.avisoPie && E.t > 2) { E.avisoPie = true; G.ui.aviso('🕶️ Consejo: bájate 🚪 y acércate a pie por detrás para reducir guardias ✊', 3200, 'sigilo'); }
     if (!E.alarma && E.vistoT > .7) { E.alarma = true; G.flags.ruido = true; G.busq.ponerNivel(Math.max(3, G.busq.nivel)); G.busq.banda(2); G.ui.aviso('🚨 ¡Te vieron! Entrada a las malas', 2600, 'nivel'); Subt.decir([['radio', '«¡Intrusa en el perímetro!» Gritos, radios, motores que arrancan.']]); }
     else if (visto && !E.alarma) G.ui.aviso('👀 Un guardia te está mirando…', 600, 'visto');
     if (d < 10) this.completar();
+  },
+  /* ✊ reducir a un guardia (no letal): si te estaba mirando, hace ruido */
+  reducir() {
+    const q = G.puedeReducir; if (!q || q.fuera) return; q.fuera = true; G.puedeReducir = null; const C = G.cuerpo; C.a = Math.atan2(q.y - C.y, q.x - C.x);
+    if (q.m3) { q.m3.clip = 'hit_reaction'; setTimeout(() => { const i = G.modelos3d.indexOf(q.m3); if (i >= 0) G.modelos3d.splice(i, 1); }, 900); }
+    G.reduciendo = .8; Snd.golpe(.3); G.camara.sacudir(.08); const visto = q.alerta > 0; G.ui.aviso(visto ? '✊ Reducido, pero hizo ruido' : '✊ Reducido sin un ruido', 1600, 'reducir'); if (visto) G.busq.alerta(6, { causa: 'forcejeo' });
+    G.reducidos = (G.reducidos || 0) + 1;
   },
   /* ---- seguir: El Contador sale en su carro hacia la salida de la ciudad; el Rastreador Cerbero lo marca al tocarlo ---- */
   ponerSeguido(p) {
@@ -146,6 +156,7 @@ const Contratos = {
   empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + c.n + ': ve a recoger', 2200, 'contrato'); },
   paso(dt) {
     const K = G.contrato; if (!K || G.pausa) return; const C = G.cuerpo; K.t += dt;
+    if (K.c.limite && K.t > K.c.limite) { G.ui.aviso('⏱ ' + K.c.n + ': se acabó el tiempo. Sin pago', 2600, 'contrato'); G.contrato = null; G.objetivo = null; return; }
     if (K.fase === 0 && Math.hypot(K.o.x - C.x, K.o.y - C.y) < 18) { if (Math.abs(C.v) < 3) { K.esp = (K.esp || 0) + dt; G.ui.aviso('📦 Cargando… ' + Math.min(100, Math.round(K.esp / 1.5 * 100)) + '%', 400, 'contrato'); if (K.esp > 1.5) { K.fase = 1; if (K.c.heat) G.busq.ponerNivel(Math.max(G.busq.nivel, K.c.heat)); if (K.c.banda) G.busq.banda(K.c.banda); G.objetivo = K.c.tipo === 'cobro' ? null : { x: K.d.x, y: K.d.y, texto: 'Entregar' }; G.ui.aviso(K.c.tipo === 'cobro' ? '🔫 Saca de la vía a los cobradores' : '📦 Llévalo: ' + Math.round(Math.hypot(K.d.x - C.x, K.d.y - C.y)) + ' m', 2400, 'contrato'); } } }
     else if (K.fase === 1) { const llego = K.c.tipo === 'cobro' ? K.fuera >= (K.c.banda || 1) : Math.hypot(K.d.x - C.x, K.d.y - C.y) < 18; if (llego) { if (K.c.tipo === 'fuga' && G.busq.nivel > 0) { if (K.t - (K.ult || 0) > 4) { K.ult = K.t; G.ui.aviso('🚨 Piérdelos antes de entregar', 2000, 'contrato'); } return; } G.dinero += K.c.pagoF; G.ui.aviso('💵 ' + K.c.n + ': +' + plata(K.c.pagoF), 2600, 'plata'); G.contrato = null; G.objetivo = null; guardarPosicion(); } }
   },

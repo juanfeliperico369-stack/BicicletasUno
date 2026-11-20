@@ -181,7 +181,10 @@ TC.CONTRATOS = [
   { id: 'carga', n: 'Muelle de humo', tipo: 'entrega', pago: [320, 520], heat: 2, banda: 2, texto: 'Mercancía que no está en ningún manifiesto. La Cámara la quiere de vuelta.' },
   { id: 'testigo', n: 'La fuente', tipo: 'escolta', pago: [380, 560], heat: 2, banda: 2, texto: 'Lleva a un testigo a un lugar seguro. Lo quieren callar.' },
   { id: 'cobro', n: 'No todo se cobra', tipo: 'cobro', pago: [300, 480], heat: 1, banda: 1, texto: 'Saca de la vía a los cobradores que acosan a una familia del barrio.' },
-  { id: 'cerco', n: 'Puertas cerradas', tipo: 'fuga', pago: [520, 760], heat: 4, texto: 'Sal de un cerco policial con la carga intacta.' }
+  { id: 'cerco', n: 'Puertas cerradas', tipo: 'fuga', pago: [520, 760], heat: 4, texto: 'Sal de un cerco policial con la carga intacta.' },
+  { id: 'contrarreloj', n: 'Contrarreloj', tipo: 'entrega', pago: [420, 640], heat: 0, limite: 150, texto: 'Un sobre que tiene que llegar antes de que cierre un juzgado. Dos minutos y medio.' },
+  { id: 'chivato', n: 'El sapo', tipo: 'escolta', pago: [450, 700], heat: 1, banda: 3, texto: 'Saca de la ciudad a un testigo que habló de más. La Cámara manda tres camionetas.' },
+  { id: 'vitrina', n: 'Vitrina rota', tipo: 'fuga', pago: [600, 900], heat: 5, texto: 'Recoge a dos que acaban de romper una vitrina. Cinco sirenas desde el primer segundo.' }
 ];
 
 /* ---------- la radio y la calle ---------- */

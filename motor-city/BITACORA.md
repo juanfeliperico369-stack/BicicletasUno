@@ -1,5 +1,29 @@
 # Bitácora de Motor City
 
+## 20-nov-2026 · 4.0.1 · Relevo entre IAs y mejoras de los pedidos 4.0
+- **Pedido del autor:** «Retoma, continúa y termina: el HTML, el link, todo actualizado y siempre un documento de contexto con todo el plan, lo hecho y lo que falta (y que la otra IA haga el suyo). Retoma las nuevas peticiones y mejora el motor, el juego de prueba, el arte y la tecnología».
+- **Relevo:**
+  - `CONTEXTO-RELEVO.md` contiene el plan, el estado, lo hecho, lo que falta (con dueño), las reglas y la entrada de cada IA;
+  - es obligatorio que cada IA deje la suya y le pida lo mismo a la siguiente;
+  - se adoptó en el motor el protocolo `coord/` de Antigravity y Codex (ficha por agente y buzón donde solo se suma);
+  - el documento único empieza por el relevo.
+- **Motor:**
+  - **luces de los GLB:** los faros y las luces traseras se encienden de noche, y cada modelo tiene un mínimo de luz propia (`Modelos.brillo`);
+  - **abolladuras por zona** en los carros 3D (`op.dano` = frente, atrás, izquierda, derecha), con faro roto, a partir de los golpes;
+  - `MC.Busqueda` guarda dónde se abolló cada rival y avisa al jugador (`abolladura`);
+  - la sirena se apaga en el rival aturdido.
+  - Esto avanza C‑M35.
+- **Turno Cero:**
+  - sonido de motor por capas de rpm y sirena con efecto Doppler (C‑M36);
+  - dron policial en 3D con el modelo de Codex;
+  - **reducción no letal a pie** de los guardias (✊), con la animación de golpe de Codex;
+  - al alejar la cámara más allá del tope se pasa al planeta con animación (C‑M31, primera parte);
+  - eventos de carretera al azar en Calle libre (banda, retén, emboscada, un camionero que paga);
+  - tres contratos nuevos, uno de ellos contrarreloj;
+  - arte de portada: ilustración SVG procedural con Manhattan, el Metrocable, la Piedra del Peñol y la carretera.
+- **Pruebas:** en Node, faros y abolladuras; el bot de la historia completa sin errores; las capturas.
+
+
 ## 20-nov-2026 · 4.0.0 · El planeta y *Turno Cero*
 - **Pedido del autor:**
   - «empieza con la creación del monstruo; nada de *family friendly*»;

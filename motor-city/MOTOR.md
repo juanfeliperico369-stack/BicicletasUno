@@ -228,7 +228,7 @@ MC.arte.registrar('encicla', {
   - `B.sacar()` entrega los eventos `nivel`, `embestida`, `disparo`, `herido`, `fuera`, `pinchado`, `bloqueo`, `puas`, `atrapado` y `perdidos`.
 - **`MC.Modelos`:**
   - `MC.Modelos.registrar(id, glb | base64)` y `MC.Modelos.paquete(MC_MODELOS)`;
-  - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro })`;
+  - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro, dano: { f, b, l, r } })`, con las abolladuras por zona; de noche se encienden los faros y hay luz propia (`MC.Modelos.brillo`);
   - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
   - `E.modelos3d = [{ id, x, y, a, k, clip }]` pone modelos en el mundo;
   - `MC.Modelos.posar(Mo, clip, t)` anima modelos con piel glTF, y `E.jugador.modelo` anima al jugador a pie.

@@ -474,6 +474,12 @@ console.log('20) Búsqueda 0–5, modelos GLB y Turno Cero (4.0)');
   ok(n >= 45 && R && R.clips.length === 8 && mueve > .2 && [...p1].every(Number.isFinite), 'modelos con esqueleto (Codex): 12 huesos y 8 clips; caminar mueve las piernas y todo es finito', { clips: R && R.clips.length, mueve: +mueve.toFixed(2) });
   ok(n >= 45 && S && S.n > 300 && Pm && Pm.frente === 'z' && rojo > 50 && maxZ > 2 && MC.Modelos.vehiculo({ sirena: true }).id === 'vehiculo_police' && MC.Modelos.vehiculo({ tipo: 'taxi' }).id === 'vehiculo_taxi',
     'modelos GLB: 45 leídos (42 + 3 con esqueleto), la carrocería toma el color del carro y un rumbo de 90° pone el carro a lo largo del eje sur', { n, tris: S && S.n, rojo, largoGirado: +maxZ.toFixed(2) });
+  { /* 4.0.x: faros y luces traseras marcadas; de noche emiten; una abolladura de frente acorta el carro y la de la izquierda lo angosta */
+    const T = S.tris; let faros = 0, traseras = 0; for (let i = 0; i < S.n; i++) { if (T[i * 21 + 15] === 2) faros++; if (T[i * 21 + 15] === 3) traseras++; }
+    const caja = op => { const m2 = new MC.Malla(); m2.modelo(S, 0, 0, 0, 0, Object.assign({ largo: 4.65 }, op)); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, emis = 0; for (let i = 0; i < m2.d.length; i += 10) { x0 = Math.min(x0, m2.d[i]); x1 = Math.max(x1, m2.d[i]); z0 = Math.min(z0, m2.d[i + 2]); z1 = Math.max(z1, m2.d[i + 2]); if (m2.d[i + 9] === 1) emis++; } return { largo: x1 - x0, ancho: z1 - z0, frente: x1, emis }; };
+    const sano = caja({}), golpe = caja({ dano: { f: 1, b: 0, l: 1, r: 0 } });
+    ok(faros > 0 && traseras > 0 && sano.emis > 0 && golpe.frente < sano.frente - .3 && golpe.ancho < sano.ancho && golpe.emis < sano.emis, 'modelos 4.0.x: faros y luces traseras que se encienden de noche; abolladuras por zona (frente y costado) y faro roto', { faros, traseras, frente: [+sano.frente.toFixed(2), +golpe.frente.toFixed(2)], ancho: [+sano.ancho.toFixed(2), +golpe.ancho.toFixed(2)] });
+  }
   MC.Modelos.L.clear();
 }
 if (process.argv.includes('--navegador')) {

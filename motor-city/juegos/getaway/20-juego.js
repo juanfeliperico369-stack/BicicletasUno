@@ -30,7 +30,12 @@ const Snd = {
   disparo(d) { this.ruido(.22, 2600, clamp(1 - d / 100, .04, .8)); },
   golpe(k) { this.ruido(.45, 520, clamp(k, .05, 1)); },
   sirenaVol(v) { const ac = this.ac; if (!ac || !this.on) return; if (!this.sirena) { const o = ac.createOscillator(), g = ac.createGain(), l = ac.createOscillator(), lg = ac.createGain(), fl = ac.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = 760; l.type = 'square'; l.frequency.value = 1.4; lg.gain.value = 170; l.connect(lg); lg.connect(o.frequency); fl.type = 'bandpass'; fl.frequency.value = 900; g.gain.value = 0; o.connect(fl); fl.connect(g); g.connect(this.out); o.start(); l.start(); this.sirena = { o, g, l }; } this.sirena.g.gain.setTargetAtTime(clamp(v, 0, 1) * .1, ac.currentTime, .25); },
-  apagar() { this.on = false; this.sirenaVol(0); if (this.ac) this.ac.suspend(); MC.Musica.parar(); }, prender() { this.on = true; if (this.ac) this.ac.resume(); else this.ini(); }
+  /* 4.0.x · efecto Doppler de la sirena: f = f0·c/(c + vr), vr > 0 si se aleja (c = 343 m/s) */
+  doppler(vr) { if (!this.sirena || !this.ac) return; const k = clamp(343 / (343 + vr), .8, 1.25); this.sirena.o.frequency.setTargetAtTime(760 * k, this.ac.currentTime, .15); },
+  /* 4.0.x · motor por capas: un diente de sierra que sube con las rpm (cambios simulados) y un zumbido grave */
+  motor(v, enCarro, acel) { const ac = this.ac; if (!ac || !this.on) return; if (!this.mot) { const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), fl = ac.createBiquadFilter(); o.type = 'sawtooth'; o2.type = 'triangle'; fl.type = 'lowpass'; fl.frequency.value = 700; g.gain.value = 0; o.connect(fl); o2.connect(fl); fl.connect(g); g.connect(this.out); o.start(); o2.start(); this.mot = { o, o2, g, fl }; }
+    const va = Math.abs(v), marcha = Math.min(5, Math.floor(va / 9)), rpm = .25 + ((va - marcha * 9) / 9) * .75, f = 42 + rpm * 70 + marcha * 6, t = ac.currentTime; this.mot.o.frequency.setTargetAtTime(f, t, .08); this.mot.o2.frequency.setTargetAtTime(f / 2, t, .08); this.mot.fl.frequency.setTargetAtTime(500 + rpm * 900 + acel * 400, t, .1); this.mot.g.gain.setTargetAtTime(enCarro ? .035 + rpm * .03 + Math.max(0, acel) * .02 : 0, t, .15); },
+  apagar() { this.on = false; this.sirenaVol(0); if (this.mot) this.mot.g.gain.value = 0; if (this.ac) this.ac.suspend(); MC.Musica.parar(); }, prender() { this.on = true; if (this.ac) this.ac.resume(); else this.ini(); }
 };
 
 /* ---------- el planeta y sus mundos (cada MC4 viene en un <script type="text/plain">) ---------- */
@@ -51,7 +56,7 @@ const G = window.TURNO = {
   modo: 'historia', id: null, M: null, cuerpo: null, camara: null, vistas: null, E: null, trafico: null, pobl: null, transporte: null, busq: null, objetos: null,
   reloj: new MC.Reloj({ vel: .25 }), clima: null, ui: null, ctl: null, cv: null, g: null, W: 0, H: 0,
   dinero: 380, rep: { taller: 0, vecindarios: 0, garantias: 0, coro: 0, northquay: 0 }, flags: {}, veh: 'tc_vega', tengo: ['tc_vega'],
-  carro: 1, vida: 1, nitro: .6, pausa: false, transicion: false, vistaId: 'cenital', zoom: null, km: 0, destrozados: 0, civiles: 0, disparosRecibidos: 0,
+  carro: 1, vida: 1, nitro: .6, danoZonas: { f: 0, b: 0, l: 0, r: 0 }, pausa: false, transicion: false, vistaId: 'cenital', zoom: null, km: 0, destrozados: 0, civiles: 0, disparosRecibidos: 0,
   hist: null, objetivo: null, contrato: null, evidencia: 0, municion: 0, dron: null, lenteT: 0, recarga: { dron: 0, pulso: 0, lente: 0 }, cebos: 2, rastreado: null, guardias: [], modelos3d: [], caidos: [], humo: [], lugaresCache: {}, viaje: null, rapido: false, errores: MC.errores, listo: false, t: 0
 };
 const ui = () => G.ui;
@@ -98,7 +103,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   G.transporte = M.transporte && M.transporte.lineas && M.transporte.lineas.length ? new MC.Transporte(M, M.cfgCiudad || {}) : null;
   G.busq = new MC.Busqueda(M, { heat: spawn.heat ?? heat0 * .6, semilla: (G.t * 1000) | 0 });
   G.objetos = new MC.Objetos(M, {}); try { G.objetos.sembrar(C.x, C.y, 320, 40); } catch (e) { /* sin objetos */ }
-  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto, modelo: 'personaje_mara_rig' }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, curvatura: CURVATURA, modelos3d: G.modelos3d,
+  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto, modelo: 'personaje_mara_rig', dano: G.danoZonas }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, curvatura: CURVATURA, modelos3d: G.modelos3d,
     bloqueosEtiquetas: (w, h) => [[w - 84 * w / innerWidth, 0, w, h]] };
   G.vistas.usar(G.vistaId, G.E); G.vistas.dpr = G.dEf || 1;
   if (G.ui && G.ui._mini) G.ui._mini.vistas = G.vistas; else if (G.ui) G.ui.minimapa(G.vistas);
@@ -106,7 +111,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   ajustar();
   await espera(120); tr.classList.remove('on'); G.transicion = false;
   MC.emit('turno:mundo', { id, desde });
-  if (G.hist) Historia.alEntrar(id);
+  if (G.hist) Historia.alEntrar(id); else if (!M.esCiudad) G.rutaEventos = eventosCarreteraLibre();
   guardarPosicion();
 }
 
@@ -147,7 +152,7 @@ async function decision(D) {
 function aplicar(A) {
   if (!A) return; if (A.rep) for (const [k, v] of Object.entries(A.rep)) G.rep[k] = clamp((G.rep[k] || 0) + v, -100, 100);
   if (A.flags) Object.assign(G.flags, A.flags); if (A.dinero) { G.dinero += A.dinero; G.ui.aviso((A.dinero > 0 ? '💵 +' : '💸 ') + plata(A.dinero), 2200, 'plata'); }
-  if (A.reparar) { G.carro = 1; G.busq.pinchado = false; G.vida = Math.max(G.vida, .8); }
+  if (A.reparar) { G.carro = 1; G.busq.pinchado = false; G.vida = Math.max(G.vida, .8); reparaZonas(); }
   if (A.veh) cambiarVeh(A.veh, true);
 }
 
@@ -173,7 +178,7 @@ function paso(dt, dtVisual) {
   const C = G.cuerpo, M = G.M, E = G.E; G.t += dt; E.t = G.t;
   G.reloj.avanzar(dt); G.clima.actualizar(G.reloj, dt); E.cielo = MC.Cielo.en(G.reloj.fecha, G.reloj.hora, G.clima);
   const ent = G.ctl.leer(); if (G.pausa) { ent.stick = { x: 0, y: 0, m: 0 }; ent.acel = 0; }
-  const V = C.veh, enCarro = V.clase !== 'pie' && V.clase !== 'rueda', x0 = C.x, y0 = C.y, v0 = Math.abs(C.v);
+  const V = C.veh, enCarro = V.clase !== 'pie' && V.clase !== 'rueda', x0 = C.x, y0 = C.y, v0 = Math.abs(C.v), sv0 = C.v;
   /* el estado del carro: daño, púas, turbo */
   C.escala = enCarro ? (G.carro <= 0 ? .14 : (.72 + .28 * G.carro) * (G.busq.pinchado ? .58 : 1)) : 1;
   if (G.viaje) viajeTransporte(dt);
@@ -189,7 +194,7 @@ function paso(dt, dtVisual) {
   if (dt > 0) {
     /* daño por golpes: lo que se perdió de velocidad de un cuadro a otro */
     const dv = v0 - Math.abs(C.v);
-    if (enCarro && (C.eventos.includes('choque') || dv > 5.5) && dv > 3) { const k = dv * .011 / (VEH(G.veh).salud || 1); G.carro = Math.max(0, G.carro - k); G.camara.sacudir(Math.min(.3, dv * .02)); Snd.golpe(dv / 18); if (MC.Vida) MC.Vida.emitir('chispa', C.x + Math.cos(C.a) * 2, C.y + Math.sin(C.a) * 2, 8); if (/persona/.test(C.bloqueo || '')) atropello(null); if (G.carro <= 0) G.ui.aviso('🔥 El carro no da más: bájate 🚪 y consigue otro 🚗', 4000, 'carro'); }
+    if (enCarro && (C.eventos.includes('choque') || dv > 5.5) && dv > 3) { const k = dv * .011 / (VEH(G.veh).salud || 1); G.carro = Math.max(0, G.carro - k); abollar(sv0 >= 0 ? 'f' : 'b', dv); G.camara.sacudir(Math.min(.3, dv * .02)); Snd.golpe(dv / 18); if (MC.Vida) MC.Vida.emitir('chispa', C.x + Math.cos(C.a) * 2, C.y + Math.sin(C.a) * 2, 8); if (/persona/.test(C.bloqueo || '')) atropello(null); if (G.carro <= 0) G.ui.aviso('🔥 El carro no da más: bájate 🚪 y consigue otro 🚗', 4000, 'carro'); }
     G.km += Math.hypot(C.x - x0, C.y - y0) / 1000;
     /* el mundo vivo alrededor */
     E.trafico = G.trafico.paso(dt, C.x, C.y, G.reloj.seg, G.vistas.calidad);
@@ -247,6 +252,7 @@ function eventoBusqueda(ev) {
   else if (ev.tipo === 'perdidos') U.aviso('🕶️ Los perdiste', 2200, 'nivel');
   else if (ev.tipo === 'escondido') U.aviso('🅿️ Escondida: la policía te perdió', 2400, 'nivel');
   else if (ev.tipo === 'alerta' && ev.causa) U.aviso('+alerta: ' + ev.causa, 1800, 'alerta');
+  else if (ev.tipo === 'abolladura') abollar(ev.zona, ev.fuerza);
   else if (ev.tipo === 'embestida') { Snd.golpe(ev.fuerza / 16); G.camara.sacudir(Math.min(.35, ev.fuerza * .025)); if (MC.Vida) MC.Vida.emitir('chispa', ev.x, ev.y, 10); if (ev.quien === 'rival' && ev.bando === 'banda' && (insultoT -= 1) <= 0) { insultoT = 4; Subt.decir([['coro', TC.INSULTOS_BANDA[(Math.random() * TC.INSULTOS_BANDA.length) | 0]]]); } }
   else if (ev.tipo === 'disparo') { Snd.disparo(d); }
   else if (ev.tipo === 'herido') { G.disparosRecibidos++; if (C.veh.clase === 'pie' || C.veh.clase === 'moto' || C.veh.clase === 'rueda') G.vida = Math.max(0, G.vida - .09); else G.vida = Math.max(0, G.vida - .025); $('#vineta').classList.add('herido'); clearTimeout(G._vt); G._vt = setTimeout(() => $('#vineta').classList.remove('herido'), 350); }
@@ -265,9 +271,21 @@ function escondites(dt) {
   escT += dt; if (escT > 3) { escT = 0; B.esconder('escondite'); }
 }
 /* eventos de la carretera (los de la historia: la banda y los retenes a cierta altura del tramo) */
+/* las abolladuras por zona (se ven en el modelo 3D del carro): f frente, b atrás, l izquierda, r derecha */
+function abollar(z, fuerza) { const D = G.danoZonas; if (!D || !(z in D)) return; D[z] = Math.min(1, D[z] + clamp(fuerza, 0, 30) * .028 / (VEH(G.veh).salud || 1)); }
+function reparaZonas() { Object.assign(G.danoZonas, { f: 0, b: 0, l: 0, r: 0 }); }
+/* Calle libre: lo que pasa en la carretera de la nada (al azar en cada viaje) */
+function eventosCarreteraLibre() {
+  const r = () => Math.random(), L = [];
+  if (r() < .7) L.push({ f: .15 + r() * .15, banda: 1 + (r() < .4 ? 1 : 0), aviso: 'Una camioneta te sigue desde la última bomba de gasolina' });
+  if (r() < .6) L.push({ f: .4 + r() * .15, heat: 2, aviso: 'Retén en la vía: alguien dio tu placa' });
+  if (r() < .5) L.push({ f: .6 + r() * .1, pago: 120 + Math.round(r() * 200), aviso: 'Un camionero varado te paga por llevarle un repuesto a la siguiente parada' });
+  if (r() < .35) L.push({ f: .8 + r() * .1, banda: 2, aviso: 'Emboscada en la curva: dos camionetas atravesadas' });
+  return L.sort((a, b) => a.f - b.f);
+}
 function eventosRuta() {
   const c = G.M.carretera, f = clamp(G.cuerpo.y / c.largo, 0, 1), R = G.rutaEventos || [];
-  for (let i = 0; i < R.length; i++) { const r = R[i]; if (G.rutaHecha[i] || f < r.f) continue; G.rutaHecha[i] = true; if (r.aviso) G.ui.aviso('⚠️ ' + r.aviso, 2600, 'ruta'); if (r.banda) G.busq.banda(r.banda); if (r.heat) G.busq.ponerNivel(Math.max(G.busq.nivel, r.heat)); }
+  for (let i = 0; i < R.length; i++) { const r = R[i]; if (G.rutaHecha[i] || f < r.f) continue; G.rutaHecha[i] = true; if (r.aviso) G.ui.aviso('⚠️ ' + r.aviso, 2600, 'ruta'); if (r.banda) G.busq.banda(r.banda); if (r.heat) G.busq.ponerNivel(Math.max(G.busq.nivel, r.heat)); if (r.pago) { G.dinero += r.pago; G.ui.aviso('💵 +' + plata(r.pago), 2000, 'plata'); } }
 }
 
 /* ---------- metro, cables, tranvía y Metroplús de Medellín (el horario y la línea reales) ---------- */
@@ -318,7 +336,7 @@ function menuTaller() {
   for (const v of TC.VEHICULOS) it.push({ id: 'v:' + v.id, texto: v.icon + ' ' + v.n + ' · ' + (G.tengo.includes(v.id) ? (G.veh === v.id ? 'lo llevas' : 'tuyo') : plata(v.precio)) + '<br><small>' + v.d + '</small>' });
   G.ui.menu('🔧 ' + T.n + ' · ' + plata(G.dinero), it, id => {
     const pagar = c => { if (G.dinero < c) { G.ui.aviso('💸 No te alcanza: ' + plata(c)); return false; } G.dinero -= c; return true; };
-    if (id === 'rep' && G.carro < .98 && pagar(costo)) { G.carro = 1; G.ui.aviso('🔧 Como nuevo'); }
+    if (id === 'rep' && G.carro < .98 && pagar(costo)) { G.carro = 1; reparaZonas(); G.ui.aviso('🔧 Como nuevo: latas enderezadas'); }
     else if (id === 'llantas' && pagar(60)) { G.busq.pinchado = false; G.ui.aviso('🛞 Llantas nuevas'); }
     else if (id === 'pintar') { if (G.busq.visto) G.ui.aviso('👀 Te están viendo: así no sirve pintarlo'); else if (pagar(150)) { G.busq.esconder('pintura'); G.ui.aviso('🎨 Otro color, otra placa. La policía ya no lo reconoce'); } }
     else if (id === 'cura' && pagar(Math.round((1 - G.vida) * 200))) { G.vida = 1; G.ui.aviso('🩹 Puntos, gasa y aguardiente'); }

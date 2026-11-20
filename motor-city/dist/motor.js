@@ -1,4 +1,4 @@
-/* Motor City 4.0.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.0.1 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.0.0',
+  version: '4.0.1',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -2699,6 +2699,10 @@ class Busqueda {
           J.v *= 1 - clamp(golpe * .025 * kJ, 0, .5); C.v *= 1 - clamp(golpe * .03 * kR, 0, .7);
           const quien = rel > 0 ? 'rival' : 'jugador', aJ = golpe * .012 * kJ * (quien === 'rival' ? r.B.agresion : .6);   /* quien embiste recibe menos */
           this.danio += aJ; r.salud -= golpe * .045 * kR * (quien === 'jugador' ? 1.3 : .6);
+          /* dónde se abolló cada uno (para los modelos 3D): el punto de contacto visto desde cada carro */
+          const zona = (ax, ay, aa) => { const f = Math.cos(aa) * ax + Math.sin(aa) * ay, l = -Math.sin(aa) * ax + Math.cos(aa) * ay; return Math.abs(f) > Math.abs(l) ? (f > 0 ? 'f' : 'b') : (l > 0 ? 'l' : 'r'); };
+          const zr = zona(dx, dy, C.a), zj = zona(-dx, -dy, J.a || 0); r.golpes = r.golpes || { f: 0, b: 0, l: 0, r: 0 }; r.golpes[zr] = Math.min(1, r.golpes[zr] + golpe * .03);
+          this._ev('abolladura', { zona: zj, fuerza: golpe });
           this._ev('embestida', { id: r.id, bando: r.bando, quien, fuerza: golpe, x: (J.x + C.x) / 2, y: (J.y + C.y) / 2 });
           if (r.bando === 'policia' && quien === 'jugador') this.alerta(4, { causa: '' });
           if (r.salud <= 0) { r.roto = true; this._ev('fuera', { id: r.id, bando: r.bando, x: C.x, y: C.y }); if (r.bando === 'policia') this.alerta(8, { causa: 'patrulla destrozada' }); } }
@@ -2724,7 +2728,7 @@ class Busqueda {
   }
   /* los rivales como vehículos de tráfico (las vistas 2D y 3D ya los dibujan; sirena y destrozo como banderas) */
   vehiculos() {
-    return this.rivales.map(r => { const c = r.cuerpo; return { id: r.id, tipo: 'carro', clase: 'auto', x: c.x, y: c.y, a: c.a, v: c.v, largo: c.veh.largo || 4.6, ancho: c.veh.ancho || 1.85, color: r.roto ? '#2a2420' : r.B.color, sirena: r.B.sirena && !r.roto && !r.retirada, roto: r.roto, humo: r.roto ? r.humo : 0, bando: r.bando, frena: 0 }; });
+    return this.rivales.map(r => { const c = r.cuerpo; return { id: r.id, tipo: 'carro', clase: 'auto', x: c.x, y: c.y, a: c.a, v: c.v, largo: c.veh.largo || 4.6, ancho: c.veh.ancho || 1.85, color: r.roto ? '#2a2420' : r.B.color, sirena: r.B.sirena && !r.roto && !r.retirada && !(r.aturdido > 0), roto: r.roto, humo: r.roto ? r.humo : 0, bando: r.bando, frena: 0, dano: r.golpes || null }; });
   }
   /* para cuerpo.obstaculos: nadie atraviesa a nadie */
   obstaculos() { const L = []; for (const r of this.rivales) { const c = r.cuerpo, l = (c.veh.largo || 4.6) / 3, cs = Math.cos(c.a), sn = Math.sin(c.a); for (const k of [-1, 0, 1]) L.push({ x: c.x + cs * l * k, y: c.y + sn * l * k, r: (c.veh.ancho || 1.85) / 2 + .1, motivo: 'rival:' + r.id }); } return L; }
@@ -5261,11 +5265,11 @@ class VistaGL {
     const m = new Malla(), M = this.mundo, O = this.O, rel = (x, y, z) => [x - O[0], z - O[2], y - O[1]];
     const pj = E.jugador; if (pj && !E._sinJugador) { const C = pj.cuerpo, A = pj.aspecto, zb = M.cota(C.x, C.y) + C.zPaso + C.z, J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: C.veh.manubrio }), ca = Math.cos(C.a), sa = Math.sin(C.a), P = j => rel(C.x + ca * j[0], C.y + sa * j[0], zb + j[1]), Lp = (j, l) => { const p = P(j); return [p[0] - sa * l, p[1], p[2] + ca * l]; };
       const piel = hex3(A.cPiel), cam = hex3(A.cCamisa), pan = hex3(A.cPantalon);
-      if (C.veh.clase !== 'pie') { const V = C.veh; if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0 }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
+      if (C.veh.clase !== 'pie') { const V = C.veh; if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
       const MoJ = C.veh.clase === 'pie' && pj.modelo && !C.nadando ? Modelos.L.get(pj.modelo) : null; if (MoJ) { const r = rel(C.x, C.y, zb), clip = C.estado === 'corre' ? 'sprint_loop' : C.estado === 'camina' || Math.abs(C.v) > .3 ? (Math.abs(C.v) > 3.2 ? 'sprint_loop' : 'walk_loop') : 'idle_breath'; m.modelo(MoJ, r[0], r[1], r[2], C.a, { k: (A.alto || 1.7) / MoJ.alto, clip, t: E.t || 0 }); } else if (!(C.veh.clase === 'auto' || C.veh.clase === 'pesado')) { m.hueso(Lp(J.cadera, .12), Lp(J.rodI, .12), .07, pan); m.hueso(Lp(J.rodI, .12), Lp(J.pieI, .12), .06, pan); m.hueso(Lp(J.cadera, -.12), Lp(J.rodD, -.12), .07, pan); m.hueso(Lp(J.rodD, -.12), Lp(J.pieD, -.12), .06, pan); if (!this._sinCabeza) m.hueso(P(J.cadera), P(J.pecho), .17, cam); m.hueso(Lp(J.pecho, .2), Lp(J.codoI, .22), .05, cam); m.hueso(Lp(J.codoI, .22), Lp(J.manoI, .2), .045, A.manga ? cam : piel); m.hueso(Lp(J.pecho, -.2), Lp(J.codoD, -.22), .05, cam); m.hueso(Lp(J.codoD, -.22), Lp(J.manoD, -.2), .045, A.manga ? cam : piel); const h = P(J.cabeza); if (!this._sinCabeza) m.caja(h[0], h[1] - .13, h[2], C.a, .24, .22, .26, piel); if (this._sinCabeza) { /* en primera persona se ven las manos y el manubrio */ } else if (A.cCasco) m.caja(h[0], h[1] + .06, h[2], C.a, .3, .27, .12, hex3(A.cCasco)); else m.caja(h[0] - ca * .03, h[1] + .07, h[2] - sa * .03, C.a, .26, .24, .08, hex3(A.cPelo)); }
     }
     this._njug = m.d.length;   // 3.0: lo del jugador va primero (se repinta encima en las cámaras aéreas)
-    for (const v of E.trafico || []) { const T2 = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, r = rel(v.x, v.y, M.cota(v.x, v.y)), h = v.tipo === 'buseta' || v.tipo === 'camion' ? 2.9 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.1; const Mo = Modelos.L.size && Math.hypot(v.x - E.camara.x, v.y - E.camara.y) < Modelos.lejos ? Modelos.vehiculo(v) : null; if (Mo) { m.modelo(Mo, r[0], r[1], r[2], v.a, { largo: v.largo || T2.largo, tinte: v.sirena || v.bando ? null : v.color, oscuro: v.roto ? .65 : 0 }); if (v.sirena) { const f = Math.floor(performance.now() / 160) % 2, ca = Math.cos(v.a), sa = Math.sin(v.a); m.cajaF(r[0] - ca * .35 - sa * .25, r[1] + 1.56, r[2] - sa * .35 + ca * .25, v.a, .3, .16, .12, f ? [1, .1, .1] : [.35, .05, .05], f); m.cajaF(r[0] - ca * .35 + sa * .25, r[1] + 1.56, r[2] - sa * .35 - ca * .25, v.a, .3, .16, .12, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); } } else m.carro3d(r[0], r[1], r[2], v.a, T2.largo, T2.ancho, v.color, v.tipo === 'buseta' || v.tipo === 'camion' || v.tipo === 'moto' || v.tipo === 'bici' ? v.tipo : 'carro', E.cielo ? E.cielo.noche : 0, v.sirena ? v : null); }
+    for (const v of E.trafico || []) { const T2 = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, r = rel(v.x, v.y, M.cota(v.x, v.y)), h = v.tipo === 'buseta' || v.tipo === 'camion' ? 2.9 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.1; const Mo = Modelos.L.size && Math.hypot(v.x - E.camara.x, v.y - E.camara.y) < Modelos.lejos ? Modelos.vehiculo(v) : null; if (Mo) { m.modelo(Mo, r[0], r[1], r[2], v.a, { largo: v.largo || T2.largo, tinte: v.sirena || v.bando ? null : v.color, oscuro: v.roto ? .65 : 0, dano: v.dano || null }); if (v.sirena) { const f = Math.floor(performance.now() / 160) % 2, ca = Math.cos(v.a), sa = Math.sin(v.a); m.cajaF(r[0] - ca * .35 - sa * .25, r[1] + 1.56, r[2] - sa * .35 + ca * .25, v.a, .3, .16, .12, f ? [1, .1, .1] : [.35, .05, .05], f); m.cajaF(r[0] - ca * .35 + sa * .25, r[1] + 1.56, r[2] - sa * .35 - ca * .25, v.a, .3, .16, .12, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); } } else m.carro3d(r[0], r[1], r[2], v.a, T2.largo, T2.ancho, v.color, v.tipo === 'buseta' || v.tipo === 'camion' || v.tipo === 'moto' || v.tipo === 'bici' ? v.tipo : 'carro', E.cielo ? E.cielo.noche : 0, v.sirena ? v : null); }
     /* 4.0: modelos GLB que el juego pone en el mundo (personas de la historia, retenes, contenedores, escondites…) */
     for (const q of E.modelos3d || []) { const Mo = Modelos.L.get(q.id); if (!Mo || Math.hypot(q.x - E.camara.x, q.y - E.camara.y) > (q.lejos || 260)) continue; const r = rel(q.x, q.y, M.cota(q.x, q.y) + (q.z || 0)); m.modelo(Mo, r[0], r[1], r[2], q.a || 0, { k: q.k || 1, ky: q.ky, largo: q.largo, tinte: q.tinte || null, e: q.e || 0, clip: q.clip, t: (E.t || 0) + (q.fase || 0) }); }
     for (const p of E.peatones || []) { const r = rel(p.x, p.y, M.cota(p.x, p.y)), A = p.aspecto || (p.aspecto = Personaje.azar(p.semilla || 1)), sw = Math.sin(p.fase) * .25; m.persona3d(r[0], r[1], r[2], p.a, A, p.fase || 0, A.alto || 1.7); }
@@ -5528,6 +5532,9 @@ const Modelos = {
     /* la carrocería: el color con más área (las llantas tienen muchos triángulos pequeños) */
     let cuerpo = null, max = 0; for (const [k, n] of cuenta) { const [r, g, b] = k.split(',').map(Number); if (n > max) { max = n; cuerpo = k; } }
     if (cuerpo) for (let t = 0; t < nt; t++) { const o2 = t * 21, key = Math.round(T[o2 + 12] * 255) + ',' + Math.round(T[o2 + 13] * 255) + ',' + Math.round(T[o2 + 14] * 255); if (key === cuerpo) T[o2 + 15] = 1; }
+    /* faros y luces traseras de los vehículos (se encienden de noche): blanco cálido adelante (+X), rojo atrás */
+    if (mx[0] - mn[0] > 2 && mx[1] - mn[1] < 3.2) for (let t = 0; t < nt; t++) { const o2 = t * 21, r = T[o2 + 12], g = T[o2 + 13], b = T[o2 + 14], gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3;
+      if (gx > mx[0] - .12 && r > .7 && g > .65 && b > .6) T[o2 + 15] = 2; else if (gx < mn[0] + .12 && r > .6 && g < .45 && b < .4) T[o2 + 15] = 3; }
     return { tris: T, n: nt, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
   },
   registrar(id, fuente, op = {}) { try { const m = Modelos.leer(fuente, Object.assign({ frente: /_rig$/.test(id) ? '-z' : /^personaje_/.test(id) ? 'z' : 'x' }, op)); m.id = id; Modelos.L.set(id, m); return m; } catch (e) { MC.falla('modelo ' + id, e); return null; } },
@@ -5560,13 +5567,22 @@ const Modelos = {
 /* un modelo en la malla: posición GL relativa (x, y = altura, z = sur), rumbo a del mundo; escala k o el largo deseado */
 Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
   const T = op.clip && Mo.piel ? Modelos.posar(Mo, op.clip, op.t || 0) : Mo.tris, n = Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d, fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
-  const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, osc = op.oscuro || 0, e = op.e || 0, ky = op.ky || k;
+  const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, D = op.dano, ky = op.ky || k;
+  /* 4.0.x: de noche cada modelo tiene un mínimo de luz propia (el sombreador solo usa la emisión de noche) y los faros se encienden */
+  const e0 = op.e != null ? op.e : Modelos.brillo, osc = Math.min(.8, (op.oscuro || 0) + (D ? Math.max(D.f || 0, D.b || 0, D.l || 0, D.r || 0) * .25 : 0));
+  /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
+  const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
-    const o = t * 21, cuerpo = T[o + 15] === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m;
+    const o = t * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
     const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
-    for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2], u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv; d.push(x + u * ca - v * sa, y + py * ky, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
+    for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
+      if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;
+        if (pf > 0 && D.f) { u -= pf * D.f * .55; h -= pf * D.f * .18; } if (pb > 0 && D.b) { u += pb * D.b * .55; h -= pb * D.b * .14; }
+        if (pl > 0 && D.l) v -= pl * D.l * .6; if (pr > 0 && D.r) v += pr * D.r * .6; }
+      d.push(x + u * ca - v * sa, y + h, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
   }
 };
+Modelos.brillo = .32;
 /* matrices 4×4 en columnas (glTF) */
 function m4trs(t, q, sc) { const [x, y, z, w] = q, x2 = x + x, y2 = y + y, z2 = z + z, xx = x * x2, xy = x * y2, xz = x * z2, yy = y * y2, yz = y * z2, zz = z * z2, wx = w * x2, wy = w * y2, wz = w * z2;
   return [(1 - (yy + zz)) * sc[0], (xy + wz) * sc[0], (xz - wy) * sc[0], 0, (xy - wz) * sc[1], (1 - (xx + zz)) * sc[1], (yz + wx) * sc[1], 0, (xz + wy) * sc[2], (yz - wx) * sc[2], (1 - (xx + yy)) * sc[2], 0, t[0], t[1], t[2], 1]; }

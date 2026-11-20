@@ -8,6 +8,8 @@
 >
 > **Después:** «adapta todo lo nuevo que se agregó». Codex subió *Turno Cero: Manhattan* (espionaje en 2026, artefactos T01–T12 y 42 modelos GLB), y este juego toma ese canon y lo lleva al planeta.
 
+![Capturas de Turno Cero](img/turno-cero-capturas.png)
+
 **Jugar:** `dist/juegos/getaway.html`, también en la página del motor. **Código:** `juegos/getaway/` (`10-contenido.js`, `20-juego.js`, `30-historia.js`, `40-dibujo.js`, `90-inicio.js`). **Pruebas:** `node motor.mjs prueba --navegador`, secciones 19, 20 y la prueba «Turno Cero en Chromium móvil».
 
 ## 1. Qué es
@@ -68,6 +70,7 @@
 | EnCicla, lancha y robo de carros | `MC.Cuerpo` | Las estaciones EnCicla reales, el embalse con su profundidad y los carros del tráfico |
 | Piel y animación glTF | `MC.Modelos.posar` | Los actores de Codex con esqueleto (12 huesos y 8 clips: reposo, caminar, correr, sigilo, golpe, interactuar, esquivar e impacto) se animan en la cámara 3D. Mara a pie camina y corre con ellos, y los guardias respiran, se distraen y corren con la alarma. Pendiente que Codex marcó: «reproducir el rig dentro del render web». |
 | La escena 3D de Codex | `dist/juegos/turno-cero-accion-3d.html` | Su misión autónoma de acción a pie (distrito de prueba, WebGL2), enlazada desde la portada como «Misión de acción 3D» |
+| 4.0.1 | Varios archivos | Faros de noche y abolladuras por zona en los GLB. Motor con sonido y sirena con Doppler. Dron policial 3D. ✊ Reducción no letal a pie. Alejar la cámara hasta el planeta. Eventos de carretera en Calle libre. Contratos nuevos. Arte de portada. |
 | Artefactos (ficción de juego) | `juegos/getaway/20-juego.js` | T02 Dron Cuervo, T05 Cebo acústico, T08 Pulso de interferencia, T01 Lente espectral (estilo térmico del motor), T03 Rastreador, T06 Acceso, T11 Cámara, T09 Custodia y T04 VELA |
 
 ## 4. Las 13 referencias del autor y lo que se tomó (técnica, nunca arte)

@@ -54,6 +54,9 @@ const Modelos = {
     /* la carrocería: el color con más área (las llantas tienen muchos triángulos pequeños) */
     let cuerpo = null, max = 0; for (const [k, n] of cuenta) { const [r, g, b] = k.split(',').map(Number); if (n > max) { max = n; cuerpo = k; } }
     if (cuerpo) for (let t = 0; t < nt; t++) { const o2 = t * 21, key = Math.round(T[o2 + 12] * 255) + ',' + Math.round(T[o2 + 13] * 255) + ',' + Math.round(T[o2 + 14] * 255); if (key === cuerpo) T[o2 + 15] = 1; }
+    /* faros y luces traseras de los vehículos (se encienden de noche): blanco cálido adelante (+X), rojo atrás */
+    if (mx[0] - mn[0] > 2 && mx[1] - mn[1] < 3.2) for (let t = 0; t < nt; t++) { const o2 = t * 21, r = T[o2 + 12], g = T[o2 + 13], b = T[o2 + 14], gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3;
+      if (gx > mx[0] - .12 && r > .7 && g > .65 && b > .6) T[o2 + 15] = 2; else if (gx < mn[0] + .12 && r > .6 && g < .45 && b < .4) T[o2 + 15] = 3; }
     return { tris: T, n: nt, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
   },
   registrar(id, fuente, op = {}) { try { const m = Modelos.leer(fuente, Object.assign({ frente: /_rig$/.test(id) ? '-z' : /^personaje_/.test(id) ? 'z' : 'x' }, op)); m.id = id; Modelos.L.set(id, m); return m; } catch (e) { MC.falla('modelo ' + id, e); return null; } },
@@ -86,13 +89,22 @@ const Modelos = {
 /* un modelo en la malla: posición GL relativa (x, y = altura, z = sur), rumbo a del mundo; escala k o el largo deseado */
 Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
   const T = op.clip && Mo.piel ? Modelos.posar(Mo, op.clip, op.t || 0) : Mo.tris, n = Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d, fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
-  const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, osc = op.oscuro || 0, e = op.e || 0, ky = op.ky || k;
+  const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, D = op.dano, ky = op.ky || k;
+  /* 4.0.x: de noche cada modelo tiene un mínimo de luz propia (el sombreador solo usa la emisión de noche) y los faros se encienden */
+  const e0 = op.e != null ? op.e : Modelos.brillo, osc = Math.min(.8, (op.oscuro || 0) + (D ? Math.max(D.f || 0, D.b || 0, D.l || 0, D.r || 0) * .25 : 0));
+  /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
+  const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
-    const o = t * 21, cuerpo = T[o + 15] === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m;
+    const o = t * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
     const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
-    for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2], u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv; d.push(x + u * ca - v * sa, y + py * ky, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
+    for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
+      if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;
+        if (pf > 0 && D.f) { u -= pf * D.f * .55; h -= pf * D.f * .18; } if (pb > 0 && D.b) { u += pb * D.b * .55; h -= pb * D.b * .14; }
+        if (pl > 0 && D.l) v -= pl * D.l * .6; if (pr > 0 && D.r) v += pr * D.r * .6; }
+      d.push(x + u * ca - v * sa, y + h, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
   }
 };
+Modelos.brillo = .32;
 /* matrices 4×4 en columnas (glTF) */
 function m4trs(t, q, sc) { const [x, y, z, w] = q, x2 = x + x, y2 = y + y, z2 = z + z, xx = x * x2, xy = x * y2, xz = x * z2, yy = y * y2, yz = y * z2, zz = z * z2, wx = w * x2, wy = w * y2, wz = w * z2;
   return [(1 - (yy + zz)) * sc[0], (xy + wz) * sc[0], (xz - wy) * sc[0], 0, (xy - wz) * sc[1], (1 - (xx + zz)) * sc[1], (yz + wx) * sc[1], 0, (xz + wy) * sc[2], (yz - wx) * sc[2], (1 - (xx + yy)) * sc[2], 0, t[0], t[1], t[2], 1]; }

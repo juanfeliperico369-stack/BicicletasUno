@@ -20,8 +20,10 @@ function iniciarInterfaz() {
   b('tierra', '🏝️', 'Tierra', () => { if (G.cuerpo.desembarcar()) G.ui.aviso('🏝️ En tierra: consigue un carro', 1800); });
   b('bajar', '🚪', 'Bajarse', () => G.cuerpo.bajarse('jugador')); b('robar', '🚗', 'Robar', robarCarro); b('montar', '🔑', 'Subirse', () => { if (G.cuerpo.montar(4)) G.carro = Math.max(G.carro, .05); });
   b('foto', '📷', 'Foto', () => Historia.foto()); b('rapido', '⏩', 'Viaje ×3', () => { G.rapido = !G.rapido; G.ui.aviso(G.rapido ? '⏩ El viaje va tres veces más rápido' : '▶ Velocidad normal', 1400, 'rapido'); });
-  b('contratos', '📞', 'Contratos', () => Contratos.menu());
-  for (const k of ['taller', 'metro', 'encicla', 'lancha', 'tierra', 'bajar', 'robar', 'montar', 'foto', 'rapido', 'contratos']) BOT[k].hidden = true;
+  b('contratos', '📞', 'Contratos', () => Contratos.menu()); b('reducir', '✊', 'Reducir', () => Historia.reducir());
+  /* alejar la cámara más allá del tope abre el planeta (de la calle al globo, sin menú) */
+  let topes = [], tGlobo = 0; MC.on('zoomTope', w => { if (w !== 'lejos' || G.globo || G.pausa) return; const t = performance.now(); topes = topes.filter(x => t - x < 1300); topes.push(t); if (topes.length > 7 && t - tGlobo > 4000) { tGlobo = t; topes = []; Globo.abrir(true); } });
+  for (const k of ['taller', 'metro', 'encicla', 'lancha', 'tierra', 'bajar', 'robar', 'montar', 'foto', 'rapido', 'contratos', 'reducir']) BOT[k].hidden = true;
   const AR = $('#artefactos'); AR.hidden = false; AR.querySelectorAll('button').forEach(x => x.onclick = e => { e.stopPropagation(); const k = x.dataset.k; if (G.pausa) return; (Artefactos[k] || (() => 0))(); });
   addEventListener('resize', ajustar);
   $('#gCerrar').onclick = () => Globo.cerrar();
@@ -45,7 +47,7 @@ function tecla(k) {
   if (!G.M || G.pausa) return; const A = Artefactos;
   if (k === 'Digit1') A.dron(); else if (k === 'Digit2') A.cebo(); else if (k === 'Digit3') A.pulso(); else if (k === 'Digit4') A.lente(); else if (k === 'KeyF') A.disparar();
   else if (k === 'KeyM') BOT.mapa.onclick({ stopPropagation() {} }); else if (k === 'KeyG') Globo.abrir(); else if (k === 'KeyC') siguienteCamara(); else if (k === 'Escape') menu();
-  else if (k === 'KeyE') { for (const q of ['foto', 'taller', 'metro', 'lancha', 'tierra', 'robar', 'montar', 'encicla']) if (BOT[q] && !BOT[q].hidden) { BOT[q].onclick({ stopPropagation() {} }); break; } }
+  else if (k === 'KeyE') { for (const q of ['reducir', 'foto', 'taller', 'metro', 'lancha', 'tierra', 'robar', 'montar', 'encicla']) if (BOT[q] && !BOT[q].hidden) { BOT[q].onclick({ stopPropagation() {} }); break; } }
   else if (k === 'KeyX') { if (G.cuerpo.veh.clase !== 'pie') G.cuerpo.bajarse('jugador'); }
 }
 
