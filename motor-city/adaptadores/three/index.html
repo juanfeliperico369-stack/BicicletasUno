@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,">
+<title>Motor City · vista three.js</title>
+<style>html,body,iframe{width:100%;height:100%;margin:0;border:0;display:block}output{position:fixed;inset:0 auto auto 0;background:white;color:black;font:16px system-ui}</style>
+<iframe id="juego" title="Motor City" src="../../dist/motor-city.html"></iframe><output id="estado" role="status">Abriendo el mundo…</output>
+<script type="module">
+const juego = document.querySelector('iframe'), estado = document.querySelector('output');
+try {
+  const THREE = await import('./node_modules/three/build/three.module.js');
+  while (!juego.contentWindow.MCS?.listo) await new Promise(resolve => setTimeout(resolve, 100));
+  const {MC, MCS} = juego.contentWindow;
+  MC.Vistas.registrarThree(THREE);
+  MCS.vistas.usar('three', MCS);
+  estado.hidden = true;
+} catch (err) { estado.textContent = 'No se pudo abrir three.js. ' + err.message; }
+</script></html>

@@ -24,7 +24,7 @@ const Mobiliario = {
     if (!ciclo) for (let d = 20 + r() * 30; d < total - 10; d += 55 + r() * 40) { if (peat || v.k === VIA.CALLE && r() < .35) { poner('banca', d, r() < .5 ? 1 : -1, .2); poner('caneca', d + 2.2, 1, .1); } }
     if (v.k === VIA.AVENIDA || v.k === VIA.CARRERA) for (let d = 60 + r() * 120; d < total - 20; d += 330 + r() * 60) poner('paradero', d, 1, .4);
     if (!ciclo) for (let d = 30 + r() * 60; d < total - 10; d += 110 + r() * 30) if (r() < .5) poner('hidrante', d, r() < .5 ? 1 : -1, -.2);
-    if ((v.k === VIA.CALLE || v.k === VIA.CARRERA || v.k === VIA.AVENIDA) && total > 30) for (const [d, sg] of [[3.5, 1], [total - 3.5, -1]]) { const q = punto(d); L.push({ t: 'cebra', x: q.x, y: q.y, a: q.a, ancho: anc * 2, v: 0 }); }
+    if ((v.k === VIA.CALLE || v.k === VIA.CARRERA || v.k === VIA.AVENIDA) && total > 30) for (const [d, sg] of [[3.5, 1], [total - 3.5, -1]]) { const q = punto(d); if (L.some(o => o.t === 'cebra' && Math.hypot(o.x - q.x, o.y - q.y) < 4)) continue; L.push({ t: 'cebra', x: q.x, y: q.y, a: q.a, ancho: anc * 2, v: 0 }); }
     C.set(i, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
   },
   /* los props en una caja (solo de las vías que pasan por ahí) */

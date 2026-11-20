@@ -88,7 +88,7 @@ async function iniciar() {
       let dir = null, acel = 0, giro = 0;
       if (v.control === 'mundo') { const s = ent.stick, c = Math.cos(camara.yaw), sn = Math.sin(camara.yaw); if (s.m > .08) dir = { x: s.x * c + s.y * sn, y: -s.x * sn + s.y * c, m: s.m }; }
       else { acel = -ent.stick.y || ent.acel; giro = ent.stick.x || ent.giro; }
-      cuerpo.actualizar(dt, { dir, acel, giro, salto: ent.salto, turbo: ent.turbo, correr: ent.correr || ent.stick.m > .92, sube: ent.sube, baja: ent.baja });
+      cuerpo.actualizar(dt, { lluvia: clima.lluvia, dir, acel, giro, salto: ent.salto, turbo: ent.turbo, correr: ent.correr || ent.stick.m > .92, sube: ent.sube, baja: ent.baja });
     }
     camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z });
     /* vida del mundo alrededor de la cámara */

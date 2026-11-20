@@ -1,0 +1,20 @@
+{
+  "vista": "vista_cenital",
+  "veh": "lugar_taller_bici",
+  "musica": "capa_ruido",
+  "agua": "agua_nadar",
+  "comprar": "serv_agua",
+  "casa": "mi_casa",
+  "ciudad": "ciudad",
+  "ajustes": "capa_servicios",
+  "salto": "ctrl_arriba",
+  "turbo": "ctrl_impulso",
+  "accion": "lugar_tienda_barrio",
+  "girar": "ctrl_camara",
+  "lugar": "lugar_taller_carro",
+  "rescate": "ctrl_freno",
+  "montar": "lugar_taller_bici",
+  "tierra": "agua_subir_orilla",
+  "baja": "ctrl_abajo",
+  "sube": "ctrl_arriba"
+}

@@ -1,0 +1,9 @@
+config_version=5
+
+[application]
+config/name="Motor City · Guatapé"
+run/main_scene="res://guatape.tscn"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.47, 0.63, 0.77, 1)

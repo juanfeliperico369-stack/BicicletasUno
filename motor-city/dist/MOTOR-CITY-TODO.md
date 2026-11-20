@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.7.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 2.9.0 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -8,7 +8,7 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.7.0** · 20‑nov‑2026 |
+> | Versión | **Motor City 2.9.0** · 20‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
@@ -64,12 +64,14 @@
 | **2.5** | «Añade la capacidad de poder entrar en el agua» | **Entrar al agua de verdad:**<ul><li>con un vehículo, al empujar hacia el agua honda (o con «🏊 Al agua») uno se baja, el vehículo queda **parqueado en la orilla** y se entra nadando;</li><li>se **bucea** («🤿», o Z/Ctrl) con **aire limitado** (~35 s); sin aire se sube sola;</li><li>el cuerpo tiene pose de **nado** (crol) y de **buceo** (rana);</li><li>bajo el agua todo se tiñe de azul, con rayos de luz y burbujas;</li><li>se sale por la orilla y se **vuelve a subir** al vehículo;</li><li>**lancha**: embarcar en el agua honda más cercana y «⚓ A tierra» (queda amarrada).</li></ul>117 pruebas. |
 | **2.5.1** | «El minijuego es injugable: no hay controles de verdad, no se puede mover nada; hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos?» | **Lo que pasaba:** el personaje sí se movía, pero la cámara estaba tan lejos que medía 3 píxeles y el joystick no se veía. **Lo que se hizo:**<ul><li>**cámara cerca**: unos 45 m en el lado corto de la pantalla;</li><li>**marca del jugador** (anillo y flecha);</li><li>**joystick visible** con guía, y **botones de acción** para el pulgar: ⤒ saltar, ⚡ turbo, y 🔽 🔼 en el agua o en el aire;</li><li>**flecha al objetivo** con la distancia, siempre en la zona libre;</li><li>**tutorial** al empezar;</li><li>**modo libre** por defecto: todo gratis, con los 34 vehículos (pie, bici, moto, carro, bus, avión y lancha);</li><li>menús **Vista** y **Ajustes**;</li><li>el **primer mandado cerca**;</li><li>en computador, flechas o WASD;</li><li>la lista **`docs/PEDIDOS.md`**.</li></ul>**Llegó la entrega de Gemini** (G‑M0…G‑M15) y quedó integrada:<ul><li>`arte/gemini/` y **`MC.Pieles`**, con respaldo procedural en cada gancho;</li><li>en Mandados se usan árboles del trópico, props, rocas, fachadas y muebles, y el selector 🎨 Arte;</li><li>también se corrigió lo válido de su auditoría.</li></ul>118 pruebas, con una nueva que juega en un celular táctil. |
 | **2.6** | «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo. Deja el estilo *family friendly*, pero con más realismo, rudeza y crudeza. Los tutoriales deben ser opcionales. Copia todos los pedidos en los repositorios. Gemini con Antigravity pasa a *hydrogen*: déjale lo fácil. ChatGPT con Codex sigue con *astra*: encárgale lo mejor; GPT genera mejores imágenes.» | **Estilo realista familiar** (`MC.estilo = 'realista'`; el clásico sigue disponible):<ul><li>**`MC.Arboleda`**: los árboles se levantan en la maqueta, la oblicua y la lateral (tronco, ramas, copa con luz y sombra según el sol). Desde arriba tienen volumen. Hay 6 especies del trópico: guayacanes florecidos, ceiba, mango, urapán y monte. Son los mismos con que se choca;</li><li>**`Rudeza`**, horneada en las losas:<ul><li>asfalto con parches, grietas, manchas de aceite y alcantarillas;</li><li>andén de baldosa con bordillo;</li><li>pasto con parches secos;</li><li>tejas de barro en hileras y planchas con humedad;</li><li>grano;</li><li>paleta menos saturada;</li></ul></li><li>los muros con la base sucia y sombra bajo el alero;</li><li>el **tutorial es opcional** (en la portada y en Ajustes);</li><li>el gancho de arte `arbol`;</li><li>`node motor.mjs capturas` y `node motor.mjs revisar-arte`;</li><li>**`TAREAS-IA.md`** en los cuatro repositorios, con el reparto nuevo.</li></ul>119 pruebas. La maqueta de Medellín queda por debajo de 40 ms con la CPU 4× más lenta. |
-| **2.7** (esta) | «Necesito peso y vida en el motor, y que se pueda adaptar a motores más potentes. Estéticas de cómic, manga, anime y novela gráfica. Investiga y aprende de las mejores obras visuales, inspírate en ellas, y recopila y adapta arte de verdad.» Y 14 reels de referencia. | **Estilos gráficos** (`MC.Estilo`, `js/16-estilos.js`). Son 8: realista, clásico, **cómic** (tinta, semitono y onomatopeyas), **manga** (grises, tramado y líneas de velocidad), **anime** (*cel* y cielos de Shinkai), **novela gráfica** (noir: tres tonos y un rojo de acento), **ukiyo-e** y **acuarela**. Cada uno tiene su mapa de color, su tinta, su trama, su sombra, sus árboles y su cielo. Las paletas salen de **obras de dominio público** (Hokusai, Hiroshige, Doré, Winslow Homer, la Comisión Corográfica…; `arte/dominio-publico/`).<br>**Peso y vida** (`MC.Vida`):<ul><li>aterrizaje con aplastamiento, sacudida y polvo;</li><li>cabeceo del vehículo al acelerar y al frenar;</li><li>**hitstop** en los choques;</li><li>bandadas con su sombra, hojas que caen y salpicaduras;</li><li>el viento mece las copas.</li></ul>**Motores potentes** (`MC.Exportar`, `MC.Puente`): el mundo en **glTF 2.0** (validador de Khronos: 0 errores; abierto en three.js), alturas RAW 16 y escena JSON para Godot, Unity, Unreal y Blender; y el estado vivo para otro motor.<br>**Investigación:** `docs/INSPIRACION-VISUAL.md` y `docs/MOTORES-POTENTES.md`.<br>123 pruebas. |
+| **2.7** | «Necesito peso y vida en el motor, y que se pueda adaptar a motores más potentes. Estéticas de cómic, manga, anime y novela gráfica. Investiga y aprende de las mejores obras visuales, inspírate en ellas, y recopila y adapta arte de verdad.» Y 14 reels de referencia. | **Estilos gráficos** (`MC.Estilo`, `js/16-estilos.js`). Son 8: realista, clásico, **cómic** (tinta, semitono y onomatopeyas), **manga** (grises, tramado y líneas de velocidad), **anime** (*cel* y cielos de Shinkai), **novela gráfica** (noir: tres tonos y un rojo de acento), **ukiyo-e** y **acuarela**. Cada uno tiene su mapa de color, su tinta, su trama, su sombra, sus árboles y su cielo. Las paletas salen de **obras de dominio público** (Hokusai, Hiroshige, Doré, Winslow Homer, la Comisión Corográfica…; `arte/dominio-publico/`).<br>**Peso y vida** (`MC.Vida`):<ul><li>aterrizaje con aplastamiento, sacudida y polvo;</li><li>cabeceo del vehículo al acelerar y al frenar;</li><li>**hitstop** en los choques;</li><li>bandadas con su sombra, hojas que caen y salpicaduras;</li><li>el viento mece las copas.</li></ul>**Motores potentes** (`MC.Exportar`, `MC.Puente`): el mundo en **glTF 2.0** (validador de Khronos: 0 errores; abierto en three.js), alturas RAW 16 y escena JSON para Godot, Unity, Unreal y Blender; y el estado vivo para otro motor.<br>**Investigación:** `docs/INSPIRACION-VISUAL.md` y `docs/MOTORES-POTENTES.md`.<br>123 pruebas. |
+| **2.8** | La **entrega maestra de referencias** (los 14 reels, videos y el análisis de ChatGPT y de Gemini: 25 fichas, peso, vida, arquitectura y rendimiento) y «prepara todo». | La entrega quedó en `docs/referencias/` y su resumen en `docs/INSPIRACION-VISUAL.md` §1. Al motor se sumó:<ul><li>**palomas que alzan vuelo** cuando el jugador se acerca (R12);</li><li>**huellas** de llantas y pisadas en arena, tierra, nieve y barro, que con lluvia salen en el pasto (R12 y R19);</li><li>**faros y luces de freno** del jugador (R13 y R19);</li><li>los estilos **vintage**, **CRT** y **visión térmica** (R17 y R22), para 11 en total;</li><li>**accesibilidad**: sacudida y partículas ajustables (§10.3);</li><li>**telemetría en percentiles** (p95 y p99) y **calidad baja, media o alta** en Ajustes (§13 y §14);</li><li>**contratos versionados** (`schemas/` y `MC.Contratos`, §12.3);</li><li>el hitstop también en Mandados.</li></ul>Lo demás quedó repartido: C‑M20, C‑M21, C‑M22, C‑A10, C‑A11, G‑H7 y G‑H9. 125 pruebas. |
+| **2.9** (esta) | Llegaron, en paralelo, las entregas de **Gemini** (G‑H1…G‑H8) y de **ChatGPT y Codex** (2.7.1: arte C‑A, C‑M1, C‑M13, C‑M15…C‑M19). | Todo quedó unido en la rama:<ul><li>los **6 atlas de ChatGPT** (676 cuadros; Vista → Arte → ChatGPT);</li><li>el agua precalculada en los MC4;</li><li>el gancho `textura` y los charcos con lluvia;</li><li>el estilo de **1 bit**;</li><li>la caché de fachadas (la maqueta de Medellín baja a **22 ms** con la CPU 4×);</li><li>los adaptadores de **Godot y three.js** probados;</li><li>los hallazgos de Gemini, corregidos;</li><li>las paletas de las obras colombianas.</li></ul>Son 12 estilos. 132 pruebas. |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **123 en verde** (`node motor.mjs prueba --navegador`): 115 en Node y 8 en Chromium. Una juega Mandados en un celular táctil y otra recorre los 8 estilos. |
+| **Pruebas** | **132 en verde** (`node motor.mjs prueba --navegador`): 117 en Node y 8 en Chromium. Una juega Mandados en un celular táctil y otra recorre los 11 estilos. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -215,6 +217,17 @@ MC.Vida.emitir('polvo', x, y, 8, { vel: 2 }); MC.Vida.onomatopeya(x, y, '¡ZAS!'
 const glb = MC.Exportar.glb(mundo, [x0, y0, x1, y1]);   // glTF 2.0 binario; MC.Exportar.escena(...), .alturas(...), .r16(...)
 socket.send(JSON.stringify(MC.Puente.instantanea(E)));  // el estado vivo para otro motor
 ```
+
+**2.8 · de la entrega maestra:**
+```js
+MC.opciones.sacudida = .4; MC.opciones.particulas = 0;   // accesibilidad: de 0 a 1
+MC.Telemetria.registro(vistas.ms, dt); MC.Telemetria.resumen();   // { fps, cuadro_p50, cuadro_p95, cuadro_p99, dibujo_p95, gpu }
+MC.Contratos.validar(MC.Exportar.escena(M, caja), esquemaEscena);   // [] si cumple schemas/escena.schema.json
+MC.on('fauna', e => …); MC.on('aterriza', e => …);   // las palomas alzaron vuelo; el jugador aterrizó (fuerza 0–1)
+```
+- Las huellas (`MC.Vida.marcas`) duran 4 minutos.
+- Las palomas aparecen en plazas, andenes y parques.
+- Los faros salen solos de noche en el carro y la moto del jugador.
 - `Rudeza` (asfalto, andén, techos y grano) se hornea una vez por losa: no cuesta por cuadro.
 
 ### 5.5 Mi casa y quien vive en ella (Los Sims)
@@ -296,7 +309,7 @@ MC.Terreno.aguaHonda(M, x, y, r, min); MC.Terreno.tierraFirme(M, x, y, r);
 
 ### 5.10 Probar y medir
 ```bash
-node motor.mjs construir && node motor.mjs prueba --navegador     # 123 en verde
+node motor.mjs construir && node motor.mjs prueba --navegador     # 132 en verde
 node motor.mjs exportar guatape                                   # el mundo en glTF, alturas RAW 16 y escena JSON (dist/exportar/)
 node motor.mjs capturas                                           # 14 fotos estándar de Mandados en dist/capturas/
 node motor.mjs revisar-arte arte/chatgpt                          # revisa un paquete de arte contra las reglas
@@ -579,6 +592,8 @@ No hace falta conectar ninguna aplicación.
 - **Gemini con Antigravity** trabaja por ahora con **«hydrogen»** (ya no con «argon»). Le tocan las **tareas fáciles**: revisar, medir, reunir datos y referencias.
 - **ChatGPT con Codex** sigue con **«astra»** y genera mejores imágenes. Le tocan las **tareas fuertes**: el arte realista a escala y el código difícil.
 
+**La guía de referencias (2.8):** `docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`, la entrega del autor con 25 fichas. Tiene el peso, la vida, la arquitectura portable y el rendimiento en móvil. Su resumen, con lo que ya está en el motor, está en `docs/INSPIRACION-VISUAL.md` §1.
+
 **Los estilos (2.7):**
 - **realista familiar** (por defecto);
 - **cómic, manga, anime, novela gráfica, ukiyo-e y acuarela** (`MC.estilo`).
@@ -599,6 +614,21 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 ---
 
 ### Gemini · Antigravity («hydrogen») · tareas fáciles
+> **Entregado el 20‑nov‑2026 (G‑H1…G‑H8):**
+> - `reportes/2026-11-20-gemini-*.md` (capturas, revisor de arte y pruebas);
+> - `arte/referencias/` (6 láminas);
+> - `contenido/datos-gemini.json` (30 datos);
+> - `arte/gemini/iconos-ui.json`;
+> - `arte/dominio-publico/candidatas.md` (40 obras);
+> - la auditoría de los reels en `docs/INSPIRACION-VISUAL.md` §1.1.
+>
+> Claude corrigió lo que encontraron las capturas (botones y zona libre, aviso desfasado, ventanas en casas de un piso, cubiertas flotantes, cebras cruzadas, botón «Comprar» y burbuja de la casa) y sacó las paletas de las obras colombianas.
+>
+> **Lo que sigue para Gemini:**
+> - **G‑H7**: los 13 enlaces y las 7 fichas que solo describe su informe;
+> - **G‑H9**: la medición en un celular real;
+> - **G‑H1 otra vez** sobre la 2.8, con `node motor.mjs capturas`.
+
 Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo anotado para ChatGPT** y no lo hagas.
 
 | Id | Tarea | Cómo | Entrega |
@@ -608,8 +638,9 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H3** | **Láminas de referencia** (Nano Banana) del estilo realista familiar | 6 escenas, sin texto ni logos, vistas como la maqueta 2:1:<br>1. una calle de Guatapé con zócalos de colores;<br>2. una ladera de Medellín con escaleras;<br>3. la orilla del embalse;<br>4. una noche con lluvia y charcos;<br>5. una plaza con guayacanes florecidos;<br>6. un taller de barrio. | `arte/referencias/` (PNG). Son **solo referencia** para ChatGPT y no van al juego. |
 | **G‑H4** | **30 datos verificables** de Guatapé y Medellín (geografía, naturaleza, historia, movilidad) | Una frase corta cada uno, **con su fuente** (enlace). | `contenido/datos-gemini.json`: `[{ "texto", "fuente", "lugar", "tema" }]` |
 | **G‑H5** | **Íconos a botones** | Elige qué ícono de `arte/gemini/iconos.json` va en cada botón de Mandados (Vista, Vehículo, Sonido, Agua, Mi casa, Ciudad, Ajustes, saltar y turbo). | `arte/gemini/iconos-ui.json`: `{ "boton": "icono" }` |
-| **G‑H7** | **Mira los 10 reels de referencia** que no se pudieron leer sin iniciar sesión (lista en `docs/INSPIRACION-VISUAL.md` §1) | Para cada uno: qué se ve, qué estilo es (cómic, manga, anime, realista…), qué da sensación de peso o de vida y qué técnica parece usar. | Una tabla en `docs/INSPIRACION-VISUAL.md` §1, una fila por reel. |
+| **G‑H7** | **Verifica las referencias que faltan**: los 13 enlaces de Instagram que siguen sin verificar y las 7 fichas que solo describe tu informe (R02, R03, R04, R08, R09, R13 y R18 en `docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md` §4) | Para cada uno: qué se ve, qué estilo es (cómic, manga, anime, realista…), qué da sensación de peso o de vida y qué técnica parece usar. | Una tabla en `docs/INSPIRACION-VISUAL.md` §1, una fila por reel. |
 | **G‑H8** | **40 obras de dominio público** para paletas, al menos 10 colombianas (Comisión Corográfica, Epifanio Garay, Ricardo Acevedo Bernal, grabados del *Papel Periódico Ilustrado*…) | Para cada una: el enlace en Wikimedia Commons y su licencia. Solo dominio público. | Una lista en `arte/dominio-publico/candidatas.md`. Claude saca las paletas. |
+| **G‑H9** | **Medición en un celular real**, con el autor | En Mandados, ⚙️ Ajustes → 📈 Telemetría. 5 minutos por vista (cenital, maqueta, lateral) y por calidad (baja, media, alta). Anota el modelo del celular, los fps, el p95 y si se calienta. | Una tabla en `reportes/AAAA-MM-DD-gemini-celular.md`. |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -617,6 +648,18 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 ---
 
 ### ChatGPT · Codex («astra») · tareas fuertes
+> **Entregado el 20‑nov‑2026 (2.7.1, unido en la 2.9):**
+> - el arte C‑A1…C‑A9 (`arte/chatgpt/`);
+> - el código C‑M1, C‑M13 (la maqueta va en 22 ms; la meta de 20 sigue abierta), C‑M15, C‑M16, C‑M17, C‑M18 y C‑M19.
+>
+> **Lo que sigue, en orden:**
+> 1. **C‑M13**: bajar de 20 ms, también en los estilos cómic y 1 bit (hoy 28 y 37 ms en Mandados);
+> 2. **C‑M21**, **C‑M20** y **C‑M22**;
+> 3. **C‑A10** y **C‑A11**;
+> 4. después, C‑M2…C‑M12 y C‑M14.
+>
+> Mandados pesa 8,2 MB con los atlas adentro: conviene un atlas más liviano para celulares, por ejemplo WebP a menor calidad o cargar los atlas por partes.
+
 **Primero el arte** (lo genera ChatGPT) y **después el código** (lo hace Codex). Detalle y reglas en el documento único, §10.
 
 #### Arte (imágenes de ChatGPT), en orden
@@ -642,6 +685,8 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A6** | **Módulos de fachada con desgaste**: 6 zonas × 6 tipos × 3 variantes, de día y de noche (reemplaza G‑M12). | `fachadaModulo` |
 | **C‑A7** | **Animales a escala**: perro criollo, gato, gallinazo, caballo, vaca, iguana, zarigüeya y ardilla. | `animalLado` |
 | **C‑A8** | **Láminas guía de los estilos 2.7**: la misma cuadra de Guatapé en cómic (*Spider‑Verse* y Lichtenstein), manga (tramado y líneas), anime (Shinkai y Ghibli), novela gráfica (noir con un rojo), ukiyo-e (Hokusai) y acuarela (Comisión Corográfica). Solo la técnica, nunca personajes ni marcas. | guía de `MC.Estilo` |
+| **C‑A10** | **Tipografía propia** (R25) para letreros, placas, grafitis y menús: una fuente a partir de letra a mano, con 3 variantes por letra, libre para usar. | interfaz y letreros |
+| **C‑A11** | **Interfaz de libreta** (R23): el mapa de mandados, la lista de misiones y los botones como una libreta dibujada, con *squash and stretch* al tocar. | `MC.UI` (tema) |
 | **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 #### Código (Codex), en orden
@@ -649,9 +694,12 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 |---|---|
 | **C‑M13** | **Maqueta por debajo de 20 ms** con la CPU 4× más lenta, con todo el detalle 2.6: árboles de pie, desgaste y fachadas. Hoy da 30–38 ms aquí y 44,7 ms en la máquina de Codex. |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
-| **C‑M17** | **Lluvia que se ve**: asfalto mojado más oscuro, charcos con reflejo y salpicaduras, sin pasar de 2 ms por cuadro. |
+| **C‑M17** | **Lluvia y atmósfera que se ven** (R02, R03 y R09): asfalto mojado más oscuro, charcos con reflejo y salpicaduras, y niebla de distancia en la maqueta y la lateral, sin pasar de 2 ms por cuadro. |
 | **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |
 | **C‑M18** | **Motores potentes**: abrir `node motor.mjs exportar guatape` en **Godot 4** (y, si se puede, Unity y Unreal); un proyecto mínimo que lea `escena.json` y ponga los árboles con `MultiMeshInstance3D`; y una vista de Motor City con **three.js o WebGPU** registrada en `MC.Vistas` (`docs/MOTORES-POTENTES.md`). |
+| **C‑M20** | **API de construcción por código y pincel de mundo** (R18 *VoxPix* y R10 *Town Brush*): `city.calle(puntos, op)`, `city.edificio(x, y, ancho, fondo, alto, op)`, `city.arbol(x, y, especie)`, `city.luz(x, y)` y un mundo que se arma desde `escena.json`, validado con `schemas/escena.schema.json` (`MC.Contratos.validar`). Con eso, una IA construye barrios enteros por código. |
+| **C‑M21** | **Peso del cuerpo y del vehículo** (R06, R07, R09, R11–R13, R20 y R21): suspensión por rueda con rayos, balanceo de la carrocería, cosas que se rompen (conos, vallas), IK de pies en escalones, animaciones cotidianas (abrir puertas, reparar, sentarse), tablero en primera persona con limpiaparabrisas, taller con rayos X y gráficas de suspensión y agarre en la telemetría. Sin pasar de 2 ms por cuadro, y la física igual en cualquier calidad gráfica. |
+| **C‑M22** | **Guardado y mundo por sectores** (entrega §11 y §12.3): `MC.Guardado`, con `schema_version`, IDs estables y migradores; sectores activos y dormidos que recuerdan los cambios (huellas, objetos rotos, grafitis) al volver. |
 | **C‑M19** | **Estilo de 1 bit con trama estable**, como *Return of the Obra Dinn*: umbral contra una trama de ruido azul que no tiemble al mover la cámara. Y semitono por luminancia en la sombra del cómic. |
 | **C‑M15** | **Terreno**: la capa `agua` precalculada en el MC4, y el carro que se inclina y patina en barro y nieve. |
 | **C‑M9, C‑M12, C‑M10, C‑M14, C‑M11** | Tráfico con propósito, sombras sobre muros, casa con A* y dos habitantes, distritos y políticas, y pueblo orgánico (§10.2). |
@@ -690,11 +738,11 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **2.7.0** · 20‑nov‑2026 · **123 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **2.9.0** · 20‑nov‑2026 · **132 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ### Resumen
-- **Hechos:** 69 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 3 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos:** 76 pedidos ✅.
+- **Hechos, pero falta algo de afuera:** 5 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -805,11 +853,32 @@ Versión **2.7.0** · 20‑nov‑2026 · **123 pruebas en verde** (`node motor.m
 | «Recopila y adapta arte de verdad» | ✅ | Paletas de 10 obras de dominio público en `arte/dominio-publico/` (sin copiar arte con derechos). |
 | Las referencias (14 reels) | 🟡 | Se leyeron 4; los otros 10 piden iniciar sesión. Los describe Gemini (G‑H7). |
 
-### 8. Lo que falta, y a quién le toca
+### 8. La entrega maestra de referencias (2.8, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Sumar la entrega maestra (25 fichas, peso, vida y arquitectura) | ✅ | `docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`, el resumen ficha por ficha en `docs/INSPIRACION-VISUAL.md` §1 y anexo E4 del documento único |
+| «Prepara todo»: lo que se pudo hacer ya en el motor | ✅ | Palomas que huyen, huellas, faros, luces de freno, vintage, CRT, térmico, accesibilidad, telemetría, calidad y contratos (`js/88-vida.js`, `js/90-telemetria.js`, `js/91-contratos.js`, `schemas/`) |
+| «Prepara todo»: lo demás, repartido | ✅ | `TAREAS-IA.md`: C‑M20, C‑M21, C‑M22, C‑A10, C‑A11, G‑H7 y G‑H9 |
+
+### 9. La entrega de Gemini (G‑H1…G‑H8) y sus hallazgos (2.8)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Tareas fáciles de Gemini | ✅ | `reportes/2026-11-20-gemini-*.md`, `arte/referencias/`, `contenido/datos-gemini.json`, `arte/gemini/iconos-ui.json`, `arte/dominio-publico/candidatas.md` y `docs/INSPIRACION-VISUAL.md` §1.1 |
+| Corregir lo que vio Gemini en las capturas | ✅ | Zona libre con margen para los botones (80 %); avisos con clave (la vista nunca queda desfasada); ventanas en las casas de un piso; cubiertas sobre columnas; cebras sin cruzarse; botón «Comprar» y burbuja dentro de la casa; sombra de las copas más pequeña |
+| Paletas de las obras colombianas | 🟡 | 12 de 16 en `arte/dominio-publico/paletas.json` (`col_*`): Comisión Corográfica, Torres Méndez, Garay, Acevedo Bernal y el *Papel Periódico Ilustrado*. Wikimedia frenó las otras 4; se completan en la próxima sesión. |
+
+### 10. La entrega de ChatGPT y Codex (2.7.1), unida en la 2.9
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Arte a escala de ChatGPT (C‑A1…C‑A9) | ✅ | `arte/chatgpt/` (6 atlas, 676 cuadros) y `arte/chatgpt/guias/`; en Mandados: Vista → Arte → ChatGPT |
+| Código de Codex (C‑M1, C‑M13, C‑M15…C‑M19) | ✅ | La auditoría y sus arreglos; caché de fachadas (maqueta a 22 ms); agua en el MC4; `textura` y charcos; adaptadores de Godot y three.js; 1 bit (`ENTREGA-CHATGPT-MOTOR-CITY-2.6.md`) |
+| Maqueta por debajo de 20 ms (C‑M13) | 🟡 | Va en 22 ms con la CPU 4×. Los estilos cómic (28 ms) y 1 bit (37 ms) de Codex cuestan más porque procesan toda la pantalla. |
+
+### 11. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |
-| Arte y código de ChatGPT (C‑A1…C‑A7, C‑M1…C‑M17) | ⏳ | A ChatGPT y Codex («astra»): `TAREAS-IA.md`. |
+| Lo que sigue de ChatGPT y Codex (C‑A10, C‑A11, C‑M2…C‑M12, C‑M14, C‑M20…C‑M22) | ⏳ | A ChatGPT y Codex («astra»): `TAREAS-IA.md`. |
 | Revisión visual, revisor de arte, referencias y datos (G‑H1…G‑H6) | ⏳ | A Gemini («hydrogen»): `TAREAS-IA.md`. |
 | Licencia del motor | ⏳ | Al autor (`docs/NEGOCIO-Y-USOS.md`). |
 | Maqueta por debajo de 40 ms en cualquier máquina (Codex midió 44,7 ms en la suya; aquí da 27–29 ms) | ⏳ | A Claude: caché por región y fachadas horneadas (§9.7). |
@@ -853,7 +922,8 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Controles** | `MC.Controles`, `MC.Manejo` | Teclado, dedo y mando; curvas, esquemas y asistencias. |
 | **Cámara y vistas** | `MC.Camara`, `MC.Vistas`, `MC.Vista2D`, `MC.Raster`, `MC.Losas` | 9 vistas más pixel, 3D por software y resortes. |
 | **Estilos gráficos (2.7)** | `MC.Estilo` | Cómic, manga, anime, novela gráfica, ukiyo-e y acuarela, con tinta, tramas y paletas de obras de dominio público. |
-| **Peso y vida (2.7)** | `MC.Vida` | Aterrizajes con aplastamiento, hitstop, bandadas, hojas, polvo, salpicaduras y viento. |
+| **Peso y vida (2.7–2.8)** | `MC.Vida`, `MC.opciones` | Aterrizajes con aplastamiento, hitstop, bandadas, hojas, polvo, salpicaduras y viento; palomas que alzan vuelo y huellas en el suelo blando; faros y luces de freno. La sacudida y las partículas se pueden bajar (accesibilidad). |
+| **Medir y contratos (2.8)** | `MC.Telemetria`, `MC.Contratos` | Fps y tiempos de cuadro en percentiles; datos versionados con sus esquemas (`schemas/`). |
 | **Motores potentes (2.7)** | `MC.Exportar`, `MC.Puente` | El mundo en glTF y el estado vivo para Godot, Unity, Unreal, Blender o three.js (`docs/MOTORES-POTENTES.md`). |
 | **Estilo realista (2.6)** | `MC.estilo`, `MC.Arboleda`, `MC.Rudeza` | Árboles de pie con volumen; asfalto, andenes, pasto, techos y muros con desgaste. Familiar, pero sin caricatura. `MC.estilo = 'clasico'` para el plano. |
 | **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel`, `MC.Pieles` | Pieles por juego, atlas, animaciones y respaldo procedural. **Paquetes de arte** de las IAs (`arte/gemini/`) instalados en una línea (2.5.1). |
@@ -869,8 +939,8 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 - **moverse:** arrastra en cualquier parte de la mitad izquierda; el joystick aparece donde pongas el dedo. En computador, flechas o WASD;
 - **acciones:** ⤒ saltar y ⚡ turbo, abajo a la derecha. En el agua o en el aire aparecen 🔽 bajar y 🔼 subir;
 - **a dónde ir:** la flecha amarilla con los metros. El mapa pequeño muestra el punto;
-- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega» (opcional; también en la portada), los controles y el rescate;
-- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e o acuarela); **🚲 Vehículo** abre el garaje con los 34 vehículos.
+- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega» (opcional; también en la portada), la sacudida de cámara, las partículas, la calidad, la telemetría, los controles y el rescate;
+- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e, acuarela, vintage, CRT o térmico); **🚲 Vehículo** abre el garaje con los 34 vehículos.
 
 **b) Un juego nuevo con una IA.** Dile a la IA:
 > «Lee `AGENTS.md` del repositorio motorcity y haz un juego de [idea] sobre el mundo [guatape|medellin|generado]».
@@ -936,7 +1006,7 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 123 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 132 pruebas, también en Chromium. |
 | `node motor.mjs exportar ID [--centro x,y --lado m]` | El mundo en glTF 2.0, alturas RAW 16 y escena JSON (Godot, Unity, Unreal, Blender, three.js). |
 | `node motor.mjs capturas [--web]` | 14 fotos estándar de Mandados en `dist/capturas/` (revisión visual). |
 | `node motor.mjs revisar-arte arte/ID` | Revisa un paquete de arte contra las reglas. |
@@ -952,7 +1022,7 @@ new MC.Bucle({
 # ANEXO B. Contrato técnico (`MOTOR.md`)
 
 
-**Versión 2.7.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 2.9.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -1173,6 +1243,8 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.9.0** | 20‑nov‑2026 | Unión de la 2.8 (Claude) con la 2.7.1 de Codex:<ul><li>`arte/chatgpt/` y `vehiculoArriba` en las pieles;</li><li>`textura` en las losas y `Vista2D.charcos`;</li><li>la capa `agua` en el MC4 (`herramientas/precalcular-agua.mjs`);</li><li>el estilo `unbit` (`Estilo.imprimir`, `ruidoAzul`);</li><li>la caché de fachadas en la maqueta;</li><li>`js/90-three.js` y `adaptadores/godot` y `adaptadores/three`.</li></ul>Los faros también salen con el vehículo de piel, y la cubierta sobre columnas pasa por la caché. 132 pruebas. |
+| **2.8.0** | 20‑nov‑2026 | **De la entrega maestra de referencias** (`docs/referencias/`):<ul><li>`MC.Vida`: `palomas` y evento `fauna`, `marcas` (huellas por superficie), `suelo(E, x, y)`, `piso(D)` y `emitir` escalado por `MC.opciones.particulas`;</li><li>`MC.opciones` (`sacudida` y `particulas`; `Camara.sacudir` lo respeta);</li><li>`Vista2D.faros` y las luces de freno del jugador;</li><li>los estilos `vintage` (`tinte`, `final: 'vineta'`), `crt` (`final: 'crt'`) y `termica` (`gradiente`);</li><li>`js/90-telemetria.js` (`MC.Telemetria`: `registro`, `percentil`, `resumen`, `linea`);</li><li>`js/91-contratos.js` (`MC.Contratos.validar`) y `schemas/` (escena, puente y entidad, `schema_version: 1`);</li><li>`schema_version` en `Exportar.escena` y `Puente.instantanea`.</li></ul>125 pruebas. |
 | **2.7.0** | 20‑nov‑2026 | **Estilos gráficos:** `js/16-estilos.js` (`MC.Estilo`: `p`, `rgb`, `col`, `luz`, `trama`, `final`, `lineas`, `lista`; `MC.ESTILOS_GRAF` con 8 estilos de datos; paletas de dominio público en `PAL_DP`). Las losas, los muros, los techos, las sombras (`MC.Sombras` usa `estilo.sombra`), el cielo lateral y los árboles (`Arboleda._copaEstilo`, un horneado por estilo) pasan por el estilo. **Vida:** `js/88-vida.js` (`MC.Vida.emitir`, `onomatopeya`, `impacto`, `dibujar`; bandadas, aterrizaje con `_squash` y evento `aterriza`, frenazos y agua) y `MC.Bucle` con `MC._pausaImpacto` (hitstop). El vehículo cabecea con `C._acel` y las copas se mecen de cerca (`E.viento`). **Exportar:** `js/89-exportar.js` (`MC.Exportar.glb`, `escena`, `alturas`, `r16`; `MC.Puente.instantanea`, `aGltf`) y `node motor.mjs exportar`. 123 pruebas. |
 | **2.6.0** | 20‑nov‑2026 | **Estilo realista familiar:** `MC.estilo` (`'realista'` o `'clasico'`, en la clave de las losas). `js/29-arboleda.js` (`MC.Arboleda.en`, `dePie`, `arriba`, `sombras`, `mip`, `precalentar`; 6 especies, sprites horneados con mipmaps y copia nocturna; los mismos árboles que `Terreno.arbolLosaEn`). Las losas llevan una bandera `2` (sin árboles: van de pie desde z ≥ 3,2, o 4,2 con calidad < 0,9) y la sombra bajo la copa horneada. `MC.Rudeza` (grano, baldosa, `asfalto(g, v, res)`, `techo`, paleta). Humedad en la base de los muros desde z > 3,5. Gancho de arte `arbol(g, t, vista, x, y, pxm, D)` y parte `arbol` en `MC.Pieles` (`arboles: false` deja fuera los árboles del paquete). `node motor.mjs capturas` y `revisar-arte`. 119 pruebas. |
 | **2.5.1** | 19‑nov‑2026 | **Arte de Gemini integrado:** `js/87-pieles.js` (`MC.Pieles.instalar(id, paquete, { partes, pixel, usar })`, `MC.Pieles.icono`, `MC.Pieles.faltan`). La construcción compila `arte/<id>/` dentro del HTML con `"arte": ["<id>"]` en `juego.json`, y suelto en `dist/arte/<id>.js`. Las capas de `MC.Urbe` traen `titulo` y `leyenda`, y hay `ui.leyenda`. **Jugable en el celular:**<ul><li>`ui.joystick(ctl, op)` y `ui.pintarJoystick()`: joystick visible que sigue al dedo, con guía «Arrastra para moverte»;</li><li>`ui.accion({ id, icono, texto, mantener, ctl, al })`: botones redondos para el pulgar, que al mantenerse alimentan `ctl.boton`;</li><li>`ui.barraVisible`;</li><li>`MC.UI.indicador(g, W, H, sx, sy, op)`: el pin o la flecha al objetivo, con `op.rect` para no tapar la interfaz;</li><li>`ui.mision` con el título en una línea y el detalle en dos;</li><li>marca del jugador en las vistas 2D (`E.marcaJugador`);</li><li>`Losas`: resolución hasta 6 y presupuesto de píxeles.</li></ul>Mandados: cámara de unos 45 m en el lado corto, modo libre (todo gratis, 34 vehículos), menú Vista y menú Ajustes, tutorial, y el primer mandado cerca. 118 pruebas. |
@@ -1288,7 +1360,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 123 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 132 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»
@@ -1662,17 +1734,91 @@ El detalle, el código y lo que falta están en `docs/DOCUMENTO-UNICO.md`, §6.
 
 > **La regla:** de las obras con derechos se toman las **técnicas**, nunca imágenes, personajes ni logos. El arte «de verdad» que se recopila y adapta es de **dominio público**: sus paletas están en `arte/dominio-publico/`, con fuente y licencia.
 
-### 1. Las referencias del autor (reels de Instagram, nov‑2026)
-De los 14 enlaces se pudieron leer 4 sin iniciar sesión:
+### 1. Las referencias del autor: la entrega maestra (nov‑2026)
+El autor reunió los 14 reels, los videos y el análisis de ChatGPT y de Gemini en un solo documento: **`docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`**. Tiene:
+- 25 fichas (R01–R25);
+- el registro de los 14 enlaces;
+- el sistema de peso y el de vida;
+- la arquitectura portable y el rendimiento en móvil;
+- el plan por fases.
 
-| Reel | Qué es | Qué tomamos |
-|---|---|---|
-| `De64QQuCsyG` (vandalnet) | Un RPG independiente inspirado en **Dragon Ball** | Estética **anime**: cel shading, contorno, colores vivos y onomatopeyas. → estilo `anime` y `comic`. |
-| `DfJFFGQRG2N` (elreagamingok) | ***Cairn***, un simulador de escalada y supervivencia | **Peso**: el cuerpo pesa, cada apoyo cuenta. → `MC.Vida`: aterrizajes con aplastamiento, sacudida y polvo. |
-| `DfpsKcEKZNx` (patricio.incoders) | Un vehículo tipo *rover* en la web | Vehículos con suspensión que **se sienten**. → cabeceo al acelerar y al frenar. |
-| `Dfkim-zvyVB` (mamon.xx) | Carreras **cinematográficas** tipo Dakar: agua, nubes, contacto de llantas | Para *Motor City* (carreras): cámara de cine, polvo y salpicaduras. → partículas de `MC.Vida` y vista `cine`. |
+**Qué es comprobado y qué no:**
+- 17 fichas se vieron en video.
+- 1 se identificó de forma indirecta (*Town Brush*).
+- 7 dependen solo del informe de Gemini.
+- Las cifras de las fichas («1000 NPC», «0,08 s», «60 FPS en cualquier celular») son **hipótesis del informe, no hechos**.
 
-**Los otros 10 reels** (`Dfaux2QFsay`, `DfvyT1QIFIQ`, `De9tpl3yakv`, `De7qMG8iZdh`, `Dfpb3_vHFPb`, `Dc_s5CPsstT`, `De9ZhRAIOhJ`, `DdwLGJmjjvQ`, `DfRe6pQzWzS` y la publicación `DfDkDxQiQS7`) piden iniciar sesión. Describirlos es la tarea **G‑H7** de Gemini, que puede ver videos.
+#### Las 25 fichas y dónde quedaron en Motor City
+| Ficha | Referencia | Lo que tomamos (la técnica, nunca el arte) | Estado |
+|---|---|---|---|
+| R01 | *The Sound of Fury* | Hitstop, contornos y efectos de tinta | ✅ `MC.Vida.impacto`, estilos `comic` y `novela` |
+| R02 | Arte sci-fi con semitono | Semitono en las sombras, niebla de distancia | ✅ semitono · ⏳ niebla de distancia (C‑M17) |
+| R03 | Calle cyberpunk pictórica | Pixel, neones y reflejos en charcos | ✅ modo pixel · ⏳ reflejos con lluvia (C‑M17) |
+| R04 | *KnoxMap* (OSM → mapa jugable) | Lugares reales craqueados de datos abiertos | ✅ `geo/territorio.py`, `MC.Lugares` e interiores |
+| R05 | Películas en estilo PS2 | *Mid‑poly* con texturas pintadas | ⏳ arte de ChatGPT (C‑A) y Godot (C‑M18) |
+| R06 | *Project Zomboid* en 3.ª persona | Animaciones cotidianas (abrir, reparar, sentarse) | ⏳ Codex (C‑M21) |
+| R07 | *Fable Rover* | Telemetría física; suspensión por rueda | ✅ `MC.Telemetria` · ⏳ suspensión (C‑M21) |
+| R08 | *Mythictale* | Hitstop, polvo, sprites 2D en un mundo 3D | ✅ `MC.Vida`, `MC.Sprites` y onomatopeyas |
+| R09 | *Motor Town* | Física de conducción; inclinación de la carrocería; lluvia | ✅ cabeceo y día/noche · ⏳ balanceo y suspensión (C‑M21) y lluvia (C‑M17) |
+| R10 | *Town Brush* | El toque que despierta el mundo; viento; *pop* al colocar | ✅ viento en las copas y aplastamiento · ⏳ pincel de mundo (C‑M20) |
+| R11 | *Cairn* | Apoyos y esfuerzo legibles | ✅ aterrizaje con peso · ⏳ IK de pies (C‑M21) |
+| R12 | 4×4 en la playa (Godot) | **Fauna que huye**, surcos y cosas que se rompen | ✅ **palomas que alzan vuelo**, **huellas** · ⏳ props rompibles (C‑M21) |
+| R13 | Pixel 3D nocturno | **Faros** y tablero en primera persona | ✅ **faros y luces de freno** · ⏳ tablero (C‑M21) |
+| R14 | *Still The Game* (24 h) | Ventanas y farolas que se encienden, rutinas | ✅ reloj, ventanas, farolas y población |
+| R15 | Ciudades en pixel art | Minijuegos sobre el mismo mapa | ✅ Run en la ciclovía y Mandados · ⏳ carreras de *Motor City* |
+| R16 | *CityRT* | *Cel* con contorno, bajar a caminar, emergencias | ✅ estilos con tinta y modo alcalde · ⏳ emergencias (C‑M14) |
+| R17 | *Miniopolis* | **Filtros intercambiables** | ✅ **11 estilos**, con **vintage** y **CRT** |
+| R18 | *VoxPix* (API para agentes) | Construir barrios por código | ✅ contratos y esquemas (`schemas/`) · ⏳ API de construcción (C‑M20) |
+| R19 | *Still The Game* (nieve) | Huellas y faros de noche | ✅ huellas en nieve, arena, tierra y barro; faros |
+| R20 | *Induction Bench* | Laboratorio de física en vivo | ✅ telemetría en Ajustes · ⏳ gráficas (C‑M21) |
+| R21 | *AngioSim* | Rayos X para inspeccionar | ✅ rayos X de edificios · ⏳ taller con rayos X (C‑M21) |
+| R22 | *FireTrace* | Mapa táctico, dron y **visión térmica** | ✅ vista dron, capas de datos y estilo **térmico** |
+| R23 | *Ballpoint Gambit* | Interfaz de libreta dibujada | ⏳ ChatGPT (C‑A11) |
+| R24 | Haikus en código | Efectos procedurales en Canvas | ✅ todo el motor (Canvas, sin imágenes pesadas) |
+| R25 | Letra a mano → fuente | Tipografía propia | ⏳ ChatGPT (C‑A10) |
+
+**Los 14 enlaces:**
+- **Sin verificar todavía:** 13, que siguen pidiendo iniciar sesión (tarea G‑H7 de Gemini, que puede ver videos).
+- **Identificado de forma indirecta:** el 03 (*Town Brush*).
+
+**Las decisiones de la entrega que el motor adopta:**
+1. Primero credibilidad física, después complejidad visual.
+2. La vida nace de las relaciones: el viento mueve las copas y la lluvia vuelve barro el pasto.
+3. No atar las reglas a los gráficos: la calidad cambia el aspecto, nunca la frenada.
+4. Contratos de datos versionados: `schemas/` y `MC.Contratos`.
+5. Medir en un celular real con percentiles: `MC.Telemetria`.
+
+#### 1.1 Auditoría G‑H7 de Gemini (20‑nov‑2026)
+Gemini revisó los 10 reels que faltaban. Siguen detrás del inicio de sesión de Instagram, así que no se inventó contenido. Lo verificado es esto:
+
+| Reel / publicación | Estado de acceso (2026-11-20) | Qué se ve (solo evidencia verificada) | Estilo | Qué da peso o vida | Técnica observada / uso en Motor City |
+|---|---|---|---|---|---|
+| `DfvyT1QIFIQ` | **Evidencia indirecta verificada** (ficha `R10`, reseña externa en `develog.develrocket.com` documentada en `MOTOR-CITY-ENTREGA-MAESTRA.md`; sin inspección del metraje original) | ***Town Brush***: al pintar con el dedo, el paisaje de un pueblo cobra vida y se transforma | Pixel art (según fuente secundaria) | Respuesta inmediata del entorno al gesto táctil (no se verificó física interna ni código) | «Toque que despierta el mundo»: pintar, reparar o limpiar activa animación, luz y cambios persistentes → referencia para `C‑M11` y `MC.Urbe` |
+| `Dfaux2QFsay` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `De9tpl3yakv` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `De7qMG8iZdh` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `Dfpb3_vHFPb` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `Dc_s5CPsstT` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `De9ZhRAIOhJ` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `DdwLGJmjjvQ` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `DfRe6pQzWzS` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `DfDkDxQiQS7` | Bloqueado por inicio de sesión en Instagram (publicación `?img_index=2` privada/login) | No verificable sin sesión; pendiente asociar la imagen o MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar imagen/MP4 |
+
+##### Técnicas verificadas directamente en los 17 clips MP4 analizados (`MOTOR-CITY-ENTREGA-MAESTRA.md`, sin asignación 1:1 a los 9 shortcodes bloqueados)
+En la entrega maestra del autor se inspeccionaron directamente 17 clips MP4 (`R01`, `R05`, `R06`, `R07`, `R11`, `R12`, `R14–R17`, `R19–R25`). Aunque no existe correspondencia confirmada entre cada `.mp4` y los 9 shortcodes bloqueados arriba, sus aportes verificados respaldan directamente los módulos de Motor City 2.7:
+
+| Fichas con MP4 directo | Qué se vio directamente en los fotogramas | Estilo | Qué da peso o vida | Principio aplicable al motor |
+|---|---|---|---|---|
+| `R01` (*The Sound of Fury*) | Combate musical con trazos de tinta negra, estelas y pausas de impacto | Cómic / novela gráfica oscura con *cel-shading* | *Hitstop*, sacudida de cámara, tela al viento y partículas | Contornos + VFX 2D + *hitstop* (`MC.Vida`, `MC.Estilo` `comic`/`novela`) |
+| `R05`, `R06` (PS2/GTA retro y *Project Zomboid* 3ª persona 3D) | Escenas *mid/low-poly* con texturas pintadas e interacciones cotidianas en interiores 3D | *Low/mid-poly* retro con luz cálida | Retroceso de golpes, gestos cotidianos (reparar, abrir puertas, leer) y sombras largas | Personajes legibles sin hiperrealismo y micro-acciones táctiles en Mi casa y lugares |
+| `R07`, `R12` (*Fable Rover ER-6* y 4×4 en desierto/playa en Godot) | Rover de 6 ruedas con suspensión visible; 4×4 rompiendo cercas y derrapando en arena junto al mar | Maqueta técnica / diorama *top-down* cálido | Compresión de suspensión, vallas rompibles, polvo de llantas, surcos y gaviotas que huyen | Suspensión ligera, *props* reactivos, fauna que reacciona y estelas (`MC.Vida`, `C‑M15`) |
+| `R11` (*Cairn*) | Escalada en roca vertical con cuerdas, apoyos cuidadosos y clima de montaña | Novela gráfica / *ligne claire* 3D | Tensión del apoyo, caídas con peso y viento en tela/nieve | Contactos firmes y peso corporal al saltar/aterrizar (`MC.Vida`) |
+| `R14`, `R19` (*Still The Game*) | Diorama isométrico urbano con ciclo de 24 h, estaciones, farolas, ventanas encendidas, nieve y huellas | Diorama isométrico 3D realista estilizado | Avance pesado en nieve, sombras largas girando y encendido progresivo de ventanas y farolas | Ciclo solar con luces nocturnas en fachadas (`C‑A6`) y huellas/charcos (`C‑M17`, `C‑M15`) |
+| `R15`, `R16`, `R17` (Ciudades pixel art, *CityRT*, *Miniopolis*) | Mapas urbanos isométricos, constructor web *cel-shaded* y edificios modulares con filtros en vivo (*Comic, CRT, Vintage, Vibrant*) | Pixel art isométrico / *cel-shading* / maqueta con filtros | Golpe seco con polvo al encajar plantas, tráfico continuo y cambio instantáneo de atmósfera | Selector de estilos `MC.Estilo` + construcción modular y modo a pie de calle (`C‑A8`, `C‑M19`) |
+| `R20–R25` (Laboratorio 3D, mapa térmico, cuaderno ilustrado, haikus JS, tipografía) | Campos 3D, vista rayos X, propagación de incendio sobre relieve, ajedrez de cuaderno, haikus en Canvas y fuente manuscrita | Técnico 3D / ilustración de cuaderno / Canvas 2D generativo | Inercia en controles, capas de datos sincronizadas, *squash & stretch* 2D y ondas procedurales | Capas de ciudad (`MC.Urbe`), efectos de lluvia/ondas ligeros en Canvas y depurador de físicas |
+
+> **Para cerrar el mapa 1:1:** basta con que el autor indique qué `.mp4` corresponde a cada uno de los 9 shortcodes bloqueados (sin intentar evadir el inicio de sesión de Instagram).
+
 
 ### 2. Peso y vida («game feel»)
 | Fuente | La técnica | En el motor |
@@ -1814,6 +1960,656 @@ socket.send(JSON.stringify(estado));       // al motor que dibuja
 
    Están descritos con sus fuentes en `docs/INSPIRACION-VISUAL.md`.
 4. **Lo que no se lleva:** el guardado de cada juego y su interfaz, que se hacen en el motor de destino.
+
+### Los contratos mínimos de la entrega maestra, y dónde están en Motor City
+La entrega maestra (§12.3) pide separar la simulación del dibujo con contratos estables. Así se corresponden hoy:
+
+| Contrato | En Motor City | Estado |
+|---|---|---|
+| `IInput` | `MC.Controles` y `MC.Manejo` (acciones: mover, saltar, turbo, bajar, subir) | ✅ |
+| `IWorldClock` | `MC.Reloj` y `MC.Bucle` (paso fijo de 1/60 s; hitstop con `MC._pausaImpacto`) | ✅ |
+| `IPhysicsWorld` | `MC.Cuerpo`, `MC.Terreno` (suelo, pendiente, agua, obstáculos) | ✅ · suspensión por rueda en C‑M21 |
+| `IRenderBridge` | `MC.Vistas`, `MC.arte`, `MC.Pieles`, `MC.Estilo` | ✅ · vista three.js o WebGPU en C‑M18 |
+| `IAudioBridge` | `MC.Sonido`, `MC.Paisaje`, `MC.Musica` | ✅ |
+| `IWorldStreamer` | Mundo MC4 por celdas, `MC.Losas` con presupuesto | 🟡 · sectores dormidos en C‑M22 |
+| `IAgentWorld` | `MC.Poblacion`, `MC.Trafico`, `MC.Transporte`, `MC.Urbe` | ✅ |
+| `ISaveSystem` | Cada juego guarda lo suyo | ⏳ `MC.Guardado` versionado en C‑M22 |
+| `IQualityProfile` | `MC.GPU`, `MC.ResDinamica`, `E.calidad`, y en Mandados Ajustes → Calidad (automática, baja, media o alta) | ✅ |
+
+**Esquemas versionados** (`schemas/`, `schema_version: 1`), que comprueba `MC.Contratos.validar(dato, esquema)`:
+- `escena.schema.json`, lo que sale de `MC.Exportar.escena`;
+- `puente.schema.json`, lo que sale de `MC.Puente.instantanea`;
+- `entidad.schema.json`, la entidad persistente que propone la entrega (§16.3).
+
+**La regla de la entrega que el motor cumple:** la calidad gráfica cambia el aspecto, nunca la física. Una frenada mide lo mismo en un celular bajo y en uno alto.
+
+
+---
+
+# ANEXO E4. Entrega maestra de referencias (del autor) (`docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`)
+
+
+**Versión:** 1.0 de unificación · **Fecha:** 19 de noviembre de 2026  
+**Fuentes fusionadas:** `ENTREGA-REELS.md` (análisis anterior) + `Referencias y Arquitectura para Motor City.md` (reporte de Gemini) + videos MP4 adjuntos en ambas entregas.  
+**Producto objetivo:** motor/sistema de videojuego de mundo abierto orientado primero a teléfonos móviles, con arquitectura reutilizable en PC y adaptadores para otros motores.  
+**Naturaleza del archivo:** documento de diseño, investigación visual, especificación preliminar y plan de implementación; no es código ni certificación de rendimiento.
+
+### Índice
+
+1. Resumen ejecutivo y decisiones principales
+2. Método, alcance, fiabilidad y reconciliación
+3. **25 fichas principales de referencia**, tablas completas del reporte de Gemini
+4. Estado de comprobación de las 25 fichas y archivos fuente
+5. **14 enlaces de Instagram**, una fila por enlace y siete columnas solicitadas
+6. Observaciones independientes de los primeros nueve videos
+7. Inspección directa de los 17 clips de referencia identificados
+8. Cinco técnicas prioritarias consolidadas
+9. Identidad artística, paletas y mecánicas transferibles
+10. Sensación de peso: locomoción, vehículos y cámara
+11. Sensación de vida: NPC, tráfico, clima y persistencia
+12. Arquitectura portable y contratos de interfaces
+13. Rendimiento y calidad adaptativa en móvil
+14. Fases de construcción y pruebas de aceptación
+15. Decisiones finales, límites y riesgos
+16. Recomendaciones operativas y protocolo para agentes IA
+17. Fuentes externas y trazabilidad
+
+---
+
+### 1. Resumen ejecutivo
+
+**Tesis:** la percepción de peso surge de contactos, aceleraciones, desaceleraciones, anticipaciones, cambios de apoyo, deformación aparente, sonido y cámara; la percepción de vida surge de cambios autónomos y respuestas del entorno. No se requieren gráficos hiperrealistas, pero sí reglas coherentes, reacciones visibles y controles precisos.
+
+**Directrices fusionadas:**
+
+- **Motor City debe ser primero un simulador de estados y relaciones**, no un renderizador con una ciudad decorativa. Física, horarios, clima, tráfico y persistencia tienen identidad propia.
+- **Primero interacción tangible, luego fidelidad gráfica.** La ciudad reacciona a frenadas, lluvia, peatones, obras, cambios de horario y colisiones; el jugador recibe confirmación visual y sonora.
+- **Compatibilidad por contratos, no promesas de exportación mágica.** Los modelos, datos y reglas de simulación pueden tener formatos portables; cada motor requiere integración, ajuste de física y reimplementación de partes gráficas.
+- **Ciudad de detalle variable:** el entorno cercano se simula; el lejano se resume y se representa; lo descargado conserva cambios persistentes relevantes.
+- **Tres niveles de calidad** para mantener el mismo gameplay en móviles diferentes, con presupuesto de CPU/GPU/RAM/temperatura.
+- **Herramientas para IA:** un editor declarativo validado permite que Claude u otro asistente genere barrios y misiones mediante comandos y esquemas, pero la salida debe pasar pruebas antes de ingresar al proyecto.
+
+**Alcance real de la evidencia:** hay **25 fichas temáticas recopiladas por Gemini**, **14 URLs originales**, **17 fichas con un MP4 observable** y **una ficha adicional (*Town Brush*) identificada de forma indirecta**. Las siete fichas restantes dependen solamente de la descripción del informe de Gemini. Esto **no significa 25 obras o videojuegos distintos**: *Still The Game* figura dos veces por mostrar aspectos diferentes y el material del carrusel incluye un resumen y seis demostraciones individuales. Las 14 URLs **no pueden vincularse automáticamente con las fichas** salvo la relación indirecta documentada para *Town Brush*.
+
+---
+
+### 2. Método, alcance y fiabilidad
+
+**Niveles usados para las afirmaciones:**
+
+- **Directa:** se inspeccionaron fotogramas del MP4 adjunto; permite describir lo visible, **no** verificar motor, código, shaders, físicas o cifras de rendimiento.
+- **Indirecta:** se dispone de una descripción externa que vincula un identificador de Instagram con un proyecto; no sustituye el metraje.
+- **Solo Gemini:** descripción proporcionada por el segundo informe, útil para hipótesis de diseño pero sin video verificable en los adjuntos disponibles.
+- **Propuesta Motor City:** decisión o técnica sugerida por los análisis, que **no afirma** ser exactamente la usada en la referencia.
+
+**Reconciliación:** El reporte de Gemini contiene interpretaciones más específicas (p. ej., *Wave Function Collapse*, ECS de 1000 NPC, sombreado concreto, simuladores en WebGL, formato MIT y generación en 0,08 s) que la inspección visual no puede demostrar. Se conservan en las fichas para no perder sus ideas, pero quedan clasificadas como **hipótesis o afirmaciones del reporte, no como hechos verificados**. El análisis anterior, más conservador, se conserva para describir qué sí se ve y qué no se sabe.
+
+**Por qué hay varias tablas:** las **25 fichas** agrupan temáticamente los materiales de Gemini; las **14 URLs** conservan exactamente el alcance del encargo original; el **registro de clips** documenta el respaldo audiovisual. No sumar tablas como si representaran proyectos distintos.
+
+---
+
+### 3. Referencias de Gemini: 25 fichas completas
+
+> **Procedencia de todas las filas de este apartado:** texto del documento de Gemini, reproducido en detalle y reorganizado en tres grupos. La columna “técnica” describe **lo que Gemini interpreta que parece utilizar**; por sí sola no verifica una implementación. La columna final representa **ideas para Motor City**, no una orden de copiar arte ajeno.
+
+#### Bloque A — Fichas R01–R10
+
+| Enlace o referencia | Qué se ve (1–2 frases) | Estilo visual | Sensación de peso | Sensación de vida | Técnica aparente / hipótesis | Qué copiaríamos como principio para mundo abierto móvil |
+|---|---|---|---|---|---|---|
+| **#1** — *The Sound of Fury* (`@donindies`) | Un pianista desciende a un infierno surrealista peleando con una batuta de director de orquesta y combos musicales que invocan instrumentos y trazos de tinta. Combina exploración en tercera persona con combates rápidos llenos de efectos gráficos. | Cómic / novela gráfica oscura con *cel-shading* y trazos de tinta pintados a mano. | Pausas en el golpe (*hitstop*), sacudida de cámara, enemigos lanzados por el aire, explosiones de tinta negra y estelas pesadas al golpear. | Cabello y gabardina ondeando al viento, bandadas de cuervos negros, flores meciéndose y partículas brillantes flotando. | Sombreado plano (*cel-shading*), contornos negros (*outlines*), VFX 2D integrados en 3D (pentagramas, tinta) e iluminación dramática. | Contornos ligeros en personajes + VFX 2D tipo cómic (baratos en GPU) y *hitstop* de pocos milisegundos para que cualquier impacto se sienta contundente. |
+| **#2** — Arte Sci-Fi (`@joshwhite_artist`) | Secuencia de escenarios monumentales de ciencia ficción: megaestructuras colosales, un explorador frente a un acantilado con nubes iluminadas y combates de naves espaciales. Destaca por su escala épica y texturas impresas. | Novela gráfica / ilustración sci-fi estilizada con tramas de impresión (*halftone*). | Escala masiva lograda por movimiento lento y paralaje entre naves diminutas y estructuras gigantes; estelas densas y destellos de disparo. | Tráfico lejano de naves, neblina atmosférica, nubes iluminadas y partículas/luces parpadeantes en la distancia. | Iluminación atmosférica/volumétrica, filtros de trama (*halftone* / *dithering*), alto contraste y composición por siluetas. | Niebla de distancia con gradiente de color y tramas sutiles en sombras para disimular el recorte de distancia (*draw distance*) en móvil y dar sensación de ciudad gigante. |
+| **#3** — Calle Cyberpunk (`@maciejdrabik_art`) | Una calle urbana nocturna bajo un tren elevado con tráfico constante, multitudes caminando, vapor saliendo del suelo y neones reflejados en el asfalto mojado. Todo está renderizado con una textura pictórica pixelada. | Pictórico impresionista / pixel art 3D cyberpunk (pinceladas cuadradas). | Paso lento, continuo y masivo del tren elevado por encima de la calle; vehículos avanzando con faros que barren el asfalto. | Multitud densa de peatones, tráfico fluido, vapor ascendente, neones vibrantes y reflejos cambiantes en el suelo húmedo. | Post-procesado pictórico/pixelado sobre escena 3D, iluminación nocturna multicolor, partículas de vapor y reflejos planos/SSR en el piso. | Usar baja resolución estilizada (filtro pictórico/pixel) con luces de neón y reflejos simples en charcos: ahorra muchísima batería/GPU y hace que la ciudad se vea viva y densa. |
+| **#4** — *KnoxMap* para *Project Zomboid* (`@luis.gamingg`) | Tutorial de una herramienta que toma cualquier zona real de OpenStreetMap (ej. La Serena, Chile) y genera automáticamente un mapa jugable con calles, edificios, muebles, botín y población de zombis proporcional al mundo real. | Isométrico 2.5D / *low poly* retro. | Escala urbana realista de manzanas, avenidas y edificios densos que obligan a recorrer distancias creíbles. | Generación procedural de interiores, mobiliario y densidad de NPCs/entidades basada en la densidad real de cada edificio. | Ingesta de datos geoespaciales (OpenStreetMap), generación procedural de edificios/interiores y carga modular por zonas (*streaming*). | Un generador procedural de manzanas y calles basado en plantillas o datos reales (OSM) + *chunk streaming* para crear ciudades enormes sin ocupar gigabytes en el teléfono. |
+| **#5** — *Brad Pitt Top 4 Movies* (estilo PS2/GTA) | Recreación de escenas icónicas de 4 películas (*Se7en*, *Once Upon a Time in Hollywood*, *Inglourious Basterds*, *Fight Club*) usando estética de videojuegos clásicos de PS2/GTA con personajes expresivos. | *Mid-poly* retro 3D (estilo PS2 / GTA clásico) con texturas pintadas a mano. | Puñetazo en *Fight Club* con retroceso inmediato del torso y cabeza, conducción estable del auto clásico y lenguaje corporal marcado. | Flashes de cámaras de paparazzi, multitud en el fondo, luz cálida del atardecer con *lens flare* al conducir y expresiones faciales claras. | Modelado de bajos/medios polígonos con texturas difusas pintadas (*hand-painted*), iluminación cinematográfica y animación facial por *blendshapes* o texturas. | Estética *mid-poly* estilo PS2 con texturas bien pintadas: corre a 60 FPS en cualquier celular y permite personajes expresivos sin necesitar shaders hiperrealistas. |
+| **#6** — *Project Zomboid* en 3ª persona 3D | Demostración de un mod que transforma un juego isométrico en una experiencia inmersiva en tercera persona 3D: el personaje camina por casas, repara circuitos sentado en la cama, pelea con zombis, lee libros y mira campos abiertos. | *Low poly* 3D retro con iluminación suave. | Golpes lentos y pesados con armas cuerpo a cuerpo que derriban al enemigo con salpicadura y caída; caminar pausado y deliberado. | Nubes moviéndose, vegetación en el horizonte, ciclo día/noche con luz cálida de atardecer, sombras largas y animaciones cotidianas (leer, atornillar). | Cámara dinámica en tercera persona sobre el hombro, sombras proyectadas en tiempo real y animaciones contextuales de interacción con objetos. | Animaciones cotidianas y táctiles (abrir puertas, reparar, sentarse) + iluminación cálida de hora dorada: elevan enormemente la inmersión incluso con modelos *low poly*. |
+| **#7** — *Fable Rover ER-6* (`@patricio.incoders`) | Aplicación interactiva 3D que simula un rover de exploración de 6 ruedas con paneles solares desplegables, pruebas sobre dunas, rocas y hielo, y un panel lateral con telemetría física en tiempo real. | *Low poly* técnico / estilizado tipo maqueta CAD / LEGO moderno con UI limpia. | Suspensión articulada independiente en las 6 ruedas que se comprime y adapta a cada roca o duna; inclinación realista del chasis. | Despliegue animado de paneles solares y sensores, interacción directa con distintos tipos de suelo y gráficas vivas de telemetría. | Física vehicular por rueda (*raycast* / restricciones de suspensión cinemática), UI técnica en tiempo real y sombreado suave limpio. | Suspensión independiente basada en *raycast* (muy ligera en CPU) para que los autos en Motor City reaccionen a baches, aceras y rampas con peso creíble. |
+| **#8** — *Mythictale* (`@vandal`) | RPG de acción indie inspirado en *Dragon Ball* clásico, mostrando combates rápidos en un torneo con sprites pixel art sobre una arena 3D y exploración en un mapa abierto con bosques y agua. | Pixel art / HD-2D (sprites 2D con contorno negro sobre escenarios 3D). | Pausas de impacto (*hitstop*), destellos al chocar golpes, rebote al ser lanzado contra el suelo, ondas de choque y choque de rayos de energía. | Público animado saltando en las gradas, auras de energía chispeantes, polvo al correr y caer, agua con brillo animado y vegetación. | Animación por cuadros (*frame-by-frame*), técnica HD-2D (sprites en mundo 3D con sombras proyectadas) y partículas de energía. | Usar *billboards* o sprites 2D animados para multitudes lejanas, vegetación o efectos de impacto (polvo, chispas) para llenar la ciudad de vida a costo casi cero. |
+| **#9** — *Motor Town: Behind The Wheel* (`@apknoo.es`) | Simulador de mundo abierto de conducción con gráficos minimalistas pero físicas profundas: taxis, buses, camiones con carga, policía, grúas, bajar del vehículo para empujarlo o cargar gasolina, clima y daños. | *Low poly* minimalista y colorido con sombreado plano/suave. | Balanceo de carrocería (*body roll*), suspensión visible en derrapes y baches, humo de llantas, polvo en tierra, empuje manual del auto y peso físico de la carga. | Tráfico IA, peatones/pasajeros, ciclo día/noche, lluvia con reflejos en el asfalto mojado, nubes estilizadas y misiones dinámicas en la ciudad. | Física vehicular avanzada (curvas de agarre de neumáticos, centro de gravedad, peso de carga), shader de asfalto mojado y mallas *low poly* optimizadas. | **Referencia núcleo para Motor City:** sacrificar polígonos en favor de física de conducción profunda (suspensión, derrape, peso de carga) + ciclo día/noche y lluvia con reflejos. |
+| **#10** — *Townbrush* (`@townbrush`) *(también en Parte 2)* | Constructor de paisajes mediterráneos/toscanos para iPhone y PC donde el usuario "pinta" pueblos, ríos, puentes y árboles que aparecen de forma orgánica con estética acogedora. | Pixel art 3D / acuarela digital pixelada (paleta cálida mediterránea). | Efecto de rebote elástico (*squash & stretch* / *pop*) al colocar o pintar edificios, árboles y caminos sobre el terreno. | Agua brillante con barquitos y patos nadando, humo de chimeneas, cipreses meciéndose al viento, gente y ovejas caminando, lluvia suave y luz dorada. | Renderizado 3D con shader *pixel-perfect*, generación procedural por adyacencia (estilo *Wave Function Collapse*) y animaciones ambientales por *vertex shader*. | Animación de viento en árboles y agua por *vertex shader* (casi gratis en GPU móvil) + detalles ambientales diminutos (humo, pájaros, reflejos de agua) que dan alma al mapa. |
+
+#### Bloque B — Fichas R11–R18
+
+| Enlace o referencia | Qué se ve (1–2 frases) | Estilo visual | Sensación de peso | Sensación de vida | Técnica aparente / hipótesis | Qué copiaríamos como principio para mundo abierto móvil |
+|---|---|---|---|---|---|---|
+| **#11** — *Cairn* (`@elreagamingok`) | Simulador de escalada y supervivencia en montaña donde armas tu propia ruta en paredes verticales, vendando tus dedos, gestionando agua/comida, armando campamento y resistiendo tormentas. | Cómic / novela gráfica 3D estilizada (*cel-shading* suave con contornos tipo *ligne claire*). | Tensión muscular y temblor en las extremidades al sostenerse, mochila cargada, cuerdas tensándose y caídas con física dura de impacto. | Nubes envolviendo picos, tormentas de nieve iluminadas con linterna frontal, arcoíris, viento en cintas y tela, y gestos cotidianos íntimos. | Cinemática inversa (IK) procedural para manos y pies, *cel-shading* con iluminación atmosférica y micro-animaciones táctiles. | IK ligero para que el personaje pise escalones o se apoye en vehículos de forma natural + gestos táctiles breves (cargar combustible, reparar) que humanizan el mundo. |
+| **#12** — Conducción en Desierto/Playa (`@mamon.xx` — Godot) | Un todoterreno 4x4 en cámara cenital atraviesa un desierto rompiendo vallas de madera y derrapa por la arena de una playa junto a olas turquesas mientras ahuyenta gaviotas. | *Low/mid-poly* estilizado con iluminación solar limpia y cálida (diorama *top-down* en Godot). | Destrucción física de cercas de madera al chocar, densas columnas de arena levantadas por las llantas, derrapes con inercia y surcos profundos permanentes en la arena. | Gaviotas que levantan vuelo al acercarse el auto (proyectando sombras), olas con espuma animada en la orilla, pastizales y luz cálida. | Motor Godot 3D, física vehicular con derrape, deformación/huellas en terreno (*render target*), partículas de polvo, shader de agua costera e IA reactiva de aves. | **Imprescindible para Motor City:** fauna reactiva barata (aves/palomas que huyen al pasar el auto), *props* urbanos rompibles (vallas, conos) y surcos persistentes en arena/tierra. |
+| **#13** — Acción/Supervivencia Pixel 3D (`@indie.gamesdaily`) | Tráiler de un juego urbano oscuro post-soviético que alterna sin cortes entre vista isométrica, plano lateral, disparos sobre el hombro y conducción nocturna en primera persona bajo lluvia. | Pixel art 3D / HD-2D oscuro y cinematográfico (baja resolución con iluminación dinámica). | Paso retumbante de un tren por las vías, retroceso seco al disparar, parabrisas que se agrieta al atropellar un enemigo y caídas pesadas al saltar del tren. | Limpiaparabrisas barriendo gotas de lluvia, faros iluminando árboles nocturnos, farolas con halos de luz y partículas, y neblina espesa. | Renderizado 3D con shader de pixelación, iluminación dinámica por píxel, transiciones fluidas entre cámaras (isométrica ↔ 3ª ↔ 1ª persona) y cabina interactiva. | Modo de conducción en primera persona con tablero estilizado, limpiaparabrisas y faros nocturnos + transición suave entre cámara aérea/ciudad y cámara cercana. |
+| **#14** — *Still The Game* — 4 Estaciones y 1000 NPCs (`@still.the.game`) | Avance del juego isométrico mostrando un ciclo rápido de 24 horas (09:33 a 22:59), cambio de invierno nevado a verano soleado, 1000 ciudadanos simulados con memoria/emociones y apagón nocturno con farolas. | Diorama isométrico 3D realista estilizado (arquitectura de Europa del Este). | Autos abriéndose paso con tracción pesada por la nieve, arquitectura masiva y sombras largas que giran de forma continua sobre los bloques de edificios. | Reloj de 24h con luz cambiante, transición de estaciones, rutinas de 1000 ciudadanos, ventanas encendiéndose de noche y conos de luz de farolas entre árboles. | Ciclo solar dinámico con sombras direccionales, simulación masiva de agentes (ECS ligero para 1000 NPCs) y materiales intercambiables por estación. | Simulación de población con ECS ligero (rutinas simples de tráfico/peatones) + ciclo día/noche donde las ventanas y farolas se encienden progresivamente al anochecer. |
+| **#15** — Ciudades Reales en Pixel Art (65 ciudades con IA) | Mapa web interactivo de 65 ciudades reales (Madrid, Barcelona, Valencia, CDMX, Buenos Aires) dibujadas edificio a edificio en pixel art isométrico con IA, con minijuegos de carreras, vuelo y construcción colaborativa. | Pixel art isométrico detallado (estética *SimCity 2000* / ilustración arquitectónica). | Densidad arquitectónica real que da escala tangible a las avenidas, derrapes simples en curvas y sensación de altura al sobrevolar edificios con sombra proyectada. | Construcción colaborativa en vivo (jugadores levantando la Sagrada Familia piedra a piedra), carreras con rivales y nubes deslizándose sobre el mapa. | Generación asistida por IA de *tilesets* isométricos desde datos geográficos reales, motor web 2D de zoom fluido y capas multijugador ligeras. | Minijuegos rápidos integrados sobre el mismo mapa abierto (carreras por avenidas, vuelos de reconocimiento, retos de ubicación o eventos comunitarios). |
+| **#16** — *CityRT* (`cityrt.com/play/`) | Constructor y simulador de ciudades 3D que corre directo en el navegador: trazas calles, levantas edificios con andamios, gestionas asesores con personalidad y desatas desastres (tornados, zombis). | Cómic / *cel-shading* 3D con contornos negros (*outlines*) y paleta europea cálida. | Edificios en obra con andamios y polvo, ruinas y calles destrozadas tras desastres, y humo denso saliendo de fábricas. | Tráfico continuo de autos/trenes, peatones, asesores con diálogos reactivos, sombras de nubes, botones para "caminar" a pie de calle y emergencias dinámicas. | WebGL / Three.js optimizado para navegador, *cel-shading* con detección de bordes, interfaz de tarjetas limpia y cámara orbital + peatonal. | Estética *cel-shading* con contornos finos corriendo fluida en web/móvil + botón para bajar a caminar por las calles que creaste + eventos de desastre/emergencia. |
+| **#17** — *Miniopolis* (Edificios Modulares + Filtros) | Herramienta de construcción arquitectónica donde levantas un edificio piso por piso con bloques brillantes, añades balcones, ascensores y antenas, y alternas filtros visuales en vivo (*Comic, CRT, Vintage, Vibrant*). | Realista estilizado / maqueta arquitectónica con filtros de post-procesado intercambiables. | Golpe seco con nube de polvo, chispas y micro-vibración cada vez que encaja una planta o módulo; sombras arquitectónicas sólidas. | Peatones diminutos caminando por la acera, agua del puerto con reflejos, árboles y transformación total de la atmósfera al cambiar de filtro. | Construcción modular por grilla/extrusión (*snapping* inteligente), partículas de impacto al construir y **pipeline de post-procesado intercambiable** (LUTs, *outlines*, CRT). | **Oro para el editor de Motor City:** construcción modular rápida de edificios + **selector de filtros visuales en tiempo real** (*Comic, Vintage, CRT, Vibrant*) para cambiar el estilo del motor con un clic. |
+| **#18** — *VoxPix* (`github.com/andyeswong/voxpix`) | Herramienta *open-source* (MIT) "hecha por agentes para agentes" donde una IA genera un paisaje completo (río, lago, castillo, casas, árboles, 11 antorchas) en 0.08 s vía código (`vp.box`, `vp.water`, `vp.light`), convirtiendo vóxeles en pixel art. | Vóxel 3D renderizado a pixel art isométrico con iluminación dinámica. | Bloques volumétricos con relieve sólido y sombras proyectadas nítidas que definen el terreno. | Transición suave de día a noche donde se encienden 11 luces cálidas (antorchas y ventanas) iluminando dinámicamente el mapa pixelado. | API programática de vóxeles controlada por agentes IA (sin ratón), proyección ortográfica a pixel art e iluminación dinámica por vóxel. | **Pieza clave para desarrollar con Claude:** exponer una API en código limpio (`city.road()`, `city.building()`, `city.light()`) para que **Claude genere y modifique barrios enteros en milisegundos**. |
+
+#### Bloque C — Fichas R19–R25
+
+| Enlace o referencia | Qué se ve (1–2 frases) | Estilo visual | Sensación de peso | Sensación de vida | Técnica aparente / hipótesis | Qué copiaríamos como principio para mundo abierto móvil |
+|---|---|---|---|---|---|---|
+| **#19** — *Still The Game* — Evolución Nieve (`@still.the.game`) | Comparativa "cómo empezó vs. cómo está ahora": pasa de un todoterreno *low-poly* probando suspensión sobre una rampa de madera a una ciudad invernal nevada con faros, derrapes y huellas profundas. | Realista estilizado / diorama isométrico 3D atmosférico. | Suspensión muy visible al cruzar listones de madera, derrape con inercia en la nieve, frenado pesado y surcos/huellas permanentes hundidos por las llantas. | Copos de nieve cayendo en 3D, faros del auto proyectando sombras largas a través de árboles secos y nubes de nieve levantadas al acelerar. | Física de suspensión, deformación/huellas en nieve (*render texture* dinámico), iluminación direccional de faros y partículas de nieve. | Huellas dinámicas en barro/nieve/arena mediante *render target* ligero + faros con sombras dinámicas de noche para conducción táctil. |
+| **#20** — *Induction Bench* — Campo Magnético 3D (`@sebaslopezinnova`) | Simulador científico 3D hecho con Claude Opus 5.5 donde el usuario mueve un imán por una bobina, cambia materiales y ve en vivo las líneas de campo magnético, un osciloscopio y un galvanómetro. | Técnico / científico 3D oscuro (estética de laboratorio de precisión con UI clara). | Inercia y amortiguación (*damping*) al arrastrar/soltar el imán; deformación elástica continua de las líneas de flujo. | Líneas de campo 3D que se reacomodan al instante, agujas analógicas vibrando, gráficas del osciloscopio en vivo y brillo reactivo. | Simulación física en tiempo real (WebGL/Three.js), renderizado de líneas/vectores 3D, shaders por intensidad y telemetría sincronizada. | Un **laboratorio/depurador de físicas en vivo** integrado en Motor City (gráficas de suspensión, agarre y torque) para calibrar el peso de los vehículos con Claude. |
+| **#21** — *AngioSim* — Corazón 3D (`@sebaslopezinnova`) | Herramienta médica 3D hecha con Claude que muestra un corazón translúcido con arterias coloreadas junto a una vista simulada de rayos X (angiograma) sincronizada con un brazo robótico virtual. | Visualización médica 3D translúcida + monocromo de rayos X (UI oscura profesional). | Rotación suave y precisa de la cámara y del brazo mecánico sincronizado; contraste de densidad en la proyección radiográfica. | Profundidad anatómica por transparencias y capas iluminadas; respuesta simultánea de múltiples vistas (3D + 2D proyectado). | Renderizado *multi-viewport* sincronizado, shaders de transparencia/Fresnel (*X-ray*) y proyección ortográfica en tiempo real. | Vista de "rayos X" o corte transparente en el taller mecánico de Motor City para inspeccionar motor, chasis, suspensión y daños internos en 3D. |
+| **#22** — *FireTrace* — Mapa de Incendios 3D (`@sebaslopezinnova`) | Plataforma 3D hecha con Claude Opus 5.5 que simula la propagación de incendios forestales sobre terreno topográfico real, con línea de tiempo, cámara de drones en vivo y visión térmica/infrarroja. | Cartografía 3D realista / táctico satelital con capas de datos y visión térmica (FLIR). | Relieve topográfico real con escala masiva, avance implacable del frente de fuego y movimiento aéreo estable de los drones. | Propagación dinámica del incendio por el terreno, columnas de humo, íconos de unidades, telemetría climática y cambio entre cámara óptica y térmica. | Terreno 3D con mapas de elevación (DEM), simulación de propagación por grilla/celdas, *picture-in-picture* (dron) y shader térmico. | Un **mapa táctico 3D / modo dron** para explorar la ciudad, monitorear eventos dinámicos (incendios, tráfico, clima) y activar visión térmica o nocturna. |
+| **#23** — *Ballpoint Gambit* — Ajedrez en Cuaderno (`@sebaslopezinnova`) | Juego de ajedrez hecho con Claude Sonnet 5.5 dibujado a mano con lápices de colores y bolígrafo sobre papel de cuaderno, donde cada pieza es una criatura con personalidad y los márgenes tienen garabatos animados. | Ilustración a mano / cuaderno escolar (lápiz de color, bolígrafo y textura de papel). | Saltos con arco y pequeño impacto al caer la pieza; empujones cómicos y micro-pausas cuando una criatura captura a otra. | Criaturas que parpadean, se asustan o celebran; garabatos vivos en los márgenes (ballena, sol, luna, notas) y trazos que se dibujan solos. | Animación 2D procedural y por cuadros (*spritesheets*), *squash & stretch* por código y textura de papel superpuesta (*multiply*). | Aplicar una **UI diegética tipo libreta/mapa de papel** (libreta de misiones, planos dibujados a mano, *squash & stretch* en botones) para dar personalidad propia. |
+| **#24** — 20 Haikus Animados en Código (`@sebaslopezinnova`) | Colección de 20 poemas cortos (haikus) generados con Claude Haiku 5.5, cada uno acompañado por una micro-animación artística minimalista dibujada 100% con código JavaScript (lluvia, ondas, nieve, tranvía, brasas). | Minimalista / arte generativo 2D (tinta, papel, grabado y diagramas poéticos). | Ritmo pausado de las ondas en el agua, pliegue del papel y tensión de las cuerdas vibrantes. | Gotas formando círculos concéntricos, copos cayendo, líneas de tranvía avanzando, brasas parpadeando y vegetación creciendo proceduralmente. | Arte generativo puro en **HTML5 Canvas / JavaScript** (sin assets pesados), ruido procedural y física ligera de ondas/partículas. | Usar **Canvas / shaders procedurales ligeros** para efectos atmosféricos de pantalla (gotas en el parabrisas, ondas en charcos, pantallas de carga) con peso casi nulo en MB. |
+| **#25** — Apuntes a Mano → Fuente Tipográfica (`@sebaslopezinnova`) | Flujo automatizado con Claude Opus 5.5 que toma 120 fotos de apuntes a mano, limpia el papel, vectoriza los trazos conservando imperfecciones y genera una fuente real (`.TTF`/`.WOFF2`) con 3 variantes por letra. | Tipografía artesanal / diseño editorial limpio sobre papel rayado. | Trazos vectoriales limpios con grosor orgánico consistente y variaciones sutiles al escribir. | Animación de escritura letra por letra y alternancia automática de variantes (*OpenType alternates*) para que el texto parezca vivo. | Visión por computadora + vectorización de esqueletos de trazo (*stroke path*) + compilación automática de fuentes con *kerning* y glifos múltiples. | Crear una **tipografía propia** para carteles de la ciudad, matrículas, grafitis y menús de Motor City usando pipelines con Claude, evitando fuentes genéricas. |
+
+---
+
+### 4. Trazabilidad y grado de comprobación de las 25 fichas
+
+Los nombres de los MP4 se abrevian por legibilidad; se refieren a archivos aportados por el usuario, no a URLs de Instagram confirmadas. Los muestreos visuales de los **nueve archivos nuevos** se realizaron alrededor del 20 %, 50 % y 80 % de su duración; los anteriores ya se habían muestreado en el informe inicial.
+
+| Ficha | Nivel de evidencia | Archivo/indicio asociado | Límite de la comprobación |
+|---|---|---|---|
+| R01 | **Directa** | `La batuta de un director de orquesta…(.mp4` | Secuencias artísticas del juego; origen y algoritmos por confirmar |
+| R02 | **Solo Gemini** | `No se aportó un clip identificable` | Descripción de Gemini no contrastada con video accesible |
+| R03 | **Solo Gemini** | `No se aportó un clip identificable` | Descripción de Gemini no contrastada con video accesible |
+| R04 | **Solo Gemini** | `No se aportó un clip identificable` | Descripción de Gemini no contrastada con video accesible |
+| R05 | **Directa** | `Brad Pitt_s 4 best movies…mp4` | Recreaciones estilizadas; no se infiere el pipeline exacto |
+| R06 | **Directa** | `Project Zomboid nunca había sido tan inmersivo…mp4` | Personaje e interiores 3D; naturaleza exacta del mod por confirmar |
+| R07 | **Directa** | `VID_20261119_162639_381.mp4` | Rover 3D y controles; técnica vehicular interna no comprobada |
+| R08 | **Solo Gemini** | `No se aportó un clip identificable` | Descripción de Gemini no contrastada con video accesible |
+| R09 | **Solo Gemini** | `No se aportó un clip identificable` | Descripción de Gemini no contrastada con video accesible |
+| R10 | **Indirecta** | `Instagram DfvyT1QIFIQ; descripción independiente en informe original` | Contenido atribuido a Town Brush; no se inspeccionó el reel original |
+| R11 | **Directa** | `VID_20261119_162235_462.mp4` | Escalada y montaña, inspección en entrega anterior |
+| R12 | **Directa** | `VID_20261119_162206_705.mp4` | Todoterreno sobre arena y costa; agua y huellas visibles |
+| R13 | **Solo Gemini** | `No se aportó un clip identificable` | Descripción de Gemini no contrastada con video accesible |
+| R14 | **Directa** | `VID_20261119_162228_194.mp4` | Barrio, estaciones y horario; número/memoria de NPC no auditados |
+| R15 | **Directa** | `¿Sabrías decir en qué esquina de tu ciudad estás…mp4` | Mapas urbanos estilizados y elementos de interfaz |
+| R16 | **Directa** | `Now u can build your own city(MP4).mp4` | Constructor de ciudad y ajustes; tecnología web concreta por confirmar |
+| R17 | **Directa** | `Using a variety of block types… Miniopolis…mp4` | Edificios modulares y comparación de filtros en pantalla |
+| R18 | **Solo Gemini** | `No se aportó un clip identificable` | Descripción de Gemini no contrastada con video accesible |
+| R19 | **Directa** | `VID_20261119_162439_208.mp4` | Comparativa del prototipo con escena nevada |
+| R20 | **Directa** | `Claude compartió…_4.mp4` | Líneas de campo magnético 3D y controles |
+| R21 | **Directa** | `Claude compartió…_5.mp4` | Visualización de corazón y paneles médicos |
+| R22 | **Directa** | `Claude compartió…_1.mp4` | Mapa de incendio sobre relieve y vistas de datos |
+| R23 | **Directa** | `Claude compartió…_2.mp4` | Ajedrez ilustrado y movimientos por cuadros |
+| R24 | **Directa** | `Claude compartió…_6.mp4` | Animaciones de haikus y composiciones gráficas |
+| R25 | **Directa** | `Claude compartió…_3.mp4` | Ejemplos de fuente manuscrita y proceso visual |
+
+**Resultado del cruce:** 17 fichas con clips directos, 1 ficha sustentada indirectamente, 7 fichas descritas solo por Gemini. **No** se han verificado cifras como “1000 NPC con memoria”, “en 0,08 segundos” o “60 FPS en cualquier celular”.
+
+---
+
+### 5. Registro íntegro de los 14 enlaces originales de Instagram
+
+> Esta tabla conserva las **siete columnas solicitadas**. Por el bloqueo/limitación de acceso directo a los reels, trece entradas se registran honestamente como no verificadas. El único vínculo atribuible de forma secundaria es R10 / *Town Brush* con el enlace 03. **No se asignan los demás archivos MP4 a las URLs por coincidencias temáticas solamente.**
+
+| Enlace | Qué se ve (1–2 frases) | Estilo visual | Qué da peso | Qué da vida | Técnica que parece usar | Qué copiaríamos para móvil |
+|---|---|---|---|---|---|---|
+| [01 — De64QQuCsyG](https://www.instagram.com/reel/De64QQuCsyG/) | **No verificable:** el contenido visual del reel no pudo inspeccionarse. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** documentar un efecto concreto después de ver el reel. |
+| [02 — Dfaux2QFsay](https://www.instagram.com/reel/Dfaux2QFsay/) | **No verificable:** no hay imágenes accesibles del contenido. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** extraer una mecánica o recurso visual comprobado. |
+| [03 — DfvyT1QIFIQ](https://www.instagram.com/reel/DfvyT1QIFIQ/) | **Confirmación indirecta:** muestra *Town Brush*, un juego de pixel art donde, al pintar con el dedo, el paisaje de un pueblo cobra vida. La fuente secundaria lo describe como un proyecto del autor del reel; no se vio el metraje original. | **Pixel art** (según fuente secundaria) | No hay prueba suficiente de inercia, colisiones o rebotes; el gesto de pintar se asocia a una transformación del entorno. | El escenario responde a la acción del usuario: elementos del pueblo se activan o se transforman. | **Hipótesis:** pincel como entrada, cambios de estado y animaciones ligadas a zonas pintadas; los algoritmos exactos no se conocen. | «Toque que despierta el mundo»: al tocar, limpiar, regar o reparar una superficie, activar animación, luz, sonido y cambios persistentes sin exigir gráficos costosos. |
+| [04 — De9tpl3yakv](https://www.instagram.com/reel/De9tpl3yakv/) | **No verificable:** Instagram no permitió ver la escena. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** seleccionar una técnica solo tras revisar imágenes. |
+| [05 — DfJFFGQRG2N](https://www.instagram.com/reel/DfJFFGQRG2N/) | **No verificable:** no se recuperaron fotogramas ni una descripción independiente identificable. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** registrar interacción y coste potencial en móvil. |
+| [06 — DfpsKcEKZNx](https://www.instagram.com/reel/DfpsKcEKZNx/) | **No verificable:** contenido audiovisual inaccesible. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** decidir después si aporta física, vida ambiental o lenguaje visual. |
+| [07 — Dfkim-zvyVB](https://www.instagram.com/reel/Dfkim-zvyVB/) | **No verificable:** no se pudo observar el reel. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** evaluar una sola aportación reutilizable al motor. |
+| [08 — De7qMG8iZdh](https://www.instagram.com/reel/De7qMG8iZdh/) | **No verificable:** no existe material visual comprobable en esta revisión. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** verificar antes de proponer un efecto. |
+| [09 — Dfpb3_vHFPb](https://www.instagram.com/reel/Dfpb3_vHFPb/) | **No verificable:** sin acceso al video original. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** aislar técnica y adaptar su calidad por dispositivo. |
+| [10 — Dc_s5CPsstT](https://www.instagram.com/reel/Dc_s5CPsstT/) | **No verificable:** no hay evidencia directa de su escena. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** registrar controles, cámara y respuesta si aparecen. |
+| [11 — De9ZhRAIOhJ](https://www.instagram.com/reel/De9ZhRAIOhJ/) | **No verificable:** imágenes no accesibles para inspección. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** evaluar iluminación, animación o simulación según lo que muestre. |
+| [12 — DdwLGJmjjvQ](https://www.instagram.com/reel/DdwLGJmjjvQ/) | **No verificable:** no pudo establecerse qué ocurre en pantalla. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** observar primero y después asignar prioridad técnica. |
+| [13 — DfRe6pQzWzS](https://www.instagram.com/reel/DfRe6pQzWzS/) | **No verificable:** faltan fotogramas verificables. | No determinable | No evaluable | No evaluable | No inferible sin fotogramas | **Pendiente:** elegir una solución reproducible a partir de evidencia. |
+| [14 — DfDkDxQiQS7, imagen 2](https://www.instagram.com/p/DfDkDxQiQS7/?img_index=2) | **No verificable:** se trata de una publicación con parámetro de imagen 2; ese fotograma no fue accesible. | No determinable | No evaluable | No evaluable | No inferible sin la imagen | **Pendiente:** extraer principios de composición o dirección artística cuando se aporte la diapositiva. |
+
+**URL n.º 3 — fuente de identificación indirecta:** [reseña/revisión externa del proyecto Town Brush](https://develog.develrocket.com/@wnqudgus1234/쇼츠-뜯어보기-공유가-좋아요의-66배-어제-오늘-뜬-쇼츠-10개), mencionada en el primer análisis. Vincula el identificador `DfvyT1QIFIQ` al proyecto; **no** evidencia su física o código.
+
+---
+
+### 6. Análisis audiovisual anterior: nueve MP4 (seis proyectos, dos juegos y un collage)
+
+> Se mantiene el análisis independiente original. Los clips A1–A6 corresponden a los proyectos R20–R25; B1 equivale a R11, B2 a R19. El montaje A0 no es un noveno proyecto. **No se vinculan aquí a ninguna URL de Instagram.**
+
+| Archivo anterior | Qué se ve | Estilo | Peso observado | Vida observada | Técnica aparente | Aplicación sugerida |
+|---|---|---|---|---|---|---|
+| **A0.** Compilado `…¿Cu(M.mp4` (13,6 s) | Montaje de seis proyectos: incendio sobre mapa, ajedrez dibujado, fuente manuscrita, campos magnéticos, corazón 3D y poesía animada. | Mixto: visualización 3D, dibujo manual, interfaz y gráfico generativo. | No permite medir física de personajes; es un montaje promocional. | Variedad de escenarios que responden a datos o interacción. | Montaje con capturas, animación de interfaces y contenidos 2D/3D. | Referencia de **amplitud de sistemas**, no de física o «peso». |
+| **A1.** Compilado `…¿Cu_1.mp4` (60 s) | Visor de terreno montañoso con frente de incendio, rutas y vistas superpuestas. | Terreno 3D de apariencia satelital, interfaz técnica. | Escala y relieve sugieren volumen; no se muestran golpes ni inercia del jugador. | El incendio cambia de posición/estado sobre el mapa. | Cámara sobre terreno, capas de datos, color para representar calor e interfaz temporal. | Mundo por **sectores y capas**; propagación local de eventos (fuego, humo, alertas) según reglas y presupuesto. |
+| **A2.** Compilado `…¿Cu_2.mp4` (60 s) | Ajedrez con tablero cuadriculado y figuras ilustradas como recortes dibujados a mano, cambiando de posición. | Ilustración de cuaderno; cómic infantil/dibujo manual. | Movimientos discretos; no se observan impactos de fuerza relevantes. | Personajes/piezas cambian de posición; escenario reconocible y expresivo. | Sprites 2D, composición por capas, estados de turno y transición de posiciones. | **Siluetas legibles, identidad gráfica** y animaciones económicas para mapas, interiores y minijuegos. |
+| **A3.** Compilado `…¿Cu_3.mp4` (60 s) | Conversión de páginas manuscritas en caracteres tipográficos, con etapas de segmentación y comparación. | Interfaz editorial, papel y tinta. | No aplica física corporal. | Una intervención humana se vuelve un sistema reutilizable. | Análisis y trazado de glifos; esta es una descripción visual, no una verificación del método. | Herramienta de autoría para **grafitis, letreros y diarios del mundo**, separada del motor de juego. |
+| **A4.** Compilado `…¿Cu_4.mp4` (60 s) | Visualizador 3D de imanes y líneas de campo que se reorganizan al cambiar su configuración, con paneles de controles y gráficas. | Científico/abstracto 3D, neón sobre fondo oscuro. | El cambio de trayectoria sugiere fuerzas, pero no demuestra un motor de cuerpos rígidos. | El sistema reacciona continuamente a parámetros. | Trazado de líneas/curvas, integración de parámetros en tiempo real y cámara orbital. | **Campos de influencia** para viento, corrientes, tráfico y partículas; usar aproximaciones, no resolver campos físicos completos en cada móvil. |
+| **A5.** Compilado `…¿Cu_5.mp4` (12,4 s) | Anatomía del corazón en 3D y vasos coloreados, junto con imagen angiográfica, curvas e interfaz de inspección. | Visualización médica 3D y paneles de diagnóstico. | Volumen y estratificación; sin interacción de choque observable. | Exploración de estructuras interrelacionadas. | Modelo 3D, transparencia/capas de color y vistas sincronizadas. | **Inspección por capas y resaltado contextual** de vehículos, edificios u objetos interactivos. |
+| **A6.** Compilado `…¿Cu_6.mp4` (40 s) | Poemas breves sobre fondos cambiantes con patrones de líneas, círculos, nieve, textura y composición ilustrada. | Gráfico generativo, acuarela aparente en algunas escenas, trazos y collage. | No hay física de locomoción. | Movimiento de líneas y texturas; cada composición produce ambiente. | Animación procedural 2D por líneas, fondos con textura y transiciones. | **Vida ambiental barata**: hojas, reflejos, letreros, polvo y viento representados con pocas capas procedurales. |
+| **B1.** `VID_20261119_162235_462.mp4` (39,6 s) | Montañismo en paredes rocosas, pasos elevados y acantilados; se ven escaladas, cuerdas y un personaje que se sujeta a la pared. | 3D estilizado con aspecto de ilustración/novela gráfica ligera. | Riesgo de caída, agarres, suspensión, distancia vertical y reajustes del cuerpo frente a la pared. **No** puede inferirse el algoritmo exacto de física del video. | Nubes, bruma, relieve y cambios de encuadre aportan atmósfera. | Animación de escalada, detección de superficies, cámara en tercera persona y uso visible de cuerda. | **Contactos confiables, esfuerzo legible y cámara con tensión controlada**; aplicarlo a correr, trepar, aterrizar y colisionar. |
+| **B2.** `VID_20261119_162439_208.mp4` (14,8 s) | Comparación «How it started vs how it's now»: vehículo y rampa de un prototipo sencillo frente a una calle isométrica nevada con automóviles, árboles, edificios y huellas. | 3D estilizado, cámara isométrica; rasgos low poly, iluminación más atmosférica en la versión posterior. | Vehículo y rampa dan contexto de apoyo y desplazamiento; **no** bastan para certificar suspensión ni masas simuladas. | Nieve en movimiento, ambiente urbano, sombras, huellas/marcas y paleta de invierno. | Cámara elevada fija/isométrica, composición modular, partículas y materiales o texturas de nieve. | **Progresión de fidelidad** sin rehacer la simulación: mismo mundo lógico, distinta densidad de clima, iluminación, detalle y efectos. |
+
+**Conclusiones de los adjuntos anteriores:** (1) «peso» depende del cuerpo apoyándose y resistiendo a su entorno, no del detalle poligonal; (2) «vida» se percibe cuando el mundo cambia y responde; (3) un mismo diseño puede aspirar a distintas capas visuales, aunque las imágenes no prueban que sus versiones compartan código.
+
+---
+
+### 7. Inspección directa: mapa de 17 fichas con evidencia en videos
+
+Esta tabla resume **lo observado** de los videos identificados de ambas tandas; cumple una función diferente a las fichas interpretativas de Gemini. No pretende certificar que la técnica inferida esté implementada en el proyecto original.
+
+| Ficha / proyecto | Imagen observada | Estilo aproximado | Peso o vida que comunica | Técnica reutilizable propuesta |
+|---|---|---|---|---|
+| R01 · The Sound of Fury | Combates estilizados, trazos gráficos, coreografía | 3D | Recuperación tras impacto y diseño sonoro sincronizados | Contornos y VFX, sin asumir shaders concretos |
+| R05 · Brad Pitt PS2/GTA recreado | Escenas de películas reproducidas con estética retro | 2D/3D estilizado | Gestos, conducción y movimiento de personajes | Geometría moderada + texturas expresivas |
+| R06 · Project Zomboid — 3ª persona | Interiores domésticos, interacción y personaje en 3ª persona | 3D | Animaciones cotidianas, pausas y presencia corporal | Interacciones contextuales y cámara cercana |
+| R07 · Rover interactivo 3D | Rover simulado y vista de ingeniería interactiva | 3D | Movimiento relativo de ruedas/chasis si se valida temporalmente | Panel de telemetría con parámetros ajustables |
+| R11 · Cairn / escalada | Persona trepando montaña con cuerdas y agarres | 3D | Apoyos y exposición de altura | Contactos/IK y esfuerzo legible |
+| R12 · 4x4 en playa/desierto | Vehículo recorriendo arena y franja de agua | 3D | Estelas y huellas; no comprueba deformación de geometría | Material de suelo + decals y partículas |
+| R14 · Still The Game — ciclo diario | Edificios, peatones y cambios de hora/luz | 3D | Tiempo urbano y ritmos de la ciudad | Ciclo de día y horarios agregados para NPC |
+| R15 · Ciudades en pixel art | Calles reconocibles representadas con pixel art | 3D | Escala de barrios y minijuegos | Capas cartográficas y tiles isométricos |
+| R16 · Constructor de ciudad | Interfaz de creación de ciudad y objetos | 3D | Colocación y evolución visible de sectores | Generación modular, APIs de edición |
+| R17 · Miniopolis — editor y filtros | Construcción de edificio y filtros comparados | 3D | Respuesta al colocar piezas y cambio de aspecto | Piezas modulares y perfiles visuales |
+| R19 · Still The Game — nieve | Rampa de prototipo frente a entorno invernal | 3D | Ruedas apoyadas y huellas aparentes; no prueba motor físico | Efectos de contacto + ajuste por perfil gráfico |
+| R20 · Induction Bench | Campos magnéticos y gráficas variables | 3D | Respuesta continua de sistema a parámetros | Depurador visual de estados y fuerzas |
+| R21 · AngioSim | Corazón, vasos y paneles diagnósticos | 3D | Sin impactos, pero lectura volumétrica | Inspector de vehículo por capas |
+| R22 · FireTrace | Terreno, incendios y controles técnicos | 3D | Propagación visible sobre mapa | Simulación por sectores, minimapa táctico |
+| R23 · Ballpoint Gambit | Tablero y criaturas dibujadas | 2D/ilustración | Movimiento y reacción de piezas | UI diegética y sprites animados |
+| R24 · Haikus animados | Poemas con movimiento de líneas y partículas | 2D/ilustración | Ritmo ambiental suave | Efectos atmosféricos 2D de bajo costo |
+| R25 · Tipografía manuscrita | Carácteres de escritura creados desde apuntes | 2D/ilustración | Variación de trazos, no interacción física | Identidad tipográfica original para UI y letreros |
+
+**Auditoría del material nuevo:** se confirmaron visualmente las fichas R01, R05, R06, R07, R12, R14, R15, R16 y R17 con los nueve MP4 añadidos en la segunda entrega. La observación directa **mejora la identificación de escenas**; no confirma los algoritmos específicos sugeridos por Gemini. Si se desean mediciones de aceleración, huellas o rebotes, se requeriría examen cuadro a cuadro con secuencias dedicadas y acceso al juego o su código.
+
+---
+
+### 8. Las cinco técnicas más útiles: convergencia de ambas evaluaciones
+
+La priorización combina **frecuencia cualitativa de rasgos visibles**, relevancia para el objetivo «peso + vida» y viabilidad móvil. No es un conteo estadístico de mecanismos ocultos.
+
+| Orden | Técnica unificada | Peso que añade | Vida que añade | Implementación mínima móvil | Escalado futuro |
+|---|---|---|---|---|---|
+| **1** | **Física perceptual y feedback táctil**: inercia, contactos, suspensión, hitstop, recuperación, sonido, polvo | Aceleraciones, apoyo de ruedas/pies, retroceso y choques legibles | Objetos y personajes reaccionan al jugador | Actualización fija, 1 vehículo + 1 personaje + perfiles de materiales, desaceleración coherente, cámaras suaves | Simulaciones de neumáticos avanzadas, destrucción controlada, ragdoll cuando proceda |
+| **2** | **Ambiente dinámico coherente**: día/noche, clima, viento, materiales mojados, luces reactivas | Faros y sombras comunican escala y velocidad | Peatones, luz, vegetación, clima y audio cambian juntos | Reloj global, estados de clima, viento simple, luces selectivas, 3–5 eventos locales | Estaciones, microclimas, iluminación y audio espacial más completos |
+| **3** | **Animaciones contextuales y estados reactivos**: IK, gestos cotidianos, sprites, objetos funcionales | Agarrar, subir, frenar, caer, reparar y activar tienen peso | NPC no parecen estatuas; señales e interfaces responden | Máquina de estados y pequeñas transiciones con pooling | IK completo, animación procedural y comportamiento más rico |
+| **4** | **Estilo artístico escalable**: low/mid-poly, cel-shading selectivo, pixel 3D, niebla, filtros | Lectura de masas, escala y profundidad | Densidad aparente de ciudad y atmósfera | Siluetas claras, sombras baratas y filtros opcionales | Materiales y reflejos superiores con el mismo estado lógico |
+| **5** | **Simulación desacoplada y streaming**: agentes por niveles, sectores, APIs declarativas | El soporte y el contacto siguen reglas pese a cambios de cámara/calidad | Persistencia, tráfico, población y eventos fuera de pantalla | Sectores + estado resumido + entradas/salidas versionadas | Motor externo, ECS o técnicas de mayor escala según perfiles |
+
+**Referencias cruzadas:** R01/R11/R12/R19 enfatizan contacto y sensación de masa; R14/R19/R22 enfatizan vida ambiental; R17/R23/R24/R25 muestran filtros o lenguajes gráficos; R15/R16/R18 aportan ideas para edición y mundo modular; R20/R21 aportan visualización y depuración. En R18 las afirmaciones técnicas dependen de Gemini, no de un video inspeccionado.
+
+#### 8.1. Priorización original del análisis anterior (conservada)
+
+> **Muestra efectiva:** seis demostraciones del compilado + los dos clips de juegos = **ocho propuestas visuales diferentes**, con observación por fotogramas; los recuentos orientativos no equivalen a auditoría de código ni a frecuencias de los 14 enlaces de Instagram. **Más repetida** y **más importante para el juego** son criterios distintos.
+
+| Prioridad | Técnica / patrón visual | Presencia cualitativa en la muestra | Por qué importa en móvil | Implementación propuesta |
+|---|---|---|---|---|
+| **1** | **Estados visibles que evolucionan en el tiempo** | Muy frecuente: incendio, ajedrez, campos, corazón, poesía, escalada, calle nevada. | Genera sensación de mundo activo sin exigir más polígonos. | Máquina de estados, transiciones y eventos programados; diferenciar simulación cerca del jugador y decorado lejano. |
+| **2** | **Respuesta visual inmediata a una acción o cambio de parámetro** | Frecuente: trazos que transforman el pueblo (*Town Brush*, fuente externa), posiciones, capas médicas, campos y acciones del personaje. | El jugador interpreta que sus decisiones tienen efecto. | Entrada → cambio de estado → animación → sonido → persistencia opcional. Presupuesto de reacción perceptual bajo. |
+| **3** | **Cámara y lectura de profundidad/escala** | Frecuente: terreno 3D, imanes, corazón 3D, escalada y escena urbana isométrica. | Permite sentir distancias y alturas sin gráficos hiperrealistas. | Cámara con límites, seguimiento amortiguado, horizonte legible, parallax y controles consistentes. |
+| **4** | **Capas ambientales animadas y efectos de atmósfera** | Presente en varios: fuego, poemas, nieve, cielo/bruma de montaña. | La vida ambiental puede costar menos que añadir más NPC con IA completa. | Partículas por zonas, shader simple de viento, niebla por distancia, audio ambiental y variación temporal. |
+| **5** | **Contacto, suspensión y movimiento dependiente de la superficie** | Evidencia concentrada en la escalada; indicios de interacción vehículo–suelo en el clip urbano. No es el patrón más frecuente, **pero sí el más importante para lograr «peso»**. | Una caída o un aterrizaje creíbles afectan más que duplicar calidad de texturas. | Controlador cinemático robusto o cuerpo rígido calibrado, reacción de cámara, animación por contactos y audio/materiales. |
+
+**Importante:** no hay base para afirmar que «sacudida de cámara», «ragdoll», «física de suspensión real», «sombras en tiempo real» o «animación cuadro a cuadro» estén implementadas en determinados videos. Son técnicas **propuestas**, no observadas de manera concluyente.
+
+#### 8.2. Priorización original de Gemini (conservada como comparación)
+
+> Términos como “raycast”, “render targets”, “ECS” y “vertex shaders” son técnicas **propuestas o atribuidas por Gemini**. No se confirmaron por inspección de metraje.
+
+1. **Estética Estilizada de Bajo Costo Poligonal + Filtros Intercambiables (*Low/Mid-Poly*, *Cel-Shading*, Pixel 3D):**
+   * *Dónde aparece:* *Motor Town*, *CityRT*, *Miniopolis*, *Townbrush*, *Indie Pixel 3D*, *Cairn*, *The Sound of Fury*, *VoxPix*.
+   * *Por qué es clave:* Libera GPU en celulares para mantener 60 FPS estables y permite lograr looks memorables (cómic, diorama, pixel 3D, vintage) mediante *shaders* ligeros de post-procesado.
+2. **Física de Suspensión, Inercia, Destrucción Ligera y Deformación de Suelo (*Raycast* + *Body Roll* + Huellas):**
+   * *Dónde aparece:* *Motor Town*, *Fable Rover*, *Still The Game*, *Godot Desierto/Playa*.
+   * *Por qué es clave:* Nada comunica mejor el **peso** que ver la carrocería inclinarse, las ruedas absorber baches, los props romperse al impacto y las llantas dejar surcos reales en nieve o arena.
+3. **Micro-Feedback Táctil y Animación Reactiva (*Hitstop*, *Squash & Stretch*, Polvo, IK y Animaciones Cotidianas):**
+   * *Dónde aparece:* *Miniopolis*, *Cairn*, *The Sound of Fury*, *Mythictale*, *Townbrush*, *Ballpoint Gambit*, *PZ 3D*.
+   * *Por qué es clave:* Polvo al encajar un bloque, nieve levantada al acelerar, micro-pausas de golpe y gestos pequeños (vendarse, atornillar, empujar) hacen que cada acción se sienta física y viva.
+4. **Iluminación Dinámica Atmosférica y Vida Ambiental Barata (Ciclo 24h, Faros, Fauna Reactiva y *Vertex Shaders*):**
+   * *Dónde aparece:* *Still The Game*, *Godot Playa*, *Indie Pixel 3D*, *Maciej Drabik*, *Townbrush*, *VoxPix*, *Haikus JS*.
+   * *Por qué es clave:* Sombras largas girando con el sol, faros cortando la niebla nocturna, ventanas que se encienden, aves que huyen y viento moviendo árboles por *vertex shader* llenan la ciudad de **vida** a muy bajo costo.
+5. **Simulación Desacoplada, Generación Procedural y Control por API/Datos (ECS + *Chunk Streaming* + Agentes):**
+   * *Dónde aparece:* *VoxPix*, *KnoxMap*, *Still The Game* (1000 NPCs), *FireTrace*, *Induction Bench*, *Ciudades Pixel*.
+   * *Por qué es clave:* Separar los datos y la simulación del renderizador permite cargar ciudades enormes por *chunks* en móvil, simular cientos de agentes en segundo plano y dejar que **Claude construya y ajuste el mundo por código**.
+
+---
+
+### 9. Lenguaje visual, paletas y mecánicas del informe de Gemini
+
+La siguiente selección conserva las cinco paletas y los seis grupos de mecánicas del informe original. Son **opciones de dirección artística y diseño**, no requisitos simultáneos: aplicar todos los filtros o sistemas a la vez sobrecargaría una primera versión.
+
+#### A. Paletas de Color Recomendadas por Atmósfera
+* **Día Urbano / Simulación Limpia** *(Motor Town, Fable Rover, CityRT)*:
+  * Asfalto cálido `#3D4046` · Cielo claro `#6BB5E8` · Vegetación viva `#5C9E4F` · Acentos vehiculares `#F2B705` y `#E85D2A`.
+* **Costa / Desierto Solar** *(Godot Arena/Playa, Townbrush)*:
+  * Arena dorada `#E6B86A` · Agua turquesa `#38A3A5` · Espuma `#F7F9F9` · Sombra cálida `#8C6A43`.
+* **Invierno Urbano / Nieve Nocturna** *(Still The Game, Cairn)*:
+  * Nieve en sombra `#5A657A` · Azul invernal profundo `#1D2433` · Luz cálida de faros `#FFF3D1` · Silueta de árboles/chasis `#14171F`.
+* **Noche Urbana / Post-Soviético / Cyberpunk** *(Maciej Drabik, Indie Pixel 3D)*:
+  * Fondo nocturno `#11151C` · Niebla de vapor `#2A3B4C` · Neón cian `#00E5FF` · Luz de freno/peligro `#FF2E63` · Farola ámbar `#FFAE42`.
+* **Editorial / Táctico / Laboratorio** *(FireTrace, Induction Bench, Ballpoint Gambit)*:
+  * Papel crema `#F4EFE6` · Tinta azul bolígrafo `#24489B` · Alerta térmica `#FF5722` · Visión infrarroja `#2B0B57` → `#FFEA00`.
+
+#### B. Mecánicas, Sistemas y Herramientas Clave a Integrar
+1. **Conducción con Física Tangible, Superficies Reactivas y Props Rompibles (*Motor Town* + *Fable Rover* + *Still The Game* + *Godot Playa*):**
+   * Suspensión independiente por rueda (*raycast*), inclinación de chasis (*body roll*), tracción diferenciada por terreno (asfalto seco/mojado, arena, barro, nieve), **huellas persistentes** en el piso y destrucción física de cercas, conos y señales.
+2. **Cambio Fluido de Cámaras + Modo "Bajar del Auto" (*Indie Pixel 3D* + *CityRT* + *PZ 3D* + *Cairn*):**
+   * Alternar sin cortes entre vista aérea/isométrica de ciudad, tercera persona, primera persona al volante (con tablero y limpiaparabrisas) y caminar a pie con micro-animaciones táctiles (empujar auto, cargar gasolina, reparar).
+3. **Ciudad Viva: Estaciones, Ciclo 24h, Fauna y Eventos Dinámicos (*Still The Game* + *Godot Playa* + *FireTrace* + *CityRT*):**
+   * Ciclo solar de 24 horas con encendido progresivo de ventanas y farolas, cambio de clima/estaciones, aves que huyen al acercarse un vehículo y emergencias urbanas (incendios propagables, tormentas) monitoreables en un **mapa táctico 3D / modo dron**.
+4. **Construcción Modular + Filtros Visuales Intercambiables (*Miniopolis* + *KnoxMap* + *Townbrush*):**
+   * Generador modular de edificios y manzanas (con *feedback* de polvo e impacto al colocar piezas) + un **selector de filtros de post-procesado en tiempo real** (*Default, Comic, Vintage, CRT, Pixel 3D*) para cambiar la identidad visual del motor sin rehacer los modelos.
+5. **Taller "Rayos X" + Laboratorio de Telemetría (*AngioSim* + *Induction Bench*):**
+   * Modo translúcido/rayos X en el taller para inspeccionar piezas internas y daños del auto, más un panel de depuración en vivo (gráficas de suspensión, agarre y torque) para afinar físicas junto a Claude.
+6. **API "Hecha para Agentes" + Identidad Artesanal (*VoxPix* + *Ballpoint Gambit* + *Handwriting Font*):**
+   * Exponer comandos declarativos en código para que **Claude pueda construir barrios, carreteras, luces y misiones directamente por script**, combinando UI diegética tipo libreta y tipografía propia generada a medida.
+
+#### 9.1. Identidad propia recomendada
+
+- **Base visual coherente:** proporciones estilizadas realistas, materiales claros, iluminación horaria creíble, siluetas de vehículo legibles, señales de tráfico y UI funcional. Esta base puede adoptar un filtro cómic/pixel/retro sin sustituir toda la dirección artística.
+- **Color al servicio de información:** luces de freno, intermitentes, semáforos y alertas se distinguen incluso si un filtro estilístico cambia la paleta; ofrecer ajustes de accesibilidad.
+- **Evitar la copia literal:** los videos son referencias de principios técnicos, no licencias para reproducir personajes, diseños, escenas o nombres de otros creadores.
+- **Paquetes y filtros:** los estilos “Default / Comic / Vintage / CRT / Pixel” son un **sistema configurable**, no la promesa de que todos mantendrán idéntico rendimiento; medir su coste real.
+
+---
+
+### 10. Sistema central: cómo lograr «peso» real y perceptible
+
+**Principio:** el peso percibido es una combinación de **dinámica de movimiento + contactos + animación + cámara + sonido**. Aumentar la gravedad por sí solo puede hacer que los controles sean desagradables.
+
+#### 10.1. Movimiento de personajes
+
+- **Aceleración y desaceleración graduales:** distinguir caminar, correr, frenar y girar; curva ajustable por tipo de personaje, superficie y habilidad.
+- **Velocidad angular y giro del cuerpo:** pies y torso no rotan instantáneamente en cambios bruscos; anticipación moderada, sin sacrificar respuesta al toque.
+- **Contacto con el suelo:** comprobación de pendiente, adherencia, límite de escalón, deslizamiento y sonido por superficie.
+- **Saltos/caídas:** altura y duración calculadas; al aterrizar, absorber el impacto con rodillas, desplazamiento leve de cámara y sonido proporcional a la velocidad vertical.
+- **Agarres y trepada (si son mecánicas del juego):** definir puntos válidos, alcance, estados de cansancio opcionales y transición clara al suelo. Evitar movimientos que atraviesen paredes.
+- **Golpes:** animación de anticipación, contacto definido, impulso/cambio de velocidad razonable y reacción proporcional. Pausa de impacto muy breve **solo cuando encaje**; en móviles no debe bloquear la entrada ni repetirse excesivamente.
+
+#### 10.2. Vehículos y objetos
+
+- Parámetros por tipo: masa, aceleración, frenado, fricción, agarre lateral, velocidad de giro y recuperación después de choque.
+- Para vehículos: modelo simplificado de suspensión/rueda y balanceo visual; **física real completa solo si la jugabilidad la exige**.
+- Objetos: evitar que todos reboten igual; usar materiales con coeficientes distintos, umbrales de reposo y deformación visual controlada.
+- Audio: frenada, impacto, roce, pasos, arrastre y reverberación por tipo de entorno. El sonido informa de la fuerza del contacto.
+
+#### 10.3. Cámara que comunica masa sin marear
+
+- **Seguimiento amortiguado** en vez de «pegar» la cámara al personaje.
+- Reacción a aterrizajes e impactos mediante *impulsos cortos*, con intensidad limitada y opción de reducir/desactivar sacudidas.
+- Ajustar distancia/altura según velocidad, obstáculo, interiores y conducción.
+- Evitar vibración constante, desenfoque agresivo y cambios abruptos de FOV. Dar prioridad a accesibilidad y legibilidad en pantallas pequeñas.
+
+#### 10.4. Regla de calibración
+
+> Si el movimiento parece pesado pero los controles se sienten lentos, Motor City está fallando. La meta es **respuesta inmediata del control, acompañada de inercia y recuperación convincentes**.
+
+### 11. Sistema de «vida» para un mundo abierto móvil
+
+#### 11.1. Capas de simulación
+
+| Capa | Comportamiento cercano al jugador | Comportamiento lejano / fuera de pantalla | Ejemplo visible |
+|---|---|---|---|
+| **Ambiental** | Hojas, polvo, viento, lluvia y charcos activos | Estado climático y semillas de efectos, sin partículas individuales | El viento mueve vegetación próxima y un letrero oscila. |
+| **Población** | NPC con percepción local, navegación y animación | Horarios y ubicaciones agregadas, sin simular cada paso | Gente cambia de ruta, reacciona al clima y retoma rutinas. |
+| **Tránsito** | Vehículos con evitación de colisiones y comportamiento vial | Flujo abstracto por vías/sectores | Semáforos, frenadas y rutas coherentes. |
+| **Audio** | Emisores 3D en función de distancia y obstáculos, según soporte | Ambientes mezclados por zona, sin cientos de emisores | Rumor de avenida, pájaros en parque, lluvia bajo techo. |
+| **Estado de mundo** | Objetos rotos, reparados, recogidos o activados | Registro resumido de cambios persistentes | Un grafiti o vehículo permanece cambiado después de volver. |
+| **Tiempo y luz** | Transiciones coherentes de sombra/luz en puntos prioritarios | Parámetros globales de ciclo diario | Cambio progresivo de tonalidad, farolas al anochecer. |
+
+#### 11.2. Sistema de eventos de vida
+
+Formato conceptual: `Estímulo → regla → cambio lógico → representación audiovisual`.
+
+- `VientoFuerte` → el sistema asigna intensidad por distrito → vegetación y telas próximas se inclinan → partículas/audios se ajustan.
+- `VehiculoFrena` → se desacelera su estado físico → balanceo visual y luces de freno → sonido según velocidad y pavimento.
+- `PersonaSaluda` → IA cambia a interacción → animación breve, mirada hacia jugador → respuesta si el jugador se acerca.
+- `EmpiezaLluvia` → humedad por zona → reflejos y salpicaduras cercanos → los NPC modifican rutas o velocidad.
+- `ChoqueLeve` → impacto materializado → pequeña deformación/ruido/reacción de peatones cercanos → estado persistente solo si la mecánica lo requiere.
+
+**Economía de simulación:** *el mundo debe recordar más de lo que necesita calcular*. Un NPC lejano puede ser una posición estimada y una agenda; se convierte en un agente completo al entrar en una región activa.
+
+### 12. Arquitectura del Motor City: crecer sin quedar atrapado en un único motor
+
+#### 12.1. Recomendación estructural
+
+**Diseñar Motor City como núcleo de simulación + contrato de datos + adaptadores de representación.** El núcleo no debe depender de las clases particulares de Unity, Godot, Unreal o de un navegador.
+
+```text
+                   PROYECTO MOTOR CITY
+                           │
+                  Reglas y contratos de datos
+              (mundo, objetos, acciones, guardado)
+                           │
+       ┌───────────────────┴───────────────────┐
+       │       Núcleo de simulación            │
+       │ IA / tráfico / clima / estados /      │
+       │ economía del mundo / eventos          │
+       └───────────────────┬───────────────────┘
+                           │
+           Interfaces estables y versionadas
+          (Input, Time, Physics, Render, Audio,
+           Navigation, Storage, AssetLoader)
+                           │
+       ┌───────────────────┼────────────────────┐
+       │                   │                    │
+  Adaptador web       Adaptador Godot      Adaptador Unity
+  WebGL/WebGPU*       GDExtension/etc.     Native plug-in/etc.
+       │                   │                    │
+    Móvil web          Android/iOS            Android/iOS
+                           │
+                    Adaptador Unreal
+                  C++ plug-in / integración
+                           │
+                      PC / móvil**
+
+* WebGPU solo donde el dispositivo/navegador lo soporte;
+  mantener vía compatible o degradación de funciones.
+** Según las capacidades y restricciones de la plataforma objetivo.
+```
+
+**Advertencia crítica:** no existe un botón para «convertir un juego web en Unreal». Los contratos, datos, modelos y parte del código de simulación **pueden ser portables**; el renderizador, shaders, físicas específicas, UI, controles, compilación y herramientas del editor normalmente requieren adaptaciones o reimplementación.
+
+#### 12.2. Dos rutas factibles
+
+| Ruta | Cuándo elegirla | Ventaja | Coste/riesgo |
+|---|---|---|---|
+| **A. Prototipo rápido con TypeScript y APIs web** | Si la prioridad es probar jugabilidad en PC/Android/iOS mediante navegador, con distribución offline que lo permita. | Iteración visual rápida; primera *vertical slice* barata. | La lógica dependiente de librerías web **no** se puede portar automáticamente a Unity/Unreal. Exigir datos y reglas independientes desde el día uno. |
+| **B. Núcleo portable en C++ o Rust + interfaces C y compilación WASM donde proceda** | Si desde el inicio es requisito reutilizar simulación en web, PC y motores externos. | Mayor control y potencial reutilización de la lógica de juego. | Integración considerablemente más compleja; cada motor requiere adaptadores, pruebas ABI y empaquetado específico. |
+
+**Decisión sugerida:** primero **contratos y un prototipo funcional**; escoger B si la portabilidad del código de simulación está realmente en la ruta de producto y existe capacidad para mantener varias integraciones. Si no, comenzar con A y asegurar *portabilidad de datos*, que es más realista que prometer portabilidad completa de código.
+
+#### 12.3. Contratos mínimos obligatorios
+
+```text
+IInput          -> acciones abstractas: mover, mirar, saltar, conducir, interactuar
+IWorldClock     -> hora simulada, delta fijo, velocidad del tiempo
+IPhysicsWorld   -> consultas de suelo, raycasts, contactos, aplicación de fuerzas
+IRenderBridge   -> representar entidad, LOD, materiales, luces, partículas
+IAudioBridge    -> eventos espaciales, mezclas ambientales, efectos por material
+IWorldStreamer  -> sectores, distancias, carga/descarga, estado persistente
+IAgentWorld     -> población, tránsito, navegación y decisiones agregadas
+ISaveSystem     -> guardado versionado y restauración de sectores
+IQualityProfile -> efectos compatibles, presupuesto térmico, CPU, GPU y memoria
+```
+
+**Separar por datos:** `Transform`, `Velocity`, `Collider`, `Locomotion`, `Vehicle`, `AgentSchedule`, `WeatherResponse`, `RenderProxy`, `AudioEmitter`, `PersistentState`. Los identificadores de entidades deben ser estables y no depender de IDs nativos de un editor.
+
+**Persistencia versionada:** JSON o formato binario documentado con `schema_version`, IDs permanentes, migradores de versión y pruebas de restauración. Los parámetros de física y materiales se guardan como datos; no como referencias implícitas a objetos de una escena de una sola herramienta.
+
+**Recursos abiertos:**
+
+- **glTF 2.0 / GLB** para intercambiar modelos, jerarquías, materiales PBR y ciertas animaciones entre herramientas, sujeto a las capacidades del importador. Es un estándar de Khronos: <https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html>.
+- **OpenUSD** como opción de *pipeline* de escenas complejas en producción, no necesariamente el formato de ejecución móvil: <https://www.pixar.com/openusd>.
+- **Tablas JSON/CSV versionadas** para eventos, NPC, tipos de superficies, clima, vehículos, economía y reglas, con validación automatizada.
+- **Pruebas del núcleo** independientes de imágenes: mismo escenario de entrada → resultado esperado dentro de tolerancia; las físicas de distintos motores pueden divergir.
+
+#### 12.4. Principio de renderizado adaptable
+
+La misma entidad lógica `car_023` puede representarse así:
+
+- **Calidad baja:** malla sencilla, textura pequeña, sombra falsa, sin reflejo dinámico, menos partículas, iluminación mayormente estática.
+- **Calidad media:** mejores materiales, animación extra de ruedas/suspensión, sombras selectivas, lluvia local y reflejos aproximados.
+- **Calidad alta:** geometría/vegetación adicional, sombras de más calidad, densidad de población decorativa y mejores materiales, siempre sujeto a mediciones.
+
+**No** introducir diferencias de reglas físicas por calidad gráfica: cambiar el *aspecto* del vehículo, no el resultado de su frenada, solo por tener otro celular.
+
+**Compatibilidad con motores conocidos:** Godot dispone de caminos Forward+, Mobile y Compatibility (véase [documentación de renderizadores](https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html)); Unity documenta escalado según estado térmico y potencia en [Adaptive Performance](https://docs.unity.com/en-us/engine/6000.3/manual/analysis/runtime-performance-scaling/adaptive-performance/introduction); Unreal dispone de una [ruta de renderizado móvil](https://dev.epicgames.com/documentation/unreal-engine/mobile-rendering-and-shading-modes-for-unreal-engine) diferenciada de la de escritorio. **Tener varias rutas disponibles no garantiza paridad de efectos ni de rendimiento.**
+
+### 13. Rendimiento: reglas de un mundo abierto que sí corre en teléfonos
+
+**Objetivos de referencia, no resultados de pruebas:**
+
+| Perfil | Objetivo inicial | Presupuesto de cuadro | Enfoque |
+|---|---|---|---|
+| **Bajo** | 30 FPS estables | ~33,3 ms total | Menos NPC cercanos, sombras simuladas, partículas limitadas, distancia reducida. |
+| **Medio** | 30 FPS de mayor calidad o 60 FPS cuando sea sostenible | ~33,3 / 16,7 ms | LOD más generoso y respuesta ambiental completa en zona próxima. |
+| **Alto** | 60 FPS cuando CPU/GPU/temperatura lo permitan | ~16,7 ms total | Más detalle, mejores sombras y efectos, sin comprometer controles. |
+
+- **Simulación con paso fijo:** por ejemplo 60 Hz donde sea viable; la representación puede ir a 30 o 60 FPS mediante interpolación. No asumir que todas las físicas mantendrán determinismo idéntico entre motores.
+- **Streaming espacial:** partir la ciudad en sectores (probar tamaños, no fijarlos sin medición); mantener activo el vecindario del jugador, prefetched el próximo y descargar recursos distantes conservando un resumen de estado.
+- **Niveles de simulación (Simulation LOD):** física completa y NPC detallados cerca; estados resumidos más lejos; estadística/horarios fuera de pantalla.
+- **Object pooling:** reutilizar emisores de polvo, gotas, sonidos y objetos temporales para evitar asignaciones frecuentes.
+- **LOD visual, oclusión, texturas adecuadas e instancing:** reducir cargas gráficas antes de sacrificar las reglas centrales.
+- **Clima y temperatura del dispositivo:** escalado adaptativo de resolución y efectos si hay caída de FPS o limitación térmica; no esconder caídas severas con sacudidas de cámara.
+- **Uso sin conexión:** si es requisito, empaquetar contenido base, guardar localmente y no depender de API remotas para la simulación principal.
+- **Accesibilidad:** opciones de sacudida de cámara, intensidad de partículas, contraste, controles táctiles escalables y tamaño de interfaz.
+
+### 14. Orden de implementación recomendado
+
+| Fase | Construir | Prueba de aceptación concreta |
+|---|---|---|
+| **0. Contratos y telemetría** | Modelo de entidades, eventos, guardado, reloj fijo, monitor de FPS/tiempos de CPU-GPU y perfiles de calidad. | Cambiar de escena y recuperar guardado sin perder identificadores ni romper eventos. |
+| **1. Sensación de peso** | Personaje, superficies, aceleración/frenado, salto, caída, sonidos y cámara amortiguada. | El usuario distingue caminar, correr, frenar, saltar y aterrizar con cámara reducida o desactivada. |
+| **2. Vehículo y contacto** | Un vehículo, fricción, frenada, curva, rampa, colisión controlada y reacción visual de suspensión. | Distancias de frenado reproducibles en la misma configuración y sin atravesar obstáculos. |
+| **3. Vida local** | Un pequeño distrito: viento, dos climas, ciclo temporal, sonidos, transeúntes y tránsito sencillo. | El barrio muestra cambios observables aun cuando el jugador no interactúa y reacciona al clima. |
+| **4. Persistencia y streaming** | Sectores activos, estados dormidos, horarios, objetos persistentes y carga progresiva. | Salir del barrio y regresar conserva los cambios elegidos sin saltos graves de FPS. |
+| **5. Fidelidad escalable** | Tres perfiles gráficos, partículas por presupuesto, LOD, sombras selectivas y adaptación térmica. | La jugabilidad permanece equivalente al cambiar calidad gráfica en dispositivos diferentes. |
+| **6. Prueba de portabilidad** | Implementar **un único sistema pequeño** (por ejemplo, clima + objetos reactivos) en un segundo adaptador/motor. | Misma escena lógica, datos y eventos; renderizado distinto pero comportamiento compatible dentro de tolerancias. |
+
+#### Medidas que deben recogerse en dispositivo real
+
+- FPS promedio **y** percentiles de tiempo de cuadro, no solo un promedio favorable.
+- CPU, GPU, memoria ocupada, consumo/temperatura y rendimiento después de una sesión prolongada.
+- Latencia desde toque hasta respuesta visual; frenadas, aterrizajes y colisiones en distintos perfiles.
+- Picos durante carga de sector y guardado; estabilidad tras cambios de orientación o retorno desde segundo plano.
+- Comparación de misma semilla/escena con distintos renderizadores; investigar diferencias antes de publicar.
+
+### 15. Decisiones de diseño finales
+
+1. **Primero credibilidad física, después complejidad visual.** Una silueta simple que frena, tropieza o cae con coherencia tiene más «peso» que un modelo detallado que se desliza como si no tocara el suelo.
+2. **La vida nace de las relaciones.** No basta un árbol que se mueve: el viento debe afectar también ropa, polvo, sonido o conducta, incluso con simulación aproximada.
+3. **Optimizar no es vaciar el mundo.** El mundo cercano debe ser rico en reacciones; el lejano, rico en apariencia y estado resumido.
+4. **No atar las reglas a los gráficos.** Una entidad lógica puede migrar entre web, Godot, Unity o Unreal mediante datos, contratos y adaptadores, con trabajo real de integración.
+5. **Usar las referencias como inspiración, no como instrucciones de copia literal.** Reconstruir principios mecánicos y artísticos con recursos propios evita una identidad visual genérica o derivativa.
+
+### 16. Manual operativo de implementación y delegación a agentes IA
+
+#### 16.1. Mapa de módulos y repositorio recomendado
+
+```text
+motor-city/
+  docs/
+    MOTOR-CITY-ENTREGA-MAESTRA.md
+    decisiones-arquitectura.md
+    criterios-de-aceptacion.md
+  schemas/
+    world.schema.json
+    vehicle.schema.json
+    agent.schema.json
+    save.schema.json
+  data/
+    surfaces.json
+    vehicle-presets.json
+    weather.json
+    districts.json
+  core/
+    time/
+    entities/
+    events/
+    movement/
+    vehicles/
+    agents/
+    world-state/
+    persistence/
+  adapters/
+    web/
+    godot/
+    unity/
+    unreal/
+  tools/
+    world-builder/
+    profiler/
+    replay/
+  tests/
+    unit/
+    integration/
+    benchmark/
+    visual/
+  assets/
+    common/
+    mobile/
+    high/
+```
+
+Los directorios de adaptadores son **destinos de arquitectura**, no afirmaciones de que esos adaptadores ya existan. No conviene construir los cuatro simultáneamente: implementar y probar **uno** primero, y portar **un módulo pequeño** a un segundo como prueba real de independencia.
+
+#### 16.2. Protocolo para Claude, Gemini u otros asistentes
+
+1. **Leer especificación y contratos actuales.** No reescribir interfaces sin una decisión de arquitectura versionada.
+2. **Proponer cambios en forma de diffs atómicos.** Cada cambio debe citar el sistema afectado, el comportamiento esperado y la prueba.
+3. **Usar JSON validable o funciones declarativas para generar escenas.** Los archivos producidos por IA deben pasar validación de esquema, referencias y límites de presupuesto.
+4. **Separar física/estado de VFX.** Un vehículo no debe cambiar su frenada porque se desactive la nieve gráfica; un edificio no debe perder su identidad al variar el LOD.
+5. **Probar en navegador y dispositivo real.** Tests unitarios y automatizados son necesarios, pero no sustituyen pruebas E2E de botones, gestos, errores de consola, carga de distrito y reanudación de partida.
+6. **Registrar evidencia.** Capturas, replays con semilla, perfil de FPS/RAM, errores reproducibles y versiones de hardware.
+7. **No prometer portabilidad automática.** En cada adaptación, hacer mapa explícito de equivalencias: unidades, ejes, coordenadas, físicas, entradas, assets, audio, UI y recursos gráficos.
+
+#### 16.3. Ejemplo de contrato de entidad (propuesta, no código del juego existente)
+
+```json
+{
+  "schema_version": 1,
+  "entity_id": "vehicle_0001",
+  "archetype": "compact_car",
+  "transform": { "position_m": [0.0, 0.0, 0.0], "rotation_xyzw": [0.0, 0.0, 0.0, 1.0] },
+  "vehicle": { "mass_kg": 1100, "drive": "FWD", "profile": "city_base_v1" },
+  "surface_contact": "dry_asphalt",
+  "visual": { "asset_id": "car_compact_a", "quality_policy": "adaptive" },
+  "persistent": true
+}
+```
+
+**Precaución:** los valores del ejemplo son ilustrativos; no se ha calibrado ni probado su comportamiento. La semántica de coordenadas, unidades, límites y presets debe fijarse formalmente en un esquema.
+
+#### 16.4. Hitos mínimos no negociables antes de expandir el mapa
+
+| Entregable | Condición comprobable |
+|---|---|
+| Un vehículo con física plausible | Acelera, frena, gira, rebota levemente sobre obstáculo y muestra telemetría sin atravesar el terreno |
+| Un peatón convincente | Camina, corre, frena, usa escalones y reacciona a un vehículo próximo sin deslizamiento flagrante |
+| Distrito activo | Cambia entre día/noche y clima sin perder tráfico y rutinas; conserva modificaciones persistentes |
+| Rendimiento móvil | Se mide en dispositivo objetivo con configuración fija y sesión prolongada; no se certifica a partir del PC del desarrollador |
+| Compatibilidad inicial | Una escena lógica produce resultados equivalentes en perfiles gráficos bajo/alto |
+| Portabilidad piloto | Un subsistema aislado puede exportarse mediante esquema y ejecutarse en otro adaptador con tests comparativos |
+
+#### 16.5. Riesgos y correcciones de afirmaciones demasiado fuertes
+
+- **“60 FPS en cualquier celular”:** no garantizable sin hardware de referencia, presupuesto de frame y telemetría. Un perfil móvil debe priorizar **30 FPS consistentes** cuando 60 no sea sostenible.
+- **“Vertex shaders o sprites casi gratis”:** los costes dependen de overdraw, cantidad de objetos, resolución y batería; pueden ser eficientes **si se miden**.
+- **“Huellas permanentes en terreno”:** una marca visual con decal/texture no implica una malla físicamente deformada. Elegir según la interacción requerida.
+- **“1000 NPC con emociones y memoria”:** el texto de un reel no certifica su arquitectura; simular muchos agentes **en segundo plano** requiere distintos grados de detalle, tests y medidas.
+- **“Física determinista a 60 Hz en todos los motores”:** un paso fijo ayuda a reproducibilidad local pero **no garantiza igualdad bit a bit** entre bibliotecas o plataformas. Repetir escenarios con tolerancias.
+- **“Migración sin esfuerzo a Unreal/Unity”:** los sistemas de datos pueden transferirse; integración de físicas, shaders, UI, input y empaquetado puede exigir trabajo considerable.
+- **“ECS, WFC, WebGL, MIT, 0,08 s”:** son atribuciones incluidas en la descripción de Gemini para ciertos proyectos; revisar código/licencia y reproducir benchmarks antes de convertirlas en decisiones cerradas.
+- **“Un filtro estilizado acelera por sí solo”:** pixelación y outlines pueden agregar pasadas de pantalla; reducir resolución interna o complejidad material es distinto de añadir un filtro.
+
+---
+
+### 17. Fuentes, material y pendientes documentados
+
+**Documentos de base (fusionados íntegramente por contenido útil):**
+
+1. `ENTREGA-REELS.md`, entrega inicial con observaciones independientes, tabla de 14 enlaces, técnica de peso/vida, arquitectura y plan de pruebas.
+2. `Referencias y Arquitectura para Motor City.md`, informe de Gemini con fichas R01–R25, paletas, mecánicas, ranking y propuestas de escalado.
+3. MP4 adjuntos en ambos mensajes: 9 iniciales (incluido el collage) y 9 añadidos, con 17 referentes distintos identificables en conjunto.
+
+**Pendiente visual:** verificar 13 URLs de Instagram sin evidencia directamente atribuible; comprobar 7 fichas que por ahora dependen de Gemini; inspeccionar código o manuales originales si se necesita afirmar tecnologías específicas. No confundir “no verificado” con “falso”.
+
+**Pendiente de ingeniería:** no se ha desarrollado ni ejecutado aquí el motor Motor City; los tests, integración de motores, prestaciones, memoria y física son **objetivos de proyecto**, no resultados medidos.
+
+**Fuentes externas consultadas para la investigación técnica y la identificación del reel accesible:**
+
+1. [Análisis independiente del reel *Town Brush*](https://develog.develrocket.com/@wnqudgus1234/쇼츠-뜯어보기-공유가-좋아요의-66배-어제-오늘-뜬-쇼츠-10개).
+2. [Khronos — Especificación glTF 2.0](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html).
+3. [Pixar — OpenUSD](https://www.pixar.com/openusd).
+4. [Godot — Renderizadores](https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html).
+5. [Unity — Adaptive Performance](https://docs.unity.com/en-us/engine/6000.3/manual/analysis/runtime-performance-scaling/adaptive-performance/introduction).
+6. [Epic — Renderizado móvil en Unreal Engine](https://dev.epicgames.com/documentation/unreal-engine/mobile-rendering-and-shading-modes-for-unreal-engine).
+
+**Límite metodológico:** las páginas de documentación respaldan compatibilidad general y opciones de implementación. No prueban que una técnica específica se haya usado en un reel.
+
+---
+
+**Cierre de unificación.** Ambas investigaciones apuntan a la misma decisión central: el mejor resultado móvil no consiste en simularlo absolutamente todo ni en maximizar los efectos, sino en **hacer que todo lo próximo al jugador tenga consecuencias comprensibles**, mientras el resto del mundo evoluciona mediante estados compactos, datos persistentes y representación escalable. Este documento es la fuente de referencia única para convertir esa idea en pruebas y código posteriores.
 
 
 ---
@@ -2017,6 +2813,74 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 20‑nov‑2026 · 2.9.0 · Unión de la 2.8 (Claude) con la 2.7.1 (ChatGPT/Codex) (Claude Code)
+Codex entregó la 2.7.1 en paralelo con la 2.8:
+- 6 atlas de ChatGPT, con 676 cuadros;
+- el agua precalculada en los MC4;
+- el gancho `textura` y los charcos;
+- el estilo de 1 bit con ruido azul;
+- la caché de fachadas en la maqueta;
+- los adaptadores de Godot y three.js probados;
+- la auditoría C‑M1, con sus arreglos.
+
+Se unió todo en la rama sin perder nada:
+- las huellas y las palomas de la 2.8 conviven con los charcos de Codex;
+- los faros y las luces de freno funcionan también con el vehículo de la piel de ChatGPT (`vehiculoArriba`);
+- la cubierta sobre columnas y las ventanas de las casas de un piso pasan por la caché de fachadas;
+- el hitstop se combina con la lluvia en el bucle de Mandados.
+
+Son 12 estilos. Versión 2.9.0.
+
+### 20‑nov‑2026 · 2.8.0 · La entrega maestra de referencias, al motor (Claude Code)
+**Pedido:** el autor trajo `MOTOR-CITY-ENTREGA-MAESTRA.md` («prepara todo»). Reúne los 14 reels, los videos y el análisis de ChatGPT y de Gemini:
+- 25 fichas;
+- el peso y la vida;
+- la arquitectura portable;
+- el rendimiento en móvil y las fases.
+
+**Lo que se hizo:**
+1. La entrega quedó en `docs/referencias/` y como anexo del documento único. Su resumen, ficha por ficha y con lo que ya está en el motor, está en `docs/INSPIRACION-VISUAL.md` §1.
+2. **Vida (R12, R19):**
+   - palomas que comen en plazas, andenes y parques, y alzan vuelo cuando el jugador se acerca rápido (evento `fauna`);
+   - huellas de llantas y pisadas en arena, tierra, nieve y barro (con lluvia, también en el pasto), que duran 4 minutos.
+3. **Peso y luz (R13, R19):** faros de noche y luces de freno del jugador. El hitstop también corre en el bucle de Mandados.
+4. **Filtros (R17, R22):** los estilos vintage, CRT y visión térmica, para 11 en total.
+5. **Accesibilidad (§10.3, §13):** `MC.opciones.sacudida` y `particulas`, en Ajustes.
+6. **Medir (§13, §14, R20):** `MC.Telemetria` con fps y tiempos de cuadro en p50, p95 y p99; en Ajustes → Telemetría, con la física del jugador. También calidad automática, baja, media o alta.
+7. **Contratos (§12.3, §16):** `schemas/` (escena, puente y entidad, `schema_version: 1`) y `MC.Contratos.validar`. La tabla de los contratos mínimos de la entrega y dónde están en Motor City está en `docs/MOTORES-POTENTES.md`.
+8. **Repartido en `TAREAS-IA.md`:**
+   - Codex: C‑M20 (API de construcción por código y pincel de mundo), C‑M21 (suspensión, balanceo, cosas que se rompen, IK, tablero y taller con rayos X) y C‑M22 (guardado versionado y sectores);
+   - ChatGPT: C‑A10 (tipografía propia) y C‑A11 (interfaz de libreta);
+   - Gemini: G‑H7 (verificar las 13 URL y las 7 fichas que solo describe su informe) y G‑H9 (medición en un celular real con la telemetría).
+
+9. **Llegó la entrega de Gemini (G‑H1…G‑H8)** y se unió a la rama. De sus capturas se corrigió:
+   - la zona libre deja margen para la columna de botones (80 %): en su máquina, la prueba fallaba por 4 px;
+   - `ui.aviso(texto, ms, clave)`: el aviso de la vista reemplaza al anterior y nunca queda desfasado;
+   - ventanas encendidas en las casas de un piso;
+   - las cubiertas sin muros se dibujan sobre columnas;
+   - cebras sin cruzarse en «#»;
+   - en Mi casa, el botón «Comprar» completo, la burbuja dentro de la casa y el rótulo de los cuartos pequeños;
+   - la sombra horneada de las copas, más pequeña.
+
+   También se sacaron las paletas de las obras colombianas de su lista. Wikimedia limita las descargas, así que algunas quedaron para después.
+10. **Rendimiento:** las huellas se dibujan en lote (16 trazos en vez de cientos). En esta máquina nueva, la cenital de Medellín mide 14–16 ms tanto en la 2.7 como en la 2.8: no es una regresión, es el contenedor.
+
+**Probado:** 125 pruebas:
+- huellas y palomas;
+- partículas apagadas por accesibilidad;
+- telemetría en percentiles;
+- la escena, el puente y la entidad pasan su esquema y uno roto no;
+- los 11 estilos en Mandados.
+
+Además se hizo una revisión visual de noche (faros), de las palomas y de los filtros nuevos.
+
+### 20 de noviembre de 2026 · 2.7.1 · Arte a escala y adaptadores
+
+Mandados incorpora seis atlas de ChatGPT con 676 cuadros. Los 997 cuadros del paquete de Gemini pasan el revisor tras reparar los recortes y márgenes. Guatapé y Medellín cargan su hidrografía desde MC4. Godot 4 y three.js abrieron escenas del motor.
+
+El banco integrado pasó 130 pruebas. La maqueta midió 34,9 ms con CPU 4×, por encima de la meta de 20 ms. El informe enlaza las pruebas de los tres juegos, las capturas y los pendientes. [Entrega del motor compartido](ENTREGA-CHATGPT-MOTOR-CITY-2.6.md)
 
 
 ### 20‑nov‑2026 · 2.7.0 · Estilos gráficos, peso y vida, y motores potentes (Claude Code)

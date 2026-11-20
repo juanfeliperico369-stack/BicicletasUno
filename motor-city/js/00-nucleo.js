@@ -5,7 +5,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.7.0',
+  version: '2.9.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -46,6 +46,8 @@ MC.falla = (donde, e) => { const m = donde + ': ' + (e && e.message || e); if (M
    MC.arte.usar('encicla') → las vistas llaman MC.arte.f('personaje', …) y, si el juego no la trae, usan la del motor. */
 /* estilo de dibujo del motor: 'realista' (2.6, por defecto: texturas, desgaste, árboles con volumen) o 'clasico' (plano y limpio) */
 MC.estilo = 'realista';
+/* 2.8 · accesibilidad (entrega maestra §10.3 y §13): cuánto se sacude la cámara y cuántas partículas hay, de 0 a 1 */
+MC.opciones = { sacudida: 1, particulas: 1 };
 MC.arte = {
   pieles: { motor: {} }, activa: 'motor',
   registrar(juego, piel) { this.pieles[juego] = Object.assign(this.pieles[juego] || {}, piel); return this; },

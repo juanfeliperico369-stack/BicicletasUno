@@ -1,0 +1,23 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://juanfeliperico369-stack.github.io/motorcity/schemas/escena.schema.json",
+ "title": "Escena exportada de Motor City (MC.Exportar.escena)",
+ "description": "El mundo de una caja: edificios, vías, árboles y lugares, en metros. Ejes del mundo: x al oriente, y al sur, alturas hacia arriba. En glTF: X = x, Y = altura, Z = y.",
+ "type": "object",
+ "required": ["schema_version", "motor", "unidades", "caja", "edificios", "vias", "arboles", "lugares"],
+ "properties": {
+  "schema_version": { "const": 1 },
+  "motor": { "type": "string" },
+  "mundo": { "type": "string" },
+  "nombre": { "type": "string" },
+  "unidades": { "const": "metros" },
+  "ejes": { "type": "string" },
+  "caja": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+  "edificios": { "type": "array", "items": { "type": "object", "required": ["id", "x", "y", "base", "alto", "huella", "clase", "muro", "techo"], "properties": {
+   "id": { "type": "integer", "minimum": 0 }, "x": { "type": "number" }, "y": { "type": "number" }, "base": { "type": "number" }, "alto": { "type": "number", "minimum": 0 },
+   "huella": { "type": "array", "items": { "type": "number" }, "minItems": 6 }, "clase": { "type": "string" }, "muro": { "type": "string" }, "techo": { "type": "string" }, "plano": { "type": "boolean" } } } },
+  "vias": { "type": "array", "items": { "type": "object", "required": ["tipo", "ancho", "p"], "properties": { "tipo": { "type": ["string", "integer"] }, "nombre": { "type": "string" }, "ancho": { "type": "number", "minimum": 0 }, "p": { "type": "array", "items": { "type": "number" }, "minItems": 4 } } } },
+  "arboles": { "type": "array", "items": { "type": "object", "required": ["x", "y", "especie", "alto", "copa"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "base": { "type": "number" }, "especie": { "enum": ["urapan", "guayacan_amarillo", "guayacan_rosado", "ceiba", "mango", "monte"] }, "alto": { "type": "number", "minimum": 0 }, "copa": { "type": "number", "minimum": 0 } } } },
+  "lugares": { "type": "array", "items": { "type": "object", "required": ["nombre", "x", "y"], "properties": { "nombre": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" }, "tipo": { "type": "string" } } } }
+ }
+}

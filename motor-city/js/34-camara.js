@@ -34,7 +34,7 @@ class Camara {
   girarA(yaw) { this.yawObj = yaw; return this; }
   inclinarA(p) { this.pitchObj = clamp(p, ...this.limites.pitch); return this; }
   /* golpe de cámara por «trauma» (0..1): la sacudida es trauma², con ruido suave, y se apaga sola */
-  sacudir(k = .4) { this.trauma = clamp((this.trauma || 0) + k, 0, 1); return this; }
+  sacudir(k = .4) { k *= MC.opciones ? MC.opciones.sacudida ?? 1 : 1; this.trauma = clamp((this.trauma || 0) + k, 0, 1); return this; }   // 2.8: se puede bajar o apagar (accesibilidad)
   /* objetivo: { x, y, z (altura de los pies en m), a (rumbo), v, zPaso, mundo } · dt en s */
   actualizar(dt, o) {
     dt = Math.min(dt || 0, .1); this._t = (this._t || 0) + dt;

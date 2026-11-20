@@ -1,4 +1,4 @@
-/* Motor City 2.7.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.9.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.7.0',
+  version: '2.9.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -52,6 +52,8 @@ MC.falla = (donde, e) => { const m = donde + ': ' + (e && e.message || e); if (M
    MC.arte.usar('encicla') → las vistas llaman MC.arte.f('personaje', …) y, si el juego no la trae, usan la del motor. */
 /* estilo de dibujo del motor: 'realista' (2.6, por defecto: texturas, desgaste, árboles con volumen) o 'clasico' (plano y limpio) */
 MC.estilo = 'realista';
+/* 2.8 · accesibilidad (entrega maestra §10.3 y §13): cuánto se sacude la cámara y cuántas partículas hay, de 0 a 1 */
+MC.opciones = { sacudida: 1, particulas: 1 };
 MC.arte = {
   pieles: { motor: {} }, activa: 'motor',
   registrar(juego, piel) { this.pieles[juego] = Object.assign(this.pieles[juego] || {}, piel); return this; },
@@ -788,7 +790,19 @@ class Mundo {
     for (const q of J.lista) { const tipo = J.tipos[q[0]], vi = tipo === 'viaducto', i0 = vi ? 6 : 5, p = new Float32Array(q.slice(i0)); let L = 0; for (let i = 2; i < p.length; i += 2) L += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]); out.push({ tipo, nivel: q[1], ancho: q[2], alto: q[3], peatonal: !!q[4], linea: vi ? q[5] : null, p, largo: L, caja: caja([p]) }); }
     return (this._pasos = out);
   }
-  pasosEn(x0, y0, x1, y1) { return this.pasos().filter(q => q.caja[2] >= x0 && q.caja[0] <= x1 && q.caja[3] >= y0 && q.caja[1] <= y1); }
+  pasosEn(x0, y0, x1, y1) {
+    const pasos = this.pasos(), lado = 128;
+    const ix = Math.floor(x0/lado), iy = Math.floor(y0/lado), fx = Math.floor(x1/lado), fy = Math.floor(y1/lado);
+    if (this._consultasPasos?.fuente !== pasos) this._consultasPasos = {fuente:pasos, zonas:new Map()};
+    const zonas = this._consultasPasos.zonas, clave = [ix,iy,fx,fy].join(',');
+    let cerca = zonas.get(clave);
+    if (!cerca) {
+      cerca = pasos.filter(({caja:b}) => b[2]>=ix*lado && b[0]<=(fx+1)*lado && b[3]>=iy*lado && b[1]<=(fy+1)*lado);
+      if (zonas.size >= 96) zonas.delete(zonas.keys().next().value);
+      zonas.set(clave,cerca);
+    }
+    return cerca.filter(({caja:b}) => b[2]>=x0 && b[0]<=x1 && b[3]>=y0 && b[1]<=y1);
+  }
   /* lugar con postal más cercano */
   lugarCercano(x, y, r = 400) { let best = null, bd = r; for (const L of this.lugares) { const d = Math.hypot(L.x - x, L.y - y); if (d < bd) { bd = d; best = L; } } return best; }
   estacionCercana(x, y, r = 600, clase) { let best = null, bd = r; for (const l of this.transporte.lineas) { if (clase && l.clase !== clase) continue; for (const s of l.estaciones) { const d = Math.hypot(s[1] - x, s[2] - y); if (d < bd) { bd = d; best = { linea: l, nombre: s[0], x: s[1], y: s[2], d }; } } } return best; }
@@ -1326,7 +1340,17 @@ const Terreno = {
   MATERIAL_TT, PEND_MAX, AGUA_MAX,
   /* ---------- agua: tipo y profundidad ---------- */
   agua(M) {
-    if (M._agua) return M._agua; const T = M.tile, paso = Math.max(T, 10, Math.ceil(Math.sqrt(M.ancho * M.alto / 1.2e6) / T) * T), w = Math.ceil(M.ancho / paso), h = Math.ceil(M.alto / paso), n = w * h;
+    if (M._agua) return M._agua;
+    if (M.tiene?.('agua') && M.capaInfo('agua').formato === 'AGUA1') {
+      const {w,h,paso,cuerpos:C} = M.capaInfo('agua'), datos = M.capa('agua');
+      const dv = new DataView(datos.buffer,datos.byteOffset,datos.byteLength), n = w*h;
+      const tipo = new Uint8Array(n), comp = new Int32Array(n).fill(-1), D = new Float32Array(n);
+      for (let o=0; o<datos.length; o+=13) {
+        const i=dv.getUint32(o,true); tipo[i]=datos[o+12]; comp[i]=dv.getInt32(o+4,true); D[i]=dv.getFloat32(o+8,true);
+      }
+      return M._agua={w,h,paso,C,tipo,comp,D};
+    }
+    const T = M.tile, paso = Math.max(T, 10, Math.ceil(Math.sqrt(M.ancho * M.alto / 1.2e6) / T) * T), w = Math.ceil(M.ancho / paso), h = Math.ceil(M.alto / paso), n = w * h;
     const tipo = new Uint8Array(n), tierra = new Uint8Array(n), rio = new Uint8Array(n);   // 0 tierra · 1 agua · 2 quebrada
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const t = M.suelo((i + .5) * paso, (j + .5) * paso), k = j * w + i; tipo[k] = t === TT.WATER ? 1 : t === TT.CANAL ? 2 : 0; }
     /* el río con nombre del mapa (si lo trae): se marca para que no se corte en la rejilla gruesa y se reconozca como río */
@@ -1422,6 +1446,7 @@ Object.assign(MC, { Terreno });
    Las PALETAS de ukiyo-e, novela y acuarela salen de obras de DOMINIO PÚBLICO (Hokusai, Hiroshige, Doré, Winslow
    Homer…), con su fuente en arte/dominio-publico/paletas.json. Del resto (Spider‑Verse, Arcane, Ghibli, Shinkai,
    Sin City, Moebius) se toman las TÉCNICAS, nunca imágenes ni personajes (docs/INSPIRACION-VISUAL.md).
+   2.8: vintage (sepia, papel y viñeta) y CRT (líneas de barrido), como los filtros de Miniopolis (entrega maestra, R17).
    Uso: MC.estilo = 'comic' · MC.Estilo.p (el estilo activo) · MC.Estilo.col('#c25f37') · MC.Estilo.lista()
    ===================================================================== */
 const PAL_DP = {
@@ -1433,10 +1458,14 @@ const ESTILOS_GRAF = {
   realista: { n: 'Realista', icono: '📷', rudeza: true, arbol: 'real' },
   clasico: { n: 'Clásico (plano)', icono: '🟩', arbol: 'cel' },
   comic: { n: 'Cómic', icono: '💥', saturar: 1.35, contraste: 1.08, niveles: 5, tinta: 2.2, tintaColor: '#141118', trama: 'puntos', arbol: 'cel', sombra: [24, 20, 70, .42], lineas: '#141118', onomatopeyas: true, cielo: [[.22, .52, .95], [.98, .92, .62]] },
+  unbit: { n: 'Grabado de un bit', icono: '◩', gris: true, arbol: 'tono', binario: true },
   manga: { n: 'Manga', icono: '🖋️', gris: true, contraste: 1.18, niveles: 4, tinta: 2, tintaColor: '#0b0b0b', trama: 'tono', arbol: 'tono', sombra: [0, 0, 0, .38], lineas: '#0b0b0b', onomatopeyas: true, final: 'gris', cielo: [[.82, .82, .82], [.99, .99, .99]] },
   anime: { n: 'Anime', icono: '🌸', saturar: 1.22, brillo: 1.05, niveles: 6, tinta: 1, tintaColor: '#2b2740', arbol: 'cel', sombra: [70, 50, 150, .32], lineas: '#ffffff', onomatopeyas: false, cielo: [[.16, .4, .92], [.8, .93, 1]] },
   novela: { n: 'Novela gráfica (noir)', icono: '🌃', umbral: [.3, .62], tonos: ['#0d0c0b', '#6a655c', '#ece5d3'], acento: '#b3201c', tinta: 2.6, tintaColor: '#000000', trama: 'rayado', arbol: 'silueta', sombra: [0, 0, 0, .72], lineas: '#000000', onomatopeyas: true, cielo: [[.07, .07, .08], [.5, .48, .45]] },
   ukiyoe: { n: 'Ukiyo-e (Hokusai)', icono: '🌊', paleta: 'hokusai', mezcla: .82, niveles: 5, tinta: 1.6, tintaColor: '#1d2a3f', trama: 'papel', arbol: 'cel', sombra: [30, 50, 90, .28], cielo: [[.17, .33, .54], [.96, .9, .78]] },
+  vintage: { n: 'Vintage', icono: '📼', saturar: .55, contraste: .92, tinte: [.66, .52, .36], tinteK: .28, trama: 'papel', arbol: 'cel', sombra: [60, 40, 20, .3], final: 'vineta', cielo: [[.72, .62, .48], [.95, .88, .74]] },   // 2.8: foto vieja (entrega maestra, R17)
+  crt: { n: 'CRT (pantalla vieja)', icono: '📺', saturar: 1.25, contraste: 1.08, niveles: 7, arbol: 'cel', sombra: [10, 20, 40, .36], final: 'crt', cielo: [[.1, .3, .6], [.6, .8, .95]] },   // 2.8: líneas de barrido y borde oscuro
+  termica: { n: 'Visión térmica', icono: '🌡️', gradiente: ['#2b0b57', '#7a1fa2', '#e5383b', '#ff9f1c', '#ffea00'], arbol: 'cel', sombra: [20, 0, 60, .3], cielo: [[.1, .03, .25], [.35, .1, .45]] },   // 2.8: FireTrace (R22), paleta del informe de Gemini
   acuarela: { n: 'Acuarela', icono: '🎨', paleta: 'acuarela', mezcla: .3, saturar: .9, brillo: 1.08, trama: 'papel', arbol: 'acuarela', sombra: [60, 70, 110, .24], cielo: [[.55, .7, .86], [.97, .95, .9]] }
 };
 const Estilo = {
@@ -1450,7 +1479,9 @@ const Estilo = {
     let r = c[0], g = c[1], b = c[2];
     if (S.saturar || S.gris) { const l = .299 * r + .587 * g + .114 * b, k = S.gris ? 0 : S.saturar; r = l + (r - l) * k; g = l + (g - l) * k; b = l + (b - l) * k; }
     if (S.brillo) { r *= S.brillo; g *= S.brillo; b *= S.brillo; }
+    if (S.tinte) { const l = .299 * r + .587 * g + .114 * b, k = S.tinteK ?? .3; r += (S.tinte[0] * l * 1.6 - r) * k; g += (S.tinte[1] * l * 1.6 - g) * k; b += (S.tinte[2] * l * 1.6 - b) * k; }   // tono sepia
     if (S.contraste) { const k = S.contraste; r = (r - .5) * k + .5; g = (g - .5) * k + .5; b = (b - .5) * k + .5; }
+    if (S.gradiente) { const G = S._g || (S._g = S.gradiente.map(hex3)), l = clamp(.299 * r + .587 * g + .114 * b, 0, 1) * (G.length - 1), i = Math.min(G.length - 2, Math.floor(l)), u = l - i; return mez3(G[i], G[i + 1], u); }   // mapa de calor por luminancia
     if (S.umbral) {   // novela gráfica: tres tonos de papel y tinta, y el rojo como acento (el «color selectivo» del noir)
       if (r > .38 && r > g * 1.45 && r > b * 1.45) return hex3(S.acento);
       const l = .299 * r + .587 * g + .114 * b; return hex3(S.tonos[l < S.umbral[0] ? 0 : l < S.umbral[1] ? 1 : 2]);
@@ -1465,7 +1496,18 @@ const Estilo = {
   col(css) {
     if (!css || typeof css !== 'string') return css; const S = this.p; if (S === ESTILOS_GRAF.realista || S === ESTILOS_GRAF.clasico) return css;
     if (this._ccEst !== MC.estilo) { this._cc.clear(); this._ccEst = MC.estilo; } let v = this._cc.get(css); if (v) return v;
-    const a = /rgba/.test(css) ? +(css.match(/[\d.]+/g)[3] ?? 1) : 1; v = css3(this.rgb(hex3(css), S), a); this._cc.set(css, v); if (this._cc.size > 4000) this._cc.clear(); return v;
+    const hex = /^#([a-f0-9]{3,4}|[a-f0-9]{6}|[a-f0-9]{8})$/i.exec(css);
+    const rgb = /^rgba?\(\s*([.\d]+)\s*,\s*([.\d]+)\s*,\s*([.\d]+)(?:\s*,\s*([.\d]+))?\s*\)$/i.exec(css);
+    if (!hex && !rgb) return css;
+    let color, alfa = 1;
+    if (hex) {
+      const codigo = hex[1].length < 5 ? [...hex[1]].map(n => n+n).join('') : hex[1];
+      color = hex3('#'+codigo.slice(0,6));
+      if (codigo.length === 8) alfa = parseInt(codigo.slice(6),16)/255;
+    } else {
+      color = rgb.slice(1,4).map(n => Number(n)/255); alfa = Number(rgb[4] ?? 1);
+    }
+    v = css3(this.rgb(color,S),alfa); this._cc.set(css, v); if (this._cc.size > 4000) this._cc.clear(); return v;
   },
   /* luz de un muro: en los estilos de cel, la luz salta en bandas en lugar de degradarse */
   luz(lz) { const S = this.p; return S.niveles && !S.rudeza ? Math.round(lz * 3) / 3 : lz; },
@@ -1483,10 +1525,58 @@ const Estilo = {
     const S = this.p; if (!S.trama) return; const f = this.fuente(S.trama); if (!f) return; const m = S.trama === 'papel' ? .12 : Math.max(.22, 2.2 / Math.max(.5, res)) / 16 * (S.trama === 'tono' ? .55 : 1);   // el punto del semitono mide lo mismo en pantalla a cualquier zoom de horneado
     const p = g.createPattern(f, 'repeat'); if (p && p.setTransform && typeof DOMMatrix !== 'undefined') p.setTransform(new DOMMatrix([m, 0, 0, m, 0, 0])); g.fillStyle = p; g.fillRect(x0, y0, L, L);
   },
+  // Umbrales ordenados por máxima distancia al punto más cercano en un toro.
+  ruidoAzul() {
+    if (this._azul) return this._azul;
+    const n = 16, rango = new Uint8Array(n*n), distancia = new Float32Array(n*n).fill(Infinity);
+    let elegido = 93;
+    for (let valor = 0; valor < rango.length; valor++) {
+      rango[elegido] = valor;
+      const x = elegido % n, y = elegido >> 4;
+      let max = -1, siguiente = 0;
+      for (let i = 0; i < rango.length; i++) {
+        const dx = Math.abs(i % n - x), dy = Math.abs((i >> 4) - y);
+        distancia[i] = Math.min(distancia[i], Math.min(dx,n-dx)**2 + Math.min(dy,n-dy)**2);
+        const candidato = distancia[i] + h2(i,valor,451) * .01;
+        if (candidato > max) { max = candidato; siguiente = i; }
+      }
+      elegido = siguiente;
+    }
+    return this._azul = rango;
+  },
+  imprimir(g, W, H, V, binario) {
+    const img = g.getImageData(0, 0, W, H), rgba = img.data;
+    const {a,b,c,d,e,f} = V, det = a*d-b*c;
+    const paso = Math.max(.08, 1 / Math.max(.1,V.z));
+    const ux = d/det/paso, uy = -b/det/paso, vx = -c/det/paso, vy = a/det/paso;
+    const azul = binario ? this.ruidoAzul() : null;
+    for (let y = 0, i = 0; y < H; y++) {
+      let xw = (.5-e)*ux+(y+.5-f)*vx, yw = (.5-e)*uy+(y+.5-f)*vy;
+      for (let x = 0; x < W; x++, i+=4, xw+=ux, yw+=uy) {
+        const lum = .2126*rgba[i]+.7152*rgba[i+1]+.0722*rgba[i+2];
+        if (binario) {
+          const rango = azul[(Math.floor(xw)&15) + ((Math.floor(yw)&15)<<4)];
+          rgba[i] = rgba[i+1] = rgba[i+2] = lum > rango+.5 || lum === 255 ? 255 : 0;
+        } else if (lum < 160) {
+          const dx = ((Math.floor(xw)&7)-3.5)/4, dy = ((Math.floor(yw)&7)-3.5)/4;
+          if (dx*dx+dy*dy < (160-lum)/160) { rgba[i]*=.52; rgba[i+1]*=.48; rgba[i+2]*=.58; }
+        }
+      }
+    }
+    g.putImageData(img,0,0);
+  },
   /* ---------- pase final (por cuadro, barato): manga en grises y líneas de velocidad ---------- */
   final(g, W, H, E) {
     const S = this.p; if (S.final === 'gris') { g.save(); g.globalCompositeOperation = 'saturation'; g.fillStyle = '#808080'; g.fillRect(0, 0, W, H); g.restore(); }
+    else if (S.final === 'vineta' || S.final === 'crt') { const c = this._capa(S.final, W, H); if (c) g.drawImage(c, 0, 0); }   // horneado una vez por tamaño de pantalla
     const C = E.jugador && E.jugador.cuerpo, v = C ? Math.abs(C.v || 0) : 0; if (S.lineas && v > 8.5) this.lineas(g, W, H, Math.min(1, (v - 8.5) / 14), E.t || 0, S.lineas);
+  },
+  _capas: {},
+  _capa(tipo, W, H) {
+    const k = tipo + W + 'x' + H; if (this._capas[k] !== undefined) return this._capas[k]; const c = lienzo(W, H); if (!c) return (this._capas[k] = null); const g = c.getContext('2d');
+    const gr = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.hypot(W, H) * .58); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, tipo === 'crt' ? 'rgba(0,0,0,.55)' : 'rgba(40,24,10,.45)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    if (tipo === 'crt') { g.fillStyle = 'rgba(0,0,0,.16)'; for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1); }   // líneas de barrido
+    for (const q in this._capas) if (q.startsWith(tipo) && q !== k) delete this._capas[q]; return (this._capas[k] = c);
   },
   /* líneas de velocidad del manga: desde el borde hacia el centro, sin tocar el centro (el juego es del centro) */
   lineas(g, W, H, k, t, col) {
@@ -2131,7 +2221,7 @@ const Mobiliario = {
     if (!ciclo) for (let d = 20 + r() * 30; d < total - 10; d += 55 + r() * 40) { if (peat || v.k === VIA.CALLE && r() < .35) { poner('banca', d, r() < .5 ? 1 : -1, .2); poner('caneca', d + 2.2, 1, .1); } }
     if (v.k === VIA.AVENIDA || v.k === VIA.CARRERA) for (let d = 60 + r() * 120; d < total - 20; d += 330 + r() * 60) poner('paradero', d, 1, .4);
     if (!ciclo) for (let d = 30 + r() * 60; d < total - 10; d += 110 + r() * 30) if (r() < .5) poner('hidrante', d, r() < .5 ? 1 : -1, -.2);
-    if ((v.k === VIA.CALLE || v.k === VIA.CARRERA || v.k === VIA.AVENIDA) && total > 30) for (const [d, sg] of [[3.5, 1], [total - 3.5, -1]]) { const q = punto(d); L.push({ t: 'cebra', x: q.x, y: q.y, a: q.a, ancho: anc * 2, v: 0 }); }
+    if ((v.k === VIA.CALLE || v.k === VIA.CARRERA || v.k === VIA.AVENIDA) && total > 30) for (const [d, sg] of [[3.5, 1], [total - 3.5, -1]]) { const q = punto(d); if (L.some(o => o.t === 'cebra' && Math.hypot(o.x - q.x, o.y - q.y) < 4)) continue; L.push({ t: 'cebra', x: q.x, y: q.y, a: q.a, ancho: anc * 2, v: 0 }); }
     C.set(i, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
   },
   /* los props en una caja (solo de las vías que pasan por ahí) */
@@ -2244,6 +2334,7 @@ const Arboleda = {
   /* ---------- horneado: un lienzo por especie, variante y vista ---------- */
   _sp: new Map(),
   sprite(e, v, vista, noche) {
+    if (!Object.hasOwn(this.ESPECIES, e)) e = 'urapan';
     const k = e + v + vista + (noche ? 'n' : '') + MC.estilo; let c = this._sp.get(k); if (c !== undefined) return c;   // 2.7: un horneado por estilo
     if (noche) { const d = this.sprite(e, v, vista, false); c = d ? lienzo(d.width, d.height) : null; if (c) { const g = c.getContext('2d'); g.drawImage(d, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(10,18,44,.6)'; g.fillRect(0, 0, c.width, c.height); c._base = d._base; c._rx = d._rx; c._alto = d._alto; } }
     else c = vista === 'lado' ? this._hornearLado(e, v) : this._hornearArriba(e, v);
@@ -2333,7 +2424,7 @@ const Arboleda = {
   dePie(D, t) {
     const { g, pr, z, P, noche } = D, fa = MC.arte.f('arbol'); if (fa) { const [ax, ay] = pr(t.x, t.y, 0); if (fa(g, t, 'lado', ax, ay, z, D) === true) return; } let sp = this.sprite(t.e, t.v, 'lado', noche > .4); if (!sp) return; const E = this.ESPECIES[t.e] || this.ESPECIES.urapan, [x, y] = pr(t.x, t.y, 0);
     sp = this.mip(sp, (t.r * E.ancho * z) / sp._rx); const kx = (t.r * E.ancho * z) / sp._rx, ky = (t.h * z * P.hk) / sp._alto, w = sp.width * kx, h = sp.height * ky; if (h < 3) return;
-    const vi = z >= 5 ? Math.sin((D.E.t || 0) * 1.3 + t.x * .21 + t.y * .13) * .045 * (D.E.viento ?? .6) : 0;   /* 2.7 · vida: el viento mece la copa (de cerca); el pie no se mueve */
+    const vi = z >= 5 ? Math.sin((D.E.t || 0) * 1.3 + t.x * .21 + t.y * .13) * .045 * (D.E.viento ?? (D.E.clima && D.E.clima.viento ? clamp(D.E.clima.viento.v / 6, .2, 1.6) : .6)) : 0;   /* 2.7 · vida: el viento mece la copa (de cerca); el pie no se mueve */
     if (t.espejo || vi) { g.save(); g.translate(x, y); if (vi) g.transform(1, 0, -vi, 1, 0, 0); if (t.espejo) g.scale(-1, 1); g.drawImage(sp, -w / 2, -sp._base[1] * ky, w, h); g.restore(); } else g.drawImage(sp, x - w / 2, y - sp._base[1] * ky, w, h);
   },
   /* desde arriba, en pantalla (árboles de calle en la cenital) */
@@ -2400,7 +2491,7 @@ const Personaje = {
     else if (estado === 'bucea') { const e = (Math.sin(fase) + 1) / 2; mI = [pecho[0] + .55 - e * .5, pecho[1] + .18 * e]; mD = [pecho[0] + .55 - e * .5, pecho[1] - .18 * e]; }   // brazada de rana
     else { const b = estado === 'corre' ? .5 : estado === 'camina' ? .28 : estado === 'patina' ? .4 : .08; mI = [pecho[0] - s * b, pecho[1] - .5 + Math.abs(s) * .05]; mD = [pecho[0] + s * b, pecho[1] - .5 + Math.abs(c) * .05]; if (estado === 'corre') { mI[1] += .12; mD[1] += .12; } }
     const codo = (m, sg) => { const mx = (pecho[0] + m[0]) / 2, mz = (pecho[1] + m[1]) / 2, dx = m[0] - pecho[0], dz = m[1] - pecho[1], L = Math.hypot(dx, dz) || 1, a = .3, h = Math.sqrt(Math.max(0, a * a - (L / 2) ** 2)); return [mx + dz / L * h * sg, mz - dx / L * h * sg]; };
-    Object.assign(J, { cadera: P(...cad), pecho: P(...pecho), cabeza: P(...cabeza), pieI: P(...pI), pieD: P(...pD), rodI: P(...rod(pI, 1)), rodD: P(...rod(pD, 1)), manoI: P(...mI), manoD: P(...mD), codoI: P(...codo(mI, -1)), codoD: P(...codo(mD, -1)), inc, estado, radioCabeza: cab * k });
+    Object.assign(J, { cadera: P(...cad), pecho: P(...pecho), cabeza: P(...cabeza), pieI: P(...pI), pieD: P(...pD), rodI: P(...rod(pI, 1)), rodD: P(...rod(pD, 1)), manoI: P(...mI), manoD: P(...mD), codoI: P(...codo(mI, -1)), codoD: P(...codo(mD, -1)), inc, estado, fase, radioCabeza: cab * k });
     return J;
   },
   /* el estado del cuerpo según el vehículo y la velocidad */
@@ -2606,7 +2697,12 @@ class Cuerpo {
     }
     if (this.enAire && V.clase !== 'aire') { this.z += this.vz * dt; this.vz -= GRAV * dt; if (this.z <= 0) { this.z = 0; this.enAire = false; this.eventos.push(this.vz < -6 ? 'aterrizaFuerte' : 'aterriza'); this.vz = 0; } }
     /* mover con choques (desliza por el eje libre) */
-    const dx = Math.cos(this.a) * this.v * dt, dy = Math.sin(this.a) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
+    const auto = V.clase === 'auto' || V.clase === 'pesado';
+    const suelto = auto && !this.paso && (this.tt === TT.NIEVE || (this.tt === TT.LAND || this.tt === TT.GRASS) && (E.lluvia || E.clima?.lluvia || 0) > .35);
+    const rumboPrevio = this.rumboRodado ?? this.a;
+    this.rumboRodado = suelto ? rumboPrevio + Math.atan2(Math.sin(this.a-rumboPrevio), Math.cos(this.a-rumboPrevio)) * (1-Math.exp(-dt*2.8)) : this.a;
+    this.inclinacion = auto ? Math.atan(clamp(this.pend,-.65,.65)) : 0;
+    const dx = Math.cos(this.rumboRodado) * this.v * dt, dy = Math.sin(this.rumboRodado) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
     if (this.puede(nx, ny)) { this.x = nx; this.y = ny; }
     else if (this.puede(nx, this.y)) { this.x = nx; this.v *= .7; }
     else if (this.puede(this.x, ny)) { this.y = ny; this.v *= .7; }
@@ -2781,7 +2877,7 @@ class Camara {
   girarA(yaw) { this.yawObj = yaw; return this; }
   inclinarA(p) { this.pitchObj = clamp(p, ...this.limites.pitch); return this; }
   /* golpe de cámara por «trauma» (0..1): la sacudida es trauma², con ruido suave, y se apaga sola */
-  sacudir(k = .4) { this.trauma = clamp((this.trauma || 0) + k, 0, 1); return this; }
+  sacudir(k = .4) { k *= MC.opciones ? MC.opciones.sacudida ?? 1 : 1; this.trauma = clamp((this.trauma || 0) + k, 0, 1); return this; }   // 2.8: se puede bajar o apagar (accesibilidad)
   /* objetivo: { x, y, z (altura de los pies en m), a (rumbo), v, zPaso, mundo } · dt en s */
   actualizar(dt, o) {
     dt = Math.min(dt || 0, .1); this._t = (this._t || 0) + dt;
@@ -3137,9 +3233,12 @@ const Sprites = {
   /* registra un atlas; imagen: dataURL, URL local, <img> o <canvas> */
   atlas(id, def) {
     const A = { id, cuadros: def.cuadros || {}, anim: def.anim || {}, metros: def.metros || {}, img: null, listo: false, magenta: def.magenta !== false };
-    const fin = img => { A.img = A.magenta ? Sprites._sinMagenta(img) : img; A.listo = true; MC.emit('sprites', id); };
+    let terminar;
+    A.carga = new Promise(resolver => { terminar = resolver; });
+    const fin = img => { A.img = A.magenta ? Sprites._sinMagenta(img) : img; A.listo = true; terminar(true); MC.emit('sprites', id); };
     if (def.imagen && typeof def.imagen === 'object') fin(def.imagen);
-    else if (def.imagen && typeof Image !== 'undefined') { const im = new Image(); im.onload = () => fin(im); im.onerror = () => MC.falla('sprites', 'no cargó ' + id); im.src = def.imagen; }
+    else if (def.imagen && typeof Image !== 'undefined') { const im = new Image(); im.onload = () => fin(im); im.onerror = () => { terminar(false); MC.falla('sprites', 'no cargó ' + id); }; im.src = def.imagen; }
+    else terminar(false);
     this.atlases.set(id, A); return A;
   },
   /* el magenta plano se vuelve transparente (con borde suave para el antialias) */
@@ -3330,7 +3429,7 @@ const Rudeza = {
 /* ---------- losas del suelo ---------- */
 class Losas {
   constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; this.px = 0; this.maxPx = op.maxPx || (GPU.perfil().nivel === 'alta' ? 40e6 : 22e6); }   // presupuesto de píxeles: las losas nítidas de cerca pesan más
-  limpiar() { this.cache.clear(); this.px = 0; this.version++; }
+  limpiar() { this.cache.clear(); this.pend.length = 0; this.px = 0; this.version++; }
   _poner(k, c) { this.cache.set(k, c); if (c) this.px += c.width * c.height; while (this.cache.size > this.max || this.px > this.maxPx) { const k0 = this.cache.keys().next().value, c0 = this.cache.get(k0); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k0); if (k0 === k) break; } }
   /* borra las losas de una caja (cuando la ciudad crece o cambia) */
   invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) { const c0 = this.cache.get(k); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k); } } this.version++; }
@@ -3342,7 +3441,15 @@ class Losas {
     c = this.pintar(gx, gy, res, fl); this._poner(k, c); return c;
   }
   /* pinta las losas pendientes con un presupuesto de milisegundos */
-  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this._poner(k, this.pintar(gx, gy, res, st | 0)); } }
+  trabajar(ms = 6) {
+    const inicio = MC.ahora();
+    while (this.pend.length && MC.ahora() - inicio < ms) {
+      const clave = this.pend.shift();
+      const [gx, gy, res, flags, piel, estilo] = clave.split(',');
+      if (piel !== MC.arte.activa || estilo !== MC.estilo || this.cache.has(clave)) continue;
+      this._poner(clave, this.pintar(+gx, +gy, +res, +flags));
+    }
+  }
   pintar(gx, gy, res, fl) {
     const ES = Estilo.p, sinTechos = (fl & 1) !== 0, sinArboles = (fl & 2) !== 0, real = !!ES.rudeza, mapa = !ES.rudeza && MC.estilo !== 'clasico', tw = ES.tinta ? clamp(ES.tinta * .9 / Math.max(.8, res), .1, .7) : 0;   /* 2.7: el estilo (mapa de color, tinta y trama) */
     const M = this.mundo, L = this.L, T = M.tile, n = Math.round(L / T), px = Math.max(8, Math.round(L * res)), cv = lienzo(px, px); if (!cv) return null;
@@ -3363,7 +3470,34 @@ class Losas {
     /* la casilla de borde de cada lado es de la losa vecina: así el suavizado no deja costuras entre losas */
     bg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; const e = px / n; g.drawImage(base, 0, 0, m, m, -e, -e, px + 2 * e, px + 2 * e);
     g.save(); g.scale(res, res); g.translate(-x0, -y0);
-    const lejos = res < .3;   // losas de lejos: sin árboles, sin techos y solo las vías grandes
+    const lejos = res < .3;
+    const textura = real && res >= .9 && MC.arte.f('textura');
+    const patrones = new Map();
+    function patron(material) {
+      if (!textura) return null;
+      if (!patrones.has(material)) {
+        const tile = textura(material);
+        let p = null;
+        if (tile && tile.metros > 0 && tile.imagen && tile.imagen.width && tile.imagen.height) {
+          p = g.createPattern(tile.imagen, 'repeat');
+          if (p) p.setTransform(new DOMMatrix().scale(tile.metros / tile.imagen.width, tile.metros / tile.imagen.height));
+        }
+        patrones.set(material, p);
+      }
+      return patrones.get(material);
+    }
+    if (textura) {
+      g.save();
+      g.globalAlpha = .55;
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const x = x0 + i * T, y = y0 + j * T;
+        const tipo = M.suelo(x + T / 2, y + T / 2);
+        const mat = tipo === TT.GRASS ? 'pasto' : tipo === TT.ROCA ? 'grava' : null;
+        const p = mat && patron(mat);
+        if (p) { g.fillStyle = p; g.fillRect(x, y, T, T); }
+      }
+      g.restore();
+    }
     /* 2. sitios: canchas, piscinas, plazas y prados de los campus */
     const SI = M.sitios(), dentroL = b => b[2] >= x0 && b[0] <= x0 + L && b[3] >= y0 && b[1] <= y0 + L;
     for (const z of SI.Z) if (dentroL(z.caja)) { g.fillStyle = mapa ? Estilo.col('#d9d1bd') : '#d9d1bd'; this._poly(g, z.R); }
@@ -3376,9 +3510,20 @@ class Losas {
     if (tw) for (const v of carros) lin(v.p, v.ancho + 3.2 + tw * 2, ES.tintaColor);
     for (const v of carros) lin(v.p, v.ancho + 3.2, V.anden);
     if (tw) for (const v of carros) lin(v.p, v.ancho + tw * 2, ES.tintaColor);
-    if (real && res >= .9) { Rudeza.anden(g, carros, lin); for (const v of carros) lin(v.p, v.ancho + .5, V.bordillo); }
+    if (real && res >= .9) {
+      const baldosa = patron('anden');
+      if (baldosa) for (const v of carros) lin(v.p, v.ancho + 3.2, baldosa);
+      else Rudeza.anden(g, carros, lin);
+      for (const v of carros) lin(v.p, v.ancho + .5, V.bordillo);
+    }
     for (const v of resto) if (v.k !== VIA.CICLO) lin(v.p, v.ancho + (v.k === VIA.ESCALAS ? .6 : 1), v.k === VIA.ESCALAS ? V.escalas : v.k === VIA.SENDERO ? V.sendero : V.peatonal);
-    for (const v of carros) lin(v.p, v.ancho, v.k === VIA.AUTOPISTA ? V.autopista : v.k === VIA.AVENIDA ? V.avenida : V.asfalto);
+    for (const v of carros) lin(v.p, v.ancho, patron(v.k === VIA.CALLE ? 'asfalto_parchado' : 'asfalto') || (v.k === VIA.AUTOPISTA ? V.autopista : v.k === VIA.AVENIDA ? V.avenida : V.asfalto));
+    if (fl & 4) for (const v of carros) lin(v.p, v.ancho, 'rgba(15,29,42,.38)');
+    if (textura) for (const v of resto) {
+      const mat = v.k === VIA.PEATONAL ? 'adoquin' : v.k === VIA.SENDERO ? 'barro' : null;
+      const p = mat && patron(mat);
+      if (p) lin(v.p, v.ancho, p);
+    }
     if (real && res >= .9) for (const v of carros) { lin(v.p, v.ancho * .5, 'rgba(14,14,16,.10)'); Rudeza.asfalto(g, v, res); }   // el centro de los carriles, más gastado y oscuro
     for (const v of carros) if (v.ancho >= 8 && res >= .6) { if (v.k === VIA.AVENIDA || v.k === VIA.AUTOPISTA) lin(v.p, .35, V.amarilla); else lin(v.p, .25, V.linea, [3, 4]); }
     for (const v of resto) if (v.k === VIA.ESCALAS && res >= .8) lin(v.p, v.ancho * .7, 'rgba(90,70,50,.35)', [.35, .45]);
@@ -3387,11 +3532,21 @@ class Losas {
     /*    2.6: los mismos árboles de MC.Arboleda (también los del borde de las losas vecinas: ya no quedan cortados).
           En las vistas inclinadas de cerca no se pintan en el piso: se levantan (antes parecían tapetes). */
     if (!lejos && !sinArboles) for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { if (MC.estilo !== 'clasico') Arboleda.arriba(g, t); else this.arbol(g, t.x, t.y, t.r, t.s); }
-    else if (!lejos && sinArboles) { g.fillStyle = 'rgba(10,16,12,.17)'; g.beginPath(); for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { const rM = t.r * (Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan).ancho; g.moveTo(t.x + rM * 1.2, t.y + rM * .2); g.ellipse(t.x + rM * .25, t.y + rM * .2, rM * .95, rM * .9, 0, 0, TAU); } g.fill(); }   // la sombra bajo la copa, horneada en el piso (gratis por cuadro)
+    else if (!lejos && sinArboles) { g.fillStyle = 'rgba(10,16,12,.15)'; g.beginPath(); for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { const rM = t.r * (Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan).ancho; g.moveTo(t.x + rM * .95, t.y + rM * .2); g.ellipse(t.x + rM * .25, t.y + rM * .2, rM * .7, rM * .66, 0, 0, TAU); } g.fill(); }   // la sombra bajo la copa, horneada en el piso (gratis por cuadro)
     /* 5. techos de las huellas reales (sombra suave al sureste) y tanques en las laderas */
     const E = lejos ? [] : M.edificiosEn(x0, y0, x0 + L, y0 + L).sort((a, b) => a.h - b.h);
     for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(1.4, .3 + b.h * .04); g.fillStyle = 'rgba(20,24,40,.2)';   /* solo oclusión de contacto: la sombra del sol la pone MC.Sombras según la hora */ g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
-    if (!sinTechos) for (const b of E) { this.techo(g, b, M, mapa, tw, ES); if (real && res >= 1.5) Rudeza.techo(g, b, Mundo.esquinas(b), estiloEdificio(M, b)); }
+    if (!sinTechos) for (const b of E) {
+      this.techo(g, b, M, mapa, tw, ES);
+      if (real && res >= 1.5) {
+        const huella = Mundo.esquinas(b), estilo = estiloEdificio(M, b);
+        const p = patron(b.clase === 'nave' || b.clase === 'techo' ? 'zinc' : estilo.plano ? 'concreto' : 'teja');
+        if (p) {
+          g.save(); g.globalAlpha = .72; g.fillStyle = p; this._poly(g, [huella]); g.restore();
+        }
+        Rudeza.techo(g, b, huella, estilo);
+      }
+    }
     if (!sinTechos) for (const b of SI.E) if (dentroL(b.caja)) { g.fillStyle = b.techo === 'cupula' ? '#56665f' : b.clase === 'iglesia' ? '#b5542f' : '#bdbcb6'; this._poly(g, b.R); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .4; this._poly(g, b.R, true); }
     if (real && res >= .9) Rudeza.textura(g, x0, y0, L);   // grano y manchas sobre todo
     else if (mapa && res >= .5) Estilo.trama(g, x0, y0, L, res);   // semitono, tramado de manga, rayado o papel
@@ -3453,7 +3608,7 @@ const Vista2D = {
     const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
     const inv = (sx, sy) => { const det = a * d - b * c, X = sx - e, Y = sy - f; return [(d * X - c * Y) / det, (-b * X + a * Y) / det]; };
-    E._pr = pr; E._vista = { modo, P, W, H, z };
+    E._pr = pr; E._vista = { modo, P, W, H, z, a, b, c, d, e, f };
     /* caja del mundo visible (con margen para lo alto) */
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [sx, sy] of [[0, -H * .6 * P.hk], [W, -H * .6 * P.hk], [0, H], [W, H]]) { const [wx, wy] = inv(sx, sy); x0 = Math.min(x0, wx); x1 = Math.max(x1, wx); y0 = Math.min(y0, wy); y1 = Math.max(y1, wy); }
     /* de lado (k pequeño) la caja se iría al infinito: se recorta a una franja de profundidad alrededor de la cámara */
@@ -3473,7 +3628,7 @@ const Vista2D = {
     g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
     const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
-      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
+      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0) | (E.clima?.lluvia > .12 ? 4 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
       if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
       if (L) g.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
     }
@@ -3483,13 +3638,19 @@ const Vista2D = {
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
     const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H, real: !!Estilo.p.rudeza, ES: Estilo.p, mapa: !Estilo.p.rudeza && MC.estilo !== 'clasico' }, luces = [];
     const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
+    // Descartar antes de preparar el dibujo, con margen para copa, focos y altura.
+    const visible = (x, y, radio, alto = 0) => {
+      const sx = a * x + c * y + e, sy = b * x + d * y + f, r = radio * z + 3;
+      return sx + r >= 0 && sx - r <= W && sy + r >= 0 && sy - r - alto * z * P.hk <= H;
+    };
+    if (E.clima?.lluvia > .12 && z >= 1) this.charcos(dibCtx, E.clima.lluvia);
     /* sombras del sol de esta hora (también de edificios que están fuera de la pantalla y la alcanzan) */
     const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3; dibCtx.sv = conSombra ? sv : null;
     const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * cal);
     if (modo !== 'cenital' || conSombra) {
       const pad = conSombra ? Math.min(160, 25 * sv.L) : 0, lista = E.mundo.edificiosEn(x0 - pad, y0 - pad, x1 + pad, y1 + pad).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
       const sit = E.mundo.sitios().E.filter(q => { const k2 = q.caja; return !(k2[2] < x0 - pad || k2[0] > x1 + pad || k2[3] < y0 - pad || k2[1] > y1 + pad); });
-      if (conSombra) { const S = lista.map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
+      if (conSombra) { const S = lista.filter(q => visible(q.x,q.y,q.hw+q.hd+q.h*sv.L+2)).map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
       if (modo !== 'cenital') { for (const q of lista) if (q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q }); for (const q of sit) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); } }
     }
     /* agua viva: brillos que se mueven sobre lagos, ríos y mar (baratos: una muestra cada pocos metros) */
@@ -3497,16 +3658,17 @@ const Vista2D = {
       for (let yy = Math.floor(y0 / st) * st; yy < y1 && n < 700; yy += st) for (let xx = Math.floor(x0 / st) * st; xx < x1 && n < 700; xx += st) { const tt = E.mundo.suelo(xx, yy); if (tt !== TT.WATER && tt !== TT.CANAL) continue; n++; const ph = h2(xx | 0, yy | 0, 7) * TAU, a = (Math.sin(t * 1.3 + ph) + 1) / 2; if (a < .55) continue; const wx = xx + Math.sin(t * .4 + ph) * st * .3, wy = yy + Math.cos(t * .3 + ph) * st * .2, p1 = pr(wx - 1.2 * a, wy, 0), p2 = pr(wx + 1.2 * a, wy, 0); g.moveTo(p1[0], p1[1]); g.lineTo(p2[0], p2[1]); }
       g.stroke(); g.restore(); }
     /* naturaleza: rocas, palmas, frailejones, arbustos y juncos (de cerca) */
-    if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
+    if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y) && visible(p.x, p.y, 8, 22)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
     /* 2.6: los árboles de pie (maqueta, oblicua y lateral de cerca), con su sombra según el sol antes de todo lo demás */
-    if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
+    if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) if (visible(t.x, t.y, t.r * 2 + 2, t.h * 1.4)) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
     /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
-    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y) && visible(p.x, p.y, 18, 16)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    if (MC.Vida && op.vida !== false) MC.Vida.piso(dibCtx);   /* 2.8: huellas de llantas y pisadas en el suelo blando */
     /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
     if (E.capaInfo && E.capaInfo.dibujar) E.capaInfo.dibujar(g, a, b, c, d, e, f, dibCtx);
     for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
-    for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
-    for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
+    for (const v of E.vehiculos || []) if (visible(v.x, v.y, (v.largo || 12) + 5, (v.z || 0) + 8)) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
+    for (const p of E.peatones || []) if (visible(p.x, p.y, 2, (p.z || 0) + 3)) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
     if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
     const est = E.jugador && E.jugador.cuerpo && E.jugador.cuerpo.estacionado; if (est && est.x >= x0 - 20 && est.x <= x1 + 20 && est.y >= y0 - 20 && est.y <= y1 + 20) objs.push({ y: dy(est.x, est.y), t: 9, q: est });
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
@@ -3542,11 +3704,12 @@ const Vista2D = {
       if (D.real && z > 3.5) { const hb = Math.min(1, (z1 - z0) * .25) / (z1 - z0), ha = .35 / (z1 - z0), Bi = [B[i][0] + (T[i][0] - B[i][0]) * hb, B[i][1] + (T[i][1] - B[i][1]) * hb], Bj = [B[j][0] + (T[j][0] - B[j][0]) * hb, B[j][1] + (T[j][1] - B[j][1]) * hb], Ti = [T[i][0] - (T[i][0] - B[i][0]) * ha, T[i][1] - (T[i][1] - B[i][1]) * ha], Tj = [T[j][0] - (T[j][0] - B[j][0]) * ha, T[j][1] - (T[j][1] - B[j][1]) * ha];   /* 2.6: humedad y salpicado en la base del muro; sombra bajo el alero */
         g.fillStyle = 'rgba(34,26,18,.24)'; g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(Bj[0], Bj[1]); g.lineTo(Bi[0], Bi[1]); g.closePath(); g.fill();
         g.fillStyle = 'rgba(0,0,0,.13)'; g.beginPath(); g.moveTo(T[i][0], T[i][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(Tj[0], Tj[1]); g.lineTo(Ti[0], Ti[1]); g.closePath(); g.fill(); }
-      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
+      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.max(1, Math.floor(alto / 3))), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
         /* fachada por reglas (WFC, como Townscaper): locales, vitrinas y puerta abajo; balcones alineados; muros ciegos */
         const FZ = pisos * cols <= 48 && z > 2.2 ? Ondas.fachadaCache(ventanas * 31 + i, pisos, cols) : null, alturaV = (T[i][1] - B[i][1]);
         const fm = MC.arte.f('fachadaModulo');   // arte del juego: fachadaModulo(g, tipo, x, y, ancho, alto, encendida, D) → true si lo dibujó
         for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const tipo = FZ ? FZ[pisos - 1 - p][q] : 'ventana'; if (tipo === 'muro') continue; const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u + alturaV * v, w = Math.max(1, ex / cols * .45);
+          if (fm) D.varianteFachada = Math.abs(ventanas + i*31 + p*7 + q) % 3;
           if (fm && fm(g, tipo, x, y, w, Math.max(1, z * 1.2), lit, D) === true) continue;
           if (tipo === 'local' || tipo === 'vitrina') { const yb = B[i][1] + ey * u + alturaV * (p + .08) / pisos; g.fillStyle = noche > .3 ? 'rgba(255,226,150,' + (.5 + noche * .4) + ')' : 'rgba(120,160,190,.55)'; g.fillRect(x - w * .25, yb - z * 1.9, w * 1.5, z * 1.9); if (tipo === 'vitrina') { g.fillStyle = ['#c43a26', '#2f80ed', '#2e7d32', '#f2b705'][(ventanas + q) % 4]; g.fillRect(x - w * .35, yb - z * 2.4, w * 1.7, Math.max(1, z * .45)); } continue; }
           if (tipo === 'puerta') { const yb = B[i][1] + ey * u + alturaV * .02; g.fillStyle = '#4a2f22'; g.fillRect(x, yb - z * 2.1, w * .8, z * 2.1); continue; }
@@ -3556,14 +3719,90 @@ const Vista2D = {
     if (D.mapa) techo = Estilo.col(techo); g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill(); if (D.ES.tinta && z > 1.2) { g.strokeStyle = D.ES.tintaColor; g.lineWidth = Math.max(1, D.ES.tinta * Math.min(1.4, z / 6)); g.stroke(); }
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();
   },
-  edificio(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 4.5 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
+  /* 2.8: una cubierta sin muros (un techo sobre columnas: parqueaderos, kioscos, plazas de mercado) no flota */
+  cubierta(D, q, st) { const { g, pr, z } = D, P = Mundo.esquinas(q), n = P.length >> 1; g.strokeStyle = '#3a3d44'; g.lineWidth = Math.max(1, z * .3); g.beginPath(); for (let i = 0; i < n; i++) { const [bx, by] = pr(P[2 * i], P[2 * i + 1], 0), [tx, ty] = pr(P[2 * i], P[2 * i + 1], q.h - .3); g.moveTo(bx, by); g.lineTo(tx, ty); } g.stroke(); this.prisma(D, P, Math.max(0, q.h - .5), q.h, st.muro, st.techo, 0); },
+  charcos(D, intensidad) {
+    const { g, E, P, pr, z } = D, cx = Math.floor(E.camara.x / 7), cy = Math.floor(E.camara.y / 7);
+    const t = E.t || 0, charcos = [];
+    for (let j = cy - 4; j <= cy + 4; j++) for (let i = cx - 4; i <= cx + 4; i++) {
+      const semilla = h2(i, j, 907);
+      if (semilla > .48 || charcos.length >= 20) continue;
+      const x = (i + semilla) * 7, y = (j + h2(i, j, 908)) * 7;
+      const tt = E.mundo.suelo(x, y);
+      if (tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO) continue;
+      const [sx, sy] = pr(x, y), rx = (.45 + semilla * 2) * z;
+      charcos.push([sx, sy, rx, Math.max(.5, rx * P.k * .52), (t * 1.8 + semilla * 17) % 1]);
+    }
+    g.save();
+    g.fillStyle = D.noche > .45 ? 'rgba(211,175,112,.32)' : 'rgba(164,203,220,.48)';
+    g.beginPath();
+    for (const [x,y,rx,ry] of charcos) { g.moveTo(x + rx,y); g.ellipse(x,y,rx,ry,0,0,TAU); }
+    g.fill(); g.beginPath(); g.lineWidth = Math.max(.5, z * .035);
+    g.strokeStyle = 'rgba(233,242,249,' + (.25 + intensidad * .35) + ')';
+    for (const [x,y,rx,ry,k] of charcos) {
+      g.moveTo(x - rx * .65, y); g.lineTo(x - rx * .2, y);
+      if (k > .08 && k < .8) { g.moveTo(x + rx * k, y); g.ellipse(x,y,rx*k,ry*k,0,0,TAU); }
+    }
+    g.stroke(); g.restore(); return charcos.length;
+  },
+  edificio(D, q) {
+    const [x, y] = D.pr(q.x, q.y);
+    const radio = Math.ceil((q.hw + q.hd + 2) * D.z) + 2;
+    const base = Math.ceil(radio * D.P.k) + 3;
+    const cima = base + Math.ceil((q.h + 2) * D.z * D.P.hk);
+    if (x + radio < 0 || x - radio > D.W || y + base < 0 || y - cima > D.H) return;
+    // La maqueta gira por cuadrantes. Un edificio ya pintado se traslada con la cámara.
+    // Las pieles con fachadas dinámicas conservan su llamada en cada cuadro.
+    const area = 2 * radio * (base + cima);
+    if (D.modo !== 'maqueta' || area > 65000 || (MC.arte.f('fachadaModulo') && !MC.arte.f('fachadasEstaticas'))) return this._edificioDirecto(D, q);
+    const clave = [MC.estilo, MC.arte.activa, D.E.losas.version, D.z, D.P.yaw, Math.round(D.noche * 36), D.noche > .3, q.h, q.hw, q.hd, q.s].join('/');
+    const cache = D.E._fachadasMaqueta || (D.E._fachadasMaqueta = { imagenes: new Map(), pixeles: 0 });
+    let pieza = cache.imagenes.get(q);
+    if (!pieza || pieza.clave !== clave) {
+      if (pieza) cache.pixeles -= pieza.area;
+      const cv = lienzo(2 * radio, base + cima), ctx = cv.getContext('2d');
+      const local = (wx, wy, h) => { const [sx, sy] = D.pr(wx, wy, h); return [sx - x + radio, sy - y + cima]; };
+      this._edificioDirecto({ ...D, g: ctx, pr: local }, q);
+      pieza = { cv, clave, area };
+      cache.imagenes.set(q, pieza);
+      cache.pixeles += area;
+      while (cache.pixeles > 4e6 || cache.imagenes.size > 1200) {
+        const vieja = cache.imagenes.keys().next().value;
+        cache.pixeles -= cache.imagenes.get(vieja).area;
+        cache.imagenes.delete(vieja);
+      }
+    }
+    D.g.drawImage(pieza.cv, x - radio, y - cima);
+  },
+  _edificioDirecto(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); if (q.clase === 'techo' && D.modo !== 'cenital') return this.cubierta(D, q, st); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 2.8 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
   sitio(D, q) {
     const ES = ['#b8673f', '#eceae4', '#bdbcb6', '#5e7b97', '#ece3cd', '#efe8d8', '#d4d8dd', '#3a3f4a', '#b9714b', '#d8432f', '#d9d4c9', '#a86a4c', '#e9dab3', '#2a302d', '#3a3f4a', '#6a645c', '#a6573a', '#e3e6ea', '#4b5a55'], m = ES[q.est] || '#d9d4c9', t = q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : q.techo === 'cupula' ? '#56665f' : tono(m, -.12);
     for (const R of q.R.slice(0, 1)) this.prisma(D, R, 0, q.partes ? q.partes[0].z0 || Math.min(q.h, 12) : q.h, m, t, 7);
     if (q.partes) for (const p of q.partes) this.prisma(D, p.B, p.z0, p.z1, ES[p.est] || m, p.techo === 'aguja' ? '#e3e6ea' : tono(ES[p.est] || m, -.15), 0);
   },
   pasoElevado(D, q) {
-    const { g, pr, z } = D, h = q.nivel * NIVEL_M, p = q.p, n = p.length >> 1, L = q.ancho / 2, vi = q.tipo === 'viaducto', T = q.trazo || (q.trazo = new Trazo(p));
+    const { g, z, P } = D, cen = D.modo === 'cenital';
+    const h = q.nivel * NIVEL_M, L = q.ancho / 2, vi = q.tipo === 'viaducto', T = q.trazo || (q.trazo = new Trazo(q.p));
+    const clave = [z,P.yaw,P.k,P.hk,cen,h,L].join('/');
+    if (!q._dibujoPaso || q._dibujoPaso.clave !== clave) {
+      const cs=Math.cos(P.yaw), sn=Math.sin(P.yaw);
+      const pr=(x,y,alt) => [(cs*(x-q.p[0])-sn*(y-q.p[1]))*z,(sn*(x-q.p[0])+cs*(y-q.p[1]))*z*P.k-alt*z*P.hk];
+      const capas = [], ctx = {beginPath(){ this.path=new Path2D(); },moveTo(x,y){this.path.moveTo(x,y);},
+        lineTo(x,y){this.path.lineTo(x,y);},closePath(){this.path.closePath();},
+        fill(){capas.push(['fill',this.fillStyle,this.path]);},stroke(){capas.push(['stroke',this.strokeStyle,this.path,this.lineWidth]);},
+        fillRect(x,y,w,h){let ultima=capas.at(-1); if (!ultima || ultima[1]!==this.fillStyle) {ultima=['fill',this.fillStyle,new Path2D()]; capas.push(ultima);} ultima[2].rect(x,y,w,h);}};
+      this._trazarPaso({cen},q,ctx,pr,z,h,L,vi,T);
+      q._dibujoPaso={clave,capas};
+    }
+    const [x,y]=D.pr(q.p[0],q.p[1]);
+    g.save();g.translate(x,y);
+    for(const [tipo,color,path,ancho] of q._dibujoPaso.capas) {
+      if(tipo==='fill'){g.fillStyle=color;g.fill(path);}
+      else {g.strokeStyle=color;g.lineWidth=ancho;g.stroke(path);}
+    }
+    g.restore();
+  },
+  _trazarPaso(D,q,g,pr,z,h,L,vi,T) {
     const rampa = vi ? 0 : Math.min(q.largo * .4, q.peatonal ? 9 : 22), alt = s => h * (vi ? 1 : suave(Math.min(s, q.largo - s) / rampa));
     if (!D.cen) { g.fillStyle = vi ? '#9aa3ad' : '#a9a49a'; for (let s = 12; s < q.largo - 6; s += vi ? 30 : 24) { const c = T.at(s), [x, y] = pr(c.x, c.y, 0), [, y2] = pr(c.x, c.y, alt(s)); const w = Math.max(1, z * 1.4); g.fillRect(x - w / 2, y2, w, y - y2); } }
     const izq = [], der = []; for (let s = 0; s <= q.largo; s += Math.max(2, 8 / Math.max(.3, z))) { const c = T.at(s), nx = -Math.sin(c.a), ny = Math.cos(c.a), hh = D.cen ? 0 : alt(s); izq.push(pr(c.x + nx * L, c.y + ny * L, hh)); der.push(pr(c.x - nx * L, c.y - ny * L, hh)); }
@@ -3589,6 +3828,12 @@ const Vista2D = {
     if (D.modo === 'cenital') { const J = Personaje.pose('camina', p.fase); J.fase = p.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, p.a + P.yaw); return; }
     const J = Personaje.pose('camina', p.fase, { alto: A.alto }), dir = Math.cos(p.a + P.yaw) >= 0 ? 1 : -1; (MC.arte.f('personajeLado'))(g, J, A, x, y, z * P.hk, dir);
   },
+  /* 2.8 · faros: un cono de luz cálida en el piso delante del vehículo, de noche (se suma a la luz, no tapa) */
+  faros(D, C, V) {
+    const { g, pr, z } = D, L = 16 + Math.abs(C.v || 0) * .6, ab = .42, ca = Math.cos(C.a), sa = Math.sin(C.a), fx = C.x + ca * (V.largo || 4) * .5, fy = C.y + sa * (V.largo || 4) * .5, [x0, y0] = pr(fx, fy, 0);
+    const P1 = pr(fx + Math.cos(C.a - ab) * L, fy + Math.sin(C.a - ab) * L, 0), P2 = pr(fx + Math.cos(C.a + ab) * L, fy + Math.sin(C.a + ab) * L, 0), [xm, ym] = pr(fx + ca * L, fy + sa * L, 0);
+    g.save(); g.globalCompositeOperation = 'lighter'; const gr = g.createLinearGradient(x0, y0, xm, ym); gr.addColorStop(0, 'rgba(255,236,190,' + (.32 * D.noche).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,220,160,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(x0, y0); g.lineTo(P1[0], P1[1]); g.quadraticCurveTo(xm, ym, P2[0], P2[1]); g.closePath(); g.fill(); g.restore();
+  },
   /* 2.7 · peso: al aterrizar el cuerpo se aplasta y vuelve (squash and stretch), desde los pies */
   jugador(D, j) {
     const C = j.cuerpo, q = C && C._squash; if (!q) return this._jugador(D, j);
@@ -3604,13 +3849,16 @@ const Vista2D = {
       g.save(); g.strokeStyle = 'rgba(57,255,179,.9)'; g.lineWidth = Math.max(2, z * .14); g.beginPath(); g.ellipse(sx, sy, r, r * kk, 0, 0, TAU); g.stroke(); g.fillStyle = '#39ffb3'; const ax = sx + ux * (r + 4), ay = sy + uy * (r * kk + 4), w = Math.max(6, r * .45); g.beginPath(); g.moveTo(ax + ux * w, ay + uy * w); g.lineTo(ax - uy * w * .6, ay + ux * w * .6); g.lineTo(ax + uy * w * .6, ay - ux * w * .6); g.closePath(); g.fill(); g.restore(); }
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
-      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
+      const frena = (C._acel || 0) < -2.2 && Math.abs(C.v) > .8, nocheJ = (D.noche || 0) > .4;   /* 2.8: luces de freno y faros (entrega maestra §11.2, R13 y R19) */
+      const dibujo = V.clase !== 'pie' && MC.arte.f('vehiculoArriba')?.(g,V,0,0,1,0);
+      if (dibujo && ['auto','pesado','moto'].includes(V.clase)) { g.restore(); if (nocheJ) this.faros(D, C, V); return; }
+      if (!dibujo && V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, frena, nocheJ); g.restore(); if (nocheJ) this.faros(D, C, V); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
       g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
       if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } if (C.buceando) { g.fillStyle = 'rgba(30,95,140,.55)'; g.beginPath(); g.arc(x, y, z * .9, 0, TAU); g.fill(); this.burbujas(g, x, y - z * .2, y + z * .4, z * 1.5, D.E.t || 0); } }
       return;
     }
     const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
-    const cab = V.clase !== 'pie' && !C.enAire ? clamp(-(C._acel || 0) * .011, -.1, .1) * dir : 0; if (cab) { g.save(); g.translate(x, y); g.rotate(cab); g.translate(-x, -y); }   /* 2.7 · peso: cabecea al acelerar y al frenar */
+    const cabeceo = V.clase !== 'pie' && !C.enAire ? clamp(-(C._acel || 0) * .011, -.1, .1) * dir : 0; const cab = cabeceo - (C.inclinacion || 0) * dir; if (cab) { g.save(); g.translate(x, y); g.rotate(cab); g.translate(-x, -y); }   /* 2.7 · peso: cabecea al acelerar y al frenar */
     const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
     const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir); if (cab) g.restore();
     /* en el agua: el agua tapa las piernas (vadeando) o casi todo el cuerpo (nadando), con su onda */
@@ -3627,10 +3875,28 @@ const Vista2D = {
   /* el vehículo que quedó parqueado (en la orilla o amarrado en el agua) */
   estacionado(D, e) {
     const { g, pr, z, P, modo } = D, V = Vehiculos.get(e.veh), [x, y] = pr(e.x, e.y, 0);
-    if (modo === 'cenital') { g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
+    if (modo === 'cenital') { if (MC.arte.f('vehiculoArriba')?.(g,V,x,y,z,e.a + P.yaw)) return; g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
     const vl = MC.arte.f('vehiculoLado'); Sombras.contacto(g, x, y, z * (V.largo || 1.6) * .5, z * .25, .25); if (vl) vl(g, V, x, y, Math.max(4, z * P.hk * 1.1), Math.cos(e.a + P.yaw) >= 0 ? 1 : -1, null);
   },
-  cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
+  cables(D, cables) {
+    const {g,z,P}=D, clave=[z,P.yaw,P.k,P.hk].join('/');
+    g.save(); g.strokeStyle='rgba(30,32,38,.8)'; g.lineWidth=Math.max(.6,z*.12);
+    for (const L of cables) {
+      const inicio=L.T.at(0), [ox,oy]=D.pr(inicio.x,inicio.y);
+      if (L._tramaCable?.clave!==clave) {
+        const path=new Path2D();
+        for (let s=0; s<=L.T.largo; s+=20) {
+          let distancia=Infinity;
+          for (const e of L.est) distancia=Math.min(distancia,Math.abs(e.s-s));
+          const c=L.T.at(s), h=6+22*suave(clamp(distancia/120,0,1)), [x,y]=D.pr(c.x,c.y,h);
+          if (s) path.lineTo(x-ox,y-oy); else path.moveTo(x-ox,y-oy);
+        }
+        L._tramaCable={clave,path};
+      }
+      g.save(); g.translate(ox,oy); g.stroke(L._tramaCable.path); g.restore();
+    }
+    g.restore();
+  },
   etiquetas(D) {
     const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
     /* las etiquetas no se montan unas sobre otras ni tapan el centro (donde va el jugador) */
@@ -4235,6 +4501,10 @@ class Vistas {
     const zoomReal = E.camara.zoom; if (px) E.camara.zoom = zoomReal / this.escalaPixel;
     try {
       if (v.tipo === '2d') { Vista2D.dibujar(dst, w, h, E, { modo: v.modo, pixel: px, dpr: this.dpr, presupuesto: this.calidad > .6 ? 3 : 1, etiquetas: !px }); this._clima2D(dst, w, h, E); }
+      else if (v.tipo === 'three') {
+        this.three ||= v.crear();
+        dst.drawImage(this.three.dibujar(w,h,E),0,0,w,h);
+      }
       else if (v.tipo === 'pano') { this.pano.dibujar(dst, w, h, E, px ? { k: clamp(Math.min(w, h * 1.4) / 70, 2, 40) * (zoomReal / 3.2) } : {}); }
       else if (v.tipo === 'gl') {
         /* resolución dinámica: la 3D se dibuja a escala s y se agranda (bajar píxeles antes que cuadros) */
@@ -4250,6 +4520,11 @@ class Vistas {
     const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);
     /* fundido desde la vista anterior */
     if (this.fundido && this.fundido.cv) { this.fundido.t += dt / .55; const a = 1 - suave(this.fundido.t); if (a <= 0) this.fundido = null; else { g.save(); g.globalAlpha = a; g.drawImage(this.fundido.cv, 0, 0, W, H); g.restore(); } }
+    if (v.tipo === '2d' && (Estilo.p.binario || MC.estilo === 'comic')) {
+      const proy = E._vista, k = px ? this.escalaPixel : 1;
+      const V = {z:proy.z*k}; for (const campo of ['a','b','c','d','e','f']) V[campo] = proy[campo]*k;
+      Estilo.imprimir(g,W,H,V,!!Estilo.p.binario);
+    }
     this._ultimo = g.canvas;
     this.losas.trabajar(this.calidad > .6 ? 5 : 3);
     /* calidad automática: media móvil del tiempo de dibujo */
@@ -4426,7 +4701,7 @@ const Interiores = {
     const fmu = MC.arte.f('mueble');   // arte: mueble(g, m, estilo, P) en metros del plano → true si lo dibujó
     for (const m of P.muebles) { if (fmu && fmu(g, m, P.estilo, P) === true) continue; if (m.tipo === 'tapete') { Interiores.tapete(g, m, EST); continue; } g.fillStyle = m.color || (EST.muebles[m.tipo]) || COL[m.tipo] || EST.madera; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; g.strokeRect(m.x, m.y, m.w, m.h); if (m.tipo === 'cama') { g.fillStyle = '#c43a26'; g.fillRect(m.x + m.w * .08, m.y + m.h * .3, m.w * .84, m.h * .62); } }
     if (P.escaleras) { const s2 = P.escaleras; g.fillStyle = '#bdb8ad'; g.fillRect(s2.x, s2.y, s2.w, s2.h); g.strokeStyle = '#7d7f84'; g.lineWidth = .04; for (let q = 0; q < s2.h; q += .28) { g.beginPath(); g.moveTo(s2.x, s2.y + q); g.lineTo(s2.x + s2.w, s2.y + q); g.stroke(); } }
-    if (op.etiquetas !== false && esc > 14) { g.fillStyle = 'rgba(20,24,32,.42)'; g.font = '600 ' + (.34) + 'px system-ui'; g.textAlign = 'left'; g.textBaseline = 'top'; for (const c of P.cuartos) if (c.w > 1.8) g.fillText({ bano: 'baño', sala_juntas: 'juntas', recepcion: 'recepción', balcon: 'balcón', rectoria: 'rectoría', sacristia: 'sacristía' }[c.tipo] || c.tipo, c.x + .22, c.y + .2); g.textBaseline = 'alphabetic'; }   // en la esquina: el nombre no tapa los muebles
+    if (op.etiquetas !== false && esc > 14) { g.fillStyle = 'rgba(20,24,32,.42)'; g.font = '600 ' + (.34) + 'px system-ui'; g.textAlign = 'left'; g.textBaseline = 'top'; for (const c of P.cuartos) if (c.w > 1.2 && c.h > 1) g.fillText({ bano: 'baño', sala_juntas: 'juntas', recepcion: 'recepción', balcon: 'balcón', rectoria: 'rectoría', sacristia: 'sacristía' }[c.tipo] || c.tipo, c.x + .22, c.y + .2); g.textBaseline = 'alphabetic'; }   // en la esquina: el nombre no tapa los muebles
     g.restore();
   }
 };
@@ -4941,14 +5216,14 @@ const UI = {
       /* foco: al ir rápido o en tensión, solo queda lo vital (velocidad, aviso); cine: nada */
       foco(on) { capa.classList.toggle('foco', !!on); }, cine(on) { capa.classList.toggle('cine', !!on); },
       /* el rectángulo que la interfaz no debe tapar (en px de la ventana) */
-      zonaLibre() { const W = innerWidth, H = innerHeight, v = H > W; return v ? { x0: W * .16, y0: H * .24, x1: W * .84, y1: H * .68 } : { x0: W * .26, y0: H * .2, x1: W * .74, y1: H * .74 }; },
+      zonaLibre() { const W = innerWidth, H = innerHeight, v = H > W; return v ? { x0: W * .16, y0: H * .24, x1: W * .8, y1: H * .68 } : { x0: W * .26, y0: H * .2, x1: W * .74, y1: H * .74 }; },
       boton({ id: bid, icono = '', texto = '', al, padre }) { const b = document.createElement('button'); b.className = 'p'; b.innerHTML = icono + (texto ? '<small>' + texto + '</small>' : ''); b.setAttribute('aria-label', texto || bid); b.onclick = e => { e.stopPropagation(); al && al(e); }; (padre || botones).appendChild(b); Bs[bid] = b; return b; },
       velocidad(ms, extra = '') { vel.innerHTML = '<b>' + Math.round(Math.abs(ms) * 3.6) + '</b> km/h ' + extra; },
       barra(clave, etiqueta, v) { if (!Ba[clave]) { const w = div('', barras), [ico, ...txt] = String(etiqueta).split(' '); w.title = etiqueta; w.innerHTML = '<small>' + (txt.length ? ico + '<span> ' + txt.join(' ') + '</span>' : etiqueta) + '</small><div class="barra"><i></i></div>';   /* en celular vertical solo el ícono: las barras caben en una fila */ Ba[clave] = w.querySelector('i'); Ba[clave]._w = w; } Ba[clave].style.width = Math.round(clamp(v, 0, 1) * 100) + '%'; },
       /* avisos en cola: uno a la vez; si llega uno igual, no se repite */
       barraVisible(clave, v) { if (Ba[clave]) Ba[clave]._w.hidden = !v; },
-      aviso(texto, ms = 2200) { const C = ui._cola || (ui._cola = []); if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms]); if (!ui._av) ui._sig(); },
-      _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; return; } ui._av = true; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
+      aviso(texto, ms = 2200, clave) { const C = ui._cola || (ui._cola = []); if (clave) { for (let i = C.length - 1; i >= 0; i--) if (C[i][2] === clave) C.splice(i, 1); if (ui._av && ui._avClave === clave) { aviso.textContent = texto; clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, ms); return; } } if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms, clave]); if (!ui._av) ui._sig(); },   // 2.8: con «clave», el aviso nuevo reemplaza al viejo del mismo tipo (la vista nunca queda desfasada)
+      _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; ui._avClave = null; return; } ui._av = true; ui._avClave = q[2] || null; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
       leyenda(L) { leyenda.hidden = !L; if (!L) return; leyenda.innerHTML = '<b>' + (L.titulo || '') + '</b>' + (L.items || []).map(([c, t]) => '<span><i style="background:' + c + '"></i>' + t + '</span>').join(''); },   // qué significa cada color de una capa de datos
       mision(texto) { mision.hidden = !texto; const [t, ...d] = String(texto || '').split('<br>'); mision.innerHTML = '<div class="t">' + t + '</div>' + (d.length ? '<div class="d">' + d.join(' ') + '</div>' : ''); },   // título en una línea; el detalle, en dos como mucho (nunca medio renglón cortado)
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
@@ -5353,7 +5628,7 @@ Object.assign(MC, { Necesidades, Habitante });
    ===================================================================== */
 const Pieles = {
   paquetes: {},
-  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble', 'arbol'],
+  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble', 'arbol', 'textura'],
   /* registra los atlas y la piel; devuelve una promesa que se cumple cuando las imágenes cargaron */
   instalar(id, pack, op = {}) {
     if (!pack || !pack.atlases) throw new Error('Pieles: el paquete ' + id + ' no trae atlas');
@@ -5367,7 +5642,22 @@ const Pieles = {
     const N = (aid, D) => D && D.noche > .4 && Sprites.atlases.get(aid + '_noche') ? aid + '_noche' : aid;
     const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
     const ARBOLES = op.arboles || ['arbol_guayacan_amarillo', 'arbol_guayacan_rosado', 'arbol_ceiba', 'arbol_palma', 'arbol_mango'];
-    const piel = {};
+    const piel = { fachadasEstaticas: true };
+    const pavimento = de('suelos');
+    if (partes.has('textura') && pavimento) {
+      const fuentes = new Map();
+      piel.textura = (material) => {
+        const atlas = Sprites.atlases.get(pavimento);
+        if (!atlas || !atlas.listo || !atlas.cuadros[material]) return null;
+        if (!fuentes.has(material)) {
+          const [x, y, w, h] = atlas.cuadros[material];
+          const tile = lienzo(w, h);
+          tile.getContext('2d').drawImage(atlas.img, x, y, w, h, 0, 0, w, h);
+          fuentes.set(material, { imagen: tile, metros: atlas.metros[material] });
+        }
+        return fuentes.get(material);
+      };
+    }
     if (partes.has('prop') && AU) piel.prop = (g, p, x, y, z, D) => {
       if (p.t === 'cebra' || (p.t === 'arbol' && op.arboles === false)) return false; const cen = D && D.modo === 'cenital', noche = D && D.noche > .3, v = p.v || 0;
       const U = N(AU, D); if (p.t === 'arbol') { const alto = 5 + v * 4, copa = 3.2 + v * 2.4; return S(U + '/' + ARBOLES[Math.floor(v * 5) % ARBOLES.length] + (cen ? '_cen' : ''), g, x, y, z, { metros: cen ? copa : alto * 1.12 }); }   // a la medida del árbol del motor
@@ -5383,15 +5673,51 @@ const Pieles = {
       return S(U + '/' + p.t, g, x, y, z);
     };
     if (partes.has('fachada') && AW) piel.fachadaModulo = (g, tipo, x, y, w, h, lit, D) => {
-      const zona = (D && D.zona) || op.zona || 'pueblo', n = AW + '/' + zona + '_' + tipo + '_v' + (Math.abs(Math.round(x * .37 + y * .61)) % 3) + '_' + (lit ? 'noche' : 'dia');
+      const zona = (D && D.zona) || op.zona || 'pueblo', n = AW + '/' + zona + '_' + tipo + '_v' + (D?.varianteFachada ?? 0) + '_' + (lit ? 'noche' : 'dia');
       if (!tiene(n)) return false; const [sx, sy, sw, sh] = Sprites.atlases.get(AW).cuadros[n.split('/')[1]], A = Sprites.atlases.get(AW), r = op.recorte || [.18, .12, .64, .62];   // solo el vano (ventana, puerta o vitrina), no el muro del módulo
       g.drawImage(A.img, sx + sw * r[0], sy + sh * r[1], sw * r[2], sh * r[3], x, y, w, h); return true;
     };
     if (partes.has('personaje') && AP) {
-      piel.personajeLado = (g, J, A, x, y, esc, dir) => (op.respetarAspecto && A && A.propio) || !S(AP + '/persona_' + ((J && J.estado) || 'quieto'), g, x, y, esc, { fase: J && J.fase, espejo: dir < 0, metros: (A && A.alto) || 1.68 }) ? M().personajeLado(g, J, A, x, y, esc, dir) : true;
-      piel.personajeArriba = (g, J, A, x, y, z, ang) => (op.respetarAspecto && A && A.propio) || !S(AP + '/persona_cen_' + ((J && J.estado) || 'quieto') + '_der', g, x, y, z, { rot: ang || 0 }) ? M().personajeArriba(g, J, A, x, y, z, ang) : true;   // un solo cuadro que gira con el cuerpo, no 4 saltos
+      const tieneReparto = !!pack.atlases[AP].anim?.persona0_quieto;
+      const atlasCel = AP + '_cel';
+      function prepararCel() {
+        if (Sprites.atlases.has(atlasCel)) return;
+        const a = Sprites.atlases.get(AP);
+        if (!a.listo) return;
+        const c = lienzo(a.img.width,a.img.height), ctx = c.getContext('2d');
+        ctx.drawImage(a.img,0,0);
+        const img = ctx.getImageData(0,0,c.width,c.height), p=img.data, fila=c.width*4;
+        for (let i=0; i<p.length; i+=4) {
+          if (p[i+3]<32) continue;
+          if (p[i-1]<48 || p[i+7]<48 || p[i-fila+3]<48 || p[i+fila+3]<48) {
+            p[i]=33; p[i+1]=32; p[i+2]=37; continue;
+          }
+          const luz=.2126*p[i]+.7152*p[i+1]+.0722*p[i+2];
+          const tono=(luz<76 ? 48 : luz<152 ? 120 : 202)/Math.max(1,luz);
+          p[i]*=tono; p[i+1]*=tono; p[i+2]*=tono;
+        }
+        ctx.putImageData(img,0,0);
+        Sprites.atlas(atlasCel,{imagen:c,cuadros:a.cuadros,metros:a.metros,anim:a.anim,magenta:false});
+      }
+      const figura = A => Number.isInteger(A?.figura) ? clamp(A.figura, 0, 5) : A?.cCasco ? 2 : Math.abs(A?.camisa | 0) % 6;
+      piel.personajeLado = (g, J, A, x, y, esc, dir) => {
+        const i = figura(A), prefijo = tieneReparto ? (i === 4 && ['comic','manga','anime'].includes(MC.estilo) ? 'cel' : i === 4 ? 'persona' : 'persona' + i) : 'persona';
+        const estado = J?.estado || 'quieto';
+        const enCel = tieneReparto && ['comic','manga','anime'].includes(MC.estilo) && i !== 4;
+        if (enCel) prepararCel();
+        const ref = (enCel ? atlasCel : AP) + '/' + prefijo + '_' + estado;
+        const pxm = tieneReparto ? esc * ((A?.alto || 1.7) / 1.7) : esc;
+        if (!(op.respetarAspecto && A?.propio) && S(ref,g,x,y,pxm,{fase:J?.fase, espejo:dir < 0, metros:tieneReparto ? undefined : A?.alto || 1.68})) return true;
+        return M().personajeLado(g, J, A, x, y, esc, dir);
+      };
+      piel.personajeArriba = (g, J, A, x, y, z, ang) => {
+        const ref = tieneReparto ? 'persona' + figura(A) + '_cen_der' : 'persona_cen_' + (J?.estado || 'quieto') + '_der';
+        if (!(op.respetarAspecto && A?.propio) && S(AP + '/' + ref, g, x, y, z, {rot:ang || 0})) return true;
+        return M().personajeArriba(g, J, A, x, y, z, ang);
+      };
     }
     if (partes.has('vehiculo') && AV) piel.vehiculoLado = (g, V, x, y, esc, dir, C) => S(AV + '/' + ((V && V.id) || 'bici') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || (M().vehiculoLado ? M().vehiculoLado(g, V, x, y, esc, dir, C) : false);
+    if (partes.has('vehiculo') && AV) piel.vehiculoArriba = (g, V, x, y, z, ang) => S(AV + '/' + V.id + '_arriba', g, x, y, z, {rot:ang});
     if (partes.has('animal') && AA) piel.animalLado = (g, a, x, y, esc, dir, t, v) => S(AA + '/' + ((a && a.id) || 'perro_criollo') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || M().animalLado(g, a, x, y, esc, dir, t, v);
     /* árboles (2.6): arbol_<especie>_lado|arriba[_v1|_v2] en cualquier atlas del paquete; si no está, el árbol procedural de MC.Arboleda */
     const AT = partes.has('arbol') ? ids.find(a => Object.keys(pack.atlases[a].cuadros || {}).some(n => /^arbol_[a-z_]+_(lado|arriba)/.test(n))) : null;
@@ -5401,8 +5727,14 @@ const Pieles = {
       const [sx, sy, sw, sh] = A.cuadros[n]; g.drawImage(A.img, sx, sy, sw, sh, m.x, m.y, m.w, m.h); return true;
     };
     MC.arte.registrar(id, piel); this.paquetes[id] = { pack, ids, partes: [...partes] };
-    const listo = new Promise(res => { const ver = () => ids.every(a => Sprites.atlases.get(a) && Sprites.atlases.get(a).listo) ? res(ids) : setTimeout(ver, 30); ver(); }).then(L => { if (AU && op.noche !== false) nocturno(AU); return L; });
-    if (op.usar) listo.then(() => MC.arte.usar(id));
+    const listo = Promise.all(ids.map(a => Sprites.atlases.get(a).carga)).then(cargas => {
+      const fallidos = ids.filter((a, i) => !cargas[i]);
+      if (fallidos.length) throw new Error('Atlas sin imagen: ' + fallidos.join(', '));
+      if (AU && op.noche !== false) nocturno(AU);
+      if (op.usar) MC.arte.usar(id);
+      return ids;
+    });
+
     return listo;
   },
   /* un ícono SVG del paquete (24 × 24, del color del texto) o '' si no está */
@@ -5427,11 +5759,17 @@ MC.Pieles = Pieles;
      agua y polvo en la tierra. Todo en un fondo común de 260 partículas, sin crear objetos por cuadro.
    Lo llama MC.Vista2D al final de cada dibujo: MC.Vida.dibujar(D). Se apaga con op.vida = false.
    ===================================================================== */
+/* 2.8 · de la entrega maestra de referencias (docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md):
+   - FAUNA QUE REACCIONA (R12, la playa en Godot): palomas en el piso que comen y alzan vuelo cuando el jugador se
+     acerca rápido; se vuelven una bandada que se aleja.
+   - HUELLAS QUE QUEDAN (R12 y R19, arena y nieve): surcos de las llantas y pisadas en arena, tierra, nieve y barro
+     (pasto mojado cuando llueve). Duran unos minutos y se desvanecen; son marcas, no deformación de la malla (§16.5).
+   - ACCESIBILIDAD (§10.3 y §13): MC.opciones.particulas (0 a 1) baja el polvo, el agua y las hojas. */
 const Vida = {
-  MAX: 260, P: [], aves: [], onos: [], _t: null, _pv: null,
+  MAX: 260, P: [], aves: [], onos: [], palomas: [], marcas: [], MAXM: 700, _t: null, _pv: null,
   /* partículas: polvo, agua, hoja o chispa en metros del mundo (z = altura) */
   emitir(tipo, x, y, n = 6, op = {}) {
-    for (let i = 0; i < n; i++) {
+    n = Math.round(n * (MC.opciones ? MC.opciones.particulas ?? 1 : 1)); for (let i = 0; i < n; i++) {
       if (this.P.length >= this.MAX) this.P.shift(); const a = Math.random() * TAU, s = (op.vel ?? 1.5) * (.4 + Math.random() * .8);
       this.P.push({ tipo, x: x + (Math.random() - .5) * (op.r ?? .6), y: y + (Math.random() - .5) * (op.r ?? .6), z: op.z ?? .1, vx: Math.cos(a) * s + (op.vx || 0), vy: Math.sin(a) * s + (op.vy || 0), vz: (op.vz ?? 1.2) * (.5 + Math.random()), t: 0, vida: op.vida ?? (tipo === 'hoja' ? 4 : tipo === 'agua' ? .7 : 1.1), r: op.tam ?? (tipo === 'polvo' ? .35 : .12), fase: Math.random() * TAU });
     }
@@ -5439,7 +5777,7 @@ const Vida = {
   onomatopeya(x, y, texto, color = '#ffd400') { if (this.onos.length > 6) this.onos.shift(); this.onos.push({ x, y, texto, color, t: 0 }); },
   /* lo que pasa con el jugador: aterrizajes, frenazos, agua y choques */
   _jugador(E, dt) {
-    const C = E.jugador && E.jugador.cuerpo; if (!C) return; const pv = this._pv || (this._pv = { aire: !!C.enAire, vz: 0, v: C.v || 0, agua: 0 });
+    const C = E.jugador && E.jugador.cuerpo; if (!C) return; if (this._cuerpo !== C) { this._cuerpo = C; this._pv = null; } const pv = this._pv || (this._pv = { aire: !!C.enAire, vz: 0, v: C.v || 0, agua: 0 });
     const acel = dt > 0 ? ((C.v || 0) - pv.v) / dt : 0; C._acel = (C._acel || 0) * .8 + acel * .2;
     if (pv.aire && !C.enAire && pv.vz < -2.2) {   // aterrizó: aplasta, sacude y levanta polvo según la caída
       const f = clamp((-pv.vz - 2.2) / 8, .15, 1); C._squash = { t0: E.t || 0, k: f }; this.emitir(C.nadando ? 'agua' : 'polvo', C.x, C.y, 6 + (f * 10 | 0), { vel: 1.5 + f * 2.5, vz: .6 }); if (E.camara && E.camara.sacudir) E.camara.sacudir(.12 + f * .3); if (f > .4) this.onomatopeya(C.x, C.y, '¡TUM!'); MC.emit('aterriza', { fuerza: f });
@@ -5447,12 +5785,51 @@ const Vida = {
     if (!C.enAire && !C.nadando && Math.abs(C._acel) > 6 && Math.abs(C.v) > 2.5 && Math.random() < .5) { const b = Math.sign(C.v) * -1; this.emitir('polvo', C.x + Math.cos(C.a) * b * .8, C.y + Math.sin(C.a) * b * .8, 1, { vel: .6, vz: .4 }); }   // frenazo o arrancón
     if ((C.nadando || C.vadeando) && Math.abs(C.v) > .6) { pv.agua -= dt; if (pv.agua <= 0) { pv.agua = .12; this.emitir('agua', C.x, C.y, 3, { vel: 1.2, vz: 1.8 }); } }
     pv.aire = !!C.enAire; pv.vz = C.vz || 0; pv.v = C.v || 0;
+    this._huellas(E, C);
+  },
+  /* el suelo blando guarda la marca: arena, tierra del monte, nieve, y el pasto o la tierra cuando llueve (barro) */
+  suelo(E, x, y) {
+    const M = E.mundo; if (!M || !M.suelo) return null; const tt = M.suelo(x, y), llueve = E.clima && /lluvia|tormenta|aguacero/.test(String(E.clima.estado || ''));
+    return tt === TT.ARENA ? 'arena' : tt === TT.NIEVE ? 'nieve' : tt === TT.MOUNT ? (llueve ? 'barro' : 'tierra') : tt === TT.GRASS && llueve ? 'barro' : null;
+  },
+  _huellas(E, C) {
+    if (C.enAire || C.nadando || C.vadeando) { C._uh = null; return; } const s = this.suelo(E, C.x, C.y); if (!s) { C._uh = null; return; }
+    const u = C._uh; if (u && Math.hypot(C.x - u.x, C.y - u.y) < .55) return; C._uh = { x: C.x, y: C.y };
+    const V = C.veh || {}, pie = V.clase === 'pie' || !V.clase, nx = -Math.sin(C.a), ny = Math.cos(C.a), t = E.t || 0;
+    if (pie) { const lado = (this._paso = !this._paso) ? 1 : -1; this.marcas.push({ x: C.x + nx * .14 * lado, y: C.y + ny * .14 * lado, a: C.a, w: .12, l: .26, s, t, pie: true }); }
+    else if (u) { const w = Math.max(.12, (V.ancho || .6) * .18), off = (V.ancho || .6) * .38, dos = V.clase !== 'rueda' && V.clase !== 'moto'; for (const k of dos ? [-1, 1] : [0]) this.marcas.push({ x0: u.x + nx * off * k, y0: u.y + ny * off * k, x1: C.x + nx * off * k, y1: C.y + ny * off * k, w, s, t }); }
+    if (this.marcas.length > this.MAXM) this.marcas.splice(0, this.marcas.length - this.MAXM);
+  },
+  /* las huellas en el piso, antes de los objetos (las llama MC.Vista2D) */
+  piso(D) {
+    const { g, pr, z, E } = D; if (!this.marcas.length || z < .9) return; const t = E.t || 0, COL = { arena: '92,70,40', tierra: '58,42,26', barro: '44,30,18', nieve: '120,135,165' };
+    let viejas = 0; while (viejas < this.marcas.length && t - this.marcas[viejas].t > 240) viejas++; if (viejas) this.marcas.splice(0, viejas);
+    /* en lote: un trazo por suelo y por edad (4 tramos), no uno por huella: cientos de huellas cuestan como 16 */
+    const G = new Map(); for (const m of this.marcas) { const k = m.s + ((t - m.t) / 60 | 0) + (m.pie ? 'p' : 'l'); let L = G.get(k); if (!L) G.set(k, L = []); L.push(m); }
+    g.save(); g.lineCap = 'round';
+    for (const L of G.values()) { const m0 = L[0], a = (m0.s === 'nieve' ? .5 : .32) * clamp(1 - (t - m0.t) / 240, 0, 1), col = 'rgba(' + COL[m0.s] + ',' + a.toFixed(3) + ')'; g.beginPath();
+      if (m0.pie) { for (const m of L) { const [x, y] = pr(m.x, m.y, 0), rx = Math.max(.6, m.l * z * .5); g.moveTo(x + rx, y); g.ellipse(x, y, rx, Math.max(.5, m.w * z * .5 * (D.P.k || 1)), m.a + (D.P.yaw || 0), 0, TAU); } g.fillStyle = col; g.fill(); }
+      else { for (const m of L) { const [x0, y0] = pr(m.x0, m.y0, 0), [x1, y1] = pr(m.x1, m.y1, 0); g.moveTo(x0, y0); g.lineTo(x1, y1); } g.strokeStyle = col; g.lineWidth = Math.max(1, m0.w * z); g.stroke(); } }
+    g.restore();
+  },
+  /* palomas en el piso cerca del jugador; alzan vuelo si se acerca rápido */
+  _palomas(E, dt) {
+    const C = E.jugador && E.jugador.cuerpo, M = E.mundo; if (!C || !M || !M.suelo) return; const t = E.t || 0;
+    if (this.palomas.length < 3 && Math.random() < dt * .5) { const a = Math.random() * TAU, d = 35 + Math.random() * 30, x = C.x + Math.cos(a) * d, y = C.y + Math.sin(a) * d, tt = M.suelo(x, y);
+      if ((tt === TT.PLAZA || tt === TT.WALK || tt === TT.GRASS || tt === TT.BRICK) && !(M.edificioEn && M.edificioEn(x, y, 1))) { const n = 4 + (Math.random() * 6 | 0), m = []; for (let i = 0; i < n; i++) m.push({ dx: (Math.random() - .5) * 4, dy: (Math.random() - .5) * 4, a: Math.random() * TAU, f: Math.random() * TAU }); this.palomas.push({ x, y, m, t0: t }); } }
+    for (let i = this.palomas.length - 1; i >= 0; i--) { const p = this.palomas[i], d = Math.hypot(C.x - p.x, C.y - p.y), v = Math.abs(C.v || 0);
+      if (d > 110) { this.palomas.splice(i, 1); continue; }
+      if (d < 5 + v * .7 && (v > 1.2 || d < 2.5)) {   // ¡se asustan! la bandada sale en contra del jugador
+        const a = Math.atan2(p.y - C.y, p.x - C.x) + (Math.random() - .5) * .6, b = { x: p.x, y: p.y, z: 1, sube: true, asustada: true, a, v: 9 + Math.random() * 3, n: p.m.length, garza: false, m: p.m.map((q, k) => [q.dx, q.dy, q.f]) };
+        this.aves.push(b); this.palomas.splice(i, 1); this.emitir('pluma', p.x, p.y, 3, { vel: 1.2, vz: 1.5, tam: .1, vida: 1.6 }); MC.emit('fauna', { tipo: 'palomas', x: p.x, y: p.y }); continue; }
+      for (const q of p.m) { q.a += (Math.random() - .5) * dt * 2; if (Math.random() < dt * .4) { q.dx += Math.cos(q.a) * .3; q.dy += Math.sin(q.a) * .3; } }
+    }
   },
   /* bandadas: unas pocas, siempre cerca de la cámara (garzas y palomas sobre el pueblo) */
   _aves(E, dt) {
     const Cm = E.camara; if (!Cm) return; const R = 260;
-    while (this.aves.length < 3) { const a = Math.random() * TAU, n = 4 + (Math.random() * 6 | 0), cx = Cm.x - Math.cos(a) * R, cy = Cm.y - Math.sin(a) * R, rumbo = a + (Math.random() - .5) * .6, b = { x: cx, y: cy, z: 22 + Math.random() * 25, a: rumbo, v: 7 + Math.random() * 4, n, garza: Math.random() < .35, m: [] }; for (let i = 0; i < n; i++) b.m.push([(-Math.floor((i + 1) / 2)) * 2.2, (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 1.7, Math.random() * TAU]); this.aves.push(b); }
-    for (let i = this.aves.length - 1; i >= 0; i--) { const b = this.aves[i]; b.a += Math.sin((E.t || 0) * .3 + i) * .05 * dt; b.x += Math.cos(b.a) * b.v * dt; b.y += Math.sin(b.a) * b.v * dt; if (Math.hypot(b.x - Cm.x, b.y - Cm.y) > R * 1.3) this.aves.splice(i, 1); }
+    while (this.aves.filter(b => b.n > 0 && !b.asustada).length < 3 && this.aves.length < 8) { const a = Math.random() * TAU, n = 4 + (Math.random() * 6 | 0), cx = Cm.x - Math.cos(a) * R, cy = Cm.y - Math.sin(a) * R, rumbo = a + (Math.random() - .5) * .6, b = { x: cx, y: cy, z: 22 + Math.random() * 25, a: rumbo, v: 7 + Math.random() * 4, n, garza: Math.random() < .35, m: [] }; for (let i = 0; i < n; i++) b.m.push([(-Math.floor((i + 1) / 2)) * 2.2, (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 1.7, Math.random() * TAU]); this.aves.push(b); }
+    for (let i = this.aves.length - 1; i >= 0; i--) { const b = this.aves[i]; if (b.sube) { b.z = Math.min(18, b.z + dt * 7); if (b.z >= 18) b.sube = false; } b.a += Math.sin((E.t || 0) * .3 + i) * .05 * dt; b.x += Math.cos(b.a) * b.v * dt; b.y += Math.sin(b.a) * b.v * dt; if (Math.hypot(b.x - Cm.x, b.y - Cm.y) > R * 1.3) this.aves.splice(i, 1); }
   },
   _hojas(E, dt) {
     const C = E.jugador && E.jugador.cuerpo; if (!C || !MC.Arboleda || Math.random() > dt * 1.2) return; const L = MC.Arboleda.en(E.mundo, C.x - 25, C.y - 25, C.x + 25, C.y + 25, 30); if (!L.length) return;
@@ -5460,9 +5837,9 @@ const Vida = {
   },
   actualizar(E) {
     const t = E.t || 0, dt = this._t == null ? 0 : clamp(t - this._t, 0, .1); this._t = t; if (!dt) return;
-    this._jugador(E, dt); this._aves(E, dt); this._hojas(E, dt);
+    this._jugador(E, dt); this._aves(E, dt); this._hojas(E, dt); this._palomas(E, dt);
     for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t > p.vida) { this.P.splice(i, 1); continue; }
-      if (p.tipo === 'hoja') { p.vz = -.7; p.vx = Math.sin(p.t * 2.3 + p.fase) * .9; p.vy = Math.cos(p.t * 1.7 + p.fase) * .4; } else { p.vz -= 9.8 * dt * (p.tipo === 'polvo' ? .15 : 1); p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2; }
+      if (p.tipo === 'hoja' || p.tipo === 'pluma') { p.vz = p.t < .3 && p.tipo === 'pluma' ? .5 : -.7; p.vx = Math.sin(p.t * 2.3 + p.fase) * .9; p.vy = Math.cos(p.t * 1.7 + p.fase) * .4; } else { p.vz -= 9.8 * dt * (p.tipo === 'polvo' ? .15 : 1); p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2; }
       p.x += p.vx * dt; p.y += p.vy * dt; p.z = Math.max(0, p.z + p.vz * dt); if (p.z === 0 && p.tipo === 'hoja') { p.vx = p.vy = 0; } }
     for (let i = this.onos.length - 1; i >= 0; i--) if ((this.onos[i].t += dt) > .8) this.onos.splice(i, 1);
   },
@@ -5470,8 +5847,11 @@ const Vida = {
     const { g, pr, z, P, E, modo } = D; this.actualizar(E); const cen = modo === 'cenital', noche = D.noche || 0;
     /* partículas */
     for (const p of this.P) { const [x, y] = pr(p.x, p.y, p.z), k = 1 - p.t / p.vida, r = Math.max(.8, p.r * z * (p.tipo === 'polvo' ? 1 + p.t * 1.6 : 1));
-      if (p.tipo === 'polvo') g.fillStyle = 'rgba(150,130,100,' + (.32 * k).toFixed(3) + ')'; else if (p.tipo === 'agua') g.fillStyle = 'rgba(225,240,255,' + (.75 * k).toFixed(3) + ')'; else if (p.tipo === 'hoja') g.fillStyle = noche > .4 ? '#3d4a2a' : (p.fase > 3 ? '#8a9a3a' : '#c4a23a'); else g.fillStyle = 'rgba(255,220,120,' + k.toFixed(3) + ')';
-      g.beginPath(); if (p.tipo === 'hoja') g.ellipse(x, y, r * 1.4, r * .7, p.fase + p.t * 3, 0, TAU); else g.arc(x, y, r, 0, TAU); g.fill(); }
+      if (p.tipo === 'polvo') g.fillStyle = 'rgba(150,130,100,' + (.32 * k).toFixed(3) + ')'; else if (p.tipo === 'agua') g.fillStyle = 'rgba(225,240,255,' + (.75 * k).toFixed(3) + ')'; else if (p.tipo === 'hoja') g.fillStyle = noche > .4 ? '#3d4a2a' : (p.fase > 3 ? '#8a9a3a' : '#c4a23a'); else if (p.tipo === 'pluma') g.fillStyle = 'rgba(200,204,212,' + k.toFixed(3) + ')'; else g.fillStyle = 'rgba(255,220,120,' + k.toFixed(3) + ')';
+      g.beginPath(); if (p.tipo === 'hoja' || p.tipo === 'pluma') g.ellipse(x, y, r * 1.4, r * .7, p.fase + p.t * 3, 0, TAU); else g.arc(x, y, r, 0, TAU); g.fill(); }
+    /* palomas comiendo en el piso: cabecean (a dos cuadros) */
+    if (z > 1.2) for (const p of this.palomas) for (const q of p.m) { const [x, y] = pr(p.x + q.dx, p.y + q.dy, 0), s = Math.max(1.6, z * .16), pico = Math.floor((E.t || 0) * 6 + q.f * 3) % 4 === 0 ? s * .5 : 0;
+      g.fillStyle = 'rgba(10,14,26,.18)'; g.beginPath(); g.ellipse(x, y + s * .3, s * 1.1, s * .45, 0, 0, TAU); g.fill(); g.fillStyle = noche > .4 ? '#2a2d36' : '#8a8f9a'; g.beginPath(); g.ellipse(x, y - s * .4, s * 1.1, s * .7, q.a, 0, TAU); g.fill(); g.fillStyle = noche > .4 ? '#3a3e48' : '#6b7280'; g.beginPath(); g.arc(x + Math.cos(q.a) * s * .9, y - s * .6 + pico, s * .45, 0, TAU); g.fill(); }
     /* pájaros: su sombra en el piso (si hay sol) y el ave aleteando a dos cuadros (como Spider‑Verse) */
     if (z > .5) { const sv = D.sv, t2 = Math.floor((E.t || 0) * 12) / 12;
       for (const b of this.aves) for (const [dx, dy, fa] of b.m) {
@@ -5515,15 +5895,41 @@ const Exportar = {
     return { w, h, paso, min: mn, max: mx, datos: D, caja: [x0, y0, x0 + (w - 1) * paso, y0 + (h - 1) * paso] };
   },
   /* RAW de 16 bits sin signo, little endian (Unity: «Raw», Unreal: «.r16»), normalizado entre min y max */
-  r16(A) { const out = new Uint16Array(A.datos.length), k = A.max > A.min ? 65535 / (A.max - A.min) : 0; for (let i = 0; i < out.length; i++) out[i] = Math.round((A.datos[i] - A.min) * k); return new Uint8Array(out.buffer); },
+  r16(A) {
+    const out = new Uint8Array(A.datos.length * 2), vista = new DataView(out.buffer);
+    const k = A.max > A.min ? 65535 / (A.max - A.min) : 0;
+    for (let i = 0; i < A.datos.length; i++) vista.setUint16(2 * i, Math.round((A.datos[i] - A.min) * k), true);
+    return out;
+  },
   /* los datos para que otro motor ponga su lógica: edificios, vías, árboles y lugares */
   escena(M, caja, op = {}) {
     const [x0, y0, x1, y1] = caja, dentro = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1, r1 = v => Math.round(v * 10) / 10, VN = {}; if (typeof VIA !== 'undefined') for (const [k, v] of Object.entries(VIA)) VN[v] = k.toLowerCase();
     const edificios = M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)).slice(0, op.maxEdificios || 20000).map((b, i) => { const st = estiloEdificio(M, b); return { id: i, x: r1(b.x), y: r1(b.y), base: r1(M.cota(b.x, b.y)), alto: r1(b.h), huella: Array.from(Mundo.esquinas(b), r1), clase: b.clase || 'casa', muro: st.muro, techo: st.techo, plano: !!st.plano }; });
-    const vias = M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
+    const vias = this.viasEn(M, caja).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
     const arboles = Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 20000).map(t => ({ x: r1(t.x), y: r1(t.y), base: r1(M.cota(t.x, t.y)), especie: t.e, alto: r1(t.h), copa: r1(t.r * (Arboleda.ESPECIES[t.e] || {}).ancho || t.r) }));
     const lugares = (M.lugares || []).filter(l => dentro(l.x, l.y)).map(l => ({ nombre: l.nombre, x: r1(l.x), y: r1(l.y), tipo: l.dibujo || l.tipo || '' }));
-    return { motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
+    return { schema_version: 1, motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
+  },
+  // Recorte paramétrico de cada segmento. Un cruce también cuenta si ambos extremos quedan fuera.
+  viasEn(M, caja) {
+    const [x0,y0,x1,y1] = caja, resultado = [];
+    for (const v of M.vias()) {
+      let tramo = null;
+      for (let i = 0; i+3 < v.p.length; i+=2) {
+        const x=v.p[i], y=v.p[i+1], dx=v.p[i+2]-x, dy=v.p[i+3]-y;
+        let ini=0, fin=1;
+        for (const [p,q] of [[-dx,x-x0],[dx,x1-x],[-dy,y-y0],[dy,y1-y]]) {
+          if (p<0) ini=Math.max(ini,q/p);
+          else if (p>0) fin=Math.min(fin,q/p);
+          else if (q<0) { fin=-1; break; }
+        }
+        if (ini>=fin || (!dx && !dy)) { tramo=null; continue; }
+        if (!tramo || ini>0) { tramo={...v,p:[x+ini*dx,y+ini*dy]}; resultado.push(tramo); }
+        tramo.p.push(x+fin*dx,y+fin*dy);
+        if (fin<1) tramo=null;
+      }
+    }
+    return resultado;
   },
   /* ---------- geometría ---------- */
   _malla() { return { p: [], n: [], c: [], i: [] }; },
@@ -5575,7 +5981,7 @@ const Exportar = {
   /* ---------- glTF 2.0 binario (GLB) ---------- */
   glb(M, caja, op = {}) {
     const A = this.alturas(M, caja, op.paso || 4), [x0, y0, x1, y1] = caja, dentro = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
-    const partes = [['terreno', this._terreno(M, A)], ['edificios', this._edificios(M, M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)))], ['vias', this._vias(M, M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }))], ['arboles', this._arboles(M, Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 8000))]].filter(([, m]) => m.i.length);
+    const partes = [['terreno', this._terreno(M, A)], ['edificios', this._edificios(M, M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)))], ['vias', this._vias(M, this.viasEn(M,caja))], ['arboles', this._arboles(M, Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 8000))]].filter(([, m]) => m.i.length);
     /* el origen en el centro de la caja (los motores pierden precisión lejos del origen) */
     const ox = (x0 + x1) / 2, oz = (y0 + y1) / 2, oy = A.min; for (const [, m] of partes) for (let k = 0; k < m.p.length; k += 3) { m.p[k] -= ox; m.p[k + 1] -= oy; m.p[k + 2] -= oz; }
     const trozos = [], bufferViews = [], accessors = [], meshes = [], nodes = []; let off = 0;
@@ -5600,14 +6006,121 @@ const Puente = {
   aGltf(x, y, h = 0) { return [x, h, y]; },
   instantanea(E, op = {}) {
     const r1 = v => Math.round((v || 0) * 100) / 100, J = E.jugador && E.jugador.cuerpo;
-    return { t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
+    return { schema_version: 1, t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
       jugador: J ? { x: r1(J.x), y: r1(J.y), z: r1((J.zPaso || 0) + (J.z || 0)), a: r1(J.a), v: r1(J.v), vehiculo: J.veh && J.veh.id, estado: J.estado || null, nadando: !!J.nadando } : null,
       vehiculos: (E.vehiculos || []).slice(0, op.max || 400).map(v => ({ x: r1(v.x), y: r1(v.y), a: r1(v.a), tipo: v.tipo || v.id || '' })), peatones: (E.peatones || []).slice(0, op.max || 400).map(p => ({ x: r1(p.x), y: r1(p.y), a: r1(p.a) })) };
   }
 };
 MC.Exportar = Exportar; MC.Puente = Puente;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js"];
+/* ---- js/90-telemetria.js ---- */
+/* =====================================================================
+   TELEMETRÍA · lo que hay que medir en un celular real (2.8; entrega maestra §13, §14 y R20)
+   - Tiempos de cuadro en PERCENTILES (p50, p95, p99), no solo un promedio que esconde los tirones.
+   - Tiempo de dibujo de la vista y FPS.
+   - El estado físico del jugador para calibrar el peso: velocidad, aceleración, suelo y si está en el aire.
+   - Sin datos personales: es solo para el reporte del autor y de las IAs.
+   Uso: MC.Telemetria.registro(msDibujo, dtCuadro) en cada cuadro · MC.Telemetria.resumen() · MC.Telemetria.linea(E)
+   ===================================================================== */
+const Telemetria = {
+  N: 360, cuadro: [], dibujo: [],
+  registro(msDibujo, dt) {
+    if (dt > 0 && dt < 1) { this.cuadro.push(dt * 1000); if (this.cuadro.length > this.N) this.cuadro.shift(); }
+    if (msDibujo >= 0) { this.dibujo.push(msDibujo); if (this.dibujo.length > this.N) this.dibujo.shift(); }
+  },
+  percentil(L, p) { if (!L.length) return 0; const S = L.slice().sort((a, b) => a - b); return S[Math.min(S.length - 1, Math.floor(p * (S.length - 1) + .5))]; },
+  resumen() {
+    const c = this.cuadro, d = this.dibujo, r1 = v => Math.round(v * 10) / 10, p50 = this.percentil(c, .5);
+    return { n: c.length, fps: p50 ? Math.round(1000 / p50) : 0, cuadro_p50: r1(p50), cuadro_p95: r1(this.percentil(c, .95)), cuadro_p99: r1(this.percentil(c, .99)), dibujo_p50: r1(this.percentil(d, .5)), dibujo_p95: r1(this.percentil(d, .95)), gpu: MC.GPU && MC.GPU.perfil ? (MC.GPU.perfil().nivel || '?') : '?' };
+  },
+  /* una línea corta para la pantalla: rendimiento + física del jugador */
+  linea(E) {
+    const R = this.resumen(), C = E && E.jugador && E.jugador.cuerpo; let f = '';
+    if (C) { const s = MC.Vida && MC.Vida.suelo ? MC.Vida.suelo(E, C.x, C.y) : null; f = ' · ' + Math.round(Math.abs(C.v || 0) * 3.6) + ' km/h · a ' + (C._acel || 0).toFixed(1) + ' m/s²' + (C.enAire ? ' · en el aire' : '') + (s ? ' · ' + s : ''); }
+    return '📈 ' + R.fps + ' fps · p95 ' + R.cuadro_p95 + ' ms · dibujo ' + R.dibujo_p95 + ' ms' + f;
+  },
+  limpiar() { this.cuadro.length = 0; this.dibujo.length = 0; }
+};
+MC.Telemetria = Telemetria;
+
+/* ---- js/90-three.js ---- */
+/* Vista opcional. Cada juego proporciona su copia local de three.js. */
+Vistas.registrarThree = function (THREE) {
+  if (!THREE?.WebGLRenderer) throw new TypeError('Se necesita three.js con WebGLRenderer');
+  const previa = VISTAS.find(v => v.id === 'three');
+  if (previa) return previa;
+  const vista = {id:'three', n:'Three.js', icon:'🌆', tipo:'three', control:'mundo', crear() {
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    const escena = new THREE.Scene(), cam = new THREE.PerspectiveCamera(48,1,.5,2000);
+    const material = new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
+    const sol = new THREE.DirectionalLight(0xffffff,1.8);
+    escena.background = new THREE.Color(0xbad5e7);
+    escena.add(sol,new THREE.HemisphereLight(0xe6f5ff,0x77604d,1.5));
+    const barrio = new THREE.Group();
+    escena.add(barrio);
+    let anterior = null, cx, cy;
+    function malla(nombre,m) {
+      if (!m.i.length) return;
+      const geo = new THREE.BufferGeometry();
+      for (const [a,datos] of [['position',m.p],['normal',m.n],['color',m.c]])
+        geo.setAttribute(a,new THREE.Float32BufferAttribute(datos,3));
+      geo.setIndex(m.i);
+      const obj = new THREE.Mesh(geo,material);
+      obj.name = nombre;
+      barrio.add(obj);
+    }
+    return {renderer, escena, dibujar(w,h,E) {
+      const M=E.mundo, C=E.camara, x=Math.floor(C.x/128), y=Math.floor(C.y/128);
+      if (M!==anterior || x!==cx || y!==cy) {
+        for (const viejo of [...barrio.children]) { viejo.geometry.dispose(); barrio.remove(viejo); }
+        const caja=[x*128-192,y*128-192,x*128+320,y*128+320];
+        malla('terreno',Exportar._terreno(M,Exportar.alturas(M,caja,8)));
+        malla('edificios',Exportar._edificios(M,M.edificiosEn(...caja)));
+        malla('vias',Exportar._vias(M,Exportar.viasEn(M,caja)));
+        malla('arboles',Exportar._arboles(M,Arboleda.en(M,...caja,2400)));
+        anterior=M; cx=x; cy=y;
+      }
+      if (renderer.domElement.width!==w || renderer.domElement.height!==h) {
+        renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix();
+      }
+      const base=M.cota(C.x,C.y), r=clamp(190/Math.max(1,C.zoom),20,120);
+      cam.position.set(C.x+Math.sin(C.yaw)*r,base+r*.85,C.y+Math.cos(C.yaw)*r);
+      cam.lookAt(C.x,base+2,C.y); sol.position.set(-.5,1,.4);
+      renderer.render(escena,cam);
+      return renderer.domElement;
+    }};
+  }};
+  VISTAS.push(vista);
+  return vista;
+};
+
+/* ---- js/91-contratos.js ---- */
+/* =====================================================================
+   CONTRATOS · datos versionados para que el mundo y el estado viajen entre motores (2.8; entrega maestra §12.3 y §16)
+   - Cada formato que sale del motor lleva `schema_version` y tiene su esquema JSON en schemas/:
+       escena.schema.json (MC.Exportar.escena) · puente.schema.json (MC.Puente.instantanea) · entidad.schema.json
+   - MC.Contratos.validar(dato, esquema) revisa un subconjunto de JSON Schema (type, required, properties, items,
+     enum, minimum, maximum, minItems, const) sin librerías, para que lo que produzca una IA pase antes de entrar.
+   - La física y el estado no cambian con la calidad gráfica: el contrato describe el mundo, no cómo se ve.
+   Uso: const errores = MC.Contratos.validar(MC.Exportar.escena(M, caja), esquema)   // [] si está bien
+   ===================================================================== */
+const Contratos = {
+  VERSION: 1,
+  tipoDe(v) { return v === null ? 'null' : Array.isArray(v) ? 'array' : Number.isInteger(v) ? 'integer' : typeof v; },
+  validar(v, S, ruta = '$', err = [], max = 50) {
+    if (!S || err.length >= max) return err;
+    if (S.const !== undefined && v !== S.const) err.push(ruta + ': debe ser ' + JSON.stringify(S.const));
+    if (S.enum && !S.enum.includes(v)) err.push(ruta + ': no es uno de ' + S.enum.join(', '));
+    if (S.type) { const t = this.tipoDe(v), ok = [].concat(S.type).some(x => x === t || (x === 'number' && t === 'integer')); if (!ok) { err.push(ruta + ': se esperaba ' + [].concat(S.type).join('|') + ' y llegó ' + t); return err; } }
+    if (typeof v === 'number') { if (S.minimum !== undefined && v < S.minimum) err.push(ruta + ': menor que ' + S.minimum); if (S.maximum !== undefined && v > S.maximum) err.push(ruta + ': mayor que ' + S.maximum); }
+    if (Array.isArray(v)) { if (S.minItems !== undefined && v.length < S.minItems) err.push(ruta + ': menos de ' + S.minItems + ' elementos'); if (S.maxItems !== undefined && v.length > S.maxItems) err.push(ruta + ': más de ' + S.maxItems + ' elementos'); if (S.items) for (let i = 0; i < v.length && err.length < max; i++) this.validar(v[i], S.items, ruta + '[' + i + ']', err, max); }
+    if (v && typeof v === 'object' && !Array.isArray(v)) { for (const k of S.required || []) if (!(k in v)) err.push(ruta + ': falta «' + k + '»'); if (S.properties) for (const [k, s2] of Object.entries(S.properties)) if (k in v) this.validar(v[k], s2, ruta + '.' + k, err, max); }
+    return err;
+  }
+};
+MC.Contratos = Contratos;
+
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

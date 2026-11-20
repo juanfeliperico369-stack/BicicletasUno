@@ -288,5 +288,365 @@
    0.111,
    0.101
   ]
+ },
+ {
+  "id": "col_1",
+  "autor": "Henry Price, 1852",
+  "obra": "Gentes de la provincia de Medellín* (Comisión Corográfica)",
+  "anio": null,
+  "archivo": "Acuarela de Henry Price, Comisión Corográfica, Medellín, 1852.jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Acuarela_de_Henry_Price,_Comisi%C3%B3n_Corogr%C3%A1fica,_Medell%C3%ADn,_1852.jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#d6ba5b",
+   "#fdf7e3",
+   "#d6b249",
+   "#a58e2e",
+   "#8a3c13",
+   "#f9f1db",
+   "#c7ae4c",
+   "#dfd393"
+  ],
+  "pesos": [
+   0.21,
+   0.19,
+   0.124,
+   0.122,
+   0.109,
+   0.1,
+   0.09,
+   0.054
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_2",
+  "autor": "Carmelo Fernández, 1850",
+  "obra": "Casa principal de Cachirí, provincia de Soto* (Comisión Corográfica)",
+  "anio": null,
+  "archivo": "Soto - Casa principal de Cachirí (1850).jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Soto_-_Casa_principal_de_Cachir%C3%AD_(1850).jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#e5d5b0",
+   "#75705a",
+   "#988f72",
+   "#82816e",
+   "#f9efc7",
+   "#b1a785",
+   "#d2c29b",
+   "#493f2a"
+  ],
+  "pesos": [
+   0.147,
+   0.147,
+   0.133,
+   0.128,
+   0.124,
+   0.116,
+   0.111,
+   0.095
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_3",
+  "autor": "Manuel María Paz, 1853",
+  "obra": "Acuarela de la Comisión Corográfica (9040)",
+  "anio": null,
+  "archivo": "Manuel María Paz (watercolor 9040, 1853 CE).png",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Manuel_Mar%C3%ADa_Paz_(watercolor_9040,_1853_CE).png",
+  "licencia": "Public domain",
+  "colores": [
+   "#ecede4",
+   "#716154",
+   "#c1b39c",
+   "#f2f3eb",
+   "#e3e5dd",
+   "#9e8c76",
+   "#392d2e",
+   "#d3d4c6"
+  ],
+  "pesos": [
+   0.145,
+   0.132,
+   0.13,
+   0.129,
+   0.124,
+   0.118,
+   0.115,
+   0.107
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_4",
+  "autor": "Manuel María Paz, 1853",
+  "obra": "Acuarela de la Comisión Corográfica (9042)",
+  "anio": null,
+  "archivo": "Manuel María Paz (watercolor 9042, 1853 CE).png",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Manuel_Mar%C3%ADa_Paz_(watercolor_9042,_1853_CE).png",
+  "licencia": "Public domain",
+  "colores": [
+   "#e3dfc2",
+   "#f3f3e8",
+   "#edebda",
+   "#d6d0b5",
+   "#9da29c",
+   "#bcc5d0",
+   "#e1e2d8",
+   "#5c5c55"
+  ],
+  "pesos": [
+   0.147,
+   0.139,
+   0.137,
+   0.127,
+   0.124,
+   0.117,
+   0.105,
+   0.105
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_6",
+  "autor": "Manuel María Paz, 1853",
+  "obra": "Acuarela de la Comisión Corográfica (9055)",
+  "anio": null,
+  "archivo": "Manuel María Paz (watercolor 9055, 1853 CE).png",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Manuel_Mar%C3%ADa_Paz_(watercolor_9055,_1853_CE).png",
+  "licencia": "Public domain",
+  "colores": [
+   "#ece4cb",
+   "#f3ecd6",
+   "#e7ddc1",
+   "#a07e5b",
+   "#c4a881",
+   "#774e2e",
+   "#ded7c3",
+   "#d9c8a8"
+  ],
+  "pesos": [
+   0.16,
+   0.132,
+   0.131,
+   0.127,
+   0.127,
+   0.112,
+   0.109,
+   0.102
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_7",
+  "autor": "Manuel María Paz, 1853",
+  "obra": "Acuarela de la Comisión Corográfica (9056)",
+  "anio": null,
+  "archivo": "Manuel María Paz (watercolor 9056, 1853 CE).png",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Manuel_Mar%C3%ADa_Paz_(watercolor_9056,_1853_CE).png",
+  "licencia": "Public domain",
+  "colores": [
+   "#fcf8df",
+   "#faf2d7",
+   "#d0be9f",
+   "#e5cfb0",
+   "#f6ecd0",
+   "#4b443b",
+   "#a4947d",
+   "#eee2c5"
+  ],
+  "pesos": [
+   0.144,
+   0.14,
+   0.132,
+   0.13,
+   0.125,
+   0.119,
+   0.11,
+   0.1
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_9",
+  "autor": "Manuel María Paz, 1855",
+  "obra": "Lagunas de Siecha, lámina 103* (Comisión Corográfica)",
+  "anio": null,
+  "archivo": "Manuel María Paz (watercolor 9098, 1855 CE) cropped.jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Manuel_Mar%C3%ADa_Paz_(watercolor_9098,_1855_CE)_cropped.jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#dbccb8",
+   "#c1bead",
+   "#898a7b",
+   "#b9b1a0",
+   "#a2a497",
+   "#e3dbca",
+   "#d5c2ab",
+   "#484c3b"
+  ],
+  "pesos": [
+   0.143,
+   0.137,
+   0.135,
+   0.13,
+   0.126,
+   0.116,
+   0.116,
+   0.097
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_10",
+  "autor": "Manuel María Paz, 1856",
+  "obra": "Acuarela de la Comisión Corográfica (9018)",
+  "anio": null,
+  "archivo": "Manuel María Paz (watercolor 9018, 1856 CE).png",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Manuel_Mar%C3%ADa_Paz_(watercolor_9018,_1856_CE).png",
+  "licencia": "Public domain",
+  "colores": [
+   "#8c8c88",
+   "#f5f5ee",
+   "#bec8cb",
+   "#97a9b0",
+   "#edebe1",
+   "#dad6cd",
+   "#b6b2ac",
+   "#5d4f44"
+  ],
+  "pesos": [
+   0.149,
+   0.144,
+   0.142,
+   0.138,
+   0.125,
+   0.107,
+   0.102,
+   0.093
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_11",
+  "autor": "Ramón Torres Méndez, s. XIX (f. 1885)",
+  "obra": "Vendedoras de papas",
+  "anio": null,
+  "archivo": "Vendedoras de Papas by Ramón Torres Méndez.jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Vendedoras_de_Papas_by_Ram%C3%B3n_Torres_M%C3%A9ndez.jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#babab9",
+   "#c6c8c8",
+   "#f1f2f1",
+   "#919293",
+   "#b4a7a7",
+   "#513a40",
+   "#dbd4d2",
+   "#b45272"
+  ],
+  "pesos": [
+   0.145,
+   0.131,
+   0.13,
+   0.124,
+   0.121,
+   0.121,
+   0.12,
+   0.108
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_12",
+  "autor": "José María Espinosa, 1840 (f. 1883)",
+  "obra": "Batalla de Boyacá",
+  "anio": null,
+  "archivo": "Batalla de Boyacá por José María Espinosa (1840).jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Batalla_de_Boyac%C3%A1_por_Jos%C3%A9_Mar%C3%ADa_Espinosa_(1840).jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#c9c8c0",
+   "#6f6243",
+   "#564b31",
+   "#8a7d5c",
+   "#3d321f",
+   "#e6dec6",
+   "#b9b5aa",
+   "#a59c86"
+  ],
+  "pesos": [
+   0.144,
+   0.13,
+   0.129,
+   0.125,
+   0.119,
+   0.118,
+   0.118,
+   0.116
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_14",
+  "autor": "Ricardo Acevedo Bernal, c. 1910 (f. 1930)",
+  "obra": "Retrato de Francisco Antonio Cano",
+  "anio": null,
+  "archivo": "Francisco Antonio Cano by Ricardo Acevedo Bernal.jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Francisco_Antonio_Cano_by_Ricardo_Acevedo_Bernal.jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#907789",
+   "#352b39",
+   "#0f0506",
+   "#494054",
+   "#191216",
+   "#77566a",
+   "#bba0a7",
+   "#2e181d"
+  ],
+  "pesos": [
+   0.171,
+   0.164,
+   0.145,
+   0.122,
+   0.112,
+   0.105,
+   0.097,
+   0.083
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_16",
+  "autor": "Grabador del *Papel Periódico Ilustrado*, 15 mar 1887",
+  "obra": "Grabado de Ramón Torres Méndez* (*Papel Periódico Ilustrado*)",
+  "anio": null,
+  "archivo": "Ramón Torres Méndez.png",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Ram%C3%B3n_Torres_M%C3%A9ndez.png",
+  "licencia": "Public domain",
+  "colores": [
+   "#ffffff",
+   "#343434",
+   "#cbcbcb",
+   "#eaeaea",
+   "#777777",
+   "#9f9f9f",
+   "#f8f8f8",
+   "#fefefe"
+  ],
+  "pesos": [
+   0.481,
+   0.109,
+   0.091,
+   0.084,
+   0.071,
+   0.071,
+   0.056,
+   0.036
+  ],
+  "curaduria": "Gemini G-H8"
  }
 ]

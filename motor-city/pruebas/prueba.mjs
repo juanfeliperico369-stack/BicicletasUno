@@ -271,7 +271,7 @@ console.log('17) Estilos gráficos, vida y exportación a motores potentes (2.7)
   MC.estilo = 'novela'; const nr = E.rgb(rojo), ng = E.rgb(verde); r.novelaAcento = MC.css3(nr) === MC.css3(MC.hex3(E.p.acento)); r.novelaTonos = E.p.tonos.map(t => MC.css3(MC.hex3(t))).includes(MC.css3(ng));
   MC.estilo = 'ukiyoe'; const u = E.rgb(verde); r.ukiyoe = E.paleta('hokusai').some(q => Math.hypot(q[0] - u[0], q[1] - u[1], q[2] - u[2]) < .25);
   MC.estilo = 'comic'; r.alfa = /,0\.5\)$/.test(E.col('rgba(10,20,30,0.5)')); r.estilos = E.lista().length; MC.estilo = antes; r.realistaIgual = E.col('#123456') === '#123456';
-  ok(r.manga && r.novelaAcento && r.novelaTonos && r.ukiyoe && r.alfa && r.estilos >= 8 && r.realistaIgual, 'estilos: manga en grises, novela con tres tonos y un rojo de acento, ukiyo-e con la paleta de Hokusai, y la transparencia se respeta', r); }
+  ok(r.manga && r.novelaAcento && r.novelaTonos && r.ukiyoe && r.alfa && r.estilos >= 10 && r.realistaIgual, 'estilos: manga en grises, novela con tres tonos y un rojo de acento, ukiyo-e con la paleta de Hokusai, y la transparencia se respeta', r); }
 { /* vida: partículas que nacen y se apagan, bandadas cerca de la cámara, aterrizaje con peso */
   const V = MC.Vida, E = { t: 0, camara: { x: 500, y: 500, sacudir() { this.s = 1; } }, mundo: M, jugador: { cuerpo: { x: 500, y: 500, a: 0, v: 0, vz: -7, enAire: true } } };
   V.P.length = 0; V.aves.length = 0; V._t = null; V._pv = null; V.actualizar(E); E.t = .05; V.actualizar(E); E.jugador.cuerpo.enAire = false; E.jugador.cuerpo.vz = 0; E.t = .1; V.actualizar(E);
@@ -283,16 +283,47 @@ console.log('17) Estilos gráficos, vida y exportación a motores potentes (2.7)
   const A = MC.Exportar.alturas(M, c0, 8), r16 = MC.Exportar.r16(A), esc = MC.Exportar.escena(M, c0);
   ok(dv.getUint32(0, true) === 0x46546C67 && dv.getUint32(4, true) === 2 && dv.getUint32(8, true) === glb.length && binL === J.buffers[0].byteLength && J.meshes.length >= 3 && idxOk && r16.length === A.w * A.h * 2 && esc.edificios.length > 10 && esc.vias.length > 0, 'exportar: un GLB (glTF 2.0) bien formado, con terreno, edificios, vías y árboles; alturas RAW 16 y escena en JSON', { kb: Math.round(glb.length / 1024), mallas: J.meshes.map(m => m.name), edificios: esc.edificios.length, alturas: A.w + '×' + A.h }); }
 
+console.log('18) Entrega maestra de referencias: fauna, huellas, telemetría y contratos (2.8)');
+{ /* huellas en suelo blando y palomas que huyen; las partículas respetan la accesibilidad */
+  const V = MC.Vida, mundoArena = { suelo: () => MC.TT.ARENA, edificioEn: () => null }, C = { x: 0, y: 0, a: 0, v: 3, veh: { clase: 'auto', ancho: 1.8 } }, E = { t: 0, mundo: mundoArena, jugador: { cuerpo: C } };
+  V.marcas.length = 0; for (let i = 0; i < 12; i++) { C.x += .7; E.t += .1; V._huellas(E, C); } const llantas = V.marcas.length; C.veh = { clase: 'pie' }; for (let i = 0; i < 6; i++) { C.x += .7; V._huellas(E, C); } const pisadas = V.marcas.filter(m => m.pie).length;
+  const llueve = V.suelo({ mundo: { suelo: () => MC.TT.GRASS }, clima: { estado: 'lluvia' } }, 0, 0), seco = V.suelo({ mundo: { suelo: () => MC.TT.GRASS }, clima: { estado: 'despejado' } }, 0, 0);
+  V.palomas.length = 0; V.aves.length = 0; V.palomas.push({ x: 4, y: 0, m: [{ dx: 0, dy: 0, a: 0, f: 0 }, { dx: 1, dy: 1, a: 0, f: 0 }], t0: 0 }); const Cp = { x: 0, y: 0, v: 5 }; V._palomas({ t: 1, mundo: { suelo: () => MC.TT.PLAZA }, jugador: { cuerpo: Cp } }, .016); const huyen = V.aves.filter(b => b.asustada).length;
+  const antes = MC.opciones.particulas; MC.opciones.particulas = 0; V.P.length = 0; V.emitir('polvo', 0, 0, 20); const sinParticulas = V.P.length === 0; MC.opciones.particulas = antes;
+  ok(llantas >= 20 && pisadas >= 5 && llueve === 'barro' && seco === null && huyen === 1 && V.palomas.length === 0 && sinParticulas, 'vida 2.8: surcos de llantas y pisadas en suelo blando (barro con lluvia), palomas que alzan vuelo y partículas que se apagan por accesibilidad', { llantas, pisadas, llueve, huyen }); }
+{ /* telemetría en percentiles y contratos de datos versionados */
+  const T = MC.Telemetria; T.limpiar(); for (let i = 0; i < 100; i++) T.registro(5, i < 95 ? 1 / 60 : .1); const R = T.resumen();
+  const esq = n => JSON.parse(fs.readFileSync(path.join(RAIZ, 'schemas', n + '.schema.json'), 'utf8')), L0 = M.lugares[0], esc = MC.Exportar.escena(M, [L0.x - 120, L0.y - 120, L0.x + 120, L0.y + 120].map(Math.round));
+  const eEsc = MC.Contratos.validar(esc, esq('escena')), eMal = MC.Contratos.validar({ schema_version: 2, motor: 1 }, esq('escena')), ins = MC.Puente.instantanea({ t: 3, jugador: { cuerpo: { x: 1, y: 2, a: 0, v: 3, veh: { id: 'bici' } } }, vehiculos: [], peatones: [] }), ePuente = MC.Contratos.validar(ins, esq('puente'));
+  const ent = { schema_version: 1, entity_id: 'vehiculo_0001', arquetipo: 'carro', transform: { posicion_m: [0, 0, 0], rumbo_rad: 0 }, superficie: 'asfalto', persistente: true }, eEnt = MC.Contratos.validar(ent, esq('entidad'));
+  ok(R.fps === 60 && R.cuadro_p95 >= 16 && R.cuadro_p99 === 100 && eEsc.length === 0 && eMal.length >= 3 && ePuente.length === 0 && eEnt.length === 0 && esc.schema_version === 1, 'telemetría con percentiles (p95, p99) y contratos versionados: la escena, el puente y la entidad pasan su esquema; uno roto no', { fps: R.fps, p95: R.cuadro_p95, p99: R.cuadro_p99, errorDelRoto: eMal[0] }); }
+{
+  const azul = MC.Estilo.ruidoAzul(), tramo = MC.Exportar.viasEn({vias:()=>[{p:[-2,5,12,5],ancho:2}]},[0,0,10,10]);
+  ok(new Set(azul).size===256 && MC.Estilo.ruidoAzul()===azul, 'El ruido azul usa una vez cada umbral y mantiene la misma fase');
+  ok(tramo.length===1 && String(tramo[0].p)==='0,5,10,5', 'Una vía que atraviesa la exportación conserva sus dos intersecciones');
+  ok(String(MC.Exportar.r16({min:0,max:2,datos:[0,1,2]}))==='0,0,0,128,255,255', 'RAW16 escribe ambos bytes en little endian');
+  const agua=MC.Terreno.agua(M);
+  ok(M.tiene('agua') && agua.C.some(x=>x.tipo==='rio') && agua.D.length===agua.w*agua.h, 'El MC4 de Medellín carga la capa de agua');
+  const L=new MC.Losas(M), original=MC.estilo;
+  L.losa(1,2,2,true,0); MC.estilo='manga'; L.pintar=()=>{throw Error('Se horneó una losa obsoleta');}; L.trabajar(20);
+  MC.estilo=original; ok(!L.cache.size && !L.pend.length,'Cambiar de estilo descarta peticiones de losas antiguas');
+  const cuerpo={v:0,enAire:true,vz:-10,x:0,y:0};
+  MC.Vida._jugador({jugador:{cuerpo}},.016);
+  const otro={v:0,enAire:false,x:0,y:0}; MC.Vida._jugador({jugador:{cuerpo:otro}},.016);
+  ok(!otro._squash,'Cambiar de personaje no produce un aterrizaje del anterior');
+}
+
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
+  const urlPrueba = archivo => process.env.MC_PRUEBAS_URL ? new URL(path.relative(RAIZ, archivo), process.env.MC_PRUEBAS_URL).href : "file://" + archivo;
   /* 2.5.1 (auditoría de Codex): si Playwright no trae su navegador (red cerrada), se usa el Chromium del sistema; o se elige con MC_CHROMIUM=/ruta */
   if (chromium) { const L = chromium.launch.bind(chromium), cand = [process.env.MC_CHROMIUM, '/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome-stable', '/usr/bin/google-chrome'].filter(Boolean); let avisado = false;
     chromium = { launch: async (op = {}) => { if (process.env.MC_CHROMIUM) return L({ ...op, executablePath: process.env.MC_CHROMIUM }); try { return await L(op); } catch (e) { for (const x of cand) if (fs.existsSync(x)) { if (!avisado) { console.log('  (Playwright sin su navegador: se usa ' + x + ')'); avisado = true; } return L({ ...op, executablePath: x }); } throw e; } } }; }
   if (chromium && fs.existsSync(html)) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-    await p.goto('file://' + html); await p.waitForFunction(() => window.MCS && MCS.listo, null, { timeout: 120000 });
+    await p.goto(urlPrueba(html)); await p.waitForFunction(() => window.MCS && MCS.listo, null, { timeout: 120000 });
     const vistas = await p.evaluate(async () => { const out = {}; for (const [i, v] of MC.VISTAS.entries()) { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (i + 1) })); await new Promise(r => setTimeout(r, 900)); out[v.id] = MCS.vistas.actual.id; } MCS.vistas.pixel = true; await new Promise(r => setTimeout(r, 600)); MCS.vistas.pixel = false; return out; });
     ok(Object.keys(vistas).length === 9 && Object.entries(vistas).every(([k, v]) => k === v) && !errs.length, 'las 9 vistas (con la lateral) y el pixel sin errores', vistas);
     const ras = await p.evaluate(async () => { MCS.vistas.motor3d = 'raster'; window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (MC.VISTAS.findIndex(q => q.id === 'tercera') + 1) })); await new Promise(r => setTimeout(r, 1500)); const n = MCS.vistas.raster ? MCS.vistas.raster.n : 0, gpu = MC.GPU.perfil(); MCS.vistas.motor3d = 'auto'; return { poligonos: n, nivel: gpu.nivel, webgl: gpu.webgl, software: gpu.software, escala: +MCS.vistas.res.escala.toFixed(2) }; });
@@ -314,7 +345,7 @@ if (process.argv.includes('--navegador')) {
   if (chromium && fs.existsSync(mh)) {
     const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 412, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage(), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-    await p.goto('file://' + mh); await p.tap('#jugar'); await p.waitForFunction(() => window.MANDADOS && window.MANDADOS.mision, null, { timeout: 120000 }); await p.waitForTimeout(1200);
+    await p.goto(urlPrueba(mh)); await p.tap('#jugar'); await p.waitForFunction(() => window.MANDADOS && window.MANDADOS.mision, null, { timeout: 120000 }); await p.waitForTimeout(1200);
     const tuto = await p.$('.dialogo button'), opcional = !!(await p.$('#comoSe')); if (tuto) await tuto.tap(); await p.waitForTimeout(300);
     const a = await p.evaluate(() => { const G = window.MANDADOS, P = G.mision.actual, j = document.querySelector('.joy'); return { x: G.cuerpo.x, y: G.cuerpo.y, libre: G.libre, vehiculos: G.vehiculos, pxPorMetro: +(G.camara.zoom / Math.min(2, devicePixelRatio)).toFixed(1), joystick: !!j && j.getBoundingClientRect().width > 80, primerMandado: Math.round(Math.hypot(P.x - G.cuerpo.x, P.y - G.cuerpo.y)) }; });
     const cdp = await ctx.newCDPSession(p), sx = 412 * .25, sy = 860 * .8;
@@ -325,14 +356,36 @@ if (process.argv.includes('--navegador')) {
     const r = { tutorialOpcional: !tuto && opcional, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio, arte };
     const est = await p.evaluate(async () => { const out = {}; for (const e of MC.Estilo.lista().map(q => q.id)) { MANDADOS.ponEstilo(e); for (const v of ['maqueta', 'cenital']) { MANDADOS.ponVista(v); await new Promise(q => setTimeout(q, 350)); } out[e] = +MANDADOS.vistas.ms.toFixed(1); } MANDADOS.ponEstilo('realista'); return out; });
     r.estilos = est;
-    ok(Object.keys(est).length >= 8 && Object.values(est).every(x => x >= 0 && x < 60) && !errs.length, 'Mandados: los 8 estilos gráficos (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e y acuarela) dibujan sin errores', est);
+    const artes = await p.evaluate(async () => {
+      MC.arte.usar('chatgpt');
+      try {
+        const g=document.createElement('canvas').getContext('2d'), tex=MC.arte.f('textura');
+        const t=tex('asfalto'), origen=g.getImageData(0,0,1,1);
+        const pixels=t.imagen.getContext('2d').getImageData(0,0,128,128).data;
+        const junta = Array.from({length:128},(_,i)=>[0,1,2].every(c=>pixels[(i*128)*4+c]===pixels[(i*128+127)*4+c])).every(Boolean);
+        const S=MC.Sprites, ref='chatgpt_p/persona0_camina';
+        const pose=MC.Personaje.pose('camina',Math.PI);
+        const fase=S.cuadro(ref,{fase:pose.fase}), cero=S.cuadro(ref,{fase:0});
+        const V={z:1,a:1,b:0,c:0,d:1,e:0,f:0};
+        function trama(e){g.fillStyle='#777';g.fillRect(0,0,33,2);MC.Estilo.imprimir(g,33,2,{...V,e},true);return g.getImageData(0,0,33,2).data;}
+        const b0=trama(0), b1=trama(1);
+        const estable=Array.from({length:32},(_,i)=>b0[i*4]===b1[(i+1)*4] && [0,255].includes(b0[i*4])).every(Boolean);
+        const D={g,E:{t:1,camara:{x:0,y:0},mundo:{suelo:()=>MC.TT.ROAD}},z:4,P:{k:.5},pr:(x,y)=>[x+50,y+50],noche:0};
+        const mediciones=[];let cuantos=0;
+        for(let j=0;j<15;j++){const t0=performance.now();for(let i=0;i<30;i++)cuantos=MC.Vista2D.charcos(D,1);mediciones.push((performance.now()-t0)/30);}
+        mediciones.sort((a,b)=>a-b);
+        return {metros:t.metros,junta,estable,fase:!!fase && fase.c!==cero.c,respaldo:tex('material_ausente')===null,charcos:cuantos,ms:+mediciones[7].toFixed(3)};
+      } finally { MC.arte.usar('gemini'); }
+    });
+    ok(artes.metros===4 && artes.junta && artes.respaldo && artes.fase && artes.estable && artes.charcos>0 && artes.charcos<=20 && artes.ms<2,'Arte ChatGPT, loseta periódica, animación por fase, trama estable y coste de charcos',artes);
+    ok(Object.keys(est).length >= 12 && Object.values(est).every(x => x >= 0 && x < 60) && !errs.length, 'Mandados: los 12 estilos gráficos (realista, clásico, cómic, 1 bit, manga, anime, novela gráfica, ukiyo-e, vintage, CRT, térmico y acuarela) dibujan sin errores', est);
     ok(r.tutorialOpcional && arte.arboles > 0 && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && arte.piel === 'gemini' && arte.atlas >= 10 && arte.faltan === 0 && arte.icono && !errs.length, 'Mandados en un celular táctil: el tutorial es opcional, todo libre y gratis, árboles de pie, joystick visible que mueve, cámara legible, el primer mandado cerca y el arte de Gemini cargado (de día y de noche)', r);
     await b.close();
   }
   if (chromium && fs.existsSync(mh)) {
     const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-    await p.goto('file://' + mh); await p.click('#jugar'); await p.waitForFunction(() => window.MANDADOS, null, { timeout: 120000 }); await p.waitForTimeout(1500);
+    await p.goto(urlPrueba(mh)); await p.click('#jugar'); await p.waitForFunction(() => window.MANDADOS, null, { timeout: 120000 }); await p.waitForTimeout(1500);
     const r = await p.evaluate(async () => { const G = window.MANDADOS, tapa = MC.UI.verificar(G.ui), R = G.ponHogar('Calle 31 # 28-15'); G.cuerpo.x = G.hogar.d.x; G.cuerpo.y = G.hogar.d.y + 3; G.abrirCasa(); await new Promise(q => setTimeout(q, 600)); const barra = !document.querySelector('#barraCasa').hidden;
       document.querySelector('#bcEstilo').click(); const est = G.hogar.plano().estilo; document.querySelector('#bcSalir').click(); await new Promise(q => setTimeout(q, 400)); G.ponVista('lateral'); await new Promise(q => setTimeout(q, 800));
       G.ui.ficha('lugar', '📍 Guatapé y la Piedra del Peñol · un nombre de lugar muy largo para probar'); G.ui.aviso('🏊 Nadando: cansa rápido'); G.ui.aviso('📦 Mandado nuevo: un texto largo de prueba que ocupa varias líneas en la columna de arriba'); await new Promise(q => setTimeout(q, 400)); const tapaLargo = MC.UI.verificar(G.ui);

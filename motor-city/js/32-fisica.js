@@ -86,7 +86,12 @@ class Cuerpo {
     }
     if (this.enAire && V.clase !== 'aire') { this.z += this.vz * dt; this.vz -= GRAV * dt; if (this.z <= 0) { this.z = 0; this.enAire = false; this.eventos.push(this.vz < -6 ? 'aterrizaFuerte' : 'aterriza'); this.vz = 0; } }
     /* mover con choques (desliza por el eje libre) */
-    const dx = Math.cos(this.a) * this.v * dt, dy = Math.sin(this.a) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
+    const auto = V.clase === 'auto' || V.clase === 'pesado';
+    const suelto = auto && !this.paso && (this.tt === TT.NIEVE || (this.tt === TT.LAND || this.tt === TT.GRASS) && (E.lluvia || E.clima?.lluvia || 0) > .35);
+    const rumboPrevio = this.rumboRodado ?? this.a;
+    this.rumboRodado = suelto ? rumboPrevio + Math.atan2(Math.sin(this.a-rumboPrevio), Math.cos(this.a-rumboPrevio)) * (1-Math.exp(-dt*2.8)) : this.a;
+    this.inclinacion = auto ? Math.atan(clamp(this.pend,-.65,.65)) : 0;
+    const dx = Math.cos(this.rumboRodado) * this.v * dt, dy = Math.sin(this.rumboRodado) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
     if (this.puede(nx, ny)) { this.x = nx; this.y = ny; }
     else if (this.puede(nx, this.y)) { this.x = nx; this.v *= .7; }
     else if (this.puede(this.x, ny)) { this.y = ny; this.v *= .7; }

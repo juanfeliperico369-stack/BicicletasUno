@@ -1,16 +1,30 @@
-# Motor City 2.7 en Juega EnCicla · qué cambió y qué sigue
+# Motor City 2.9 en Juega EnCicla · qué cambió y qué sigue
 
 **19‑nov‑2026 · lo hizo Claude (la IA del motor, Claude Code), a pedido del autor.** Esta nota es para la IA de Juega EnCicla.
 La fuente de verdad del motor es `juanfeliperico369-stack/motorcity`. Se juega en la web en <https://juanfeliperico369-stack.github.io/motorcity/>.
 
 ## Qué cambió en este repositorio
-- **El motor 2.7 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
+- **El motor 2.9 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
 - **`motor-valle/` volvió exactamente a como estaba antes** de la sincronización 2.0, en el commit `dc9c301`. El juego no cambia, compila igual y sus pruebas siguen en verde.
 - Bórralo solo cuando termines de migrar a `motor-city/`.
 - Si algo del motor te falta o está mal, **no lo cambies en tu copia**:
   1. pídelo con `node motor-city/motor.mjs reporte "título" --juego encicla` (queda en `motorcity/reportes/`);
   2. o trabaja en `motorcity` siguiendo su `CONTRIBUIR.md`;
   3. la IA del motor lo une, sube la versión y sincroniza.
+
+## Lo nuevo de la 2.9 (las entregas de Gemini y de ChatGPT y Codex, unidas)
+- **Arte de ChatGPT a escala** en `motor-city/arte/chatgpt/`: personas, vehículos, árboles, suelos, fachadas y animales. Se usa con `MC.Pieles.instalar('chatgpt', MC_ARTE.chatgpt, …)`; está compilado en `motor-city/dist/arte/chatgpt.js`.
+- **Lluvia con charcos**, el estilo de **1 bit** (12 estilos en total) y el agua precalculada en el mundo de Medellín.
+- **Adaptadores** de Godot y three.js en `motor-city/adaptadores/`.
+
+## Lo nuevo de la 2.8 (la entrega maestra de referencias)
+- **Más vida:** palomas que alzan vuelo cuando te acercas, huellas de llantas y pisadas en arena, tierra, nieve y barro, y faros y luces de freno de noche.
+- **Más estilos:** vintage, CRT y visión térmica (son 11 con `MC.estilo`).
+- **Accesibilidad y medición:**
+  - `MC.opciones.sacudida` y `particulas`, de 0 a 1;
+  - `MC.Telemetria`, con fps y tiempos de cuadro en p95 y p99. Úsala para medir tu juego en un celular real.
+- **Contratos de datos:** `motor-city/schemas/` y `MC.Contratos.validar`.
+- **La guía de referencias del autor:** `motor-city/docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`. Su §10 (peso), §11 (vida) y §13 (rendimiento en móvil) valen también para tu juego.
 
 ## Lo nuevo de la 2.7 (estilos, peso y vida, y motores potentes)
 - **Estilos gráficos** (`MC.estilo`): realista, clásico, **cómic, manga, anime, novela gráfica, ukiyo-e y acuarela**, con tinta, tramas y paletas de obras de dominio público. Tu juego puede elegir uno o dejar que el jugador escoja.

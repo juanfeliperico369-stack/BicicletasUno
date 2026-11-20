@@ -22,15 +22,41 @@ const Exportar = {
     return { w, h, paso, min: mn, max: mx, datos: D, caja: [x0, y0, x0 + (w - 1) * paso, y0 + (h - 1) * paso] };
   },
   /* RAW de 16 bits sin signo, little endian (Unity: «Raw», Unreal: «.r16»), normalizado entre min y max */
-  r16(A) { const out = new Uint16Array(A.datos.length), k = A.max > A.min ? 65535 / (A.max - A.min) : 0; for (let i = 0; i < out.length; i++) out[i] = Math.round((A.datos[i] - A.min) * k); return new Uint8Array(out.buffer); },
+  r16(A) {
+    const out = new Uint8Array(A.datos.length * 2), vista = new DataView(out.buffer);
+    const k = A.max > A.min ? 65535 / (A.max - A.min) : 0;
+    for (let i = 0; i < A.datos.length; i++) vista.setUint16(2 * i, Math.round((A.datos[i] - A.min) * k), true);
+    return out;
+  },
   /* los datos para que otro motor ponga su lógica: edificios, vías, árboles y lugares */
   escena(M, caja, op = {}) {
     const [x0, y0, x1, y1] = caja, dentro = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1, r1 = v => Math.round(v * 10) / 10, VN = {}; if (typeof VIA !== 'undefined') for (const [k, v] of Object.entries(VIA)) VN[v] = k.toLowerCase();
     const edificios = M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)).slice(0, op.maxEdificios || 20000).map((b, i) => { const st = estiloEdificio(M, b); return { id: i, x: r1(b.x), y: r1(b.y), base: r1(M.cota(b.x, b.y)), alto: r1(b.h), huella: Array.from(Mundo.esquinas(b), r1), clase: b.clase || 'casa', muro: st.muro, techo: st.techo, plano: !!st.plano }; });
-    const vias = M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
+    const vias = this.viasEn(M, caja).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
     const arboles = Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 20000).map(t => ({ x: r1(t.x), y: r1(t.y), base: r1(M.cota(t.x, t.y)), especie: t.e, alto: r1(t.h), copa: r1(t.r * (Arboleda.ESPECIES[t.e] || {}).ancho || t.r) }));
     const lugares = (M.lugares || []).filter(l => dentro(l.x, l.y)).map(l => ({ nombre: l.nombre, x: r1(l.x), y: r1(l.y), tipo: l.dibujo || l.tipo || '' }));
-    return { motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
+    return { schema_version: 1, motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
+  },
+  // Recorte paramétrico de cada segmento. Un cruce también cuenta si ambos extremos quedan fuera.
+  viasEn(M, caja) {
+    const [x0,y0,x1,y1] = caja, resultado = [];
+    for (const v of M.vias()) {
+      let tramo = null;
+      for (let i = 0; i+3 < v.p.length; i+=2) {
+        const x=v.p[i], y=v.p[i+1], dx=v.p[i+2]-x, dy=v.p[i+3]-y;
+        let ini=0, fin=1;
+        for (const [p,q] of [[-dx,x-x0],[dx,x1-x],[-dy,y-y0],[dy,y1-y]]) {
+          if (p<0) ini=Math.max(ini,q/p);
+          else if (p>0) fin=Math.min(fin,q/p);
+          else if (q<0) { fin=-1; break; }
+        }
+        if (ini>=fin || (!dx && !dy)) { tramo=null; continue; }
+        if (!tramo || ini>0) { tramo={...v,p:[x+ini*dx,y+ini*dy]}; resultado.push(tramo); }
+        tramo.p.push(x+fin*dx,y+fin*dy);
+        if (fin<1) tramo=null;
+      }
+    }
+    return resultado;
   },
   /* ---------- geometría ---------- */
   _malla() { return { p: [], n: [], c: [], i: [] }; },
@@ -82,7 +108,7 @@ const Exportar = {
   /* ---------- glTF 2.0 binario (GLB) ---------- */
   glb(M, caja, op = {}) {
     const A = this.alturas(M, caja, op.paso || 4), [x0, y0, x1, y1] = caja, dentro = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
-    const partes = [['terreno', this._terreno(M, A)], ['edificios', this._edificios(M, M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)))], ['vias', this._vias(M, M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }))], ['arboles', this._arboles(M, Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 8000))]].filter(([, m]) => m.i.length);
+    const partes = [['terreno', this._terreno(M, A)], ['edificios', this._edificios(M, M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)))], ['vias', this._vias(M, this.viasEn(M,caja))], ['arboles', this._arboles(M, Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 8000))]].filter(([, m]) => m.i.length);
     /* el origen en el centro de la caja (los motores pierden precisión lejos del origen) */
     const ox = (x0 + x1) / 2, oz = (y0 + y1) / 2, oy = A.min; for (const [, m] of partes) for (let k = 0; k < m.p.length; k += 3) { m.p[k] -= ox; m.p[k + 1] -= oy; m.p[k + 2] -= oz; }
     const trozos = [], bufferViews = [], accessors = [], meshes = [], nodes = []; let off = 0;
@@ -107,7 +133,7 @@ const Puente = {
   aGltf(x, y, h = 0) { return [x, h, y]; },
   instantanea(E, op = {}) {
     const r1 = v => Math.round((v || 0) * 100) / 100, J = E.jugador && E.jugador.cuerpo;
-    return { t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
+    return { schema_version: 1, t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
       jugador: J ? { x: r1(J.x), y: r1(J.y), z: r1((J.zPaso || 0) + (J.z || 0)), a: r1(J.a), v: r1(J.v), vehiculo: J.veh && J.veh.id, estado: J.estado || null, nadando: !!J.nadando } : null,
       vehiculos: (E.vehiculos || []).slice(0, op.max || 400).map(v => ({ x: r1(v.x), y: r1(v.y), a: r1(v.a), tipo: v.tipo || v.id || '' })), peatones: (E.peatones || []).slice(0, op.max || 400).map(p => ({ x: r1(p.x), y: r1(p.y), a: r1(p.a) })) };
   }

@@ -1,5 +1,73 @@
 # Bitácora de Motor City
 
+## 20‑nov‑2026 · 2.9.0 · Unión de la 2.8 (Claude) con la 2.7.1 (ChatGPT/Codex) (Claude Code)
+Codex entregó la 2.7.1 en paralelo con la 2.8:
+- 6 atlas de ChatGPT, con 676 cuadros;
+- el agua precalculada en los MC4;
+- el gancho `textura` y los charcos;
+- el estilo de 1 bit con ruido azul;
+- la caché de fachadas en la maqueta;
+- los adaptadores de Godot y three.js probados;
+- la auditoría C‑M1, con sus arreglos.
+
+Se unió todo en la rama sin perder nada:
+- las huellas y las palomas de la 2.8 conviven con los charcos de Codex;
+- los faros y las luces de freno funcionan también con el vehículo de la piel de ChatGPT (`vehiculoArriba`);
+- la cubierta sobre columnas y las ventanas de las casas de un piso pasan por la caché de fachadas;
+- el hitstop se combina con la lluvia en el bucle de Mandados.
+
+Son 12 estilos. Versión 2.9.0.
+
+## 20‑nov‑2026 · 2.8.0 · La entrega maestra de referencias, al motor (Claude Code)
+**Pedido:** el autor trajo `MOTOR-CITY-ENTREGA-MAESTRA.md` («prepara todo»). Reúne los 14 reels, los videos y el análisis de ChatGPT y de Gemini:
+- 25 fichas;
+- el peso y la vida;
+- la arquitectura portable;
+- el rendimiento en móvil y las fases.
+
+**Lo que se hizo:**
+1. La entrega quedó en `docs/referencias/` y como anexo del documento único. Su resumen, ficha por ficha y con lo que ya está en el motor, está en `docs/INSPIRACION-VISUAL.md` §1.
+2. **Vida (R12, R19):**
+   - palomas que comen en plazas, andenes y parques, y alzan vuelo cuando el jugador se acerca rápido (evento `fauna`);
+   - huellas de llantas y pisadas en arena, tierra, nieve y barro (con lluvia, también en el pasto), que duran 4 minutos.
+3. **Peso y luz (R13, R19):** faros de noche y luces de freno del jugador. El hitstop también corre en el bucle de Mandados.
+4. **Filtros (R17, R22):** los estilos vintage, CRT y visión térmica, para 11 en total.
+5. **Accesibilidad (§10.3, §13):** `MC.opciones.sacudida` y `particulas`, en Ajustes.
+6. **Medir (§13, §14, R20):** `MC.Telemetria` con fps y tiempos de cuadro en p50, p95 y p99; en Ajustes → Telemetría, con la física del jugador. También calidad automática, baja, media o alta.
+7. **Contratos (§12.3, §16):** `schemas/` (escena, puente y entidad, `schema_version: 1`) y `MC.Contratos.validar`. La tabla de los contratos mínimos de la entrega y dónde están en Motor City está en `docs/MOTORES-POTENTES.md`.
+8. **Repartido en `TAREAS-IA.md`:**
+   - Codex: C‑M20 (API de construcción por código y pincel de mundo), C‑M21 (suspensión, balanceo, cosas que se rompen, IK, tablero y taller con rayos X) y C‑M22 (guardado versionado y sectores);
+   - ChatGPT: C‑A10 (tipografía propia) y C‑A11 (interfaz de libreta);
+   - Gemini: G‑H7 (verificar las 13 URL y las 7 fichas que solo describe su informe) y G‑H9 (medición en un celular real con la telemetría).
+
+9. **Llegó la entrega de Gemini (G‑H1…G‑H8)** y se unió a la rama. De sus capturas se corrigió:
+   - la zona libre deja margen para la columna de botones (80 %): en su máquina, la prueba fallaba por 4 px;
+   - `ui.aviso(texto, ms, clave)`: el aviso de la vista reemplaza al anterior y nunca queda desfasado;
+   - ventanas encendidas en las casas de un piso;
+   - las cubiertas sin muros se dibujan sobre columnas;
+   - cebras sin cruzarse en «#»;
+   - en Mi casa, el botón «Comprar» completo, la burbuja dentro de la casa y el rótulo de los cuartos pequeños;
+   - la sombra horneada de las copas, más pequeña.
+
+   También se sacaron las paletas de las obras colombianas de su lista. Wikimedia limita las descargas, así que algunas quedaron para después.
+10. **Rendimiento:** las huellas se dibujan en lote (16 trazos en vez de cientos). En esta máquina nueva, la cenital de Medellín mide 14–16 ms tanto en la 2.7 como en la 2.8: no es una regresión, es el contenedor.
+
+**Probado:** 125 pruebas:
+- huellas y palomas;
+- partículas apagadas por accesibilidad;
+- telemetría en percentiles;
+- la escena, el puente y la entidad pasan su esquema y uno roto no;
+- los 11 estilos en Mandados.
+
+Además se hizo una revisión visual de noche (faros), de las palomas y de los filtros nuevos.
+
+## 20 de noviembre de 2026 · 2.7.1 · Arte a escala y adaptadores
+
+Mandados incorpora seis atlas de ChatGPT con 676 cuadros. Los 997 cuadros del paquete de Gemini pasan el revisor tras reparar los recortes y márgenes. Guatapé y Medellín cargan su hidrografía desde MC4. Godot 4 y three.js abrieron escenas del motor.
+
+El banco integrado pasó 130 pruebas. La maqueta midió 34,9 ms con CPU 4×, por encima de la meta de 20 ms. El informe enlaza las pruebas de los tres juegos, las capturas y los pendientes. [Entrega del motor compartido](ENTREGA-CHATGPT-MOTOR-CITY-2.6.md)
+
+
 ## 20‑nov‑2026 · 2.7.0 · Estilos gráficos, peso y vida, y motores potentes (Claude Code)
 **Pedido:**
 - 14 reels de referencia;

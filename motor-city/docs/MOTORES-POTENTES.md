@@ -67,3 +67,25 @@ socket.send(JSON.stringify(estado));       // al motor que dibuja
 
    Están descritos con sus fuentes en `docs/INSPIRACION-VISUAL.md`.
 4. **Lo que no se lleva:** el guardado de cada juego y su interfaz, que se hacen en el motor de destino.
+
+## Los contratos mínimos de la entrega maestra, y dónde están en Motor City
+La entrega maestra (§12.3) pide separar la simulación del dibujo con contratos estables. Así se corresponden hoy:
+
+| Contrato | En Motor City | Estado |
+|---|---|---|
+| `IInput` | `MC.Controles` y `MC.Manejo` (acciones: mover, saltar, turbo, bajar, subir) | ✅ |
+| `IWorldClock` | `MC.Reloj` y `MC.Bucle` (paso fijo de 1/60 s; hitstop con `MC._pausaImpacto`) | ✅ |
+| `IPhysicsWorld` | `MC.Cuerpo`, `MC.Terreno` (suelo, pendiente, agua, obstáculos) | ✅ · suspensión por rueda en C‑M21 |
+| `IRenderBridge` | `MC.Vistas`, `MC.arte`, `MC.Pieles`, `MC.Estilo` | ✅ · vista three.js o WebGPU en C‑M18 |
+| `IAudioBridge` | `MC.Sonido`, `MC.Paisaje`, `MC.Musica` | ✅ |
+| `IWorldStreamer` | Mundo MC4 por celdas, `MC.Losas` con presupuesto | 🟡 · sectores dormidos en C‑M22 |
+| `IAgentWorld` | `MC.Poblacion`, `MC.Trafico`, `MC.Transporte`, `MC.Urbe` | ✅ |
+| `ISaveSystem` | Cada juego guarda lo suyo | ⏳ `MC.Guardado` versionado en C‑M22 |
+| `IQualityProfile` | `MC.GPU`, `MC.ResDinamica`, `E.calidad`, y en Mandados Ajustes → Calidad (automática, baja, media o alta) | ✅ |
+
+**Esquemas versionados** (`schemas/`, `schema_version: 1`), que comprueba `MC.Contratos.validar(dato, esquema)`:
+- `escena.schema.json`, lo que sale de `MC.Exportar.escena`;
+- `puente.schema.json`, lo que sale de `MC.Puente.instantanea`;
+- `entidad.schema.json`, la entidad persistente que propone la entrega (§16.3).
+
+**La regla de la entrega que el motor cumple:** la calidad gráfica cambia el aspecto, nunca la física. Una frenada mide lo mismo en un celular bajo y en uno alto.

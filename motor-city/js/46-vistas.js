@@ -47,6 +47,10 @@ class Vistas {
     const zoomReal = E.camara.zoom; if (px) E.camara.zoom = zoomReal / this.escalaPixel;
     try {
       if (v.tipo === '2d') { Vista2D.dibujar(dst, w, h, E, { modo: v.modo, pixel: px, dpr: this.dpr, presupuesto: this.calidad > .6 ? 3 : 1, etiquetas: !px }); this._clima2D(dst, w, h, E); }
+      else if (v.tipo === 'three') {
+        this.three ||= v.crear();
+        dst.drawImage(this.three.dibujar(w,h,E),0,0,w,h);
+      }
       else if (v.tipo === 'pano') { this.pano.dibujar(dst, w, h, E, px ? { k: clamp(Math.min(w, h * 1.4) / 70, 2, 40) * (zoomReal / 3.2) } : {}); }
       else if (v.tipo === 'gl') {
         /* resolución dinámica: la 3D se dibuja a escala s y se agranda (bajar píxeles antes que cuadros) */
@@ -62,6 +66,11 @@ class Vistas {
     const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);
     /* fundido desde la vista anterior */
     if (this.fundido && this.fundido.cv) { this.fundido.t += dt / .55; const a = 1 - suave(this.fundido.t); if (a <= 0) this.fundido = null; else { g.save(); g.globalAlpha = a; g.drawImage(this.fundido.cv, 0, 0, W, H); g.restore(); } }
+    if (v.tipo === '2d' && (Estilo.p.binario || MC.estilo === 'comic')) {
+      const proy = E._vista, k = px ? this.escalaPixel : 1;
+      const V = {z:proy.z*k}; for (const campo of ['a','b','c','d','e','f']) V[campo] = proy[campo]*k;
+      Estilo.imprimir(g,W,H,V,!!Estilo.p.binario);
+    }
     this._ultimo = g.canvas;
     this.losas.trabajar(this.calidad > .6 ? 5 : 3);
     /* calidad automática: media móvil del tiempo de dibujo */

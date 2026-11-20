@@ -1,0 +1,15 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://juanfeliperico369-stack.github.io/motorcity/schemas/puente.schema.json",
+ "title": "Estado vivo de un juego de Motor City (MC.Puente.instantanea)",
+ "description": "Una instantánea por cuadro para que otro motor (Godot, Unity, Unreal, three.js) dibuje lo que simula Motor City. Metros y radianes; posición glTF = [x, z, y].",
+ "type": "object",
+ "required": ["schema_version", "t", "jugador", "vehiculos", "peatones"],
+ "properties": {
+  "schema_version": { "const": 1 },
+  "t": { "type": "number" }, "hora": { "type": ["number", "null"] }, "clima": { "type": ["string", "null"] }, "estilo": { "type": "string" },
+  "jugador": { "type": ["object", "null"], "required": ["x", "y", "z", "a", "v"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" }, "a": { "type": "number" }, "v": { "type": "number" }, "vehiculo": { "type": ["string", "null"] }, "estado": { "type": ["string", "null"] }, "nadando": { "type": "boolean" } } },
+  "vehiculos": { "type": "array", "items": { "type": "object", "required": ["x", "y", "a"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "a": { "type": "number" }, "tipo": { "type": "string" } } } },
+  "peatones": { "type": "array", "items": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "a": { "type": "number" } } } }
+ }
+}

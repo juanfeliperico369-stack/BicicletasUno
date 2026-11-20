@@ -25,7 +25,17 @@ const Terreno = {
   MATERIAL_TT, PEND_MAX, AGUA_MAX,
   /* ---------- agua: tipo y profundidad ---------- */
   agua(M) {
-    if (M._agua) return M._agua; const T = M.tile, paso = Math.max(T, 10, Math.ceil(Math.sqrt(M.ancho * M.alto / 1.2e6) / T) * T), w = Math.ceil(M.ancho / paso), h = Math.ceil(M.alto / paso), n = w * h;
+    if (M._agua) return M._agua;
+    if (M.tiene?.('agua') && M.capaInfo('agua').formato === 'AGUA1') {
+      const {w,h,paso,cuerpos:C} = M.capaInfo('agua'), datos = M.capa('agua');
+      const dv = new DataView(datos.buffer,datos.byteOffset,datos.byteLength), n = w*h;
+      const tipo = new Uint8Array(n), comp = new Int32Array(n).fill(-1), D = new Float32Array(n);
+      for (let o=0; o<datos.length; o+=13) {
+        const i=dv.getUint32(o,true); tipo[i]=datos[o+12]; comp[i]=dv.getInt32(o+4,true); D[i]=dv.getFloat32(o+8,true);
+      }
+      return M._agua={w,h,paso,C,tipo,comp,D};
+    }
+    const T = M.tile, paso = Math.max(T, 10, Math.ceil(Math.sqrt(M.ancho * M.alto / 1.2e6) / T) * T), w = Math.ceil(M.ancho / paso), h = Math.ceil(M.alto / paso), n = w * h;
     const tipo = new Uint8Array(n), tierra = new Uint8Array(n), rio = new Uint8Array(n);   // 0 tierra · 1 agua · 2 quebrada
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const t = M.suelo((i + .5) * paso, (j + .5) * paso), k = j * w + i; tipo[k] = t === TT.WATER ? 1 : t === TT.CANAL ? 2 : 0; }
     /* el río con nombre del mapa (si lo trae): se marca para que no se corte en la rejilla gruesa y se reconozca como río */

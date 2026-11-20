@@ -9,7 +9,7 @@
 import fs from 'node:fs'; import path from 'node:path'; import { createRequire } from 'node:module'; import { fileURLToPath } from 'node:url';
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), require = createRequire(import.meta.url), web = process.argv.includes('--web');
 let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.error('✗ Falta Playwright: npm i -g playwright'); process.exit(1); }
-const URL = web ? 'https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html' : 'file://' + path.join(RAIZ, 'dist/juegos/mandados.html'), OUT = path.join(RAIZ, 'dist/capturas'); fs.mkdirSync(OUT, { recursive: true });
+const URL = web ? 'https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html' : process.env.MC_PRUEBAS_URL ? new globalThis.URL('dist/juegos/mandados.html', process.env.MC_PRUEBAS_URL).href : 'file://' + path.join(RAIZ, 'dist/juegos/mandados.html'), OUT = path.join(RAIZ, 'dist/capturas'); fs.mkdirSync(OUT, { recursive: true });
 const op = process.env.MC_CHROMIUM ? { executablePath: process.env.MC_CHROMIUM } : {}; let b; try { b = await chromium.launch(op); } catch (e) { const x = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'].find(f => fs.existsSync(f)); if (!x) throw e; b = await chromium.launch({ executablePath: x }); }
 const ctx = await b.newContext({ viewport: { width: 412, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage(), errs = [];
 p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });

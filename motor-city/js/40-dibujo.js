@@ -76,7 +76,7 @@ const Rudeza = {
 /* ---------- losas del suelo ---------- */
 class Losas {
   constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; this.px = 0; this.maxPx = op.maxPx || (GPU.perfil().nivel === 'alta' ? 40e6 : 22e6); }   // presupuesto de píxeles: las losas nítidas de cerca pesan más
-  limpiar() { this.cache.clear(); this.px = 0; this.version++; }
+  limpiar() { this.cache.clear(); this.pend.length = 0; this.px = 0; this.version++; }
   _poner(k, c) { this.cache.set(k, c); if (c) this.px += c.width * c.height; while (this.cache.size > this.max || this.px > this.maxPx) { const k0 = this.cache.keys().next().value, c0 = this.cache.get(k0); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k0); if (k0 === k) break; } }
   /* borra las losas de una caja (cuando la ciudad crece o cambia) */
   invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) { const c0 = this.cache.get(k); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k); } } this.version++; }
@@ -88,7 +88,15 @@ class Losas {
     c = this.pintar(gx, gy, res, fl); this._poner(k, c); return c;
   }
   /* pinta las losas pendientes con un presupuesto de milisegundos */
-  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this._poner(k, this.pintar(gx, gy, res, st | 0)); } }
+  trabajar(ms = 6) {
+    const inicio = MC.ahora();
+    while (this.pend.length && MC.ahora() - inicio < ms) {
+      const clave = this.pend.shift();
+      const [gx, gy, res, flags, piel, estilo] = clave.split(',');
+      if (piel !== MC.arte.activa || estilo !== MC.estilo || this.cache.has(clave)) continue;
+      this._poner(clave, this.pintar(+gx, +gy, +res, +flags));
+    }
+  }
   pintar(gx, gy, res, fl) {
     const ES = Estilo.p, sinTechos = (fl & 1) !== 0, sinArboles = (fl & 2) !== 0, real = !!ES.rudeza, mapa = !ES.rudeza && MC.estilo !== 'clasico', tw = ES.tinta ? clamp(ES.tinta * .9 / Math.max(.8, res), .1, .7) : 0;   /* 2.7: el estilo (mapa de color, tinta y trama) */
     const M = this.mundo, L = this.L, T = M.tile, n = Math.round(L / T), px = Math.max(8, Math.round(L * res)), cv = lienzo(px, px); if (!cv) return null;
@@ -109,7 +117,34 @@ class Losas {
     /* la casilla de borde de cada lado es de la losa vecina: así el suavizado no deja costuras entre losas */
     bg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; const e = px / n; g.drawImage(base, 0, 0, m, m, -e, -e, px + 2 * e, px + 2 * e);
     g.save(); g.scale(res, res); g.translate(-x0, -y0);
-    const lejos = res < .3;   // losas de lejos: sin árboles, sin techos y solo las vías grandes
+    const lejos = res < .3;
+    const textura = real && res >= .9 && MC.arte.f('textura');
+    const patrones = new Map();
+    function patron(material) {
+      if (!textura) return null;
+      if (!patrones.has(material)) {
+        const tile = textura(material);
+        let p = null;
+        if (tile && tile.metros > 0 && tile.imagen && tile.imagen.width && tile.imagen.height) {
+          p = g.createPattern(tile.imagen, 'repeat');
+          if (p) p.setTransform(new DOMMatrix().scale(tile.metros / tile.imagen.width, tile.metros / tile.imagen.height));
+        }
+        patrones.set(material, p);
+      }
+      return patrones.get(material);
+    }
+    if (textura) {
+      g.save();
+      g.globalAlpha = .55;
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const x = x0 + i * T, y = y0 + j * T;
+        const tipo = M.suelo(x + T / 2, y + T / 2);
+        const mat = tipo === TT.GRASS ? 'pasto' : tipo === TT.ROCA ? 'grava' : null;
+        const p = mat && patron(mat);
+        if (p) { g.fillStyle = p; g.fillRect(x, y, T, T); }
+      }
+      g.restore();
+    }
     /* 2. sitios: canchas, piscinas, plazas y prados de los campus */
     const SI = M.sitios(), dentroL = b => b[2] >= x0 && b[0] <= x0 + L && b[3] >= y0 && b[1] <= y0 + L;
     for (const z of SI.Z) if (dentroL(z.caja)) { g.fillStyle = mapa ? Estilo.col('#d9d1bd') : '#d9d1bd'; this._poly(g, z.R); }
@@ -122,9 +157,20 @@ class Losas {
     if (tw) for (const v of carros) lin(v.p, v.ancho + 3.2 + tw * 2, ES.tintaColor);
     for (const v of carros) lin(v.p, v.ancho + 3.2, V.anden);
     if (tw) for (const v of carros) lin(v.p, v.ancho + tw * 2, ES.tintaColor);
-    if (real && res >= .9) { Rudeza.anden(g, carros, lin); for (const v of carros) lin(v.p, v.ancho + .5, V.bordillo); }
+    if (real && res >= .9) {
+      const baldosa = patron('anden');
+      if (baldosa) for (const v of carros) lin(v.p, v.ancho + 3.2, baldosa);
+      else Rudeza.anden(g, carros, lin);
+      for (const v of carros) lin(v.p, v.ancho + .5, V.bordillo);
+    }
     for (const v of resto) if (v.k !== VIA.CICLO) lin(v.p, v.ancho + (v.k === VIA.ESCALAS ? .6 : 1), v.k === VIA.ESCALAS ? V.escalas : v.k === VIA.SENDERO ? V.sendero : V.peatonal);
-    for (const v of carros) lin(v.p, v.ancho, v.k === VIA.AUTOPISTA ? V.autopista : v.k === VIA.AVENIDA ? V.avenida : V.asfalto);
+    for (const v of carros) lin(v.p, v.ancho, patron(v.k === VIA.CALLE ? 'asfalto_parchado' : 'asfalto') || (v.k === VIA.AUTOPISTA ? V.autopista : v.k === VIA.AVENIDA ? V.avenida : V.asfalto));
+    if (fl & 4) for (const v of carros) lin(v.p, v.ancho, 'rgba(15,29,42,.38)');
+    if (textura) for (const v of resto) {
+      const mat = v.k === VIA.PEATONAL ? 'adoquin' : v.k === VIA.SENDERO ? 'barro' : null;
+      const p = mat && patron(mat);
+      if (p) lin(v.p, v.ancho, p);
+    }
     if (real && res >= .9) for (const v of carros) { lin(v.p, v.ancho * .5, 'rgba(14,14,16,.10)'); Rudeza.asfalto(g, v, res); }   // el centro de los carriles, más gastado y oscuro
     for (const v of carros) if (v.ancho >= 8 && res >= .6) { if (v.k === VIA.AVENIDA || v.k === VIA.AUTOPISTA) lin(v.p, .35, V.amarilla); else lin(v.p, .25, V.linea, [3, 4]); }
     for (const v of resto) if (v.k === VIA.ESCALAS && res >= .8) lin(v.p, v.ancho * .7, 'rgba(90,70,50,.35)', [.35, .45]);
@@ -133,11 +179,21 @@ class Losas {
     /*    2.6: los mismos árboles de MC.Arboleda (también los del borde de las losas vecinas: ya no quedan cortados).
           En las vistas inclinadas de cerca no se pintan en el piso: se levantan (antes parecían tapetes). */
     if (!lejos && !sinArboles) for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { if (MC.estilo !== 'clasico') Arboleda.arriba(g, t); else this.arbol(g, t.x, t.y, t.r, t.s); }
-    else if (!lejos && sinArboles) { g.fillStyle = 'rgba(10,16,12,.17)'; g.beginPath(); for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { const rM = t.r * (Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan).ancho; g.moveTo(t.x + rM * 1.2, t.y + rM * .2); g.ellipse(t.x + rM * .25, t.y + rM * .2, rM * .95, rM * .9, 0, 0, TAU); } g.fill(); }   // la sombra bajo la copa, horneada en el piso (gratis por cuadro)
+    else if (!lejos && sinArboles) { g.fillStyle = 'rgba(10,16,12,.15)'; g.beginPath(); for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { const rM = t.r * (Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan).ancho; g.moveTo(t.x + rM * .95, t.y + rM * .2); g.ellipse(t.x + rM * .25, t.y + rM * .2, rM * .7, rM * .66, 0, 0, TAU); } g.fill(); }   // la sombra bajo la copa, horneada en el piso (gratis por cuadro)
     /* 5. techos de las huellas reales (sombra suave al sureste) y tanques en las laderas */
     const E = lejos ? [] : M.edificiosEn(x0, y0, x0 + L, y0 + L).sort((a, b) => a.h - b.h);
     for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(1.4, .3 + b.h * .04); g.fillStyle = 'rgba(20,24,40,.2)';   /* solo oclusión de contacto: la sombra del sol la pone MC.Sombras según la hora */ g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
-    if (!sinTechos) for (const b of E) { this.techo(g, b, M, mapa, tw, ES); if (real && res >= 1.5) Rudeza.techo(g, b, Mundo.esquinas(b), estiloEdificio(M, b)); }
+    if (!sinTechos) for (const b of E) {
+      this.techo(g, b, M, mapa, tw, ES);
+      if (real && res >= 1.5) {
+        const huella = Mundo.esquinas(b), estilo = estiloEdificio(M, b);
+        const p = patron(b.clase === 'nave' || b.clase === 'techo' ? 'zinc' : estilo.plano ? 'concreto' : 'teja');
+        if (p) {
+          g.save(); g.globalAlpha = .72; g.fillStyle = p; this._poly(g, [huella]); g.restore();
+        }
+        Rudeza.techo(g, b, huella, estilo);
+      }
+    }
     if (!sinTechos) for (const b of SI.E) if (dentroL(b.caja)) { g.fillStyle = b.techo === 'cupula' ? '#56665f' : b.clase === 'iglesia' ? '#b5542f' : '#bdbcb6'; this._poly(g, b.R); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .4; this._poly(g, b.R, true); }
     if (real && res >= .9) Rudeza.textura(g, x0, y0, L);   // grano y manchas sobre todo
     else if (mapa && res >= .5) Estilo.trama(g, x0, y0, L, res);   // semitono, tramado de manga, rayado o papel

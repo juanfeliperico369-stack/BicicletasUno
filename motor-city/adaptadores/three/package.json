@@ -1,0 +1,5 @@
+{
+  "name": "motor-city-vista-three",
+  "private": true,
+  "dependencies": { "three": "0.182.0" }
+}

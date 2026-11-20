@@ -28,7 +28,7 @@ for (const [aid, A] of Object.entries(man)) {
 }
 /* lo que esperan los ganchos del motor (si el paquete dice traerlo) */
 const ESPERA = { arbol: ['arbol_guayacan_amarillo_lado', 'arbol_guayacan_rosado_lado', 'arbol_ceiba_lado', 'arbol_mango_lado', 'arbol_urapan_lado', 'arbol_monte_lado'], persona: ['persona_quieto_0', 'persona_camina_0', 'persona_pedalea_0', 'persona_nada_0'], vehiculo: ['bici_lado', 'moto_lado', 'carro_lado', 'buseta_lado', 'lancha_lado'] };
-for (const [k, L] of Object.entries(ESPERA)) { const tiene = [...todos].some(n => n.startsWith(k)); if (!tiene) continue; const falta = L.filter(n => !todos.has(n)); if (falta.length) avisos.push('gancho ' + k + ': faltan ' + falta.join(', ')); }
+for (const [k, L] of Object.entries(ESPERA)) { const tiene = [...todos].some(n => k === 'arbol' ? /^arbol_.*_(lado|arriba)(?:_v[12])?$/.test(n) : n.startsWith(k)); if (!tiene) continue; const falta = L.filter(n => !todos.has(n)); if (falta.length) avisos.push('gancho ' + k + ': faltan ' + falta.join(', ')); }
 console.log('Paquete ' + path.basename(dir) + ': ' + Object.keys(man).length + ' atlas · ' + todos.size + ' cuadros');
 for (const g of graves) console.log('  ✗ ' + g); for (const a of avisos.slice(0, 60)) console.log('  ⚠ ' + a); if (avisos.length > 60) console.log('  … y ' + (avisos.length - 60) + ' avisos más');
 console.log(graves.length ? '✗ ' + graves.length + ' problemas graves' : '✓ sin problemas graves' + (avisos.length ? ' (' + avisos.length + ' avisos)' : '')); process.exit(graves.length ? 1 : 0);

@@ -23,7 +23,7 @@ const Vista2D = {
     const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
     const inv = (sx, sy) => { const det = a * d - b * c, X = sx - e, Y = sy - f; return [(d * X - c * Y) / det, (-b * X + a * Y) / det]; };
-    E._pr = pr; E._vista = { modo, P, W, H, z };
+    E._pr = pr; E._vista = { modo, P, W, H, z, a, b, c, d, e, f };
     /* caja del mundo visible (con margen para lo alto) */
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [sx, sy] of [[0, -H * .6 * P.hk], [W, -H * .6 * P.hk], [0, H], [W, H]]) { const [wx, wy] = inv(sx, sy); x0 = Math.min(x0, wx); x1 = Math.max(x1, wx); y0 = Math.min(y0, wy); y1 = Math.max(y1, wy); }
     /* de lado (k pequeño) la caja se iría al infinito: se recorta a una franja de profundidad alrededor de la cámara */
@@ -43,7 +43,7 @@ const Vista2D = {
     g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
     const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
-      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
+      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0) | (E.clima?.lluvia > .12 ? 4 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
       if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
       if (L) g.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
     }
@@ -53,13 +53,19 @@ const Vista2D = {
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
     const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H, real: !!Estilo.p.rudeza, ES: Estilo.p, mapa: !Estilo.p.rudeza && MC.estilo !== 'clasico' }, luces = [];
     const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
+    // Descartar antes de preparar el dibujo, con margen para copa, focos y altura.
+    const visible = (x, y, radio, alto = 0) => {
+      const sx = a * x + c * y + e, sy = b * x + d * y + f, r = radio * z + 3;
+      return sx + r >= 0 && sx - r <= W && sy + r >= 0 && sy - r - alto * z * P.hk <= H;
+    };
+    if (E.clima?.lluvia > .12 && z >= 1) this.charcos(dibCtx, E.clima.lluvia);
     /* sombras del sol de esta hora (también de edificios que están fuera de la pantalla y la alcanzan) */
     const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3; dibCtx.sv = conSombra ? sv : null;
     const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * cal);
     if (modo !== 'cenital' || conSombra) {
       const pad = conSombra ? Math.min(160, 25 * sv.L) : 0, lista = E.mundo.edificiosEn(x0 - pad, y0 - pad, x1 + pad, y1 + pad).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
       const sit = E.mundo.sitios().E.filter(q => { const k2 = q.caja; return !(k2[2] < x0 - pad || k2[0] > x1 + pad || k2[3] < y0 - pad || k2[1] > y1 + pad); });
-      if (conSombra) { const S = lista.map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
+      if (conSombra) { const S = lista.filter(q => visible(q.x,q.y,q.hw+q.hd+q.h*sv.L+2)).map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
       if (modo !== 'cenital') { for (const q of lista) if (q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q }); for (const q of sit) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); } }
     }
     /* agua viva: brillos que se mueven sobre lagos, ríos y mar (baratos: una muestra cada pocos metros) */
@@ -67,16 +73,17 @@ const Vista2D = {
       for (let yy = Math.floor(y0 / st) * st; yy < y1 && n < 700; yy += st) for (let xx = Math.floor(x0 / st) * st; xx < x1 && n < 700; xx += st) { const tt = E.mundo.suelo(xx, yy); if (tt !== TT.WATER && tt !== TT.CANAL) continue; n++; const ph = h2(xx | 0, yy | 0, 7) * TAU, a = (Math.sin(t * 1.3 + ph) + 1) / 2; if (a < .55) continue; const wx = xx + Math.sin(t * .4 + ph) * st * .3, wy = yy + Math.cos(t * .3 + ph) * st * .2, p1 = pr(wx - 1.2 * a, wy, 0), p2 = pr(wx + 1.2 * a, wy, 0); g.moveTo(p1[0], p1[1]); g.lineTo(p2[0], p2[1]); }
       g.stroke(); g.restore(); }
     /* naturaleza: rocas, palmas, frailejones, arbustos y juncos (de cerca) */
-    if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
+    if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y) && visible(p.x, p.y, 8, 22)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
     /* 2.6: los árboles de pie (maqueta, oblicua y lateral de cerca), con su sombra según el sol antes de todo lo demás */
-    if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
+    if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) if (visible(t.x, t.y, t.r * 2 + 2, t.h * 1.4)) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
     /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
-    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y) && visible(p.x, p.y, 18, 16)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    if (MC.Vida && op.vida !== false) MC.Vida.piso(dibCtx);   /* 2.8: huellas de llantas y pisadas en el suelo blando */
     /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
     if (E.capaInfo && E.capaInfo.dibujar) E.capaInfo.dibujar(g, a, b, c, d, e, f, dibCtx);
     for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
-    for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
-    for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
+    for (const v of E.vehiculos || []) if (visible(v.x, v.y, (v.largo || 12) + 5, (v.z || 0) + 8)) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
+    for (const p of E.peatones || []) if (visible(p.x, p.y, 2, (p.z || 0) + 3)) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
     if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
     const est = E.jugador && E.jugador.cuerpo && E.jugador.cuerpo.estacionado; if (est && est.x >= x0 - 20 && est.x <= x1 + 20 && est.y >= y0 - 20 && est.y <= y1 + 20) objs.push({ y: dy(est.x, est.y), t: 9, q: est });
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
@@ -112,11 +119,12 @@ const Vista2D = {
       if (D.real && z > 3.5) { const hb = Math.min(1, (z1 - z0) * .25) / (z1 - z0), ha = .35 / (z1 - z0), Bi = [B[i][0] + (T[i][0] - B[i][0]) * hb, B[i][1] + (T[i][1] - B[i][1]) * hb], Bj = [B[j][0] + (T[j][0] - B[j][0]) * hb, B[j][1] + (T[j][1] - B[j][1]) * hb], Ti = [T[i][0] - (T[i][0] - B[i][0]) * ha, T[i][1] - (T[i][1] - B[i][1]) * ha], Tj = [T[j][0] - (T[j][0] - B[j][0]) * ha, T[j][1] - (T[j][1] - B[j][1]) * ha];   /* 2.6: humedad y salpicado en la base del muro; sombra bajo el alero */
         g.fillStyle = 'rgba(34,26,18,.24)'; g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(Bj[0], Bj[1]); g.lineTo(Bi[0], Bi[1]); g.closePath(); g.fill();
         g.fillStyle = 'rgba(0,0,0,.13)'; g.beginPath(); g.moveTo(T[i][0], T[i][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(Tj[0], Tj[1]); g.lineTo(Ti[0], Ti[1]); g.closePath(); g.fill(); }
-      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
+      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.max(1, Math.floor(alto / 3))), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
         /* fachada por reglas (WFC, como Townscaper): locales, vitrinas y puerta abajo; balcones alineados; muros ciegos */
         const FZ = pisos * cols <= 48 && z > 2.2 ? Ondas.fachadaCache(ventanas * 31 + i, pisos, cols) : null, alturaV = (T[i][1] - B[i][1]);
         const fm = MC.arte.f('fachadaModulo');   // arte del juego: fachadaModulo(g, tipo, x, y, ancho, alto, encendida, D) → true si lo dibujó
         for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const tipo = FZ ? FZ[pisos - 1 - p][q] : 'ventana'; if (tipo === 'muro') continue; const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u + alturaV * v, w = Math.max(1, ex / cols * .45);
+          if (fm) D.varianteFachada = Math.abs(ventanas + i*31 + p*7 + q) % 3;
           if (fm && fm(g, tipo, x, y, w, Math.max(1, z * 1.2), lit, D) === true) continue;
           if (tipo === 'local' || tipo === 'vitrina') { const yb = B[i][1] + ey * u + alturaV * (p + .08) / pisos; g.fillStyle = noche > .3 ? 'rgba(255,226,150,' + (.5 + noche * .4) + ')' : 'rgba(120,160,190,.55)'; g.fillRect(x - w * .25, yb - z * 1.9, w * 1.5, z * 1.9); if (tipo === 'vitrina') { g.fillStyle = ['#c43a26', '#2f80ed', '#2e7d32', '#f2b705'][(ventanas + q) % 4]; g.fillRect(x - w * .35, yb - z * 2.4, w * 1.7, Math.max(1, z * .45)); } continue; }
           if (tipo === 'puerta') { const yb = B[i][1] + ey * u + alturaV * .02; g.fillStyle = '#4a2f22'; g.fillRect(x, yb - z * 2.1, w * .8, z * 2.1); continue; }
@@ -126,14 +134,90 @@ const Vista2D = {
     if (D.mapa) techo = Estilo.col(techo); g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill(); if (D.ES.tinta && z > 1.2) { g.strokeStyle = D.ES.tintaColor; g.lineWidth = Math.max(1, D.ES.tinta * Math.min(1.4, z / 6)); g.stroke(); }
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();
   },
-  edificio(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 4.5 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
+  /* 2.8: una cubierta sin muros (un techo sobre columnas: parqueaderos, kioscos, plazas de mercado) no flota */
+  cubierta(D, q, st) { const { g, pr, z } = D, P = Mundo.esquinas(q), n = P.length >> 1; g.strokeStyle = '#3a3d44'; g.lineWidth = Math.max(1, z * .3); g.beginPath(); for (let i = 0; i < n; i++) { const [bx, by] = pr(P[2 * i], P[2 * i + 1], 0), [tx, ty] = pr(P[2 * i], P[2 * i + 1], q.h - .3); g.moveTo(bx, by); g.lineTo(tx, ty); } g.stroke(); this.prisma(D, P, Math.max(0, q.h - .5), q.h, st.muro, st.techo, 0); },
+  charcos(D, intensidad) {
+    const { g, E, P, pr, z } = D, cx = Math.floor(E.camara.x / 7), cy = Math.floor(E.camara.y / 7);
+    const t = E.t || 0, charcos = [];
+    for (let j = cy - 4; j <= cy + 4; j++) for (let i = cx - 4; i <= cx + 4; i++) {
+      const semilla = h2(i, j, 907);
+      if (semilla > .48 || charcos.length >= 20) continue;
+      const x = (i + semilla) * 7, y = (j + h2(i, j, 908)) * 7;
+      const tt = E.mundo.suelo(x, y);
+      if (tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO) continue;
+      const [sx, sy] = pr(x, y), rx = (.45 + semilla * 2) * z;
+      charcos.push([sx, sy, rx, Math.max(.5, rx * P.k * .52), (t * 1.8 + semilla * 17) % 1]);
+    }
+    g.save();
+    g.fillStyle = D.noche > .45 ? 'rgba(211,175,112,.32)' : 'rgba(164,203,220,.48)';
+    g.beginPath();
+    for (const [x,y,rx,ry] of charcos) { g.moveTo(x + rx,y); g.ellipse(x,y,rx,ry,0,0,TAU); }
+    g.fill(); g.beginPath(); g.lineWidth = Math.max(.5, z * .035);
+    g.strokeStyle = 'rgba(233,242,249,' + (.25 + intensidad * .35) + ')';
+    for (const [x,y,rx,ry,k] of charcos) {
+      g.moveTo(x - rx * .65, y); g.lineTo(x - rx * .2, y);
+      if (k > .08 && k < .8) { g.moveTo(x + rx * k, y); g.ellipse(x,y,rx*k,ry*k,0,0,TAU); }
+    }
+    g.stroke(); g.restore(); return charcos.length;
+  },
+  edificio(D, q) {
+    const [x, y] = D.pr(q.x, q.y);
+    const radio = Math.ceil((q.hw + q.hd + 2) * D.z) + 2;
+    const base = Math.ceil(radio * D.P.k) + 3;
+    const cima = base + Math.ceil((q.h + 2) * D.z * D.P.hk);
+    if (x + radio < 0 || x - radio > D.W || y + base < 0 || y - cima > D.H) return;
+    // La maqueta gira por cuadrantes. Un edificio ya pintado se traslada con la cámara.
+    // Las pieles con fachadas dinámicas conservan su llamada en cada cuadro.
+    const area = 2 * radio * (base + cima);
+    if (D.modo !== 'maqueta' || area > 65000 || (MC.arte.f('fachadaModulo') && !MC.arte.f('fachadasEstaticas'))) return this._edificioDirecto(D, q);
+    const clave = [MC.estilo, MC.arte.activa, D.E.losas.version, D.z, D.P.yaw, Math.round(D.noche * 36), D.noche > .3, q.h, q.hw, q.hd, q.s].join('/');
+    const cache = D.E._fachadasMaqueta || (D.E._fachadasMaqueta = { imagenes: new Map(), pixeles: 0 });
+    let pieza = cache.imagenes.get(q);
+    if (!pieza || pieza.clave !== clave) {
+      if (pieza) cache.pixeles -= pieza.area;
+      const cv = lienzo(2 * radio, base + cima), ctx = cv.getContext('2d');
+      const local = (wx, wy, h) => { const [sx, sy] = D.pr(wx, wy, h); return [sx - x + radio, sy - y + cima]; };
+      this._edificioDirecto({ ...D, g: ctx, pr: local }, q);
+      pieza = { cv, clave, area };
+      cache.imagenes.set(q, pieza);
+      cache.pixeles += area;
+      while (cache.pixeles > 4e6 || cache.imagenes.size > 1200) {
+        const vieja = cache.imagenes.keys().next().value;
+        cache.pixeles -= cache.imagenes.get(vieja).area;
+        cache.imagenes.delete(vieja);
+      }
+    }
+    D.g.drawImage(pieza.cv, x - radio, y - cima);
+  },
+  _edificioDirecto(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); if (q.clase === 'techo' && D.modo !== 'cenital') return this.cubierta(D, q, st); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 2.8 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
   sitio(D, q) {
     const ES = ['#b8673f', '#eceae4', '#bdbcb6', '#5e7b97', '#ece3cd', '#efe8d8', '#d4d8dd', '#3a3f4a', '#b9714b', '#d8432f', '#d9d4c9', '#a86a4c', '#e9dab3', '#2a302d', '#3a3f4a', '#6a645c', '#a6573a', '#e3e6ea', '#4b5a55'], m = ES[q.est] || '#d9d4c9', t = q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : q.techo === 'cupula' ? '#56665f' : tono(m, -.12);
     for (const R of q.R.slice(0, 1)) this.prisma(D, R, 0, q.partes ? q.partes[0].z0 || Math.min(q.h, 12) : q.h, m, t, 7);
     if (q.partes) for (const p of q.partes) this.prisma(D, p.B, p.z0, p.z1, ES[p.est] || m, p.techo === 'aguja' ? '#e3e6ea' : tono(ES[p.est] || m, -.15), 0);
   },
   pasoElevado(D, q) {
-    const { g, pr, z } = D, h = q.nivel * NIVEL_M, p = q.p, n = p.length >> 1, L = q.ancho / 2, vi = q.tipo === 'viaducto', T = q.trazo || (q.trazo = new Trazo(p));
+    const { g, z, P } = D, cen = D.modo === 'cenital';
+    const h = q.nivel * NIVEL_M, L = q.ancho / 2, vi = q.tipo === 'viaducto', T = q.trazo || (q.trazo = new Trazo(q.p));
+    const clave = [z,P.yaw,P.k,P.hk,cen,h,L].join('/');
+    if (!q._dibujoPaso || q._dibujoPaso.clave !== clave) {
+      const cs=Math.cos(P.yaw), sn=Math.sin(P.yaw);
+      const pr=(x,y,alt) => [(cs*(x-q.p[0])-sn*(y-q.p[1]))*z,(sn*(x-q.p[0])+cs*(y-q.p[1]))*z*P.k-alt*z*P.hk];
+      const capas = [], ctx = {beginPath(){ this.path=new Path2D(); },moveTo(x,y){this.path.moveTo(x,y);},
+        lineTo(x,y){this.path.lineTo(x,y);},closePath(){this.path.closePath();},
+        fill(){capas.push(['fill',this.fillStyle,this.path]);},stroke(){capas.push(['stroke',this.strokeStyle,this.path,this.lineWidth]);},
+        fillRect(x,y,w,h){let ultima=capas.at(-1); if (!ultima || ultima[1]!==this.fillStyle) {ultima=['fill',this.fillStyle,new Path2D()]; capas.push(ultima);} ultima[2].rect(x,y,w,h);}};
+      this._trazarPaso({cen},q,ctx,pr,z,h,L,vi,T);
+      q._dibujoPaso={clave,capas};
+    }
+    const [x,y]=D.pr(q.p[0],q.p[1]);
+    g.save();g.translate(x,y);
+    for(const [tipo,color,path,ancho] of q._dibujoPaso.capas) {
+      if(tipo==='fill'){g.fillStyle=color;g.fill(path);}
+      else {g.strokeStyle=color;g.lineWidth=ancho;g.stroke(path);}
+    }
+    g.restore();
+  },
+  _trazarPaso(D,q,g,pr,z,h,L,vi,T) {
     const rampa = vi ? 0 : Math.min(q.largo * .4, q.peatonal ? 9 : 22), alt = s => h * (vi ? 1 : suave(Math.min(s, q.largo - s) / rampa));
     if (!D.cen) { g.fillStyle = vi ? '#9aa3ad' : '#a9a49a'; for (let s = 12; s < q.largo - 6; s += vi ? 30 : 24) { const c = T.at(s), [x, y] = pr(c.x, c.y, 0), [, y2] = pr(c.x, c.y, alt(s)); const w = Math.max(1, z * 1.4); g.fillRect(x - w / 2, y2, w, y - y2); } }
     const izq = [], der = []; for (let s = 0; s <= q.largo; s += Math.max(2, 8 / Math.max(.3, z))) { const c = T.at(s), nx = -Math.sin(c.a), ny = Math.cos(c.a), hh = D.cen ? 0 : alt(s); izq.push(pr(c.x + nx * L, c.y + ny * L, hh)); der.push(pr(c.x - nx * L, c.y - ny * L, hh)); }
@@ -159,6 +243,12 @@ const Vista2D = {
     if (D.modo === 'cenital') { const J = Personaje.pose('camina', p.fase); J.fase = p.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, p.a + P.yaw); return; }
     const J = Personaje.pose('camina', p.fase, { alto: A.alto }), dir = Math.cos(p.a + P.yaw) >= 0 ? 1 : -1; (MC.arte.f('personajeLado'))(g, J, A, x, y, z * P.hk, dir);
   },
+  /* 2.8 · faros: un cono de luz cálida en el piso delante del vehículo, de noche (se suma a la luz, no tapa) */
+  faros(D, C, V) {
+    const { g, pr, z } = D, L = 16 + Math.abs(C.v || 0) * .6, ab = .42, ca = Math.cos(C.a), sa = Math.sin(C.a), fx = C.x + ca * (V.largo || 4) * .5, fy = C.y + sa * (V.largo || 4) * .5, [x0, y0] = pr(fx, fy, 0);
+    const P1 = pr(fx + Math.cos(C.a - ab) * L, fy + Math.sin(C.a - ab) * L, 0), P2 = pr(fx + Math.cos(C.a + ab) * L, fy + Math.sin(C.a + ab) * L, 0), [xm, ym] = pr(fx + ca * L, fy + sa * L, 0);
+    g.save(); g.globalCompositeOperation = 'lighter'; const gr = g.createLinearGradient(x0, y0, xm, ym); gr.addColorStop(0, 'rgba(255,236,190,' + (.32 * D.noche).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,220,160,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(x0, y0); g.lineTo(P1[0], P1[1]); g.quadraticCurveTo(xm, ym, P2[0], P2[1]); g.closePath(); g.fill(); g.restore();
+  },
   /* 2.7 · peso: al aterrizar el cuerpo se aplasta y vuelve (squash and stretch), desde los pies */
   jugador(D, j) {
     const C = j.cuerpo, q = C && C._squash; if (!q) return this._jugador(D, j);
@@ -174,13 +264,16 @@ const Vista2D = {
       g.save(); g.strokeStyle = 'rgba(57,255,179,.9)'; g.lineWidth = Math.max(2, z * .14); g.beginPath(); g.ellipse(sx, sy, r, r * kk, 0, 0, TAU); g.stroke(); g.fillStyle = '#39ffb3'; const ax = sx + ux * (r + 4), ay = sy + uy * (r * kk + 4), w = Math.max(6, r * .45); g.beginPath(); g.moveTo(ax + ux * w, ay + uy * w); g.lineTo(ax - uy * w * .6, ay + ux * w * .6); g.lineTo(ax + uy * w * .6, ay - ux * w * .6); g.closePath(); g.fill(); g.restore(); }
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
-      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
+      const frena = (C._acel || 0) < -2.2 && Math.abs(C.v) > .8, nocheJ = (D.noche || 0) > .4;   /* 2.8: luces de freno y faros (entrega maestra §11.2, R13 y R19) */
+      const dibujo = V.clase !== 'pie' && MC.arte.f('vehiculoArriba')?.(g,V,0,0,1,0);
+      if (dibujo && ['auto','pesado','moto'].includes(V.clase)) { g.restore(); if (nocheJ) this.faros(D, C, V); return; }
+      if (!dibujo && V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, frena, nocheJ); g.restore(); if (nocheJ) this.faros(D, C, V); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
       g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
       if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } if (C.buceando) { g.fillStyle = 'rgba(30,95,140,.55)'; g.beginPath(); g.arc(x, y, z * .9, 0, TAU); g.fill(); this.burbujas(g, x, y - z * .2, y + z * .4, z * 1.5, D.E.t || 0); } }
       return;
     }
     const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
-    const cab = V.clase !== 'pie' && !C.enAire ? clamp(-(C._acel || 0) * .011, -.1, .1) * dir : 0; if (cab) { g.save(); g.translate(x, y); g.rotate(cab); g.translate(-x, -y); }   /* 2.7 · peso: cabecea al acelerar y al frenar */
+    const cabeceo = V.clase !== 'pie' && !C.enAire ? clamp(-(C._acel || 0) * .011, -.1, .1) * dir : 0; const cab = cabeceo - (C.inclinacion || 0) * dir; if (cab) { g.save(); g.translate(x, y); g.rotate(cab); g.translate(-x, -y); }   /* 2.7 · peso: cabecea al acelerar y al frenar */
     const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
     const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir); if (cab) g.restore();
     /* en el agua: el agua tapa las piernas (vadeando) o casi todo el cuerpo (nadando), con su onda */
@@ -197,10 +290,28 @@ const Vista2D = {
   /* el vehículo que quedó parqueado (en la orilla o amarrado en el agua) */
   estacionado(D, e) {
     const { g, pr, z, P, modo } = D, V = Vehiculos.get(e.veh), [x, y] = pr(e.x, e.y, 0);
-    if (modo === 'cenital') { g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
+    if (modo === 'cenital') { if (MC.arte.f('vehiculoArriba')?.(g,V,x,y,z,e.a + P.yaw)) return; g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
     const vl = MC.arte.f('vehiculoLado'); Sombras.contacto(g, x, y, z * (V.largo || 1.6) * .5, z * .25, .25); if (vl) vl(g, V, x, y, Math.max(4, z * P.hk * 1.1), Math.cos(e.a + P.yaw) >= 0 ? 1 : -1, null);
   },
-  cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
+  cables(D, cables) {
+    const {g,z,P}=D, clave=[z,P.yaw,P.k,P.hk].join('/');
+    g.save(); g.strokeStyle='rgba(30,32,38,.8)'; g.lineWidth=Math.max(.6,z*.12);
+    for (const L of cables) {
+      const inicio=L.T.at(0), [ox,oy]=D.pr(inicio.x,inicio.y);
+      if (L._tramaCable?.clave!==clave) {
+        const path=new Path2D();
+        for (let s=0; s<=L.T.largo; s+=20) {
+          let distancia=Infinity;
+          for (const e of L.est) distancia=Math.min(distancia,Math.abs(e.s-s));
+          const c=L.T.at(s), h=6+22*suave(clamp(distancia/120,0,1)), [x,y]=D.pr(c.x,c.y,h);
+          if (s) path.lineTo(x-ox,y-oy); else path.moveTo(x-ox,y-oy);
+        }
+        L._tramaCable={clave,path};
+      }
+      g.save(); g.translate(ox,oy); g.stroke(L._tramaCable.path); g.restore();
+    }
+    g.restore();
+  },
   etiquetas(D) {
     const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
     /* las etiquetas no se montan unas sobre otras ni tapan el centro (donde va el jugador) */

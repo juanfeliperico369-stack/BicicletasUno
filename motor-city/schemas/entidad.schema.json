@@ -1,0 +1,18 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://juanfeliperico369-stack.github.io/motorcity/schemas/entidad.schema.json",
+ "title": "Entidad persistente de Motor City (propuesta de la entrega maestra §16.3)",
+ "description": "Una cosa del mundo con identidad estable (no depende de los IDs de un editor): vehículo, persona, objeto o lugar. Las reglas físicas son datos; la calidad gráfica solo cambia cómo se ve.",
+ "type": "object",
+ "required": ["schema_version", "entity_id", "arquetipo", "transform"],
+ "properties": {
+  "schema_version": { "const": 1 },
+  "entity_id": { "type": "string" },
+  "arquetipo": { "type": "string" },
+  "transform": { "type": "object", "required": ["posicion_m", "rumbo_rad"], "properties": { "posicion_m": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }, "rumbo_rad": { "type": "number" } } },
+  "vehiculo": { "type": "object", "properties": { "id": { "type": "string" }, "masa_kg": { "type": "number", "minimum": 0 }, "perfil": { "type": "string" } } },
+  "superficie": { "enum": ["asfalto", "asfalto_mojado", "anden", "tierra", "barro", "arena", "nieve", "pasto", "roca", "agua"] },
+  "visual": { "type": "object", "properties": { "asset_id": { "type": "string" }, "calidad": { "enum": ["auto", "baja", "media", "alta"] } } },
+  "persistente": { "type": "boolean" }
+ }
+}

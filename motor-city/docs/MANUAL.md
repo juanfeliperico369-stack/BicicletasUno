@@ -1,4 +1,4 @@
-# Manual de Motor City 2.7
+# Manual de Motor City 2.9
 
 > **Para todas las IAs:** el documento único `docs/DOCUMENTO-UNICO.md` tiene el contexto, el código exacto y el plan de cada una.
 
@@ -32,7 +32,8 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Controles** | `MC.Controles`, `MC.Manejo` | Teclado, dedo y mando; curvas, esquemas y asistencias. |
 | **Cámara y vistas** | `MC.Camara`, `MC.Vistas`, `MC.Vista2D`, `MC.Raster`, `MC.Losas` | 9 vistas más pixel, 3D por software y resortes. |
 | **Estilos gráficos (2.7)** | `MC.Estilo` | Cómic, manga, anime, novela gráfica, ukiyo-e y acuarela, con tinta, tramas y paletas de obras de dominio público. |
-| **Peso y vida (2.7)** | `MC.Vida` | Aterrizajes con aplastamiento, hitstop, bandadas, hojas, polvo, salpicaduras y viento. |
+| **Peso y vida (2.7–2.8)** | `MC.Vida`, `MC.opciones` | Aterrizajes con aplastamiento, hitstop, bandadas, hojas, polvo, salpicaduras y viento; palomas que alzan vuelo y huellas en el suelo blando; faros y luces de freno. La sacudida y las partículas se pueden bajar (accesibilidad). |
+| **Medir y contratos (2.8)** | `MC.Telemetria`, `MC.Contratos` | Fps y tiempos de cuadro en percentiles; datos versionados con sus esquemas (`schemas/`). |
 | **Motores potentes (2.7)** | `MC.Exportar`, `MC.Puente` | El mundo en glTF y el estado vivo para Godot, Unity, Unreal, Blender o three.js (`docs/MOTORES-POTENTES.md`). |
 | **Estilo realista (2.6)** | `MC.estilo`, `MC.Arboleda`, `MC.Rudeza` | Árboles de pie con volumen; asfalto, andenes, pasto, techos y muros con desgaste. Familiar, pero sin caricatura. `MC.estilo = 'clasico'` para el plano. |
 | **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel`, `MC.Pieles` | Pieles por juego, atlas, animaciones y respaldo procedural. **Paquetes de arte** de las IAs (`arte/gemini/`) instalados en una línea (2.5.1). |
@@ -48,8 +49,8 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 - **moverse:** arrastra en cualquier parte de la mitad izquierda; el joystick aparece donde pongas el dedo. En computador, flechas o WASD;
 - **acciones:** ⤒ saltar y ⚡ turbo, abajo a la derecha. En el agua o en el aire aparecen 🔽 bajar y 🔼 subir;
 - **a dónde ir:** la flecha amarilla con los metros. El mapa pequeño muestra el punto;
-- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega» (opcional; también en la portada), los controles y el rescate;
-- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e o acuarela); **🚲 Vehículo** abre el garaje con los 34 vehículos.
+- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega» (opcional; también en la portada), la sacudida de cámara, las partículas, la calidad, la telemetría, los controles y el rescate;
+- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e, acuarela, vintage, CRT o térmico); **🚲 Vehículo** abre el garaje con los 34 vehículos.
 
 **b) Un juego nuevo con una IA.** Dile a la IA:
 > «Lee `AGENTS.md` del repositorio motorcity y haz un juego de [idea] sobre el mundo [guatape|medellin|generado]».
@@ -115,7 +116,7 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 123 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 132 pruebas, también en Chromium. |
 | `node motor.mjs exportar ID [--centro x,y --lado m]` | El mundo en glTF 2.0, alturas RAW 16 y escena JSON (Godot, Unity, Unreal, Blender, three.js). |
 | `node motor.mjs capturas [--web]` | 14 fotos estándar de Mandados en `dist/capturas/` (revisión visual). |
 | `node motor.mjs revisar-arte arte/ID` | Revisa un paquete de arte contra las reglas. |

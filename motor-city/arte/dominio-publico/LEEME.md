@@ -10,6 +10,7 @@
 | Estilo `ukiyoe` | Hokusai, *La gran ola de Kanagawa* y *Fuji rojo* (1831), más dos verdes de los paisajes de Hiroshige |
 | Estilo `novela` | Gustave Doré, grabado de la *Divina comedia* (1861) |
 | Estilo `acuarela` | Winslow Homer (1899), Hiroshige (1857) y la Comisión Corográfica (1853) |
+| Obras colombianas (2.8, curaduría de Gemini, G‑H8) | Comisión Corográfica (Henry Price, Carmelo Fernández, Manuel María Paz, 1850–1853), Ramón Torres Méndez, Epifanio Garay y otros: `col_*` en `paletas.json`. La lista completa de 40 está en `candidatas.md`. |
 | Referencias | Van Gogh, *Terraza de café por la noche* (1888); Monet, *Impresión, sol naciente* (1872); McCay, *Little Nemo* (1906); Mucha, *Las estaciones* (1896) |
 
 **Reglas:**

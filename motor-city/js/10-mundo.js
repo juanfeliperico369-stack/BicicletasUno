@@ -265,7 +265,19 @@ class Mundo {
     for (const q of J.lista) { const tipo = J.tipos[q[0]], vi = tipo === 'viaducto', i0 = vi ? 6 : 5, p = new Float32Array(q.slice(i0)); let L = 0; for (let i = 2; i < p.length; i += 2) L += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]); out.push({ tipo, nivel: q[1], ancho: q[2], alto: q[3], peatonal: !!q[4], linea: vi ? q[5] : null, p, largo: L, caja: caja([p]) }); }
     return (this._pasos = out);
   }
-  pasosEn(x0, y0, x1, y1) { return this.pasos().filter(q => q.caja[2] >= x0 && q.caja[0] <= x1 && q.caja[3] >= y0 && q.caja[1] <= y1); }
+  pasosEn(x0, y0, x1, y1) {
+    const pasos = this.pasos(), lado = 128;
+    const ix = Math.floor(x0/lado), iy = Math.floor(y0/lado), fx = Math.floor(x1/lado), fy = Math.floor(y1/lado);
+    if (this._consultasPasos?.fuente !== pasos) this._consultasPasos = {fuente:pasos, zonas:new Map()};
+    const zonas = this._consultasPasos.zonas, clave = [ix,iy,fx,fy].join(',');
+    let cerca = zonas.get(clave);
+    if (!cerca) {
+      cerca = pasos.filter(({caja:b}) => b[2]>=ix*lado && b[0]<=(fx+1)*lado && b[3]>=iy*lado && b[1]<=(fy+1)*lado);
+      if (zonas.size >= 96) zonas.delete(zonas.keys().next().value);
+      zonas.set(clave,cerca);
+    }
+    return cerca.filter(({caja:b}) => b[2]>=x0 && b[0]<=x1 && b[3]>=y0 && b[1]<=y1);
+  }
   /* lugar con postal más cercano */
   lugarCercano(x, y, r = 400) { let best = null, bd = r; for (const L of this.lugares) { const d = Math.hypot(L.x - x, L.y - y); if (d < bd) { bd = d; best = L; } } return best; }
   estacionCercana(x, y, r = 600, clase) { let best = null, bd = r; for (const l of this.transporte.lineas) { if (clase && l.clase !== clase) continue; for (const s of l.estaciones) { const d = Math.hypot(s[1] - x, s[2] - y); if (d < bd) { bd = d; best = { linea: l, nombre: s[0], x: s[1], y: s[2], d }; } } } return best; }

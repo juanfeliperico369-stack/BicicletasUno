@@ -1,11 +1,11 @@
 {
  "ciudad": "guatape",
- "bytes": 201693,
+ "bytes": 421486,
  "casillas": [
   952,
   730
  ],
- "tile": 5.0,
+ "tile": 5,
  "vias": 362,
  "edificios": 2661,
  "lugares": 400,
