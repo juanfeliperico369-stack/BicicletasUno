@@ -9,7 +9,8 @@
 |---|---|
 | **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/> · minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
 | **Documento único** (contexto, código a usar y plan de cada IA) | [`docs/DOCUMENTO-UNICO.md`](docs/DOCUMENTO-UNICO.md) · todo junto con anexos: `dist/MOTOR-CITY-TODO.md` |
-| Versión | **2.5.1** · `VERSION.json` |
+| Versión | **2.6.0** · `VERSION.json` |
+| **Tareas de cada IA** («mira el repositorio y haz tu parte») | [`TAREAS-IA.md`](TAREAS-IA.md) |
 | **¿Está todo lo pedido?** | [`docs/PEDIDOS.md`](docs/PEDIDOS.md): cada pedido, su estado y dónde quedó |
 | Cómo se usa | [`docs/MANUAL.md`](docs/MANUAL.md) |
 | Guía completa | [`docs/GUIA.md`](docs/GUIA.md) |
@@ -66,12 +67,18 @@
   - flecha al objetivo y tutorial;
   - **modo libre** con todo gratis y los 34 vehículos;
   - en computador, flechas o WASD;
-  - **el arte de Gemini integrado** (`arte/gemini/`, `MC.Pieles`): guayacanes, ceibas, palmas, postes, rocas, fachadas y muebles, con respaldo procedural.
+  - **el arte de Gemini integrado** (`arte/gemini/`, `MC.Pieles`): postes, bancas, fachadas y muebles, con respaldo procedural.
+- **2.6, estilo realista familiar:**
+  - árboles de pie con volumen (`MC.Arboleda`): guayacanes florecidos, ceibas, mangos; ya no «tapetes» en el piso;
+  - asfalto con parches, grietas y alcantarillas, andenes de baldosa con bordillo y pasto con parches secos;
+  - tejas de barro y planchas con humedad, y muros con la base sucia;
+  - tutorial opcional;
+  - el estilo clásico (plano) sigue disponible.
 
 ## Trabajar en el motor
 ```bash
 node motor.mjs construir            # dist/motor.js, los mundos, dist/motor-city.html y dist/juegos/*.html
-node motor.mjs prueba --navegador   # 118 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
+node motor.mjs prueba --navegador   # 119 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
 node motor.mjs documento            # dist/MOTOR-CITY-TODO.md: el documento único con todo
 node motor.mjs nuevo juego nombre   # un juego nuevo desde la plantilla
 node motor.mjs reporte "título" --juego encicla   # obligatorio si otra IA cambia el motor

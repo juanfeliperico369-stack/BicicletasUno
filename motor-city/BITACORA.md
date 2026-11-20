@@ -1,5 +1,49 @@
 # Bitácora de Motor City
 
+## 20‑nov‑2026 · 2.6.0 · Estilo realista familiar, árboles de pie y tareas de cada IA (Claude Code)
+**Pedido:**
+- «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo.»
+- «Deja el estilo *family friendly*, pero dale más realismo, rudeza y crudeza.»
+- «Los tutoriales deben ser opcionales.»
+- «Copia todos tus pedidos en los repositorios para que cada uno continúe.»
+- «Gemini con Antigravity pasa a *hydrogen*: déjale las tareas fáciles. ChatGPT con Codex sigue con *astra*: encárgale mejores pedidos; GPT genera mejores imágenes.»
+
+**Lo que pasaba:** los árboles eran discos pintados en el piso de las losas. Desde una vista inclinada, el piso se aplasta y los discos quedaban como elipses acostadas: «tapetes».
+
+**Lo que se hizo:**
+1. **`MC.Arboleda`** (`js/29-arboleda.js`):
+   - los mismos árboles (y los mismos con que se choca) se levantan en la maqueta, la oblicua y la lateral: tronco que se afina, ramas, copa de lóbulos con luz de arriba a la izquierda, hojas, y flores en los guayacanes;
+   - desde arriba, la copa tiene volumen;
+   - 6 especies (guayacán amarillo y rosado, ceiba con raíces tablares, mango, urapán y monte), 3 variantes cada una;
+   - sprites horneados una vez, con versiones reducidas y copia nocturna;
+   - sombra según el sol de cerca, y la sombra bajo la copa horneada en el piso.
+2. **`MC.Rudeza`**, horneada en las losas (no cuesta por cuadro):
+   - asfalto con parches, grietas, manchas de aceite y alcantarillas;
+   - centro de carril más gastado;
+   - andén de baldosa con bordillo;
+   - pasto con parches secos y verdes;
+   - tejas de barro en hileras y planchas con humedad;
+   - grano;
+   - paleta 30 % menos saturada.
+
+   Además, los muros tienen la base sucia y sombra bajo el alero.
+3. **`MC.estilo`** (`'realista'` por defecto o `'clasico'`) y el selector 🖌️ en Vista.
+4. **Tutorial opcional:** ya no se abre solo; está en la portada («❓ Cómo se juega (opcional)») y en ⚙️ Ajustes.
+5. **Tareas de cada IA:**
+   - **`TAREAS-IA.md`** en los cuatro repositorios;
+   - Gemini («hydrogen»): G‑H1…G‑H6, tareas fáciles;
+   - ChatGPT («astra»): arte C‑A1…C‑A7 y código C‑M13, C‑M16, C‑M17…;
+   - `node motor.mjs capturas` y `revisar-arte` para que las tareas fáciles sean comprobables;
+   - el gancho `arbol` para el arte de ChatGPT.
+6. **Rendimiento:** la maqueta de Medellín con la CPU 4× más lenta mide 30–38 ms (el límite es 40). Los árboles de pie se ralean parejo si son muchos, y con calidad media salen desde un poco más cerca.
+
+**Probado:** 119 pruebas:
+- los árboles que se ven son los que chocan;
+- Mandados en un celular táctil: tutorial opcional, árboles de pie y arte cargado;
+- la CPU 4× más lenta.
+
+Capturas de día, tarde y noche en la maqueta, la cenital y la lateral.
+
 ## 19‑nov‑2026 · 2.5.1 · Mandados jugable de verdad (Claude Code)
 **Pedido:** «Traté de probar el minijuego pero es injugable. No hay controles de verdad, no se puede mover nada. No está completamente liberado porque hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos en el repositorio?»
 

@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v2.0.1 · compilado el 2026-11-19.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v2.0.1 · compilado el 2026-11-20.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-19 | Claude Code | documento creado (v2.0.1) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-20 | Claude Code | documento creado (v2.0.1) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2750,6 +2750,15 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 - comparación lado a lado con la imagen satelital de la UdeA, la UPB, EAFIT, la U. de Medellín, La Alpujarra, el centro, Santo Domingo y El Poblado.
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
+
+### 19‑nov‑2026 · Motor City 2.5.1 en `motor-city/` (Claude, la IA del motor)
+- Se sincronizó el motor 2.5.1:
+  - controles que se ven (joystick, botones de acción y flecha al objetivo);
+  - modo libre en Mandados;
+  - el arte de Gemini integrado con `MC.Pieles` (`motor-city/dist/arte/gemini.js`);
+  - leyenda en las capas de datos;
+  - la lista de pedidos.
+- **El juego no cambia** y sus pruebas siguen en verde.
 
 ### 19‑nov‑2026 · Motor City 2.5 en `motor-city/` (Claude, la IA del motor)
 - Se sincronizó el motor 2.5: entrar al agua (dejar el vehículo en la orilla, nadar, bucear con aire, volver a subirse, lancha).

@@ -1,4 +1,4 @@
-/* Motor City 2.5.1 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.6.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.5.1',
+  version: '2.6.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -50,6 +50,8 @@ MC.falla = (donde, e) => { const m = donde + ': ' + (e && e.message || e); if (M
 /* ---------- arte: cada juego pone su piel con funciones de dibujo (hooks) ----------
    MC.arte.registrar('encicla', { paleta, suelo, edificio, personaje, vehiculo, cielo, … })
    MC.arte.usar('encicla') → las vistas llaman MC.arte.f('personaje', …) y, si el juego no la trae, usan la del motor. */
+/* estilo de dibujo del motor: 'realista' (2.6, por defecto: texturas, desgaste, árboles con volumen) o 'clasico' (plano y limpio) */
+MC.estilo = 'realista';
 MC.arte = {
   pieles: { motor: {} }, activa: 'motor',
   registrar(juego, piel) { this.pieles[juego] = Object.assign(this.pieles[juego] || {}, piel); return this; },
@@ -2055,6 +2057,7 @@ const Mobiliario = {
     const { g, pr, z, P, noche, modo } = D, [x, y] = pr(p.x, p.y, 0), cen = modo === 'cenital', hk = cen ? 0 : P.hk;
     /* arte del juego (sprites de Gemini/ChatGPT): MC.arte.registrar(j, { prop(g, p, x, y, pxPorMetro, D) { … return true } }) */
     const fa = MC.arte.f('prop'); if (fa && fa(g, p, x, y, z, D) === true) { if (p.t === 'poste' && luces && noche > .3) luces.push([x, y, Math.max(14, z * 11)]); return; }
+    if (p.t === 'arbol' && MC.estilo !== 'clasico') { const t = p._t || (p._t = { x: p.x, y: p.y, r: 1.6 + p.v * 1.2, h: 5 + p.v * 4, e: p.v < .22 ? 'guayacan_amarillo' : p.v < .4 ? 'guayacan_rosado' : p.v < .55 ? 'mango' : 'urapan', v: ((p.v * 7) | 0) % 3, espejo: p.v * 10 % 1 < .5 }); if (cen) Arboleda.arribaPantalla(D, t); else { Arboleda.sombra(D, t, D.sv || null); Arboleda.dePie(D, t); } return; }   // 2.6: árbol de calle con volumen
     if (p.t === 'arbol') { const h = 5 + p.v * 4, r = (1.6 + p.v * 1.2) * z, [, yc] = pr(p.x, p.y, h * .75); Sombras.contacto(g, x + r * .3, y + r * .15, r * .9, r * .45 * (cen ? 1 : P.k + .2), .22); if (!cen) { g.strokeStyle = '#5b4030'; g.lineWidth = Math.max(1, z * .25); g.beginPath(); g.moveTo(x, y); g.lineTo(x, yc); g.stroke(); } const cy = cen ? y : yc; g.fillStyle = noche > .3 ? '#21402c' : ['#3f7d3a', '#4b8b3f', '#356f37'][(p.v * 3) | 0]; g.beginPath(); g.arc(x, cy, r, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.arc(x - r * .3, cy - r * .3, r * .45, 0, TAU); g.fill(); return; }
     if (p.t === 'poste') { const [, yt] = pr(p.x, p.y, 8.5); if (!cen) { g.strokeStyle = '#4a4f58'; g.lineWidth = Math.max(1, z * .16); g.beginPath(); g.moveTo(x, y); g.lineTo(x, yt); g.stroke(); } g.fillStyle = noche > .3 ? '#ffe7b0' : '#cfd3d8'; g.beginPath(); g.arc(x, cen ? y : yt, Math.max(1.2, z * .35), 0, TAU); g.fill(); if (luces && noche > .3) luces.push([x, y, Math.max(14, z * 11)]); return; }
     const h = (PROPS[p.t] || { h: 1 }).h, w = Math.max(1.5, z * (p.t === 'paradero' ? 3 : p.t === 'banca' ? 1.6 : .5)), hh = Math.max(1, h * z * (cen ? .4 : hk));
@@ -2106,6 +2109,128 @@ const Naturaleza = {
   }
 };
 MC.Naturaleza = Naturaleza;
+
+/* ---- js/29-arboleda.js ---- */
+/* =====================================================================
+   ARBOLEDA · los árboles del mundo, de pie y con volumen (2.6)
+   - Son los mismos árboles de siempre: azar fijo por celdas de 7 m según el suelo y la zona, en las mismas
+     posiciones con que choca MC.Terreno. Antes eran discos pintados en el piso, y desde la maqueta, la oblicua
+     o la lateral se veían como «tapetes». Ahora:
+       · en las vistas inclinadas se levantan: tronco, ramas y copa con luz del sol, sombra en el piso según la hora;
+       · desde arriba, la copa tiene volumen: lóbulos, lado iluminado, borde oscuro, hojas y flores.
+   - Especies del trópico andino: guayacán amarillo y rosado (florecidos), ceiba (copa ancha), mango (densa y
+     oscura), urapán (la común) y árbol de monte (más alto y estrecho).
+   - Barato: cada especie se hornea UNA vez en lienzos (3 variantes, de lado y desde arriba; los de noche, cuando
+     se necesitan). Dibujar un árbol es un drawImage.
+   Uso: Arboleda.en(M, x0, y0, x1, y1, max) · Arboleda.dePie(D, t) · Arboleda.arriba(g, t) (en metros, para las losas)
+   ===================================================================== */
+const Arboleda = {
+  CEL: 7, BLOQUE: 56, R: 56,
+  ESPECIES: {
+    urapan: { copa: ['#2f4a24', '#4d6a33', '#7c9450'], forma: 'redonda', alto: 1, ancho: 1 },
+    guayacan_amarillo: { copa: ['#3b4f25', '#5d7334', '#8a9a52'], flor: ['#d89a12', '#f2c230', '#fde38a'], flores: .62, forma: 'redonda', alto: .95, ancho: 1.05 },
+    guayacan_rosado: { copa: ['#3a4c2b', '#5b6e3e', '#86955a'], flor: ['#b8507a', '#df7ea3', '#f6c3d6'], flores: .55, forma: 'redonda', alto: .95, ancho: 1.05 },
+    ceiba: { copa: ['#2c4522', '#476236', '#6f8a4a'], forma: 'ancha', alto: 1.25, ancho: 1.45 },
+    mango: { copa: ['#1f3a1c', '#33502a', '#56713e'], forma: 'densa', alto: .85, ancho: 1.1 },
+    monte: { copa: ['#263d22', '#3c5530', '#5f7744'], forma: 'conica', alto: 1.15, ancho: .78 }
+  },
+  /* la especie según el suelo y el azar fijo del árbol */
+  especie(tt, s, r) { if (tt === TT.MOUNT) return s < .72 ? 'monte' : 'urapan'; return s < .1 ? 'guayacan_amarillo' : s < .18 ? 'guayacan_rosado' : s < .32 ? 'mango' : s < .42 && r > 3.4 ? 'ceiba' : 'urapan'; },
+  /* los árboles de un bloque de 56 m (los mismos que las losas y Terreno.arbolLosaEn) */
+  _bloque(M, bx, by) {
+    const C = M._arboleda || (M._arboleda = new Map()), k = bx * 65536 + by; let L = C.get(k); if (L) return L; L = [];
+    const cel = this.CEL, B = this.BLOQUE;
+    for (let y = by * B; y < (by + 1) * B; y += cel) for (let x = bx * B; x < (bx + 1) * B; x += cel) {
+      const tt = M.suelo(x, y); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(x, y), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(x, y, 41) > dens) continue;
+      const tx = x + h2(x, y, 42) * cel, ty = y + h2(x, y, 43) * cel, r = 2.2 + h2(x, y, 44) * 2.6, s = h2(x, y, 45), e = this.especie(tt, s, r), E = this.ESPECIES[e];
+      L.push({ x: tx, y: ty, r, s, e, h: r * (2.05 + h2(x, y, 46) * .5) * E.alto, v: (h2(x, y, 47) * 3) | 0, espejo: h2(x, y, 48) < .5 });
+    }
+    C.set(k, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
+  },
+  en(M, x0, y0, x1, y1, max = 2000) { const B = this.BLOQUE, out = []; for (let by = Math.floor(y0 / B); by <= Math.floor(y1 / B); by++) for (let bx = Math.floor(x0 / B); bx <= Math.floor(x1 / B); bx++) for (const t of this._bloque(M, bx, by)) if (t.x >= x0 && t.x <= x1 && t.y >= y0 && t.y <= y1) { out.push(t); if (out.length >= max) return out; } return out; },
+  /* ---------- horneado: un lienzo por especie, variante y vista ---------- */
+  _sp: new Map(),
+  sprite(e, v, vista, noche) {
+    const k = e + v + vista + (noche ? 'n' : ''); let c = this._sp.get(k); if (c !== undefined) return c;
+    if (noche) { const d = this.sprite(e, v, vista, false); c = d ? lienzo(d.width, d.height) : null; if (c) { const g = c.getContext('2d'); g.drawImage(d, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(10,18,44,.6)'; g.fillRect(0, 0, c.width, c.height); c._base = d._base; c._rx = d._rx; c._alto = d._alto; } }
+    else c = vista === 'lado' ? this._hornearLado(e, v) : this._hornearArriba(e, v);
+    this._sp.set(k, c); return c;
+  },
+  /* la copa: lóbulos en tres pasadas (silueta oscura, cuerpo y luz desde arriba a la izquierda), hojas y flores encima */
+  _copa(g, E, rnd, cx, cy, rx, ry, R, arriba) {
+    const N = arriba ? 16 : 20, L = [];
+    for (let i = 0; i < N; i++) { const a = rnd() * TAU, d = Math.sqrt(rnd()) * .78; let px = cx + Math.cos(a) * d * rx, py = cy + Math.sin(a) * d * ry; if (!arriba && E.forma === 'conica') px = cx + (px - cx) * (.55 + .45 * clamp((py - (cy - ry)) / (2 * ry), 0, 1)); L.push([px, py, R * (.26 + rnd() * .2) * (E.forma === 'densa' ? 1.12 : 1)]); }
+    if (!arriba) L.sort((p, q) => q[1] - p[1]);   // de atrás (abajo) hacia delante (arriba)
+    const [c0, c1, c2] = E.copa;
+    g.fillStyle = tono(c0, -.12); for (const [x, y, r] of L) { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
+    g.fillStyle = c1; for (const [x, y, r] of L) { g.beginPath(); g.arc(x - r * .12, y - r * .16, r * .84, 0, TAU); g.fill(); }
+    for (const [x, y, r] of L) { const luz = clamp(((cx - x) / rx + (cy - y) / ry) * .5 + .45, 0, 1); if (luz < .3) continue; g.globalAlpha = .35 + luz * .5; g.fillStyle = c2; g.beginPath(); g.arc(x - r * .3, y - r * .34, r * .46, 0, TAU); g.fill(); }
+    g.globalAlpha = 1;
+    /* textura de hojas y sombra interior (solo dentro de la copa) */
+    g.globalCompositeOperation = 'source-atop';
+    for (let i = 0; i < (arriba ? 260 : 320); i++) { const a = rnd() * TAU, d = Math.sqrt(rnd()), x = cx + Math.cos(a) * d * rx * 1.05, y = cy + Math.sin(a) * d * ry * 1.05, r = R * (.03 + rnd() * .035); g.fillStyle = rnd() < .55 ? 'rgba(12,26,10,.32)' : 'rgba(200,220,150,.22)'; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
+    if (E.flor) for (let i = 0; i < 420 * E.flores; i++) { const a = rnd() * TAU, d = Math.sqrt(rnd()), x = cx + Math.cos(a) * d * rx, y = cy + Math.sin(a) * d * ry, lado = clamp(((cx - x) / rx + (cy - y) / ry) * .5 + .5, 0, 1), r = R * (.035 + rnd() * .04); g.fillStyle = E.flor[lado > .62 ? 2 : lado > .3 ? 1 : 0]; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
+    const gr = arriba ? g.createRadialGradient(cx - rx * .25, cy - ry * .25, R * .1, cx, cy, Math.max(rx, ry) * 1.05) : g.createLinearGradient(cx - rx, cy - ry, cx + rx, cy + ry);
+    gr.addColorStop(0, 'rgba(255,250,220,.10)'); gr.addColorStop(.55, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(6,14,8,.42)'); g.fillStyle = gr; g.fillRect(cx - rx * 1.4, cy - ry * 1.4, rx * 2.8, ry * 2.8);
+    g.globalCompositeOperation = 'source-over';
+  },
+  _hornearLado(e, v) {
+    const E = this.ESPECIES[e], R = this.R, rx = R * E.ancho, ry = R * (E.forma === 'ancha' ? .62 : E.forma === 'conica' ? 1.05 : .86), alto = R * 2.3 * E.alto, W = Math.ceil(rx * 2 + R * .5), H = Math.ceil(alto + R * .25);
+    const c = lienzo(W, H); if (!c) return null; const g = c.getContext('2d'), rnd = mulberry32(e.length * 977 + v * 131 + 7), cx = W / 2, base = H - 2, cy = Math.max(ry + 2, base - alto + ry);
+    /* tronco que se afina, con su lado en sombra, y ramas que entran a la copa */
+    const tb = R * (E.forma === 'ancha' ? .2 : .13), tt = tb * .55, bark = E.forma === 'ancha' ? '#7a7466' : '#5a4433';
+    g.fillStyle = tono(bark, -.25); g.beginPath(); g.moveTo(cx - tb, base); g.quadraticCurveTo(cx - tb * .4, (base + cy) / 2, cx - tt, cy + ry * .2); g.lineTo(cx + tt, cy + ry * .2); g.quadraticCurveTo(cx + tb * .4, (base + cy) / 2, cx + tb, base); g.closePath(); g.fill();
+    g.fillStyle = bark; g.beginPath(); g.moveTo(cx - tb, base); g.quadraticCurveTo(cx - tb * .4, (base + cy) / 2, cx - tt, cy + ry * .2); g.lineTo(cx - tt * .1, cy + ry * .2); g.quadraticCurveTo(cx - tb * .05, (base + cy) / 2, cx - tb * .1, base); g.closePath(); g.fill();
+    g.strokeStyle = tono(bark, -.15); g.lineCap = 'round'; for (let i = 0; i < 4; i++) { const s = i % 2 ? 1 : -1, y0 = cy + ry * (.3 - i * .12); g.lineWidth = tt * (.9 - i * .15); g.beginPath(); g.moveTo(cx, y0 + ry * .25); g.quadraticCurveTo(cx + s * rx * .25, y0, cx + s * rx * (.45 + rnd() * .2), y0 - ry * (.15 + rnd() * .2)); g.stroke(); }
+    if (E.forma === 'ancha') { g.fillStyle = tono(bark, -.3); for (const s of [-1, 1]) { g.beginPath(); g.moveTo(cx + s * tb * .6, base); g.lineTo(cx + s * tb * 2.1, base); g.lineTo(cx + s * tb * .5, base - R * .35); g.closePath(); g.fill(); } }   // las raíces tablares de la ceiba
+    /* la copa en su capa, para que hojas y sombras queden adentro */
+    const cc = lienzo(W, H), gc = cc.getContext('2d'); this._copa(gc, E, rnd, cx, cy, rx, ry, R, false); g.drawImage(cc, 0, 0);
+    c._base = [cx, base]; c._rx = rx; c._alto = base - (cy - ry); return c;
+  },
+  _hornearArriba(e, v) {
+    const E = this.ESPECIES[e], R = this.R, rx = R * E.ancho * .98, S = Math.ceil(rx * 2 + R * .3), c = lienzo(S, S); if (!c) return null;
+    const g = c.getContext('2d'), rnd = mulberry32(e.length * 613 + v * 97 + 3); this._copa(g, E, rnd, S / 2, S / 2, rx, rx, R, true); c._rx = rx; return c;
+  },
+  /* hornea todo en ratos libres al arrancar (un lienzo cada 40 ms), para que la primera vez que se vean no cueste */
+  precalentar() { if (this._pre || typeof setTimeout === 'undefined' || typeof document === 'undefined') return; this._pre = true; const L = []; for (const e of Object.keys(this.ESPECIES)) for (let v = 0; v < 3; v++) L.push([e, v, 'lado'], [e, v, 'arriba']);
+    const paso = () => { const q = L.shift(); if (!q) return; const sp = this.sprite(q[0], q[1], q[2], false); if (sp && q[2] === 'lado') { this.mip(sp, .4); this.mip(sp, .1); } setTimeout(paso, 40); }; setTimeout(paso, 300); },
+  /* ---------- dibujo ---------- */
+  /* desde arriba, en metros del mundo (para hornear en las losas): sombra suave al sureste y la copa */
+  arriba(g, t, sombra = true) {
+    const fa = MC.arte.f('arbol'); if (fa && fa(g, t, 'arriba', t.x, t.y, 1, null) === true) return;   // gancho de arte: arbol(g, t, vista, x, y, pxPorMetro, D) → true si lo dibujó
+    const E = this.ESPECIES[t.e] || this.ESPECIES.urapan, rM = t.r * E.ancho, sp = this.sprite(t.e, t.v, 'arriba', false); if (!sp) return;
+    if (sombra) { g.fillStyle = 'rgba(8,14,10,.3)'; g.beginPath(); g.ellipse(t.x + rM * .45, t.y + rM * .5, rM * 1.02, rM * .95, .6, 0, TAU); g.fill(); }
+    const k = rM / sp._rx; g.drawImage(sp, t.x - sp.width / 2 * k, t.y - sp.height / 2 * k, sp.width * k, sp.height * k);
+  },
+  /* todas las sombras de una vez (un solo trazo: el sol es el mismo para todos), antes de los objetos */
+  sombras(D, L, sv) {
+    const { g, pr, z, P } = D; if (!L.length) return; const k = Math.max(.25, P.k * 1.2), Lf = sv ? Math.min(2.2, sv.L * .55) : 0;
+    let ang = 0; if (sv) { const [ax, ay] = pr(0, 0, 0), [bx, by] = pr(sv.dx, sv.dy, 0); ang = Math.atan2(by - ay, bx - ax); }
+    g.fillStyle = 'rgba(8,14,30,' + (sv ? (.11 + .15 * sv.fuerza) : .12).toFixed(3) + ')'; g.beginPath();
+    for (const t of L) { const E = this.ESPECIES[t.e] || this.ESPECIES.urapan, rM = t.r * E.ancho, rx = z * rM * (1 + Lf * .35), ry = z * rM * .9 * k; if (rx < 1.5) continue; const [sx, sy] = sv ? pr(t.x + sv.dx / sv.L * t.h * Lf * .55, t.y + sv.dy / sv.L * t.h * Lf * .55, 0) : pr(t.x + rM * .2, t.y + rM * .1, 0); g.moveTo(sx + rx * Math.cos(ang), sy + rx * Math.sin(ang)); g.ellipse(sx, sy, rx, ry, ang, 0, TAU); }
+    g.fill(); g.fillStyle = 'rgba(10,14,26,.32)'; g.beginPath();
+    for (const t of L) { const [x, y] = pr(t.x, t.y, 0), rx = Math.max(1, z * t.r * .18), ry = Math.max(.6, z * t.r * .09 * (P.k + .2)); g.moveTo(x + rx, y); g.ellipse(x, y, rx, ry, 0, 0, TAU); }
+    g.fill();
+  },
+  /* la sombra de un solo árbol (árboles de calle) */
+  sombra(D, t, sv) {
+    const { g, pr, z, P } = D, E = this.ESPECIES[t.e] || this.ESPECIES.urapan, rM = t.r * E.ancho, [x, y] = pr(t.x, t.y, 0);
+    Sombras.contacto(g, x, y, Math.max(1, z * t.r * .18), Math.max(.6, z * t.r * .09 * (P.k + .2)), .35);
+    if (!sv) { Sombras.contacto(g, x + z * rM * .2, y + z * rM * .1 * P.k, z * rM * .9, z * rM * .9 * P.k, .16); return; }
+    const L = Math.min(2.2, sv.L * .55), [sx, sy] = pr(t.x + sv.dx / sv.L * t.h * L * .55, t.y + sv.dy / sv.L * t.h * L * .55, 0), [ex, ey] = pr(t.x + sv.dx, t.y + sv.dy, 0), ang = Math.atan2(ey - y, ex - x);
+    g.save(); g.fillStyle = 'rgba(8,14,30,' + (.16 + .18 * sv.fuerza).toFixed(3) + ')'; g.translate(sx, sy); g.rotate(ang); g.scale(1, Math.max(.25, P.k * 1.2)); g.beginPath(); g.ellipse(0, 0, z * rM * (1 + L * .35), z * rM * .9, 0, 0, TAU); g.fill(); g.restore();
+  },
+  /* de pie (maqueta, oblicua, lateral): el sprite de lado a la medida del árbol */
+  mip(sp, k) { if (k >= .55 || !sp) return sp; const n = k >= .28 ? 1 : 2, M = sp._mip || (sp._mip = []); if (!M[n]) { const f = n === 1 ? .5 : .25, c = lienzo(Math.max(1, sp.width * f), Math.max(1, sp.height * f)); if (!c) return sp; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(sp, 0, 0, c.width, c.height); c._base = [sp._base[0] * f, sp._base[1] * f]; c._rx = sp._rx * f; c._alto = sp._alto * f; M[n] = c; } return M[n]; },
+  dePie(D, t) {
+    const { g, pr, z, P, noche } = D, fa = MC.arte.f('arbol'); if (fa) { const [ax, ay] = pr(t.x, t.y, 0); if (fa(g, t, 'lado', ax, ay, z, D) === true) return; } let sp = this.sprite(t.e, t.v, 'lado', noche > .4); if (!sp) return; const E = this.ESPECIES[t.e] || this.ESPECIES.urapan, [x, y] = pr(t.x, t.y, 0);
+    sp = this.mip(sp, (t.r * E.ancho * z) / sp._rx); const kx = (t.r * E.ancho * z) / sp._rx, ky = (t.h * z * P.hk) / sp._alto, w = sp.width * kx, h = sp.height * ky; if (h < 3) return;
+    if (t.espejo) { g.save(); g.translate(x, 0); g.scale(-1, 1); g.drawImage(sp, -w / 2, y - sp._base[1] * ky, w, h); g.restore(); } else g.drawImage(sp, x - w / 2, y - sp._base[1] * ky, w, h);
+  },
+  /* desde arriba, en pantalla (árboles de calle en la cenital) */
+  arribaPantalla(D, t) { const { g, pr, z, noche } = D, fa = MC.arte.f('arbol'); if (fa) { const [ax, ay] = pr(t.x, t.y, 0); if (fa(g, t, 'arriba', ax, ay, z, D) === true) return; } const sp = this.sprite(t.e, t.v, 'arriba', noche > .4); if (!sp) return; const E = this.ESPECIES[t.e] || this.ESPECIES.urapan, [x, y] = pr(t.x, t.y, 0), k = t.r * E.ancho * z / sp._rx; Sombras.contacto(g, x + t.r * z * .35, y + t.r * z * .4, t.r * z, t.r * z * .92, .26); g.drawImage(sp, x - sp.width / 2 * k, y - sp.height / 2 * k, sp.width * k, sp.height * k); }
+};
+MC.Arboleda = Arboleda;
 
 /* ---- js/30-personaje.js ---- */
 /* =====================================================================
@@ -3031,6 +3156,7 @@ const AGUA_COL = { mar: [[.36, .74, .80], [.05, .24, .44], 22], lago: [[.40, .64
 const PAL_SUELO = ['#78ad55', '#3f7a3c', '#cdbfa5', '#bdb3a2', '#5d636e', '#565c68', '#c9c4b8', '#4caf63', '#4f9fd0', '#5f9fb8', '#d8cfbd', '#6b7180', '#e7e2d6', '#b9b4a8', '#4d525c', '#a9a395', '#b8a98e', '#e6d7a8', '#f2f5f9', '#8d8a86'];
 const PAL_VIA = { anden: '#d4cfc3', asfalto: '#4a4f59', avenida: '#444955', autopista: '#3c414b', linea: '#f4f1e6', amarilla: '#f2c400', ciclo: '#3fae5a', cicloBorde: '#e8f5d0', peatonal: '#e3dccb', escalas: '#b8a98e', sendero: '#c9b78f' };
 MC.arte.pieles.motor.suelo = PAL_SUELO; MC.arte.pieles.motor.via = PAL_VIA;
+const PAL_SUELO_REAL = PAL_SUELO.map((c, i) => { const v = hex3(c), gr = (v[0] + v[1] + v[2]) / 3, k = i === 8 || i === 9 ? .1 : .3; return css3([v[0] + (gr - v[0]) * k, v[1] + (gr - v[1]) * k, v[2] + (gr - v[2]) * k].map(x => x * .94)); });   // 2.6: 30 % menos saturado y un poco más oscuro (el agua casi igual)
 /* lienzo fuera de pantalla (navegador u OffscreenCanvas; en Node, null) */
 function lienzo(w, h) { if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(Math.max(1, w | 0), Math.max(1, h | 0)); if (typeof document !== 'undefined') { const c = document.createElement('canvas'); c.width = Math.max(1, w | 0); c.height = Math.max(1, h | 0); return c; } return null; }
 /* color de techo y de muro de un edificio según su zona, su clase y su semilla (las reglas de la ciudad) */
@@ -3044,6 +3170,54 @@ function estiloEdificio(mundo, e) {
   else if (!plano) techo = s * 13 % 1 < (Z.teja || .3) / Math.max(.05, 1 - (Z.plancha || .5)) ? '#b5542f' : techo;
   return (e._est = { muro, techo, plano, tanque });
 }
+/* ---------- RUDEZA (2.6, estilo realista): grano, manchas, baldosas, desgaste de las vías y techos con textura ----------
+   Todo se hornea en las losas (una vez por losa), así que no cuesta nada por cuadro. Familiar, pero con la ciudad
+   como es: asfalto parcheado y con grietas, alcantarillas, manchas de aceite, rayas gastadas, andenes de baldosa con
+   bordillo, pasto con parches secos, tejas de barro con hileras y planchas de concreto con humedad. */
+const Rudeza = {
+  _src: {},
+  /* lienzos fuente de ruido (256 px), hechos una sola vez */
+  fuente(tipo) {
+    if (this._src[tipo] !== undefined) return this._src[tipo]; const S = tipo === 'baldosa' ? 64 : 256, c = lienzo(S, S); if (!c) return (this._src[tipo] = null); const g = c.getContext('2d');
+    if (tipo === 'baldosa') { g.fillStyle = 'rgba(0,0,0,0)'; g.fillRect(0, 0, S, S); g.fillStyle = 'rgba(40,36,30,.32)'; g.fillRect(0, 0, S, 2); g.fillRect(0, 0, 2, S); g.fillStyle = 'rgba(255,255,255,.10)'; g.fillRect(2, 2, S - 4, 2); }
+    else { const img = g.createImageData(S, S), d = img.data, rnd = mulberry32(tipo === 'grano' ? 11 : 23), cel = tipo === 'grano' ? 4 : 32, n = S / cel, V = []; for (let i = 0; i < n * n; i++) V.push(rnd());
+      const vn = (x, y) => { const fx = x / cel, fy = y / cel, ix = Math.floor(fx), iy = Math.floor(fy), tx = fx - ix, ty = fy - iy, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty), a = V[(iy % n) * n + ix % n], b = V[(iy % n) * n + (ix + 1) % n], c2 = V[((iy + 1) % n) * n + ix % n], e = V[((iy + 1) % n) * n + (ix + 1) % n]; return a + (b - a) * sx + (c2 - a) * sy + (a - b - c2 + e) * sx * sy; };
+      for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const v = rnd() * .55 + vn(x, y) * .45, o = (y * S + x) * 4, cl = v > .5; d[o] = d[o + 1] = d[o + 2] = cl ? 255 : 0; d[o + 3] = Math.round(Math.abs(v - .5) * 2 * (cl ? 34 : 60)); }   // motas claras y oscuras con su transparencia
+      g.putImageData(img, 0, 0); }
+    return (this._src[tipo] = c);
+  },
+  /* un patrón en metros del mundo: m metros por píxel de la fuente */
+  patron(g, tipo, m) { const f = this.fuente(tipo); if (!f) return null; const p = g.createPattern(f, 'repeat'); if (p && p.setTransform && typeof DOMMatrix !== 'undefined') p.setTransform(new DOMMatrix([m, 0, 0, m, 0, 0])); return p; },
+  /* textura final de la losa: grano fino (un pase con mezcla normal; las manchas grandes ya van en el color de cada casilla) */
+  textura(g, x0, y0, L) { const p = this.patron(g, 'grano', .2); if (!p) return; g.fillStyle = p; g.fillRect(x0, y0, L, L); },
+  /* baldosas del andén: se repinta el trazo del andén con la cuadrícula */
+  anden(g, vias, lin) { const p = this.patron(g, 'baldosa', .6 / 64); if (!p) return; for (const v of vias) lin(v.p, v.ancho + 3.2, p); },
+  /* el asfalto como es: parches, grietas, manchas de aceite y alcantarillas, con azar fijo por tramo */
+  asfalto(g, v, res = 6) {
+    const P = v.p, w = v.ancho, fino = res >= 4; g.save(); g.lineCap = 'round';   // lo fino (grietas, alcantarillas) solo se ve de cerca
+    for (let i = 0; i + 3 < P.length; i += 2) {
+      const ax = P[i], ay = P[i + 1], bx = P[i + 2], by = P[i + 3], dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy); if (l < 1) continue; const ux = dx / l, uy = dy / l, nx = -uy, ny = ux, rnd = mulberry32((ax * 73 | 0) ^ (ay * 151 | 0) ^ (v.k * 977));
+      for (let s = rnd() * 6; s < l; s += 5 + rnd() * 8) {
+        const u = rnd(), lat = (rnd() - .5) * w * .7, cx = ax + ux * s + nx * lat, cy = ay + uy * s + ny * lat;
+        if (u < .22) { const L2 = 1.5 + rnd() * 5, W2 = w * (.25 + rnd() * .3); g.fillStyle = rnd() < .5 ? 'rgba(98,98,96,.3)' : 'rgba(16,16,18,.24)'; g.save(); g.translate(cx, cy); g.rotate(Math.atan2(uy, ux)); g.fillRect(-L2 / 2, -W2 / 2, L2, W2); g.restore(); }   // parche de asfalto nuevo o viejo
+        else if (u < .42) { if (!fino) continue; g.strokeStyle = 'rgba(10,10,10,.42)'; g.lineWidth = .06 + rnd() * .05; g.beginPath(); let px = cx, py = cy; g.moveTo(px, py); for (let q = 0; q < 4 + rnd() * 4; q++) { const a = Math.atan2(uy, ux) + (rnd() - .5) * 2.2; px += Math.cos(a) * (.5 + rnd()); py += Math.sin(a) * (.5 + rnd()); g.lineTo(px, py); } g.stroke(); }   // grieta
+        else if (u < .6) { const r = .4 + rnd() * .8; g.fillStyle = 'rgba(8,8,10,.12)'; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill(); g.beginPath(); g.arc(cx + r * .1, cy, r * .55, 0, TAU); g.fill(); }   // mancha de aceite
+        else if (u < .66 && w >= 5 && fino) { g.fillStyle = '#3b3c3e'; g.beginPath(); g.arc(cx, cy, .34, 0, TAU); g.fill(); g.strokeStyle = 'rgba(160,160,155,.4)'; g.lineWidth = .06; g.stroke(); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; for (const o of [-.15, 0, .15]) { g.beginPath(); g.moveTo(cx - .25, cy + o); g.lineTo(cx + .25, cy + o); g.stroke(); } }   // alcantarilla
+      }
+    }
+    g.restore();
+  },
+  /* techos: hileras de teja de barro, o plancha de concreto con humedad y su pretil */
+  techo(g, b, P, st) {
+    const rnd = mulberry32((b.x * 31 | 0) ^ (b.y * 17 | 0)); g.save(); g.beginPath(); g.moveTo(P[0], P[1]); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i], P[i + 1]); g.closePath(); g.clip();
+    const R = Math.max(b.hw, b.hd) + 1;
+    if (!st.plano) { const L = b.hw > b.hd, ax = L ? -b.uy : b.ux, ay = L ? b.ux : b.uy; g.strokeStyle = 'rgba(70,24,12,.28)'; g.lineWidth = .07; g.beginPath(); for (let t = -R; t <= R; t += .32) { const cx = b.x + ax * t, cy = b.y + ay * t; g.moveTo(cx - ay * R, cy + ax * R); g.lineTo(cx + ay * R, cy - ax * R); } g.stroke(); }   // hileras perpendiculares al caballete
+    g.fillStyle = st.plano ? 'rgba(40,42,40,.1)' : 'rgba(50,40,20,.1)'; for (let i = 0; i < 2 + rnd() * 4; i++) { const cx = b.x + (rnd() - .5) * b.hw * 1.6, cy = b.y + (rnd() - .5) * b.hd * 1.6, r = .8 + rnd() * 2.2; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.arc(cx, cy, r * .6, 0, TAU); g.fill(); }   // humedad, musgo y hollín
+    g.restore(); if (st.plano) { g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = .22; g.beginPath(); g.moveTo(P[0], P[1]); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i], P[i + 1]); g.closePath(); g.stroke(); }
+  },
+  /* la paleta del suelo y de las vías, menos de caricatura */
+  SUELO: null, VIA: { anden: '#c4bdb0', asfalto: '#46484c', avenida: '#414347', autopista: '#3a3c40', linea: 'rgba(236,232,220,.82)', amarilla: 'rgba(226,182,20,.85)', ciclo: '#3c8f4f', cicloBorde: '#d9e3c6', peatonal: '#d2cab8', escalas: '#a99a80', sendero: '#b8a47c', bordillo: '#a19c92' }
+};
 /* ---------- losas del suelo ---------- */
 class Losas {
   constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; this.px = 0; this.maxPx = op.maxPx || (GPU.perfil().nivel === 'alta' ? 40e6 : 22e6); }   // presupuesto de píxeles: las losas nítidas de cerca pesan más
@@ -3053,23 +3227,24 @@ class Losas {
   invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) { const c0 = this.cache.get(k); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k); } } this.version++; }
   /* la losa (gx, gy) a res px por metro; se pinta si no está (o se pone en cola si `diferir`) */
   losa(gx, gy, res, diferir, sinTechos) {
-    const k = gx + ',' + gy + ',' + res + ',' + (sinTechos ? 1 : 0) + ',' + MC.arte.activa; let c = this.cache.get(k);
+    const fl = typeof sinTechos === 'number' ? sinTechos : (sinTechos ? 1 : 0), k = gx + ',' + gy + ',' + res + ',' + fl + ',' + MC.arte.activa + ',' + MC.estilo; let c = this.cache.get(k);
     if (c) { this.cache.delete(k); this.cache.set(k, c); return c; }
     if (diferir) { if (!this.pend.includes(k)) this.pend.push(k); return null; }
-    c = this.pintar(gx, gy, res, sinTechos); this._poner(k, c); return c;
+    c = this.pintar(gx, gy, res, fl); this._poner(k, c); return c;
   }
   /* pinta las losas pendientes con un presupuesto de milisegundos */
-  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this._poner(k, this.pintar(gx, gy, res, !!st)); } }
-  pintar(gx, gy, res, sinTechos) {
+  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this._poner(k, this.pintar(gx, gy, res, st | 0)); } }
+  pintar(gx, gy, res, fl) {
+    const sinTechos = (fl & 1) !== 0, sinArboles = (fl & 2) !== 0, real = MC.estilo !== 'clasico';
     const M = this.mundo, L = this.L, T = M.tile, n = Math.round(L / T), px = Math.max(8, Math.round(L * res)), cv = lienzo(px, px); if (!cv) return null;
-    const g = cv.getContext('2d'), x0 = gx * L, y0 = gy * L, S = MC.arte.dato('suelo', PAL_SUELO), V = Object.assign({}, PAL_VIA, MC.arte.dato('via', {}));
+    const g = cv.getContext('2d'), x0 = gx * L, y0 = gy * L, S = MC.arte.dato('suelo', real ? PAL_SUELO_REAL : PAL_SUELO), V = Object.assign({}, PAL_VIA, real ? Rudeza.VIA : {}, MC.arte.dato('via', {}));
     /* 1. suelo suave: una casilla = un píxel, con sombreado del relieve y la zona; se agranda con suavizado */
     const m = n + 2, base = lienzo(m, m), bg = base.getContext('2d'), img = bg.createImageData(m, m), D = img.data;
     const luzX = -.55, luzY = -.65;
     for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) {
       const wx = x0 + (i - .5) * T, wy = y0 + (j - .5) * T, tt = M.suelo(wx, wy); let col = S[tt] || '#888';
       if (tt === TT.BRICK || tt === TT.BLDG) col = M.estilo(wx, wy).suelo || col;
-      let c = hex3(col); const dzx = (M.cota(wx + T, wy) - M.cota(wx - T, wy)) / (2 * T), dzy = (M.cota(wx, wy + T) - M.cota(wx, wy - T)) / (2 * T); let sh = clamp(1 + (dzx * luzX + dzy * luzY) * 1.6, .62, 1.3); const rn = .96 + h2(Math.floor(wx / T), Math.floor(wy / T), 3) * .08;
+      let c = hex3(col); const dzx = (M.cota(wx + T, wy) - M.cota(wx - T, wy)) / (2 * T), dzy = (M.cota(wx, wy + T) - M.cota(wx, wy - T)) / (2 * T); let sh = clamp(1 + (dzx * luzX + dzy * luzY) * 1.6, .62, 1.3); const rn = .96 + h2(Math.floor(wx / T), Math.floor(wy / T), 3) * .08; if (real) c = c.map(v => v * (.93 + h2(Math.floor(wx / 60), Math.floor(wy / 60), 8) * .1)); if (real && (tt === TT.GRASS || tt === TT.MOUNT)) { const q = h2(Math.floor(wx / 30), Math.floor(wy / 30), 5) * .6 + h2(Math.floor(wx / 11), Math.floor(wy / 11), 6) * .4; if (q > .62) c = mez3(c, [.62, .58, .4], (q - .62) * 1.4); else if (q < .2) c = mez3(c, [.2, .3, .16], (.2 - q) * 1.2); }
       /* agua: color según el tipo y la profundidad (turquesa en la orilla del mar, oscuro en lo hondo) y espuma en la orilla */
       if (tt === TT.WATER || tt === TT.CANAL) { const ag = Terreno.aguaEn(M, wx, wy); if (ag) { const A = AGUA_COL[ag.tipo] || AGUA_COL.lago, k = clamp(ag.prof / A[2], 0, 1); c = mez3(A[0], A[1], k); if (ag.orilla < T * 1.3 + 2) c = mez3(c, [.88, .94, .96], .3); sh = 1; } }
       /* laderas muy empinadas: la roca asoma (acantilados y barrancos), y la playa se aclara junto al agua */
@@ -3090,22 +3265,24 @@ class Losas {
     g.lineCap = 'round'; g.lineJoin = 'round';
     const carros = vias.filter(v => v.k <= 4), resto = vias.filter(v => v.k > 4);
     for (const v of carros) lin(v.p, v.ancho + 3.2, V.anden);
+    if (real && res >= .9) { Rudeza.anden(g, carros, lin); for (const v of carros) lin(v.p, v.ancho + .5, V.bordillo); }
     for (const v of resto) if (v.k !== VIA.CICLO) lin(v.p, v.ancho + (v.k === VIA.ESCALAS ? .6 : 1), v.k === VIA.ESCALAS ? V.escalas : v.k === VIA.SENDERO ? V.sendero : V.peatonal);
     for (const v of carros) lin(v.p, v.ancho, v.k === VIA.AUTOPISTA ? V.autopista : v.k === VIA.AVENIDA ? V.avenida : V.asfalto);
+    if (real && res >= .9) for (const v of carros) { lin(v.p, v.ancho * .5, 'rgba(14,14,16,.10)'); Rudeza.asfalto(g, v, res); }   // el centro de los carriles, más gastado y oscuro
     for (const v of carros) if (v.ancho >= 8 && res >= .6) { if (v.k === VIA.AVENIDA || v.k === VIA.AUTOPISTA) lin(v.p, .35, V.amarilla); else lin(v.p, .25, V.linea, [3, 4]); }
     for (const v of resto) if (v.k === VIA.ESCALAS && res >= .8) lin(v.p, v.ancho * .7, 'rgba(90,70,50,.35)', [.35, .45]);
     for (const v of resto) if (v.k === VIA.CICLO) { lin(v.p, v.ancho + .7, V.cicloBorde); lin(v.p, v.ancho, V.ciclo); if (res >= .8) lin(v.p, .18, 'rgba(255,255,255,.85)', [1.5, 1.5]); }
     /* 4. árboles por zona (en pasto y a lo largo de las avenidas) */
-    const cel = 7;
-    if (!lejos) for (let y = Math.floor(y0 / cel) * cel; y < y0 + L; y += cel) for (let x = Math.floor(x0 / cel) * cel; x < x0 + L; x += cel) {
-      const hv = h2(x, y, 41), tt = M.suelo(x, y); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(x, y), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (hv > dens) continue;
-      const tx = x + h2(x, y, 42) * cel, ty = y + h2(x, y, 43) * cel, r = 2.2 + h2(x, y, 44) * 2.6; this.arbol(g, tx, ty, r, h2(x, y, 45));
-    }
+    /*    2.6: los mismos árboles de MC.Arboleda (también los del borde de las losas vecinas: ya no quedan cortados).
+          En las vistas inclinadas de cerca no se pintan en el piso: se levantan (antes parecían tapetes). */
+    if (!lejos && !sinArboles) for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { if (real) Arboleda.arriba(g, t); else this.arbol(g, t.x, t.y, t.r, t.s); }
+    else if (!lejos && sinArboles) { g.fillStyle = 'rgba(10,16,12,.17)'; g.beginPath(); for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { const rM = t.r * (Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan).ancho; g.moveTo(t.x + rM * 1.2, t.y + rM * .2); g.ellipse(t.x + rM * .25, t.y + rM * .2, rM * .95, rM * .9, 0, 0, TAU); } g.fill(); }   // la sombra bajo la copa, horneada en el piso (gratis por cuadro)
     /* 5. techos de las huellas reales (sombra suave al sureste) y tanques en las laderas */
     const E = lejos ? [] : M.edificiosEn(x0, y0, x0 + L, y0 + L).sort((a, b) => a.h - b.h);
     for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(1.4, .3 + b.h * .04); g.fillStyle = 'rgba(20,24,40,.2)';   /* solo oclusión de contacto: la sombra del sol la pone MC.Sombras según la hora */ g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
-    if (!sinTechos) for (const b of E) this.techo(g, b, M);
+    if (!sinTechos) for (const b of E) { this.techo(g, b, M); if (real && res >= 1.5) Rudeza.techo(g, b, Mundo.esquinas(b), estiloEdificio(M, b)); }
     if (!sinTechos) for (const b of SI.E) if (dentroL(b.caja)) { g.fillStyle = b.techo === 'cupula' ? '#56665f' : b.clase === 'iglesia' ? '#b5542f' : '#bdbcb6'; this._poly(g, b.R); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .4; this._poly(g, b.R, true); }
+    if (real && res >= .9) Rudeza.textura(g, x0, y0, L);   // grano y manchas sobre todo
     g.restore();
     return cv;
   }
@@ -3136,7 +3313,7 @@ const Pincel = {
     for (let i = 0; i < n; i++) { const sc = s - dir * (i + .5) * coche, a = T.at(sc - dir * coche * .45), b = T.at(sc + dir * coche * .45), [ax, ay] = aPx(a.x, a.y), [bx, by] = aPx(b.x, b.y), L = Math.hypot(bx - ax, by - ay); if (L < .5) continue; g.save(); g.translate((ax + bx) / 2, (ay + by) / 2); g.rotate(Math.atan2(by - ay, bx - ax)); const w = Math.max(2, L * .14); g.fillStyle = '#e6e9ee'; g.fillRect(-L / 2 + .5, -w / 2, L - 1, w); g.fillStyle = color; g.fillRect(-L / 2 + .5, -w / 2, L - 1, w * .22); g.fillRect(-L / 2 + .5, w / 2 - w * .22, L - 1, w * .22); g.fillStyle = 'rgba(30,45,65,.6)'; g.fillRect(-L / 2 + 2, -w * .12, L - 4, w * .24); g.restore(); }
   }
 };
-Object.assign(MC, { Losas, Pincel, lienzo, estiloEdificio, PAL_SUELO, PAL_VIA });
+Object.assign(MC, { Losas, Pincel, lienzo, estiloEdificio, PAL_SUELO, PAL_VIA, Rudeza });
 
 /* ---- js/41-vista2d.js ---- */
 /* =====================================================================
@@ -3171,7 +3348,7 @@ const Vista2D = {
     if (P.k < .55) { const R = Math.max(W, H) / z * .6 + 60, Rp = Math.min(R, 90 + 260 * P.k); const fx = Math.sin(P.yaw), fy = Math.cos(P.yaw); const RR = Math.max(R, Rp); x0 = Math.max(x0, C.x - RR); x1 = Math.min(x1, C.x + RR); y0 = Math.max(y0, C.y - RR); y1 = Math.min(y1, C.y + RR); E._franja = P.k < .45 ? { Rp, fx, fy } : null; } else E._franja = null;   /* la maqueta (k = .5) recorta lo que dibuja, pero sin el corte de tierra de la vista lateral */
     E._caja = [x0, y0, x1, y1];
     /* ---------- suelo ---------- */
-    const sinTechos = modo !== 'cenital', pixel = !!op.pixel, Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
+    const sinTechos = modo !== 'cenital', pixel = !!op.pixel, dePie = sinTechos && z >= ((E.calidad ?? 1) >= .9 ? 3.2 : 4.2) && op.arboles !== false,   /* árboles de pie de cerca; con calidad media, desde un poco más cerca */ Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
     let res = z; const RES = [.0625, .125, .25, .5, 1, 2, 3, 4, 6]; res = RES.find(r => r >= res * (pixel ? .9 : .7)) || 6;   /* z ya está en píxeles del lienzo por metro; de cerca, losas de hasta 6 px/m */ if (Ls === E.losasLejos) res = Math.min(res, .25);
     g.save(); g.fillStyle = '#5e8c4a'; g.fillRect(0, 0, W, H);
     if (E._franja) {   /* de lado: cielo arriba de la franja y el corte de la tierra abajo (casa de muñecas) */
@@ -3184,18 +3361,18 @@ const Vista2D = {
     g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
     const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
-      let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), sinTechos);
-      if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, sinTechos); }   // mientras llega la buena, una borrosa
+      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
+      if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
       if (L) g.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
     }
     g.restore();
     const noche0 = E.cielo ? E.cielo.noche : 0; if (noche0 > .02) { g.fillStyle = 'rgba(8,18,52,' + (noche0 * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     /* ---------- lo que se levanta: edificios, pasos elevados, vehículos y gente, en orden de profundidad ---------- */
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
-    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H }, luces = [];
+    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H, real: MC.estilo !== 'clasico' }, luces = [];
     const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
     /* sombras del sol de esta hora (también de edificios que están fuera de la pantalla y la alcanzan) */
-    const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3;
+    const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3; dibCtx.sv = conSombra ? sv : null;
     const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * cal);
     if (modo !== 'cenital' || conSombra) {
       const pad = conSombra ? Math.min(160, 25 * sv.L) : 0, lista = E.mundo.edificiosEn(x0 - pad, y0 - pad, x1 + pad, y1 + pad).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
@@ -3209,6 +3386,8 @@ const Vista2D = {
       g.stroke(); g.restore(); }
     /* naturaleza: rocas, palmas, frailejones, arbustos y juncos (de cerca) */
     if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
+    /* 2.6: los árboles de pie (maqueta, oblicua y lateral de cerca), con su sombra según el sol antes de todo lo demás */
+    if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
     /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
     if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
     /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
@@ -3224,9 +3403,9 @@ const Vista2D = {
     const Jc = E.jugador && E.jugador.cuerpo, jKey = Jc ? dy(Jc.x, Jc.y) : 0, jS = Jc ? pr(Jc.x, Jc.y, (Jc.zPaso || 0) + (Jc.z || 0) + 1) : null;
     const tapa = q => { const hw = q.hw != null ? Math.max(q.hw, q.hd) : q.caja ? Math.max(q.caja[2] - q.caja[0], q.caja[3] - q.caja[1]) / 2 : 15, r = hw * z * 1.15 + 12, [bx, by] = pr(q.x, q.y, 0), [, ty] = pr(q.x, q.y, q.h || 10); return Math.abs(jS[0] - bx) < r && jS[1] > ty - 12 && jS[1] < by + hw * z * P.k + 12; };
     for (const o of objs) {
-      const rx = Jc && modo !== 'cenital' && (o.t === 0 || o.t === 4) && o.y > jKey && tapa(o.q); if (rx) g.globalAlpha = .28;
+      const rx = Jc && modo !== 'cenital' && o.y > jKey && ((o.t === 0 || o.t === 4) ? tapa(o.q) : o.t === 10 ? (() => { const [tx, ty] = pr(o.q.x, o.q.y, 0); return Math.abs(jS[0] - tx) < o.q.r * 1.3 * z + 6 && jS[1] < ty && jS[1] > ty - o.q.h * z * P.hk; })() : false); if (rx) g.globalAlpha = o.t === 10 ? .4 : .28;
       if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
-      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces); else if (o.t === 8) Naturaleza.objeto(dibCtx, o.q); else if (o.t === 9) this.estacionado(dibCtx, o.q);
+      else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P); else if (o.t === 7) Mobiliario.objeto(dibCtx, o.q, luces); else if (o.t === 8) Naturaleza.objeto(dibCtx, o.q); else if (o.t === 9) this.estacionado(dibCtx, o.q); else if (o.t === 10) Arboleda.dePie(dibCtx, o.q);
       if (rx) g.globalAlpha = 1;
     }
     Sombras.luces(g, luces, noche);   // los charcos de luz de los postes, encima de todo (como luz que se suma)
@@ -3245,6 +3424,9 @@ const Vista2D = {
       const j = (i + 1) % n, ex = B[j][0] - B[i][0], ey = B[j][1] - B[i][1], ny = ex * sg; if (ny <= 0) continue;   // el muro mira hacia abajo de la pantalla: se ve
       const lz = clamp(.72 + .28 * (ey * sg / (Math.hypot(ex, ey) || 1)) * D.luzX + .1, .55, 1.05) - noche * .45;
       g.fillStyle = tono(muro, lz - 1); g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
+      if (D.real && z > 3.5) { const hb = Math.min(1, (z1 - z0) * .25) / (z1 - z0), ha = .35 / (z1 - z0), Bi = [B[i][0] + (T[i][0] - B[i][0]) * hb, B[i][1] + (T[i][1] - B[i][1]) * hb], Bj = [B[j][0] + (T[j][0] - B[j][0]) * hb, B[j][1] + (T[j][1] - B[j][1]) * hb], Ti = [T[i][0] - (T[i][0] - B[i][0]) * ha, T[i][1] - (T[i][1] - B[i][1]) * ha], Tj = [T[j][0] - (T[j][0] - B[j][0]) * ha, T[j][1] - (T[j][1] - B[j][1]) * ha];   /* 2.6: humedad y salpicado en la base del muro; sombra bajo el alero */
+        g.fillStyle = 'rgba(34,26,18,.24)'; g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(Bj[0], Bj[1]); g.lineTo(Bi[0], Bi[1]); g.closePath(); g.fill();
+        g.fillStyle = 'rgba(0,0,0,.13)'; g.beginPath(); g.moveTo(T[i][0], T[i][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(Tj[0], Tj[1]); g.lineTo(Ti[0], Ti[1]); g.closePath(); g.fill(); }
       if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
         /* fachada por reglas (WFC, como Townscaper): locales, vitrinas y puerta abajo; balcones alineados; muros ciegos */
         const FZ = pisos * cols <= 48 && z > 2.2 ? Ondas.fachadaCache(ventanas * 31 + i, pisos, cols) : null, alturaV = (T[i][1] - B[i][1]);
@@ -3904,7 +4086,7 @@ const VISTAS = [
   { id: 'cine', n: 'Cine', icon: '🎥', tipo: 'gl', perfil: 'cine', control: 'volante' }
 ];
 class Vistas {
-  constructor(mundo, op = {}) {
+  constructor(mundo, op = {}) { if (MC.estilo !== 'clasico') Arboleda.precalentar();
     this.mundo = mundo; this.losas = new Losas(mundo); this.losasLejos = new Losas(mundo, { lado: 1280, max: 40 }); this.pano = new Panoramica(mundo); this.gl = null; this.glIntentado = false;
     this.actual = VISTAS[0]; this.anterior = null; this.pixel = false; this.escalaPixel = op.escalaPixel || 3; this.calidad = op.calidad ?? .85; this.auto = op.auto !== false; this.ms = 16; this.dpr = 1; this.fundido = null; this._buf = null;
     const aj = GPU.ajustes(); this.motor3d = op.motor3d || 'auto'; this.raster = null; this.res = new ResDinamica({ objetivo: 1000 / aj.fps, escala: aj.escala });
@@ -5049,7 +5231,7 @@ Object.assign(MC, { Necesidades, Habitante });
    ===================================================================== */
 const Pieles = {
   paquetes: {},
-  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble'],
+  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble', 'arbol'],
   /* registra los atlas y la piel; devuelve una promesa que se cumple cuando las imágenes cargaron */
   instalar(id, pack, op = {}) {
     if (!pack || !pack.atlases) throw new Error('Pieles: el paquete ' + id + ' no trae atlas');
@@ -5065,7 +5247,7 @@ const Pieles = {
     const ARBOLES = op.arboles || ['arbol_guayacan_amarillo', 'arbol_guayacan_rosado', 'arbol_ceiba', 'arbol_palma', 'arbol_mango'];
     const piel = {};
     if (partes.has('prop') && AU) piel.prop = (g, p, x, y, z, D) => {
-      if (p.t === 'cebra') return false; const cen = D && D.modo === 'cenital', noche = D && D.noche > .3, v = p.v || 0;
+      if (p.t === 'cebra' || (p.t === 'arbol' && op.arboles === false)) return false; const cen = D && D.modo === 'cenital', noche = D && D.noche > .3, v = p.v || 0;
       const U = N(AU, D); if (p.t === 'arbol') { const alto = 5 + v * 4, copa = 3.2 + v * 2.4; return S(U + '/' + ARBOLES[Math.floor(v * 5) % ARBOLES.length] + (cen ? '_cen' : ''), g, x, y, z, { metros: cen ? copa : alto * 1.12 }); }   // a la medida del árbol del motor
       if (p.t === 'poste') return S(AU + '/' + (cen ? 'poste_cen' : noche ? 'poste_noche' : 'poste_dia'), g, x, y, z);   // el poste encendido no se oscurece
       if (cen) return S(U + '/' + p.t + '_cen', g, x, y, z);   // sin vista de arriba: el del motor
@@ -5089,6 +5271,9 @@ const Pieles = {
     }
     if (partes.has('vehiculo') && AV) piel.vehiculoLado = (g, V, x, y, esc, dir, C) => S(AV + '/' + ((V && V.id) || 'bici') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || (M().vehiculoLado ? M().vehiculoLado(g, V, x, y, esc, dir, C) : false);
     if (partes.has('animal') && AA) piel.animalLado = (g, a, x, y, esc, dir, t, v) => S(AA + '/' + ((a && a.id) || 'perro_criollo') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || M().animalLado(g, a, x, y, esc, dir, t, v);
+    /* árboles (2.6): arbol_<especie>_lado|arriba[_v1|_v2] en cualquier atlas del paquete; si no está, el árbol procedural de MC.Arboleda */
+    const AT = partes.has('arbol') ? ids.find(a => Object.keys(pack.atlases[a].cuadros || {}).some(n => /^arbol_[a-z_]+_(lado|arriba)/.test(n))) : null;
+    if (AT) piel.arbol = (g, t, vista, x, y, pxm) => { const b = AT + '/arbol_' + t.e + '_' + vista, ref = t.v && tiene(b + '_v' + t.v) ? b + '_v' + t.v : tiene(b) ? b : null; if (!ref) return false; const E = MC.Arboleda && MC.Arboleda.ESPECIES[t.e]; return Sprites.dibujar(g, ref, x, y, pxm, { metros: vista === 'lado' ? t.h : t.r * 2 * (E ? E.ancho : 1), espejo: t.espejo, pixel: px() }); };
     if (partes.has('mueble') && AM) piel.mueble = (g, m, estilo) => {
       const n = sinTilde(m.tipo) + '_' + (estilo || 'paisa'), A = Sprites.atlases.get(AM); if (!A || !A.listo || !A.cuadros[n]) return false;
       const [sx, sy, sw, sh] = A.cuadros[n]; g.drawImage(A.img, sx, sy, sw, sh, m.x, m.y, m.w, m.h); return true;
@@ -5108,7 +5293,7 @@ const Pieles = {
 };
 MC.Pieles = Pieles;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

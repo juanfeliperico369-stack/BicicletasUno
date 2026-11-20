@@ -106,13 +106,14 @@ function jugar() {
   ui.minimapa(vistas);
   /* controles a la vista: joystick que aparece bajo el dedo y botones grandes de acción (mantener oprimido) */
   /* 2.5.1: el arte de Gemini (G‑M0…G‑M15) como piel opcional; lo que no esté o no haya cargado se dibuja procedural */
+  MC.estilo = leerG().estilo || 'realista';   // 2.6: realista (texturas, desgaste y árboles de pie) o clásico (plano y limpio)
   let arte = leerG().arte || 'gemini'; const hayGemini = !!(window.MC_ARTE && MC_ARTE.gemini);
-  if (hayGemini) MC.Pieles.instalar('gemini', MC_ARTE.gemini, { partes: ['prop', 'naturaleza', 'fachada', 'mueble'], pixel: () => vistas.pixel, usar: arte === 'gemini' }).catch(e => ocu.anotar && ocu.anotar('arte', String(e)));
-  const cambiarArte = () => { arte = MC.arte.activa === 'gemini' ? 'motor' : 'gemini'; MC.arte.usar(arte); escribirG({ arte }); ui.aviso(arte === 'gemini' ? '🎨 Arte de Gemini: guayacanes, ceibas, palmas, postes, rocas, fachadas y muebles' : '🎨 Arte del motor (procedural)', 2500); };
+  if (hayGemini) MC.Pieles.instalar('gemini', MC_ARTE.gemini, { partes: ['prop', 'fachada', 'mueble'], arboles: false, pixel: () => vistas.pixel, usar: arte === 'gemini' }).catch(e => ocu.anotar && ocu.anotar('arte', String(e)));
+  const cambiarArte = () => { arte = MC.arte.activa === 'gemini' ? 'motor' : 'gemini'; MC.arte.usar(arte); escribirG({ arte }); ui.aviso(arte === 'gemini' ? '🎨 Arte de Gemini: postes, bancas, paraderos, fachadas y muebles' : '🎨 Arte del motor (procedural)', 2500); };
   ui.joystick(ctl, { texto: matchMedia('(pointer: fine)').matches && !('ontouchstart' in window) ? 'Flechas o WASD · o arrastra' : 'Arrastra para moverte' });
   ui.accion({ id: 'salto', icono: '⤒', texto: 'Saltar', ctl }); ui.accion({ id: 'turbo', icono: '⚡', texto: 'Turbo (mantener)', mantener: true, ctl });
   const bBaja = ui.accion({ id: 'baja', icono: '🔽', texto: 'Bajar / bucear (mantener)', mantener: true, ctl }), bSube = ui.accion({ id: 'sube', icono: '🔼', texto: 'Subir (mantener)', mantener: true, ctl }); bBaja.hidden = bSube.hidden = true;
-  const menuVista = () => ui.menu('Vista', MC.VISTAS.map(v => ({ id: v.id, texto: v.icon + ' ' + v.n + (vistas.actual.id === v.id ? ' ✓' : '') })).concat([{ id: 'pixel', texto: '👾 Pixel: ' + (vistas.pixel ? 'sí' : 'no') }].concat(hayGemini ? [{ id: 'arte', texto: '🎨 Arte: ' + (MC.arte.activa === 'gemini' ? 'de Gemini' : 'del motor') }] : []), [{ id: 'mas', texto: '🔍 Acercar' }, { id: 'menos', texto: '🔎 Alejar' }]), id => { if (id === 'pixel') vistas.pixel = !vistas.pixel; else if (id === 'arte') cambiarArte(); else if (id === 'mas') camara.zoom = Math.min(camara.limites.zoom[1], camara.zoom * 1.5); else if (id === 'menos') camara.zoom = Math.max(camara.limites.zoom[0], camara.zoom / 1.5); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
+  const menuVista = () => ui.menu('Vista', MC.VISTAS.map(v => ({ id: v.id, texto: v.icon + ' ' + v.n + (vistas.actual.id === v.id ? ' ✓' : '') })).concat([{ id: 'pixel', texto: '👾 Pixel: ' + (vistas.pixel ? 'sí' : 'no') }].concat([{ id: 'estilo', texto: '🖌️ Estilo: ' + (MC.estilo === 'clasico' ? 'clásico (plano)' : 'realista') }], hayGemini ? [{ id: 'arte', texto: '🎨 Arte: ' + (MC.arte.activa === 'gemini' ? 'de Gemini' : 'del motor') }] : []), [{ id: 'mas', texto: '🔍 Acercar' }, { id: 'menos', texto: '🔎 Alejar' }]), id => { if (id === 'pixel') vistas.pixel = !vistas.pixel; else if (id === 'arte') cambiarArte(); else if (id === 'estilo') { MC.estilo = MC.estilo === 'clasico' ? 'realista' : 'clasico'; escribirG({ estilo: MC.estilo }); ui.aviso(MC.estilo === 'clasico' ? '🖌️ Estilo clásico: plano y limpio' : '🖌️ Estilo realista: asfalto gastado, tierra, tejas y árboles de pie', 2500); } else if (id === 'mas') camara.zoom = Math.min(camara.limites.zoom[1], camara.zoom * 1.5); else if (id === 'menos') camara.zoom = Math.max(camara.limites.zoom[0], camara.zoom / 1.5); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
   const ayuda = () => ui.dialogo('🎮 Cómo se juega', '<div style="text-align:left;line-height:1.5">' +
     '• <b>Moverte:</b> pon el pulgar abajo a la izquierda y arrastra (o flechas / WASD).<br>• <b>Saltar ⤒ y turbo ⚡:</b> abajo a la derecha (o espacio y Shift).<br>' +
     '• <b>Mirar:</b> arrastra a la derecha para girar la cámara; pellizca o usa la rueda para acercar.<br>• <b>Mandados:</b> sigue la <b style="color:#ffc23a">flecha amarilla</b>; al llegar, «🚪 Entrar» y entrega en la mano.<br>' +
@@ -186,7 +187,7 @@ function jugar() {
   /* tamaño */
   let W = 0, H = 0; const ajustar = () => { const d = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
   ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
-  if (!leerG().tuto) { escribirG({ tuto: 1 }); setTimeout(ayuda, 600); }
+  /* 2.6: el tutorial es opcional (en la portada y en ⚙️ Ajustes); al empezar solo queda la guía del joystick, que se va sola */
   /* ciclo */
   let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0, ultBloqueo = null, nadaba = false;
   /* el tráfico y la gente también ocupan espacio: no se atraviesan */

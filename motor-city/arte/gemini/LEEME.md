@@ -35,8 +35,9 @@ Cada atlas se miró a ojo, y en el juego se comparó con el arte del motor en la
 
 | Parte | Veredicto | Por qué |
 |---|---|---|
-| Árboles del trópico (guayacán amarillo y rosado, ceiba, mango, palma), postes, bancas, paraderos | ✅ **Se usa** | Le da identidad colombiana al pueblo. Se dibujan a la medida del árbol del motor, y de noche con una copia oscurecida del atlas. |
-| Rocas y palmas (naturaleza) | ✅ **Se usa** | Se ven bien de lado. Desde arriba solo las rocas; las palmas de lado no sirven en la vista cenital. |
+| Postes, bancas, paraderos | ✅ **Se usa** | Se dibujan a la medida del motor, y de noche con una copia oscurecida del atlas. |
+| Árboles del trópico | ❌ **No se usa desde la 2.6** | Se ven como chupetas de caricatura; los reemplazan los árboles procedurales con volumen (`MC.Arboleda`). Los realistas los hará ChatGPT (C‑A4). |
+| Rocas y palmas (naturaleza) | ❌ **No se usa desde la 2.6** | Planas para el estilo realista; las procedurales del motor encajan mejor. |
 | Muebles × 8 estilos | ✅ **Se usa** | Un poco más de detalle que los procedurales (estufa con fogones, cama con almohada). |
 | Módulos de fachada (WFC) | ✅ **Se usa** | Se recorta solo el vano (ventana, puerta o vitrina) para no pintar un muro de otro color sobre el edificio. |
 | Personaje | ❌ **No se usa por defecto** | Queda más pequeño que el mundo y no respeta el aspecto que el jugador elige. El procedural va alineado con la bici. |
@@ -44,7 +45,8 @@ Cada atlas se miró a ojo, y en el juego se comparó con el arte del motor en la
 | Animales | ❌ **No se usa por defecto** | La escala no coincide con el perro del motor. |
 | Íconos, hitos, paletas | 📦 **Guardados** | Listos para la siguiente versión de la interfaz y de la capa para daltónicos. |
 
-## Lo que se le pide a Gemini para la próxima entrega
+## Lo que se pedía para la segunda vuelta
+Desde la 2.6 esto pasa a **ChatGPT** (C‑A2 y C‑A3): Gemini trabaja con «hydrogen» y le tocan tareas fáciles (`TAREAS-IA.md`). Además, `node motor.mjs revisar-arte arte/gemini` encuentra 21 cuadros que se salen de la imagen. La lista:
 1. **Personaje y vehículos a escala:**
    - que la figura llene el cuadro: el alto en `metros` es el del cuadro entero;
    - la bici de lado con la rueda de 0,68 m;

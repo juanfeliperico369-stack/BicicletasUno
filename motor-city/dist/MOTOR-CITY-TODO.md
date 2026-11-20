@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.5.1 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 2.6.0 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -8,11 +8,12 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.5.1** · 19‑nov‑2026 |
+> | Versión | **Motor City 2.6.0** · 20‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
 > | **¿Está todo lo pedido?** | `docs/PEDIDOS.md`: cada pedido del autor, su estado y el archivo donde quedó |
+> | **«Mira el repositorio y haz tu parte»** | `TAREAS-IA.md`: la lista corta de cada IA, en orden |
 
 ## Índice
 1. Qué es Motor City
@@ -61,12 +62,13 @@
 | **2.3** | Estudiar **SimCity, Los Sims, Cities: Skylines y Townscaper**: cómo crean entornos, ambientes, sombras y detalles de ciudad. Un **documento único** con todo y el código a usar | **Sombras del sol** por hora en todas las vistas. **Mobiliario urbano** y luces de noche. **Fachadas por reglas** (WFC). **`MC.Urbe`**: zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y **capas de datos**. **Objetos inteligentes** y necesidades (`MC.Habitante`). **`MC.Ondas`**, `MC.Autotile` y `MC.RejillaIrregular`. **`MC.Paisaje`** (sonido ambiente). Mandados con **modo alcalde** y casa habitada. 109 pruebas. Este documento. |
 | **2.4** | Montañas, rocas y tipos de terreno; agua en **lagos, ríos, playa y mar**; **límites de paso verosímiles** («el personaje pasa por encima de cosas que no debería») | **`MC.Terreno`**: agua por tipo y profundidad; material y pendiente; **reglas de paso** por vehículo con su motivo (vadear, nadar, barrancos, roca, monte, arena, nieve, borde del mundo); **obstáculos reales** (emblemáticos, árboles de las losas, postes, bancas, rocas, tráfico y gente). **`MC.Naturaleza`**: rocas, palmas, frailejones, arbustos y juncos. **Lagos** en los mundos generados (llenado por prioridad) y mar a nivel 0. **Agua y roca en las losas**: color por profundidad, espuma en la orilla y roca en las laderas empinadas. Brillos del agua. El personaje se ve vadeando o nadando. 115 pruebas. |
 | **2.5** | «Añade la capacidad de poder entrar en el agua» | **Entrar al agua de verdad:**<ul><li>con un vehículo, al empujar hacia el agua honda (o con «🏊 Al agua») uno se baja, el vehículo queda **parqueado en la orilla** y se entra nadando;</li><li>se **bucea** («🤿», o Z/Ctrl) con **aire limitado** (~35 s); sin aire se sube sola;</li><li>el cuerpo tiene pose de **nado** (crol) y de **buceo** (rana);</li><li>bajo el agua todo se tiñe de azul, con rayos de luz y burbujas;</li><li>se sale por la orilla y se **vuelve a subir** al vehículo;</li><li>**lancha**: embarcar en el agua honda más cercana y «⚓ A tierra» (queda amarrada).</li></ul>117 pruebas. |
-| **2.5.1** (esta) | «El minijuego es injugable: no hay controles de verdad, no se puede mover nada; hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos?» | **Lo que pasaba:** el personaje sí se movía, pero la cámara estaba tan lejos que medía 3 píxeles y el joystick no se veía. **Lo que se hizo:**<ul><li>**cámara cerca**: unos 45 m en el lado corto de la pantalla;</li><li>**marca del jugador** (anillo y flecha);</li><li>**joystick visible** con guía, y **botones de acción** para el pulgar: ⤒ saltar, ⚡ turbo, y 🔽 🔼 en el agua o en el aire;</li><li>**flecha al objetivo** con la distancia, siempre en la zona libre;</li><li>**tutorial** al empezar;</li><li>**modo libre** por defecto: todo gratis, con los 34 vehículos (pie, bici, moto, carro, bus, avión y lancha);</li><li>menús **Vista** y **Ajustes**;</li><li>el **primer mandado cerca**;</li><li>en computador, flechas o WASD;</li><li>la lista **`docs/PEDIDOS.md`**.</li></ul>**Llegó la entrega de Gemini** (G‑M0…G‑M15) y quedó integrada:<ul><li>`arte/gemini/` y **`MC.Pieles`**, con respaldo procedural en cada gancho;</li><li>en Mandados se usan árboles del trópico, props, rocas, fachadas y muebles, y el selector 🎨 Arte;</li><li>también se corrigió lo válido de su auditoría.</li></ul>118 pruebas, con una nueva que juega en un celular táctil. |
+| **2.5.1** | «El minijuego es injugable: no hay controles de verdad, no se puede mover nada; hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos?» | **Lo que pasaba:** el personaje sí se movía, pero la cámara estaba tan lejos que medía 3 píxeles y el joystick no se veía. **Lo que se hizo:**<ul><li>**cámara cerca**: unos 45 m en el lado corto de la pantalla;</li><li>**marca del jugador** (anillo y flecha);</li><li>**joystick visible** con guía, y **botones de acción** para el pulgar: ⤒ saltar, ⚡ turbo, y 🔽 🔼 en el agua o en el aire;</li><li>**flecha al objetivo** con la distancia, siempre en la zona libre;</li><li>**tutorial** al empezar;</li><li>**modo libre** por defecto: todo gratis, con los 34 vehículos (pie, bici, moto, carro, bus, avión y lancha);</li><li>menús **Vista** y **Ajustes**;</li><li>el **primer mandado cerca**;</li><li>en computador, flechas o WASD;</li><li>la lista **`docs/PEDIDOS.md`**.</li></ul>**Llegó la entrega de Gemini** (G‑M0…G‑M15) y quedó integrada:<ul><li>`arte/gemini/` y **`MC.Pieles`**, con respaldo procedural en cada gancho;</li><li>en Mandados se usan árboles del trópico, props, rocas, fachadas y muebles, y el selector 🎨 Arte;</li><li>también se corrigió lo válido de su auditoría.</li></ul>118 pruebas, con una nueva que juega en un celular táctil. |
+| **2.6** (esta) | «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo. Deja el estilo *family friendly*, pero con más realismo, rudeza y crudeza. Los tutoriales deben ser opcionales. Copia todos los pedidos en los repositorios. Gemini con Antigravity pasa a *hydrogen*: déjale lo fácil. ChatGPT con Codex sigue con *astra*: encárgale lo mejor; GPT genera mejores imágenes.» | **Estilo realista familiar** (`MC.estilo = 'realista'`; el clásico sigue disponible):<ul><li>**`MC.Arboleda`**: los árboles se levantan en la maqueta, la oblicua y la lateral (tronco, ramas, copa con luz y sombra según el sol). Desde arriba tienen volumen. Hay 6 especies del trópico: guayacanes florecidos, ceiba, mango, urapán y monte. Son los mismos con que se choca;</li><li>**`Rudeza`**, horneada en las losas:<ul><li>asfalto con parches, grietas, manchas de aceite y alcantarillas;</li><li>andén de baldosa con bordillo;</li><li>pasto con parches secos;</li><li>tejas de barro en hileras y planchas con humedad;</li><li>grano;</li><li>paleta menos saturada;</li></ul></li><li>los muros con la base sucia y sombra bajo el alero;</li><li>el **tutorial es opcional** (en la portada y en Ajustes);</li><li>el gancho de arte `arbol`;</li><li>`node motor.mjs capturas` y `node motor.mjs revisar-arte`;</li><li>**`TAREAS-IA.md`** en los cuatro repositorios, con el reparto nuevo.</li></ul>119 pruebas. La maqueta de Medellín queda por debajo de 40 ms con la CPU 4× más lenta. |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **118 en verde** (`node motor.mjs prueba --navegador`): 111 en Node y 7 en Chromium. Una de ellas juega Mandados en un celular táctil. |
+| **Pruebas** | **119 en verde** (`node motor.mjs prueba --navegador`): 112 en Node y 7 en Chromium. Una de ellas juega Mandados en un celular táctil. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -190,7 +192,17 @@ MC.Pieles.icono('vista_cenital', 20);     // <svg> de G‑M9
 - Cada gancho cae al dibujo del motor si el sprite no está.
 - Los árboles y las rocas se dibujan **a la medida del motor**, para que la sombra calculada coincida con el dibujo.
 - De noche se usa una **copia oscurecida** del atlas, hecha una sola vez.
-- Las partes son: `prop`, `naturaleza`, `fachada`, `personaje`, `vehiculo`, `animal` y `mueble`.
+- Las partes son: `prop`, `naturaleza`, `fachada`, `personaje`, `vehiculo`, `animal`, `mueble` y `arbol` (2.6).
+
+**2.6 · estilo realista familiar:**
+```js
+MC.estilo = 'realista';        // por defecto; 'clasico' = plano y limpio (las losas se rehacen solas)
+MC.Arboleda.en(mundo, x0, y0, x1, y1)   // los árboles: { x, y, r, h, e (especie), v (variante) }, los mismos que chocan
+// gancho de arte para reemplazar los árboles procedurales (C‑A4): vista 'lado' (ancla en el pie) o 'arriba' (ancla en el centro)
+MC.arte.registrar('mijuego', { arbol(g, t, vista, x, y, pxPorMetro, D) { return MC.Sprites.dibujar(g, 'mijuego/arbol_' + t.e + '_' + vista, x, y, pxPorMetro, { metros: vista === 'lado' ? t.h : t.r * 2 }); } });
+```
+- Los árboles van de pie desde un zoom de 3,2 px por metro (4,2 con calidad media), y antes se hornean desde arriba en las losas.
+- `Rudeza` (asfalto, andén, techos y grano) se hornea una vez por losa: no cuesta por cuadro.
 
 ### 5.5 Mi casa y quien vive en ella (Los Sims)
 ```js
@@ -271,7 +283,9 @@ MC.Terreno.aguaHonda(M, x, y, r, min); MC.Terreno.tierraFirme(M, x, y, r);
 
 ### 5.10 Probar y medir
 ```bash
-node motor.mjs construir && node motor.mjs prueba --navegador     # 118 en verde
+node motor.mjs construir && node motor.mjs prueba --navegador     # 119 en verde
+node motor.mjs capturas                                           # 14 fotos estándar de Mandados en dist/capturas/
+node motor.mjs revisar-arte arte/chatgpt                          # revisa un paquete de arte contra las reglas
 MC_CHROMIUM=/usr/bin/chromium node motor.mjs prueba --navegador   # si Playwright no pudo bajar su navegador (red cerrada)
 node motor.mjs reporte "Lo que cambié" --juego encicla --autor "IA de EnCicla"
 node motor.mjs documento                                          # arma dist/MOTOR-CITY-TODO.md (este documento + anexos)
@@ -332,68 +346,50 @@ node motor.mjs construir && node motor.mjs prueba --navegador
 - **Los juegos:** `node motor.mjs sincronizar ../BicicletasUno` copia el motor a `BicicletasUno/motor-city/`.
 
 ## 9. Plan de cada IA
-### 9.1 Gemini (Antigravity y Nano Banana) · ARTE y auditoría visual
-**Objetivo:** la piel por defecto del motor y una **ciudad con detalle** como Cities: Skylines y Townscaper; casas distintas como Los Sims.
+### 9.1 Gemini (Antigravity «hydrogen» y Nano Banana) · TAREAS FÁCILES: revisar, medir, datos y referencias
+**Cambio del autor (nov‑2026):** Antigravity trabaja por ahora con **«hydrogen»** (ya no con «argon»), así que a Gemini le tocan tareas cortas y comprobables. **La lista exacta está en `TAREAS-IA.md`.**
 
-**En orden** (detalle en §10.1):
-1. **G‑M0** · ancla de estilo.
-2. **G‑M1** · personaje.
-3. **G‑M2** · vehículos.
-4. **G‑M3** · animales y criaturas.
-5. **G‑M4** · muebles por estilo.
-6. **G‑M5** · pisos y muros.
-7. **G‑M6** · lugares jugables.
-8. **G‑M7** · fachadas por zona.
-9. **G‑M8** · siluetas de hitos.
-10. **G‑M9** · íconos.
-11. **NUEVO G‑M10** · kit de props urbanos (gancho `prop`).
-12. **NUEVO G‑M11** · *decals* del piso.
-13. **NUEVO G‑M12** · módulos de fachada para las reglas (gancho `fachadaModulo`).
-    - **NUEVO G‑M15 (2.4)** · naturaleza y agua: rocas (5 tamaños), palmas, frailejones, arbustos y juncos para el gancho `naturaleza`; texturas de agua por tipo (mar, lago, río, quebrada), espuma de orilla y arena mojada.
-14. **NUEVO G‑M13** · paletas por hora y por capa de datos.
-15. **NUEVO G‑M14** · guía de luz y sombra.
-16. **Auditoría visual.**
+| Id | Tarea |
+|---|---|
+| **G‑H1** | Revisión visual con `node motor.mjs capturas` (14 fotos estándar de Mandados) y una tabla de hallazgos. |
+| **G‑H2** | Revisor de arte: `node motor.mjs revisar-arte arte/<paquete>` sobre cada entrega. |
+| **G‑H3** | 6 láminas de referencia del estilo realista familiar (Nano Banana), solo como guía para ChatGPT. |
+| **G‑H4** | 30 datos verificables de Guatapé y Medellín, con fuente. |
+| **G‑H5** | Qué ícono de G‑M9 va en cada botón. |
+| **G‑H6** | Correr las pruebas del motor y de los juegos, y reportar. |
 
-**El código que usarás para probar:** pega tu atlas en la consola de Mandados y registra los ganchos (§5.4):
-```js
-MC.Sprites.atlas('gemini', { imagen: 'data:image/webp;base64,…', cuadros: { poste: [0, 0, 16, 64, 8, 64], arbol_guayacan: [16, 0, 64, 96, 32, 96] }, metros: { poste: 9, arbol_guayacan: 8 } });
-MC.arte.registrar('motor', { prop: (g, p, x, y, pxm) => MC.Sprites.dibujar(g, 'gemini/' + (p.t === 'arbol' ? 'arbol_guayacan' : p.t), x, y, pxm) });
-```
+**Lo que ya entregó (2.5.1):**
+- G‑M0…G‑M15 está en `arte/gemini/`; la revisión de Claude, en `arte/gemini/LEEME.md`;
+- se usan los props, las fachadas y los muebles. En 2.6 los árboles son los procedurales con volumen.
 
-**Estado (2.5.1):** la entrega G‑M0…G‑M15 llegó (`ENTREGA-GEMINI-MOTOR-CITY-2.5.md`) y está integrada en `arte/gemini/`. La revisión de Claude está en `arte/gemini/LEEME.md`:
-- **se usan** los árboles, los props, las rocas, las fachadas y los muebles;
-- **falta, para la segunda vuelta:**
-  - el personaje y los vehículos a escala, llenando el cuadro;
-  - sin sombra horneada;
-  - 2 px de margen entre cuadros;
-  - árboles de 128 px.
+**Lo que ya no le toca:** los atlas grandes, el personaje y los vehículos a escala pasan a ChatGPT (C‑A2 y C‑A3).
 
-**No es tu rol:** el código del motor (eso es de ChatGPT).
+**No es tu rol:** el código del motor (eso es de ChatGPT y de Claude).
 
-### 9.2 ChatGPT (Codex) · CÓDIGO: auditoría, mejoras, contenido y pruebas
-**Objetivo:** más rápido, más robusto y más contenido, con pruebas.
+### 9.2 ChatGPT (imágenes) y Codex («astra») · TAREAS FUERTES: arte realista a escala y código difícil
+**Cambio del autor (nov‑2026):** Codex sigue con **«astra»** y ChatGPT genera mejores imágenes, así que le tocan el arte importante y el código difícil. **La lista exacta está en `TAREAS-IA.md`.**
 
-**En orden** (detalle en §10.2):
-1. **C‑M1** · auditoría 2.2 y 2.3.
-2. **C‑M2** · redes precalculadas.
-3. **C‑M3** · raster más rápido.
-4. **C‑M4** · 50 direcciones públicas.
-5. **C‑M5** · 60 storylets, más 15 de alcalde.
-6. **C‑M6** · accesibilidad, con paletas para daltónicos en las capas.
-7. **C‑M7** · íconos.
-8. **C‑M8** · pruebas.
-9. **NUEVO C‑M9** · tráfico con propósito (casa → trabajo por la red).
-10. **NUEVO C‑M10** · casa: A*, paredes y dos habitantes.
-11. **NUEVO C‑M11** · pueblo sobre la rejilla irregular.
-12. **NUEVO C‑M12** · sombras sobre muros y de árboles, en caché.
-13. **NUEVO C‑M13** · maqueta por debajo de 20 ms.
-    - **NUEVO C‑M15 (2.4)** · terreno.
-14. **NUEVO C‑M14** · distritos y políticas en `MC.Urbe`.
+**Arte, en orden** (detalle en §10.2):
+1. **C‑A1** · ancla de estilo realista familiar.
+2. **C‑A2** · personaje a escala.
+3. **C‑A3** · vehículos a escala.
+4. **C‑A4** · árboles realistas (gancho nuevo `arbol`).
+5. **C‑A5** · texturas de suelo.
+6. **C‑A6** · fachadas con desgaste.
+7. **C‑A7** · animales a escala.
+
+**Código, en orden:**
+1. **C‑M13** · maqueta por debajo de 20 ms.
+2. **C‑M16** · gancho `textura`.
+3. **C‑M17** · lluvia que se ve.
+4. **C‑M1** · auditoría de lo nuevo.
+5. **C‑M15** · terreno.
+6. **C‑M9, C‑M12, C‑M10, C‑M14 y C‑M11.**
+7. **C‑M2 a C‑M8.**
 
 **El código que usarás:**
-- `git apply` de tus *diffs* sobre la rama;
-- `node motor.mjs prueba --navegador` en verde;
-- cada mejora con su prueba en `pruebas/prueba.mjs`, con el estilo `ok(condición, 'qué se prueba', datos)`.
+- **arte:** en `arte/chatgpt/`, con atlas y `manifiesto.json`. Debe pasar `node motor.mjs revisar-arte arte/chatgpt`. Se prueba con `MC.Pieles.instalar('chatgpt', MC_ARTE.chatgpt, { partes: [...] })` (§5.4);
+- **código:** commits en la rama con `node motor.mjs prueba --navegador` en verde, y cada mejora con su prueba `ok(condición, 'qué se prueba', datos)`.
 
 ### 9.3 IA de Juega EnCicla (`BicicletasUno`)
 1. Migrar a `motor-city/` (`motor-city/docs/MIGRACION-ENCICLA.md`) sin perder sus 97 pruebas.
@@ -435,7 +431,9 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 6. Otra ciudad completa con transporte.
 
 ## 10. Peticiones en detalle
-### 10.1 Para Gemini (arte)
+### 10.1 Para Gemini
+> **Desde la 2.6, lo de Gemini son las tareas fáciles G‑H1…G‑H6 de `TAREAS-IA.md`.** La tabla de abajo (G‑M0…G‑M15) ya se entregó en la 2.5.1 y queda como referencia de las reglas y los nombres.
+
 **Reglas del arte:**
 - sin texto, logos ni marcas;
 - fondo transparente o **magenta #ff00ff**;
@@ -474,7 +472,7 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 - Compara con SimCity, Cities: Skylines y Townscaper (sin copiar arte).
 - Mide en un celular real (FPS por vista) y anota `MC.GPU.perfil()`.
 
-### 10.2 Para ChatGPT (código)
+### 10.2 Para ChatGPT (arte y código)
 | Id | Encargo |
 |---|---|
 | **C‑M1** | **Auditoría** de todos los módulos 2.2 y 2.3 (§4). Busca errores, bordes, fugas (cachés que crecen) y trabajo de más por cuadro. Entrega una tabla con archivo:línea, severidad, escenario y *diff*. |
@@ -492,6 +490,15 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 | **C‑M13 (nuevo)** | **Maqueta por debajo de 20 ms** con la CPU 4× más lenta, con todo el detalle: lotes por región, fachadas en caché y mobiliario en lienzos. |
 | **C‑M15 (2.4)** | **Terreno:** (1) guardar en el MC4 una capa `agua` precalculada (tipo y distancia a la orilla), porque hoy se calcula al cargar en 0,3–1 s; (2) física en terreno irregular: el carro se inclina y patina en barro y nieve, y la moto y la bici de montaña saltan rocas pequeñas; (3) pruebas de los motivos de `Terreno.paso` en los 7 tipos de vehículo; (4) en el raster, agua y rocas. |
 | **C‑M14 (nuevo)** | **Distritos y políticas** en `MC.Urbe`, como Cities: Skylines: nombre, impuestos por distrito y políticas (prohibir industria pesada, bici prioritaria, parques gratis), con efecto en los campos y en la demanda. |
+| **C‑A1 (2.6)** | **Ancla de estilo realista familiar:** una cuadra de Guatapé en maqueta 2:1, de día y de noche con lluvia. Asfalto gastado, andenes de baldosa, tejas, zócalos de colores y guayacanes. Sin caricatura, sin texto ni marcas. |
+| **C‑A2 (2.6)** | **Personaje a escala** (reemplaza G‑M1): 10 estados × 4 cuadros de perfil y 4 direcciones desde arriba. 6 personas distintas. 1,70 m = 54 px. La figura llena el cuadro. |
+| **C‑A3 (2.6)** | **Vehículos a escala** (reemplaza G‑M2): los 35 más los 2 de mandados, de perfil y desde arriba, sin sombra horneada, con algo de uso. Ruedas aparte. |
+| **C‑A4 (2.6)** | **Árboles realistas** para el gancho `arbol`: 6 especies × 3 variantes más 2 palmas, de lado y desde arriba, de 128 px. |
+| **C‑A5 (2.6)** | **Texturas de suelo sin costuras**, de 128 px = 4 m: asfalto gastado y parcheado, baldosa, adoquín, pasto, barro, grava, teja, plancha y zinc. |
+| **C‑A6 (2.6)** | **Fachadas con desgaste** para `fachadaModulo` (reemplaza G‑M12). |
+| **C‑A7 (2.6)** | **Animales a escala** para `animalLado` (reemplaza G‑M3). |
+| **C‑M16 (2.6)** | **Gancho `textura`** en `Losas.pintar`: patrones en metros con las texturas de C‑A5, y `Rudeza` como respaldo. Con su prueba. |
+| **C‑M17 (2.6)** | **Lluvia que se ve:** asfalto mojado, charcos con reflejo y salpicaduras, sin pasar de 2 ms por cuadro. |
 
 ## 11. Cómo entregar
 - **Gemini:** `ENTREGA-GEMINI-MOTOR-CITY-<versión>.md` (Claude extrae el arte a `arte/gemini/`):
@@ -546,7 +553,106 @@ No hace falta conectar ninguna aplicación.
 
 ---
 
-# ANEXO 0. Todos los pedidos y su estado (`docs/PEDIDOS.md`)
+# ANEXO 0. Tareas de cada IA (`TAREAS-IA.md`)
+
+
+> **Si te dijeron «mira el repositorio y haz tu parte», empieza aquí.**
+> 1. Busca abajo **quién eres** y haz **solo tu parte**, en el orden indicado.
+> 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
+> 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
+
+**Reparto desde noviembre de 2026, por decisión del autor:**
+- **Gemini con Antigravity** trabaja por ahora con **«hydrogen»** (ya no con «argon»). Le tocan las **tareas fáciles**: revisar, medir, reunir datos y referencias.
+- **ChatGPT con Codex** sigue con **«astra»** y genera mejores imágenes. Le tocan las **tareas fuertes**: el arte realista a escala y el código difícil.
+
+**El estilo nuevo (2.6): «realista familiar».**
+- Para todo público, pero con la ciudad como es:
+  - asfalto gastado, con parches, grietas y alcantarillas;
+  - andenes de baldosa con bordillo;
+  - pasto con parches secos;
+  - tejas de barro y planchas de concreto con humedad;
+  - muros con la base sucia;
+  - árboles con volumen (guayacanes florecidos, ceibas, mangos).
+- Nada de caricatura plana. Nada de violencia, sangre ni marcas.
+- El estilo clásico (plano) sigue disponible: `MC.estilo = 'clasico'`.
+
+---
+
+### Gemini · Antigravity («hydrogen») · tareas fáciles
+Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo anotado para ChatGPT** y no lo hagas.
+
+| Id | Tarea | Cómo | Entrega |
+|---|---|---|---|
+| **G‑H1** | **Revisión visual con capturas** | `node motor.mjs construir` y `node motor.mjs capturas`. Saca 14 fotos de Mandados: 4 vistas × 3 horas, más la capa de valor y Mi casa. Para cada foto responde: ¿se lee el personaje? ¿algo tapa el centro? ¿los árboles están de pie en la maqueta y la lateral? ¿la noche se ve bien? ¿hay algo que se vea de caricatura o fuera de escala? | `reportes/AAAA-MM-DD-gemini-capturas.md`, con una tabla foto → hallazgo → gravedad (alta, media o baja). |
+| **G‑H2** | **Revisor de arte** | `node motor.mjs revisar-arte arte/<paquete>` sobre cada paquete que llegue (empieza por `arte/gemini`, que hoy tiene 21 cuadros fuera de la imagen). | La salida pegada en un reporte y una lista de qué debe corregir quien lo hizo. |
+| **G‑H3** | **Láminas de referencia** (Nano Banana) del estilo realista familiar | 6 escenas, sin texto ni logos, vistas como la maqueta 2:1:<br>1. una calle de Guatapé con zócalos de colores;<br>2. una ladera de Medellín con escaleras;<br>3. la orilla del embalse;<br>4. una noche con lluvia y charcos;<br>5. una plaza con guayacanes florecidos;<br>6. un taller de barrio. | `arte/referencias/` (PNG). Son **solo referencia** para ChatGPT y no van al juego. |
+| **G‑H4** | **30 datos verificables** de Guatapé y Medellín (geografía, naturaleza, historia, movilidad) | Una frase corta cada uno, **con su fuente** (enlace). | `contenido/datos-gemini.json`: `[{ "texto", "fuente", "lugar", "tema" }]` |
+| **G‑H5** | **Íconos a botones** | Elige qué ícono de `arte/gemini/iconos.json` va en cada botón de Mandados (Vista, Vehículo, Sonido, Agua, Mi casa, Ciudad, Ajustes, saltar y turbo). | `arte/gemini/iconos-ui.json`: `{ "boton": "icono" }` |
+| **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
+
+**No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
+
+---
+
+### ChatGPT · Codex («astra») · tareas fuertes
+**Primero el arte** (lo genera ChatGPT) y **después el código** (lo hace Codex). Detalle y reglas en el documento único, §10.
+
+#### Arte (imágenes de ChatGPT), en orden
+**Reglas comunes:**
+- 32 px por metro;
+- que la figura **llene su cuadro**;
+- ancla en los pies o la base;
+- **2 px de margen** entre cuadros;
+- fondo transparente o magenta #ff00ff;
+- **sin sombra horneada**: la pone el motor según el sol;
+- luz de arriba a la izquierda;
+- sin texto, logos ni marcas.
+
+Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin problemas graves.
+
+| Id | Encargo | Para qué gancho |
+|---|---|---|
+| **C‑A1** | **Ancla de estilo realista familiar**: una cuadra de Guatapé en maqueta 2:1, de día y de noche con lluvia. Es la referencia de todo lo demás. | — |
+| **C‑A2** | **Personaje a escala**: 10 estados × 4 cuadros de perfil (quieto, camina, corre, pedalea, impulsa, patina, sentado, salta, nada, bucea) y desde arriba en 4 direcciones. 6 personas distintas (piel, pelo, ropa de diario y de trabajo, casco de ciclista). 1,70 m = 54 px. | `personajeLado`, `personajeArriba` |
+| **C‑A3** | **Vehículos a escala**: los 35 de `MC.Vehiculos` más la moto y el carro de mandados, de perfil y desde arriba, con un poco de uso (polvo, rayones). Buseta, chiva, taxi y bus colombianos, sin marcas. Ruedas aparte. | `vehiculoLado` |
+| **C‑A4** | **Árboles realistas**: guayacán amarillo y rosado (florecidos), ceiba, mango, urapán y árbol de monte, más palma de cera y de coco. 3 variantes de cada uno, de lado (128 px de alto) y desde arriba (128 px). Nombres: `arbol_<especie>_lado`, `arbol_<especie>_arriba`, `_v1`, `_v2`. | `arbol` (nuevo) |
+| **C‑A5** | **Texturas de suelo sin costuras** (128 × 128 px = 4 m): asfalto gastado, asfalto parcheado, andén de baldosa, adoquín, pasto, tierra con barro, grava, teja de barro, plancha de concreto y zinc oxidado. | `textura` (lo hace C‑M16) |
+| **C‑A6** | **Módulos de fachada con desgaste**: 6 zonas × 6 tipos × 3 variantes, de día y de noche (reemplaza G‑M12). | `fachadaModulo` |
+| **C‑A7** | **Animales a escala**: perro criollo, gato, gallinazo, caballo, vaca, iguana, zarigüeya y ardilla. | `animalLado` |
+
+#### Código (Codex), en orden
+| Id | Encargo |
+|---|---|
+| **C‑M13** | **Maqueta por debajo de 20 ms** con la CPU 4× más lenta, con todo el detalle 2.6: árboles de pie, desgaste y fachadas. Hoy da 30–38 ms aquí y 44,7 ms en la máquina de Codex. |
+| **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
+| **C‑M17** | **Lluvia que se ve**: asfalto mojado más oscuro, charcos con reflejo y salpicaduras, sin pasar de 2 ms por cuadro. |
+| **C‑M1** | **Auditoría de lo nuevo**: `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js` y la interfaz 2.5.1. Una tabla con archivo:línea, severidad, escenario y *diff*. |
+| **C‑M15** | **Terreno**: la capa `agua` precalculada en el MC4, y el carro que se inclina y patina en barro y nieve. |
+| **C‑M9, C‑M12, C‑M10, C‑M14, C‑M11** | Tráfico con propósito, sombras sobre muros, casa con A* y dos habitantes, distritos y políticas, y pueblo orgánico (§10.2). |
+| **C‑M2 a C‑M8** | Redes precalculadas, raster, direcciones, storylets, accesibilidad y pruebas que faltan (§10.2). |
+
+**Cómo entregas:**
+- **El arte:** en `arte/chatgpt/`, con el mismo formato de `arte/gemini/` (atlas `.webp` o `.png` más `manifiesto.json`).
+- **El código:** commits en la rama `claude/motor-city-engine-xu7p4y`, con `node motor.mjs prueba --navegador` en verde y cada mejora con su prueba.
+- **El resumen:** `ENTREGA-CHATGPT-MOTOR-CITY-2.6.md`.
+
+---
+
+### Las IAs de los juegos
+Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
+- **Juega EnCicla** (`BicicletasUno`): migrar a `motor-city/` y el estilo 2.6.
+- **El Metro** (`MetroZero`): su protocolo de 7 pasos y la migración.
+- **Run Scooter** (`RunRunZero`): sigue independiente.
+
+### Claude · la IA del motor
+- Une las entregas (arte de ChatGPT en `MC.Pieles` y código de Codex).
+- Mantiene `docs/PEDIDOS.md`.
+- Sigue con *Motor City* (carreras) y *Extremo* (§9.7).
+
+
+---
+
+# ANEXO 0b. Todos los pedidos y su estado (`docs/PEDIDOS.md`)
 
 
 > **Para qué sirve:** responder «¿ya está todo lo que pedí en el repositorio?».
@@ -558,17 +664,17 @@ No hace falta conectar ninguna aplicación.
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **2.6.0** · 20‑nov‑2026 · **119 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ### Resumen
-- **Hechos:** 58 pedidos ✅.
+- **Hechos:** 64 pedidos ✅.
 - **Hechos, pero falta algo de afuera:** 2 🟡. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
   - el test de WebRTC de EnCicla, que le toca a su IA;
-  - la entrega de ChatGPT (la de Gemini ya llegó y está integrada);
-  - la segunda vuelta del arte de Gemini (personaje y vehículos a escala);
+  - el arte y el código de ChatGPT (C‑A y C‑M);
+  - las tareas fáciles de Gemini (G‑H1…G‑H6);
   - la licencia.
 
   Ninguno es un olvido. Cada uno está en el plan (§9 y §12 del documento único).
@@ -653,12 +759,22 @@ Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.m
 | La auditoría de Codex (`docs/AUDITORIA-MOTOR-CITY-2026-11-19.md`), atendida | ✅ | Las pruebas usan el Chromium del sistema si Playwright no trae el suyo, o el que diga `MC_CHROMIUM`. El arte de Gemini ya se revisó en las vistas. Lo que no es del motor quedó con su dueño (abajo). |
 | La auditoría de Gemini, corregida | ✅ | Leyenda en las capas de datos; etiquetas de los cuartos en la esquina; ventanas encendidas en las casas bajas; la maqueta sin el corte de tierra; barras con fondo. Además, un comentario que desde la 2.2 anulaba dos líneas de la interfaz. |
 
-### 6. Lo que falta, y a quién le toca
+### 6. Realismo y reparto de tareas (2.6, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| «Desde la cenital los árboles se ven como tapetes en el suelo» | ✅ | `js/29-arboleda.js`: de pie en la maqueta, la oblicua y la lateral, con volumen desde arriba y sombra según el sol. |
+| «Más realismo, rudeza y crudeza, pero *family friendly*» | ✅ | `MC.Rudeza` en `js/40-dibujo.js` (asfalto, andenes, pasto, techos y grano), muros con la base sucia y `MC.estilo` (realista o clásico). |
+| «Los tutoriales deben ser opcionales» | ✅ | Mandados: «❓ Cómo se juega (opcional)» en la portada y en ⚙️ Ajustes; ya no se abre solo. |
+| «Copia todos tus pedidos en los repositorios» | ✅ | `TAREAS-IA.md` en motorcity, BicicletasUno, MetroZero y RunRunZero, y `AGENTS.md`, `CLAUDE.md` y `GEMINI.md` apuntando ahí. |
+| «Gemini (Antigravity) pasa a *hydrogen*: lo fácil» | ✅ | G‑H1…G‑H6 en `TAREAS-IA.md`, con `node motor.mjs capturas` y `revisar-arte` para que sean comprobables. |
+| «ChatGPT (Codex) sigue con *astra*: mejores pedidos; mejores imágenes» | ✅ | Arte C‑A1…C‑A7 y código C‑M13, C‑M16 y C‑M17 (más los C‑M de antes) en `TAREAS-IA.md` y §10.2. |
+
+### 7. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |
-| Código de ChatGPT (C‑M1…C‑M15) | ⏳ | Al autor, que le pasa el documento único (§9.2 y §10.2), y a ChatGPT. |
-| Arte de Gemini, segunda vuelta: personaje y vehículos a escala | ⏳ | A Gemini (lista en `arte/gemini/LEEME.md`). |
+| Arte y código de ChatGPT (C‑A1…C‑A7, C‑M1…C‑M17) | ⏳ | A ChatGPT y Codex («astra»): `TAREAS-IA.md`. |
+| Revisión visual, revisor de arte, referencias y datos (G‑H1…G‑H6) | ⏳ | A Gemini («hydrogen»): `TAREAS-IA.md`. |
 | Licencia del motor | ⏳ | Al autor (`docs/NEGOCIO-Y-USOS.md`). |
 | Maqueta por debajo de 40 ms en cualquier máquina (Codex midió 44,7 ms en la suya; aquí da 27–29 ms) | ⏳ | A Claude: caché por región y fachadas horneadas (§9.7). |
 | El test de WebRTC de EnCicla (ventana fija de 900 ms) | ⏳ | A la IA de EnCicla (lo señalaron Gemini y Codex). |
@@ -700,6 +816,7 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Cuerpos y máquinas** | `MC.Personaje`, `MC.Vehiculos`, `MC.Cuerpo`, `MC.Taller`, `MC.Seres` | Personaje único, 35 vehículos, física con puentes, taller de ingeniería, biología. |
 | **Controles** | `MC.Controles`, `MC.Manejo` | Teclado, dedo y mando; curvas, esquemas y asistencias. |
 | **Cámara y vistas** | `MC.Camara`, `MC.Vistas`, `MC.Vista2D`, `MC.Raster`, `MC.Losas` | 9 vistas más pixel, 3D por software y resortes. |
+| **Estilo realista (2.6)** | `MC.estilo`, `MC.Arboleda`, `MC.Rudeza` | Árboles de pie con volumen; asfalto, andenes, pasto, techos y muros con desgaste. Familiar, pero sin caricatura. `MC.estilo = 'clasico'` para el plano. |
 | **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel`, `MC.Pieles` | Pieles por juego, atlas, animaciones y respaldo procedural. **Paquetes de arte** de las IAs (`arte/gemini/`) instalados en una línea (2.5.1). |
 | **Adentro** | `MC.Interiores`, `MC.Hogar`, `MC.Direccion` | Interiores con estilos, **tu casa desde tu dirección** y diseño. |
 | **A dónde ir** | `MC.Lugares`, `MC.Desgaste` | Talleres, tiendas, restaurantes, bibliotecas y parques; reparar y mejorar. |
@@ -713,8 +830,8 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 - **moverse:** arrastra en cualquier parte de la mitad izquierda; el joystick aparece donde pongas el dedo. En computador, flechas o WASD;
 - **acciones:** ⤒ saltar y ⚡ turbo, abajo a la derecha. En el agua o en el aire aparecen 🔽 bajar y 🔼 subir;
 - **a dónde ir:** la flecha amarilla con los metros. El mapa pequeño muestra el punto;
-- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega», los controles y el rescate;
-- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…) y el pixel; **🚲 Vehículo** abre el garaje con los 34 vehículos.
+- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega» (opcional; también en la portada), los controles y el rescate;
+- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista o clásico); **🚲 Vehículo** abre el garaje con los 34 vehículos.
 
 **b) Un juego nuevo con una IA.** Dile a la IA:
 > «Lee `AGENTS.md` del repositorio motorcity y haz un juego de [idea] sobre el mundo [guatape|medellin|generado]».
@@ -780,7 +897,9 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 118 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 119 pruebas, también en Chromium. |
+| `node motor.mjs capturas [--web]` | 14 fotos estándar de Mandados en `dist/capturas/` (revisión visual). |
+| `node motor.mjs revisar-arte arte/ID` | Revisa un paquete de arte contra las reglas. |
 | `node motor.mjs documento` | Arma `dist/MOTOR-CITY-TODO.md` (el documento único con anexos). |
 | `node motor.mjs nuevo juego\|modulo nombre` | Crea un juego o un módulo desde su plantilla. |
 | `node motor.mjs reporte "título" --juego X` | Deja el reporte de un cambio hecho desde otro juego. |
@@ -793,7 +912,7 @@ new MC.Bucle({
 # ANEXO B. Contrato técnico (`MOTOR.md`)
 
 
-**Versión 2.5.1 · 19‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 2.6.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -1014,6 +1133,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.6.0** | 20‑nov‑2026 | **Estilo realista familiar:** `MC.estilo` (`'realista'` o `'clasico'`, en la clave de las losas). `js/29-arboleda.js` (`MC.Arboleda.en`, `dePie`, `arriba`, `sombras`, `mip`, `precalentar`; 6 especies, sprites horneados con mipmaps y copia nocturna; los mismos árboles que `Terreno.arbolLosaEn`). Las losas llevan una bandera `2` (sin árboles: van de pie desde z ≥ 3,2, o 4,2 con calidad < 0,9) y la sombra bajo la copa horneada. `MC.Rudeza` (grano, baldosa, `asfalto(g, v, res)`, `techo`, paleta). Humedad en la base de los muros desde z > 3,5. Gancho de arte `arbol(g, t, vista, x, y, pxm, D)` y parte `arbol` en `MC.Pieles` (`arboles: false` deja fuera los árboles del paquete). `node motor.mjs capturas` y `revisar-arte`. 119 pruebas. |
 | **2.5.1** | 19‑nov‑2026 | **Arte de Gemini integrado:** `js/87-pieles.js` (`MC.Pieles.instalar(id, paquete, { partes, pixel, usar })`, `MC.Pieles.icono`, `MC.Pieles.faltan`). La construcción compila `arte/<id>/` dentro del HTML con `"arte": ["<id>"]` en `juego.json`, y suelto en `dist/arte/<id>.js`. Las capas de `MC.Urbe` traen `titulo` y `leyenda`, y hay `ui.leyenda`. **Jugable en el celular:**<ul><li>`ui.joystick(ctl, op)` y `ui.pintarJoystick()`: joystick visible que sigue al dedo, con guía «Arrastra para moverte»;</li><li>`ui.accion({ id, icono, texto, mantener, ctl, al })`: botones redondos para el pulgar, que al mantenerse alimentan `ctl.boton`;</li><li>`ui.barraVisible`;</li><li>`MC.UI.indicador(g, W, H, sx, sy, op)`: el pin o la flecha al objetivo, con `op.rect` para no tapar la interfaz;</li><li>`ui.mision` con el título en una línea y el detalle en dos;</li><li>marca del jugador en las vistas 2D (`E.marcaJugador`);</li><li>`Losas`: resolución hasta 6 y presupuesto de píxeles.</li></ul>Mandados: cámara de unos 45 m en el lado corto, modo libre (todo gratis, 34 vehículos), menú Vista y menú Ajustes, tutorial, y el primer mandado cerca. 118 pruebas. |
 | **2.5.0** | 19‑nov‑2026 | **Entrar al agua:** `cuerpo.bajarse`, `montar` y `puedeMontar` (vehículo parqueado en la orilla, también solo al empujar hacia lo hondo), nado con **buceo** y **aire** (`buceando`, `aire`, `pulmones`, evento `sinAire`), poses `nada` y `bucea`, `embarcar` y `desembarcar` (lancha), `Terreno.aguaHonda` y `tierraFirme`. Tono bajo el agua, burbujas y vehículo parqueado en las vistas. 117 pruebas. |
 | **2.4.0** | 19‑nov‑2026 | Terreno y límites verosímiles: agua por tipo y profundidad (vadear, nadar; lancha con calado), pendiente máxima fuera de las vías, roca, monte, arena y nieve por vehículo, obstáculos reales (emblemáticos, árboles de las losas, mobiliario, rocas, tráfico y gente) y edificios también sobre la calle si uno se mete de verdad. Naturaleza. Lagos por llenado de prioridad en el generador y mar a nivel 0. Agua por profundidad, espuma y roca de acantilado en las losas; brillos del agua; vadear y nadar visibles. 115 pruebas. |
@@ -1127,7 +1247,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 118 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 119 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»
@@ -1696,6 +1816,50 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 20‑nov‑2026 · 2.6.0 · Estilo realista familiar, árboles de pie y tareas de cada IA (Claude Code)
+**Pedido:**
+- «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo.»
+- «Deja el estilo *family friendly*, pero dale más realismo, rudeza y crudeza.»
+- «Los tutoriales deben ser opcionales.»
+- «Copia todos tus pedidos en los repositorios para que cada uno continúe.»
+- «Gemini con Antigravity pasa a *hydrogen*: déjale las tareas fáciles. ChatGPT con Codex sigue con *astra*: encárgale mejores pedidos; GPT genera mejores imágenes.»
+
+**Lo que pasaba:** los árboles eran discos pintados en el piso de las losas. Desde una vista inclinada, el piso se aplasta y los discos quedaban como elipses acostadas: «tapetes».
+
+**Lo que se hizo:**
+1. **`MC.Arboleda`** (`js/29-arboleda.js`):
+   - los mismos árboles (y los mismos con que se choca) se levantan en la maqueta, la oblicua y la lateral: tronco que se afina, ramas, copa de lóbulos con luz de arriba a la izquierda, hojas, y flores en los guayacanes;
+   - desde arriba, la copa tiene volumen;
+   - 6 especies (guayacán amarillo y rosado, ceiba con raíces tablares, mango, urapán y monte), 3 variantes cada una;
+   - sprites horneados una vez, con versiones reducidas y copia nocturna;
+   - sombra según el sol de cerca, y la sombra bajo la copa horneada en el piso.
+2. **`MC.Rudeza`**, horneada en las losas (no cuesta por cuadro):
+   - asfalto con parches, grietas, manchas de aceite y alcantarillas;
+   - centro de carril más gastado;
+   - andén de baldosa con bordillo;
+   - pasto con parches secos y verdes;
+   - tejas de barro en hileras y planchas con humedad;
+   - grano;
+   - paleta 30 % menos saturada.
+
+   Además, los muros tienen la base sucia y sombra bajo el alero.
+3. **`MC.estilo`** (`'realista'` por defecto o `'clasico'`) y el selector 🖌️ en Vista.
+4. **Tutorial opcional:** ya no se abre solo; está en la portada («❓ Cómo se juega (opcional)») y en ⚙️ Ajustes.
+5. **Tareas de cada IA:**
+   - **`TAREAS-IA.md`** en los cuatro repositorios;
+   - Gemini («hydrogen»): G‑H1…G‑H6, tareas fáciles;
+   - ChatGPT («astra»): arte C‑A1…C‑A7 y código C‑M13, C‑M16, C‑M17…;
+   - `node motor.mjs capturas` y `revisar-arte` para que las tareas fáciles sean comprobables;
+   - el gancho `arbol` para el arte de ChatGPT.
+6. **Rendimiento:** la maqueta de Medellín con la CPU 4× más lenta mide 30–38 ms (el límite es 40). Los árboles de pie se ralean parejo si son muchos, y con calidad media salen desde un poco más cerca.
+
+**Probado:** 119 pruebas:
+- los árboles que se ven son los que chocan;
+- Mandados en un celular táctil: tutorial opcional, árboles de pie y arte cargado;
+- la CPU 4× más lenta.
+
+Capturas de día, tarde y noche en la maqueta, la cenital y la lateral.
 
 ### 19‑nov‑2026 · 2.5.1 · Mandados jugable de verdad (Claude Code)
 **Pedido:** «Traté de probar el minijuego pero es injugable. No hay controles de verdad, no se puede mover nada. No está completamente liberado porque hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos en el repositorio?»

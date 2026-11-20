@@ -254,6 +254,9 @@ console.log('15) Terreno: agua, montañas, rocas y límites de paso');
   let arb = null; for (let i = 0; i < 4000 && !arb; i++) { const x = col.x + (i % 60) * 7 - 200, y = col.y + Math.floor(i / 60) * 7 - 200; const a = MC.Terreno.arbolLosaEn(M, x, y, .3); if (a && a.x) arb = a; }
   const Pa = new MC.Cuerpo(M, { x: arb.x + 3, y: arb.y, veh: 'pie' }), arbol = !Pa.puede(arb.x, arb.y) && /árbol/.test(Pa.bloqueo);
   ok(adentro && poste && arbol, 'no se atraviesan los emblemáticos, los postes ni los árboles que se ven en el mapa', { sitio: S.nombre || S.clase, bloqueo: Pa.bloqueo }); }
+  /* 2.6: los árboles que se levantan (MC.Arboleda) son los mismos con que se choca (Terreno.arbolLosaEn) */
+  { const L = MC.Arboleda.en(M, col.x - 300, col.y - 300, col.x + 300, col.y + 300), mal = L.filter(t => !MC.Terreno.arbolLosaEn(M, t.x, t.y, .1)).length, esp = [...new Set(L.map(t => t.e))];
+    ok(L.length > 20 && mal === 0 && L.every(t => t.h > t.r * 1.5 && t.h < 16) && esp.length >= 3, 'árboles de pie: los que se ven son los que chocan, con especies del trópico y alturas reales', { arboles: L.length, distintos: mal, especies: esp }); }
 { /* mundos generados: lagos planos, mar a nivel cero, rocas en la montaña y nada de naturaleza en las vías */
   const Gm = MC.Generador.mundo({ semilla: 1, tipo: 'montaña', ancho: 256, alto: 256, pueblos: 2 }), Gi = MC.Generador.mundo({ semilla: 1, tipo: 'isla', ancho: 256, alto: 256, pueblos: 2 }), Am = MC.Terreno.agua(Gm), Ai = MC.Terreno.agua(Gi), lagoG = Am.C.filter(c => c.tipo === 'lago').sort((a, b) => b.area - a.area)[0];
   let pts = []; for (let x = 20; x < Gm.ancho && pts.length < 2; x += 23) for (let y = 20; y < Gm.alto && pts.length < 2; y += 29) { const a = MC.Terreno.aguaEn(Gm, x, y); if (a && a.cuerpo === lagoG && a.orilla > 25) pts.push(Gm.cota(x, y)); }
@@ -288,20 +291,20 @@ if (process.argv.includes('--navegador')) {
   }
   /* el minijuego Mandados: mi casa, diseño, lugares, historias y que la interfaz no tape el centro */
   const mh = path.join(RAIZ, 'dist/juegos/mandados.html');
-  /* 2.5.1: jugable en un celular de verdad (táctil): tutorial, joystick visible que mueve, cámara legible, todo libre y el primer mandado cerca */
+  /* 2.5.1: jugable en un celular de verdad (táctil): joystick visible que mueve, cámara legible, todo libre y el primer mandado cerca; 2.6: el tutorial es opcional y los árboles se levantan */
   if (chromium && fs.existsSync(mh)) {
     const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 412, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage(), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.goto('file://' + mh); await p.tap('#jugar'); await p.waitForFunction(() => window.MANDADOS && window.MANDADOS.mision, null, { timeout: 120000 }); await p.waitForTimeout(1200);
-    const tuto = await p.$('.dialogo button'); if (tuto) await tuto.tap(); await p.waitForTimeout(300);
+    const tuto = await p.$('.dialogo button'), opcional = !!(await p.$('#comoSe')); if (tuto) await tuto.tap(); await p.waitForTimeout(300);
     const a = await p.evaluate(() => { const G = window.MANDADOS, P = G.mision.actual, j = document.querySelector('.joy'); return { x: G.cuerpo.x, y: G.cuerpo.y, libre: G.libre, vehiculos: G.vehiculos, pxPorMetro: +(G.camara.zoom / Math.min(2, devicePixelRatio)).toFixed(1), joystick: !!j && j.getBoundingClientRect().width > 80, primerMandado: Math.round(Math.hypot(P.x - G.cuerpo.x, P.y - G.cuerpo.y)) }; });
     const cdp = await ctx.newCDPSession(p), sx = 412 * .25, sy = 860 * .8;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sx, y: sy, id: 1 }] });
     for (let i = 1; i <= 10; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sx, y: sy - i * 6, id: 1 }] }); await p.waitForTimeout(30); }
     await p.waitForTimeout(2000); const movio = await p.evaluate(c => +Math.hypot(MANDADOS.cuerpo.x - c.x, MANDADOS.cuerpo.y - c.y).toFixed(1), a); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    const arte = await p.evaluate(async () => { for (let i = 0; i < 100 && !MC.Sprites.atlases.get('gemini_u_noche'); i++) await new Promise(q => setTimeout(q, 50)); MANDADOS.ponVista('maqueta'); MANDADOS.reloj.min = 20.5 * 60; await new Promise(q => setTimeout(q, 700)); MANDADOS.ponVista('cenital'); const L = [...MC.Sprites.atlases.values()]; return { piel: MC.arte.activa, atlas: L.filter(A => A.listo && A.id.startsWith('gemini')).length, faltan: MC.Pieles.faltan().length, icono: MC.Pieles.icono('vista_cenital').startsWith('<svg') }; });
-    const r = { tutorial: !!tuto, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio, arte };
-    ok(r.tutorial && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && arte.piel === 'gemini' && arte.atlas >= 10 && arte.faltan === 0 && arte.icono && !errs.length, 'Mandados en un celular táctil: tutorial, todo libre y gratis, joystick visible que mueve, cámara legible, el primer mandado cerca y el arte de Gemini cargado (de día y de noche)', r);
+    const arte = await p.evaluate(async () => { for (let i = 0; i < 100 && !MC.Sprites.atlases.get('gemini_u_noche'); i++) await new Promise(q => setTimeout(q, 50)); MANDADOS.ponVista('maqueta'); MANDADOS.reloj.min = 20.5 * 60; await new Promise(q => setTimeout(q, 700)); const arboles = MC.Arboleda._sp.size; MANDADOS.ponVista('cenital'); const L = [...MC.Sprites.atlases.values()]; return { arboles, piel: MC.arte.activa, atlas: L.filter(A => A.listo && A.id.startsWith('gemini')).length, faltan: MC.Pieles.faltan().length, icono: MC.Pieles.icono('vista_cenital').startsWith('<svg') }; });
+    const r = { tutorialOpcional: !tuto && opcional, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio, arte };
+    ok(r.tutorialOpcional && arte.arboles > 0 && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && arte.piel === 'gemini' && arte.atlas >= 10 && arte.faltan === 0 && arte.icono && !errs.length, 'Mandados en un celular táctil: el tutorial es opcional, todo libre y gratis, árboles de pie, joystick visible que mueve, cámara legible, el primer mandado cerca y el arte de Gemini cargado (de día y de noche)', r);
     await b.close();
   }
   if (chromium && fs.existsSync(mh)) {

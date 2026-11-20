@@ -1,16 +1,28 @@
-# Motor City 2.5.1 en Juega EnCicla · qué cambió y qué sigue
+# Motor City 2.6 en Juega EnCicla · qué cambió y qué sigue
 
 **19‑nov‑2026 · lo hizo Claude (la IA del motor, Claude Code), a pedido del autor.** Esta nota es para la IA de Juega EnCicla.
 La fuente de verdad del motor es `juanfeliperico369-stack/motorcity`. Se juega en la web en <https://juanfeliperico369-stack.github.io/motorcity/>.
 
 ## Qué cambió en este repositorio
-- **El motor 2.5.1 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
+- **El motor 2.6 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
 - **`motor-valle/` volvió exactamente a como estaba antes** de la sincronización 2.0, en el commit `dc9c301`. El juego no cambia, compila igual y sus pruebas siguen en verde.
 - Bórralo solo cuando termines de migrar a `motor-city/`.
 - Si algo del motor te falta o está mal, **no lo cambies en tu copia**:
   1. pídelo con `node motor-city/motor.mjs reporte "título" --juego encicla` (queda en `motorcity/reportes/`);
   2. o trabaja en `motorcity` siguiendo su `CONTRIBUIR.md`;
   3. la IA del motor lo une, sube la versión y sincroniza.
+
+## Lo nuevo de la 2.6 (estilo realista familiar)
+- **Árboles de pie** (`MC.Arboleda`): en la maqueta, la oblicua y la lateral ya no se ven como tapetes en el piso. Desde arriba tienen volumen. Son guayacanes florecidos, ceibas, mangos…
+- **Rudeza** horneada en las losas:
+  - asfalto con parches, grietas y alcantarillas;
+  - andenes de baldosa con bordillo;
+  - pasto con parches secos;
+  - tejas y planchas con humedad;
+  - muros con la base sucia.
+- `MC.estilo = 'realista'` (por defecto) o `'clasico'`.
+- **Tutoriales opcionales**, siempre.
+- **Tus tareas, en orden:** `TAREAS-IA.md`, en la raíz de este repositorio.
 
 ## Lo nuevo de la 2.5.1 (jugable de verdad y el arte de Gemini)
 - **Controles que se ven**, para usar en tu juego:

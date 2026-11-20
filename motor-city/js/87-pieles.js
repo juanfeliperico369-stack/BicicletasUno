@@ -10,7 +10,7 @@
    ===================================================================== */
 const Pieles = {
   paquetes: {},
-  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble'],
+  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble', 'arbol'],
   /* registra los atlas y la piel; devuelve una promesa que se cumple cuando las imágenes cargaron */
   instalar(id, pack, op = {}) {
     if (!pack || !pack.atlases) throw new Error('Pieles: el paquete ' + id + ' no trae atlas');
@@ -26,7 +26,7 @@ const Pieles = {
     const ARBOLES = op.arboles || ['arbol_guayacan_amarillo', 'arbol_guayacan_rosado', 'arbol_ceiba', 'arbol_palma', 'arbol_mango'];
     const piel = {};
     if (partes.has('prop') && AU) piel.prop = (g, p, x, y, z, D) => {
-      if (p.t === 'cebra') return false; const cen = D && D.modo === 'cenital', noche = D && D.noche > .3, v = p.v || 0;
+      if (p.t === 'cebra' || (p.t === 'arbol' && op.arboles === false)) return false; const cen = D && D.modo === 'cenital', noche = D && D.noche > .3, v = p.v || 0;
       const U = N(AU, D); if (p.t === 'arbol') { const alto = 5 + v * 4, copa = 3.2 + v * 2.4; return S(U + '/' + ARBOLES[Math.floor(v * 5) % ARBOLES.length] + (cen ? '_cen' : ''), g, x, y, z, { metros: cen ? copa : alto * 1.12 }); }   // a la medida del árbol del motor
       if (p.t === 'poste') return S(AU + '/' + (cen ? 'poste_cen' : noche ? 'poste_noche' : 'poste_dia'), g, x, y, z);   // el poste encendido no se oscurece
       if (cen) return S(U + '/' + p.t + '_cen', g, x, y, z);   // sin vista de arriba: el del motor
@@ -50,6 +50,9 @@ const Pieles = {
     }
     if (partes.has('vehiculo') && AV) piel.vehiculoLado = (g, V, x, y, esc, dir, C) => S(AV + '/' + ((V && V.id) || 'bici') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || (M().vehiculoLado ? M().vehiculoLado(g, V, x, y, esc, dir, C) : false);
     if (partes.has('animal') && AA) piel.animalLado = (g, a, x, y, esc, dir, t, v) => S(AA + '/' + ((a && a.id) || 'perro_criollo') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || M().animalLado(g, a, x, y, esc, dir, t, v);
+    /* árboles (2.6): arbol_<especie>_lado|arriba[_v1|_v2] en cualquier atlas del paquete; si no está, el árbol procedural de MC.Arboleda */
+    const AT = partes.has('arbol') ? ids.find(a => Object.keys(pack.atlases[a].cuadros || {}).some(n => /^arbol_[a-z_]+_(lado|arriba)/.test(n))) : null;
+    if (AT) piel.arbol = (g, t, vista, x, y, pxm) => { const b = AT + '/arbol_' + t.e + '_' + vista, ref = t.v && tiene(b + '_v' + t.v) ? b + '_v' + t.v : tiene(b) ? b : null; if (!ref) return false; const E = MC.Arboleda && MC.Arboleda.ESPECIES[t.e]; return Sprites.dibujar(g, ref, x, y, pxm, { metros: vista === 'lado' ? t.h : t.r * 2 * (E ? E.ancho : 1), espejo: t.espejo, pixel: px() }); };
     if (partes.has('mueble') && AM) piel.mueble = (g, m, estilo) => {
       const n = sinTilde(m.tipo) + '_' + (estilo || 'paisa'), A = Sprites.atlases.get(AM); if (!A || !A.listo || !A.cuadros[n]) return false;
       const [sx, sy, sw, sh] = A.cuadros[n]; g.drawImage(A.img, sx, sy, sw, sh, m.x, m.y, m.w, m.h); return true;

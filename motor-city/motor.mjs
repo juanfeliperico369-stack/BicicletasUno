@@ -11,6 +11,8 @@
      node motor.mjs nuevo juego|modulo NOMBRE                  arma un juego o un módulo nuevo desde plantillas
      node motor.mjs reporte "título"                           abre un reporte de cambios para la IA del motor
      node motor.mjs documento                                  arma dist/MOTOR-CITY-TODO.md (el documento único + anexos)
+     node motor.mjs capturas [--web]                           las fotos estándar de Mandados en dist/capturas/ (revisión visual)
+     node motor.mjs revisar-arte arte/ID                       revisa un paquete de arte contra las reglas (§10)
      python3 geo/territorio.py --id ID --bbox=lon0,latS,lon1,latN   craquea cualquier lugar del mundo a datos/ID/mundo.mc4
    Mapa 1.x (sigue igual, para los datos que hoy leen los juegos):
    ---------------------------------------------------------------------
@@ -55,6 +57,8 @@ else if (cmd === 'sincronizar') nodo('herramientas/sincronizar.mjs', args.slice(
 else if (cmd === 'nuevo') nodo('herramientas/nuevo.mjs', args.slice(1));
 else if (cmd === 'reporte') nodo('herramientas/reporte.mjs', args.slice(1));
 else if (cmd === 'documento') nodo('herramientas/documento.mjs', args.slice(1));
+else if (cmd === 'capturas') nodo('herramientas/capturas.mjs', args.slice(1));
+else if (cmd === 'revisar-arte') nodo('herramientas/revisar-arte.mjs', args.slice(1));
 else if (cmd === 'fuentes') { py('fetch.py'); py('oficial.py'); }
 else if (cmd === 'encicla') {
   const out = prueba ? salida('encicla') : path.join(ROOT, 'src', 'data');

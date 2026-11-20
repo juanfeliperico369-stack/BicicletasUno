@@ -487,6 +487,14 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 20‑nov‑2026 · Motor City 2.6 en `motor-city/` y `TAREAS-IA.md` (Claude, la IA del motor)
+- Se sincronizó el motor 2.6:
+  - estilo realista familiar (árboles de pie, asfalto gastado, andenes de baldosa, techos con textura);
+  - tutorial opcional.
+- **`TAREAS-IA.md`** en la raíz: la lista de cada IA en orden. Gemini con Antigravity («hydrogen») hace lo fácil; ChatGPT y Codex («astra») hacen lo fuerte.
+- Se agregaron `AGENTS.md`, `CLAUDE.md` y `GEMINI.md`, que apuntan a `TAREAS-IA.md`.
+- **El juego no cambia** y sus pruebas siguen en verde.
+
 ## 19‑nov‑2026 · Motor City 2.5.1 en `motor-city/` (Claude, la IA del motor)
 - Se sincronizó el motor 2.5.1:
   - controles que se ven (joystick, botones de acción y flecha al objetivo);

@@ -1,4 +1,4 @@
-# Manual de Motor City 2.5.1
+# Manual de Motor City 2.6
 
 > **Para todas las IAs:** el documento único `docs/DOCUMENTO-UNICO.md` tiene el contexto, el código exacto y el plan de cada una.
 
@@ -31,6 +31,7 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Cuerpos y máquinas** | `MC.Personaje`, `MC.Vehiculos`, `MC.Cuerpo`, `MC.Taller`, `MC.Seres` | Personaje único, 35 vehículos, física con puentes, taller de ingeniería, biología. |
 | **Controles** | `MC.Controles`, `MC.Manejo` | Teclado, dedo y mando; curvas, esquemas y asistencias. |
 | **Cámara y vistas** | `MC.Camara`, `MC.Vistas`, `MC.Vista2D`, `MC.Raster`, `MC.Losas` | 9 vistas más pixel, 3D por software y resortes. |
+| **Estilo realista (2.6)** | `MC.estilo`, `MC.Arboleda`, `MC.Rudeza` | Árboles de pie con volumen; asfalto, andenes, pasto, techos y muros con desgaste. Familiar, pero sin caricatura. `MC.estilo = 'clasico'` para el plano. |
 | **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel`, `MC.Pieles` | Pieles por juego, atlas, animaciones y respaldo procedural. **Paquetes de arte** de las IAs (`arte/gemini/`) instalados en una línea (2.5.1). |
 | **Adentro** | `MC.Interiores`, `MC.Hogar`, `MC.Direccion` | Interiores con estilos, **tu casa desde tu dirección** y diseño. |
 | **A dónde ir** | `MC.Lugares`, `MC.Desgaste` | Talleres, tiendas, restaurantes, bibliotecas y parques; reparar y mejorar. |
@@ -44,8 +45,8 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 - **moverse:** arrastra en cualquier parte de la mitad izquierda; el joystick aparece donde pongas el dedo. En computador, flechas o WASD;
 - **acciones:** ⤒ saltar y ⚡ turbo, abajo a la derecha. En el agua o en el aire aparecen 🔽 bajar y 🔼 subir;
 - **a dónde ir:** la flecha amarilla con los metros. El mapa pequeño muestra el punto;
-- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega», los controles y el rescate;
-- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…) y el pixel; **🚲 Vehículo** abre el garaje con los 34 vehículos.
+- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega» (opcional; también en la portada), los controles y el rescate;
+- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista o clásico); **🚲 Vehículo** abre el garaje con los 34 vehículos.
 
 **b) Un juego nuevo con una IA.** Dile a la IA:
 > «Lee `AGENTS.md` del repositorio motorcity y haz un juego de [idea] sobre el mundo [guatape|medellin|generado]».
@@ -111,7 +112,9 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 118 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 119 pruebas, también en Chromium. |
+| `node motor.mjs capturas [--web]` | 14 fotos estándar de Mandados en `dist/capturas/` (revisión visual). |
+| `node motor.mjs revisar-arte arte/ID` | Revisa un paquete de arte contra las reglas. |
 | `node motor.mjs documento` | Arma `dist/MOTOR-CITY-TODO.md` (el documento único con anexos). |
 | `node motor.mjs nuevo juego\|modulo nombre` | Crea un juego o un módulo desde su plantilla. |
 | `node motor.mjs reporte "título" --juego X` | Deja el reporte de un cambio hecho desde otro juego. |
