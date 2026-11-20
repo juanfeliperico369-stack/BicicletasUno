@@ -3173,6 +3173,20 @@ Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los 
 
 **Qué falta:** migrar a `motor-city/` para que EnCicla use la cámara 3D y los objetos físicos.
 
+
+### 2026-11-20 · v2.0.1 · Lo del motor 3.0, adaptado a EnCicla (`src/js/97-motor30.js`)
+
+**Qué cambió:**
+1. **Calidad automática del 3.0:** mide el tiempo real entre cuadros (media móvil), reacciona en ~1 s y solo deja la resolución más baja si de verdad mejoró. Si no mejoró, vuelve atrás y no insiste por 60 s (la pantalla puede ir a 30 Hz).
+2. **Artilugios físicos** (`MC.Objetos` del motor, a la escala de los sprites):
+   - conos de obra en grupos de 3 en las ciclorrutas y balones en las plazas;
+   - la bici los tumba y los hace rodar: saltan, caen, ruedan, rebotan contra las casas y se quedan quietos;
+   - no frenan la bici.
+
+**Qué se probó:** `node tools/build.js` y `node tests/run.js`, todas en verde, con una prueba nueva (3h3). También una captura en el mundo libre.
+
+**Qué falta:** migrar a `motor-city/` para tener el mundo 3D único con sus cámaras.
+
 ---
 
 # Anexo D · Plan único (Gemini con Antigravity y ChatGPT con Codex)

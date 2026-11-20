@@ -243,6 +243,11 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     Save.data.settings.contraste = was; return out; });
   ok(ac.corredor, 'metro y tranvía sin casas bajo su trazado (A, B y T; ' + ac.n + ' casillas pasan a andén)');
   ok(ac.contraste, 'opción de alto contraste en Más (se enciende y se apaga)');
+  console.log('3h3) Motor City 3.0 en EnCicla: artilugios físicos y calidad automática');
+  const ar = await p.evaluate(() => { const A = JE.artilugios, keep = A.L; A.L = []; let i0 = JE.map.t.findIndex(v => v === TT.CICLO); const x = (i0 % MW + .5) * TS, y = (Math.floor(i0 / MW) + .5) * TS;
+    const o = A.poner('cono', x + 4, y), ride = { p: { x, y, a: 0, v: 40, veh: 'bike' } }; for (let i = 0; i < 180; i++) { ride.p.x += ride.p.v / 60; A.actualizar(ride, 1 / 60); }
+    const out = { movio: +Math.hypot(o.x - x - 4, o.y - y).toFixed(1), vuelco: o.vuelco, sembrados: A.sembrar(x, y, 900, 20, 3), calidad: typeof Calidad.cuadro === 'function' && Calidad.cuadro.toString().includes('prueba') }; A.L = keep; return out; });
+  ok(ar.movio > 2 && ar.vuelco === 1 && ar.sembrados > 0 && ar.calidad, 'Motor City 3.0: la bici tumba y empuja los conos, se siembran conos y balones, y la calidad automática solo baja si sirve ' + JSON.stringify(ar));
   console.log('3i) Guion C-99: Un día del valle, ciudad que habla, tutor, fiestas, huevos del Metro y horario especial');
   const gi = await p.evaluate(() => {
     const out = {}, keep = { dia: JSON.stringify(Save.data.diaValle || []), flags: JSON.stringify(Save.data.flags), logros: JSON.stringify(Save.data.logros), cine: Save.data.settings.cine }, T = [], _toast = UI.toast;
