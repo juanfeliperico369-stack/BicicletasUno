@@ -47,6 +47,10 @@
   - al cerrar un capítulo se saltaban capítulos (el último paso se completaba varias veces);
   - el Muelle 4 caía sobre el agua;
   - los subtítulos y el letrero de la carretera tapaban el joystick y las barras.
+- **Lo último de Codex** (`b2fd2e4`: la escena 3D de acción y los actores con esqueleto) quedó unido e integrado:
+  - **piel y animación glTF** en `MC.Modelos.posar`: huesos, matrices de enlace y clips con interpolación, en caché por cuadro;
+  - Mara a pie y los guardias se animan en la cámara 3D, y Rook, Nadia, Noah y los intermediarios esperan en sus escenas;
+  - su misión 3D autónoma se copia a `dist/juegos/` (`"extras"` en `juego.json`) y se abre desde la portada.
 - **Pendiente:** medir en un celular real con GPU. Los nuevos pedidos para Gemini, Codex y ChatGPT están en `TAREAS-IA.md` § 4.0.
 
 

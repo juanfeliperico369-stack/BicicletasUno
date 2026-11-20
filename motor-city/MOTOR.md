@@ -230,7 +230,8 @@ MC.arte.registrar('encicla', {
   - `MC.Modelos.registrar(id, glb | base64)` y `MC.Modelos.paquete(MC_MODELOS)`;
   - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro })`;
   - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
-  - `E.modelos3d = [{ id, x, y, a, k }]` pone modelos en el mundo.
+  - `E.modelos3d = [{ id, x, y, a, k, clip }]` pone modelos en el mundo;
+  - `MC.Modelos.posar(Mo, clip, t)` anima modelos con piel glTF, y `E.jugador.modelo` anima al jugador a pie.
 - **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
 
 ## 10. Hoja de ruta (lo que sigue)

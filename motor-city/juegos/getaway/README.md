@@ -32,3 +32,9 @@ Un jugador adulto entra a una misión opcional de entrega nocturna, maneja por u
 - [Biblia revisada: acción, dispositivos especiales, 3D, misiones y calidad](../../docs/GETAWAY-ESPIONAJE-3D.md).
 - Los modelos GLB generados en un paquete externo son **proxies de preproducción**, todavía sin rigging, PBR o animación; no confundir con assets finales ni con la escena jugable integrada.
 - La prioridad pasa a ser **una única ciudad 3D** con cámaras de acción, vehículos y gadgets, no un juego de sprites.
+
+
+## Vertical slice 3D de acción (v0.3.0, 20-nov-2026)
+- [Juego 3D offline](turno-cero-accion-3d.html) con una misión original de espionaje, combate ficticio, dron, visor, señuelos y persecución vehicular.
+- [Guía](arte3d/README-ACCION-3D.md), [generador de 3 actores con rig y 8 clips](arte3d/generar_actores_rig.py), [validador](arte3d/validar_actores_rig.py) y [E2E Playwright](../../pruebas/getaway-3d.mjs).
+- **45 GLB generables** incluyendo los 42 anteriores; los 3 actores nuevos están articulados y son editables. Es un **distrito ficticio**: GIS Manhattan, integración MC4, modelos PBR de alta fidelidad y reproducción de skin glTF en el juego web siguen pendientes.

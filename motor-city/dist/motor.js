@@ -5262,12 +5262,12 @@ class VistaGL {
     const pj = E.jugador; if (pj && !E._sinJugador) { const C = pj.cuerpo, A = pj.aspecto, zb = M.cota(C.x, C.y) + C.zPaso + C.z, J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: C.veh.manubrio }), ca = Math.cos(C.a), sa = Math.sin(C.a), P = j => rel(C.x + ca * j[0], C.y + sa * j[0], zb + j[1]), Lp = (j, l) => { const p = P(j); return [p[0] - sa * l, p[1], p[2] + ca * l]; };
       const piel = hex3(A.cPiel), cam = hex3(A.cCamisa), pan = hex3(A.cPantalon);
       if (C.veh.clase !== 'pie') { const V = C.veh; if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0 }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
-      if (!(C.veh.clase === 'auto' || C.veh.clase === 'pesado')) { m.hueso(Lp(J.cadera, .12), Lp(J.rodI, .12), .07, pan); m.hueso(Lp(J.rodI, .12), Lp(J.pieI, .12), .06, pan); m.hueso(Lp(J.cadera, -.12), Lp(J.rodD, -.12), .07, pan); m.hueso(Lp(J.rodD, -.12), Lp(J.pieD, -.12), .06, pan); if (!this._sinCabeza) m.hueso(P(J.cadera), P(J.pecho), .17, cam); m.hueso(Lp(J.pecho, .2), Lp(J.codoI, .22), .05, cam); m.hueso(Lp(J.codoI, .22), Lp(J.manoI, .2), .045, A.manga ? cam : piel); m.hueso(Lp(J.pecho, -.2), Lp(J.codoD, -.22), .05, cam); m.hueso(Lp(J.codoD, -.22), Lp(J.manoD, -.2), .045, A.manga ? cam : piel); const h = P(J.cabeza); if (!this._sinCabeza) m.caja(h[0], h[1] - .13, h[2], C.a, .24, .22, .26, piel); if (this._sinCabeza) { /* en primera persona se ven las manos y el manubrio */ } else if (A.cCasco) m.caja(h[0], h[1] + .06, h[2], C.a, .3, .27, .12, hex3(A.cCasco)); else m.caja(h[0] - ca * .03, h[1] + .07, h[2] - sa * .03, C.a, .26, .24, .08, hex3(A.cPelo)); }
+      const MoJ = C.veh.clase === 'pie' && pj.modelo && !C.nadando ? Modelos.L.get(pj.modelo) : null; if (MoJ) { const r = rel(C.x, C.y, zb), clip = C.estado === 'corre' ? 'sprint_loop' : C.estado === 'camina' || Math.abs(C.v) > .3 ? (Math.abs(C.v) > 3.2 ? 'sprint_loop' : 'walk_loop') : 'idle_breath'; m.modelo(MoJ, r[0], r[1], r[2], C.a, { k: (A.alto || 1.7) / MoJ.alto, clip, t: E.t || 0 }); } else if (!(C.veh.clase === 'auto' || C.veh.clase === 'pesado')) { m.hueso(Lp(J.cadera, .12), Lp(J.rodI, .12), .07, pan); m.hueso(Lp(J.rodI, .12), Lp(J.pieI, .12), .06, pan); m.hueso(Lp(J.cadera, -.12), Lp(J.rodD, -.12), .07, pan); m.hueso(Lp(J.rodD, -.12), Lp(J.pieD, -.12), .06, pan); if (!this._sinCabeza) m.hueso(P(J.cadera), P(J.pecho), .17, cam); m.hueso(Lp(J.pecho, .2), Lp(J.codoI, .22), .05, cam); m.hueso(Lp(J.codoI, .22), Lp(J.manoI, .2), .045, A.manga ? cam : piel); m.hueso(Lp(J.pecho, -.2), Lp(J.codoD, -.22), .05, cam); m.hueso(Lp(J.codoD, -.22), Lp(J.manoD, -.2), .045, A.manga ? cam : piel); const h = P(J.cabeza); if (!this._sinCabeza) m.caja(h[0], h[1] - .13, h[2], C.a, .24, .22, .26, piel); if (this._sinCabeza) { /* en primera persona se ven las manos y el manubrio */ } else if (A.cCasco) m.caja(h[0], h[1] + .06, h[2], C.a, .3, .27, .12, hex3(A.cCasco)); else m.caja(h[0] - ca * .03, h[1] + .07, h[2] - sa * .03, C.a, .26, .24, .08, hex3(A.cPelo)); }
     }
     this._njug = m.d.length;   // 3.0: lo del jugador va primero (se repinta encima en las cámaras aéreas)
     for (const v of E.trafico || []) { const T2 = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, r = rel(v.x, v.y, M.cota(v.x, v.y)), h = v.tipo === 'buseta' || v.tipo === 'camion' ? 2.9 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.1; const Mo = Modelos.L.size && Math.hypot(v.x - E.camara.x, v.y - E.camara.y) < Modelos.lejos ? Modelos.vehiculo(v) : null; if (Mo) { m.modelo(Mo, r[0], r[1], r[2], v.a, { largo: v.largo || T2.largo, tinte: v.sirena || v.bando ? null : v.color, oscuro: v.roto ? .65 : 0 }); if (v.sirena) { const f = Math.floor(performance.now() / 160) % 2, ca = Math.cos(v.a), sa = Math.sin(v.a); m.cajaF(r[0] - ca * .35 - sa * .25, r[1] + 1.56, r[2] - sa * .35 + ca * .25, v.a, .3, .16, .12, f ? [1, .1, .1] : [.35, .05, .05], f); m.cajaF(r[0] - ca * .35 + sa * .25, r[1] + 1.56, r[2] - sa * .35 - ca * .25, v.a, .3, .16, .12, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); } } else m.carro3d(r[0], r[1], r[2], v.a, T2.largo, T2.ancho, v.color, v.tipo === 'buseta' || v.tipo === 'camion' || v.tipo === 'moto' || v.tipo === 'bici' ? v.tipo : 'carro', E.cielo ? E.cielo.noche : 0, v.sirena ? v : null); }
     /* 4.0: modelos GLB que el juego pone en el mundo (personas de la historia, retenes, contenedores, escondites…) */
-    for (const q of E.modelos3d || []) { const Mo = Modelos.L.get(q.id); if (!Mo || Math.hypot(q.x - E.camara.x, q.y - E.camara.y) > (q.lejos || 260)) continue; const r = rel(q.x, q.y, M.cota(q.x, q.y) + (q.z || 0)); m.modelo(Mo, r[0], r[1], r[2], q.a || 0, { k: q.k || 1, ky: q.ky, largo: q.largo, tinte: q.tinte || null, e: q.e || 0 }); }
+    for (const q of E.modelos3d || []) { const Mo = Modelos.L.get(q.id); if (!Mo || Math.hypot(q.x - E.camara.x, q.y - E.camara.y) > (q.lejos || 260)) continue; const r = rel(q.x, q.y, M.cota(q.x, q.y) + (q.z || 0)); m.modelo(Mo, r[0], r[1], r[2], q.a || 0, { k: q.k || 1, ky: q.ky, largo: q.largo, tinte: q.tinte || null, e: q.e || 0, clip: q.clip, t: (E.t || 0) + (q.fase || 0) }); }
     for (const p of E.peatones || []) { const r = rel(p.x, p.y, M.cota(p.x, p.y)), A = p.aspecto || (p.aspecto = Personaje.azar(p.semilla || 1)), sw = Math.sin(p.fase) * .25; m.persona3d(r[0], r[1], r[2], p.a, A, p.fase || 0, A.alto || 1.7); }
     if (E.objetos) E.objetos.malla(m, rel, pj ? pj.cuerpo : null, 170);   // 3.0: artilugios físicos (MC.Objetos)
     for (const v of E.vehiculos || []) { const zt = M.cota(v.x, v.y) + (v.z || 0); if (v.clase === 'cable') { const r = rel(v.x, v.y, zt); m.caja(r[0], r[1] - 2.2, r[2], v.a, 2.2, 2, 2, hex3(v.color), .5); m.caja(r[0], r[1] - .2, r[2], v.a, .15, .15, .4, hex3('#2d3138')); continue; } const L = E.transporte && E.transporte.lineas.find(l => l.id === v.linea); if (!L) continue; const n = v.clase === 'metro' ? 6 : v.clase === 'tram' ? 2 : 1, coche = v.largo / n; for (let i = 0; i < n; i++) { const sc = v.s - v.dir * (i + .5) * coche, c = L.T.at(sc), r = rel(c.x, c.y, M.cota(c.x, c.y) + (v.z || 0)); m.caja(r[0], r[1] + .4, r[2], c.a, coche - .6, v.clase === 'brt' || v.clase === 'feeder' ? 2.5 : 3, 3.2, hex3('#e6e9ee'), .35); m.caja(r[0], r[1] + 1.4, r[2], c.a, coche - .5, (v.clase === 'brt' ? 2.5 : 3) + .04, .5, hex3(v.color)); } }
@@ -5482,6 +5482,9 @@ MC.Mundo3D = { PAL_ZOCALO };
    - Color dominante = carrocería: se puede teñir por instancia (cada carro del tráfico con su color).
    - Ejes: glTF Y arriba. Los carros miran hacia +X; las personas, hacia +Z (op.frente).
    - Rendimiento: normales y colores precalculados; por instancia solo se gira, se escala y se copia. Lejos, cajas.
+   - PIEL Y ANIMACIÓN (glTF skin + animations, p. ej. los actores de Codex con 12 huesos y 8 clips): Modelos.posar()
+     calcula la pose de un clip en el tiempo t (traslación y escala lineales, rotación con nlerp) y deforma los vértices
+     en la CPU (4 huesos por vértice). Las poses se guardan por cuadro (15 por segundo) para no recalcular.
    Uso: MC.Modelos.registrar('vehiculo_sedan', base64); malla.modelo(MC.Modelos.get('vehiculo_sedan'), x, y, z, a, { k: 1, tinte: '#7a1f1f' })
    ===================================================================== */
 const Modelos = {
@@ -5495,9 +5498,18 @@ const Modelos = {
     let o = 12, json = null, bin = null;
     while (o < u8.byteLength) { const len = dv.getUint32(o, true), tipo = dv.getUint32(o + 4, true), d = u8.subarray(o + 8, o + 8 + len); if (tipo === 0x4E4F534A) json = JSON.parse(new TextDecoder().decode(d)); else if (tipo === 0x004E4942) bin = d; o += 8 + len; }
     if (!json || !bin) throw new Error('GLB sin JSON o sin BIN');
-    const pr = json.meshes[0].primitives[0], acc = i => { const A = json.accessors[i], V = json.bufferViews[A.bufferView], off = (V.byteOffset || 0) + (A.byteOffset || 0), n = A.count * ({ SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[A.type]), b = bin.buffer, bo = bin.byteOffset + off;
+    const pr = json.meshes[0].primitives[0], acc = i => { const A = json.accessors[i], V = json.bufferViews[A.bufferView], off = (V.byteOffset || 0) + (A.byteOffset || 0), n = A.count * ({ SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT3: 9, MAT4: 16 }[A.type]), b = bin.buffer, bo = bin.byteOffset + off;
       const T = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array, 5121: Uint8Array }[A.componentType]; const copia = new Uint8Array(n * T.BYTES_PER_ELEMENT); copia.set(new Uint8Array(b, bo, n * T.BYTES_PER_ELEMENT)); return { a: new T(copia.buffer), A }; };
     const P = acc(pr.attributes.POSITION).a, Cc = pr.attributes.COLOR_0 != null ? acc(pr.attributes.COLOR_0) : null, I = pr.indices != null ? acc(pr.indices).a : null;
+    /* piel: huesos, pesos, matrices de enlace y animaciones (si las hay) */
+    let piel = null;
+    if (pr.attributes.JOINTS_0 != null && pr.attributes.WEIGHTS_0 != null && json.skins && json.skins.length) {
+      const Jt = acc(pr.attributes.JOINTS_0), Wt = acc(pr.attributes.WEIGHTS_0), sk = json.skins[0], wn = Wt.A.componentType === 5121 ? 1 / 255 : Wt.A.componentType === 5123 ? 1 / 65535 : 1;
+      const nodos = json.nodes.map(n => ({ t: n.translation || [0, 0, 0], r: n.rotation || [0, 0, 0, 1], s: n.scale || [1, 1, 1], hijos: n.children || [] })), padre = new Int32Array(nodos.length).fill(-1);
+      nodos.forEach((n, i) => n.hijos.forEach(h => { padre[h] = i; }));
+      const anim = {}; for (const A of json.animations || []) { let dur = 0; const canales = A.channels.map(ch => { const S = A.samplers[ch.sampler], ti = acc(S.input).a, va = acc(S.output).a; dur = Math.max(dur, ti[ti.length - 1] || 0); return { nodo: ch.target.node, path: ch.target.path, t: ti, v: va, paso: ch.target.path === 'rotation' ? 4 : 3 }; }); anim[A.name || ('clip' + Object.keys(anim).length)] = { dur: dur || 1, canales }; }
+      piel = { P, C: Cc, comp: Cc ? (Cc.A.type === 'VEC4' ? 4 : 3) : 0, norm: Cc && Cc.A.componentType === 5121 ? 1 / 255 : 1, idx: I, J: Jt.a, W: Float32Array.from(Wt.a, x => x * wn), joints: sk.joints, ibm: sk.inverseBindMatrices != null ? acc(sk.inverseBindMatrices).a : null, nodos, padre, anim, cache: new Map() };
+    }
     const nv = P.length / 3, comp = Cc ? (Cc.A.type === 'VEC4' ? 4 : 3) : 0, norm = Cc && Cc.A.componentType === 5121 ? 1 / 255 : 1;
     const col = i => Cc ? [Cc.a[i * comp] * norm, Cc.a[i * comp + 1] * norm, Cc.a[i * comp + 2] * norm] : [.6, .6, .6];
     const idx = I || Uint32Array.from({ length: nv }, (_, i) => i), nt = idx.length / 3, T = new Float32Array(nt * 21), cuenta = new Map();
@@ -5516,11 +5528,28 @@ const Modelos = {
     /* la carrocería: el color con más área (las llantas tienen muchos triángulos pequeños) */
     let cuerpo = null, max = 0; for (const [k, n] of cuenta) { const [r, g, b] = k.split(',').map(Number); if (n > max) { max = n; cuerpo = k; } }
     if (cuerpo) for (let t = 0; t < nt; t++) { const o2 = t * 21, key = Math.round(T[o2 + 12] * 255) + ',' + Math.round(T[o2 + 13] * 255) + ',' + Math.round(T[o2 + 14] * 255); if (key === cuerpo) T[o2 + 15] = 1; }
-    return { tris: T, n: nt, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1] };
+    return { tris: T, n: nt, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
   },
-  registrar(id, fuente, op = {}) { try { const m = Modelos.leer(fuente, Object.assign({ frente: /^personaje_/.test(id) ? 'z' : 'x' }, op)); m.id = id; Modelos.L.set(id, m); return m; } catch (e) { MC.falla('modelo ' + id, e); return null; } },
+  registrar(id, fuente, op = {}) { try { const m = Modelos.leer(fuente, Object.assign({ frente: /_rig$/.test(id) ? '-z' : /^personaje_/.test(id) ? 'z' : 'x' }, op)); m.id = id; Modelos.L.set(id, m); return m; } catch (e) { MC.falla('modelo ' + id, e); return null; } },
   /* todos los de un paquete { id: base64 } */
   paquete(P) { let n = 0; for (const [id, b] of Object.entries(P || {})) if (Modelos.registrar(id, b)) n++; return n; },
+  /* la pose de un clip en el tiempo t → triángulos con el mismo formato que Mo.tris (en caché por cuadro de 1/15 s) */
+  posar(Mo, clip, t = 0) {
+    const S = Mo.piel; if (!S) return Mo.tris; const A = S.anim[clip] || S.anim[Object.keys(S.anim)[0]]; if (!A) return Mo.tris;
+    const f = Math.floor(((t % A.dur) + A.dur) % A.dur * 15), clave = (clip || '') + ':' + f; let T = S.cache.get(clave); if (T) return T;
+    const tt = f / 15, N = S.nodos, L = N.map(n => ({ t: n.t.slice(), r: n.r.slice(), s: n.s.slice() }));
+    for (const c of A.canales) { const ti = c.t, k = c.paso; let i = 0; while (i < ti.length - 2 && ti[i + 1] < tt) i++; const u = ti.length > 1 ? clamp((tt - ti[i]) / ((ti[i + 1] - ti[i]) || 1), 0, 1) : 0, a = i * k, b = Math.min(ti.length - 1, i + 1) * k, o = L[c.nodo][c.path === 'translation' ? 't' : c.path === 'rotation' ? 'r' : 's'];
+      if (!o) continue; let dot = 0; if (k === 4) for (let j = 0; j < 4; j++) dot += c.v[a + j] * c.v[b + j]; const sg = dot < 0 ? -1 : 1; for (let j = 0; j < k; j++) o[j] = c.v[a + j] + (c.v[b + j] * (k === 4 ? sg : 1) - c.v[a + j]) * u; if (k === 4) { const l = Math.hypot(o[0], o[1], o[2], o[3]) || 1; for (let j = 0; j < 4; j++) o[j] /= l; } }
+    const G = new Array(N.length), glob = i => { if (G[i]) return G[i]; const m = m4trs(L[i].t, L[i].r, L[i].s); return (G[i] = S.padre[i] >= 0 ? m4mul(glob(S.padre[i]), m) : m); };
+    const JM = S.joints.map((nd, j) => S.ibm ? m4mul(glob(nd), S.ibm.subarray(j * 16, j * 16 + 16)) : glob(nd));
+    const nv = S.P.length / 3, V = new Float32Array(nv * 3);
+    for (let v = 0; v < nv; v++) { const x = S.P[v * 3], y = S.P[v * 3 + 1], z = S.P[v * 3 + 2]; let X = 0, Y = 0, Z = 0; for (let k = 0; k < 4; k++) { const w = S.W[v * 4 + k]; if (!w) continue; const m = JM[S.J[v * 4 + k]]; X += w * (m[0] * x + m[4] * y + m[8] * z + m[12]); Y += w * (m[1] * x + m[5] * y + m[9] * z + m[13]); Z += w * (m[2] * x + m[6] * y + m[10] * z + m[14]); } V[v * 3] = X; V[v * 3 + 1] = Y; V[v * 3 + 2] = Z; }
+    T = Mo.tris.slice(); const idx = S.idx || Uint32Array.from({ length: nv }, (_, i) => i), cx = (Mo.bounds[0][0] + Mo.bounds[1][0]) / 2, cy = (Mo.bounds[0][1] + Mo.bounds[1][1]) / 2, cz = (Mo.bounds[0][2] + Mo.bounds[1][2]) / 2;
+    for (let q = 0; q < Mo.n; q++) { const o = q * 21; for (let k = 0; k < 3; k++) { const vi = idx[q * 3 + k]; T[o + k * 3] = V[vi * 3]; T[o + k * 3 + 1] = V[vi * 3 + 1]; T[o + k * 3 + 2] = V[vi * 3 + 2]; }
+      const ux = T[o + 3] - T[o], uy = T[o + 4] - T[o + 1], uz = T[o + 5] - T[o + 2], vx = T[o + 6] - T[o], vy = T[o + 7] - T[o + 1], vz = T[o + 8] - T[o + 2]; let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+      const gx = (T[o] + T[o + 3] + T[o + 6]) / 3 - cx, gy = (T[o + 1] + T[o + 4] + T[o + 7]) / 3 - cy, gz = (T[o + 2] + T[o + 5] + T[o + 8]) / 3 - cz, sgn = gx * nx + gy * ny + gz * nz < 0 ? -1 : 1; T[o + 9] = nx * sgn; T[o + 10] = ny * sgn; T[o + 11] = nz * sgn; }
+    if (S.cache.size > 400) S.cache.clear(); S.cache.set(clave, T); return T;
+  },
   _b64(s) { if (typeof atob === 'function') { const t = atob(s), u = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) u[i] = t.charCodeAt(i); return u; } return new Uint8Array(Buffer.from(s, 'base64')); },
   /* qué modelo le toca a un vehículo del tráfico (el juego lo puede cambiar) */
   vehiculo(v) {
@@ -5530,14 +5559,18 @@ const Modelos = {
 };
 /* un modelo en la malla: posición GL relativa (x, y = altura, z = sur), rumbo a del mundo; escala k o el largo deseado */
 Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
-  const T = Mo.tris, n = Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d, fz = Mo.frente === 'z';
+  const T = op.clip && Mo.piel ? Modelos.posar(Mo, op.clip, op.t || 0) : Mo.tris, n = Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d, fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
   const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, osc = op.oscuro || 0, e = op.e || 0, ky = op.ky || k;
   for (let t = 0; t < n; t++) {
     const o = t * 21, cuerpo = T[o + 15] === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m;
-    const nu = fz ? T[o + 11] : T[o + 9], nv = fz ? -T[o + 9] : T[o + 11], nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
-    for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2], u = (fz ? pz : px) * k, v = (fz ? -px : pz) * k; d.push(x + u * ca - v * sa, y + py * ky, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
+    const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
+    for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2], u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv; d.push(x + u * ca - v * sa, y + py * ky, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
   }
 };
+/* matrices 4×4 en columnas (glTF) */
+function m4trs(t, q, sc) { const [x, y, z, w] = q, x2 = x + x, y2 = y + y, z2 = z + z, xx = x * x2, xy = x * y2, xz = x * z2, yy = y * y2, yz = y * z2, zz = z * z2, wx = w * x2, wy = w * y2, wz = w * z2;
+  return [(1 - (yy + zz)) * sc[0], (xy + wz) * sc[0], (xz - wy) * sc[0], 0, (xy - wz) * sc[1], (1 - (xx + zz)) * sc[1], (yz + wx) * sc[1], 0, (xz + wy) * sc[2], (yz - wx) * sc[2], (1 - (xx + yy)) * sc[2], 0, t[0], t[1], t[2], 1]; }
+function m4mul(a, b) { const o = new Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3]; return o; }
 MC.Modelos = Modelos;
 
 /* ---- js/46-vistas.js ---- */

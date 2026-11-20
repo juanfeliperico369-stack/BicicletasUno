@@ -98,7 +98,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   G.transporte = M.transporte && M.transporte.lineas && M.transporte.lineas.length ? new MC.Transporte(M, M.cfgCiudad || {}) : null;
   G.busq = new MC.Busqueda(M, { heat: spawn.heat ?? heat0 * .6, semilla: (G.t * 1000) | 0 });
   G.objetos = new MC.Objetos(M, {}); try { G.objetos.sembrar(C.x, C.y, 320, 40); } catch (e) { /* sin objetos */ }
-  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, curvatura: CURVATURA, modelos3d: G.modelos3d,
+  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto, modelo: 'personaje_mara_rig' }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, curvatura: CURVATURA, modelos3d: G.modelos3d,
     bloqueosEtiquetas: (w, h) => [[w - 84 * w / innerWidth, 0, w, h]] };
   G.vistas.usar(G.vistaId, G.E); G.vistas.dpr = G.dEf || 1;
   if (G.ui && G.ui._mini) G.ui._mini.vistas = G.vistas; else if (G.ui) G.ui.minimapa(G.vistas);

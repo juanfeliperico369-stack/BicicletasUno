@@ -83,7 +83,8 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   const jsJ = fs.readdirSync(jd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(jd, f), 'utf8')).join('\n');
   const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
   const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version);
-  fs.mkdirSync(path.join(DIST, 'juegos'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'juegos', id + '.html'), out); juegos.push(id + ' ' + Math.round(out.length / 1024) + ' KB');
+  fs.mkdirSync(path.join(DIST, 'juegos'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'juegos', id + '.html'), out);
+  for (const f of J.extras || []) if (fs.existsSync(path.join(jd, f))) fs.copyFileSync(path.join(jd, f), path.join(DIST, 'juegos', path.basename(f)));   /* 4.0: páginas autónomas que acompañan al juego (la escena 3D de Codex) */ juegos.push(id + ' ' + Math.round(out.length / 1024) + ' KB');
 }
 const sha = b => crypto.createHash('sha1').update(b).digest('hex').slice(0, 8);
 const info = { version: VER.version, motor_kb: Math.round(motor.length / 1024), mundo_kb: Math.round(mundoJS.length / 1024), html_kb: html ? Math.round(html.length / 1024) : null, sha: sha(motor), archivos: lista.length };

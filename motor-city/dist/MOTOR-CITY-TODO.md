@@ -691,8 +691,8 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 | Id | Tarea | Contrato | Entrega |
 |---|---|---|---|
 | **C‑M31** | **El globo en WebGL y la transición continua** | Al alejar la cámara más allá del mapa, el mundo se vuelve esfera sin corte. Debe tener:<ul><li>biomas de `MC.Planeta.BIOMAS`;</li><li>dispersión de Rayleigh simple;</li><li>las estrellas de `MC.Cosmos`.</li></ul>Con respaldo al lienzo actual (`Planeta.globo`). | `js/` + prueba |
-| **C‑M32** | **Acción a pie** (tu biblia 3D, §2): bajarse, cobertura tras `MC.Objetos`, guardias que patrullan y van a la última posición vista | Reusa `MC.Busqueda` (rivales a pie) y los conos del sigilo de `juegos/getaway/30-historia.js`. Sin gore y sin instrucciones reales. | `js/` + paso «a pie» en Turno Cero |
-| **C‑M33** | **Esqueleto procedural y LOD de los GLB** | Personajes: caminar, correr y agacharse. Vehículos: LOD1 y LOD2. `MC.Modelos` ya los dibuja: añade huesos y LOD sin romper `Malla.modelo`. | `arte/modelos/turno-cero/` + `js/45-glb.js` |
+| **C‑M32** | **Pasa tu escena 3D de acción** (`turno-cero-accion-3d.html`) **al motor**: a pie, cobertura tras `MC.Objetos`, guardias que patrullan y van a la última posición vista, combate no letal | Reusa `MC.Busqueda` (rivales a pie), `MC.Modelos.posar` (tus rigs ya se animan) y los conos del sigilo de `juegos/getaway/30-historia.js`, para que funcione en Manhattan, Medellín y Guatapé reales. Sin gore y sin instrucciones reales. | `js/` + paso «a pie» en Turno Cero |
+| **C‑M33** | **LOD de los GLB y más actores con esqueleto** | **Ya hecho por Claude:** `MC.Modelos.posar` reproduce tus rigs (12 huesos y 8 clips) en el juego.<br>**Falta:**<ul><li>LOD1 y LOD2 de vehículos y actores;</li><li>Nadia, Noah, Cross, El Contador y transeúntes con esqueleto;</li><li>pesos suaves en codos y rodillas.</li></ul> | `arte/modelos/turno-cero/` + `js/45-glb.js` |
 | **C‑M34** | **Manhattan por sectores de 1 km** (era C‑M22) | El MC4 de 10 MB por sectores alrededor del jugador, con `MC.GuardadoSectores` | Herramienta + prueba de memoria |
 | **C‑M35** | **Daño por piezas en los carros GLB**: capó, puertas y llantas | Deformar vértices por zona según `Busqueda` y los choques. Humo y fuego en 3D. | `js/45-glb.js` |
 | **C‑M36** | **Audio de persecución**: motor por capas de rpm y sirena con Doppler y oclusión aproximada | Sin samples con derechos; Web Audio | `js/61-sonido.js` |
@@ -873,6 +873,10 @@ La PR #5 contiene C-M26 (persecución jugable y E2E verificado), C-M25 (portada 
 - **C-A15:** dirección artística conceptual y wireframe listos como documentos, no atlas UV ni captura de gameplay.
 - **G-H19:** investigación documental ampliada de 3 a 13 fichas, sin cronometrajes de vídeos no observados.
 - **Siguiente IA:** antes de iniciar 3D, auditar licencias del GIS, cobertura de la isla y conectividad de puentes, carga por 1 km y transición de prototipo a MC4.
+
+
+#### Avance comprobable «Turno Cero» v0.3.0 (20-nov-2026)
+ChatGPT entregó una vertical slice 3D original en `juegos/getaway/turno-cero-accion-3d.html`, pruebas E2E `pruebas/getaway-3d.mjs` y tres GLB de personajes con 12 huesos y 8 clips cada uno. Tiene controles PC/táctil, combate ficticio, dron, visor, señuelos, persecución y una misión completa en **distrito ficticio de prueba**. Ver `docs/GETAWAY-AVANCE-V03.md`. Pendiente GIS Manhattan real, conexión de las APIs MC4, materiales PBR finales y reproducción de rig glTF en runtime.
 
 
 ---
@@ -1651,7 +1655,8 @@ MC.arte.registrar('encicla', {
   - `MC.Modelos.registrar(id, glb | base64)` y `MC.Modelos.paquete(MC_MODELOS)`;
   - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro })`;
   - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
-  - `E.modelos3d = [{ id, x, y, a, k }]` pone modelos en el mundo.
+  - `E.modelos3d = [{ id, x, y, a, k, clip }]` pone modelos en el mundo;
+  - `MC.Modelos.posar(Mo, clip, t)` anima modelos con piel glTF, y `E.jugador.modelo` anima al jugador a pie.
 - **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
 
 ### 10. Hoja de ruta (lo que sigue)
@@ -3322,6 +3327,10 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
   - al cerrar un capítulo se saltaban capítulos (el último paso se completaba varias veces);
   - el Muelle 4 caía sobre el agua;
   - los subtítulos y el letrero de la carretera tapaban el joystick y las barras.
+- **Lo último de Codex** (`b2fd2e4`: la escena 3D de acción y los actores con esqueleto) quedó unido e integrado:
+  - **piel y animación glTF** en `MC.Modelos.posar`: huesos, matrices de enlace y clips con interpolación, en caché por cuadro;
+  - Mara a pie y los guardias se animan en la cámara 3D, y Rook, Nadia, Noah y los intermediarios esperan en sus escenas;
+  - su misión 3D autónoma se copia a `dist/juegos/` (`"extras"` en `juego.json`) y se abre desde la portada.
 - **Pendiente:** medir en un celular real con GPU. Los nuevos pedidos para Gemini, Codex y ChatGPT están en `TAREAS-IA.md` § 4.0.
 
 

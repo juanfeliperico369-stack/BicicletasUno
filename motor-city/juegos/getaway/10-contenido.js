@@ -83,7 +83,7 @@ TC.HISTORIA = [
           decision: { pregunta: 'Adentro hay una hoja de rutas que no cuadra con el manifiesto. ¿Qué haces?', opciones: [
             { texto: 'Leer la hoja de rutas', rep: { nadia: 6 }, flags: { leyo: true }, evidencia: 1, respuesta: [['mara', 'Turnos que no existen. Conductores que firmaron entregas desde el hospital. Salarios que salen y no llegan…'], ['mara', 'Esto no es una ruta. Es un robo con horario.']] },
             { texto: 'Entregar tarde, sin mirar', rep: { ward: 6 }, dinero: 120, respuesta: [['mara', 'Lo que no se sabe no se puede contar.']] }] } } },
-      { tipo: 'ir', a: 'ny_nadia', texto: 'Recoge a Nadia Bell en Water Street antes de que cierre el muelle', limite: 330,
+      { tipo: 'ir', a: 'ny_nadia', actor: { id: 'personaje_nadia', clip: 'idle_breath' }, texto: 'Recoge a Nadia Bell en Water Street antes de que cierre el muelle', limite: 330,
         llamada: [['nadia', '¿Mara Vega? Soy Nadia Bell, del sindicato. Usted tiene mi expediente: Ward se lo robó a mi archivo. Recójame en Water Street. Ya. Me están siguiendo.']],
         alLlegar: { escena: [['nadia', 'Gracias. Ese papel es la prueba de que Argenta Quay borra salarios de conductores y los manda a cuentas de la Cámara de Rutas.'], ['nadia', 'Y alguien más lo quiere. No son de la Cámara. Son más callados. Mire el retrovisor.']],
           heat: 2, causa: 'una camioneta sin placas avisó a la policía' } },
@@ -99,7 +99,7 @@ TC.HISTORIA = [
     intro: [['camara', 'Señora Vega. Somos la Cámara de Rutas. Usted tiene papeles que no le pertenecen y una pasajera que habla demasiado.'], ['camara', 'Devuelva las dos cosas antes del amanecer. O se las cobramos.'], ['mara', 'Hijueputas. Ni saben con quién se metieron.']],
     pasos: [
       { tipo: 'dron', a: 'ny_noah', texto: 'Encuentra la azotea de Noah: vuela el Dron Cuervo 🛸 sobre Eldridge Street', llamada: [['vela', '[VELA] Dron Cuervo (T02) listo: 70 m de radio, 50 s de batería. Acércate a Eldridge Street y lánzalo.']] },
-      { tipo: 'ir', a: 'ny_noah', texto: 'Ve a la azotea de Noah Kim',
+      { tipo: 'ir', a: 'ny_noah', actor: { id: 'personaje_informant' }, texto: 'Ve a la azotea de Noah Kim',
         alLlegar: { escena: [['noah', 'Si publico esto, salvan los conductores o los matan a todos. Depende de quién lo lea primero.'], ['noah', 'Argenta Quay es solo la vitrina. Detrás está una cosa que se llama Dirección Argo: venden vigilancia a la policía, a la mafia y a los bancos. A todos.']],
           decision: { pregunta: '¿Noah difunde una muestra del expediente esta noche?', opciones: [
             { texto: 'Sí: una muestra, sin nombres', rep: { noah: 10, nadia: 4 }, flags: { muestra: true }, evidencia: 1, respuesta: [['noah', 'Al aire en diez minutos. Ahora sí nos van a buscar.']] },
@@ -113,7 +113,7 @@ TC.HISTORIA = [
           { texto: 'Asegurar todos los recibos', evidencia: 1, rep: { nadia: -8 }, respuesta: [['mara', 'Perdóname, hermano. Vuelvo por ti.'], ['radio', 'No vuelves.']] }] } } },
       { tipo: 'destruir', banda: 2, n: 2, texto: '¡La Cámara de Rutas! Saca de la vía a dos de sus camionetas', heatInicio: 1,
         llamada: [['camara', 'Le dijimos que devolviera las cosas, señora Vega. Ahora cantamos.'], ['mara', 'Vengan, malparidos. Vengan.']], alLlegar: { dinero: 320 } },
-      { tipo: 'ir', a: 'ny_taller', texto: 'Vuelve al taller: alguien te espera adentro', maxNivel: 0, avisoNivel: 'Piérdelos antes de entrar.',
+      { tipo: 'ir', a: 'ny_taller', actor: { id: 'personaje_rook_rig', clip: 'idle_breath' }, texto: 'Vuelve al taller: alguien te espera adentro', maxNivel: 0, avisoNivel: 'Piérdelos antes de entrar.',
         alLlegar: { escena: [['rook', 'Tranquila. Si quisiera matarla ya lo habría hecho. Elías Rook. Trabajé para Argo hasta que me quisieron borrar.'], ['rook', 'El dinero de los conductores no se queda aquí. Sale por contenedores hacia Urabá y se lava en Medellín, en una empresa que se llama Argenta Andina. El que firma todo es El Contador.'], ['rook', 'Si quiere a la cabeza, no la va a encontrar en Manhattan. Sáquese de aquí por el puente George Washington.']], reparar: true, dinero: 200 } }
     ] },
   { cap: 3, titulo: 'Cruce de cuentas', acto: 'III', mundo: 'nueva_york', hora: 3.4, clima: 'despejado',
@@ -124,7 +124,7 @@ TC.HISTORIA = [
         ruta: [{ f: .3, banda: 2, aviso: 'Camionetas de la Cámara de Rutas en la carretera' }, { f: .62, heat: 3, aviso: 'Retén en la vía: alguien dio tu placa' }] },
       { tipo: 'ir', a: 'md_efrain', texto: 'Llega al taller de Don Efraín, en Barrio Colombia',
         alLlegar: { escena: [['efrain', '¡Mirá quién volvió! La Marita, toda una gringa. Bienvenida, mija. Aquí el que debe, paga, y el que sabe, calla.'], ['efrain', 'Argenta Andina tiene una torre en El Poblado y una bodega en Itagüí. Los tombos que cuidan la bodega no son tombos: son de Argo con uniforme prestado.'], ['efrain', 'Si la persiguen, métase al metro. Al metro no entran con el carro.']], reparar: true, dinero: 200 } },
-      { tipo: 'ir', a: 'md_lleras', texto: 'Encuéntrate con el primer intermediario en el Parque Lleras',
+      { tipo: 'ir', a: 'md_lleras', actor: { id: 'personaje_courier' }, texto: 'Encuéntrate con el primer intermediario en el Parque Lleras',
         alLlegar: { escena: [['radio', 'Un hombre gordo, de lino blanco, con dos escoltas y una cerveza que no se toma.'], ['radio', '«Yo solo muevo la plata de un lado a otro, mamita. La plata no tiene patria. Pregúntele a la bodega de Itagüí.»']], evidencia: 1, heat: 3, causa: 'uno de los escoltas llamó a la policía' } },
       { tipo: 'perder', texto: 'Piérdelos: métete al metro 🚇 en una estación, toma una EnCicla 🚲 o pinta el carro 🔧',
         llamada: [['efrain', '¡Esos son los de Argo, mija! Bájese en una estación y súbase al metro. En el metro no la siguen.']] },
@@ -151,7 +151,7 @@ TC.HISTORIA = [
   { cap: 5, titulo: 'Saldo', acto: 'V', mundo: 'guatape', hora: 5.3, clima: 'niebla',
     intro: [['radio', 'Guatapé al amanecer. Zócalos de colores, el embalse quieto como un espejo y la Piedra mirándolo todo.'], ['mara', 'Aquí veníamos de niñas, mi hermana y yo. Nunca pensé volver así.']],
     pasos: [
-      { tipo: 'ir', a: 'gu_finca', texto: 'Llega a la Finca La Esperanza, el refugio de El Contador (por el embalse en lancha 🚤 es más rápido)', heatInicio: 0,
+      { tipo: 'ir', a: 'gu_finca', actor: { id: 'personaje_operative' }, texto: 'Llega a la Finca La Esperanza, el refugio de El Contador (por el embalse en lancha 🚤 es más rápido)', heatInicio: 0,
         alLlegar: { escena: [['contador', 'Bienvenida. ¿Un tinto? Usted cree que esto es una película, señora Vega. Aquí nadie es bueno. Los conductores robaron horas; yo robé mejor. La diferencia es que yo pago impuestos.'], ['contador', 'Le ofrezco esto: protección para sus testigos, dos millones para usted y que nadie publique nada. O publica todo, y vemos cuántos de sus conductores llegan vivos al juicio.']],
           decision: { pregunta: 'El final empieza aquí. ¿Qué haces con el expediente?', opciones: [
             { texto: 'A · Publicar todo (exposición completa)', flags: { finA: true }, respuesta: [['mara', 'Que lo lea todo el mundo. Al mismo tiempo.'], ['contador', '¡Que no salga de la finca!']] },

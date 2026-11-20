@@ -470,8 +470,10 @@ console.log('20) Búsqueda 0–5, modelos GLB y Turno Cero (4.0)');
   let n = 0; for (const f of F) if (MC.Modelos.registrar(f.slice(0, -4), new Uint8Array(fs.readFileSync(path.join(D, f))))) n++;
   const S = MC.Modelos.get('vehiculo_sedan'), Pm = MC.Modelos.get('personaje_mara'), m = new MC.Malla(); if (S) m.modelo(S, 0, 0, 0, Math.PI / 2, { largo: 4.65, tinte: '#ff0000' });
   let rojo = 0, maxZ = -1e9; for (let i = 0; i < m.d.length; i += 10) { if (m.d[i + 6] === 1 && m.d[i + 7] === 0 && m.d[i + 8] === 0) rojo++; maxZ = Math.max(maxZ, m.d[i + 2]); }
-  ok(n === 42 && S && S.n > 300 && Pm && Pm.frente === 'z' && rojo > 50 && maxZ > 2 && MC.Modelos.vehiculo({ sirena: true }).id === 'vehiculo_police' && MC.Modelos.vehiculo({ tipo: 'taxi' }).id === 'vehiculo_taxi',
-    'modelos GLB: 42 leídos, la carrocería toma el color del carro y un rumbo de 90° pone el carro a lo largo del eje sur', { n, tris: S && S.n, rojo, largoGirado: +maxZ.toFixed(2) });
+  const R = MC.Modelos.get('personaje_mara_rig'), p0 = R && MC.Modelos.posar(R, 'walk_loop', 0), p1 = R && MC.Modelos.posar(R, 'walk_loop', .3); let mueve = 0; if (p0) for (let i = 0; i < p0.length; i++) if (i % 21 < 9) mueve = Math.max(mueve, Math.abs(p0[i] - p1[i]));
+  ok(n >= 45 && R && R.clips.length === 8 && mueve > .2 && [...p1].every(Number.isFinite), 'modelos con esqueleto (Codex): 12 huesos y 8 clips; caminar mueve las piernas y todo es finito', { clips: R && R.clips.length, mueve: +mueve.toFixed(2) });
+  ok(n >= 45 && S && S.n > 300 && Pm && Pm.frente === 'z' && rojo > 50 && maxZ > 2 && MC.Modelos.vehiculo({ sirena: true }).id === 'vehiculo_police' && MC.Modelos.vehiculo({ tipo: 'taxi' }).id === 'vehiculo_taxi',
+    'modelos GLB: 45 leídos (42 + 3 con esqueleto), la carrocería toma el color del carro y un rumbo de 90° pone el carro a lo largo del eje sur', { n, tris: S && S.n, rojo, largoGirado: +maxZ.toFixed(2) });
   MC.Modelos.L.clear();
 }
 if (process.argv.includes('--navegador')) {
@@ -612,8 +614,8 @@ if (process.argv.includes('--navegador')) {
       G.Artefactos.cebo(); G.busq.ponerNivel(3); await espera(1500); const persigue = G.busq.rivales.length, tapa2 = MC.UI.verificar(G.ui);
       return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, errores: MC.errores.length };
     });
-    ok(portada.adultos && portada.modelos === 42 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && !r.errores && !errs.length,
-      'Turno Cero en Chromium móvil: aviso 18+, 42 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro y la policía persigue', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
+    ok(portada.adultos && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && !r.errores && !errs.length,
+      'Turno Cero en Chromium móvil: aviso 18+, 45 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro y la policía persigue', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
     await b.close();
   }
 }

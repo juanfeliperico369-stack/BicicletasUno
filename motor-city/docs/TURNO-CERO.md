@@ -66,6 +66,8 @@
 | Varios mundos por juego | `herramientas/construir.mjs` | `"mundos": [...]` en `juego.json` mete cada MC4 en un `<script type="text/plain">`, y solo se descomprime el mundo al que se llega. `"modelos": "arte/modelos/…"` mete los GLB. |
 | Transporte de Medellín | `MC.Transporte` | Subirse al metro, a un cable, al tranvía o al Metroplús en su línea real; la policía te pierde |
 | EnCicla, lancha y robo de carros | `MC.Cuerpo` | Las estaciones EnCicla reales, el embalse con su profundidad y los carros del tráfico |
+| Piel y animación glTF | `MC.Modelos.posar` | Los actores de Codex con esqueleto (12 huesos y 8 clips: reposo, caminar, correr, sigilo, golpe, interactuar, esquivar e impacto) se animan en la cámara 3D. Mara a pie camina y corre con ellos, y los guardias respiran, se distraen y corren con la alarma. Pendiente que Codex marcó: «reproducir el rig dentro del render web». |
+| La escena 3D de Codex | `dist/juegos/turno-cero-accion-3d.html` | Su misión autónoma de acción a pie (distrito de prueba, WebGL2), enlazada desde la portada como «Misión de acción 3D» |
 | Artefactos (ficción de juego) | `juegos/getaway/20-juego.js` | T02 Dron Cuervo, T05 Cebo acústico, T08 Pulso de interferencia, T01 Lente espectral (estilo térmico del motor), T03 Rastreador, T06 Acceso, T11 Cámara, T09 Custodia y T04 VELA |
 
 ## 4. Las 13 referencias del autor y lo que se tomó (técnica, nunca arte)
@@ -84,6 +86,12 @@
 
 ## 5. Lo que falta (y quién lo hace)
 Está en `TAREAS-IA.md` § «4.0». En resumen:
-- **Codex:** el globo en WebGL y la transición continua; el combate a pie con cobertura; esqueletos y LOD de los GLB; el streaming por sectores de Manhattan; el daño por piezas.
+- **Codex:**
+  - el globo en WebGL y la transición continua;
+  - pasar su combate a pie (la escena 3D) a `MC` y a las tres ciudades;
+  - LOD de los GLB;
+  - el streaming por sectores de Manhattan;
+  - el daño por piezas.
+  - Los esqueletos ya se reproducen.
 - **ChatGPT:** las texturas de los modelos y la portada.
 - **Gemini:** medir en un celular real, verificar los lugares y revisar el lenguaje.

@@ -41,6 +41,8 @@ const Historia = {
     if (p.a && TC.LUGARES[p.a]) { m = resolver(p.a); if (!m && TC.LUGARES[p.a].mundo !== G.id) m = this.haciaMundo(TC.LUGARES[p.a].mundo); }
     else if (p.tipo === 'viajar') m = this.haciaMundo(p.a);
     G.objetivo = m ? { x: m.x, y: m.y, texto: m.n || '' } : null; this.est.meta = m;
+    /* quien espera en el lugar (actores GLB de Codex con su animación) */
+    if (p.actor && m && TC.LUGARES[p.a] && TC.LUGARES[p.a].mundo === G.id && !G.modelos3d.some(q => q.actor)) { const Mo = MC.Modelos.get(p.actor.id); G.modelos3d.push({ actor: true, id: p.actor.id, x: m.x + Math.cos((m.a || 0) + 1.57) * 4, y: m.y + Math.sin((m.a || 0) + 1.57) * 4, a: (m.a || 0) - 1.57, k: Mo ? 1.72 / Mo.alto : 1, clip: p.actor.clip || 'idle_breath' }); }
   },
   /* si el objetivo está en otro mundo, la flecha va a la salida que lleva hacia allá (el planeta es un anillo) */
   haciaMundo(id) {
@@ -89,14 +91,14 @@ const Historia = {
   /* ---- sigilo: guardias con vista (24 m, 60°) y línea de visión; el cebo los distrae; si te ven, entrada a las malas ---- */
   ponerGuardias(p) {
     const m = resolver(p.a); if (!m) return; const M = G.M, n = p.guardias || 3;
-    for (let k = 0; k < n * 6 && G.guardias.length < n; k++) { const ang = k / n * TAU + (k % 3) * .4, r = 20 + (k % 4) * 7, x = m.x + Math.cos(ang) * r, y = m.y + Math.sin(ang) * r; if (M.edificioEn(x, y, 0) || M.suelo(x, y) === MC.TT.WATER) continue; G.guardias.push({ x, y, a0: ang, a: ang, vista: 24, cono: 1.05, distraido: 0, fase: k * 1.7, modelo: k % 2 ? 'personaje_operative' : 'personaje_guard' }); }
-    for (const q of G.guardias) G.modelos3d.push(q.m3 = { id: q.modelo, x: q.x, y: q.y, a: q.a, k: 1.75 / 2.14 });
+    for (let k = 0; k < n * 6 && G.guardias.length < n; k++) { const ang = k / n * TAU + (k % 3) * .4, r = 20 + (k % 4) * 7, x = m.x + Math.cos(ang) * r, y = m.y + Math.sin(ang) * r; if (M.edificioEn(x, y, 0) || M.suelo(x, y) === MC.TT.WATER) continue; G.guardias.push({ x, y, a0: ang, a: ang, vista: 24, cono: 1.05, distraido: 0, fase: k * 1.7, modelo: MC.Modelos.tiene('personaje_guard_rig') ? 'personaje_guard_rig' : k % 2 ? 'personaje_operative' : 'personaje_guard' }); }
+    for (const q of G.guardias) { const Mo = MC.Modelos.get(q.modelo); G.modelos3d.push(q.m3 = { id: q.modelo, x: q.x, y: q.y, a: q.a, k: Mo ? 1.75 / Mo.alto : 1, clip: 'idle_breath', fase: q.fase }); }
     for (let k = 0; k < 4; k++) { const ang = k * 1.6 + .5, x = m.x + Math.cos(ang) * 14, y = m.y + Math.sin(ang) * 14; if (!M.edificioEn(x, y, 0)) G.modelos3d.push({ id: G.id === 'nueva_york' ? 'escenario_container' : k % 2 ? 'escenario_container' : 'escenario_barrier', x, y, a: ang }); }
     G.modelos3d.push({ id: 'escenario_checkpoint', x: m.x, y: m.y, a: m.a || 0 });
   },
   sigilo(dt, d) {
     const C = G.cuerpo, E = this.est; let visto = false;
-    for (const q of G.guardias) { q.fase += dt; if (q.distraido > 0) { q.distraido -= dt; q.a = Math.atan2((G.ceboVis ? G.ceboVis.y : q.y) - q.y, (G.ceboVis ? G.ceboVis.x : q.x) - q.x); } else q.a = q.a0 + Math.sin(q.fase * .6) * .9; if (q.m3) q.m3.a = q.a;
+    for (const q of G.guardias) { q.fase += dt; if (q.distraido > 0) { q.distraido -= dt; q.a = Math.atan2((G.ceboVis ? G.ceboVis.y : q.y) - q.y, (G.ceboVis ? G.ceboVis.x : q.x) - q.x); } else q.a = q.a0 + Math.sin(q.fase * .6) * .9; if (q.m3) { q.m3.a = q.a; q.m3.clip = q.distraido > 0 ? 'interact_device' : q.alerta > 0 || E.alarma ? 'sprint_loop' : 'idle_breath'; }
       if (q.distraido > 0 || E.alarma) continue; const dx = C.x - q.x, dy = C.y - q.y, dd = Math.hypot(dx, dy); if (dd < q.vista && Math.abs(angDif(Math.atan2(dy, dx), q.a)) < q.cono && G.busq.vista(q.x, q.y, C.x, C.y)) { visto = true; q.alerta = 1; } else q.alerta = Math.max(0, (q.alerta || 0) - dt); }
     E.vistoT = visto ? E.vistoT + dt : Math.max(0, E.vistoT - dt * .5);
     if (!E.alarma && E.vistoT > .7) { E.alarma = true; G.flags.ruido = true; G.busq.ponerNivel(Math.max(3, G.busq.nivel)); G.busq.banda(2); G.ui.aviso('🚨 ¡Te vieron! Entrada a las malas', 2600, 'nivel'); Subt.decir([['radio', '«¡Intrusa en el perímetro!» Gritos, radios, motores que arrancan.']]); }

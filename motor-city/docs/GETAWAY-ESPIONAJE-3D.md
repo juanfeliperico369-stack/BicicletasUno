@@ -101,3 +101,8 @@ La relación central es el choque entre **la vida civil de Mara** y el universo 
 | Nuevo juego 3D con combate y personajes animados | **Pendiente** |
 | GIS real y precisión de Manhattan | **Pendiente** |
 | Integración con Motor City y PR fusionada | **Pendiente** |
+
+## 9. Implementación real v0.3.0 y límites (20-nov-2026)
+La [vertical slice 3D autónoma](../juegos/getaway/turno-cero-accion-3d.html) ahora se puede jugar offline con navegador WebGL2; tiene una misión de prueba completa, combate ficticio, patrullas con red de calles, dron, visor y señales. Sus cuatro GLB base originales están incrustados en HTML. [Guía y pruebas](../juegos/getaway/arte3d/README-ACCION-3D.md), [informe de avance](GETAWAY-AVANCE-V03.md). La CI de Playwright comprueba cuatro resoluciones y el flujo desde el inicio hasta la elección del final. Tres GLB articulados más añaden personajes con 12 huesos y 8 clips cada uno: junto a los 42 modelos anteriores suman 45 GLB, publicados como artefacto descargable de Actions.
+
+**No integrado aún:** la reproducción de animaciones `skin` glTF dentro de la escena (los actores del juego emplean movimiento procedural), la geografía GIS auténtica de Manhattan, las APIs de Motor City MC4, arte y texturas PBR de publicación y FPS medidos en teléfonos reales. No confundir esta entrega con un juego completo.
