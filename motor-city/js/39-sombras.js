@@ -29,7 +29,7 @@ const Sombras = {
   _cv: null, _cache: new WeakMap(),
   /* capa de sombras de las vistas 2D. objs: [{ P, h }] · pr: mundo → pantalla · cenital: recorta los techos */
   dibujar2D(g, W, H, objs, pr, v, op = {}) {
-    if (!v || !objs.length || v.fuerza < .03) return 0; const a = (op.alfa ?? .34) * v.fuerza, col = v.calida > .3 ? '38,22,40' : '22,30,52';
+    if (!v || !objs.length || v.fuerza < .03) return 0; const ES = MC.Estilo && MC.Estilo.p, a = (ES && ES.sombra ? ES.sombra[3] / .34 : 1) * (op.alfa ?? .34) * v.fuerza, col = ES && ES.sombra ? ES.sombra.slice(0, 3).join(',') : v.calida > .3 ? '38,22,40' : '22,30,52';   /* 2.7: el color de la sombra según el estilo */
     let dst = g; if (op.cenital) { if (!this._cv || this._cv.width !== W || this._cv.height !== H) this._cv = lienzo(W, H); if (!this._cv) return 0; dst = this._cv.getContext('2d'); dst.setTransform(1, 0, 0, 1, 0, 0); dst.clearRect(0, 0, W, H); }
     dst.save(); dst.fillStyle = op.cenital ? '#000' : 'rgba(' + col + ',' + a.toFixed(3) + ')'; dst.beginPath();
     const kv = Math.round(v.dx * 25) + ',' + Math.round(v.dy * 25);   // el sol se mueve despacio: la sombra de cada edificio se guarda mientras no cambie

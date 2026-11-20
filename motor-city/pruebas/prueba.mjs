@@ -9,7 +9,7 @@ import fs from 'node:fs'; import path from 'node:path'; import vm from 'node:vm'
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), require = createRequire(import.meta.url);
 let bien = 0, mal = 0; const t0 = Date.now();
 const ok = (c, msg, extra) => { if (c) { bien++; console.log('  ✓ ' + msg + (extra !== undefined ? ' ' + JSON.stringify(extra) : '')); } else { mal++; console.log('  ✗ ' + msg + (extra !== undefined ? ' ' + JSON.stringify(extra) : '')); } };
-const ctx = { console, require, process, Buffer, TextDecoder, performance, setTimeout }; ctx.globalThis = ctx; vm.createContext(ctx);
+const ctx = { console, require, process, Buffer, TextDecoder, TextEncoder, performance, setTimeout }; ctx.globalThis = ctx; vm.createContext(ctx);
 if (!fs.existsSync(path.join(RAIZ, 'dist/motor.js'))) { console.error('Falta dist/motor.js: node herramientas/construir.mjs'); process.exit(1); }
 vm.runInContext(fs.readFileSync(path.join(RAIZ, 'dist/motor.js'), 'utf8'), ctx);
 const MC = ctx.MC, cfg = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/medellin.json'), 'utf8')), bin = fs.readFileSync(path.join(RAIZ, 'datos/medellin/mundo.mc4'));
@@ -264,6 +264,25 @@ console.log('15) Terreno: agua, montañas, rocas y límites de paso');
   const nat = MC.Naturaleza.en(Gm, 0, 0, Gm.ancho, Gm.alto), rocas = nat.filter(p => p.t === 'roca').length, enVia = nat.filter(p => p.t !== 'junco' && [4, 5, 6, 7, 14].includes(Gm.suelo(p.x, p.y))).length;
   ok(Gm.generado.lagos > 0 && pts.length === 2 && Math.abs(pts[0] - pts[1]) < 1.5 && Ai.C.some(c => c.tipo === 'mar') && Math.abs(mar) < .5 && rocas > 30 && enVia === 0 && JSON.stringify(nat) === JSON.stringify(MC.Naturaleza.en(Gm, 0, 0, Gm.ancho, Gm.alto)), 'mundos generados: lagos de superficie plana, mar a nivel cero, rocas en la montaña y nada sobre las vías', { lagos: Gm.generado.lagos, rocas, naturaleza: nat.length }); }
 
+console.log('17) Estilos gráficos, vida y exportación a motores potentes (2.7)');
+{ /* estilos: el mismo mundo pasa por el mapa de color de cada estilo */
+  const E = MC.Estilo, verde = MC.hex3('#4caf63'), rojo = MC.hex3('#b5542f'), r = {}; const antes = MC.estilo;
+  MC.estilo = 'manga'; const m = E.rgb(verde); r.manga = Math.abs(m[0] - m[1]) < 1e-6 && Math.abs(m[1] - m[2]) < 1e-6;
+  MC.estilo = 'novela'; const nr = E.rgb(rojo), ng = E.rgb(verde); r.novelaAcento = MC.css3(nr) === MC.css3(MC.hex3(E.p.acento)); r.novelaTonos = E.p.tonos.map(t => MC.css3(MC.hex3(t))).includes(MC.css3(ng));
+  MC.estilo = 'ukiyoe'; const u = E.rgb(verde); r.ukiyoe = E.paleta('hokusai').some(q => Math.hypot(q[0] - u[0], q[1] - u[1], q[2] - u[2]) < .25);
+  MC.estilo = 'comic'; r.alfa = /,0\.5\)$/.test(E.col('rgba(10,20,30,0.5)')); r.estilos = E.lista().length; MC.estilo = antes; r.realistaIgual = E.col('#123456') === '#123456';
+  ok(r.manga && r.novelaAcento && r.novelaTonos && r.ukiyoe && r.alfa && r.estilos >= 8 && r.realistaIgual, 'estilos: manga en grises, novela con tres tonos y un rojo de acento, ukiyo-e con la paleta de Hokusai, y la transparencia se respeta', r); }
+{ /* vida: partículas que nacen y se apagan, bandadas cerca de la cámara, aterrizaje con peso */
+  const V = MC.Vida, E = { t: 0, camara: { x: 500, y: 500, sacudir() { this.s = 1; } }, mundo: M, jugador: { cuerpo: { x: 500, y: 500, a: 0, v: 0, vz: -7, enAire: true } } };
+  V.P.length = 0; V.aves.length = 0; V._t = null; V._pv = null; V.actualizar(E); E.t = .05; V.actualizar(E); E.jugador.cuerpo.enAire = false; E.jugador.cuerpo.vz = 0; E.t = .1; V.actualizar(E);
+  const nacen = V.P.length, aves = V.aves.length, squash = !!E.jugador.cuerpo._squash, sacude = E.camara.s === 1; for (let i = 0; i < 40; i++) { E.t += .1; V.actualizar(E); }
+  ok(nacen > 5 && aves === 3 && squash && sacude && V.P.length < nacen, 'vida: al aterrizar levanta polvo, se aplasta y sacude la cámara; las partículas se apagan; hay bandadas', { nacen, quedan: V.P.length, aves, squash }); }
+{ /* exportar: GLB válido (cabecera, trozos, accesores e índices), alturas RAW 16 y escena */
+  const Lx = M.lugares[0], c0 = [Lx.x - 150, Lx.y - 150, Lx.x + 150, Lx.y + 150].map(Math.round), glb = MC.Exportar.glb(M, c0, { paso: 8 }), dv = new DataView(glb.buffer, glb.byteOffset, glb.byteLength), jl = dv.getUint32(12, true), J = JSON.parse(Buffer.from(glb.subarray(20, 20 + jl)).toString('utf8').trim()), binL = dv.getUint32(20 + jl, true);
+  let idxOk = true; const bin = glb.subarray(28 + jl); for (const me of J.meshes) { const pr = me.primitives[0], ai = J.accessors[pr.indices], ap = J.accessors[pr.attributes.POSITION], bv = J.bufferViews[ai.bufferView], I = new Uint32Array(bin.buffer.slice(bin.byteOffset + bv.byteOffset, bin.byteOffset + bv.byteOffset + bv.byteLength)); for (const k of I) if (k >= ap.count) { idxOk = false; break; } }
+  const A = MC.Exportar.alturas(M, c0, 8), r16 = MC.Exportar.r16(A), esc = MC.Exportar.escena(M, c0);
+  ok(dv.getUint32(0, true) === 0x46546C67 && dv.getUint32(4, true) === 2 && dv.getUint32(8, true) === glb.length && binL === J.buffers[0].byteLength && J.meshes.length >= 3 && idxOk && r16.length === A.w * A.h * 2 && esc.edificios.length > 10 && esc.vias.length > 0, 'exportar: un GLB (glTF 2.0) bien formado, con terreno, edificios, vías y árboles; alturas RAW 16 y escena en JSON', { kb: Math.round(glb.length / 1024), mallas: J.meshes.map(m => m.name), edificios: esc.edificios.length, alturas: A.w + '×' + A.h }); }
+
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
@@ -304,6 +323,9 @@ if (process.argv.includes('--navegador')) {
     await p.waitForTimeout(2000); const movio = await p.evaluate(c => +Math.hypot(MANDADOS.cuerpo.x - c.x, MANDADOS.cuerpo.y - c.y).toFixed(1), a); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     const arte = await p.evaluate(async () => { for (let i = 0; i < 100 && !MC.Sprites.atlases.get('gemini_u_noche'); i++) await new Promise(q => setTimeout(q, 50)); MANDADOS.ponVista('maqueta'); MANDADOS.reloj.min = 20.5 * 60; await new Promise(q => setTimeout(q, 700)); const arboles = MC.Arboleda._sp.size; MANDADOS.ponVista('cenital'); const L = [...MC.Sprites.atlases.values()]; return { arboles, piel: MC.arte.activa, atlas: L.filter(A => A.listo && A.id.startsWith('gemini')).length, faltan: MC.Pieles.faltan().length, icono: MC.Pieles.icono('vista_cenital').startsWith('<svg') }; });
     const r = { tutorialOpcional: !tuto && opcional, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio, arte };
+    const est = await p.evaluate(async () => { const out = {}; for (const e of MC.Estilo.lista().map(q => q.id)) { MANDADOS.ponEstilo(e); for (const v of ['maqueta', 'cenital']) { MANDADOS.ponVista(v); await new Promise(q => setTimeout(q, 350)); } out[e] = +MANDADOS.vistas.ms.toFixed(1); } MANDADOS.ponEstilo('realista'); return out; });
+    r.estilos = est;
+    ok(Object.keys(est).length >= 8 && Object.values(est).every(x => x >= 0 && x < 60) && !errs.length, 'Mandados: los 8 estilos gráficos (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e y acuarela) dibujan sin errores', est);
     ok(r.tutorialOpcional && arte.arboles > 0 && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && arte.piel === 'gemini' && arte.atlas >= 10 && arte.faltan === 0 && arte.icono && !errs.length, 'Mandados en un celular táctil: el tutorial es opcional, todo libre y gratis, árboles de pie, joystick visible que mueve, cámara legible, el primer mandado cerca y el arte de Gemini cargado (de día y de noche)', r);
     await b.close();
   }

@@ -1,5 +1,56 @@
 # Bitácora de Motor City
 
+## 20‑nov‑2026 · 2.7.0 · Estilos gráficos, peso y vida, y motores potentes (Claude Code)
+**Pedido:**
+- 14 reels de referencia;
+- «Necesito peso y vida en el motor, y que se pueda adaptar a motores más potentes.»
+- «Estéticas de cómic, manga, anime y novelas gráficas.»
+- «Investiga y aprende de las mejores obras visuales e inspírate en ellas. Recopila y adapta arte de verdad.»
+
+**Lo que se hizo:**
+1. **Reels:** se leyeron 4 de 14 sin iniciar sesión:
+   - un RPG inspirado en Dragon Ball;
+   - *Cairn*;
+   - un *rover* en la web;
+   - carreras cinematográficas tipo Dakar.
+
+   Los otros 10 quedan para Gemini (G‑H7).
+2. **`MC.Estilo`** (`js/16-estilos.js`): 8 estilos hechos de datos (mapa de color, tinta, trama, sombra, árboles, cielo y pase final):
+   - realista y clásico;
+   - **cómic**: tinta, semitono y onomatopeyas;
+   - **manga**: grises, tramado y líneas de velocidad;
+   - **anime**: *cel* en 6 bandas, línea fina, sombras azul violeta y cielo de Shinkai;
+   - **novela gráfica**: tres tonos de papel y tinta, sombras negras, árboles en silueta y el rojo como acento;
+   - **ukiyo-e**: paleta de Hokusai;
+   - **acuarela**: papel y pigmento en el borde.
+
+   Las losas, los muros, los techos, las sombras, el cielo y los árboles pasan por el estilo. En Mandados: 🗺️ Vista → 🖌️ Estilo.
+3. **Arte de verdad:** paletas de 10 obras de dominio público bajadas de Wikimedia Commons (Hokusai, Hiroshige, Van Gogh, Monet, McCay, Mucha, Doré, la Comisión Corográfica y Winslow Homer), en `arte/dominio-publico/`. En el repositorio solo quedan los colores, con fuente y licencia.
+4. **`MC.Vida`** (`js/88-vida.js`):
+   - al aterrizar, el cuerpo se aplasta, la cámara se sacude según la caída y salta polvo;
+   - el vehículo cabecea al acelerar y al frenar;
+   - en los choques hay **hitstop** (60 ms; `MC.Bucle`);
+   - bandadas de garzas y palomas con su sombra, que aletean a dos cuadros;
+   - hojas que caen y salpicaduras;
+   - el viento mece las copas de cerca;
+   - onomatopeyas en los estilos dibujados.
+5. **`MC.Exportar` y `MC.Puente`** (`js/89-exportar.js`) y `node motor.mjs exportar`: el mundo sale en **glTF 2.0** (terreno, edificios, vías y árboles, con colores por vértice), con alturas RAW 16 y escena JSON. El GLB de Guatapé:
+   - pasa el **validador de Khronos con 0 errores y 0 avisos**;
+   - three.js lo dibuja tal cual.
+6. **Investigación:** `docs/INSPIRACION-VISUAL.md` (Spider‑Verse, Arcane, Shinkai, Ghibli, *Sin City*, Moebius y *ligne claire*, *Obra Dinn*, Vlambeer, Disney y ukiyo-e, con fuentes) y `docs/MOTORES-POTENTES.md` (Godot, Unity, Unreal, Blender y three.js).
+7. **Tareas nuevas** en `TAREAS-IA.md`:
+   - Gemini: G‑H7 (describir los reels) y G‑H8 (40 obras de dominio público, también colombianas);
+   - ChatGPT: C‑A8 (láminas guía de los estilos) y C‑A9 (personaje en *cel*);
+   - Codex: C‑M18 (Godot, Unity, Unreal y una vista three.js o WebGPU) y C‑M19 (1 bit con trama estable).
+
+**Probado** (123 pruebas):
+- estilos (manga en grises, novela con acento, ukiyo-e con la paleta de Hokusai);
+- vida (aterrizaje, partículas y bandadas);
+- un GLB bien formado;
+- los 8 estilos en Mandados, sin errores.
+
+La maqueta de Medellín, con la CPU 4× más lenta, mide 31 ms.
+
 ## 20‑nov‑2026 · 2.6.0 · Estilo realista familiar, árboles de pie y tareas de cada IA (Claude Code)
 **Pedido:**
 - «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo.»

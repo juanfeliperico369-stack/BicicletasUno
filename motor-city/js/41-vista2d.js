@@ -32,9 +32,9 @@ const Vista2D = {
     /* ---------- suelo ---------- */
     const sinTechos = modo !== 'cenital', pixel = !!op.pixel, dePie = sinTechos && z >= ((E.calidad ?? 1) >= .9 ? 3.2 : 4.2) && op.arboles !== false,   /* árboles de pie de cerca; con calidad media, desde un poco más cerca */ Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
     let res = z; const RES = [.0625, .125, .25, .5, 1, 2, 3, 4, 6]; res = RES.find(r => r >= res * (pixel ? .9 : .7)) || 6;   /* z ya está en píxeles del lienzo por metro; de cerca, losas de hasta 6 px/m */ if (Ls === E.losasLejos) res = Math.min(res, .25);
-    g.save(); g.fillStyle = '#5e8c4a'; g.fillRect(0, 0, W, H);
+    g.save(); g.fillStyle = Estilo.col('#5e8c4a'); g.fillRect(0, 0, W, H);
     if (E._franja) {   /* de lado: cielo arriba de la franja y el corte de la tierra abajo (casa de muñecas) */
-      const Rp = E._franja.Rp, yF = H / 2 + oy - Rp * z * P.k, yC = H / 2 + oy + Rp * z * P.k, cie = E.cielo || { top: [.4, .6, .9], hor: [.8, .88, .95] };
+      const Rp = E._franja.Rp, yF = H / 2 + oy - Rp * z * P.k, yC = H / 2 + oy + Rp * z * P.k, ES0 = Estilo.p, cie = ES0.cielo ? { top: mez3(ES0.cielo[0], (E.cielo || {}).top || ES0.cielo[0], .25), hor: mez3(ES0.cielo[1], (E.cielo || {}).hor || ES0.cielo[1], .25) } : (E.cielo || { top: [.4, .6, .9], hor: [.8, .88, .95] });   /* el cielo del estilo (de Shinkai en el anime), con algo de la hora */
       const gs = g.createLinearGradient(0, 0, 0, Math.max(1, yF)); gs.addColorStop(0, css3(cie.top)); gs.addColorStop(1, css3(cie.hor)); g.fillStyle = gs; g.fillRect(0, 0, W, Math.max(0, yF));
       const gt = g.createLinearGradient(0, yC, 0, H); gt.addColorStop(0, '#6b4f36'); gt.addColorStop(.15, '#5a4230'); gt.addColorStop(1, '#2e2219'); g.fillStyle = gt; g.fillRect(0, yC, W, H - yC);
       g.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 40; i++) g.fillRect(h2(i, 1, 9) * W, yC + 6 + h2(i, 2, 9) * (H - yC), 2 + h2(i, 3, 9) * 4, 2);
@@ -51,7 +51,7 @@ const Vista2D = {
     const noche0 = E.cielo ? E.cielo.noche : 0; if (noche0 > .02) { g.fillStyle = 'rgba(8,18,52,' + (noche0 * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     /* ---------- lo que se levanta: edificios, pasos elevados, vehículos y gente, en orden de profundidad ---------- */
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
-    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H, real: MC.estilo !== 'clasico' }, luces = [];
+    const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H, real: !!Estilo.p.rudeza, ES: Estilo.p, mapa: !Estilo.p.rudeza && MC.estilo !== 'clasico' }, luces = [];
     const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
     /* sombras del sol de esta hora (también de edificios que están fuera de la pantalla y la alcanzan) */
     const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3; dibCtx.sv = conSombra ? sv : null;
@@ -93,6 +93,9 @@ const Vista2D = {
     Sombras.luces(g, luces, noche);   // los charcos de luz de los postes, encima de todo (como luz que se suma)
     /* cables del Metrocable: el cable entre torres por encima de todo */
     if (E.cables) this.cables(dibCtx, E.cables);
+    /* 2.7: el pase final del estilo (manga en grises, líneas de velocidad) y la vida (partículas, pájaros, onomatopeyas) */
+    if (MC.Vida && op.vida !== false) MC.Vida.dibujar(dibCtx);
+    if (dibCtx.mapa) Estilo.final(g, W, H, E);
     /* etiquetas (estaciones, lugares) */
     if (op.etiquetas !== false) this.etiquetas(dibCtx);
     return faltan;
@@ -104,8 +107,8 @@ const Vista2D = {
     let area = 0; for (let i = 0; i < n; i++) { const j = (i + 1) % n; area += B[i][0] * B[j][1] - B[j][0] * B[i][1]; } const sg = area > 0 ? 1 : -1;
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n, ex = B[j][0] - B[i][0], ey = B[j][1] - B[i][1], ny = ex * sg; if (ny <= 0) continue;   // el muro mira hacia abajo de la pantalla: se ve
-      const lz = clamp(.72 + .28 * (ey * sg / (Math.hypot(ex, ey) || 1)) * D.luzX + .1, .55, 1.05) - noche * .45;
-      g.fillStyle = tono(muro, lz - 1); g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
+      const lz = Estilo.luz(clamp(.72 + .28 * (ey * sg / (Math.hypot(ex, ey) || 1)) * D.luzX + .1, .55, 1.05) - noche * .45);
+      g.fillStyle = tono(D.mapa ? Estilo.col(muro) : muro, lz - 1); g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill(); if (D.ES.tinta && z > 1.2) { g.strokeStyle = D.ES.tintaColor; g.lineWidth = Math.max(1, D.ES.tinta * Math.min(1.4, z / 6)); g.lineJoin = 'round'; g.stroke(); }   /* 2.7: línea clara */
       if (D.real && z > 3.5) { const hb = Math.min(1, (z1 - z0) * .25) / (z1 - z0), ha = .35 / (z1 - z0), Bi = [B[i][0] + (T[i][0] - B[i][0]) * hb, B[i][1] + (T[i][1] - B[i][1]) * hb], Bj = [B[j][0] + (T[j][0] - B[j][0]) * hb, B[j][1] + (T[j][1] - B[j][1]) * hb], Ti = [T[i][0] - (T[i][0] - B[i][0]) * ha, T[i][1] - (T[i][1] - B[i][1]) * ha], Tj = [T[j][0] - (T[j][0] - B[j][0]) * ha, T[j][1] - (T[j][1] - B[j][1]) * ha];   /* 2.6: humedad y salpicado en la base del muro; sombra bajo el alero */
         g.fillStyle = 'rgba(34,26,18,.24)'; g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(Bj[0], Bj[1]); g.lineTo(Bi[0], Bi[1]); g.closePath(); g.fill();
         g.fillStyle = 'rgba(0,0,0,.13)'; g.beginPath(); g.moveTo(T[i][0], T[i][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(Tj[0], Tj[1]); g.lineTo(Ti[0], Ti[1]); g.closePath(); g.fill(); }
@@ -120,7 +123,7 @@ const Vista2D = {
           g.fillStyle = lit ? 'rgba(255,214,120,' + (.55 + noche * .4) + ')' : 'rgba(25,35,50,.32)'; g.fillRect(x, y, w, Math.max(1, z * 1.2));
           if (tipo === 'balcon') { g.fillStyle = 'rgba(40,44,52,.55)'; g.fillRect(x - w * .2, y + Math.max(1, z * 1.2), w * 1.4, Math.max(1, z * .3)); } } } }
     }
-    g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill();
+    if (D.mapa) techo = Estilo.col(techo); g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill(); if (D.ES.tinta && z > 1.2) { g.strokeStyle = D.ES.tintaColor; g.lineWidth = Math.max(1, D.ES.tinta * Math.min(1.4, z / 6)); g.stroke(); }
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();
   },
   edificio(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 4.5 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
@@ -156,7 +159,13 @@ const Vista2D = {
     if (D.modo === 'cenital') { const J = Personaje.pose('camina', p.fase); J.fase = p.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, p.a + P.yaw); return; }
     const J = Personaje.pose('camina', p.fase, { alto: A.alto }), dir = Math.cos(p.a + P.yaw) >= 0 ? 1 : -1; (MC.arte.f('personajeLado'))(g, J, A, x, y, z * P.hk, dir);
   },
+  /* 2.7 · peso: al aterrizar el cuerpo se aplasta y vuelve (squash and stretch), desde los pies */
   jugador(D, j) {
+    const C = j.cuerpo, q = C && C._squash; if (!q) return this._jugador(D, j);
+    const u = ((D.E.t || 0) - q.t0) / .32; if (u >= 1 || u < 0) { C._squash = null; return this._jugador(D, j); }
+    const k = q.k * Math.sin(u * Math.PI) * Math.exp(-u * 2.2) * .9, [x, y] = D.pr(C.x, C.y, (C.zPaso || 0) + (C.z || 0)); D.g.save(); D.g.translate(x, y); D.g.scale(1 + k * .3, 1 - k * .3); D.g.translate(-x, -y); this._jugador(D, j); D.g.restore();
+  },
+  _jugador(D, j) {
     const { g, pr, z, P } = D, C = j.cuerpo, A = j.aspecto, V = C.veh, [x, y] = pr(C.x, C.y, C.zPaso + C.z), fn = MC.arte.f('jugador');
     if (fn && fn(g, j, x, y, z, P, D) !== false) return;
     g.fillStyle = 'rgba(0,0,0,.3)'; const [sx, sy] = pr(C.x, C.y, C.zPaso); g.beginPath(); g.ellipse(sx, sy, Math.max(2, z * .7), Math.max(1.2, z * .4 * P.k), 0, 0, TAU); g.fill();
@@ -171,8 +180,9 @@ const Vista2D = {
       return;
     }
     const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
+    const cab = V.clase !== 'pie' && !C.enAire ? clamp(-(C._acel || 0) * .011, -.1, .1) * dir : 0; if (cab) { g.save(); g.translate(x, y); g.rotate(cab); g.translate(-x, -y); }   /* 2.7 · peso: cabecea al acelerar y al frenar */
     const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
-    const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir);
+    const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir); if (cab) g.restore();
     /* en el agua: el agua tapa las piernas (vadeando) o casi todo el cuerpo (nadando), con su onda */
     if (C.nadando || C.vadeando) {
       /* la superficie del agua tapa lo que está debajo: las piernas al vadear, el cuerpo al nadar y todo al bucear */

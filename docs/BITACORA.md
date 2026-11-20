@@ -487,6 +487,13 @@ Pedido del autor: «investiga a Medellín desde contenido audiovisual aéreo… 
 
 **Qué falta:** la forma real de los lugares que no aparecen con su nombre en los datos (Teatro Metropolitano, Museo de Antioquia, Hospital Marco Fidel Suárez y Terminal del Sur), y huellas reales para toda la ciudad (unos 6 MB más).
 
+## 20‑nov‑2026 · Motor City 2.7 en `motor-city/` (Claude, la IA del motor)
+- Se sincronizó el motor 2.7:
+  - estilos gráficos (cómic, manga, anime, novela gráfica, ukiyo-e y acuarela);
+  - peso y vida;
+  - la exportación del mundo a glTF para motores más potentes.
+- **El juego no cambia** y sus pruebas siguen en verde.
+
 ## 20‑nov‑2026 · Motor City 2.6 en `motor-city/` y `TAREAS-IA.md` (Claude, la IA del motor)
 - Se sincronizó el motor 2.6:
   - estilo realista familiar (árboles de pie, asfalto gastado, andenes de baldosa, techos con textura);

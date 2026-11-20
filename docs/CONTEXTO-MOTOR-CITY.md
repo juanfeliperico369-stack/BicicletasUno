@@ -1,16 +1,21 @@
-# Motor City 2.6 en Juega EnCicla · qué cambió y qué sigue
+# Motor City 2.7 en Juega EnCicla · qué cambió y qué sigue
 
 **19‑nov‑2026 · lo hizo Claude (la IA del motor, Claude Code), a pedido del autor.** Esta nota es para la IA de Juega EnCicla.
 La fuente de verdad del motor es `juanfeliperico369-stack/motorcity`. Se juega en la web en <https://juanfeliperico369-stack.github.io/motorcity/>.
 
 ## Qué cambió en este repositorio
-- **El motor 2.6 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
+- **El motor 2.7 está en `motor-city/`** (el nombre es solo «Motor City»; nada de «del Valle»).
 - **`motor-valle/` volvió exactamente a como estaba antes** de la sincronización 2.0, en el commit `dc9c301`. El juego no cambia, compila igual y sus pruebas siguen en verde.
 - Bórralo solo cuando termines de migrar a `motor-city/`.
 - Si algo del motor te falta o está mal, **no lo cambies en tu copia**:
   1. pídelo con `node motor-city/motor.mjs reporte "título" --juego encicla` (queda en `motorcity/reportes/`);
   2. o trabaja en `motorcity` siguiendo su `CONTRIBUIR.md`;
   3. la IA del motor lo une, sube la versión y sincroniza.
+
+## Lo nuevo de la 2.7 (estilos, peso y vida, y motores potentes)
+- **Estilos gráficos** (`MC.estilo`): realista, clásico, **cómic, manga, anime, novela gráfica, ukiyo-e y acuarela**, con tinta, tramas y paletas de obras de dominio público. Tu juego puede elegir uno o dejar que el jugador escoja.
+- **Peso y vida** (`MC.Vida`): aterrizajes con aplastamiento, hitstop, bandadas, hojas, polvo y salpicaduras. Sale solo en `MC.Vistas`.
+- **Motores potentes:** `node motor-city/motor.mjs exportar <mundo>` saca el mundo en glTF para Godot, Unity, Unreal o Blender (`motor-city/docs/MOTORES-POTENTES.md`).
 
 ## Lo nuevo de la 2.6 (estilo realista familiar)
 - **Árboles de pie** (`MC.Arboleda`): en la maqueta, la oblicua y la lateral ya no se ven como tapetes en el piso. Desde arriba tienen volumen. Son guayacanes florecidos, ceibas, mangos…

@@ -9,11 +9,11 @@
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **2.6.0** · 20‑nov‑2026 · **119 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **2.7.0** · 20‑nov‑2026 · **123 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ## Resumen
-- **Hechos:** 64 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 2 🟡. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos:** 69 pedidos ✅.
+- **Hechos, pero falta algo de afuera:** 3 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -114,7 +114,17 @@ Versión **2.6.0** · 20‑nov‑2026 · **119 pruebas en verde** (`node motor.m
 | «Gemini (Antigravity) pasa a *hydrogen*: lo fácil» | ✅ | G‑H1…G‑H6 en `TAREAS-IA.md`, con `node motor.mjs capturas` y `revisar-arte` para que sean comprobables. |
 | «ChatGPT (Codex) sigue con *astra*: mejores pedidos; mejores imágenes» | ✅ | Arte C‑A1…C‑A7 y código C‑M13, C‑M16 y C‑M17 (más los C‑M de antes) en `TAREAS-IA.md` y §10.2. |
 
-## 7. Lo que falta, y a quién le toca
+## 7. Estilos, peso y vida, y motores potentes (2.7, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| «Peso y vida en el motor» | ✅ | `js/88-vida.js` (`MC.Vida`): aterrizaje con aplastamiento, sacudida y polvo; hitstop; cabeceo del vehículo; bandadas; hojas; salpicaduras; viento en las copas. |
+| «Que se pueda adaptar a motores más potentes» | ✅ | `js/89-exportar.js` (`MC.Exportar`, `MC.Puente`), `node motor.mjs exportar` y `docs/MOTORES-POTENTES.md`. El GLB pasa el validador de Khronos y three.js lo dibuja. |
+| «Estéticas de cómic, manga, anime y novela gráfica» | ✅ | `js/16-estilos.js`: cómic, manga, anime, novela gráfica, ukiyo-e y acuarela, más realista y clásico. |
+| «Investiga y aprende de las mejores obras visuales» | ✅ | `docs/INSPIRACION-VISUAL.md`, con fuentes. |
+| «Recopila y adapta arte de verdad» | ✅ | Paletas de 10 obras de dominio público en `arte/dominio-publico/` (sin copiar arte con derechos). |
+| Las referencias (14 reels) | 🟡 | Se leyeron 4; los otros 10 piden iniciar sesión. Los describe Gemini (G‑H7). |
+
+## 8. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |

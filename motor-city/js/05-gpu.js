@@ -70,7 +70,8 @@ class Bucle {
   _cuadro(t) {
     if (!this.corre) return; let dt = (t - this.t0) / 1000; this.t0 = t; if (!(dt > 0)) dt = 0; dt = Math.min(dt, .25);   // tope: nunca más de 1/4 s de golpe
     this.acum += dt; let n = 0;
-    while (this.acum >= this.paso && n < this.maxPasos) { this.actualizar && this.actualizar(this.paso); this.acum -= this.paso; n++; this.pasos++; }
+    if (MC._pausaImpacto > 0) { MC._pausaImpacto -= dt; this.acum = 0; }   /* 2.7 · hitstop: tras un golpe, el mundo se congela un instante (se sigue dibujando) */
+    else while (this.acum >= this.paso && n < this.maxPasos) { this.actualizar && this.actualizar(this.paso); this.acum -= this.paso; n++; this.pasos++; }
     if (n === this.maxPasos) this.acum = 0;   // espiral de la muerte: se suelta el atraso
     this.fps = this.fps * .95 + (dt > 0 ? 1 / dt : 60) * .05;
     const espera = this.limiteFps ? 1000 / this.limiteFps - 1 : 0;

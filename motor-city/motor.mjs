@@ -13,6 +13,7 @@
      node motor.mjs documento                                  arma dist/MOTOR-CITY-TODO.md (el documento único + anexos)
      node motor.mjs capturas [--web]                           las fotos estándar de Mandados en dist/capturas/ (revisión visual)
      node motor.mjs revisar-arte arte/ID                       revisa un paquete de arte contra las reglas (§10)
+     node motor.mjs exportar ID [--centro x,y --lado m]       el mundo en glTF (GLB), alturas RAW 16 y escena JSON (Godot, Unity, Unreal…)
      python3 geo/territorio.py --id ID --bbox=lon0,latS,lon1,latN   craquea cualquier lugar del mundo a datos/ID/mundo.mc4
    Mapa 1.x (sigue igual, para los datos que hoy leen los juegos):
    ---------------------------------------------------------------------
@@ -59,6 +60,7 @@ else if (cmd === 'reporte') nodo('herramientas/reporte.mjs', args.slice(1));
 else if (cmd === 'documento') nodo('herramientas/documento.mjs', args.slice(1));
 else if (cmd === 'capturas') nodo('herramientas/capturas.mjs', args.slice(1));
 else if (cmd === 'revisar-arte') nodo('herramientas/revisar-arte.mjs', args.slice(1));
+else if (cmd === 'exportar') nodo('herramientas/exportar.mjs', args.slice(1));
 else if (cmd === 'fuentes') { py('fetch.py'); py('oficial.py'); }
 else if (cmd === 'encicla') {
   const out = prueba ? salida('encicla') : path.join(ROOT, 'src', 'data');

@@ -9,7 +9,8 @@
 |---|---|
 | **Jugar en la web** | <https://juanfeliperico369-stack.github.io/motorcity/> · minijuego **Mandados**: [dist/juegos/mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
 | **Documento único** (contexto, código a usar y plan de cada IA) | [`docs/DOCUMENTO-UNICO.md`](docs/DOCUMENTO-UNICO.md) · todo junto con anexos: `dist/MOTOR-CITY-TODO.md` |
-| Versión | **2.6.0** · `VERSION.json` |
+| Versión | **2.7.0** · `VERSION.json` |
+| Inspiración visual y motores potentes | [`docs/INSPIRACION-VISUAL.md`](docs/INSPIRACION-VISUAL.md) · [`docs/MOTORES-POTENTES.md`](docs/MOTORES-POTENTES.md) |
 | **Tareas de cada IA** («mira el repositorio y haz tu parte») | [`TAREAS-IA.md`](TAREAS-IA.md) |
 | **¿Está todo lo pedido?** | [`docs/PEDIDOS.md`](docs/PEDIDOS.md): cada pedido, su estado y dónde quedó |
 | Cómo se usa | [`docs/MANUAL.md`](docs/MANUAL.md) |
@@ -74,11 +75,15 @@
   - tejas de barro y planchas con humedad, y muros con la base sucia;
   - tutorial opcional;
   - el estilo clásico (plano) sigue disponible.
+- **2.7, estilos, peso y motores potentes:**
+  - 8 estilos: realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e y acuarela, con paletas de obras de dominio público;
+  - peso y vida: aterrizajes con aplastamiento, hitstop, bandadas, hojas, polvo y salpicaduras;
+  - el mundo exportado en glTF 2.0, alturas RAW 16 y escena JSON para Godot, Unity, Unreal, Blender y three.js.
 
 ## Trabajar en el motor
 ```bash
 node motor.mjs construir            # dist/motor.js, los mundos, dist/motor-city.html y dist/juegos/*.html
-node motor.mjs prueba --navegador   # 119 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
+node motor.mjs prueba --navegador   # 123 pruebas: ciencia, mundo, terreno, física, vistas, casa, lugares, historias, cosmos, ciudad y Mandados
 node motor.mjs documento            # dist/MOTOR-CITY-TODO.md: el documento único con todo
 node motor.mjs nuevo juego nombre   # un juego nuevo desde la plantilla
 node motor.mjs reporte "título" --juego encicla   # obligatorio si otra IA cambia el motor

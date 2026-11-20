@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.6.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 2.7.0 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -8,7 +8,7 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.6.0** · 20‑nov‑2026 |
+> | Versión | **Motor City 2.7.0** · 20‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
@@ -63,12 +63,13 @@
 | **2.4** | Montañas, rocas y tipos de terreno; agua en **lagos, ríos, playa y mar**; **límites de paso verosímiles** («el personaje pasa por encima de cosas que no debería») | **`MC.Terreno`**: agua por tipo y profundidad; material y pendiente; **reglas de paso** por vehículo con su motivo (vadear, nadar, barrancos, roca, monte, arena, nieve, borde del mundo); **obstáculos reales** (emblemáticos, árboles de las losas, postes, bancas, rocas, tráfico y gente). **`MC.Naturaleza`**: rocas, palmas, frailejones, arbustos y juncos. **Lagos** en los mundos generados (llenado por prioridad) y mar a nivel 0. **Agua y roca en las losas**: color por profundidad, espuma en la orilla y roca en las laderas empinadas. Brillos del agua. El personaje se ve vadeando o nadando. 115 pruebas. |
 | **2.5** | «Añade la capacidad de poder entrar en el agua» | **Entrar al agua de verdad:**<ul><li>con un vehículo, al empujar hacia el agua honda (o con «🏊 Al agua») uno se baja, el vehículo queda **parqueado en la orilla** y se entra nadando;</li><li>se **bucea** («🤿», o Z/Ctrl) con **aire limitado** (~35 s); sin aire se sube sola;</li><li>el cuerpo tiene pose de **nado** (crol) y de **buceo** (rana);</li><li>bajo el agua todo se tiñe de azul, con rayos de luz y burbujas;</li><li>se sale por la orilla y se **vuelve a subir** al vehículo;</li><li>**lancha**: embarcar en el agua honda más cercana y «⚓ A tierra» (queda amarrada).</li></ul>117 pruebas. |
 | **2.5.1** | «El minijuego es injugable: no hay controles de verdad, no se puede mover nada; hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos?» | **Lo que pasaba:** el personaje sí se movía, pero la cámara estaba tan lejos que medía 3 píxeles y el joystick no se veía. **Lo que se hizo:**<ul><li>**cámara cerca**: unos 45 m en el lado corto de la pantalla;</li><li>**marca del jugador** (anillo y flecha);</li><li>**joystick visible** con guía, y **botones de acción** para el pulgar: ⤒ saltar, ⚡ turbo, y 🔽 🔼 en el agua o en el aire;</li><li>**flecha al objetivo** con la distancia, siempre en la zona libre;</li><li>**tutorial** al empezar;</li><li>**modo libre** por defecto: todo gratis, con los 34 vehículos (pie, bici, moto, carro, bus, avión y lancha);</li><li>menús **Vista** y **Ajustes**;</li><li>el **primer mandado cerca**;</li><li>en computador, flechas o WASD;</li><li>la lista **`docs/PEDIDOS.md`**.</li></ul>**Llegó la entrega de Gemini** (G‑M0…G‑M15) y quedó integrada:<ul><li>`arte/gemini/` y **`MC.Pieles`**, con respaldo procedural en cada gancho;</li><li>en Mandados se usan árboles del trópico, props, rocas, fachadas y muebles, y el selector 🎨 Arte;</li><li>también se corrigió lo válido de su auditoría.</li></ul>118 pruebas, con una nueva que juega en un celular táctil. |
-| **2.6** (esta) | «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo. Deja el estilo *family friendly*, pero con más realismo, rudeza y crudeza. Los tutoriales deben ser opcionales. Copia todos los pedidos en los repositorios. Gemini con Antigravity pasa a *hydrogen*: déjale lo fácil. ChatGPT con Codex sigue con *astra*: encárgale lo mejor; GPT genera mejores imágenes.» | **Estilo realista familiar** (`MC.estilo = 'realista'`; el clásico sigue disponible):<ul><li>**`MC.Arboleda`**: los árboles se levantan en la maqueta, la oblicua y la lateral (tronco, ramas, copa con luz y sombra según el sol). Desde arriba tienen volumen. Hay 6 especies del trópico: guayacanes florecidos, ceiba, mango, urapán y monte. Son los mismos con que se choca;</li><li>**`Rudeza`**, horneada en las losas:<ul><li>asfalto con parches, grietas, manchas de aceite y alcantarillas;</li><li>andén de baldosa con bordillo;</li><li>pasto con parches secos;</li><li>tejas de barro en hileras y planchas con humedad;</li><li>grano;</li><li>paleta menos saturada;</li></ul></li><li>los muros con la base sucia y sombra bajo el alero;</li><li>el **tutorial es opcional** (en la portada y en Ajustes);</li><li>el gancho de arte `arbol`;</li><li>`node motor.mjs capturas` y `node motor.mjs revisar-arte`;</li><li>**`TAREAS-IA.md`** en los cuatro repositorios, con el reparto nuevo.</li></ul>119 pruebas. La maqueta de Medellín queda por debajo de 40 ms con la CPU 4× más lenta. |
+| **2.6** | «Haz una revolución para que los gráficos sean más realistas: desde la vista cenital los árboles se ven como tapetes en el suelo. Deja el estilo *family friendly*, pero con más realismo, rudeza y crudeza. Los tutoriales deben ser opcionales. Copia todos los pedidos en los repositorios. Gemini con Antigravity pasa a *hydrogen*: déjale lo fácil. ChatGPT con Codex sigue con *astra*: encárgale lo mejor; GPT genera mejores imágenes.» | **Estilo realista familiar** (`MC.estilo = 'realista'`; el clásico sigue disponible):<ul><li>**`MC.Arboleda`**: los árboles se levantan en la maqueta, la oblicua y la lateral (tronco, ramas, copa con luz y sombra según el sol). Desde arriba tienen volumen. Hay 6 especies del trópico: guayacanes florecidos, ceiba, mango, urapán y monte. Son los mismos con que se choca;</li><li>**`Rudeza`**, horneada en las losas:<ul><li>asfalto con parches, grietas, manchas de aceite y alcantarillas;</li><li>andén de baldosa con bordillo;</li><li>pasto con parches secos;</li><li>tejas de barro en hileras y planchas con humedad;</li><li>grano;</li><li>paleta menos saturada;</li></ul></li><li>los muros con la base sucia y sombra bajo el alero;</li><li>el **tutorial es opcional** (en la portada y en Ajustes);</li><li>el gancho de arte `arbol`;</li><li>`node motor.mjs capturas` y `node motor.mjs revisar-arte`;</li><li>**`TAREAS-IA.md`** en los cuatro repositorios, con el reparto nuevo.</li></ul>119 pruebas. La maqueta de Medellín queda por debajo de 40 ms con la CPU 4× más lenta. |
+| **2.7** (esta) | «Necesito peso y vida en el motor, y que se pueda adaptar a motores más potentes. Estéticas de cómic, manga, anime y novela gráfica. Investiga y aprende de las mejores obras visuales, inspírate en ellas, y recopila y adapta arte de verdad.» Y 14 reels de referencia. | **Estilos gráficos** (`MC.Estilo`, `js/16-estilos.js`). Son 8: realista, clásico, **cómic** (tinta, semitono y onomatopeyas), **manga** (grises, tramado y líneas de velocidad), **anime** (*cel* y cielos de Shinkai), **novela gráfica** (noir: tres tonos y un rojo de acento), **ukiyo-e** y **acuarela**. Cada uno tiene su mapa de color, su tinta, su trama, su sombra, sus árboles y su cielo. Las paletas salen de **obras de dominio público** (Hokusai, Hiroshige, Doré, Winslow Homer, la Comisión Corográfica…; `arte/dominio-publico/`).<br>**Peso y vida** (`MC.Vida`):<ul><li>aterrizaje con aplastamiento, sacudida y polvo;</li><li>cabeceo del vehículo al acelerar y al frenar;</li><li>**hitstop** en los choques;</li><li>bandadas con su sombra, hojas que caen y salpicaduras;</li><li>el viento mece las copas.</li></ul>**Motores potentes** (`MC.Exportar`, `MC.Puente`): el mundo en **glTF 2.0** (validador de Khronos: 0 errores; abierto en three.js), alturas RAW 16 y escena JSON para Godot, Unity, Unreal y Blender; y el estado vivo para otro motor.<br>**Investigación:** `docs/INSPIRACION-VISUAL.md` y `docs/MOTORES-POTENTES.md`.<br>123 pruebas. |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **119 en verde** (`node motor.mjs prueba --navegador`): 112 en Node y 7 en Chromium. Una de ellas juega Mandados en un celular táctil. |
+| **Pruebas** | **123 en verde** (`node motor.mjs prueba --navegador`): 115 en Node y 8 en Chromium. Una juega Mandados en un celular táctil y otra recorre los 8 estilos. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -202,6 +203,18 @@ MC.Arboleda.en(mundo, x0, y0, x1, y1)   // los árboles: { x, y, r, h, e (especi
 MC.arte.registrar('mijuego', { arbol(g, t, vista, x, y, pxPorMetro, D) { return MC.Sprites.dibujar(g, 'mijuego/arbol_' + t.e + '_' + vista, x, y, pxPorMetro, { metros: vista === 'lado' ? t.h : t.r * 2 }); } });
 ```
 - Los árboles van de pie desde un zoom de 3,2 px por metro (4,2 con calidad media), y antes se hornean desde arriba en las losas.
+
+**2.7 · estilos gráficos, peso y vida, y motores potentes:**
+```js
+MC.estilo = 'comic';            // realista, clasico, comic, manga, anime, novela, ukiyoe, acuarela (MC.Estilo.lista())
+MC.Estilo.col('#c25f37')        // un color pasado por el estilo activo; MC.Estilo.rgb([r, g, b]) en 0..1
+// un estilo nuevo es un objeto de datos en MC.ESTILOS_GRAF: { n, icono, saturar, brillo, contraste, gris, niveles,
+//   paleta, mezcla, umbral, tonos, acento, tinta, tintaColor, trama: 'puntos'|'tono'|'rayado'|'papel', arbol: 'real'|'cel'|'tono'|'silueta'|'acuarela',
+//   sombra: [r, g, b, a], cielo: [[arriba], [horizonte]], lineas: color, onomatopeyas: true, final: 'gris' }
+MC.Vida.emitir('polvo', x, y, 8, { vel: 2 }); MC.Vida.onomatopeya(x, y, '¡ZAS!'); MC.Vida.impacto(.06);   // peso y vida
+const glb = MC.Exportar.glb(mundo, [x0, y0, x1, y1]);   // glTF 2.0 binario; MC.Exportar.escena(...), .alturas(...), .r16(...)
+socket.send(JSON.stringify(MC.Puente.instantanea(E)));  // el estado vivo para otro motor
+```
 - `Rudeza` (asfalto, andén, techos y grano) se hornea una vez por losa: no cuesta por cuadro.
 
 ### 5.5 Mi casa y quien vive en ella (Los Sims)
@@ -283,7 +296,8 @@ MC.Terreno.aguaHonda(M, x, y, r, min); MC.Terreno.tierraFirme(M, x, y, r);
 
 ### 5.10 Probar y medir
 ```bash
-node motor.mjs construir && node motor.mjs prueba --navegador     # 119 en verde
+node motor.mjs construir && node motor.mjs prueba --navegador     # 123 en verde
+node motor.mjs exportar guatape                                   # el mundo en glTF, alturas RAW 16 y escena JSON (dist/exportar/)
 node motor.mjs capturas                                           # 14 fotos estándar de Mandados en dist/capturas/
 node motor.mjs revisar-arte arte/chatgpt                          # revisa un paquete de arte contra las reglas
 MC_CHROMIUM=/usr/bin/chromium node motor.mjs prueba --navegador   # si Playwright no pudo bajar su navegador (red cerrada)
@@ -565,7 +579,13 @@ No hace falta conectar ninguna aplicación.
 - **Gemini con Antigravity** trabaja por ahora con **«hydrogen»** (ya no con «argon»). Le tocan las **tareas fáciles**: revisar, medir, reunir datos y referencias.
 - **ChatGPT con Codex** sigue con **«astra»** y genera mejores imágenes. Le tocan las **tareas fuertes**: el arte realista a escala y el código difícil.
 
-**El estilo nuevo (2.6): «realista familiar».**
+**Los estilos (2.7):**
+- **realista familiar** (por defecto);
+- **cómic, manga, anime, novela gráfica, ukiyo-e y acuarela** (`MC.estilo`).
+
+De las obras con derechos se toman las **técnicas**; el arte que se copia es de **dominio público** (`docs/INSPIRACION-VISUAL.md`). **Peso y vida:** `MC.Vida`. **Motores potentes:** `docs/MOTORES-POTENTES.md`.
+
+**El estilo realista familiar (2.6):**
 - Para todo público, pero con la ciudad como es:
   - asfalto gastado, con parches, grietas y alcantarillas;
   - andenes de baldosa con bordillo;
@@ -588,6 +608,8 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H3** | **Láminas de referencia** (Nano Banana) del estilo realista familiar | 6 escenas, sin texto ni logos, vistas como la maqueta 2:1:<br>1. una calle de Guatapé con zócalos de colores;<br>2. una ladera de Medellín con escaleras;<br>3. la orilla del embalse;<br>4. una noche con lluvia y charcos;<br>5. una plaza con guayacanes florecidos;<br>6. un taller de barrio. | `arte/referencias/` (PNG). Son **solo referencia** para ChatGPT y no van al juego. |
 | **G‑H4** | **30 datos verificables** de Guatapé y Medellín (geografía, naturaleza, historia, movilidad) | Una frase corta cada uno, **con su fuente** (enlace). | `contenido/datos-gemini.json`: `[{ "texto", "fuente", "lugar", "tema" }]` |
 | **G‑H5** | **Íconos a botones** | Elige qué ícono de `arte/gemini/iconos.json` va en cada botón de Mandados (Vista, Vehículo, Sonido, Agua, Mi casa, Ciudad, Ajustes, saltar y turbo). | `arte/gemini/iconos-ui.json`: `{ "boton": "icono" }` |
+| **G‑H7** | **Mira los 10 reels de referencia** que no se pudieron leer sin iniciar sesión (lista en `docs/INSPIRACION-VISUAL.md` §1) | Para cada uno: qué se ve, qué estilo es (cómic, manga, anime, realista…), qué da sensación de peso o de vida y qué técnica parece usar. | Una tabla en `docs/INSPIRACION-VISUAL.md` §1, una fila por reel. |
+| **G‑H8** | **40 obras de dominio público** para paletas, al menos 10 colombianas (Comisión Corográfica, Epifanio Garay, Ricardo Acevedo Bernal, grabados del *Papel Periódico Ilustrado*…) | Para cada una: el enlace en Wikimedia Commons y su licencia. Solo dominio público. | Una lista en `arte/dominio-publico/candidatas.md`. Claude saca las paletas. |
 | **G‑H6** | **Pruebas y reporte** | `node motor.mjs prueba --navegador`, y en cada juego sus pruebas (ver su `TAREAS-IA.md`). | Un reporte con lo que pasó y lo que falló, sin corregir código. |
 
 **No es tu rol:** cambiar el código del motor, hacer atlas grandes o arreglar fallas. Eso es de ChatGPT y de Claude.
@@ -619,6 +641,8 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑A5** | **Texturas de suelo sin costuras** (128 × 128 px = 4 m): asfalto gastado, asfalto parcheado, andén de baldosa, adoquín, pasto, tierra con barro, grava, teja de barro, plancha de concreto y zinc oxidado. | `textura` (lo hace C‑M16) |
 | **C‑A6** | **Módulos de fachada con desgaste**: 6 zonas × 6 tipos × 3 variantes, de día y de noche (reemplaza G‑M12). | `fachadaModulo` |
 | **C‑A7** | **Animales a escala**: perro criollo, gato, gallinazo, caballo, vaca, iguana, zarigüeya y ardilla. | `animalLado` |
+| **C‑A8** | **Láminas guía de los estilos 2.7**: la misma cuadra de Guatapé en cómic (*Spider‑Verse* y Lichtenstein), manga (tramado y líneas), anime (Shinkai y Ghibli), novela gráfica (noir con un rojo), ukiyo-e (Hokusai) y acuarela (Comisión Corográfica). Solo la técnica, nunca personajes ni marcas. | guía de `MC.Estilo` |
+| **C‑A9** | **El personaje en *cel***, con contorno y 3 tonos, para los estilos dibujados: los mismos estados que C‑A2. | `personajeLado` en los estilos `comic`, `manga` y `anime` |
 
 #### Código (Codex), en orden
 | Id | Encargo |
@@ -626,7 +650,9 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 | **C‑M13** | **Maqueta por debajo de 20 ms** con la CPU 4× más lenta, con todo el detalle 2.6: árboles de pie, desgaste y fachadas. Hoy da 30–38 ms aquí y 44,7 ms en la máquina de Codex. |
 | **C‑M16** | **Gancho `textura`** en las losas: las texturas de C‑A5 como patrones en metros, con respaldo procedural (`Rudeza`), y su prueba. |
 | **C‑M17** | **Lluvia que se ve**: asfalto mojado más oscuro, charcos con reflejo y salpicaduras, sin pasar de 2 ms por cuadro. |
-| **C‑M1** | **Auditoría de lo nuevo**: `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js` y la interfaz 2.5.1. Una tabla con archivo:línea, severidad, escenario y *diff*. |
+| **C‑M1** | **Auditoría de lo nuevo**: `js/16-estilos.js`, `js/29-arboleda.js`, `Rudeza` en `js/40-dibujo.js`, `js/87-pieles.js`, `js/88-vida.js` y `js/89-exportar.js`. Una tabla con archivo:línea, severidad, escenario y *diff*. |
+| **C‑M18** | **Motores potentes**: abrir `node motor.mjs exportar guatape` en **Godot 4** (y, si se puede, Unity y Unreal); un proyecto mínimo que lea `escena.json` y ponga los árboles con `MultiMeshInstance3D`; y una vista de Motor City con **three.js o WebGPU** registrada en `MC.Vistas` (`docs/MOTORES-POTENTES.md`). |
+| **C‑M19** | **Estilo de 1 bit con trama estable**, como *Return of the Obra Dinn*: umbral contra una trama de ruido azul que no tiemble al mover la cámara. Y semitono por luminancia en la sombra del cómic. |
 | **C‑M15** | **Terreno**: la capa `agua` precalculada en el MC4, y el carro que se inclina y patina en barro y nieve. |
 | **C‑M9, C‑M12, C‑M10, C‑M14, C‑M11** | Tráfico con propósito, sombras sobre muros, casa con A* y dos habitantes, distritos y políticas, y pueblo orgánico (§10.2). |
 | **C‑M2 a C‑M8** | Redes precalculadas, raster, direcciones, storylets, accesibilidad y pruebas que faltan (§10.2). |
@@ -664,11 +690,11 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **2.6.0** · 20‑nov‑2026 · **119 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **2.7.0** · 20‑nov‑2026 · **123 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ### Resumen
-- **Hechos:** 64 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 2 🟡. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos:** 69 pedidos ✅.
+- **Hechos, pero falta algo de afuera:** 3 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -769,7 +795,17 @@ Versión **2.6.0** · 20‑nov‑2026 · **119 pruebas en verde** (`node motor.m
 | «Gemini (Antigravity) pasa a *hydrogen*: lo fácil» | ✅ | G‑H1…G‑H6 en `TAREAS-IA.md`, con `node motor.mjs capturas` y `revisar-arte` para que sean comprobables. |
 | «ChatGPT (Codex) sigue con *astra*: mejores pedidos; mejores imágenes» | ✅ | Arte C‑A1…C‑A7 y código C‑M13, C‑M16 y C‑M17 (más los C‑M de antes) en `TAREAS-IA.md` y §10.2. |
 
-### 7. Lo que falta, y a quién le toca
+### 7. Estilos, peso y vida, y motores potentes (2.7, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| «Peso y vida en el motor» | ✅ | `js/88-vida.js` (`MC.Vida`): aterrizaje con aplastamiento, sacudida y polvo; hitstop; cabeceo del vehículo; bandadas; hojas; salpicaduras; viento en las copas. |
+| «Que se pueda adaptar a motores más potentes» | ✅ | `js/89-exportar.js` (`MC.Exportar`, `MC.Puente`), `node motor.mjs exportar` y `docs/MOTORES-POTENTES.md`. El GLB pasa el validador de Khronos y three.js lo dibuja. |
+| «Estéticas de cómic, manga, anime y novela gráfica» | ✅ | `js/16-estilos.js`: cómic, manga, anime, novela gráfica, ukiyo-e y acuarela, más realista y clásico. |
+| «Investiga y aprende de las mejores obras visuales» | ✅ | `docs/INSPIRACION-VISUAL.md`, con fuentes. |
+| «Recopila y adapta arte de verdad» | ✅ | Paletas de 10 obras de dominio público en `arte/dominio-publico/` (sin copiar arte con derechos). |
+| Las referencias (14 reels) | 🟡 | Se leyeron 4; los otros 10 piden iniciar sesión. Los describe Gemini (G‑H7). |
+
+### 8. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |
@@ -816,6 +852,9 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Cuerpos y máquinas** | `MC.Personaje`, `MC.Vehiculos`, `MC.Cuerpo`, `MC.Taller`, `MC.Seres` | Personaje único, 35 vehículos, física con puentes, taller de ingeniería, biología. |
 | **Controles** | `MC.Controles`, `MC.Manejo` | Teclado, dedo y mando; curvas, esquemas y asistencias. |
 | **Cámara y vistas** | `MC.Camara`, `MC.Vistas`, `MC.Vista2D`, `MC.Raster`, `MC.Losas` | 9 vistas más pixel, 3D por software y resortes. |
+| **Estilos gráficos (2.7)** | `MC.Estilo` | Cómic, manga, anime, novela gráfica, ukiyo-e y acuarela, con tinta, tramas y paletas de obras de dominio público. |
+| **Peso y vida (2.7)** | `MC.Vida` | Aterrizajes con aplastamiento, hitstop, bandadas, hojas, polvo, salpicaduras y viento. |
+| **Motores potentes (2.7)** | `MC.Exportar`, `MC.Puente` | El mundo en glTF y el estado vivo para Godot, Unity, Unreal, Blender o three.js (`docs/MOTORES-POTENTES.md`). |
 | **Estilo realista (2.6)** | `MC.estilo`, `MC.Arboleda`, `MC.Rudeza` | Árboles de pie con volumen; asfalto, andenes, pasto, techos y muros con desgaste. Familiar, pero sin caricatura. `MC.estilo = 'clasico'` para el plano. |
 | **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel`, `MC.Pieles` | Pieles por juego, atlas, animaciones y respaldo procedural. **Paquetes de arte** de las IAs (`arte/gemini/`) instalados en una línea (2.5.1). |
 | **Adentro** | `MC.Interiores`, `MC.Hogar`, `MC.Direccion` | Interiores con estilos, **tu casa desde tu dirección** y diseño. |
@@ -831,7 +870,7 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 - **acciones:** ⤒ saltar y ⚡ turbo, abajo a la derecha. En el agua o en el aire aparecen 🔽 bajar y 🔼 subir;
 - **a dónde ir:** la flecha amarilla con los metros. El mapa pequeño muestra el punto;
 - **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega» (opcional; también en la portada), los controles y el rescate;
-- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista o clásico); **🚲 Vehículo** abre el garaje con los 34 vehículos.
+- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…), el pixel y el estilo (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e o acuarela); **🚲 Vehículo** abre el garaje con los 34 vehículos.
 
 **b) Un juego nuevo con una IA.** Dile a la IA:
 > «Lee `AGENTS.md` del repositorio motorcity y haz un juego de [idea] sobre el mundo [guatape|medellin|generado]».
@@ -897,7 +936,8 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 119 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 123 pruebas, también en Chromium. |
+| `node motor.mjs exportar ID [--centro x,y --lado m]` | El mundo en glTF 2.0, alturas RAW 16 y escena JSON (Godot, Unity, Unreal, Blender, three.js). |
 | `node motor.mjs capturas [--web]` | 14 fotos estándar de Mandados en `dist/capturas/` (revisión visual). |
 | `node motor.mjs revisar-arte arte/ID` | Revisa un paquete de arte contra las reglas. |
 | `node motor.mjs documento` | Arma `dist/MOTOR-CITY-TODO.md` (el documento único con anexos). |
@@ -912,7 +952,7 @@ new MC.Bucle({
 # ANEXO B. Contrato técnico (`MOTOR.md`)
 
 
-**Versión 2.6.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 2.7.0 · 20‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -1133,6 +1173,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.7.0** | 20‑nov‑2026 | **Estilos gráficos:** `js/16-estilos.js` (`MC.Estilo`: `p`, `rgb`, `col`, `luz`, `trama`, `final`, `lineas`, `lista`; `MC.ESTILOS_GRAF` con 8 estilos de datos; paletas de dominio público en `PAL_DP`). Las losas, los muros, los techos, las sombras (`MC.Sombras` usa `estilo.sombra`), el cielo lateral y los árboles (`Arboleda._copaEstilo`, un horneado por estilo) pasan por el estilo. **Vida:** `js/88-vida.js` (`MC.Vida.emitir`, `onomatopeya`, `impacto`, `dibujar`; bandadas, aterrizaje con `_squash` y evento `aterriza`, frenazos y agua) y `MC.Bucle` con `MC._pausaImpacto` (hitstop). El vehículo cabecea con `C._acel` y las copas se mecen de cerca (`E.viento`). **Exportar:** `js/89-exportar.js` (`MC.Exportar.glb`, `escena`, `alturas`, `r16`; `MC.Puente.instantanea`, `aGltf`) y `node motor.mjs exportar`. 123 pruebas. |
 | **2.6.0** | 20‑nov‑2026 | **Estilo realista familiar:** `MC.estilo` (`'realista'` o `'clasico'`, en la clave de las losas). `js/29-arboleda.js` (`MC.Arboleda.en`, `dePie`, `arriba`, `sombras`, `mip`, `precalentar`; 6 especies, sprites horneados con mipmaps y copia nocturna; los mismos árboles que `Terreno.arbolLosaEn`). Las losas llevan una bandera `2` (sin árboles: van de pie desde z ≥ 3,2, o 4,2 con calidad < 0,9) y la sombra bajo la copa horneada. `MC.Rudeza` (grano, baldosa, `asfalto(g, v, res)`, `techo`, paleta). Humedad en la base de los muros desde z > 3,5. Gancho de arte `arbol(g, t, vista, x, y, pxm, D)` y parte `arbol` en `MC.Pieles` (`arboles: false` deja fuera los árboles del paquete). `node motor.mjs capturas` y `revisar-arte`. 119 pruebas. |
 | **2.5.1** | 19‑nov‑2026 | **Arte de Gemini integrado:** `js/87-pieles.js` (`MC.Pieles.instalar(id, paquete, { partes, pixel, usar })`, `MC.Pieles.icono`, `MC.Pieles.faltan`). La construcción compila `arte/<id>/` dentro del HTML con `"arte": ["<id>"]` en `juego.json`, y suelto en `dist/arte/<id>.js`. Las capas de `MC.Urbe` traen `titulo` y `leyenda`, y hay `ui.leyenda`. **Jugable en el celular:**<ul><li>`ui.joystick(ctl, op)` y `ui.pintarJoystick()`: joystick visible que sigue al dedo, con guía «Arrastra para moverte»;</li><li>`ui.accion({ id, icono, texto, mantener, ctl, al })`: botones redondos para el pulgar, que al mantenerse alimentan `ctl.boton`;</li><li>`ui.barraVisible`;</li><li>`MC.UI.indicador(g, W, H, sx, sy, op)`: el pin o la flecha al objetivo, con `op.rect` para no tapar la interfaz;</li><li>`ui.mision` con el título en una línea y el detalle en dos;</li><li>marca del jugador en las vistas 2D (`E.marcaJugador`);</li><li>`Losas`: resolución hasta 6 y presupuesto de píxeles.</li></ul>Mandados: cámara de unos 45 m en el lado corto, modo libre (todo gratis, 34 vehículos), menú Vista y menú Ajustes, tutorial, y el primer mandado cerca. 118 pruebas. |
 | **2.5.0** | 19‑nov‑2026 | **Entrar al agua:** `cuerpo.bajarse`, `montar` y `puedeMontar` (vehículo parqueado en la orilla, también solo al empujar hacia lo hondo), nado con **buceo** y **aire** (`buceando`, `aire`, `pulmones`, evento `sinAire`), poses `nada` y `bucea`, `embarcar` y `desembarcar` (lancha), `Terreno.aguaHonda` y `tierraFirme`. Tono bajo el agua, burbujas y vehículo parqueado en las vistas. 117 pruebas. |
@@ -1247,7 +1288,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 119 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 123 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»
@@ -1616,6 +1657,167 @@ El detalle, el código y lo que falta están en `docs/DOCUMENTO-UNICO.md`, §6.
 
 ---
 
+# ANEXO E2. Inspiración visual (`docs/INSPIRACION-VISUAL.md`)
+
+
+> **La regla:** de las obras con derechos se toman las **técnicas**, nunca imágenes, personajes ni logos. El arte «de verdad» que se recopila y adapta es de **dominio público**: sus paletas están en `arte/dominio-publico/`, con fuente y licencia.
+
+### 1. Las referencias del autor (reels de Instagram, nov‑2026)
+De los 14 enlaces se pudieron leer 4 sin iniciar sesión:
+
+| Reel | Qué es | Qué tomamos |
+|---|---|---|
+| `De64QQuCsyG` (vandalnet) | Un RPG independiente inspirado en **Dragon Ball** | Estética **anime**: cel shading, contorno, colores vivos y onomatopeyas. → estilo `anime` y `comic`. |
+| `DfJFFGQRG2N` (elreagamingok) | ***Cairn***, un simulador de escalada y supervivencia | **Peso**: el cuerpo pesa, cada apoyo cuenta. → `MC.Vida`: aterrizajes con aplastamiento, sacudida y polvo. |
+| `DfpsKcEKZNx` (patricio.incoders) | Un vehículo tipo *rover* en la web | Vehículos con suspensión que **se sienten**. → cabeceo al acelerar y al frenar. |
+| `Dfkim-zvyVB` (mamon.xx) | Carreras **cinematográficas** tipo Dakar: agua, nubes, contacto de llantas | Para *Motor City* (carreras): cámara de cine, polvo y salpicaduras. → partículas de `MC.Vida` y vista `cine`. |
+
+**Los otros 10 reels** (`Dfaux2QFsay`, `DfvyT1QIFIQ`, `De9tpl3yakv`, `De7qMG8iZdh`, `Dfpb3_vHFPb`, `Dc_s5CPsstT`, `De9ZhRAIOhJ`, `DdwLGJmjjvQ`, `DfRe6pQzWzS` y la publicación `DfDkDxQiQS7`) piden iniciar sesión. Describirlos es la tarea **G‑H7** de Gemini, que puede ver videos.
+
+### 2. Peso y vida («game feel»)
+| Fuente | La técnica | En el motor |
+|---|---|---|
+| Jan Willem Nijman (Vlambeer), «The Art of Screenshake» (2013) | El mismo juego con y sin «jugo»: sacudida, retroceso, pausa de impacto y partículas. Sin eso, todo se siente plano. | `MC.Vida` (88): sacudida según la caída, **hitstop** de 60 ms en los choques (`MC.Bucle` respeta `MC._pausaImpacto`), polvo, salpicaduras y hojas. |
+| Disney, los 12 principios de la animación | *Squash and stretch*, anticipación y acción complementaria | El cuerpo se aplasta al aterrizar y vuelve (`_squash`); el vehículo cabecea con la aceleración. |
+| *Spider‑Man: Into the Spider‑Verse* | Animación «a dos cuadros» (*on twos*) para un movimiento con carácter | Las alas de los pájaros aletean a 12 cuadros por segundo. |
+| *Cairn*, carreras tipo Dakar (reels) | El peso del cuerpo y del vehículo | Lo mismo, más el viento que mece las copas de cerca. |
+
+### 3. Cómic, manga, anime y novela gráfica
+| Obra o autor | La técnica | Estilo del motor (`MC.estilo`) |
+|---|---|---|
+| *Into the Spider‑Verse* (Sony, 2018) | Semitono de puntos para la luz, rayado para las sombras, puntos de Kirby, líneas dibujadas sobre el 3D y onomatopeyas en pantalla | `comic`: semitono horneado en las losas, tinta, onomatopeyas (`¡PUM!`, `¡TUM!`) y líneas de velocidad. |
+| Roy Lichtenstein, la imprenta del cómic | El punto Ben‑Day como textura | La trama `puntos` de `MC.Estilo`. |
+| Hergé y la *ligne claire*; Moebius (y *Sable*, que se inspira en él) | Línea de grosor uniforme, color plano y poco contraste. En *Sable*, el contorno da profundidad. | La **tinta** de grosor constante en vías, techos, muros y árboles (`tinta`, `tintaColor`). |
+| Manga (tramado, *screentone*) | Grises con tramas de puntos y líneas de velocidad radiales | `manga`: todo a escala de grises, tramado en las copas, líneas de velocidad desde el borde sin tocar el centro. |
+| *Return of the Obra Dinn* (Lucas Pope) | Todo en 8 bits de gris y, al final, umbral contra una trama (1 bit), estable entre cuadros | La idea del **umbral** de la novela gráfica. Un estilo de 1 bit con trama queda para ChatGPT (C‑M19). |
+| *Sin City* (Frank Miller), Mike Mignola | Blanco y negro duro y un solo color de acento | `novela`: tres tonos de papel y tinta, sombras negras, árboles en silueta con filo de luz y el **rojo** de los techos como acento. |
+| Makoto Shinkai | El cielo manda la luz: azul profundo arriba, cian claro en el horizonte, nubes en capas y brillo | `anime`: cielo propio en la vista lateral, sombras azul violeta, *cel shading* en 6 bandas y línea fina. |
+| Studio Ghibli (Kazuo Oga) | Fondos en gouache y acuarela, mate, con humedad en el aire | `acuarela`: papel, pigmento que se junta en el borde de las copas y paleta de acuarelas reales. |
+| *Arcane* (Fortiche) | 3D con texturas pintadas a mano, sombras y luces pintadas, efectos en 2D | La dirección para el arte de ChatGPT (C‑A8): texturas pintadas sobre el volumen del motor. |
+| Hokusai e Hiroshige (ukiyo-e) | Grabado en madera: azul de Prusia, papel crema, contorno y color plano | `ukiyoe`: la **paleta real** de *La gran ola* y *Fuji rojo*, con tinta índigo y papel. |
+
+### 4. Arte de verdad, de dominio público (recopilado y adaptado)
+`arte/dominio-publico/paletas.json` tiene las paletas de 8 colores sacadas de estas obras con un algoritmo de corte por la mediana. Las imágenes vienen de Wikimedia Commons (`node` / Python, 200 px), y en el repositorio solo quedan los colores, con su fuente:
+
+| Obra | Autor y año | Licencia en Commons | Uso |
+|---|---|---|---|
+| *La gran ola de Kanagawa* | Hokusai, 1831 | Dominio público | `ukiyoe` |
+| *Fuji rojo* (Viento del sur, cielo despejado) | Hokusai, 1831 | Dominio público | `ukiyoe` |
+| *Aguacero sobre el puente Ōhashi* | Hiroshige, 1857 | Dominio público | `acuarela` |
+| *Terraza de café por la noche* | Van Gogh, 1888 | CC0 | referencia para la noche |
+| *Impresión, sol naciente* | Monet, 1872 | Dominio público | referencia para el amanecer |
+| *Little Nemo in Slumberland* | Winsor McCay, 1906 | Dominio público | referencia del cómic clásico |
+| *Las estaciones* | Alfons Mucha, 1896 | Obra de dominio público (foto FAL) | referencia |
+| Grabado de la *Divina comedia* | Gustave Doré, 1861 | Dominio público | `novela` |
+| Acuarelas de la **Comisión Corográfica** | Manuel María Paz y otros, 1853 | Obra de dominio público (escaneo CC BY‑SA 4.0) | `acuarela` |
+| Acuarela del trópico | Winslow Homer, 1899 | Dominio público | `acuarela` |
+
+**Por qué solo paletas:** pesan casi nada, no meten imágenes en el juego y no confunden lo que es del motor con lo que es de un museo. La lista completa, con enlaces, está en `arte/dominio-publico/paletas.json`. Gemini amplía la lista con obras colombianas (G‑H8).
+
+### 5. Lo que sigue
+- **ChatGPT** (imágenes) dibuja las láminas guía de cada estilo (C‑A8) y el personaje en *cel* (C‑A9).
+- **Codex** hace el estilo de 1 bit con trama estable (C‑M19) y una vista con three.js o WebGPU (C‑M18).
+- **Gemini** describe los 10 reels que faltan (G‑H7) y busca 40 obras de dominio público, también colombianas (G‑H8).
+
+### Fuentes
+- Spider‑Verse:
+  - [AWN · Creating the stylized universe](https://www.awn.com/animationworld/creating-stylized-universe-sonys-spider-man-spider-verse);
+  - [Foundry · Graphic look in comp](https://www.foundry.com/insights/film-tv/graphic-look-in-comp-spiderman);
+  - [No Film School](https://nofilmschool.com/how-spider-verse-took-animation-risks).
+- Arcane:
+  - [VFX Voice · Arcane season 2](https://vfxvoice.com/riot-games-and-fortiche-get-revolutionary-with-arcane-season-2/);
+  - [80.lv · backgrounds](https://80.lv/articles/arcane-artists-show-how-they-combine-traditional-art-3d-for-backgrounds).
+- Game feel:
+  - [Game Developer · Squeezing more juice](https://gamedeveloper.com/design/squeezing-more-juice-out-of-your-game-design-);
+  - [Universität Bayreuth · Game Feel (PDF)](https://medienwissenschaft.uni-bayreuth.de/wp-content/uploads/GxD-10-Game-Feel.pdf).
+- Obra Dinn:
+  - [PlayStation Blog](https://blog.playstation.com/2019/10/17/return-of-the-obra-dinn-adventures-in-one-bit-out-tomorrow/);
+  - [Alan Zucconi · Shader Showcase](https://www.alanzucconi.com/?p=10365).
+- Ghibli y Shinkai:
+  - [Gurney Journey · Painting in Ghibli style](https://gurneyjourney.blogspot.com/2018/05/painting-in-ghibli-style.html);
+  - [Looper · Shinkai sobre Suzume](https://www.looper.com/1254434/director-makoto-shinkai-anime-artistry-suzume-exclusive-interview/).
+- Moebius, *ligne claire* y *Sable*:
+  - [Game Developer · GDC 2022, Sable](https://gamedeveloper.com/gdc2022/how-shedworks-refined-the-art-of-sable-in-pursuit-of-readability);
+  - [Cook & Becker · Moebius](https://www.cookandbecker.com/en/article/346/artist-spotlight-moebius.html).
+- Obras de dominio público: [Wikimedia Commons](https://commons.wikimedia.org/). Cada archivo está en `arte/dominio-publico/paletas.json`.
+
+
+---
+
+# ANEXO E3. Motores potentes (`docs/MOTORES-POTENTES.md`)
+
+
+> **La idea:** Motor City nació para correr en un HTML, en cualquier celular y sin internet. Eso no lo encierra:
+> - sus **mundos** salen en formatos estándar;
+> - su **simulación** (física, terreno, ciudad, historias, economía) es JavaScript puro, que también corre sin pantalla;
+> - su **estado vivo** se puede mandar a otro motor que solo dibuje.
+>
+> Así, un mismo juego puede tener una versión liviana (Motor City) y una de consola o PC (Unreal o Godot) **sin rehacer el mundo**.
+
+![Guatapé exportado de Motor City y abierto en three.js](img/exportar-guatape-threejs.jpg)
+
+*Guatapé exportado con `node motor.mjs exportar guatape` y abierto en three.js, sin tocar nada. El validador oficial de Khronos da 0 errores y 0 avisos.*
+
+### Tres niveles para sacarle el máximo provecho
+| Nivel | Qué se lleva | Cómo | Para qué |
+|---|---|---|---|
+| **1. El mundo** | Terreno, edificios, vías, árboles y lugares | `node motor.mjs exportar <mundo>` → `mundo.glb`, `alturas.r16` y `escena.json` | Hacer el juego en Godot, Unity o Unreal con el pueblo o la ciudad real ya armados. |
+| **2. La simulación en vivo** | Jugador, vehículos, gente, hora y clima | `MC.Puente.instantanea(E)` cada cuadro, enviado por WebSocket (o `postMessage`) | Que Motor City siga simulando y otro motor dibuje con más detalle (luz global, sombras suaves y más polígonos). |
+| **3. Otro dibujante en la web** | La vista | Una vista registrada que use three.js, Babylon o WebGPU con el mismo `E` | Gráficos de PC en el navegador, con el mismo juego (C‑M18). |
+
+### Nivel 1 · Exportar el mundo
+```bash
+node motor.mjs exportar guatape                              # 600 × 600 m alrededor del centro del pueblo
+node motor.mjs exportar medellin --centro 15680,13534 --lado 800 --paso 4
+```
+Sale en `dist/exportar/<mundo>/`:
+- `mundo.glb` (glTF 2.0 binario):
+  - mallas `terreno` (relieve real; color por suelo y el agua por profundidad), `edificios` (extruidos con el color de su zona), `vias` (cintas sobre el terreno) y `arboles` (tronco y copa por especie);
+  - un solo material con colores por vértice;
+  - +Y arriba, en metros, y el origen en el centro de la caja (en `extras.origen_mundo` quedan las coordenadas originales).
+- `alturas.r16` y `alturas.json`: el relieve en RAW de 16 bits *little endian*, con su mínimo y máximo.
+- `escena.json`: edificios (huella, altura, clase y colores), vías (polilínea, ancho y tipo), árboles (especie, alto y copa) y lugares jugables. El motor de destino pone **su** lógica y **su** arte sobre esto.
+- `LEEME.md`: cómo abrirlo en cada motor.
+
+| Motor | El mundo | El terreno de alta calidad | La lógica |
+|---|---|---|---|
+| **Godot 4** | Arrastrar `mundo.glb` al proyecto | `HTerrain` o *Terrain3D* con `alturas.r16` | GDScript lee `escena.json` y pone `MultiMeshInstance3D` para los árboles. |
+| **Unity** | Paquete *glTFast* | *Terrain* → Import Raw (16 bits, Windows, ancho × alto de `alturas.json`) | C# lee `escena.json`. |
+| **Unreal 5** | Import (Interchange) de `mundo.glb` | *Landscape* desde `.r16`, con escala Z = (max − min) / 512 × 100 | Blueprint o C++ con el JSON; *PCG* para poblar con los árboles. |
+| **Blender** | Archivo → Importar → glTF 2.0 | — | Python lee el JSON (render de cine). |
+| **three.js y Babylon** | `GLTFLoader` y `SceneLoader` | `PlaneGeometry` desplazada con las alturas | El mismo JavaScript de Motor City. |
+
+**Comprobado:**
+- `mundo.glb` de Guatapé (300 edificios, 66 vías, 1.396 árboles, 86 mil vértices) pasa el **glTF Validator de Khronos con 0 errores**;
+- three.js lo dibuja (la imagen de arriba).
+
+En Godot, Unity y Unreal no se pudo abrir desde aquí; esa prueba le toca a Codex (C‑M18).
+
+### Nivel 2 · El puente en vivo
+```js
+// en Motor City (navegador o Node), en cada cuadro:
+const estado = MC.Puente.instantanea(E);   // { t, hora, clima, estilo, jugador: { x, y, z, a, v, vehiculo, estado }, vehiculos: [...], peatones: [...] }
+socket.send(JSON.stringify(estado));       // al motor que dibuja
+// del lado del otro motor: posición glTF = [x, z, y] (MC.Puente.aGltf)
+```
+- La simulación sigue siendo la de Motor City (Terreno, Cuerpo, Urbe, Historias…). El otro motor solo dibuja.
+- Es la arquitectura de los juegos en red: un servidor autoritativo y clientes que dibujan.
+
+### Nivel 3 · Lo que conviene hacer para otro motor
+1. **Primero el juego en Motor City**, liviano, para validar que es divertido en un celular.
+2. **Después exportar el mundo** y llevar el arte final (los atlas de ChatGPT valen en cualquier motor).
+3. **El peso y la vida** (`MC.Vida`) y los **estilos** (`MC.Estilo`) son ideas fáciles de rehacer en un *shader*:
+   - el cómic, con semitono por luminancia y contorno por normales;
+   - el manga, con umbral y trama;
+   - el anime, con *cel shading* en bandas;
+   - la novela, con umbral y un color de acento.
+
+   Están descritos con sus fuentes en `docs/INSPIRACION-VISUAL.md`.
+4. **Lo que no se lleva:** el guardado de cada juego y su interfaz, que se hacen en el motor de destino.
+
+
+---
+
 # ANEXO F. Optimización (`docs/OPTIMIZACION.md`)
 
 
@@ -1816,6 +2018,57 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 20‑nov‑2026 · 2.7.0 · Estilos gráficos, peso y vida, y motores potentes (Claude Code)
+**Pedido:**
+- 14 reels de referencia;
+- «Necesito peso y vida en el motor, y que se pueda adaptar a motores más potentes.»
+- «Estéticas de cómic, manga, anime y novelas gráficas.»
+- «Investiga y aprende de las mejores obras visuales e inspírate en ellas. Recopila y adapta arte de verdad.»
+
+**Lo que se hizo:**
+1. **Reels:** se leyeron 4 de 14 sin iniciar sesión:
+   - un RPG inspirado en Dragon Ball;
+   - *Cairn*;
+   - un *rover* en la web;
+   - carreras cinematográficas tipo Dakar.
+
+   Los otros 10 quedan para Gemini (G‑H7).
+2. **`MC.Estilo`** (`js/16-estilos.js`): 8 estilos hechos de datos (mapa de color, tinta, trama, sombra, árboles, cielo y pase final):
+   - realista y clásico;
+   - **cómic**: tinta, semitono y onomatopeyas;
+   - **manga**: grises, tramado y líneas de velocidad;
+   - **anime**: *cel* en 6 bandas, línea fina, sombras azul violeta y cielo de Shinkai;
+   - **novela gráfica**: tres tonos de papel y tinta, sombras negras, árboles en silueta y el rojo como acento;
+   - **ukiyo-e**: paleta de Hokusai;
+   - **acuarela**: papel y pigmento en el borde.
+
+   Las losas, los muros, los techos, las sombras, el cielo y los árboles pasan por el estilo. En Mandados: 🗺️ Vista → 🖌️ Estilo.
+3. **Arte de verdad:** paletas de 10 obras de dominio público bajadas de Wikimedia Commons (Hokusai, Hiroshige, Van Gogh, Monet, McCay, Mucha, Doré, la Comisión Corográfica y Winslow Homer), en `arte/dominio-publico/`. En el repositorio solo quedan los colores, con fuente y licencia.
+4. **`MC.Vida`** (`js/88-vida.js`):
+   - al aterrizar, el cuerpo se aplasta, la cámara se sacude según la caída y salta polvo;
+   - el vehículo cabecea al acelerar y al frenar;
+   - en los choques hay **hitstop** (60 ms; `MC.Bucle`);
+   - bandadas de garzas y palomas con su sombra, que aletean a dos cuadros;
+   - hojas que caen y salpicaduras;
+   - el viento mece las copas de cerca;
+   - onomatopeyas en los estilos dibujados.
+5. **`MC.Exportar` y `MC.Puente`** (`js/89-exportar.js`) y `node motor.mjs exportar`: el mundo sale en **glTF 2.0** (terreno, edificios, vías y árboles, con colores por vértice), con alturas RAW 16 y escena JSON. El GLB de Guatapé:
+   - pasa el **validador de Khronos con 0 errores y 0 avisos**;
+   - three.js lo dibuja tal cual.
+6. **Investigación:** `docs/INSPIRACION-VISUAL.md` (Spider‑Verse, Arcane, Shinkai, Ghibli, *Sin City*, Moebius y *ligne claire*, *Obra Dinn*, Vlambeer, Disney y ukiyo-e, con fuentes) y `docs/MOTORES-POTENTES.md` (Godot, Unity, Unreal, Blender y three.js).
+7. **Tareas nuevas** en `TAREAS-IA.md`:
+   - Gemini: G‑H7 (describir los reels) y G‑H8 (40 obras de dominio público, también colombianas);
+   - ChatGPT: C‑A8 (láminas guía de los estilos) y C‑A9 (personaje en *cel*);
+   - Codex: C‑M18 (Godot, Unity, Unreal y una vista three.js o WebGPU) y C‑M19 (1 bit con trama estable).
+
+**Probado** (123 pruebas):
+- estilos (manga en grises, novela con acento, ukiyo-e con la paleta de Hokusai);
+- vida (aterrizaje, partículas y bandadas);
+- un GLB bien formado;
+- los 8 estilos en Mandados, sin errores.
+
+La maqueta de Medellín, con la CPU 4× más lenta, mide 31 ms.
 
 ### 20‑nov‑2026 · 2.6.0 · Estilo realista familiar, árboles de pie y tareas de cada IA (Claude Code)
 **Pedido:**
