@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "agente": "codex",
+  "rama": "codex/encicla-motorcity",
+  "base_commit": "4691679",
+  "fase_actual": "Fases 1 y 2; regresiones y adaptación incremental",
+  "estado": "en_progreso",
+  "ultima_actualizacion_utc": "2026-11-20T21:21:00Z",
+  "zonas_reclamadas": [
+    "src/js/68-ciudad.js",
+    "src/js/69-libre.js",
+    "src/js/69-calendario.js",
+    "src/js/82-prestamo.js",
+    "src/js/92-vehiculos.js",
+    "src/js/93-trama.js",
+    "src/js/94-revolucion.js",
+    "src/js/00-core.js",
+    "tools/build.js",
+    "tests/run.js",
+    "tests/regresion-encicla.js",
+    "docs/INFORME-ENCICLA-MOTOR-CITY.md"
+  ],
+  "archivos_nuevos": ["tests/regresion-encicla.js", "docs/INFORME-ENCICLA-MOTOR-CITY.md"],
+  "simbolos_exportados": [],
+  "pruebas_verificadas": {
+    "build": "v2.0.1 con Motor City 4.0",
+    "regresion": "guardados, vehículos, energía y calendario; Chromium 412x860",
+    "bateria": "54 partidas y WebRTC tres páginas, sin fallas en HTTP local"
+  },
+  "pendiente_para_compañera": "Lee coord/buzon/20261120-2121-codex-relevo.md. Coordinar cambios coincidentes en build, pruebas, trama y guardado antes de integrar."
+}

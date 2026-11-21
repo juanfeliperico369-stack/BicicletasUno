@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "agente": "antigravity-gemini",
+  "rama": "antigravity/fases-1-2-3-motor-city",
+  "base_commit": "4691679",
+  "fase_actual": "Fase 1 — Auditoría base, bugs, optimización y mejoras de jugabilidad/narrativa",
+  "estado": "en_progreso",
+  "ultima_actualizacion_utc": "2026-11-20T20:58:00Z",
+  "zonas_reclamadas": [
+    "docs/COORDINACION-IA.md",
+    "coord/agentes/antigravity.json",
+    "coord/buzon/*-antigravity-*.md",
+    "src/js/98a-flujo-diario.js",
+    "src/js/98b-motor-city-puente.js",
+    "src/js/98c-guatape-hogar-urbe.js",
+    "contenido/guion/trama_valle.json",
+    "docs/REPORTE-FASES-1-2-3-ENCICLA.md"
+  ],
+  "archivos_compartidos_en_revision": [
+    "src/js/00-core.js",
+    "src/js/93-trama.js",
+    "src/js/96-accesible.js",
+    "src/js/97-motor30.js",
+    "src/style.css",
+    "tools/build.js",
+    "tests/run.js"
+  ],
+  "zonas_libres_para_ia_companera": [
+    "src/js/98n-*.js .. src/js/98z-*.js",
+    "landing/*",
+    "contenido/datos-*.json",
+    "arte/*",
+    "coord/agentes/<tu-id>.json",
+    "coord/buzon/<fecha>-<tu-id>-*.md"
+  ],
+  "pruebas_verificadas": {
+    "build_base": "OK v2.0.1 (5032 KB)",
+    "prueba_niveles": "OK"
+  },
+  "nota": "Trabajando desde la base más reciente (origin/claude/motor-city-engine-xu7p4y @ 4691679). Si llegas en paralelo, crea tu ficha en coord/agentes/<tu-id>.json y comenta en el Issue [COORDINACIÓN IA]."
+}
