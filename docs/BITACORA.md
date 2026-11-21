@@ -4,6 +4,15 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 
 
+## 21-nov-2026 · Mundo abierto primero (Claude, a partir de la auditoría G‑H28 de Antigravity)
+- **Regla del autor:** mundo abierto desde el principio; el tutorial y la historia son opcionales.
+- **`src/js/98n-abierto.js`**, aditivo (envuelve `UI.init`):
+  - **▶ Jugar entra directo al modo libre**, pedaleando por el valle: 1 toque y 0,3 s. Antes había 4 toques o más: «BIENVENIDA 1 DE 4» y luego «Crea tu personaje»;
+  - sale con bici de EnCicla si el sistema está abierto; si no, o si hay suspensión, con la bici propia;
+  - el botón nuevo **«🏆 Oficios y modos»** lleva al escalafón (los 11 oficios), y ahí siguen la bienvenida y el personaje. Todo es opcional.
+- **`tests/run.js`:** comprueba el toque directo; el flujo bienvenida → personaje → escalafón ahora se prueba desde «🏆 Oficios y modos». `tests/verify-live.js` usa ese botón si existe.
+- **Probado:** `node tools/build.js` y `node tests/run.js`, todas en verde.
+
 ## 21-nov-2026 · Motor City 4.2.0 en `motor-city/` (Claude)
 - Llegó el motor 4.2:
   - recorte por región en el 3D (niebla y cono de visión);

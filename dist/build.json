@@ -1,7 +1,7 @@
 {
  "version": "2.0.1",
- "hash": "0efe8cc4",
- "cache": "juega-encicla-v2.0.1-0efe8cc4",
+ "hash": "4cca3615",
+ "cache": "juega-encicla-v2.0.1-4cca3615",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -60,11 +60,12 @@
   "95-promo.js",
   "96-accesible.js",
   "97-motor30.js",
+  "98n-abierto.js",
   "99-boot.js"
  ],
  "bytes": {
-  "single": 5152507,
-  "web": 5153531,
-  "js": 4970684
+  "single": 5155365,
+  "web": 5156389,
+  "js": 4973542
  }
 }

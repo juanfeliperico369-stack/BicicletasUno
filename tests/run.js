@@ -38,12 +38,15 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
 
   console.log('3) Humo de interfaz');
   await p.reload(); await p.waitForFunction(() => window.JE && JE.ready);
-  await p.click('#bPlay'); ok(await p.isVisible('#modal'), 'introducción ¿Qué es EnCicla?');
+  /* mundo abierto primero (regla del autor, auditoría G-H28): ▶ Jugar entra directo al modo libre, sin bienvenida ni personaje */
+  await p.click('#bPlay'); await p.waitForTimeout(800); ok(await p.isVisible('#sGame') && !(await p.isVisible('#modal')) && await p.evaluate(() => !!(Game.meta && Game.meta.free)), 'mundo abierto primero: ▶ Jugar entra directo al modo libre');
+  await p.reload(); await p.waitForFunction(() => window.JE && JE.ready);
+  await p.click('#bOficios'); ok(await p.isVisible('#modal'), 'introducción ¿Qué es EnCicla? (opcional, desde 🏆 Oficios y modos)');
   for (let k = 0; k < 4 && await p.isVisible('#inNext'); k++) await p.click('#inNext');
   ok(await p.isVisible('#avOk') && await p.isVisible('#avPrev'), 'al empezar se crea el personaje');
   await p.click('.avtabs button[data-tab=ropa]'); await p.click('#mBody [data-k=pants][data-i="2"]'); await p.click('#avOk');
   ok(await p.evaluate(() => Save.data.profile.pants === 2 && Save.data.settings.seen.profile === 1), 'personaje guardado');
-  ok(await p.isVisible('#sHome') && !(await p.isVisible('#modal')), 'portada → introducción → personaje → escalafón');
+  ok(await p.isVisible('#sHome') && !(await p.isVisible('#modal')), '🏆 Oficios y modos → introducción → personaje → escalafón');
   if (SHOTS) await p.screenshot({ path: path.join(OUT, 'escalafon.png') });
   await p.click('button[data-role=usuario][data-t="1"]'); ok(await p.isVisible('#sBrief'), 'briefing de Usuario');
   await p.click('#bGo'); await p.waitForTimeout(400); ok(await p.isVisible('#sGame'), 'juego iniciado');
