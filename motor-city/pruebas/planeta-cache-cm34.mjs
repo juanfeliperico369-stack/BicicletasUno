@@ -122,4 +122,36 @@ await prueba('cargas paralelas de ciudades distintas obedecen presupuesto y perm
   assert.equal(llamadas.get('a'), 2);
   assert.equal(p.cache.size, 2);
 });
+await prueba('una precarga vieja no resucita después de liberar la ciudad en juego', async () => {
+  let resolverB;
+  const p = new Planeta({ anillo, cargar: async id => id === 'b'
+    ? new Promise(resolve => { resolverB = resolve; }) : { id } });
+  const a = await p.mundo('a');
+  assert.strictEqual(p.fijar('a'), a);
+  const pendiente = p.mundo('b');
+  await tick();
+  assert.equal(typeof resolverB, 'function');
+  p.liberarExcepto('a');
+  resolverB({ id: 'b' });
+  const b = await pendiente;
+  assert.equal(b.id, 'b', 'el solicitante conserva el resultado');
+  assert(!p.cache.has('b'), 'la carga obsoleta no vuelve a entrar en memoria');
+  assert.strictEqual(p.cache.get('a'), a);
+  assert.equal(p._cargando.size, 0);
+});
+
+await prueba('liberarExcepto descarga mundos y también rutas cacheadas', async () => {
+  const p = new Planeta({ anillo, cargar: async id => ({ id }) });
+  await p.mundo('a');
+  await p.mundo('b');
+  p._puertas.set('a', { anterior: {}, siguiente: {} });
+  p._puertas.set('b', { anterior: {}, siguiente: {} });
+  const libres = p.liberarExcepto('b');
+  assert.equal(libres, 1);
+  assert.deepEqual([...p.cache.keys()], ['b']);
+  assert(!p._puertas.has('a'));
+  assert(p._puertas.has('b'));
+  assert.equal(p.diagnosticoCache().activo, 'b');
+});
+
 console.log('C-M34 Planeta: ' + hechas + '/' + hechas + ' pruebas en verde (Node, mundos sintéticos).');

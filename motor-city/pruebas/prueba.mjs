@@ -499,6 +499,13 @@ console.log('21) Manejo 4.0.2: reversa, vuelta en tres puntos y piloto de la IA'
   ok(vRev < -2 && vRev > -8.6 && intentos >= 3 && llego >= intentos - 1, 'manejo: con el carro quieto, frenar es reversa (hasta 8 m/s); el piloto de la IA arranca de espaldas y llega a su destino por la calle', { reversa: +vRev.toFixed(1), llego, de: intentos, segundos: tiempos });
 }
 
+console.log('23) COLORMAP 4.4 (Doom): paleta de 256, tabla RGB15 y 32 niveles de luz por búsqueda en tabla');
+{ const w = 64, h = 32, data = new Uint8ClampedArray(w * h * 4); for (let i = 0; i < w * h; i++) { data[i * 4] = 200; data[i * 4 + 1] = 120; data[i * 4 + 2] = 60; data[i * 4 + 3] = 255; }
+  const img = { data, width: w, height: h }, T = MC.Colormap.tablas(); MC.Colormap.aplicar(img, { cx: 0, cy: 16, base: 0, caida: 30 / (w * w) });
+  const lum = x => { const i = (16 * w + x) * 4; return data[i] * .3 + data[i + 1] * .59 + data[i + 2] * .11; }, cerca = lum(1), lejos = lum(63);
+  let enPaleta = true; for (let i = 0; i < w * h; i += 37) { const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2]; if (!T.P.some(p => p[0] === r && p[1] === g && p[2] === b)) { enPaleta = false; break; } }
+  ok(T.n === 256 && T.tabla.length === 32768 && T.luz.length === 32 * 256 && enPaleta && cerca > lejos * 1.5, 'colormap: 256 colores, tabla de 32 768, 32 niveles; cada píxel queda en la paleta y lo lejano es más oscuro', { cerca: Math.round(cerca), lejos: Math.round(lejos) }); }
+
 console.log('22) Motores clásicos 4.1: DDA (Wolfenstein), semillas (Elite), gema y ruido (Thief), carretera arcade (OutRun) y Voxel Space (Comanche)');
 { /* todo rehecho desde cero: se prueba con números que se pueden comprobar a mano */
   const cas = []; MC.DDA.recorrer(.5, .5, 3.5, .5, 1, (x, y) => { cas.push(x + ',' + y); }); const diag = []; MC.DDA.recorrer(.5, .5, 2.5, 2.5, 1, (x, y) => { diag.push(x + ',' + y); });

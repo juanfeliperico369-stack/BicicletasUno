@@ -50,7 +50,13 @@ async function cargarCiudad(id) {
     return MC.Mundo.cargarPaquete(meta, nombre => {
       const el = document.getElementById('mc4-' + id + '-' + nombre);
       return el ? el.textContent : null;
-    }, cfg);
+    }, cfg, (nombre, indice) => {
+      /* C-M34: extraer solo el bloque de suelo/nivel consultado del HTML offline. */
+      const info = meta.rasters && meta.rasters[nombre];
+      if (!info || indice < 0 || indice + 1 >= info.indices.length) return null;
+      const el = document.getElementById('mc4r-' + id + '-' + nombre);
+      return el ? el.textContent.slice(info.indices[indice], info.indices[indice + 1]) : null;
+    });
   }
   const el = document.getElementById('mc4-' + id);
   if (!el) throw new Error('Este juego no trae el mundo ' + id);
@@ -107,11 +113,8 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const q = M.viaCercana(L.x, L.y, 60);
   const C = new MC.Cuerpo(M, { x: q ? q.x : L.x, y: q ? q.y : L.y, a: L.a ?? (q ? q.ang : 0), veh: spawn.aPie ? 'pie' : G.veh }); C.v = spawn.aPie ? 0 : Math.min(v0, 18);
   G.cuerpo = C; C.obstaculos = obstaculos;
-   /* C-M34/G-H24: sólo durante una transición jugable, el planeta libera las ciudades
-      y carreteras anteriores. Planeta.mundo() mantiene su semántica de precarga/QA. */
-   if (planeta.cache && planeta.cache.size > 1) {
-     for (const key of [...planeta.cache.keys()]) if (key !== id) planeta.cache.delete(key);
-   }
+  /* C-M34: descargar el anterior e impedir resurrección de precargas obsoletas. */
+  planeta.liberarExcepto(id);
   const lat = M.cfgCiudad ? (M.cfgCiudad.lat ?? M.metrosAGeo(C.x, C.y).lat) : (planeta.enGlobo(id, C.x, C.y).lat);
   G.clima = new MC.ClimaGlobal({ lat: Math.abs(lat) > 1 ? lat : 6.2, alt: M.cota(C.x, C.y) }); C.clima = G.clima; if (G.climaForzado) G.clima.forzar(G.climaForzado);
   const dpr0 = Math.min(2, devicePixelRatio || 1);

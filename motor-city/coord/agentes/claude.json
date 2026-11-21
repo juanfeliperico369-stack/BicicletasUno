@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.3.0: arreglada la auditoría móvil de Antigravity (G-H25/26/28), unida la caché del planeta de ChatGPT, mundo abierto primero en El Metro y EnCicla",
+  "fase_actual": "4.4.0: Claude asume todo lo pendiente (Codex, ChatGPT y Antigravity ya no siguen)",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-21T20:30:00Z",
+  "ultima_actualizacion_utc": "2026-11-21T23:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -20,7 +20,10 @@
     "js/47-clasicos.js",
     "juegos/getaway/55-clasicos.js",
     "docs/INVESTIGACION-MOTORES-CLASICOS.md",
-    "juegos/getaway/56-abierto.js"
+    "juegos/getaway/56-abierto.js",
+    "juegos/getaway/57-cine.js",
+    "js/47-colormap.js",
+    "todo lo de las otras IA (4.4)"
   ],
   "no_toco": [
     "src/ de BicicletasUno, MetroZero y RunRunZero (zonas de Antigravity y Codex)",
@@ -59,5 +62,5 @@
     "getaway_contenido": "node pruebas/getaway-contenido.mjs: todo OK"
   },
   "pendiente_para_compañeras": "Leer CONTEXTO-RELEVO.md § 5 (qué falta y a quién le toca) y dejar su entrada en § 8 al terminar.",
-  "pendiente_para_compañera": "Codex: C-M37..C-M40 y C-A18 (TAREAS-IA § 4.1) además de lo de 4.0.3. Gemini: G-H25..G-H27. Todos: entrada en CONTEXTO-RELEVO § 8."
+  "pendiente_para_compañera": "Nadie: Claude lleva todo desde 4.4. Ver CONTEXTO-RELEVO § 5."
 }

@@ -1,0 +1,42 @@
+{
+  "agente": "ChatGPT",
+  "id": "chatgpt-spatial-420",
+  "version_base": "4.2.0",
+  "rama": "ia/chatgpt/cm34-spatial-420-20261121",
+  "pr": 11,
+  "fecha": "2026-11-21",
+  "estado": "borrador; sin merge; comprobar CI último commit",
+  "rol": "C-M34 raster suelo/nivel espacial + concurrencia y retención de MC.Planeta",
+  "archivos_editados": [
+    "js/10-raster-sector.js",
+    "js/10-mundo.js",
+    "js/13-planeta.js",
+    "herramientas/construir.mjs",
+    "juegos/getaway/juego.json",
+    "juegos/getaway/20-juego.js",
+    "pruebas/raster-sector-cm34.mjs",
+    "pruebas/paquete-capas-cm34.mjs",
+    "pruebas/paquete-capas-browser.mjs",
+    "pruebas/planeta-cache-cm34.mjs",
+    "pruebas/planeta-cache-browser.mjs",
+    "pruebas/getaway-contenido.mjs",
+    ".github/workflows/motor-city-qa.yml",
+    "docs/MC4-STREAMING-TERRITORIAL.md",
+    "reportes/2026-11-21-chatgpt-cm34-streaming-territorial.md"
+  ],
+  "pendientes": [
+    "CI completo de PR #11",
+    "benchmarks reales de RAM y FPS",
+    "ED1 y vías por sectores",
+    "relieve con halo y colisiones continuas",
+    "coordinación de PR #10 conflictiva"
+  ],
+  "no_tocar": [
+    "Ramas de Claude/Gemini/Codex",
+    "Obras de arte/licencias ajenas",
+    "datos MC4 de origen",
+    "VERSION.json y main sin revisión"
+  ],
+  "documentacion": "docs/MC4-STREAMING-TERRITORIAL.md",
+  "instrucciones_siguiente": "Registrar entrada propia aditiva en CONTEXTO-RELEVO.md, ficha y buzon; revisar QA y conflictos antes de merge."
+}

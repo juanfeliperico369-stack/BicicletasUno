@@ -1,4 +1,4 @@
-/* Motor City 4.3.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.4.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.3.0',
+  version: '4.4.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -484,16 +484,44 @@ const GPU = {
   }
 };
 
-/* controlador de resolución dinámica: medir() cada cuadro con los ms de dibujo; escala va de min a max */
+/* controlador de resolución dinámica (4.2 · lazo cerrado EMA con histéresis y niebla acoplada, técnica Shadow of the Colossus):
+   medir(ms) cada cuadro; escala va de min a max; escalaPaso cuantiza el cambio con enfriamiento (evita redimensionar el lienzo cada cuadro);
+   si escala toca el piso y el cuadro sigue lento, acorta factorNiebla (0,62–1) para sostener los FPS. */
 class ResDinamica {
-  constructor(op = {}) { this.objetivo = op.objetivo || 1000 / 60; this.min = op.min ?? .5; this.max = op.max ?? 1; this.escala = op.escala ?? 1; this.integral = 0; this.ms = this.objetivo; this.kp = op.kp ?? .012; this.ki = op.ki ?? .002; }
+  constructor(op = {}) {
+    this.objetivo = op.objetivo || 1000 / 60; this.min = op.min ?? .5; this.max = op.max ?? 1;
+    this.escala = clamp(op.escala ?? 1, this.min, this.max); this.integral = 0; this.ms = this.objetivo;
+    this.kp = op.kp ?? .016; this.kpSube = op.kpSube ?? .009; this.ki = op.ki ?? .0022;
+    this.bandaBaja = op.bandaBaja ?? .72; this.bandaAlta = op.bandaAlta ?? .92;
+    this.paso = op.paso ?? .05; this.enfriamiento = op.enfriamiento ?? 8; this._desdeCambio = 0;
+    this.escalaPaso = this._cuantizar(this.escala); this.cambiosRes = 0;
+    this.nieblaMin = op.nieblaMin ?? .62; this.factorNiebla = 1;
+  }
+  _cuantizar(s) { return this.paso > 0 ? clamp(Math.round(s / this.paso) * this.paso, this.min, this.max) : clamp(s, this.min, this.max); }
   medir(ms) {
-    if (!(ms >= 0) || ms > 1000) return this.escala; this.ms = this.ms * .85 + ms * .15;
-    const err = (this.objetivo * .85 - this.ms) / this.objetivo;   // margen del 15 %: el navegador también necesita su tiempo
-    this.integral = clamp(this.integral + err, -20, 20);
-    /* el costo del dibujo crece con el área (escala²): se corrige en raíz para no oscilar */
-    this.escala = clamp(this.escala + this.kp * err + this.ki * this.integral * .1, this.min, this.max);
+    if (!(ms >= 0) || ms > 1000) return this.escala;
+    this.ms = this.ms * .85 + ms * .15; this._desdeCambio++;
+    const alto = this.objetivo * this.bandaAlta, bajo = this.objetivo * this.bandaBaja;
+    if (this.ms > alto) {
+      const err = (alto - this.ms) / this.objetivo;
+      this.integral = clamp(this.integral + err, -20, 20);
+      this.escala = clamp(this.escala + this.kp * err + this.ki * this.integral * .1, this.min, this.max);
+      if (this.escala <= this.min + .04) this.factorNiebla = clamp(this.factorNiebla + err * .018, this.nieblaMin, 1);
+    } else if (this.ms < bajo) {
+      const err = (bajo - this.ms) / this.objetivo;
+      this.integral = clamp(this.integral + err, -20, 20);
+      if (this.factorNiebla < 1) this.factorNiebla = clamp(this.factorNiebla + err * .012, this.nieblaMin, 1);
+      this.escala = clamp(this.escala + this.kpSube * err + this.ki * this.integral * .1, this.min, this.max);
+    } else {
+      /* zona muerta (histéresis): dentro del presupuesto estable, cero oscilación */
+      this.integral *= .9;
+    }
+    const q = this._cuantizar(this.escala);
+    if (q !== this.escalaPaso && this._desdeCambio >= this.enfriamiento) { this.escalaPaso = q; this._desdeCambio = 0; this.cambiosRes++; }
     return this.escala;
+  }
+  diagnostico() {
+    return { escala: +this.escala.toFixed(3), escalaPaso: +this.escalaPaso.toFixed(3), factorNiebla: +this.factorNiebla.toFixed(3), ms: +this.ms.toFixed(2), objetivo: +this.objetivo.toFixed(2), cambiosRes: this.cambiosRes, estable: this.ms >= this.objetivo * this.bandaBaja && this.ms <= this.objetivo * this.bandaAlta };
   }
 }
 
@@ -601,18 +629,26 @@ class Mundo {
      obtener(nombre) devuelve base64 o bytes SOLO para la capa pedida. No retiene
      los bytes MC4 completos; el juego puede guardar las capas en su HTML offline.
      Es particionado POR CAPA, no streaming espacial por kilómetros. */
-  static desdePaquete(meta, obtener, cfg) {
+  static desdePaquete(meta, obtener, cfg, obtenerSector) {
     if (!meta || meta.formato !== 'MC4' || !meta.capas || typeof obtener !== 'function') throw new Error('Paquete MC4 inválido');
     const m = Object.create(Mundo.prototype);
     m.meta = meta; m.cfg = cfg || null; m.u8 = null; m.base = 0; m._c = new Map(); m._obtenerCapa = obtener;
+    m._rasters = Object.create(null);
+    if (meta.rasters) {
+      if (typeof obtenerSector !== 'function') throw new Error('Falta proveedor de sectores MC4');
+      for (const [nombre, spec] of Object.entries(meta.rasters)) {
+        if (!meta.capas[nombre]) throw new Error('Sector raster sin capa MC4: ' + nombre);
+        m._rasters[nombre] = new MC.RasterMC4(spec, indice => obtenerSector(nombre, indice));
+      }
+    }
     m.W = meta.W; m.H = meta.H; m.tile = meta.tile; m.ancho = meta.W * meta.tile; m.alto = meta.H * meta.tile;
     m.kx = meta.kx * meta.tile; m.ky = meta.ky * meta.tile;
     const r = m.capaInfo('relieve'); m.eW = r.w; m.eH = r.h; m.es = r.paso * m.tile;
     const c = m.capaInfo('municipio'); m.mW = c.w; m.mH = c.h; m.ms = c.paso * m.tile;
     return m;
   }
-  static async cargarPaquete(meta, obtener, cfg) {
-    const m = Mundo.desdePaquete(meta, obtener, cfg);
+  static async cargarPaquete(meta, obtener, cfg, obtenerSector) {
+    const m = Mundo.desdePaquete(meta, obtener, cfg, obtenerSector);
     await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
     return m;
   }
@@ -639,7 +675,10 @@ class Mundo {
   /* la capa ya inflada (síncrona) */
   capa(nombre) {
     let v = this._c.get(nombre); if (v !== undefined) return v;
-    const c = this.capaInfo(nombre), b = this._bytes(c, nombre); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
+    const raster = this._rasters && this._rasters[nombre];
+    if (raster) v = raster.completa();
+    else { const c = this.capaInfo(nombre), b = this._bytes(c, nombre); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); }
+    this._c.set(nombre, v); return v;
   }
   /* un mundo armado en memoria (generador procedural, editor o herramientas): capas ya tipadas, sin comprimir.
      d = { meta: { W, H, tile, lon0, latN, kx, ky, nombre, … }, capas: { suelo: Uint8Array, relieve: {datos: Int16Array, w, h, paso}, … } } */
@@ -651,7 +690,20 @@ class Mundo {
     const r = M.capaInfo('relieve'); M.eW = r.w; M.eH = r.h; M.es = r.paso * M.tile; const c2 = M.capaInfo('municipio'); M.mW = c2.w; M.mH = c2.h; M.ms = c2.paso * M.tile;
     return M;
   }
-  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c, n), c.raw))); })); return this; }
+  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n) && !(this._rasters && this._rasters[n])).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c, n), c.raw))); })); return this; }
+  /* Lectura espacial: sin crear la cuadrícula completa si existe un paquete
+     sectorizado; la ruta MC4 histórica sigue funcionando sin cambios. */
+  _casillaRaster(nombre, tx, ty) {
+    const completa = this._c.get(nombre);
+    if (completa !== undefined) return completa[ty * this.W + tx];
+    const raster = this._rasters && this._rasters[nombre];
+    return raster ? raster.valorSeguro(tx, ty) : this.capa(nombre)[ty * this.W + tx];
+  }
+  diagnosticoRasters() {
+    const salida = {};
+    for (const [nombre, raster] of Object.entries(this._rasters || {})) salida[nombre] = raster.diagnostico();
+    return salida;
+  }
 
   /* ---------- coordenadas ---------- */
   geoAMetros(lat, lon) { return { x: (lon - this.meta.lon0) * this.kx, y: (this.meta.latN - lat) * this.ky }; }
@@ -659,8 +711,8 @@ class Mundo {
   dentro(x, y) { return x >= 0 && y >= 0 && x < this.ancho && y < this.alto; }
 
   /* ---------- suelo, relieve y niveles ---------- */
-  suelo(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this.capa('suelo')[ty * this.W + tx]; }
-  sueloCasilla(tx, ty) { return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this.capa('suelo')[ty * this.W + tx]; }
+  suelo(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this._casillaRaster('suelo', tx, ty); }
+  sueloCasilla(tx, ty) { return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this._casillaRaster('suelo', tx, ty); }
   /* cota del terreno en metros sobre el nivel del mar (bilineal en la malla de 80 m) */
   cota(x, y) {
     const E = this.capa('relieve'), w = this.eW, gx = clamp(x / this.es, 0, w - 1.001), gy = clamp(y / this.es, 0, this.eH - 1.001), x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, i = y0 * w + x0;
@@ -670,7 +722,7 @@ class Mundo {
   pendiente(x, y, ang, d = 20) { const c = Math.cos(ang) * d, s = Math.sin(ang) * d; return (this.cota(x + c, y + s) - this.cota(x - c, y - s)) / (2 * d); }
   normal(x, y, d = 20) { const gx = (this.cota(x + d, y) - this.cota(x - d, y)) / (2 * d), gy = (this.cota(x, y + d) - this.cota(x, y - d)) / (2 * d), l = Math.hypot(gx, gy, 1); return [-gx / l, 1 / l, -gy / l]; }
   /* nivel firmado de lo que pasa por la casilla (puente, viaducto o deprimido); 0 = nada */
-  nivel(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? 0 : this.capa('nivel')[ty * this.W + tx]; }
+  nivel(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? 0 : this._casillaRaster('nivel', tx, ty); }
   solido(x, y) { return TT_SOLIDO[this.suelo(x, y)] === 1; }
   superficie(x, y) { return TT_SUPERFICIE[this.suelo(x, y)]; }
   esCiclovia(x, y, r = 6) { if (this.suelo(x, y) === TT.CICLO) return true; const c = this.viaCercana(x, y, r, v => v.k === VIA.CICLO); return !!c; }
@@ -908,6 +960,115 @@ const ValleCompat = {
   }
 };
 MC.ValleCompat = ValleCompat; MC.Compat1 = ValleCompat;
+
+/* ---- js/10-raster-sector.js ---- */
+/* =====================================================================
+   C-M34 · RASTER MC4 POR SECTORES (aprox. 1 km)
+   Lee suelo/nivel desde bloques DEFLATE independientes dentro del HTML
+   offline. No descarga bytes externos ni cambia los MC4 de origen.
+   Un sector = `lado` casillas, con bordes parciales exactos y LRU acotada.
+   La cuadrícula completa solo se reconstruye si un consumidor pide
+   explícitamente `Mundo.capa('suelo'/'nivel')`.
+   ===================================================================== */
+class RasterMC4 {
+  constructor(spec, obtener, op = {}) {
+    const entero = v => Number.isSafeInteger(v) && v > 0;
+    if (!spec || !entero(spec.w) || !entero(spec.h) || !entero(spec.lado) ||
+      !entero(spec.nx) || !entero(spec.ny) ||
+      spec.nx !== Math.ceil(spec.w / spec.lado) || spec.ny !== Math.ceil(spec.h / spec.lado) ||
+      !['u8', 'i8'].includes(spec.tipo) || !Array.isArray(spec.indices) ||
+      spec.indices.length !== spec.nx * spec.ny + 1 ||
+      spec.indices[0] !== 0 || typeof obtener !== 'function') {
+      throw new Error('Manifiesto de raster MC4 inválido');
+    }
+    for (let i = 1; i < spec.indices.length; i++) {
+      if (!Number.isSafeInteger(spec.indices[i]) || spec.indices[i] <= spec.indices[i - 1]) {
+        throw new Error('Índices de raster MC4 inválidos');
+      }
+    }
+    const max = op.maxSectores === undefined ? 16 : op.maxSectores;
+    if (!entero(max) || max > 512) throw new RangeError('Presupuesto de sectores raster inválido');
+    this.spec = spec; this.obtener = obtener; this.maxSectores = max;
+    this.cache = new Map(); this._ultimoId = -1; this._ultimo = null;
+    this._hot = 0; this.aciertos = 0; this.fallos = 0; this.expulsiones = 0;
+    this.bytesResidentes = 0;
+  }
+  _dim(ix, iy) {
+    return { w: Math.min(this.spec.lado, this.spec.w - ix * this.spec.lado),
+      h: Math.min(this.spec.lado, this.spec.h - iy * this.spec.lado) };
+  }
+  _pedir(ix, iy) {
+    const id = iy * this.spec.nx + ix;
+    if (id === this._ultimoId && this._ultimo) {
+      this.aciertos++;
+      /* No hacer delete/set del Map por cada píxel: relajar el LRU de la
+         casilla caliente y renovar su recencia amortizada. */
+      if ((++this._hot & 255) === 0 && this.cache.has(id)) {
+        this.cache.delete(id); this.cache.set(id, this._ultimo);
+      }
+      return this._ultimo;
+    }
+    let datos = this.cache.get(id);
+    if (datos) {
+      this.aciertos++; this.cache.delete(id); this.cache.set(id, datos);
+    } else {
+      const comprimidos = this.obtener(id);
+      if (!(typeof comprimidos === 'string' || (comprimidos && typeof comprimidos.subarray === 'function'))) {
+        throw new Error('Sector raster MC4 ausente: ' + id);
+      }
+      const { w, h } = this._dim(ix, iy);
+      const raw = inflarSync(typeof comprimidos === 'string' ? deB64(comprimidos) : comprimidos, w * h);
+      if (raw.byteLength !== w * h) throw new Error('Sector raster MC4 corrupto: ' + id);
+      datos = this.spec.tipo === 'i8'
+        ? new Int8Array(raw.buffer, raw.byteOffset, raw.byteLength) : raw;
+      this.cache.set(id, datos); this.bytesResidentes += datos.byteLength; this.fallos++;
+      while (this.cache.size > this.maxSectores) {
+        const k = this.cache.keys().next().value, viejo = this.cache.get(k);
+        this.cache.delete(k); this.bytesResidentes -= viejo.byteLength; this.expulsiones++;
+      }
+    }
+    this._ultimoId = id; this._ultimo = datos; this._hot = 0;
+    return datos;
+  }
+  valor(tx, ty) {
+    if (!Number.isSafeInteger(tx) || !Number.isSafeInteger(ty) ||
+      tx < 0 || ty < 0 || tx >= this.spec.w || ty >= this.spec.h) return undefined;
+    return this.valorSeguro(tx, ty);
+  }
+  /* Llamado solamente cuando Mundo.suelo/nivel ya comprobaron los límites.
+     Elimina dos Number.isSafeInteger por casilla en la ruta de render. */
+  valorSeguro(tx, ty) {
+    const lado = this.spec.lado, ix = Math.floor(tx / lado), iy = Math.floor(ty / lado);
+    const w = Math.min(lado, this.spec.w - ix * lado);
+    const sector = this._pedir(ix, iy);
+    return sector[(ty - iy * lado) * w + tx - ix * lado];
+  }
+  /* Compatibilidad de `capa(nombre)`: materialización EXPLÍCITA de la
+     cuadrícula completa. No ocurre durante la precarga normal del paquete. */
+  completa() {
+    const S = this.spec, resultado = S.tipo === 'i8'
+      ? new Int8Array(S.w * S.h) : new Uint8Array(S.w * S.h);
+    for (let iy = 0; iy < S.ny; iy++) for (let ix = 0; ix < S.nx; ix++) {
+      const d = this._dim(ix, iy), chunk = this._pedir(ix, iy);
+      for (let y = 0; y < d.h; y++) {
+        const desde = y * d.w, hasta = desde + d.w, destino = (iy * S.lado + y) * S.w + ix * S.lado;
+        resultado.set(chunk.subarray(desde, hasta), destino);
+      }
+    }
+    this.limpiar(); // Los sectores ya no son necesarios cuando la capa está completa.
+    return resultado;
+  }
+  diagnostico() {
+    return { residentes: this.cache.size, maxSectores: this.maxSectores,
+      bytesResidentes: this.bytesResidentes, aciertos: this.aciertos,
+      descompresiones: this.fallos, expulsiones: this.expulsiones };
+  }
+  limpiar() {
+    this.cache.clear(); this.bytesResidentes = 0; this._ultimo = null;
+    this._ultimoId = -1; this._hot = 0;
+  }
+}
+MC.RasterMC4 = RasterMC4;
 
 /* ---- js/10-sectores.js ---- */
 /* C-M34 · Caché acotada de sectores de 1 km para edificios ED1.
@@ -1621,7 +1782,7 @@ class Planeta {
     this.maxMundos = op.maxMundos === undefined ? 2 : op.maxMundos;
     if (!Number.isSafeInteger(this.maxMundos) || this.maxMundos < 1) throw new RangeError('maxMundos debe ser entero positivo');
     this.cache = new Map(); this._cargando = new Map(); this._puertas = new Map();
-    this.activo = null; this.radioVisual = op.radioVisual || 60000; this.llegadaT = 0;
+    this.activo = null; this._epoca = 0; this.radioVisual = op.radioVisual || 60000; this.llegadaT = 0;
     this.metricasCache = { aciertos: 0, compartidas: 0, cargas: 0, expulsiones: 0, errores: 0 };
   }
   indice(id) { return this.anillo.findIndex(q => q.id === id); }
@@ -1649,6 +1810,14 @@ class Planeta {
     this._recortar(id);
     return this.cache.get(id) || null;
   }
+  liberarExcepto(id) {
+    this.fijar(id);
+    this._epoca++;
+    for (const k of [...this.cache.keys()]) if (k !== id) {
+      this.cache.delete(k); this._puertas.delete(k); this.metricasCache.expulsiones++;
+    }
+    return this.cache.size;
+  }
   diagnosticoCache() {
     return { residentes: [...this.cache.keys()], cargando: [...this._cargando.keys()],
       activo: this.activo, maxMundos: this.maxMundos, ...this.metricasCache };
@@ -1663,6 +1832,7 @@ class Planeta {
     if (this._cargando.has(id)) { this.metricasCache.compartidas++; return this._cargando.get(id); }
     const d = this.def(id); if (!d) throw new Error('el planeta no tiene ' + id);
     this.metricasCache.cargas++;
+    const epocaAlPedir = this._epoca;
     const tarea = Promise.resolve().then(async () => {
       try {
         const M = d.tipo === 'tramo'
@@ -1670,8 +1840,10 @@ class Planeta {
           : await this.cargar(id);
         if (!M || typeof M !== 'object') throw new Error('Cargador de mundo vacío: ' + id);
         M.planetaId = id;
-        this._tocar(id, M);
-        this._recortar(id);
+        if (this._epoca === epocaAlPedir || this.activo === id) {
+          this._tocar(id, M);
+          this._recortar(id);
+        }
         return M;
       } catch (e) { this.metricasCache.errores++; throw e; }
       finally { this._cargando.delete(id); }
@@ -6147,14 +6319,16 @@ class Vistas {
       }
       else if (v.tipo === 'pano') { this.pano.dibujar(dst, w, h, E, px ? { k: clamp(Math.min(w, h * 1.4) / 70, 2, 40) * (zoomReal / 3.2) } : {}); }
       else if (v.tipo === 'gl') {
-        /* resolución dinámica: la 3D se dibuja a escala s y se agranda (bajar píxeles antes que cuadros) */
-        const s = this.auto ? this.res.escala : 1, rw = Math.max(64, Math.round(w * s)), rh = Math.max(48, Math.round(h * s));
+        /* resolución dinámica cuantizada (4.2 · Shadow of the Colossus): evita redimensionar el lienzo 3D cada cuadro */
+        const s = this.auto ? (this.res.escalaPaso ?? this.res.escala) : 1, rw = Math.max(64, Math.round(w * s)), rh = Math.max(48, Math.round(h * s));
+        E.factorNiebla = this.auto ? (this.res.factorNiebla ?? 1) : 1;
         if (this.usaRaster()) { if (!this.raster) this.raster = new Raster(this.mundo); if (!this._rb || this._rb.width !== rw || this._rb.height !== rh) this._rb = lienzo(rw, rh); this.raster.dibujar(this._rb.getContext('2d'), rw, rh, E); dst.drawImage(this._rb, 0, 0, w, h); }
         else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
         this._clima2D(dst, w, h, E, true);
       }
     } catch (e) { MC.falla('vista ' + v.id, e); }
     E.camara.zoom = zoomReal;
+    if (px && this.colormap && MC.Colormap) { try { const Cj = E.jugador && E.jugador.cuerpo, q = Cj ? this.aPantalla(E, Cj.x, Cj.y, 0) : null; MC.Colormap.lienzo(this._buf, E, q ? [q[0] / this.escalaPixel, q[1] / this.escalaPixel] : null); } catch (e) { MC.falla('colormap', e); } }   /* 4.4: la luz de Doom en el modo pixel */
     if (px) { g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._buf, 0, 0, W, H); g.restore(); }
     /* bajo el agua: todo se tiñe de azul (más oscuro mientras más hondo), con rayos de luz que se mueven */
     const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);
@@ -6506,6 +6680,50 @@ VISTAS.push({ id: 'arcade', n: 'Arcade (carretera)', icon: '🏁', tipo: 'arcade
 }
 
 Object.assign(MC, { DDA, Semilla, Sigilo, Arcade, VoxelSpace });
+
+/* ---- js/47-colormap.js ---- */
+/* =====================================================================
+   COLORMAP (4.4, C‑M39) · la luz de Doom (id Software, 1993), rehecha desde cero (sala limpia; la paleta es nuestra)
+   Doom no mezclaba colores: tenía UNA paleta de 256 colores y 32 tablas que dicen, para cada color, cuál es su versión
+   más oscura dentro de la misma paleta. La luz que baja con la distancia era solo buscar en una tabla.
+   Aquí, en el modo pixel de cualquier vista:
+   - una paleta de 256 colores (cubo 6×6×6 + rampa de grises cálidos);
+   - una tabla de 32 768 entradas (RGB de 15 bits → índice) que se arma una sola vez;
+   - 32 niveles de luz; el nivel crece con la distancia al jugador en pantalla y con la noche.
+   Cuesta unas 3 búsquedas por píxel del búfer pequeño (≈ 40 000 píxeles en un celular): menos de 1 ms.
+   Uso: vistas.pixel = true; vistas.colormap = true   (o MC.Colormap.aplicar(imageData, op) a mano)
+   ===================================================================== */
+const Colormap = {
+  _cm: null,
+  /* la paleta y las tablas (perezoso: la primera vez que se usa) */
+  crear(niveles = 32) {
+    const P = []; for (let r = 0; r < 6; r++) for (let g = 0; g < 6; g++) for (let b = 0; b < 6; b++) P.push([r * 51, g * 51, b * 51]);
+    for (let k = 0; k < 40; k++) { const v = Math.round(k / 39 * 255); P.push([Math.min(255, v + 6), v, Math.max(0, v - 8)]); }
+    const n = P.length, cerca = (r, g, b) => { let m = 0, md = 1e9; for (let i = 0; i < n; i++) { const p = P[i], d = (p[0] - r) * (p[0] - r) * .3 + (p[1] - g) * (p[1] - g) * .59 + (p[2] - b) * (p[2] - b) * .11; if (d < md) { md = d; m = i; } } return m; };
+    const tabla = new Uint8Array(32768); for (let i = 0; i < 32768; i++) tabla[i] = cerca(((i >> 10) & 31) * 8.23, ((i >> 5) & 31) * 8.23, (i & 31) * 8.23);
+    /* luz[nivel·n + c]: el color c oscurecido (0 = tal cual, niveles-1 = casi negro), siempre dentro de la paleta */
+    const luz = new Uint8Array(niveles * n); for (let l = 0; l < niveles; l++) { const k = 1 - l / (niveles - 1) * .94; for (let c = 0; c < n; c++) { const p = P[c]; luz[l * n + c] = tabla[((p[0] * k) >> 3) << 10 | ((p[1] * k) >> 3) << 5 | ((p[2] * k) >> 3)]; } }
+    const rgba = new Uint32Array(n); for (let c = 0; c < n; c++) rgba[c] = (255 << 24) | (P[c][2] << 16) | (P[c][1] << 8) | P[c][0];
+    return { P, n, tabla, luz, niveles, rgba };
+  },
+  tablas() { return this._cm || (this._cm = this.crear()); },
+  /* img: { data, width, height } (ImageData). op: { cx, cy (centro de la luz, px), base (nivel de luz de fondo 0..31), caida (niveles por px²) } */
+  aplicar(img, op = {}) {
+    const T = this.tablas(), U = new Uint32Array(img.data.buffer, img.data.byteOffset, img.data.length >> 2), w = img.width, h = img.height, n = T.n, max = T.niveles - 1;
+    const cx = op.cx ?? w / 2, cy = op.cy ?? h * .6, base = op.base ?? 0, caida = op.caida ?? 18 / (w * w);
+    for (let y = 0, i = 0; y < h; y++) { const dy2 = (y - cy) * (y - cy); for (let x = 0; x < w; x++, i++) {
+      const v = U[i], c = T.tabla[((v & 255) >> 3) << 10 | (((v >> 8) & 255) >> 3) << 5 | (((v >> 16) & 255) >> 3)], l = Math.min(max, (base + ((x - cx) * (x - cx) + dy2) * caida) | 0);
+      U[i] = T.rgba[T.luz[l * n + c]]; } }
+    return img;
+  },
+  /* sobre un lienzo pequeño (el búfer del modo pixel), con la luz centrada en el jugador */
+  lienzo(cv, E, centro) {
+    const g = cv.getContext('2d'), img = g.getImageData(0, 0, cv.width, cv.height), cielo = E && E.reloj && typeof Cielo !== 'undefined' ? Cielo.en(E.reloj.fecha, E.reloj.hora, E.clima) : null, noche = cielo ? cielo.noche : 0;
+    this.aplicar(img, { cx: centro ? centro[0] : cv.width / 2, cy: centro ? centro[1] : cv.height * .6, base: Math.round(noche * 9), caida: (4 + noche * 22) / (cv.width * cv.width) });
+    g.putImageData(img, 0, 0);
+  }
+};
+MC.Colormap = Colormap;
 
 /* ---- js/47-seguir.js ---- */
 /* =====================================================================
@@ -7769,12 +7987,54 @@ MC.Pieles = Pieles;
    - ACCESIBILIDAD (§10.3 y §13): MC.opciones.particulas (0 a 1) baja el polvo, el agua y las hojas. */
 const Vida = {
   MAX: 260, P: [], aves: [], onos: [], palomas: [], marcas: [], MAXM: 700, _t: null, _pv: null,
-  /* partículas: polvo, agua, hoja o chispa en metros del mundo (z = altura) */
-  emitir(tipo, x, y, n = 6, op = {}) {
-    n = Math.round(n * (MC.opciones ? MC.opciones.particulas ?? 1 : 1)); for (let i = 0; i < n; i++) {
-      if (this.P.length >= this.MAX) this.P.shift(); const a = Math.random() * TAU, s = (op.vel ?? 1.5) * (.4 + Math.random() * .8);
-      this.P.push({ tipo, x: x + (Math.random() - .5) * (op.r ?? .6), y: y + (Math.random() - .5) * (op.r ?? .6), z: op.z ?? .1, vx: Math.cos(a) * s + (op.vx || 0), vy: Math.sin(a) * s + (op.vy || 0), vz: (op.vz ?? 1.2) * (.5 + Math.random()), t: 0, vida: op.vida ?? (tipo === 'hoja' ? 4 : tipo === 'agua' ? .7 : 1.1), r: op.tam ?? (tipo === 'polvo' ? .35 : .12), fase: Math.random() * TAU });
+  _banco: null, _libres: null, _nAct: 0, _evict: 0, _stats: { creados: 0, reciclados: 0, descartados: 0, pico: 0 },
+  /* 4.2 · pool circular sin basura en memoria (técnica Burnout 3 / RenderWare: 0 objetos nuevos por cuadro, O(1) sin shift ni splice) */
+  _asegurarPool() {
+    if (!this._banco) {
+      this._banco = new Array(this.MAX); this._libres = new Array(this.MAX);
+      for (let i = 0; i < this.MAX; i++) {
+        const p = { tipo: '', x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, vida: 1, r: .1, fase: 0 };
+        this._banco[i] = p; this._libres[i] = p;
+      }
+      this._stats.creados = this.MAX; this._nAct = 0; this._evict = 0;
+    } else if (this.P.length < this._nAct || this._banco.length < this.MAX) {
+      if (this._banco.length < this.MAX) {
+        for (let i = this._banco.length; i < this.MAX; i++) {
+          const p = { tipo: '', x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, vida: 1, r: .1, fase: 0 };
+          this._banco.push(p); this._stats.creados++;
+        }
+      }
+      const vivas = new Set(this.P); this._libres.length = 0;
+      for (let i = 0; i < this._banco.length; i++) if (!vivas.has(this._banco[i])) this._libres.push(this._banco[i]);
+      this._nAct = this.P.length; if (this._evict >= Math.max(1, this.P.length)) this._evict = 0;
     }
+  },
+  poolDiagnostico() {
+    this._asegurarPool();
+    return { capacidad: this.MAX, activas: this.P.length, libres: this._libres.length, creados: this._stats.creados, reciclados: this._stats.reciclados, descartados: this._stats.descartados, pico: this._stats.pico };
+  },
+  /* partículas: polvo, agua, hoja o chispa en metros del mundo (z = altura); O(1) sin crear objetos por cuadro */
+  emitir(tipo, x, y, n = 6, op = {}) {
+    n = Math.round(n * (MC.opciones ? MC.opciones.particulas ?? 1 : 1)); if (n <= 0) return;
+    this._asegurarPool();
+    for (let i = 0; i < n; i++) {
+      let p;
+      if (this.P.length >= this.MAX) {
+        p = this.P[this._evict % this.P.length];
+        this._evict = (this._evict + 1) % this.P.length;
+        this._stats.descartados++;
+      } else {
+        p = this._libres.pop();
+        if (!p) { p = { tipo: '', x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, vida: 1, r: .1, fase: 0 }; this._banco.push(p); this._stats.creados++; }
+        this.P.push(p);
+      }
+      const a = Math.random() * TAU, s = (op.vel ?? 1.5) * (.4 + Math.random() * .8);
+      p.tipo = tipo; p.x = x + (Math.random() - .5) * (op.r ?? .6); p.y = y + (Math.random() - .5) * (op.r ?? .6); p.z = op.z ?? .1;
+      p.vx = Math.cos(a) * s + (op.vx || 0); p.vy = Math.sin(a) * s + (op.vy || 0); p.vz = (op.vz ?? 1.2) * (.5 + Math.random());
+      p.t = 0; p.vida = op.vida ?? (tipo === 'hoja' ? 4 : tipo === 'agua' ? .7 : 1.1); p.r = op.tam ?? (tipo === 'polvo' ? .35 : .12); p.fase = Math.random() * TAU;
+      this._stats.reciclados++;
+    }
+    this._nAct = this.P.length; if (this.P.length > this._stats.pico) this._stats.pico = this.P.length;
   },
   onomatopeya(x, y, texto, color = '#ffd400') { if (this.onos.length > 6) this.onos.shift(); this.onos.push({ x, y, texto, color, t: 0 }); },
   /* lo que pasa con el jugador: aterrizajes, frenazos, agua y choques */
@@ -7840,9 +8100,11 @@ const Vida = {
   actualizar(E) {
     const t = E.t || 0, dt = this._t == null ? 0 : clamp(t - this._t, 0, .1); this._t = t; if (!dt) return;
     this._jugador(E, dt); this._aves(E, dt); this._hojas(E, dt); this._palomas(E, dt);
-    for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t > p.vida) { this.P.splice(i, 1); continue; }
+    if (this._banco && this.P.length < this._nAct) this._asegurarPool();
+    for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t > p.vida) { const ult = this.P.pop(); if (i < this.P.length) this.P[i] = ult; if (this._libres && this._libres.length < this.MAX) this._libres.push(p); continue; }
       if (p.tipo === 'hoja' || p.tipo === 'pluma') { p.vz = p.t < .3 && p.tipo === 'pluma' ? .5 : -.7; p.vx = Math.sin(p.t * 2.3 + p.fase) * .9; p.vy = Math.cos(p.t * 1.7 + p.fase) * .4; } else { p.vz -= 9.8 * dt * (p.tipo === 'polvo' ? .15 : 1); p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2; }
       p.x += p.vx * dt; p.y += p.vy * dt; p.z = Math.max(0, p.z + p.vz * dt); if (p.z === 0 && p.tipo === 'hoja') { p.vx = p.vy = 0; } }
+    this._nAct = this.P.length;
     for (let i = this.onos.length - 1; i >= 0; i--) if ((this.onos[i].t += dt) > .8) this.onos.splice(i, 1);
   },
   dibujar(D) {
@@ -8280,7 +8542,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","46-vistas.js","47-clasicos.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

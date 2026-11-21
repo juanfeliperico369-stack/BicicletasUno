@@ -48,16 +48,44 @@ const GPU = {
   }
 };
 
-/* controlador de resolución dinámica: medir() cada cuadro con los ms de dibujo; escala va de min a max */
+/* controlador de resolución dinámica (4.2 · lazo cerrado EMA con histéresis y niebla acoplada, técnica Shadow of the Colossus):
+   medir(ms) cada cuadro; escala va de min a max; escalaPaso cuantiza el cambio con enfriamiento (evita redimensionar el lienzo cada cuadro);
+   si escala toca el piso y el cuadro sigue lento, acorta factorNiebla (0,62–1) para sostener los FPS. */
 class ResDinamica {
-  constructor(op = {}) { this.objetivo = op.objetivo || 1000 / 60; this.min = op.min ?? .5; this.max = op.max ?? 1; this.escala = op.escala ?? 1; this.integral = 0; this.ms = this.objetivo; this.kp = op.kp ?? .012; this.ki = op.ki ?? .002; }
+  constructor(op = {}) {
+    this.objetivo = op.objetivo || 1000 / 60; this.min = op.min ?? .5; this.max = op.max ?? 1;
+    this.escala = clamp(op.escala ?? 1, this.min, this.max); this.integral = 0; this.ms = this.objetivo;
+    this.kp = op.kp ?? .016; this.kpSube = op.kpSube ?? .009; this.ki = op.ki ?? .0022;
+    this.bandaBaja = op.bandaBaja ?? .72; this.bandaAlta = op.bandaAlta ?? .92;
+    this.paso = op.paso ?? .05; this.enfriamiento = op.enfriamiento ?? 8; this._desdeCambio = 0;
+    this.escalaPaso = this._cuantizar(this.escala); this.cambiosRes = 0;
+    this.nieblaMin = op.nieblaMin ?? .62; this.factorNiebla = 1;
+  }
+  _cuantizar(s) { return this.paso > 0 ? clamp(Math.round(s / this.paso) * this.paso, this.min, this.max) : clamp(s, this.min, this.max); }
   medir(ms) {
-    if (!(ms >= 0) || ms > 1000) return this.escala; this.ms = this.ms * .85 + ms * .15;
-    const err = (this.objetivo * .85 - this.ms) / this.objetivo;   // margen del 15 %: el navegador también necesita su tiempo
-    this.integral = clamp(this.integral + err, -20, 20);
-    /* el costo del dibujo crece con el área (escala²): se corrige en raíz para no oscilar */
-    this.escala = clamp(this.escala + this.kp * err + this.ki * this.integral * .1, this.min, this.max);
+    if (!(ms >= 0) || ms > 1000) return this.escala;
+    this.ms = this.ms * .85 + ms * .15; this._desdeCambio++;
+    const alto = this.objetivo * this.bandaAlta, bajo = this.objetivo * this.bandaBaja;
+    if (this.ms > alto) {
+      const err = (alto - this.ms) / this.objetivo;
+      this.integral = clamp(this.integral + err, -20, 20);
+      this.escala = clamp(this.escala + this.kp * err + this.ki * this.integral * .1, this.min, this.max);
+      if (this.escala <= this.min + .04) this.factorNiebla = clamp(this.factorNiebla + err * .018, this.nieblaMin, 1);
+    } else if (this.ms < bajo) {
+      const err = (bajo - this.ms) / this.objetivo;
+      this.integral = clamp(this.integral + err, -20, 20);
+      if (this.factorNiebla < 1) this.factorNiebla = clamp(this.factorNiebla + err * .012, this.nieblaMin, 1);
+      this.escala = clamp(this.escala + this.kpSube * err + this.ki * this.integral * .1, this.min, this.max);
+    } else {
+      /* zona muerta (histéresis): dentro del presupuesto estable, cero oscilación */
+      this.integral *= .9;
+    }
+    const q = this._cuantizar(this.escala);
+    if (q !== this.escalaPaso && this._desdeCambio >= this.enfriamiento) { this.escalaPaso = q; this._desdeCambio = 0; this.cambiosRes++; }
     return this.escala;
+  }
+  diagnostico() {
+    return { escala: +this.escala.toFixed(3), escalaPaso: +this.escalaPaso.toFixed(3), factorNiebla: +this.factorNiebla.toFixed(3), ms: +this.ms.toFixed(2), objetivo: +this.objetivo.toFixed(2), cambiosRes: this.cambiosRes, estable: this.ms >= this.objetivo * this.bandaBaja && this.ms <= this.objetivo * this.bandaAlta };
   }
 }
 

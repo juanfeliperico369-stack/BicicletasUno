@@ -6,7 +6,7 @@
      dist/motor-city.html       el banco de pruebas jugable (sandbox/): un solo HTML, sin internet
    Uso: node herramientas/construir.mjs [--ciudad medellin] [--sin-sandbox]
    ===================================================================== */
-import fs from 'node:fs'; import path from 'node:path'; import { execSync } from 'node:child_process'; import crypto from 'node:crypto'; import { fileURLToPath } from 'node:url';
+import fs from 'node:fs'; import path from 'node:path'; import { execSync } from 'node:child_process'; import crypto from 'node:crypto'; import zlib from 'node:zlib'; import { fileURLToPath } from 'node:url';
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), DIST = path.join(RAIZ, 'dist');
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const CIUDAD = arg('--ciudad', 'medellin'), VER = JSON.parse(fs.readFileSync(path.join(RAIZ, 'VERSION.json'), 'utf8'));
@@ -66,25 +66,68 @@ if (fs.existsSync(path.join(RAIZ, 'arte'))) for (const id of fs.readdirSync(path
 /* C-M34 · partición opcional del contenedor MC4 en capas comprimidas.
    Cada capa conserva exactamente los bytes deflate del MC4 original: el lector
    puede decodificar solo lo que necesita. Sin peticiones de red ni cambio MC4. */
-function mundoPorCapas(id, bin) {
+/* Raster espacial: bloques comprimidos por casillas, ~1 km de lado.
+   El HTML contiene un único <script> de texto por raster; los índices
+   permiten extraer solo el Base64 de la región solicitada. */
+function rasterPorSectores(id, nombre, capa, comprimido, meta) {
+  if (!Number.isFinite(meta.tile) || meta.tile <= 0 || !Number.isSafeInteger(capa.w) ||
+    !Number.isSafeInteger(capa.h) || capa.w !== meta.W || capa.h !== meta.H ||
+    !['u8', 'i8'].includes(capa.tipo) || capa.raw !== capa.w * capa.h) {
+    throw new Error('Raster MC4 incompatible: ' + id + '/' + nombre);
+  }
+  const lado = Math.ceil(1000 / meta.tile), nx = Math.ceil(capa.w / lado), ny = Math.ceil(capa.h / lado);
+  const original = zlib.inflateRawSync(comprimido);
+  if (original.length !== capa.raw) throw new Error('Raster MC4 comprimido corrupto: ' + id + '/' + nombre);
+  const partes = [], indices = [0];
+  let offset = 0;
+  for (let iy = 0; iy < ny; iy++) for (let ix = 0; ix < nx; ix++) {
+    const w = Math.min(lado, capa.w - ix * lado), h = Math.min(lado, capa.h - iy * lado);
+    const zona = Buffer.allocUnsafe(w * h);
+    for (let fila = 0; fila < h; fila++) {
+      const desde = (iy * lado + fila) * capa.w + ix * lado;
+      original.copy(zona, fila * w, desde, desde + w);
+    }
+    const b64 = zlib.deflateRawSync(zona, { level: 6 }).toString('base64');
+    partes.push(b64); offset += b64.length; indices.push(offset);
+  }
+  return {
+    spec: { w: capa.w, h: capa.h, lado, nx, ny, tipo: capa.tipo, indices },
+    html: '<script type="text/plain" id="mc4r-' + id + '-' + nombre + '">' + partes.join('') + '</script>\n'
+  };
+}
+
+/* El MC4 original NO se modifica. `rasters:true` es opt-in y fragmenta
+   suelo/nivel con LRU espacial mientras el resto conserva el formato
+   por capas de C-M34. Sin servidor, peticiones de red ni archivos sueltos. */
+function mundoPorCapas(id, bin, op = {}) {
   if (!/^[a-zA-Z0-9_-]+$/.test(id)) throw new Error('ID de mundo no seguro: ' + id);
   if (bin.length < 8 || bin.toString('ascii', 0, 3) !== 'MC4') throw new Error('No es MC4: ' + id);
   const n = bin.readUInt32LE(4), base = 8 + n;
   if (n < 2 || base > bin.length) throw new Error('Cabecera MC4 truncada: ' + id);
   const meta = JSON.parse(bin.subarray(8, base).toString('utf8'));
   if (!meta.capas || meta.formato !== 'MC4') throw new Error('Metadatos MC4 inválidos: ' + id);
-  /* Reemplazar < impide cerrar un script desde metadatos de terceros. */
-  let html = '<script type="text/plain" id="mc4meta-' + id + '">' +
-    JSON.stringify(meta).replaceAll('<', '\\u003c') + '</script>\n';
+  if (op.rasters && meta.rasters) throw new Error('MC4 de origen ya incluye rasters; manifest ambiguo');
+  const partes = [], rasters = {};
   for (const [nombre, c] of Object.entries(meta.capas)) {
     if (!/^[a-zA-Z0-9_-]+$/.test(nombre)) throw new Error('Nombre de capa no seguro: ' + nombre);
     if (!Number.isSafeInteger(c.o) || !Number.isSafeInteger(c.n) || c.o < 0 || c.n < 0 || base + c.o + c.n > bin.length) {
       throw new Error('Capa MC4 fuera de límites: ' + id + '/' + nombre);
     }
-    html += '<script type="text/plain" id="mc4-' + id + '-' + nombre + '">' +
-      bin.subarray(base + c.o, base + c.o + c.n).toString('base64') + '</script>\n';
+    const compressed = bin.subarray(base + c.o, base + c.o + c.n);
+    if (op.rasters && (nombre === 'suelo' || nombre === 'nivel')) {
+      const r = rasterPorSectores(id, nombre, c, compressed, meta);
+      rasters[nombre] = r.spec; partes.push(r.html);
+    } else {
+      partes.push('<script type="text/plain" id="mc4-' + id + '-' + nombre + '">' + compressed.toString('base64') + '</script>\n');
+    }
   }
-  return html;
+  if (op.rasters) {
+    if (!rasters.suelo || !rasters.nivel) throw new Error('El MC4 requiere suelo y nivel para dividir por sectores');
+    meta.rasters = rasters;
+  }
+  /* Escapar '<' en la serialización de metadatos: texto inerte en el HTML. */
+  return '<script type="text/plain" id="mc4meta-' + id + '">' +
+    JSON.stringify(meta).replaceAll('<', '\\u003c') + '</script>\n' + partes.join('');
 }
 
 /* ---------- los juegos de juegos/<id>/ (cada uno con su mundo): dist/juegos/<id>.html ---------- */
@@ -97,7 +140,7 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   /* 4.0: varios mundos en un juego ("mundos": ["nueva_york", "medellin", "guatape"]): cada MC4 va en un <script type="text/plain">
      (el navegador no lo interpreta como JavaScript: se lee y se descomprime solo el mundo al que se llega) y sus reglas en MC_CIUDADES */
   let mundosHTML = '';
-  if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += J.mundos_capas ? mundoPorCapas(m, fs.readFileSync(f)) : `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`; }
+  if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += J.mundos_capas ? mundoPorCapas(m, fs.readFileSync(f), { rasters: J.mundos_rasters === true }) : `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`; }
     J._ciudades = C; }
   let mundoJ; const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')); mundoJ = J.mundos ? `var MC_CIUDADES = ${JSON.stringify(J._ciudades)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n` : `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
   /* arte en sprites: "arte": ["gemini"] en juego.json compila arte/<id>/ (atlas WebP + manifiesto + íconos + hitos + paletas) dentro del HTML */

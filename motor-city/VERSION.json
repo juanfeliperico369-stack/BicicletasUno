@@ -1,5 +1,5 @@
 {
-  "version": "4.3.0",
+  "version": "4.4.0",
   "fecha": "2026-11-21",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
@@ -7,5 +7,5 @@
     "BicicletasUno: integración del motor en main no comprobada",
     "MetroZero: integración del motor en main no comprobada"
   ],
-  "estado": "4.3.0 en la rama de integración y en main (Pages): arreglos de la auditoría móvil de Antigravity (Arcade sin fantasmas, correr con ⚡ a pie, menú que no se corta, gema de color, faros solo de noche, vuelo con búferes reusados); caché del planeta de ChatGPT; mundo abierto primero también en El Metro y EnCicla"
+  "estado": "4.4.0 en la rama de integración y en main (Pages): Claude asume lo que dejaron Codex, ChatGPT y Antigravity; unidas sus últimas entregas (C-M34 raster espacial, pool de partículas, escalador EMA); Turno Cero con modo cine (direccionales), cubierta y esquivar a pie, y Retro 1993 (COLORMAP de Doom); EnCicla con los arreglos de Codex; Run Scooter con la carretera de la nada"
 }

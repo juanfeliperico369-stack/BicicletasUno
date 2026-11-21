@@ -62,14 +62,16 @@ class Vistas {
       }
       else if (v.tipo === 'pano') { this.pano.dibujar(dst, w, h, E, px ? { k: clamp(Math.min(w, h * 1.4) / 70, 2, 40) * (zoomReal / 3.2) } : {}); }
       else if (v.tipo === 'gl') {
-        /* resolución dinámica: la 3D se dibuja a escala s y se agranda (bajar píxeles antes que cuadros) */
-        const s = this.auto ? this.res.escala : 1, rw = Math.max(64, Math.round(w * s)), rh = Math.max(48, Math.round(h * s));
+        /* resolución dinámica cuantizada (4.2 · Shadow of the Colossus): evita redimensionar el lienzo 3D cada cuadro */
+        const s = this.auto ? (this.res.escalaPaso ?? this.res.escala) : 1, rw = Math.max(64, Math.round(w * s)), rh = Math.max(48, Math.round(h * s));
+        E.factorNiebla = this.auto ? (this.res.factorNiebla ?? 1) : 1;
         if (this.usaRaster()) { if (!this.raster) this.raster = new Raster(this.mundo); if (!this._rb || this._rb.width !== rw || this._rb.height !== rh) this._rb = lienzo(rw, rh); this.raster.dibujar(this._rb.getContext('2d'), rw, rh, E); dst.drawImage(this._rb, 0, 0, w, h); }
         else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
         this._clima2D(dst, w, h, E, true);
       }
     } catch (e) { MC.falla('vista ' + v.id, e); }
     E.camara.zoom = zoomReal;
+    if (px && this.colormap && MC.Colormap) { try { const Cj = E.jugador && E.jugador.cuerpo, q = Cj ? this.aPantalla(E, Cj.x, Cj.y, 0) : null; MC.Colormap.lienzo(this._buf, E, q ? [q[0] / this.escalaPixel, q[1] / this.escalaPixel] : null); } catch (e) { MC.falla('colormap', e); } }   /* 4.4: la luz de Doom en el modo pixel */
     if (px) { g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._buf, 0, 0, W, H); g.restore(); }
     /* bajo el agua: todo se tiñe de azul (más oscuro mientras más hondo), con rayos de luz que se mueven */
     const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);

@@ -1,5 +1,7 @@
 # Motor City · MC4 offline por capas (C-M34, versión experimental)
 
+> **Nota de vigencia:** este documento describe la primera entrega de la **PR #9**, ya integrada en Motor City **4.2.0**. Su afirmación histórica de que todavía no hay streaming de 1 km corresponde a aquella versión inicial. Para el lector territorial optativo de `suelo/nivel` de la **PR #11**, ver [MC4-STREAMING-TERRITORIAL.md](MC4-STREAMING-TERRITORIAL.md). Las capas ED1/vías/relieve siguen pendientes.
+
 **Rama de trabajo:** `ia/chatgpt/cm34-cache-20261120` · **base:** 4.0.3 · **estado:** candidato para revisión; no fusionar sin CI de Node + Chromium.
 
 ## 1. Qué resuelve

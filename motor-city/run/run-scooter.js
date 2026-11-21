@@ -1,4 +1,4 @@
-/* RUN SCOOTER dentro de Motor City · copia casi idéntica de RunRunZero 5b2f85d (motor WebGL propio, modelos, escena, reglas y audio)
+/* RUN SCOOTER dentro de Motor City · copia casi idéntica de RunRunZero 5d14819 (motor WebGL propio, modelos, escena, reglas y audio)
    con 12 parches con nombre (herramientas/importar-run.mjs). Generado: no editar a mano.
    © Run Scooter (juanfeliperico369-stack/RunRunZero), mismo autor. */
 (function (MC) {
@@ -370,11 +370,22 @@ const ZRAW = [
   Z({ name: 'FINCA CAFETERA', sub: 'Montañas verdes y casitas de colores', bill: 9, top: '#7fc8f5', hor: '#fff1cf', sunC: '#fff8e0', sun: [0.3, 0.75, 0.06], stars: 0, amb: 0.85, sunI: 0.42, emit: 0.2, fog: [70, 185],
     road: ['#7a3b1f', '#e9d8b4', '#7fb24a', '#ffffff', '#e9d8b4'], scen: ['#3f8a3a', '#6b4226', '#e7dfc8', '#c0191c', '#ff3b30'], ui: '#7a3b1f' }),
   Z({ name: 'PUENTE SOBRE EL RÍO', sub: 'Rueda sobre el agua', bill: 0, top: '#6fb2d6', hor: '#cfe6ee', sunC: '#ffffff', sun: [-0.3, 0.8, 0.05], stars: 0, amb: 0.84, sunI: 0.4, emit: 0.25, fog: [70, 185],
-    road: ['#4a4f58', '#b9bcc2', '#2f7fb0', '#ffd23a', '#e8e4c4'], scen: ['#3f8a4f', '#3a3f4a', '#e8e4c4', '#f4f1e6', '#ffd23a'], ui: '#2f7fb0' })
+    road: ['#4a4f58', '#b9bcc2', '#2f7fb0', '#ffd23a', '#e8e4c4'], scen: ['#3f8a4f', '#3a3f4a', '#e8e4c4', '#f4f1e6', '#ffd23a'], ui: '#2f7fb0' }),
+  /* C‑R40 · «Run por la carretera de la nada»: los biomas de las carreteras de MC.Planeta (Motor City) entre una ciudad y otra */
+  Z({ name: 'CARRETERA · COSTA', sub: 'La Ruta del Atlántico junto al mar', bill: 1, top: '#4fb6e8', hor: '#f6e6c0', sunC: '#fff7d6', sun: [0.3, 0.78, 0.06], stars: 0, amb: 0.86, sunI: 0.44, emit: 0.18, fog: [80, 200],
+    road: ['#55585f', '#e9dcb4', '#e7d29a', '#ffffff', '#f2c400'], scen: ['#4aa35e', '#8a5a32', '#f2c400', '#2f9fd1', '#ffd23a'], ui: '#2f9fd1' }),
+  Z({ name: 'CARRETERA · DESIERTO', sub: 'Kilómetros de nada y calor', bill: 3, top: '#f2a65a', hor: '#ffe0a8', sunC: '#fff3c8', sun: [-0.2, 0.7, 0.1], stars: 0, amb: 0.88, sunI: 0.5, emit: 0.22, fog: [60, 175],
+    road: ['#5c4a3a', '#e9c98a', '#d9a35b', '#fff3d0', '#f2c400'], scen: ['#8c9a4a', '#6b4a2b', '#c98a3e', '#e9c98a', '#fff0b0'], ui: '#c0612a' }),
+  Z({ name: 'CARRETERA · NEVADO', sub: 'Hielo en la vía, ojo con resbalar', bill: 4, top: '#a9c3d9', hor: '#eef3f7', sunC: '#ffffff', sun: [0.25, 0.8, 0.04], stars: 0, amb: 0.9, sunI: 0.32, emit: 0.25, fog: [40, 150],
+    road: ['#3d434c', '#dfe7ee', '#f4f7fa', '#ffffff', '#cfe8ff'], scen: ['#2e5e44', '#4a3a2e', '#f4f7fa', '#9fb7cc', '#ffd36b'], ui: '#3a6d96' }),
+  Z({ name: 'CARRETERA · BOSQUE DE LAGOS', sub: 'Pinos, troncos caídos y agua quieta', bill: 8, top: '#8fbcd0', hor: '#dbe9e2', sunC: '#ffffff', sun: [-0.25, 0.82, 0.05], stars: 0, amb: 0.8, sunI: 0.34, emit: 0.28, fog: [45, 160],
+    road: ['#3b4a3a', '#c9c2a8', '#3d6b3f', '#f4f1e6', '#8a7a5a'], scen: ['#2e6b3a', '#5a3a22', '#3f7fb0', '#e8efe9', '#ffd36b'], ui: '#2f5d3a' })
 ];
 /* orden de las ediciones: la revista alterna sus páginas con los nuevos escenarios */
 const ZORD = [0, 1, 7, 2, 9, 3, 8, 4, 10, 5, 6];
 const ZONES = ZORD.map(i => ZRAW[i]);
+/* las zonas de la carretera van al final de ZONES; la partida normal recorre solo ZSEQ y la de la carretera, ZRUTA */
+const ZSEQ = ZONES.map((_, i) => i), ZRUTA = [11, 12, 13, 14].map(i => (ZONES.push(ZRAW[i]), ZONES.length - 1));
 /* nombre corto de la zona para letreros de esquina */
 const zShort = Z => { const p = Z.name.split(' · '); return p.length > 1 && /^(SESIÓN|EDICIÓN)/.test(p[0]) ? p[1] : p[0]; };
 /* zona libre: retos para ganar habilidad */
@@ -633,14 +644,16 @@ const OT = {
   pbike: { hw: 0.32, hd: 0.85, y0: 0, y1: 1.0, fatal: 1, need: 'jump', vault: 1, name: 'una bici parqueada' },
   container: { hw: 0.62, hd: 0.66, y0: 0, y1: 1.3, fatal: 1, land: 1, need: 'block', hard: 1, name: 'un contenedor de basura' },
   sand: { hw: 0.78, hd: 1.6, y0: -0.1, y1: 0.05, ground: 1, sand: 1, need: 'jump', name: 'la arena' },
+  log: { hw: 0.8, hd: 0.38, y0: 0, y1: 0.55, fatal: 1, need: 'jump', vault: 1, name: 'un tronco caído' },
+  ice: { hw: 0.78, hd: 1.9, y0: -0.1, y1: 0.04, ground: 1, ice: 1, need: 'jump', name: 'el hielo' },
   scaff: { hw: 0.8, hd: 0.45, y0: 1.15, y1: 2.9, fatal: 1, need: 'duck', name: 'un andamio de obra' }
 };
 /* cada barrio tiene obstáculos con lógica: ciudad (c), naturaleza (n) y playa (b) */
-const CAT = ZORD.map(i => ['c', 'c', 'c', 'c', 'c', 'n', 'c', 'b', 'n', 'n', 'c'][i]);
+const CAT = ZORD.map(i => ['c', 'c', 'c', 'c', 'c', 'n', 'c', 'b', 'n', 'n', 'c'][i]).concat(['b', 'd', 'i', 'f']);   /* + carretera: costa, desierto, hielo, bosque */
 /* zonas: tabla por tramos; en cada esquina el jugador puede doblar y cambiar de zona */
 function zinfo(g, s) {
   const zt = g.zt; s = Math.max(0, s);
-  while (zt[zt.length - 1].s <= s) { const l = zt[zt.length - 1]; zt.push({ s: l.s + 1000, z: (l.z + 1) % ZONES.length, ed: l.ed + 1 }); }
+  const seq = g.zseq || ZSEQ; while (zt[zt.length - 1].s <= s) { const l = zt[zt.length - 1], k = seq.indexOf(l.z); zt.push({ s: l.s + 1000, z: seq[(k + 1) % seq.length], ed: l.ed + 1 }); }
   let i = zt.length - 2; while (i > 0 && zt[i].s > s) i--;
   const a = zt[i]; return { z: a.z, ed: a.ed, s0: a.s, s1: zt[i + 1].s, pz: i > 0 ? zt[i - 1].z : a.z };
 }
@@ -651,7 +664,11 @@ const POOL = {
   n: { e: [['rock', 2], ['branch', 1.8], ['pothole', 1.4], ['puddle', 1.2], ['trash', 0.4], ['stall', 0.8], ['cone', 0.6]],
        m: [['pothole', 2.2], ['rock', 0.8], ['puddle', 1], ['crack', 0.8], ['cone', 0.8], ['barrier', 0.8], ['bump', 0.6]] },
   b: { e: [['sand', 2], ['trash', 1.2], ['stall', 2], ['puddle', 0.6], ['cone', 0.8], ['pbike', 1]],
-       m: [['sand', 1.6], ['pothole', 1.4], ['bump', 1], ['cone', 1], ['barrier', 0.8], ['crack', 0.5]] }
+       m: [['sand', 1.6], ['pothole', 1.4], ['bump', 1], ['cone', 1], ['barrier', 0.8], ['crack', 0.5]] },
+  /* carretera de la nada (C‑R40): desierto con arena y rocas, nevado con hielo, bosque con troncos */
+  d: { e: [['sand', 2.4], ['rock', 1.8], ['pothole', 0.8], ['crack', 0.8]], m: [['sand', 2], ['rock', 1], ['crack', 1.2], ['bump', 0.8], ['pothole', 0.8]] },
+  i: { e: [['ice', 2.4], ['rock', 1], ['log', 0.8], ['pothole', 0.6]], m: [['ice', 2.2], ['crack', 1], ['bump', 0.6], ['pothole', 0.6]] },
+  f: { e: [['log', 2.2], ['branch', 1.6], ['rock', 1.2], ['puddle', 1]], m: [['log', 1.6], ['puddle', 1.2], ['pothole', 1], ['crack', 0.6]] }
 };
 const STREETX = ['branch', 'scaff', 'stall', 'pbike', 'sand', 'trash', 'rock'];
 const NPCN = ['un ciclista', 'un corredor', 'una patinadora', 'un peatón', '', 'una moto'];
@@ -673,7 +690,12 @@ const THRAW = [
   { near: [['coffee', 4], ['fence', 2], ['tree', 1.5], ['bench', 0.6], ['bill', 0.8]], far: [['coffee', 3], ['mount', 2], ['hill', 2]] },
   { near: [['lamp', 2]], far: [['boat', 1.5], ['mount', 1.2]], rail: 1 }
 ];
-const THEMES = ZORD.map(i => THRAW[i]);
+const THEMES = ZORD.map(i => THRAW[i]).concat([
+  { near: [['palm', 4], ['lamp', 1], ['bush', 1.5]], far: [['palm', 3], ['mount', 1.5]], sea: 1 },
+  { near: [['bush', 1.2], ['fence', 2], ['lamp', 0.8]], far: [['hill', 4], ['mount', 3.5]] },
+  { near: [['pine', 4], ['fence', 1.5]], far: [['pine', 3], ['mount', 4.5]] },
+  { near: [['pine', 4.5], ['tree', 2], ['bush', 1.5]], far: [['pine', 4], ['mount', 2]], sea: 1 }
+]);
 const TUT = [
   { need: 'jump', msg: 'DESLIZA ↑ PARA SALTAR', pc: 'Flecha ↑ · W · Espacio' },
   { need: 'duck', msg: 'DESLIZA ↓ PARA AGACHARTE', pc: 'Flecha ↓ · S' },
@@ -692,8 +714,8 @@ const HILLD = s => HILL(s + 0.5) - HILL(s - 0.5);
 RUNV.ponHill = f => { HILL = f; };
 /* las subidas cuestan más a los vehículos de fuerza; las bajadas aceleran (toca frenar) */
 const hillK = (g, sl) => { const v = g.veh; if (v.id === 'long' && sl < 0) return clamp(1 - 2.8 * sl, 1, 1.4); if (v.id === 'ebike' && sl > 0) return 1; return v.kind === 'h' ? clamp(1 - 2.0 * sl, 0.72, 1.3) : clamp(1 - sl, 0.86, 1.24); };
-const FLOW = ZORD.map(i => [0.6, 0.6, 0.2, 0.4, 0.3, 0.6, 0.35, 0.2, 0.3, 0.5, 0][i]);
-const DELK = ZORD.map(i => [0.6, 0.7, 0.3, 0.4, 0.3, 0.6, 0.3, 0.45, 0.6, 0.85, -1][i]);
+const FLOW = ZORD.map(i => [0.6, 0.6, 0.2, 0.4, 0.3, 0.6, 0.35, 0.2, 0.3, 0.5, 0][i]).concat([0.15, 0.04, 0.02, 0.35]);
+const DELK = ZORD.map(i => [0.6, 0.7, 0.3, 0.4, 0.3, 0.6, 0.3, 0.45, 0.6, 0.85, -1][i]).concat([0.3, 0.2, 0.2, 0.4]);
 const diffAt = s => clamp((s - 150) / 6500, 0, 1);
 /* semáforos de los cruces: verde, amarillo, rojo (en rojo cruzan carros) */
 const TG = 6.5, TY = 1.3, TR = 4.6, CYC = TG + TY + TR;
@@ -718,7 +740,7 @@ function newGame(o) {
     p: { s: 0, x: LX(2), lane: 2, from: 2, laneT: -9, y: 0, vy: 0, gv: 0, gy: 0, v: 0, air: false, airT: 0, crouch: 0, fastFall: 0, jumps: 0, stumble: 0, slow: 1, inv: 0, alive: true, deadT: 0,
       magnet: 0, turbo: 0, x2: 0, glide: 0, shield: v.id === 'auto' ? 1 : 0, boost: 0, sl: 0, trickHit: 0, phase: 0, brake: 0, en: 0, tapT: 9, over: 0, trN: 0, trT: 9, grind: 0, grT: 0, inPark: 0 },
     obs: [], coins: [], items: [], scen: [], ev: [], lf: [0, 0, 0, 0], resv: [0, 0, 0, 0], sideBusy: [0, 0],
-    zt: [{ s: 0, z: 0, ed: 0 }], corners: [], turns: 0, free: o.free ? 1 : 0, drI: 0, drB: 0, drills: 0, drP: 0, drCur: 0, drNeed: 1, falls: 0,
+    zt: [{ s: 0, z: o.ruta ? ZRUTA[0] : 0, ed: 0 }], zseq: o.ruta ? ZRUTA : null, ruta: o.ruta ? 1 : 0, corners: [], turns: 0, free: o.free ? 1 : 0, drI: 0, drB: 0, drills: 0, drP: 0, drCur: 0, drNeed: 1, falls: 0,
     xs: [], crs: [], nars: [], parks: [], shops: [], forks: [], fork: null, evt: o.evt || '', vs: v.spd * (1 + 0.02 * ((o.vup || {}).v || 0)), hk: v.hnd * (1 + 0.05 * ((o.vup || {}).h || 0)), pads: 0, forksN: 0, nar: null, park: null, pol: null, riv: null, _cars: [],
     genS: 42, scenS: -30, nextGate: 1000, nextSeg: o.free ? 30 : 520, segI: 0, nextCrit: 640, nextRiv: o.free ? 1e12 : 850, nextKio: 420,
     dels: [], deliv: 0, perf: 0, dStreak: 0, dBest: 0, nextDel: 105, stolen: 0, tuns: [], pet: !!o.pet, petSide: 1, edition: 0, score: 0, coinsRun: 0, starsRun: 0, clues: 0, gifts: 0, jumps: 0, ducks: 0, tricks: 0, powers: 0, trucks: 0,
@@ -783,7 +805,7 @@ function genSeg(g) {
     // esquina: a la izquierda y a la derecha salen calles hacia otras zonas (de 2 carriles o un callejón de 1)
     const C = s + 50, tb = tunB(s, C + 30); if (tb) { g.nextSeg = tb[1] + 25; return; }
     if (g.resv.some(x => x > C - 10)) { g.nextSeg = Math.max(...g.resv) + 12; return; }
-    const z = zinfo(g, C).z, o = []; for (let i = 1; i < ZONES.length; i++) o.push((z + i) % ZONES.length);
+    const z = zinfo(g, C).z, o = [], sq = g.zseq || ZSEQ, kz = Math.max(0, sq.indexOf(z)); for (let i = 1; i < sq.length; i++) o.push(sq[(kz + i) % sq.length]);
     for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = o[i]; o[i] = o[j]; o[j] = t; }
     const nL = r() < 0.5 ? 1 : 2, nR = r() < 0.65 ? 3 - nL : nL;
     g.corners.push({ s: C, z, L: { z: o[0], n: nL }, R: { z: o[1], n: nR }, done: 0, ai: null });
@@ -1027,6 +1049,7 @@ function chase(g, k, d) { if (g.free) return; const P = g.p; g.pol = { k, d, t: 
 function input(g, k) {
   const P = g.p, V = g.veh; if (!P.alive) return;
   if (k === 'L' || k === 'R') {
+    if (P.slip > 0) { ev(g, 'slip'); return; }   /* resbalando en el hielo */
     const nl = clamp(P.lane + (k === 'L' ? -1 : 1), 0, NL - 1);
     if (nl !== P.lane) { P.from = P.lane; P.lane = nl; P.laneT = g.t; ev(g, 'lane'); }
   } else if (k === 'U') {
@@ -1174,7 +1197,7 @@ function step(g, dt, inp) {
   // descanso en el parque: detente unos segundos para recuperar energía (y curar una lesión)
   if (inPark && P.v < 1.2 && !P.air) { if ((g.restT = (g.restT || 0) + dt) > 2.5 && !g.rested) { g.rested = 1; P.en = g.enMax; ev(g, 'rest'); } } else g.restT = 0;
   // velocidad: v = (14 + 21·(1 − e^(−s/2600)))·vehículo·pendiente + impulso
-  const base = vEst(g, P.s); P.slow = Math.min(1, P.slow + dt * 0.35); P.boost = Math.max(0, P.boost - dt * 0.24);
+  const base = vEst(g, P.s); P.slow = Math.min(1, P.slow + dt * 0.35); if (P.slip > 0) P.slip -= dt; P.boost = Math.max(0, P.boost - dt * 0.24);
   const tv = (base * hillK(g, sl) + g.bmax * P.boost) * (P.turbo > 0 ? 1.4 : 1) * P.slow;
   if (P.brake && P.turbo <= 0 && P.glide <= 0) P.v = Math.max(0, P.v - g.brakeDec * dt);
   else P.v += (tv - P.v) * Math.min(1, dt * (P.v < tv ? 2.2 : 6));
@@ -1245,6 +1268,7 @@ function step(g, dt, inp) {
     if (frontal) {
       if (g.vault && o.T.vault) { P.air = true; P.airT = 0; P.vy = Math.sqrt(2 * GRAV * (o.y1 + 0.55)); P.slow = Math.min(P.slow, 0.88); P.jumps = 1; P.trickHit = 1; P.crouch = 0; g.vaults++; ev(g, 'vault', o); }
       else if (o.T.sand) { P.slow = Math.min(P.slow, 0.7); ev(g, 'sand', o); continue; }
+      else if (o.T.ice) { P.slip = 1.1; ev(g, 'ice', o); continue; }   /* en el hielo no se puede cambiar de carril un rato */
       else if (o.T.bump && P.v < 13) { if (!P.air) { P.air = true; P.airT = 0; P.vy = 3.2; P.trickHit = 1; } ev(g, 'bump', o); continue; }
       else if (o.T.minor || (g.vault && o.T.ground)) { if (o.t === 'puddle' && V.id === 'inline') { ev(g, 'splash', o); continue; } stumble(g, o, false); if (o.t === 'cone' || o.t === 'trash') smash(g, o); }
       else die(g, o);
@@ -1418,7 +1442,7 @@ function aiThink(g, skill = 1) {
 
 /* Simulación rápida sin render (bot de pruebas) */
 function simulate(o) {
-  const g = newGame({ seed: o.seed, veh: o.veh || 'foot', ai: true, up: o.up, mult: 1, cluesLeft: 12, pet: o.pet, letters: 'EMSAY', fit: o.fit == null ? 50 : o.fit, inj: o.inj, perks: o.perks, skill: o.skill2 || 0, tut: o.tut, evt: o.evt, vup: o.vup, free: o.free });
+  const g = newGame({ ruta: o.ruta, seed: o.seed, veh: o.veh || 'foot', ai: true, up: o.up, mult: 1, cluesLeft: 12, pet: o.pet, letters: 'EMSAY', fit: o.fit == null ? 50 : o.fit, inj: o.inj, perks: o.perks, skill: o.skill2 || 0, tut: o.tut, evt: o.evt, vup: o.vup, free: o.free });
   const maxT = o.maxT || 240; let n = 0, inp = null, errs = [], stuck = 0; g.aiPad = !!o.padRoute;
   while (g.p.alive && g.t < maxT) {
     if (n % 3 === 0) inp = aiThink(g, o.skill == null ? 1 : o.skill); else inp = null;
@@ -1776,6 +1800,9 @@ const MOD = {
   container() { const m = new MB(), g1 = hex('#2f6e3c'), g2 = hex('#245a30'); m.box(0, 0.62, 0, 1.18, 1.0, 1.15, g1); m.box(0, 1.15, 0.03, 1.22, 0.08, 1.22, g2); m.box(0, 1.2, -0.62, 1.1, 0.06, 0.08, hex('#111'));
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) wheelX(m, sx * 0.48, 0.08, sz * 0.45, 0.08, 0.06, hex('#111'), 8);
     m.tri([-0.15, 0.55, 0.578], [0.15, 0.55, 0.578], [0, 0.82, 0.578], hex('#f4f1e6'), 0.5); m.box(0, 0.3, 0.58, 1.0, 0.06, 0.01, hex('#f4f1e6')); return m; },
+  /* C‑R40: tronco caído (bosque) y placa de hielo (nevado) */
+  log() { const m = new MB(), r = rngOf(71), cor = hex('#6b4a2b'), anillo = hex('#c9a26b'); m.at(0, 0.28, 0, 0, 0, Math.PI / 2, 1, 1, 1, q => { q.cyl(0, -0.78, 0, 0.27, 1.56, 10, cor); q.cyl(0, -0.8, 0, 0.2, 0.03, 10, anillo); q.cyl(0, 0.78, 0, 0.2, 0.03, 10, anillo); }); for (let i = 0; i < 3; i++) m.ico((r() - 0.5) * 1.2, 0.5, (r() - 0.5) * 0.2, 0.08, hex('#3d6b3f'), 0, 0.6, r, 0.3); return m; },
+  ice() { const m = new MB(), r = rngOf(73); m.at(0, 0, 0, 0, 0, 0, 1, 1, 2.3, q => { q.cyl(0, 0.004, 0, 0.84, 0.014, 12, hex('#cfe8ff'), 0.25); q.cyl(-0.2, 0.008, 0.1, 0.35, 0.012, 8, hex('#ffffff'), 0.4); }); for (let i = 0; i < 5; i++) m.box((r() - 0.5) * 1.1, 0.012, (r() - 0.5) * 3, 0.05, 0.01, 0.5, hex('#ffffff'), 0.5); return m; },
   sand() { const m = new MB(), r = rngOf(61), sd = hex('#e8cf8f'); m.at(0, 0, 0, 0, 0, 0, 1, 1, 2.0, q => q.cyl(0, 0.004, 0, 0.82, 0.016, 12, sd)); for (let i = 0; i < 8; i++) m.ico((r() - 0.5) * 1.2, 0.02, (r() - 0.5) * 2.6, 0.18 + r() * 0.16, hex('#d9bd78'), 0, 0.28, r, 0.4); m.box(0.3, 0.02, 0.5, 0.12, 0.015, 0.22, hex('#ff5a2a')); return m; },
   scaff() { const m = new MB(), tb = hex('#9aa0aa'), y = hex('#ffc23a'), net = hex('#ff6a1a');
     for (const sx of [-1, 1]) { for (const sz of [-0.42, 0.42]) m.box(sx * 0.86, 1.5, sz, 0.07, 3.0, 0.07, tb); m.box(sx * 0.86, 2.4, 0, 0.06, 0.06, 0.92, tb); m.box(sx * 0.86, 0.12, 0, 0.12, 0.06, 1.0, hex('#5b4636')); m.quad([sx * 0.9, 1.45, 0.42], [sx * 0.9, 1.45, -0.42], [sx * 0.9, 2.85, -0.42], [sx * 0.9, 2.85, 0.42], net, 0.15); }
@@ -2124,9 +2151,9 @@ const RN = {
     for (const k of ['road', 'tree', 'pine', 'bush', 'lamp', 'bench', 'hill', 'billFrame', 'gateFrame', 'rock', 'cone', 'barrier', 'pothole', 'puddle', 'kiosk', 'coin', 'gift', 'clue', 'magnet', 'shield', 'turbo', 'x2', 'cube', 'shadow', 'ink', 'flowers', 'wing', 'bfly', 'bird', 'bwing', 'rabbit', 'palm', 'parasol', 'sea', 'mount', 'fence', 'coffee', 'rail', 'boat', 'buzon', 'flag', 'door', 'rarm', 'mag', 'tunnel', 'portal']) mo[k] = mk(MOD[k]());
     mo.runB = [0, 1, 2, 3].map(c => mk(MOD.npcRun(c, 0))); mo.skB = [0, 1, 2, 3].map(c => mk(MOD.npcRun(c, 1))); mo.runL = mk(MOD.npcLeg(0)); mo.skL = mk(MOD.npcLeg(1));
     mo.kite = [0, 1, 2].map(v => mk(MOD.kite(v))); mo.balloon = [0, 1].map(v => mk(MOD.balloon(v)));
-    for (const k of ['tlight', 'wallseg', 'railseg', 'posterWall', 'bundle', 'envelope', 'paper', 'xroad', 'parkArch', 'quarter', 'policia', 'ducks', 'medseg', 'forkSign', 'chev', 'fountain', 'playground', 'pond', 'hedgeseg', 'bedseg', 'manhole', 'crack', 'bump', 'trash', 'pbike', 'container', 'sand', 'scaff']) mo[k] = mk(MOD[k]());
+    for (const k of ['tlight', 'wallseg', 'railseg', 'posterWall', 'bundle', 'envelope', 'paper', 'xroad', 'parkArch', 'quarter', 'policia', 'ducks', 'medseg', 'forkSign', 'chev', 'fountain', 'playground', 'pond', 'hedgeseg', 'bedseg', 'manhole', 'crack', 'bump', 'trash', 'pbike', 'container', 'sand', 'scaff', 'log', 'ice']) mo[k] = mk(MOD[k]());
     mo.signpost = [null, mk(MOD.signpost(1)), mk(MOD.signpost(2))];
-    this.NEWO = new Set(['manhole', 'crack', 'bump', 'trash', 'pbike', 'container', 'sand', 'scaff']);
+    this.NEWO = new Set(['manhole', 'crack', 'bump', 'trash', 'pbike', 'container', 'sand', 'scaff', 'log', 'ice']);
     mo.picnic = [0, 1, 2].map(v => mk(MOD.picnic(v))); mo.sitter = [0, 1, 2, 3].map(v => mk(MOD.sitter(v)));
     mo.shop = [0, 1, 2].map(v => mk(MOD.shop(v))); mo.stall = [0, 1, 2].map(v => mk(MOD.stall(v))); mo.person = [0, 1, 2, 3].map(v => mk(MOD.person(v))); mo.poster = [0, 1, 2, 3].map(v => mk(MOD.poster(v)));
     mo.carNpc = [0, 1, 2, 3].map(v => mk(MOD.carNpc(v))); mo.motoNpc = [0, 1, 2, 3].map(v => mk(MOD.motoNpc(v)));
@@ -2640,5 +2667,5 @@ const AU = {
   }
 };
 
-MC.RunScooter = { version: "5b2f85d", RUNV, R, RN, AU, MOD, VEH, VEHI, ZONES, newGame, step, input, aiThink, revive, makeAtlas, LX, NL, DT, HILLD: s => HILLD(s), GRAV };
+MC.RunScooter = { version: "5d14819", RUNV, R, RN, AU, MOD, VEH, VEHI, ZONES, newGame, step, input, aiThink, revive, makeAtlas, LX, NL, DT, HILLD: s => HILLD(s), GRAV };
 })(typeof window !== 'undefined' ? window.MC : globalThis.MC);

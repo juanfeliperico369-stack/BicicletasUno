@@ -1,5 +1,45 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.4.0 · Claude asume lo que dejaron las otras IA
+- **El autor:** «Y ya ni lo harán, resuelve tú lo que falta».
+- **Unidas las últimas entregas:**
+  - ChatGPT: C‑M34 raster espacial (sectores de suelo y nivel de 1 km comprimidos, bajo demanda y con LRU);
+  - Antigravity:
+    - pool circular sin basura en `MC.Vida`;
+    - escalador EMA con histéresis y niebla acoplada en `ResDinamica` (*Shadow of the Colossus*).
+- **Turno Cero:**
+  - **🎬 Modo cine (C‑M40, *The Getaway*):**
+    - sin flecha ni minimapa;
+    - las direccionales del carro marcan la próxima esquina de la ruta (a menos de 90 m);
+    - al llegar se encienden las estacionarias.
+  - **A pie (C‑M32):**
+    - 🧱 cubierta: quieta y pegada a un muro, los guardias ven a 0,45 de la distancia;
+    - 💨 esquivar (botón o Q): 3 m en 0,4 s sin que te alcancen a golpear.
+  - **🕹️ Retro 1993 (C‑M39):** el COLORMAP de Doom (`js/47-colormap.js`):
+    - paleta propia de 256 colores;
+    - tabla RGB15 de 32 768 entradas;
+    - 32 niveles de luz por distancia y por la noche;
+    - unos 1,3 ms por cuadro.
+- **EnCicla:** los 5 arreglos que describió Codex, con su regresión (ver su bitácora).
+- **Run Scooter:**
+  - 🛣️ «Run por la carretera de la nada» (C‑R40): costa, desierto, nevado y bosque de lagos, con arena, hielo y troncos;
+  - el regalo diario se entrega solo, sin ventana;
+  - el motor lo reimporta (`herramientas/importar-run.mjs`; las 12 adaptaciones aplican).
+- **Probado:**
+  - Node: 142, con el COLORMAP en § 23;
+  - el contenido;
+  - C‑M34;
+  - Chromium;
+  - EnCicla en verde;
+  - El Metro: 100 partidas;
+  - Run Scooter: 100 partidas.
+- **Pendiente** (`CONTEXTO-RELEVO.md` § 5):
+  - el PVS calculado por adelantado;
+  - Guatapé en El Metro y EnCicla;
+  - las crónicas de El Metro;
+  - el globo en la misma escena;
+  - el celular real.
+
 ## 21-nov-2026 · 4.3.0 · La auditoría móvil de Antigravity, arreglada; mundo abierto primero en los tres juegos
 - **Unidas:**
   - **la auditoría de Antigravity:** `reportes/2026-11-21-gemini-clasicos-4.1.md` (G‑H25, G‑H26 y G‑H28, con 18 capturas) y el catálogo G‑H27 (`reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md`);
@@ -819,3 +859,14 @@ Rama: ia/chatgpt/cm34-cache-20261120. Motor 4.0.3 base sin incremento de versió
 - **No se fusionó ni incrementó versión.** Mantener pendiente hasta CI, benchmark JS Heap/CPU y GPU física. Todavía NO son sectores geográficos de 1 km.
 ## C-M34 · ChatGPT · Motor City 4.1 · caché multicidad sin cargas duplicadas
 Rama `ia/chatgpt/planeta-cache-410-20261121`, basada en `main` 4.1.0: single-flight asíncrono por ciudad, política LRU real, protección de mundo activo, `maxMundos` y métricas `diagnosticoCache()`. Turno Cero llama a `planeta.fijar(id)` al llegar. QA Node (7 casos) y Chromium offline integrado en GitHub Actions. Documentación: `docs/PLANETA-CACHE-CONCURRENCIA.md`, `reportes/2026-11-21-chatgpt-planeta-cache-410.md`. Estado: candidato para revisión, sin mezclar con PR #9 ni fusionar en main antes de pruebas.
+
+## 21-nov-2026 · ChatGPT · C-M34 streaming territorial (PR #11, rama 4.2)
+
+- El MC4 original se mantiene intacto, pero `suelo` y `nivel` se empaquetan por sectores de aproximadamente 1 km y se decodifican bajo demanda. `MC.RasterMC4` contiene LRU de 16 sectores por raster, bordes parciales, `u8/i8` y materialización compatible con `Mundo.capa`.
+- `Mundo.desdePaquete/cargarPaquete` recibe proveedor opcional de sectores; el constructor y Turno Cero activan `mundos_rasters:true`; el HTML sigue offline y el resto de capas MC4 conserva sus bytes originales.
+- Portada de la PR #10 a `main` 4.2: `Planeta` deduplica cargas, usa LRU, protege el mundo activo y `liberarExcepto` descarga mundo anterior e invalida rutas. Un contador de época impide resucitar cargas antiguas tras cambiar de ciudad.
+- QA: `raster-sector-cm34.mjs`, `paquete-capas-cm34.mjs` (equivalencia byte a byte de Manhattan/Medellín/Guatapé), `planeta-cache-cm34.mjs` (9 casos), `getaway-contenido.mjs` actualizado a la nueva API, más Chromium offline. CI del último commit pendiente de confirmación; no mezclar runs anteriores.
+- Guía: `docs/MC4-STREAMING-TERRITORIAL.md`; informe: `reportes/2026-11-21-chatgpt-cm34-streaming-territorial.md`; relevo en `coord/buzon/20261121-1015-chatgpt-cm34-spatial.md`.
+- **Sin merge ni nueva versión.** ED1/vías/relieve no están fragmentados; falta medir memoria y FPS real.
+
+**Sincronización:** los cambios de Motor City 4.3.0 de Claude/Gemini se incorporaron al historial de esta rama sin reemplazar su código. Validación del commit combinado pendiente de CI.

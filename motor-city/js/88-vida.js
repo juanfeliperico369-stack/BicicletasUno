@@ -17,12 +17,54 @@
    - ACCESIBILIDAD (§10.3 y §13): MC.opciones.particulas (0 a 1) baja el polvo, el agua y las hojas. */
 const Vida = {
   MAX: 260, P: [], aves: [], onos: [], palomas: [], marcas: [], MAXM: 700, _t: null, _pv: null,
-  /* partículas: polvo, agua, hoja o chispa en metros del mundo (z = altura) */
-  emitir(tipo, x, y, n = 6, op = {}) {
-    n = Math.round(n * (MC.opciones ? MC.opciones.particulas ?? 1 : 1)); for (let i = 0; i < n; i++) {
-      if (this.P.length >= this.MAX) this.P.shift(); const a = Math.random() * TAU, s = (op.vel ?? 1.5) * (.4 + Math.random() * .8);
-      this.P.push({ tipo, x: x + (Math.random() - .5) * (op.r ?? .6), y: y + (Math.random() - .5) * (op.r ?? .6), z: op.z ?? .1, vx: Math.cos(a) * s + (op.vx || 0), vy: Math.sin(a) * s + (op.vy || 0), vz: (op.vz ?? 1.2) * (.5 + Math.random()), t: 0, vida: op.vida ?? (tipo === 'hoja' ? 4 : tipo === 'agua' ? .7 : 1.1), r: op.tam ?? (tipo === 'polvo' ? .35 : .12), fase: Math.random() * TAU });
+  _banco: null, _libres: null, _nAct: 0, _evict: 0, _stats: { creados: 0, reciclados: 0, descartados: 0, pico: 0 },
+  /* 4.2 · pool circular sin basura en memoria (técnica Burnout 3 / RenderWare: 0 objetos nuevos por cuadro, O(1) sin shift ni splice) */
+  _asegurarPool() {
+    if (!this._banco) {
+      this._banco = new Array(this.MAX); this._libres = new Array(this.MAX);
+      for (let i = 0; i < this.MAX; i++) {
+        const p = { tipo: '', x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, vida: 1, r: .1, fase: 0 };
+        this._banco[i] = p; this._libres[i] = p;
+      }
+      this._stats.creados = this.MAX; this._nAct = 0; this._evict = 0;
+    } else if (this.P.length < this._nAct || this._banco.length < this.MAX) {
+      if (this._banco.length < this.MAX) {
+        for (let i = this._banco.length; i < this.MAX; i++) {
+          const p = { tipo: '', x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, vida: 1, r: .1, fase: 0 };
+          this._banco.push(p); this._stats.creados++;
+        }
+      }
+      const vivas = new Set(this.P); this._libres.length = 0;
+      for (let i = 0; i < this._banco.length; i++) if (!vivas.has(this._banco[i])) this._libres.push(this._banco[i]);
+      this._nAct = this.P.length; if (this._evict >= Math.max(1, this.P.length)) this._evict = 0;
     }
+  },
+  poolDiagnostico() {
+    this._asegurarPool();
+    return { capacidad: this.MAX, activas: this.P.length, libres: this._libres.length, creados: this._stats.creados, reciclados: this._stats.reciclados, descartados: this._stats.descartados, pico: this._stats.pico };
+  },
+  /* partículas: polvo, agua, hoja o chispa en metros del mundo (z = altura); O(1) sin crear objetos por cuadro */
+  emitir(tipo, x, y, n = 6, op = {}) {
+    n = Math.round(n * (MC.opciones ? MC.opciones.particulas ?? 1 : 1)); if (n <= 0) return;
+    this._asegurarPool();
+    for (let i = 0; i < n; i++) {
+      let p;
+      if (this.P.length >= this.MAX) {
+        p = this.P[this._evict % this.P.length];
+        this._evict = (this._evict + 1) % this.P.length;
+        this._stats.descartados++;
+      } else {
+        p = this._libres.pop();
+        if (!p) { p = { tipo: '', x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, vida: 1, r: .1, fase: 0 }; this._banco.push(p); this._stats.creados++; }
+        this.P.push(p);
+      }
+      const a = Math.random() * TAU, s = (op.vel ?? 1.5) * (.4 + Math.random() * .8);
+      p.tipo = tipo; p.x = x + (Math.random() - .5) * (op.r ?? .6); p.y = y + (Math.random() - .5) * (op.r ?? .6); p.z = op.z ?? .1;
+      p.vx = Math.cos(a) * s + (op.vx || 0); p.vy = Math.sin(a) * s + (op.vy || 0); p.vz = (op.vz ?? 1.2) * (.5 + Math.random());
+      p.t = 0; p.vida = op.vida ?? (tipo === 'hoja' ? 4 : tipo === 'agua' ? .7 : 1.1); p.r = op.tam ?? (tipo === 'polvo' ? .35 : .12); p.fase = Math.random() * TAU;
+      this._stats.reciclados++;
+    }
+    this._nAct = this.P.length; if (this.P.length > this._stats.pico) this._stats.pico = this.P.length;
   },
   onomatopeya(x, y, texto, color = '#ffd400') { if (this.onos.length > 6) this.onos.shift(); this.onos.push({ x, y, texto, color, t: 0 }); },
   /* lo que pasa con el jugador: aterrizajes, frenazos, agua y choques */
@@ -88,9 +130,11 @@ const Vida = {
   actualizar(E) {
     const t = E.t || 0, dt = this._t == null ? 0 : clamp(t - this._t, 0, .1); this._t = t; if (!dt) return;
     this._jugador(E, dt); this._aves(E, dt); this._hojas(E, dt); this._palomas(E, dt);
-    for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t > p.vida) { this.P.splice(i, 1); continue; }
+    if (this._banco && this.P.length < this._nAct) this._asegurarPool();
+    for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t > p.vida) { const ult = this.P.pop(); if (i < this.P.length) this.P[i] = ult; if (this._libres && this._libres.length < this.MAX) this._libres.push(p); continue; }
       if (p.tipo === 'hoja' || p.tipo === 'pluma') { p.vz = p.t < .3 && p.tipo === 'pluma' ? .5 : -.7; p.vx = Math.sin(p.t * 2.3 + p.fase) * .9; p.vy = Math.cos(p.t * 1.7 + p.fase) * .4; } else { p.vz -= 9.8 * dt * (p.tipo === 'polvo' ? .15 : 1); p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2; }
       p.x += p.vx * dt; p.y += p.vy * dt; p.z = Math.max(0, p.z + p.vz * dt); if (p.z === 0 && p.tipo === 'hoja') { p.vx = p.vy = 0; } }
+    this._nAct = this.P.length;
     for (let i = this.onos.length - 1; i >= 0; i--) if ((this.onos[i].t += dt) > .8) this.onos.splice(i, 1);
   },
   dibujar(D) {

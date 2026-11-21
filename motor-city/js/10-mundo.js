@@ -41,18 +41,26 @@ class Mundo {
      obtener(nombre) devuelve base64 o bytes SOLO para la capa pedida. No retiene
      los bytes MC4 completos; el juego puede guardar las capas en su HTML offline.
      Es particionado POR CAPA, no streaming espacial por kilómetros. */
-  static desdePaquete(meta, obtener, cfg) {
+  static desdePaquete(meta, obtener, cfg, obtenerSector) {
     if (!meta || meta.formato !== 'MC4' || !meta.capas || typeof obtener !== 'function') throw new Error('Paquete MC4 inválido');
     const m = Object.create(Mundo.prototype);
     m.meta = meta; m.cfg = cfg || null; m.u8 = null; m.base = 0; m._c = new Map(); m._obtenerCapa = obtener;
+    m._rasters = Object.create(null);
+    if (meta.rasters) {
+      if (typeof obtenerSector !== 'function') throw new Error('Falta proveedor de sectores MC4');
+      for (const [nombre, spec] of Object.entries(meta.rasters)) {
+        if (!meta.capas[nombre]) throw new Error('Sector raster sin capa MC4: ' + nombre);
+        m._rasters[nombre] = new MC.RasterMC4(spec, indice => obtenerSector(nombre, indice));
+      }
+    }
     m.W = meta.W; m.H = meta.H; m.tile = meta.tile; m.ancho = meta.W * meta.tile; m.alto = meta.H * meta.tile;
     m.kx = meta.kx * meta.tile; m.ky = meta.ky * meta.tile;
     const r = m.capaInfo('relieve'); m.eW = r.w; m.eH = r.h; m.es = r.paso * m.tile;
     const c = m.capaInfo('municipio'); m.mW = c.w; m.mH = c.h; m.ms = c.paso * m.tile;
     return m;
   }
-  static async cargarPaquete(meta, obtener, cfg) {
-    const m = Mundo.desdePaquete(meta, obtener, cfg);
+  static async cargarPaquete(meta, obtener, cfg, obtenerSector) {
+    const m = Mundo.desdePaquete(meta, obtener, cfg, obtenerSector);
     await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
     return m;
   }
@@ -79,7 +87,10 @@ class Mundo {
   /* la capa ya inflada (síncrona) */
   capa(nombre) {
     let v = this._c.get(nombre); if (v !== undefined) return v;
-    const c = this.capaInfo(nombre), b = this._bytes(c, nombre); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
+    const raster = this._rasters && this._rasters[nombre];
+    if (raster) v = raster.completa();
+    else { const c = this.capaInfo(nombre), b = this._bytes(c, nombre); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); }
+    this._c.set(nombre, v); return v;
   }
   /* un mundo armado en memoria (generador procedural, editor o herramientas): capas ya tipadas, sin comprimir.
      d = { meta: { W, H, tile, lon0, latN, kx, ky, nombre, … }, capas: { suelo: Uint8Array, relieve: {datos: Int16Array, w, h, paso}, … } } */
@@ -91,7 +102,20 @@ class Mundo {
     const r = M.capaInfo('relieve'); M.eW = r.w; M.eH = r.h; M.es = r.paso * M.tile; const c2 = M.capaInfo('municipio'); M.mW = c2.w; M.mH = c2.h; M.ms = c2.paso * M.tile;
     return M;
   }
-  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c, n), c.raw))); })); return this; }
+  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n) && !(this._rasters && this._rasters[n])).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c, n), c.raw))); })); return this; }
+  /* Lectura espacial: sin crear la cuadrícula completa si existe un paquete
+     sectorizado; la ruta MC4 histórica sigue funcionando sin cambios. */
+  _casillaRaster(nombre, tx, ty) {
+    const completa = this._c.get(nombre);
+    if (completa !== undefined) return completa[ty * this.W + tx];
+    const raster = this._rasters && this._rasters[nombre];
+    return raster ? raster.valorSeguro(tx, ty) : this.capa(nombre)[ty * this.W + tx];
+  }
+  diagnosticoRasters() {
+    const salida = {};
+    for (const [nombre, raster] of Object.entries(this._rasters || {})) salida[nombre] = raster.diagnostico();
+    return salida;
+  }
 
   /* ---------- coordenadas ---------- */
   geoAMetros(lat, lon) { return { x: (lon - this.meta.lon0) * this.kx, y: (this.meta.latN - lat) * this.ky }; }
@@ -99,8 +123,8 @@ class Mundo {
   dentro(x, y) { return x >= 0 && y >= 0 && x < this.ancho && y < this.alto; }
 
   /* ---------- suelo, relieve y niveles ---------- */
-  suelo(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this.capa('suelo')[ty * this.W + tx]; }
-  sueloCasilla(tx, ty) { return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this.capa('suelo')[ty * this.W + tx]; }
+  suelo(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this._casillaRaster('suelo', tx, ty); }
+  sueloCasilla(tx, ty) { return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? TT.MOUNT : this._casillaRaster('suelo', tx, ty); }
   /* cota del terreno en metros sobre el nivel del mar (bilineal en la malla de 80 m) */
   cota(x, y) {
     const E = this.capa('relieve'), w = this.eW, gx = clamp(x / this.es, 0, w - 1.001), gy = clamp(y / this.es, 0, this.eH - 1.001), x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, i = y0 * w + x0;
@@ -110,7 +134,7 @@ class Mundo {
   pendiente(x, y, ang, d = 20) { const c = Math.cos(ang) * d, s = Math.sin(ang) * d; return (this.cota(x + c, y + s) - this.cota(x - c, y - s)) / (2 * d); }
   normal(x, y, d = 20) { const gx = (this.cota(x + d, y) - this.cota(x - d, y)) / (2 * d), gy = (this.cota(x, y + d) - this.cota(x, y - d)) / (2 * d), l = Math.hypot(gx, gy, 1); return [-gx / l, 1 / l, -gy / l]; }
   /* nivel firmado de lo que pasa por la casilla (puente, viaducto o deprimido); 0 = nada */
-  nivel(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? 0 : this.capa('nivel')[ty * this.W + tx]; }
+  nivel(x, y) { const tx = Math.floor(x / this.tile), ty = Math.floor(y / this.tile); return (tx < 0 || ty < 0 || tx >= this.W || ty >= this.H) ? 0 : this._casillaRaster('nivel', tx, ty); }
   solido(x, y) { return TT_SOLIDO[this.suelo(x, y)] === 1; }
   superficie(x, y) { return TT_SUPERFICIE[this.suelo(x, y)]; }
   esCiclovia(x, y, r = 6) { if (this.suelo(x, y) === TT.CICLO) return true; const c = this.viaCercana(x, y, r, v => v.k === VIA.CICLO); return !!c; }

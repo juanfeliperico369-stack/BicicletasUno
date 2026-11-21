@@ -2268,6 +2268,21 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 
 
+### 21-nov-2026 · Los arreglos de Codex, hechos por Claude
+- Codex describió estos arreglos y nunca los subió. El autor pidió resolverlos. Cada uno se reprodujo y quedó con su prueba en `tests/regresion-encicla.js`, que se llama desde `tests/run.js`.
+  1. **Bici prestada:**
+     - antes, al cambiar de la bici de EnCicla a otro vehículo, la bici quedaba guardada aparte; no contaba como abandonada y se podía volver a montar desde cualquier lugar;
+     - ahora queda parqueada en la vía y para montarla hay que volver hasta ella.
+  2. **Acceso sin aparcamiento:** a pie y sin bici parqueada, «Ir a la bici» rompía el juego. Ahora ese botón no sale.
+  3. **Gasto de la eléctrica:** la eléctrica es `bike` con `R.ebike` y gastaba como una bici normal. Ahora gasta 0,12 contra 1,85 en la misma subida (`69-libre.js`).
+  4. **Montar:** subirse a la bici a pie ahora avisa el evento «montar» de los boletos de Rosalba.
+  5. **Hojas de la trama:**
+     - los premios iban a `Save.data.leaves` y la tienda lee `stats.leaves` (`93-trama.js`);
+     - las hojas viejas se migran al cargar o importar la partida.
+- **Archivos:** `src/js/98o-arreglos.js` (aditivo) y los cambios de una línea en `69-libre.js` y `93-trama.js`.
+- **`MC.Calendario.pascua`:** no se cambió. `Cal.easter` es el mismo algoritmo y meter todo el motor en este juego sumaría casi 900 KB.
+- **Probado:** `node tools/build.js` y `node tests/run.js`, todas en verde.
+
 ### 21-nov-2026 · Mundo abierto primero (Claude, a partir de la auditoría G‑H28 de Antigravity)
 - **Regla del autor:** mundo abierto desde el principio; el tutorial y la historia son opcionales.
 - **`src/js/98n-abierto.js`**, aditivo (envuelve `UI.init`):

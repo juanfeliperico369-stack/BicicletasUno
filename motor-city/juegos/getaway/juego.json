@@ -12,5 +12,6 @@
     "turno-cero-accion-3d.html"
   ],
   "run": true,
-  "mundos_capas": true
+  "mundos_capas": true,
+  "mundos_rasters": true
 }

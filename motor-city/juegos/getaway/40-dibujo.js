@@ -102,7 +102,7 @@ function capas(g, es2D) {
   g.restore();
   /* la flecha al objetivo: pin si se ve, flecha en el borde si no */
   for (const f of EXTRAS.capas) f(g, pr, d, t);
-  const O = G.objetivo; if (O && !G.dron) { const sp = pr(O.x, O.y, 0); if (sp) { const Z = G.ui.zonaLibre(), d2 = G.W / innerWidth; MC.UI.indicador(g, G.W, G.H, sp[0], sp[1], { texto: Math.round(Math.hypot(O.x - G.cuerpo.x, O.y - G.cuerpo.y)) + ' m', escala: d, t, rect: [Z.x0 * d2 + 20 * d, Z.y0 * d2 + 10 * d, Z.x1 * d2 - 20 * d, Z.y1 * d2] }); } }
+  const O = G.objetivo; if (O && !G.dron && !G.cine) { const sp = pr(O.x, O.y, 0);   /* en 🎬 modo cine no hay flecha: guían las direccionales (57-cine.js) */ if (sp) { const Z = G.ui.zonaLibre(), d2 = G.W / innerWidth; MC.UI.indicador(g, G.W, G.H, sp[0], sp[1], { texto: Math.round(Math.hypot(O.x - G.cuerpo.x, O.y - G.cuerpo.y)) + ' m', escala: d, t, rect: [Z.x0 * d2 + 20 * d, Z.y0 * d2 + 10 * d, Z.x1 * d2 - 20 * d, Z.y1 * d2] }); } }
 }
 
 /* ---------- HUD ---------- */

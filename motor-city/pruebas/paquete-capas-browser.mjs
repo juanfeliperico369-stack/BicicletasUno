@@ -27,20 +27,28 @@ try {
   const vivo = await page.evaluate(() => ({
     id: TURNO.id, x: TURNO.cuerpo.x, y: TURNO.cuerpo.y,
     suelo: TURNO.M.suelo(TURNO.cuerpo.x, TURNO.cuerpo.y),
-    paquete: !TURNO.M.u8, n: TURNO.M._c.size
+    paquete: !TURNO.M.u8, n: TURNO.M._c.size,
+    raster: !!TURNO.M._rasters?.suelo, completa: TURNO.M._c.has('suelo'),
+    memoriaRaster: TURNO.M.diagnosticoRasters()
   }));
-  assert(vivo.id === 'guatape' && Number.isFinite(vivo.x) && Number.isFinite(vivo.y) && vivo.paquete && vivo.n > 0);
+  assert(vivo.id === 'guatape' && Number.isFinite(vivo.x) && Number.isFinite(vivo.y) &&
+    vivo.paquete && vivo.n > 0 && vivo.raster && !vivo.completa);
+  assert(vivo.memoriaRaster.suelo.residentes <= 16);
   console.log('✓ Guatapé: partida real desde portada en HTML offline, capas diferidas', vivo.n);
   for (const id of ['medellin', 'nueva_york']) {
     const dato = await page.evaluate(async id => {
       const M = await TURNO.planeta.mundo(id);
-      return { id, w: M.W, h: M.H, capa: M._c.has('suelo'), paquete: !M.u8 };
+      const suelo = M.sueloCasilla(0, 0), nivel = M.nivel(0, 0);
+      return { id, w: M.W, h: M.H, raster: !!M._rasters?.suelo, sinCapaEntera: !M._c.has('suelo'),
+        paquete: !M.u8, suelo, nivel, memoria: M.diagnosticoRasters() };
     }, id);
-    assert(dato.w > 0 && dato.h > 0 && dato.capa && dato.paquete, 'Mundo inválido: ' + id);
+    assert(dato.w > 0 && dato.h > 0 && dato.raster && dato.sinCapaEntera && dato.paquete &&
+      Number.isFinite(dato.suelo) && Number.isFinite(dato.nivel), 'Mundo inválido: ' + id);
+    assert(dato.memoria.suelo.residentes <= 16 && dato.memoria.nivel.residentes <= 16);
     console.log('✓', id, 'cargado desde capas comprimidas offline');
   }
   assert.deepEqual(red, [], 'No debe haber solicitudes a Internet');
   assert.deepEqual(errors, [], 'Errores de ejecución: ' + errors.join(' | '));
   await page.close();
-  console.log('✓ C-M34 Chromium 412×860: partida + tres ciudades offline, sin errores JS ni red');
+  console.log('✓ C-M34 Chromium 412×860: partida y tres ciudades con rasters espaciales, offline');
 } finally { await browser.close(); }

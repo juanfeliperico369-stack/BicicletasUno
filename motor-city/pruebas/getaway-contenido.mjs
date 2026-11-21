@@ -204,7 +204,9 @@ console.log('G-H20 · diálogos inválidos cancelados y subtítulos limpios al e
 /* G-H22: catálogo Gemini por rutas; G-H24: sólo ciudad activa en caché MC4. */
 assert(fuente.includes("q.rutas.includes(op.id)"),'sólo elegir paradas compatibles con carretera');
 assert(fuente.includes("id: d.id"),'pasar id de ruta al generador');
-assert(f('juegos/getaway/20-juego.js').includes('if (key !== id) planeta.cache.delete(key)'), 'liberar anteriores sólo al cambiar de ciudad');
+assert(f('juegos/getaway/20-juego.js').includes('planeta.liberarExcepto(id)') &&
+  f('js/13-planeta.js').includes('liberarExcepto(id)'),
+  'liberar anteriores sólo al cambiar de ciudad, desde una API del motor');
 assert(f('juegos/getaway/20-juego.js').includes("tipo === 'car_repair'"),'reparación por tipo estructurado, no sólo nombre');
 console.log('Gemini G-H22/G-H24: metadatos de ruta y una sola ciudad en caché OK');
 

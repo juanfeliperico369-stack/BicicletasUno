@@ -24,7 +24,7 @@
       const fuentes = noche < .05 ? [] : ((G.E && G.E.trafico) || []).filter(q => Math.hypot(q.x - C.x, q.y - C.y) < 40 && !MC.DDA.bloqueado(G.M, C.x, C.y, q.x, q.y)).map(q => ({ x: q.x + Math.cos(q.a || 0) * 8, y: q.y + Math.sin(q.a || 0) * 8, r: 14, k: .45 * noche }));
       G.luzAqui = MC.Sigilo.luz(G.M, C.x, C.y, { reloj: G.reloj, clima: G.clima, fuentes });
       G.gema = MC.Sigilo.gema(G.luzAqui, { vel: v, agachado: pie && v < 1 }); }   /* agachada = casi quieta (antes, caminar normal ya contaba como agachada) */
-    for (const q of G.guardias) { if (q.vista0 == null) q.vista0 = q.vista || 24; q.vista = MC.Sigilo.alcance(q.vista0, G.gema ?? 1, E.alarma || q.estado === 'alerta'); }
+    for (const q of G.guardias) { if (q.vista0 == null) q.vista0 = q.vista || 24; q.vista = MC.Sigilo.alcance(q.vista0, G.gema ?? 1, E.alarma || q.estado === 'alerta') * (G.cubierta && !E.alarma ? .45 : 1); }   /* 🧱 cubierta contra un muro (57-cine.js) */
     /* el ruido: pasos al correr, el motor del carro; viaja por donde hay paso */
     const fuerza = pie ? ((C.corriendo && v > 2.8) || v > 4.2 ? 16 : 0) : (v > .5 ? 22 + v * 1.5 : 10);   /* correr suena también en pasto o andén (auditoría G-H26) */
     if ((tRuido -= dt) <= 0 && fuerza > 0 && !E.alarma) { tRuido = .7;

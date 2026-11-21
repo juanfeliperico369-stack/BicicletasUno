@@ -113,7 +113,7 @@ class Planeta {
     this.maxMundos = op.maxMundos === undefined ? 2 : op.maxMundos;
     if (!Number.isSafeInteger(this.maxMundos) || this.maxMundos < 1) throw new RangeError('maxMundos debe ser entero positivo');
     this.cache = new Map(); this._cargando = new Map(); this._puertas = new Map();
-    this.activo = null; this.radioVisual = op.radioVisual || 60000; this.llegadaT = 0;
+    this.activo = null; this._epoca = 0; this.radioVisual = op.radioVisual || 60000; this.llegadaT = 0;
     this.metricasCache = { aciertos: 0, compartidas: 0, cargas: 0, expulsiones: 0, errores: 0 };
   }
   indice(id) { return this.anillo.findIndex(q => q.id === id); }
@@ -141,6 +141,14 @@ class Planeta {
     this._recortar(id);
     return this.cache.get(id) || null;
   }
+  liberarExcepto(id) {
+    this.fijar(id);
+    this._epoca++;
+    for (const k of [...this.cache.keys()]) if (k !== id) {
+      this.cache.delete(k); this._puertas.delete(k); this.metricasCache.expulsiones++;
+    }
+    return this.cache.size;
+  }
   diagnosticoCache() {
     return { residentes: [...this.cache.keys()], cargando: [...this._cargando.keys()],
       activo: this.activo, maxMundos: this.maxMundos, ...this.metricasCache };
@@ -155,6 +163,7 @@ class Planeta {
     if (this._cargando.has(id)) { this.metricasCache.compartidas++; return this._cargando.get(id); }
     const d = this.def(id); if (!d) throw new Error('el planeta no tiene ' + id);
     this.metricasCache.cargas++;
+    const epocaAlPedir = this._epoca;
     const tarea = Promise.resolve().then(async () => {
       try {
         const M = d.tipo === 'tramo'
@@ -162,8 +171,10 @@ class Planeta {
           : await this.cargar(id);
         if (!M || typeof M !== 'object') throw new Error('Cargador de mundo vacío: ' + id);
         M.planetaId = id;
-        this._tocar(id, M);
-        this._recortar(id);
+        if (this._epoca === epocaAlPedir || this.activo === id) {
+          this._tocar(id, M);
+          this._recortar(id);
+        }
         return M;
       } catch (e) { this.metricasCache.errores++; throw e; }
       finally { this._cargando.delete(id); }
