@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.2.0: unidas las ramas de ChatGPT (auditoría y C-M34) y de Antigravity; recorte por región en el 3D; 📖 en el mundo abierto de Turno Cero",
+  "fase_actual": "4.3.0: arreglada la auditoría móvil de Antigravity (G-H25/26/28), unida la caché del planeta de ChatGPT, mundo abierto primero en El Metro y EnCicla",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-21T18:00:00Z",
+  "ultima_actualizacion_utc": "2026-11-21T20:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",

@@ -47,7 +47,7 @@ class Controles {
     const E = {
       stick: { x: sx, y: sy, m: sm }, teclado: !!(ax || ay),
       acel: clamp(-ay || (pad ? pad.rt - pad.lt : 0) || (B.has('acel') ? 1 : 0) - (B.has('freno') ? 1 : 0), -1, 1), giro: ax || (pad ? pad.x : 0),
-      salto: pulso('Space') || pulso('btn:salto') || (pad && pad.a), turbo: k('ShiftLeft') || k('ShiftRight') || B.has('turbo') || (pad && pad.rb), correr: k('ShiftLeft') || k('ShiftRight') || B.has('correr') || (pad && pad.rb),
+      salto: pulso('Space') || pulso('btn:salto') || (pad && pad.a), turbo: k('ShiftLeft') || k('ShiftRight') || B.has('turbo') || (pad && pad.rb), correr: k('ShiftLeft') || k('ShiftRight') || B.has('correr') || B.has('turbo') || (pad && pad.rb),   /* 4.3: en el celular, ⚡ a pie es correr (auditoría G-H26) */
       sube: k('Space') || B.has('sube'), baja: k('ControlLeft') || k('KeyZ') || B.has('baja'), accion: pulso('KeyE') || pulso('Enter') || pulso('btn:accion'), pulsos: new Set(p)
     };
     p.clear(); return E;

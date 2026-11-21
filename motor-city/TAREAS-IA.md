@@ -95,7 +95,11 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 > - En el menú ⏸ están los personajes y los artefactos.
 > - `window.TURNO` expone el estado para pruebas.
 
-> **Estado al 21‑nov‑2026 (4.0.3, Claude):**
+> **Estado al 21‑nov‑2026 (4.3.0, Claude):**
+> - **G‑H25, G‑H26, G‑H27 y G‑H28 entregadas por Antigravity.** Sus hallazgos se arreglaron en 4.3.0, incluido «mundo abierto primero» en El Metro y EnCicla.
+> - **Sigue para Gemini:** medir en un celular real con la plantilla del reporte `reportes/2026-11-21-gemini-clasicos-4.1.md`.
+>
+> **Estado anterior (4.0.3):**
 > - **Gemini:**
 >   - **G‑H21, G‑H22, G‑H23 y G‑H24 entregadas y aplicadas.**
 >   - **G‑H20:** se hizo la revisión en VM y se aplicaron sus arreglos; falta el celular real con GPU.

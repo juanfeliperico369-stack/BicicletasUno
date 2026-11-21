@@ -91,7 +91,7 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
 .mcui:has(> .menu) > .izq,.mcui:has(> .menu) > .botones,.mcui:has(> .menu) > .vel,.mcui:has(> .menu) > .acciones,.mcui:has(> .menu) > canvas.mini{visibility:hidden;pointer-events:none;}
 .mcui:has(> .menu) > .dialogo{visibility:hidden;pointer-events:none;}
 .mcui > .menu{z-index:2;}
-.mcui:has(> .menu) > .menu{position:fixed;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:min(370px,90vw);max-height:min(84vh,690px);padding:16px;background:#12171c;border:1px solid rgba(232,163,60,.55);box-shadow:0 24px 90px #000e;pointer-events:auto;}
+.mcui:has(> .menu) > .menu{position:fixed!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;width:min(370px,90vw);max-height:min(84dvh,84vh,690px)!important;overflow-y:auto;overscroll-behavior:contain;padding:16px;background:#12171c;border:1px solid rgba(232,163,60,.55);box-shadow:0 24px 90px #000e;pointer-events:auto;}
 
 </style>
 </head>

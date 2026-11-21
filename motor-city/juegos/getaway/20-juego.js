@@ -100,7 +100,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const v0 = G.cuerpo ? G.cuerpo.v : 0, heat0 = G.busq ? G.busq.heat : 0, desde = G.id;
   const M = await mundoListo(id);
   if (G.vistas) G.vistas.liberar();
-  G.id = id; G.M = M; G._esp = null; G.sectores = id === 'nueva_york' ? new MC.Sectores1km(M, { lado: 1000, radio: 1, maxRegiones: 36 }) : null; G._sectoresT = 0;
+  G.id = id; G.M = M; planeta.fijar(id); G._esp = null; G.sectores = id === 'nueva_york' ? new MC.Sectores1km(M, { lado: 1000, radio: 1, maxRegiones: 36 }) : null; G._sectoresT = 0;
   let L = spawn.x != null ? spawn : spawn.lugar ? resolver(spawn.lugar) : null;
   if (!L && desde) L = planeta.llegada(id, desde);
   if (!L) { const c = M.carretera ? M.carretera.inicio : M.viaCercana(M.ancho / 2, M.alto / 2, 2000) || { x: M.ancho / 2, y: M.alto / 2 }; L = { x: c.x, y: c.y, a: c.a ?? c.ang ?? 0 }; }

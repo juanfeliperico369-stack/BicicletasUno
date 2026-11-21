@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-planeta-cache-410",
+  "rol": "Concurrencia y presupuesto de memoria de MC.Planeta en 4.1.0",
+  "rama": "ia/chatgpt/planeta-cache-410-20261121",
+  "estado": "PR candidata a validación; no fusionada",
+  "fecha_utc": "2026-11-21",
+  "archivos_reclamados": [
+    "js/13-planeta.js",
+    "juegos/getaway/20-juego.js (solo avisar mundo activo)",
+    "pruebas/planeta-cache-cm34.mjs",
+    "pruebas/planeta-cache-browser.mjs",
+    "docs/PLANETA-CACHE-CONCURRENCIA.md",
+    "reportes/2026-11-21-chatgpt-planeta-cache-410.md"
+  ],
+  "no_tocar": [
+    "js/10-mundo.js (PR #9)",
+    "js/10-sectores.js (PR #9)",
+    "assets/",
+    "datos/",
+    "arte/",
+    "repositorios de juegos"
+  ],
+  "pruebas": "7 casos Node y una prueba en navegador añadidos a CI; ver resultado de PR",
+  "pendiente": "CI completa, mediciones de heap y GPU real, streaming espacial MC4"
+}

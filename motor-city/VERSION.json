@@ -1,5 +1,5 @@
 {
-  "version": "4.2.0",
+  "version": "4.3.0",
   "fecha": "2026-11-21",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
@@ -7,5 +7,5 @@
     "BicicletasUno: integración del motor en main no comprobada",
     "MetroZero: integración del motor en main no comprobada"
   ],
-  "estado": "4.2.0 en la rama de integración y en main (Pages): unidas las entregas de ChatGPT/Codex (C-M34 por capas, arte de Gemini, PBR) y Antigravity (técnicas clásicas sobre datos reales); recorte por región (niebla y cono) en el 3D; Turno Cero con la historia descubrible en el mundo abierto (📖) y el vuelo sin pausa"
+  "estado": "4.3.0 en la rama de integración y en main (Pages): arreglos de la auditoría móvil de Antigravity (Arcade sin fantasmas, correr con ⚡ a pie, menú que no se corta, gema de color, faros solo de noche, vuelo con búferes reusados); caché del planeta de ChatGPT; mundo abierto primero también en El Metro y EnCicla"
 }

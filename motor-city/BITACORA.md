@@ -1,5 +1,41 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.3.0 · La auditoría móvil de Antigravity, arreglada; mundo abierto primero en los tres juegos
+- **Unidas:**
+  - **la auditoría de Antigravity:** `reportes/2026-11-21-gemini-clasicos-4.1.md` (G‑H25, G‑H26 y G‑H28, con 18 capturas) y el catálogo G‑H27 (`reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md`);
+  - **la caché del planeta de ChatGPT:**
+    - cada ciudad se carga una sola vez aunque la pidan varias veces;
+    - LRU con presupuesto;
+    - la ciudad donde uno juega queda protegida;
+    - pruebas `planeta-cache-cm34.mjs` y `planeta-cache-browser.mjs`.
+- **Arreglos de la auditoría:**
+  - **🏁 Arcade:**
+    - en la ciudad, debajo del horizonte ya no queda el cuadro anterior (ni el «carro fantasma»);
+    - sin costuras entre segmentos;
+    - el haz de los faros de noche ya no quema el horizonte.
+  - **Correr a pie en el celular:** ⚡ a pie ahora es correr (`js/33-controles.js`). Antes, con el dedo, Mara no pasaba de 1,53 m/s; ahora llega a 4,25 m/s.
+  - **Sigilo:**
+    - «agachada» solo cuando va casi quieta;
+    - correr hace ruido también en pasto o en el andén;
+    - los faros cuentan solo de noche y no atraviesan muros (`MC.DDA.bloqueado`);
+    - la gema cambia de color (azul apagado → ámbar → amarillo) y la primera vez explica qué es.
+  - **Menú ⏸:** ya no se corta arriba a 412 × 860 (lo empujaba un estilo en línea). Ahora queda centrado y se desplaza.
+  - **⛰️ Vuelo:**
+    - se reusan los búferes de la ventana anterior (sin 2,8 MB nuevos en cada cambio);
+    - de noche, el carro lleva halo y los stops encendidos.
+- **Mundo abierto primero en los tres juegos** (regla del autor, medida por Antigravity):
+  - **El Metro:** ▶ Jugar entra directo a Ciudad Libre, y «Todos los modos» queda debajo. Sus íconos ya no dan 404.
+  - **EnCicla:** ▶ Jugar entra directo al modo libre. «🏆 Oficios y modos» lleva al escalafón; la bienvenida y el personaje son opcionales.
+  - **Turno Cero:** ya cumplía.
+- **Probado:**
+  - Node: 141;
+  - el contenido de Turno Cero;
+  - la caché del planeta en Node y en Chromium;
+  - la batería de Chromium;
+  - El Metro: 100 partidas, 0 errores;
+  - EnCicla: en verde;
+  - capturas a `412 × 860`.
+
 ## 21-nov-2026 · 4.2.0 · Las entregas de las otras IA unidas, recorte por región, la historia se encuentra en el mundo abierto
 - **Unidas:**
   - **ChatGPT/Codex** (`ia/chatgpt/4-0-2-gemini-auditoria`, 13 commits):
@@ -781,3 +817,5 @@ Rama: ia/chatgpt/cm34-cache-20261120. Motor 4.0.3 base sin incremento de versió
 - Nuevas pruebas Node de equivalencia byte a byte y Chromium de juego real (`pruebas/paquete-capas-*.mjs`), añadidas a CI.
 - Guía `docs/MC4-CAPAS-OFFLINE.md`; informe `reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md`.
 - **No se fusionó ni incrementó versión.** Mantener pendiente hasta CI, benchmark JS Heap/CPU y GPU física. Todavía NO son sectores geográficos de 1 km.
+## C-M34 · ChatGPT · Motor City 4.1 · caché multicidad sin cargas duplicadas
+Rama `ia/chatgpt/planeta-cache-410-20261121`, basada en `main` 4.1.0: single-flight asíncrono por ciudad, política LRU real, protección de mundo activo, `maxMundos` y métricas `diagnosticoCache()`. Turno Cero llama a `planeta.fijar(id)` al llegar. QA Node (7 casos) y Chromium offline integrado en GitHub Actions. Documentación: `docs/PLANETA-CACHE-CONCURRENCIA.md`, `reportes/2026-11-21-chatgpt-planeta-cache-410.md`. Estado: candidato para revisión, sin mezclar con PR #9 ni fusionar en main antes de pruebas.

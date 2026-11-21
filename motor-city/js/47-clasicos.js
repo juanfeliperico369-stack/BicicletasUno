@@ -157,6 +157,8 @@ class Arcade {
     const bioma = M.carretera && M.carretera.bioma ? M.carretera.bioma(C.y) : null, BIO = { costa: [[214, 196, 140], [200, 182, 128]], desierto: [[214, 170, 110], [200, 156, 98]], nieve: [[236, 240, 246], [222, 228, 238]], lagos: [[104, 160, 90], [92, 146, 80]] }, ciudad = !M.carretera, pasto = ciudad ? [[178, 172, 160], [168, 162, 150]] : BIO[bioma] || [[96, 150, 70], [84, 136, 62]], berma = ciudad ? [[222, 220, 214], [150, 150, 150]] : [[235, 235, 235], [200, 40, 40]];
     const bruma = cielo.bruma, oscuro = 1 - noche * .62;
     const col = (rgb, f) => rgbCss(rgbMez(rgb, bruma, clamp(f / lejos, 0, 1) ** 1.6 * .9), oscuro);
+    /* 4.3: todo lo de debajo del horizonte se pinta primero (antes, en calles con giros o lomas quedaba el cuadro anterior: auditoría G-H25) */
+    { const gs = g.createLinearGradient(0, hor, 0, H); gs.addColorStop(0, col(pasto[0], lejos * .7)); gs.addColorStop(1, col(pasto[1], 0)); g.fillStyle = gs; g.fillRect(0, hor - 1, W, H - hor + 1); }
     /* objetos a los lados y en la vía, con su distancia (para mezclarlos con los segmentos de lejos a cerca) */
     const objs = [], hs = (i, s) => h2(Math.round(P[i].x / 3), Math.round(P[i].y / 3), s);
     for (let i = 2; i < P.length; i++) {
@@ -181,7 +183,7 @@ class Arcade {
       while (io < vis.length && vis[io].f > f) dibObj(vis[io++]);
       const alt = ((Math.floor((P[i].u || 0) / 3) % 2) + 2) % 2, wa = P[i - 1].w / 2, wb = P[i].w / 2;
       const yA = A.Y, yB = B.Y; g.fillStyle = col(pasto[alt], f); g.fillRect(0, Math.min(yA, yB) - 1, W, Math.abs(yA - yB) + 2);
-      const trap = (ka, kb, color) => { g.fillStyle = color; g.beginPath(); g.moveTo(A.X - wa * ka * A.s, yA); g.lineTo(A.X + wa * ka * A.s, yA); g.lineTo(B.X + wb * kb * B.s, yB); g.lineTo(B.X - wb * kb * B.s, yB); g.fill(); };
+      const trap = (ka, kb, color) => { const ya = yA + .7, yb = yB - .7; g.fillStyle = color; g.beginPath(); g.moveTo(A.X - wa * ka * A.s, ya); g.lineTo(A.X + wa * ka * A.s, ya); g.lineTo(B.X + wb * kb * B.s, yb); g.lineTo(B.X - wb * kb * B.s, yb); g.fill(); };   /* se solapan 0,7 px: sin costuras entre segmentos */
       trap(ciudad ? 1.12 : 1.18, ciudad ? 1.12 : 1.18, col(berma[alt], f));
       trap(1, 1, col(alt ? [92, 96, 104] : [84, 88, 96], f));
       if (alt) { if (M.carretera) { trap(.04, .04, col([245, 245, 235], f)); } else { g.fillStyle = col([240, 200, 40], f); g.fillRect(A.X - Math.max(.6, .12 * A.s), yB, Math.max(1.2, .24 * A.s), Math.max(.5, yA - yB)); } }
@@ -191,7 +193,7 @@ class Arcade {
     const pc = proy(C.x, C.y, M.cota(C.x, C.y) + (C.z || 0));
     if (pc) { const giro = clamp(Math.sin((C.a - a)) * 2.5, -1, 1); if (C.veh && C.veh.clase === 'pie') { g.fillStyle = '#2b2b33'; g.fillRect(pc.X - .3 * pc.s, pc.Y - 1.7 * pc.s, .6 * pc.s, 1.7 * pc.s); g.fillStyle = '#e0b48c'; g.beginPath(); g.arc(pc.X, pc.Y - 1.85 * pc.s, .2 * pc.s, 0, TAU); g.fill(); } else carroAtras(g, pc.X, pc.Y, 1.9 * pc.s, (C.veh && C.veh.color) || '#a3202a', { giro, freno: C.v > 1 && (C.frenando || C._frenoT > 0), t }); }
     /* de noche: luz de los faros sobre la vía */
-    if (noche > .3 && pc) { g.save(); g.globalCompositeOperation = 'lighter'; const gl = g.createRadialGradient(pc.X, pc.Y - pc.s * 2, 2, pc.X, hor + (pc.Y - hor) * .35, W * .45); gl.addColorStop(0, 'rgba(255,230,170,' + (.22 * noche).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(255,230,170,0)'); g.fillStyle = gl; g.beginPath(); g.moveTo(pc.X - pc.s * .8, pc.Y - pc.s); g.lineTo(W * .1, hor + 4); g.lineTo(W * .9, hor + 4); g.lineTo(pc.X + pc.s * .8, pc.Y - pc.s); g.fill(); g.restore(); }
+    if (noche > .3 && pc) { g.save(); g.globalCompositeOperation = 'lighter'; const gl = g.createRadialGradient(pc.X, pc.Y - pc.s * 2, 2, pc.X, hor + (pc.Y - hor) * .35, W * .45); gl.addColorStop(0, 'rgba(255,230,170,' + (.11 * noche).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(255,230,170,0)'); g.fillStyle = gl; g.beginPath(); g.moveTo(pc.X - pc.s * .8, pc.Y - pc.s); g.lineTo(W * .1, hor + 4); g.lineTo(W * .9, hor + 4); g.lineTo(pc.X + pc.s * .8, pc.Y - pc.s); g.fill(); g.restore(); }
     if (op.pixel) { const k = op.escala || 3, w = Math.max(80, W / k | 0), h = Math.max(60, H / k | 0); this._px ||= lienzo(w, h); if (this._px.width !== w || this._px.height !== h) { this._px.width = w; this._px.height = h; } const q = this._px.getContext('2d'); q.drawImage(g.canvas, 0, 0, w, h); g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._px, 0, 0, W, H); g.restore(); }
   }
   _obj(g, o, proy, col, cielo, t, W, H) {
@@ -228,7 +230,9 @@ class VoxelSpace {
      Se arma por franjas de filas (_trabajar) para no trabar el juego al moverse: mientras tanto se dibuja con la ventana anterior. */
   _iniciar(x, y) {
     const M = this.M, c = this.c, N = this.N, half = N * c / 2, x0 = Math.round((x - half) / 64) * 64, y0 = Math.round((y - half) / 64) * 64;
-    return { x0, y0, j: 0, s: 0, A: new Float32Array(N * N), K: new Uint32Array(N * N), B: new Uint8ClampedArray(N * N * 3), L: M.edificiosEn ? M.edificiosEn(x0, y0, x0 + N * c, y0 + N * c).map(e => { const Q = Mundo.esquinas(e); let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity; for (let k = 0; k < Q.length; k += 2) { bx0 = Math.min(bx0, Q[k]); bx1 = Math.max(bx1, Q[k]); by0 = Math.min(by0, Q[k + 1]); by1 = Math.max(by1, Q[k + 1]); } return { Q, bx0, by0, bx1, by1, z: M.cota(e.x, e.y) + (e.h || 6), t: rgbHex(['#a8644a', '#b5542f', '#8e9095', '#c9b8a0', '#6f7a84', '#d0c6b4'][(e.s * 6) | 0] || '#a0a0a0') }; }) : [], pal: (typeof PAL_SUELO_REAL !== 'undefined' ? PAL_SUELO_REAL : PAL_SUELO).map(rgbHex) };
+    /* 4.3: se reusan los búferes de la ventana vieja (antes, 2,8 MB nuevos en cada cambio de ventana: auditoría G-H25) */
+    const R = this._libres && this._libres.A.length === N * N ? this._libres : { A: new Float32Array(N * N), K: new Uint32Array(N * N) }; this._libres = null; this._B = this._B && this._B.length === N * N * 3 ? this._B : new Uint8ClampedArray(N * N * 3);
+    return { x0, y0, j: 0, s: 0, A: R.A, K: R.K, B: this._B, L: M.edificiosEn ? M.edificiosEn(x0, y0, x0 + N * c, y0 + N * c).map(e => { const Q = Mundo.esquinas(e); let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity; for (let k = 0; k < Q.length; k += 2) { bx0 = Math.min(bx0, Q[k]); bx1 = Math.max(bx1, Q[k]); by0 = Math.min(by0, Q[k + 1]); by1 = Math.max(by1, Q[k + 1]); } return { Q, bx0, by0, bx1, by1, z: M.cota(e.x, e.y) + (e.h || 6), t: rgbHex(['#a8644a', '#b5542f', '#8e9095', '#c9b8a0', '#6f7a84', '#d0c6b4'][(e.s * 6) | 0] || '#a0a0a0') }; }) : [], pal: (typeof PAL_SUELO_REAL !== 'undefined' ? PAL_SUELO_REAL : PAL_SUELO).map(rgbHex) };
   }
   /* filas de la ventana nueva: primero suelo y alturas (con los edificios de esa franja), luego la luz «horneada» */
   _trabajar(J, filas) {
@@ -245,7 +249,7 @@ class VoxelSpace {
       K[k] = (255 << 24) | (Math.min(255, B[3 * k + 2] * lz) << 16) | (Math.min(255, B[3 * k + 1] * lz) << 8) | Math.min(255, B[3 * k] * lz); }
     J.s = s1; return J.s >= N;
   }
-  _usar(J) { this.x0 = J.x0; this.y0 = J.y0; this.alt = J.A; this.col = J.K; this._job = null; }
+  _usar(J) { if (this.alt && this.alt !== J.A) this._libres = { A: this.alt, K: this.col }; this.x0 = J.x0; this.y0 = J.y0; this.alt = J.A; this.col = J.K; this._job = null; }
   preparar(x, y) { const t0 = MC.ahora(), J = this._iniciar(x, y); while (!this._trabajar(J, 64)); this._usar(J); this.ms = MC.ahora() - t0; return this; }
   aPantalla(x, y, z = 0) { const q = this._q; if (!q) return null; const dx = x - q.cx, dy = y - q.cy, f = dx * q.ca + dy * q.sa; if (f < 1) return null; const l = -dx * q.sa + dy * q.ca; return [(q.w / 2 + l / f * q.foc) * q.kx, ((q.camH - (z || this.M.cota(x, y))) / f * q.esc + q.hor) * q.ky]; }
   dibujar(g, W, H, E) {
@@ -279,7 +283,7 @@ class VoxelSpace {
     g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._cv, 0, 0, W, H); g.restore();
     this._q = { cx, cy, ca, sa, foc, w, camH, esc, hor, kx: W / w, ky: H / h };
     /* el jugador y los carros cercanos encima (sprites, como los helicópteros de Comanche) */
-    const pj = this.aPantalla(C.x, C.y, suelo + (C.z || 0)); if (pj) { const s = W / w * foc / Math.max(10, (C.x - cx) * ca + (C.y - cy) * sa); if (C.veh && C.veh.clase === 'pie') { g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(pj[0], pj[1] - 3, Math.max(3, s * .8), 0, TAU); g.fill(); } else carroAtras(g, pj[0], pj[1], Math.max(10, 1.9 * s), (C.veh && C.veh.color) || '#a3202a', { giro: 0, t: E.t || 0 }); }
+    const pj = this.aPantalla(C.x, C.y, suelo + (C.z || 0)); if (pj) { const s = W / w * foc / Math.max(10, (C.x - cx) * ca + (C.y - cy) * sa); if (C.veh && C.veh.clase === 'pie') { g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(pj[0], pj[1] - 3, Math.max(3, s * .8), 0, TAU); g.fill(); } else { const wc = Math.max(12, 1.9 * s); if (cielo.noche > .3) { const gl2 = g.createRadialGradient(pj[0], pj[1] - wc * .3, 1, pj[0], pj[1] - wc * .3, wc * 2.2); gl2.addColorStop(0, 'rgba(255,220,140,' + (.55 * cielo.noche).toFixed(2) + ')'); gl2.addColorStop(1, 'rgba(255,220,140,0)'); g.fillStyle = gl2; g.fillRect(pj[0] - wc * 2.2, pj[1] - wc * 2.5, wc * 4.4, wc * 4.4); } carroAtras(g, pj[0], pj[1], wc, (C.veh && C.veh.color) || '#a3202a', { giro: 0, t: E.t || 0, freno: cielo.noche > .3 }); } }   /* de noche, con su halo y los stops encendidos (se perdía: auditoría G-H25) */
     let nc = 0; for (const v of E.trafico || []) { if (nc > 30) break; const q = this.aPantalla(v.x, v.y, M.cota(v.x, v.y)); if (!q || q[0] < 0 || q[0] > W || q[1] < 0 || q[1] > H) continue; const f = (v.x - cx) * ca + (v.y - cy) * sa; if (f > 700) continue; nc++; carroAtras(g, q[0], q[1], Math.max(3, 1.85 * W / w * foc / f), v.color || '#d8d8d8', { t: E.t || 0, sirena: /patrulla|policia/.test(v.tipo || '') }); }
   }
 }

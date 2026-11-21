@@ -108,16 +108,68 @@ const ANILLO_PLANETA = [
   { tipo: 'tramo', id: 'ruta_norte', nombre: 'Carretera del Norte', largo: 15000, biomas: ['lagos', 'bosque', 'nieve', 'llanura'], semilla: 37 }
 ];
 class Planeta {
-  constructor(op = {}) { this.anillo = op.anillo || ANILLO_PLANETA; this.cargar = op.cargar; this.cache = new Map(); this._puertas = new Map(); this.radioVisual = op.radioVisual || 60000; this.llegadaT = 0; }
+  constructor(op = {}) {
+    this.anillo = op.anillo || ANILLO_PLANETA; this.cargar = op.cargar;
+    this.maxMundos = op.maxMundos === undefined ? 2 : op.maxMundos;
+    if (!Number.isSafeInteger(this.maxMundos) || this.maxMundos < 1) throw new RangeError('maxMundos debe ser entero positivo');
+    this.cache = new Map(); this._cargando = new Map(); this._puertas = new Map();
+    this.activo = null; this.radioVisual = op.radioVisual || 60000; this.llegadaT = 0;
+    this.metricasCache = { aciertos: 0, compartidas: 0, cargas: 0, expulsiones: 0, errores: 0 };
+  }
   indice(id) { return this.anillo.findIndex(q => q.id === id); }
   def(id) { return this.anillo[this.indice(id)]; }
   vecino(id, paso) { const n = this.anillo.length, i = this.indice(id); return this.anillo[(i + paso + n) % n]; }
-  /* el mundo de una parada del anillo (carga perezosa; se guardan a lo sumo dos en memoria) */
+  /* La recencia se actualiza tanto en accesos normales como en cambios de mundo. */
+  _tocar(id, M) { this.cache.delete(id); this.cache.set(id, M); }
+  /* Nunca expulsa el mundo solicitado; mientras haya espacio protege además
+     el mundo en juego, incluso si otra IA precarga varios destinos a la vez. */
+  _recortar(proteger) {
+    while (this.cache.size > this.maxMundos) {
+      let quitar;
+      for (const id of this.cache.keys()) if (id !== proteger && id !== this.activo) { quitar = id; break; }
+      if (quitar === undefined) for (const id of this.cache.keys()) if (id !== proteger) { quitar = id; break; }
+      if (quitar === undefined) break;
+      this.cache.delete(quitar); this._puertas.delete(quitar); this.metricasCache.expulsiones++;
+    }
+  }
+  /* Marcar el mundo jugado evita que una precarga de mapa expulse su referencia.
+     Con maxMundos=1, el destino solicitado tiene prioridad durante el traslado. */
+  fijar(id) {
+    if (!this.def(id)) throw new Error('el planeta no tiene ' + id);
+    this.activo = id;
+    if (this.cache.has(id)) this._tocar(id, this.cache.get(id));
+    this._recortar(id);
+    return this.cache.get(id) || null;
+  }
+  diagnosticoCache() {
+    return { residentes: [...this.cache.keys()], cargando: [...this._cargando.keys()],
+      activo: this.activo, maxMundos: this.maxMundos, ...this.metricasCache };
+  }
+  /* Carga única por ID: 10 peticiones concurrentes no decodifican 10 mapas.
+     Promise.resolve() inicia en microtarea para registrar la tarea incluso
+     si Generador.carretera termina de forma síncrona. Los fallos no se cachean. */
   async mundo(id) {
-    if (this.cache.has(id)) return this.cache.get(id); const d = this.def(id); if (!d) throw new Error('el planeta no tiene ' + id);
-    const M = d.tipo === 'tramo' ? Generador.carretera({ largo: d.largo, biomas: d.biomas, semilla: d.semilla, nombre: d.nombre, id: d.id }) : await this.cargar(id);
-    M.planetaId = id; this.cache.set(id, M); while (this.cache.size > 2) { const k = this.cache.keys().next().value; if (k === id) break; this.cache.delete(k); }
-    return M;
+    if (this.cache.has(id)) {
+      const M = this.cache.get(id); this._tocar(id, M); this.metricasCache.aciertos++; return M;
+    }
+    if (this._cargando.has(id)) { this.metricasCache.compartidas++; return this._cargando.get(id); }
+    const d = this.def(id); if (!d) throw new Error('el planeta no tiene ' + id);
+    this.metricasCache.cargas++;
+    const tarea = Promise.resolve().then(async () => {
+      try {
+        const M = d.tipo === 'tramo'
+          ? Generador.carretera({ largo: d.largo, biomas: d.biomas, semilla: d.semilla, nombre: d.nombre, id: d.id })
+          : await this.cargar(id);
+        if (!M || typeof M !== 'object') throw new Error('Cargador de mundo vacío: ' + id);
+        M.planetaId = id;
+        this._tocar(id, M);
+        this._recortar(id);
+        return M;
+      } catch (e) { this.metricasCache.errores++; throw e; }
+      finally { this._cargando.delete(id); }
+    });
+    this._cargando.set(id, tarea);
+    return tarea;
   }
   /* puertas de una ciudad: un punto de una vía grande cerca del borde del lado pedido (n, s, e, o), con el rumbo hacia afuera */
   puertas(id, M) {
