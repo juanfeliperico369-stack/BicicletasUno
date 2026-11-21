@@ -5,13 +5,18 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const f=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const q=JSON.parse(f('contenido/paradas-carretera.json'));
+assert(q.autor?.includes('Gemini'),'se conserva autoría del catálogo original');
+for(const registros of Object.values(q.biomas))for(const item of registros){
+ assert(item.id && item.nombre_es && item.nombre===item.nombre_es && item.nombre_en,'id/ES/EN');
+ assert(Array.isArray(item.rutas) && item.rutas.length,'rutas específicas');
+}
 const biomas=['costa','llanura','desierto','bosque','montana','nieve','lagos'];
 /* G-H22 unido: 4 de Antigravity + 4 de ChatGPT por bioma */
 for(const b of biomas){assert.equal(q.biomas[b]?.length,8,'8 paradas '+b);for(const x of q.biomas[b]) assert(x.nombre&&x.nombre_en&&x.ambiente&&x.tipo);}
 assert.equal(new Set(biomas.flatMap(b=>q.biomas[b].map(x=>x.nombre))).size,56);
 const fuente=f('js/13-planeta.js'),match=fuente.match(/^const PARADAS_RUTA = (\{.*\});$/m);
 assert(match,'dataset embebido en generador de carretera');
-assert.equal(JSON.stringify(JSON.parse(match[1])),JSON.stringify(Object.fromEntries(Object.entries(q.biomas).map(([b,L])=>[b,L.map(x=>({nombre:x.nombre,nombre_en:x.nombre_en,tipo:x.tipo,ambiente:x.ambiente}))]))));
+assert.equal(JSON.stringify(JSON.parse(match[1])),JSON.stringify(q.biomas),'el generador usa el catálogo tal cual');
 assert(fuente.includes('biomaP = biomas[bioma(y)]'),'la selección debe obedecer al bioma');
 const historia=f('juegos/getaway/10-contenido.js');
 assert(!/La valentina finca hotel/i.test(historia),'un negocio real no puede ser guarida ficticia');
@@ -194,3 +199,28 @@ assert(inicio.includes('const token = G.narrativaEpoch || 0') && inicio.includes
 assert(historiaE.includes('G.narrativaEpoch = (G.narrativaEpoch || 0) + 1'));
 assert(historiaE.includes("querySelectorAll('.dialogo')") && historiaE.includes('Subt.limpiar()'));
 console.log('G-H20 · diálogos inválidos cancelados y subtítulos limpios al entrar Calle libre');
+
+
+/* G-H22: catálogo Gemini por rutas; G-H24: sólo ciudad activa en caché MC4. */
+assert(fuente.includes("q.rutas.includes(op.id)"),'sólo elegir paradas compatibles con carretera');
+assert(fuente.includes("id: d.id"),'pasar id de ruta al generador');
+assert(f('juegos/getaway/20-juego.js').includes('if (key !== id) planeta.cache.delete(key)'), 'liberar anteriores sólo al cambiar de ciudad');
+assert(f('juegos/getaway/20-juego.js').includes("tipo === 'car_repair'"),'reparación por tipo estructurado, no sólo nombre');
+console.log('Gemini G-H22/G-H24: metadatos de ruta y una sola ciudad en caché OK');
+
+
+/* Gemini C-M31: planeta WebGL2 debe caber en modo vertical y mantener etiquetas en Canvas. */
+const shaderG=f('js/13-globo-gpu.js');
+const etiquetasG=f('juegos/getaway/40-dibujo.js');
+assert(shaderG.includes("R=min(.68,(uSize.x/uSize.y)*.80)"),'radio acorde a formato vertical');
+assert(etiquetasG.includes("c.style.opacity = '1'"),'Canvas encima de WebGL lleva etiquetas de ciudades');
+assert(etiquetasG.includes("g.fillText(C.nombre"),'las ciudades tienen nombre sobre el globo WebGL');
+console.log('C-M31 Gemini: radio de globo móvil y etiquetas en overlay OK');
+
+
+/* Gemini C-M35: fragmentos y humo visibles también al caer en Raster/Canvas 2D. */
+const dib2D=f('juegos/getaway/40-dibujo.js');
+assert(dib2D.includes("(V.usaRaster && V.usaRaster())"),'piezas se ven en Raster software');
+assert(dib2D.includes("G.piezasFisicas && G.piezasFisicas.lista"),'proyección de piezas físicas');
+assert(dib2D.includes("g.strokeRect(-k*.4"),'malla 2D visible y sombreada');
+console.log('C-M35 Gemini: piezas y humo en Canvas/Raster sin WebGL');

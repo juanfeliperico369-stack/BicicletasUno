@@ -1,598 +1,670 @@
 {
   "schema_version": 1,
   "tarea": "G-H22",
-  "autores": "Gemini · Antigravity (28 paradas, ids y rutas) y ChatGPT · Codex (28 paradas integradas al generador); unidas por Claude",
+  "autor": "Gemini · Antigravity («hydrogen»): 28 paradas con ids y rutas; ChatGPT · Codex: 28 paradas del generador; unidas por Claude",
   "fecha": "2026-11-21",
-  "nota": "56 paradas de carretera ficticias (8 por bioma de MC.Planeta.BIOMAS). Todos los nombres son inventados. El generador (js/13-planeta.js, PARADAS_RUTA) usa este catálogo.",
+  "nota": "56 paradas de carretera ficticias (8 por bioma de MC.Planeta.BIOMAS), con nombre en español e inglés y las rutas donde pueden salir. Todos los nombres son inventados. El generador (js/13-planeta.js, PARADAS_RUTA) usa este catálogo tal cual.",
   "biomas": {
     "costa": [
       {
         "id": "costa_bomba_salitre",
         "tipo": "fuel",
-        "nombre": "Estación Salitre 99",
+        "nombre_es": "Estación Salitre 99",
         "nombre_en": "Saltwind Gas 99",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Tres surtidores oxidados por la brisa marina y un foco amarillo zumbando sobre las conchas trituradas.",
-        "autor": "antigravity"
+        "nombre": "Estación Salitre 99"
       },
       {
         "id": "costa_motel_marea",
         "tipo": "motel",
-        "nombre": "Motel Marea Baja",
+        "nombre_es": "Motel Marea Baja",
         "nombre_en": "Low Tide Motor Inn",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Puertas celestes despintadas mirando al rompeolas; el neón parpadea con el ritmo del oleaje.",
-        "autor": "antigravity"
+        "nombre": "Motel Marea Baja"
       },
       {
         "id": "costa_paradero_babor",
         "tipo": "restaurant",
-        "nombre": "Paradero El Babor",
+        "nombre_es": "Paradero El Babor",
         "nombre_en": "Portside Diner & Trucks",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Olor a aceite caliente, café recalentado y tractomulas parqueadas con las luces de emergencia encendidas.",
-        "autor": "antigravity"
+        "nombre": "Paradero El Babor"
       },
       {
         "id": "costa_mirador_faro",
         "tipo": "mirador",
-        "nombre": "Mirador del Espigón Viejo",
+        "nombre_es": "Mirador del Espigón Viejo",
         "nombre_en": "Old Breakwater Overlook",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Un muro bajo de concreto manchado de salitre desde donde se ve el horizonte curvo del mar.",
-        "autor": "antigravity"
+        "nombre": "Mirador del Espigón Viejo"
       },
       {
-        "id": "costa_c1",
+        "id": "costa_bomba_brisa_de_sal",
         "tipo": "fuel",
-        "nombre": "Bomba Brisa de Sal",
+        "nombre_es": "Bomba Brisa de Sal",
         "nombre_en": "Saltwind Fuel",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "Lámparas cálidas bajo una brisa de mar.",
-        "autor": "chatgpt"
+        "nombre": "Bomba Brisa de Sal"
       },
       {
-        "id": "costa_c2",
+        "id": "costa_taller_la_boya",
         "tipo": "car_repair",
-        "nombre": "Taller La Boya",
+        "nombre_es": "Taller La Boya",
         "nombre_en": "The Buoy Garage",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "Motores y redes húmedas junto al mar.",
-        "autor": "chatgpt"
+        "nombre": "Taller La Boya"
       },
       {
-        "id": "costa_c3",
+        "id": "costa_paradero_faro_viejo",
         "tipo": "restaurant",
-        "nombre": "Paradero Faro Viejo",
+        "nombre_es": "Paradero Faro Viejo",
         "nombre_en": "Old Beacon Diner",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "Café junto a los cristales empañados.",
-        "autor": "chatgpt"
+        "nombre": "Paradero Faro Viejo"
       },
       {
-        "id": "costa_c4",
+        "id": "costa_mirador_del_salitre",
         "tipo": "mirador",
-        "nombre": "Mirador del Salitre",
+        "nombre_es": "Mirador del Salitre",
         "nombre_en": "Salt Air Lookout",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "La línea del mar desaparece en la bruma.",
-        "autor": "chatgpt"
+        "nombre": "Mirador del Salitre"
       }
     ],
     "llanura": [
       {
         "id": "llanura_taller_horizonte",
         "tipo": "car_repair",
-        "nombre": "Taller Recta Larga",
+        "nombre_es": "Taller Recta Larga",
         "nombre_en": "Long Mile Auto & Tire",
         "rutas": [
           "ruta_atlantico",
           "ruta_norte"
         ],
         "ambiente": "Una grúa vieja junto a pilas de llantas gastadas y el eco metálico de una llave de impacto.",
-        "autor": "antigravity"
+        "nombre": "Taller Recta Larga"
       },
       {
         "id": "llanura_bar_poste",
         "tipo": "bar",
-        "nombre": "Estadéro Kilómetro Cero",
+        "nombre_es": "Estadéro Kilómetro Cero",
         "nombre_en": "Milepost Zero Tavern",
         "rutas": [
           "ruta_atlantico",
           "ruta_norte"
         ],
         "ambiente": "Música de radio AM saliendo por una persiana entreabierta mientras el viento barre el polvo del parqueadero.",
-        "autor": "antigravity"
+        "nombre": "Estadéro Kilómetro Cero"
       },
       {
         "id": "llanura_bomba_molino",
         "tipo": "fuel",
-        "nombre": "Bomba El Molino Seco",
+        "nombre_es": "Bomba El Molino Seco",
         "nombre_en": "Dry Mill Fuel Stop",
         "rutas": [
           "ruta_atlantico",
           "ruta_norte"
         ],
         "ambiente": "Un techo de zinc que traquea con cada ráfaga y un letrero de precios al que le faltan dos números.",
-        "autor": "antigravity"
+        "nombre": "Bomba El Molino Seco"
       },
       {
         "id": "llanura_peaje_llano",
         "tipo": "toll",
-        "nombre": "Caseta Vieja del Llano",
+        "nombre_es": "Caseta Vieja del Llano",
         "nombre_en": "Plains Old Tollbooth",
         "rutas": [
           "ruta_atlantico",
           "ruta_norte"
         ],
         "ambiente": "Talanqueras levantadas hace años, vidrios rotos y marcas frescas de frenada sobre los carriles vacíos.",
-        "autor": "antigravity"
+        "nombre": "Caseta Vieja del Llano"
       },
       {
-        "id": "llanura_c1",
+        "id": "llanura_bomba_horizonte_bajo",
         "tipo": "fuel",
-        "nombre": "Bomba Horizonte Bajo",
+        "nombre_es": "Bomba Horizonte Bajo",
         "nombre_en": "Low Horizon Fuel",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_norte"
+        ],
         "ambiente": "Camiones diminutos en la recta interminable.",
-        "autor": "chatgpt"
+        "nombre": "Bomba Horizonte Bajo"
       },
       {
-        "id": "llanura_c2",
+        "id": "llanura_taller_tres_vientos",
         "tipo": "car_repair",
-        "nombre": "Taller Tres Vientos",
+        "nombre_es": "Taller Tres Vientos",
         "nombre_en": "Three Winds Garage",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_norte"
+        ],
         "ambiente": "Herramientas en un galpón abierto.",
-        "autor": "chatgpt"
+        "nombre": "Taller Tres Vientos"
       },
       {
-        "id": "llanura_c3",
+        "id": "llanura_paradero_la_lumbre",
         "tipo": "restaurant",
-        "nombre": "Paradero La Lumbre",
+        "nombre_es": "Paradero La Lumbre",
         "nombre_en": "Lamplight Diner",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_norte"
+        ],
         "ambiente": "Comida caliente bajo una luz amarilla.",
-        "autor": "chatgpt"
+        "nombre": "Paradero La Lumbre"
       },
       {
-        "id": "llanura_c4",
+        "id": "llanura_motel_kilometro_azul",
         "tipo": "motel",
-        "nombre": "Motel Kilómetro Azul",
+        "nombre_es": "Motel Kilómetro Azul",
         "nombre_en": "Blue Mile Motel",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_norte"
+        ],
         "ambiente": "Un letrero cansado vibra con el viento.",
-        "autor": "chatgpt"
+        "nombre": "Motel Kilómetro Azul"
       }
     ],
     "desierto": [
       {
         "id": "desierto_motel_calima",
         "tipo": "motel",
-        "nombre": "Motel La Calima",
+        "nombre_es": "Motel La Calima",
         "nombre_en": "Heat Haze Motel",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Paredes de adobe agrietado, ventiladores girando lento y ni una sola sombra en tres kilómetros a la redonda.",
-        "autor": "antigravity"
+        "nombre": "Motel La Calima"
       },
       {
         "id": "desierto_bomba_espejismo",
         "tipo": "fuel",
-        "nombre": "Surtidor El Espejismo",
+        "nombre_es": "Surtidor El Espejismo",
         "nombre_en": "Mirage Diesel & Ice",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Un tanque metálico blanco brillando al sol, arena acumulada contra el andén y una nevera de hielo zumbando.",
-        "autor": "antigravity"
+        "nombre": "Surtidor El Espejismo"
       },
       {
         "id": "desierto_taller_radiador",
         "tipo": "car_repair",
-        "nombre": "Montallantas y Radiadores Arena Roja",
+        "nombre_es": "Montallantas y Radiadores Arena Roja",
         "nombre_en": "Red Sand Radiator & Tire",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Bidones de refrigerante alineados bajo una polisombra y perros dormidos debajo de un chasis sin motor.",
-        "autor": "antigravity"
+        "nombre": "Montallantas y Radiadores Arena Roja"
       },
       {
         "id": "desierto_mirador_dunas",
         "tipo": "mirador",
-        "nombre": "Paradero Paso del Polvo",
+        "nombre_es": "Paradero Paso del Polvo",
         "nombre_en": "Dust Pass Pullout",
         "rutas": [
           "ruta_atlantico"
         ],
         "ambiente": "Un ensanche de gravilla roja donde el motor caliente cruje al enfriarse frente a las dunas.",
-        "autor": "antigravity"
+        "nombre": "Paradero Paso del Polvo"
       },
       {
-        "id": "desierto_c1",
+        "id": "desierto_bomba_polvo_rojo",
         "tipo": "fuel",
-        "nombre": "Bomba Polvo Rojo",
+        "nombre_es": "Bomba Polvo Rojo",
         "nombre_en": "Red Dust Fuel",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "La arena golpea las ventanillas.",
-        "autor": "chatgpt"
+        "nombre": "Bomba Polvo Rojo"
       },
       {
-        "id": "desierto_c2",
+        "id": "desierto_taller_la_calima",
         "tipo": "car_repair",
-        "nombre": "Taller La Calima",
+        "nombre_es": "Taller La Calima",
         "nombre_en": "Heat Haze Garage",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "Metal caliente y una sombra mínima.",
-        "autor": "chatgpt"
+        "nombre": "Taller La Calima"
       },
       {
-        "id": "desierto_c3",
+        "id": "desierto_paradero_las_agujas",
         "tipo": "restaurant",
-        "nombre": "Paradero Las Agujas",
+        "nombre_es": "Paradero Las Agujas",
         "nombre_en": "Needles Diner",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "Un ventilador antiguo mueve el aire seco.",
-        "autor": "chatgpt"
+        "nombre": "Paradero Las Agujas"
       },
       {
-        "id": "desierto_c4",
+        "id": "desierto_mirador_del_mediodia",
         "tipo": "mirador",
-        "nombre": "Mirador del Mediodía",
+        "nombre_es": "Mirador del Mediodía",
         "nombre_en": "High Noon Lookout",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico"
+        ],
         "ambiente": "La carretera tiembla entre las dunas.",
-        "autor": "chatgpt"
+        "nombre": "Mirador del Mediodía"
       }
     ],
     "bosque": [
       {
         "id": "bosque_paradero_helechos",
         "tipo": "restaurant",
-        "nombre": "Paradero Los Helechos",
+        "nombre_es": "Paradero Los Helechos",
         "nombre_en": "Fern Bend Truck Stop",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Humo de leña mezclándose con la humedad de los árboles altos y mesas de madera mojadas por el sereno.",
-        "autor": "antigravity"
+        "nombre": "Paradero Los Helechos"
       },
       {
         "id": "bosque_taller_aserradero",
         "tipo": "car_repair",
-        "nombre": "Taller del Aserradero",
+        "nombre_es": "Taller del Aserradero",
         "nombre_en": "Sawmill Garage",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Olor a resina de pino y grasa de motor bajo un cobertizo de teja verde cubierto de musgo.",
-        "autor": "antigravity"
+        "nombre": "Taller del Aserradero"
       },
       {
         "id": "bosque_motel_neblina",
         "tipo": "motel",
-        "nombre": "Cabañas La Hojarasca",
+        "nombre_es": "Cabañas La Hojarasca",
         "nombre_en": "Timberline Cabins",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Luces cálidas filtrándose entre troncos oscuros y el canto constante de grillos a lado y lado del asfalto.",
-        "autor": "antigravity"
+        "nombre": "Cabañas La Hojarasca"
       },
       {
         "id": "bosque_capilla_cedro",
         "tipo": "church",
-        "nombre": "Gruta del Cedro Alto",
+        "nombre_es": "Gruta del Cedro Alto",
         "nombre_en": "Tall Cedar Wayside",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Un pequeño nicho de piedra junto a la berma con veladoras encendidas y flores frescas de la vereda.",
-        "autor": "antigravity"
+        "nombre": "Gruta del Cedro Alto"
       },
       {
-        "id": "bosque_c1",
+        "id": "bosque_bomba_los_helechos",
         "tipo": "fuel",
-        "nombre": "Bomba Los Helechos",
+        "nombre_es": "Bomba Los Helechos",
         "nombre_en": "Fernwood Fuel",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "Musgo sobre la marquesina.",
-        "autor": "chatgpt"
+        "nombre": "Bomba Los Helechos"
       },
       {
-        "id": "bosque_c2",
+        "id": "bosque_taller_raiz_vieja",
         "tipo": "car_repair",
-        "nombre": "Taller Raíz Vieja",
+        "nombre_es": "Taller Raíz Vieja",
         "nombre_en": "Old Root Workshop",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "Ramas mojadas y faros entre los pinos.",
-        "autor": "chatgpt"
+        "nombre": "Taller Raíz Vieja"
       },
       {
-        "id": "bosque_c3",
+        "id": "bosque_paradero_sombra_larga",
         "tipo": "restaurant",
-        "nombre": "Paradero Sombra Larga",
+        "nombre_es": "Paradero Sombra Larga",
         "nombre_en": "Long Shade Diner",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "La conversación baja cuando cruje el bosque.",
-        "autor": "chatgpt"
+        "nombre": "Paradero Sombra Larga"
       },
       {
-        "id": "bosque_c4",
+        "id": "bosque_mirador_copa_alta",
         "tipo": "mirador",
-        "nombre": "Mirador Copa Alta",
+        "nombre_es": "Mirador Copa Alta",
         "nombre_en": "High Canopy Lookout",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "Una vía estrecha entre las copas.",
-        "autor": "chatgpt"
+        "nombre": "Mirador Copa Alta"
       }
     ],
     "montana": [
       {
         "id": "montana_mirador_neblina",
         "tipo": "mirador",
-        "nombre": "Mirador Alto del Viento",
+        "nombre_es": "Mirador Alto del Viento",
         "nombre_en": "High Wind Overlook",
         "rutas": [
           "ruta_atlantico",
           "ruta_embalse"
         ],
         "ambiente": "Barandas metálicas golpeadas por la neblina; abajo se ven las luces de los carros serpenteando por la ladera.",
-        "autor": "antigravity"
+        "nombre": "Mirador Alto del Viento"
       },
       {
         "id": "montana_paradero_curva",
         "tipo": "restaurant",
-        "nombre": "Fonda La Curva Brava",
+        "nombre_es": "Fonda La Curva Brava",
         "nombre_en": "Switchback Coffee House",
         "rutas": [
           "ruta_atlantico",
           "ruta_embalse"
         ],
         "ambiente": "Tinto humeante, arepas al carbón y camioneros revisando los frenos antes de bajar la pendiente.",
-        "autor": "antigravity"
+        "nombre": "Fonda La Curva Brava"
       },
       {
         "id": "montana_taller_frenos",
         "tipo": "car_repair",
-        "nombre": "Frenos y Engrase La Cumbre",
+        "nombre_es": "Frenos y Engrase La Cumbre",
         "nombre_en": "Summit Brakes & Service",
         "rutas": [
           "ruta_atlantico",
           "ruta_embalse"
         ],
         "ambiente": "Una rampa de concreto sobre la berma con olor a balatas calientes y herramientas colgadas en madera.",
-        "autor": "antigravity"
+        "nombre": "Frenos y Engrase La Cumbre"
       },
       {
         "id": "montana_peaje_cordillera",
         "tipo": "toll",
-        "nombre": "Retén Viejo de la Cordillera",
+        "nombre_es": "Retén Viejo de la Cordillera",
         "nombre_en": "Ridge Old Checkpoint",
         "rutas": [
           "ruta_atlantico",
           "ruta_embalse"
         ],
         "ambiente": "Dos casetas grises desgastadas por la lluvia de altura y reflectores solitarios apuntando al túnel de niebla.",
-        "autor": "antigravity"
+        "nombre": "Retén Viejo de la Cordillera"
       },
       {
-        "id": "montana_c1",
+        "id": "montana_bomba_alto_de_piedra",
         "tipo": "fuel",
-        "nombre": "Bomba Alto de Piedra",
+        "nombre_es": "Bomba Alto de Piedra",
         "nombre_en": "Stonecrest Fuel",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_embalse"
+        ],
         "ambiente": "Viento frío detrás de la estación.",
-        "autor": "chatgpt"
+        "nombre": "Bomba Alto de Piedra"
       },
       {
-        "id": "montana_c2",
+        "id": "montana_taller_curva_cerrada",
         "tipo": "car_repair",
-        "nombre": "Taller Curva Cerrada",
+        "nombre_es": "Taller Curva Cerrada",
         "nombre_en": "Hairpin Garage",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_embalse"
+        ],
         "ambiente": "Frenos calientes y grava en la cuneta.",
-        "autor": "chatgpt"
+        "nombre": "Taller Curva Cerrada"
       },
       {
-        "id": "montana_c3",
+        "id": "montana_paradero_la_cornisa",
         "tipo": "restaurant",
-        "nombre": "Paradero La Cornisa",
+        "nombre_es": "Paradero La Cornisa",
         "nombre_en": "Ledge Diner",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_embalse"
+        ],
         "ambiente": "La ventana da directamente al barranco.",
-        "autor": "chatgpt"
+        "nombre": "Paradero La Cornisa"
       },
       {
-        "id": "montana_c4",
+        "id": "montana_mirador_del_condor",
         "tipo": "mirador",
-        "nombre": "Mirador del Cóndor",
+        "nombre_es": "Mirador del Cóndor",
         "nombre_en": "Condor Ridge Lookout",
-        "rutas": [],
+        "rutas": [
+          "ruta_atlantico",
+          "ruta_embalse"
+        ],
         "ambiente": "Las nubes quedan debajo del camino.",
-        "autor": "chatgpt"
+        "nombre": "Mirador del Cóndor"
       }
     ],
     "nieve": [
       {
         "id": "nieve_bomba_escarcha",
         "tipo": "fuel",
-        "nombre": "Estación Escarcha Blanca",
+        "nombre_es": "Estación Escarcha Blanca",
         "nombre_en": "White Frost Fuel",
         "rutas": [
           "ruta_norte"
         ],
         "ambiente": "Carámbanos colgando del techo iluminado con tubos blancos y surcos oscuros de llantas en la nieve apisonada.",
-        "autor": "antigravity"
+        "nombre": "Estación Escarcha Blanca"
       },
       {
         "id": "nieve_motel_ventisca",
         "tipo": "motel",
-        "nombre": "Posada La Ventisca",
+        "nombre_es": "Posada La Ventisca",
         "nombre_en": "Blizzard Pass Lodge",
         "rutas": [
           "ruta_norte"
         ],
         "ambiente": "Chimenea humeando sin pausa y vidrios empañados que dejan ver siluetas calentándose las manos.",
-        "autor": "antigravity"
+        "nombre": "Posada La Ventisca"
       },
       {
         "id": "nieve_bar_puerto_frio",
         "tipo": "bar",
-        "nombre": "Refugio Paso Helado",
+        "nombre_es": "Refugio Paso Helado",
         "nombre_en": "Frozen Pass Outpost",
         "rutas": [
           "ruta_norte"
         ],
         "ambiente": "Un quitanieves apagado en la entrada y el silencio sordo de la nieve cayendo bajo los postes de luz.",
-        "autor": "antigravity"
+        "nombre": "Refugio Paso Helado"
       },
       {
         "id": "nieve_mirador_glaciar",
         "tipo": "mirador",
-        "nombre": "Mirador de la Cresta Blanca",
+        "nombre_es": "Mirador de la Cresta Blanca",
         "nombre_en": "White Crest Turnout",
         "rutas": [
           "ruta_norte"
         ],
         "ambiente": "Postes naranjas marcando el borde del abismo blanco y el silbido helado del viento entre las rocas.",
-        "autor": "antigravity"
+        "nombre": "Mirador de la Cresta Blanca"
       },
       {
-        "id": "nieve_c1",
+        "id": "nieve_bomba_ultimo_refugio",
         "tipo": "fuel",
-        "nombre": "Bomba Último Refugio",
+        "nombre_es": "Bomba Último Refugio",
         "nombre_en": "Last Shelter Fuel",
-        "rutas": [],
+        "rutas": [
+          "ruta_norte"
+        ],
         "ambiente": "Hielo alrededor de los surtidores.",
-        "autor": "chatgpt"
+        "nombre": "Bomba Último Refugio"
       },
       {
-        "id": "nieve_c2",
+        "id": "nieve_taller_cadena_norte",
         "tipo": "car_repair",
-        "nombre": "Taller Cadena Norte",
+        "nombre_es": "Taller Cadena Norte",
         "nombre_en": "North Chain Garage",
-        "rutas": [],
+        "rutas": [
+          "ruta_norte"
+        ],
         "ambiente": "Neumáticos de invierno junto a la estufa.",
-        "autor": "chatgpt"
+        "nombre": "Taller Cadena Norte"
       },
       {
-        "id": "nieve_c3",
+        "id": "nieve_paradero_escarcha",
         "tipo": "restaurant",
-        "nombre": "Paradero Escarcha",
+        "nombre_es": "Paradero Escarcha",
         "nombre_en": "Frostline Diner",
-        "rutas": [],
+        "rutas": [
+          "ruta_norte"
+        ],
         "ambiente": "Cristales blancos ocultan la carretera.",
-        "autor": "chatgpt"
+        "nombre": "Paradero Escarcha"
       },
       {
-        "id": "nieve_c4",
+        "id": "nieve_motel_ventisca_2",
         "tipo": "motel",
-        "nombre": "Motel Ventisca",
+        "nombre_es": "Motel Ventisca",
         "nombre_en": "Snowdrift Motel",
-        "rutas": [],
+        "rutas": [
+          "ruta_norte"
+        ],
         "ambiente": "Una sola puerta iluminada en la nevada.",
-        "autor": "chatgpt"
+        "nombre": "Motel Ventisca"
       }
     ],
     "lagos": [
       {
         "id": "lagos_paradero_muelle",
         "tipo": "restaurant",
-        "nombre": "Paradero Brisa del Lago",
+        "nombre_es": "Paradero Brisa del Lago",
         "nombre_en": "Lakeside Breeze Diner",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Un deck sencillo de madera sobre la orilla con botes amarrados golpeando suavemente las llantas de protección.",
-        "autor": "antigravity"
+        "nombre": "Paradero Brisa del Lago"
       },
       {
         "id": "lagos_bomba_represa",
         "tipo": "fuel",
-        "nombre": "Estación Náutica y Vial El Espejo",
+        "nombre_es": "Estación Náutica y Vial El Espejo",
         "nombre_en": "Mirror Lake Gas & Dock",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Surtidores para carros hacia la carretera y un muelle pequeño con pimpinas de gasolina hacia el agua quieta.",
-        "autor": "antigravity"
+        "nombre": "Estación Náutica y Vial El Espejo"
       },
       {
         "id": "lagos_motel_bahia",
         "tipo": "motel",
-        "nombre": "Hostal Bahía Mansa",
+        "nombre_es": "Hostal Bahía Mansa",
         "nombre_en": "Still Bay Motel",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Balcones sencillos reflejándose en el agua oscura al atardecer y olor a tierra húmeda.",
-        "autor": "antigravity"
+        "nombre": "Hostal Bahía Mansa"
       },
       {
         "id": "lagos_mirador_islote",
         "tipo": "mirador",
-        "nombre": "Mirador del Islote",
+        "nombre_es": "Mirador del Islote",
         "nombre_en": "Islet Viewpoint",
         "rutas": [
           "ruta_embalse",
           "ruta_norte"
         ],
         "ambiente": "Una curva abierta con gravilla desde donde se dominan las islas verdes y la neblina pegada al agua.",
-        "autor": "antigravity"
+        "nombre": "Mirador del Islote"
       },
       {
-        "id": "lagos_c1",
+        "id": "lagos_bomba_agua_clara",
         "tipo": "fuel",
-        "nombre": "Bomba Agua Clara",
+        "nombre_es": "Bomba Agua Clara",
         "nombre_en": "Clearwater Fuel",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "Reflejos verdes bajo los surtidores.",
-        "autor": "chatgpt"
+        "nombre": "Bomba Agua Clara"
       },
       {
-        "id": "lagos_c2",
+        "id": "lagos_taller_el_pescador",
         "tipo": "car_repair",
-        "nombre": "Taller El Pescador",
+        "nombre_es": "Taller El Pescador",
         "nombre_en": "Fisher's Workshop",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "Motores de lancha junto a los carros.",
-        "autor": "chatgpt"
+        "nombre": "Taller El Pescador"
       },
       {
-        "id": "lagos_c3",
+        "id": "lagos_paradero_orilla_norte",
         "tipo": "restaurant",
-        "nombre": "Paradero Orilla Norte",
+        "nombre_es": "Paradero Orilla Norte",
         "nombre_en": "North Shore Diner",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "Café con vista al muelle de tablas.",
-        "autor": "chatgpt"
+        "nombre": "Paradero Orilla Norte"
       },
       {
-        "id": "lagos_c4",
+        "id": "lagos_mirador_los_espejos",
         "tipo": "mirador",
-        "nombre": "Mirador Los Espejos",
+        "nombre_es": "Mirador Los Espejos",
         "nombre_en": "Mirror Lake Lookout",
-        "rutas": [],
+        "rutas": [
+          "ruta_embalse",
+          "ruta_norte"
+        ],
         "ambiente": "Las montañas duplicadas en el agua.",
-        "autor": "chatgpt"
+        "nombre": "Mirador Los Espejos"
       }
     ]
   }

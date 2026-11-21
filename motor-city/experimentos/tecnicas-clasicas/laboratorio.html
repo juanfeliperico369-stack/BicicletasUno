@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0e11">
+<title>Motor City · Laboratorio de Motores Clásicos (Sala Limpia)</title>
+<style>
+:root{
+  --bg:#0d0e11; --surf:#15181e; --surf2:#1c2028; --ink:#ede7db; --muted:#a69f92;
+  --amber:#e29d3e; --crimson:#c93b34; --teal:#4e95a3; --ok:#65a87a;
+  --line:rgba(237,231,219,.14);
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--amber)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+.wrap{max-width:1160px;margin:0 auto;padding:0 clamp(14px,3vw,26px)}
+header{border-bottom:1px solid var(--line);padding:18px 0 14px;background:linear-gradient(180deg,#171412 0%,var(--bg) 100%)}
+.head-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.kicker{font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transform:uppercase}
+.sub{margin:0;color:var(--muted);max-width:68ch;font-size:13.5px}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:6px;background:var(--surf);color:var(--ink);text-decoration:none;font:600 12.5px var(--sans)}
+.links a.pri{border-color:var(--amber);background:#22190d;color:var(--amber)}
+
+.tabs{display:flex;flex-wrap:wrap;gap:8px;padding:14px 0}
+.tabs button{
+  min-height:44px;padding:0 14px;border-radius:6px;border:1px solid var(--line);
+  background:var(--surf);color:var(--ink);font:700 13px var(--sans);cursor:pointer
+}
+.tabs button[aria-selected="true"]{border-color:var(--amber);background:#251b0e;color:var(--amber)}
+
+.panel{display:none;padding-bottom:36px}
+.panel.on{display:block}
+
+.stage-grid{display:grid;gap:16px;grid-template-columns:1fr 310px;align-items:start}
+@media (max-width:900px){.stage-grid{grid-template-columns:1fr}}
+
+.canvas-box{position:relative;background:#08090c;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.canvas-box canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;touch-action:none}
+.hud-bar{
+  display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px solid var(--line);
+  background:var(--surf);font:600 12px var(--mono)
+}
+.pill{background:var(--surf2);border:1px solid var(--line);border-radius:4px;padding:4px 8px;color:var(--ink)}
+.pill b{color:var(--amber)}
+.pill.ok b{color:var(--ok)}
+.pill.warn b{color:#ff8a80}
+
+.side{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:12px;min-width:0;overflow:hidden}
+.side select{width:100%;max-width:100%;min-width:0;text-overflow:ellipsis}
+.side h2{margin:0;font:700 17px/1.2 var(--serif)}
+.side p{margin:0;color:var(--muted);font-size:12.5px}
+.toggles{display:grid;gap:8px;min-width:0}
+.tgl{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
+  padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surf2);
+  color:var(--ink);font:600 12.5px var(--sans);cursor:pointer
+}
+.tgl input{width:18px;height:18px;accent-color:var(--amber)}
+.slider-row{display:grid;gap:4px;font:600 12px var(--sans)}
+.slider-row span{display:flex;justify-content:space-between;color:var(--muted)}
+.slider-row input[type=range]{width:100%;accent-color:var(--amber)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pad button{
+  min-height:44px;border:1px solid var(--line);border-radius:6px;background:var(--surf2);
+  color:var(--ink);font:700 15px var(--sans);cursor:pointer;user-select:none
+}
+.pad button:active{background:var(--amber);color:#000}
+
+.cat-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(310px,1fr))}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:15px;display:grid;gap:8px}
+.card .top{display:flex;justify-content:space-between;gap:8px;font:700 11px var(--mono);color:var(--teal);text-transform:uppercase}
+.card h3{margin:0;font:700 18px/1.2 var(--serif)}
+.card p{margin:0;font-size:13px;color:#cfc8ba}
+.card .lic{font:600 11.5px var(--mono);color:var(--amber);border-top:1px solid var(--line);padding-top:8px}
+
+.mem-bars{display:grid;gap:10px;margin-top:8px}
+.mbar{background:var(--surf2);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.mbar-top{display:flex;justify-content:space-between;font:600 12px var(--mono);margin-bottom:5px}
+.mtrack{height:10px;background:#0d0e11;border-radius:999px;overflow:hidden}
+.mfill{height:100%;border-radius:999px;transition:width .2s}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head-row">
+    <div>
+      <div class="kicker">Motor City 4.0.3 · Ingeniería inversa en sala limpia (0 dependencias)</div>
+      <h1>Laboratorio de Motores Clásicos</h1>
+      <p class="sub">Pruebas interactivas en vivo de 6 técnicas de RenderWare, id Tech, Build Engine, Voxel Space, Driver PS1, GOAL y Shadow of the Colossus adaptadas a Motor City y <em>Turno Cero</em>.</p>
+    </div>
+    <div class="links">
+      <a class="pri" href="../../dist/juegos/getaway.html">▶ Jugar Turno Cero 4.0.3</a>
+      <a href="../../arte/gemini/turno-cero/galeria.html">🎨 Galería Arte + PBR</a>
+      <a href="../../index.html">🏙️ Motor City</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="tabs" role="tablist" aria-label="Modos del laboratorio">
+    <button role="tab" aria-selected="true" data-tab="urbano">1. Cañón Urbano (Build + Silent Hill + Quake + Driver)</button>
+    <button role="tab" aria-selected="false" data-tab="voxel">2. Voxel Space 60 FPS (Comanche / Guatapé)</button>
+    <button role="tab" aria-selected="false" data-tab="stream">3. CStreaming RenderWare / GTA SA (RAM)</button>
+    <button role="tab" aria-selected="false" data-tab="catalogo">4. 10 Motores Clásicos (Licencias y Mapa)</button>
+  </div>
+
+  <!-- TAB 1: CAÑÓN URBANO -->
+  <section class="panel on" id="tab-urbano">
+    <div class="stage-grid">
+      <div class="canvas-box">
+        <canvas id="cvUrbano" width="720" height="450" aria-label="Escena interactiva de cañón urbano con oclusión y suspensión"></canvas>
+        <div class="hud-bar">
+          <span class="pill ok">Dibujados: <b id="stDraw">0</b> / <span id="stTotal">0</span></span>
+          <span class="pill ok">Descartados: <b id="stCull">0%</b></span>
+          <span class="pill">Tiempo: <b id="stMs">0 ms</b></span>
+          <span class="pill">Pitch/Roll Driver: <b id="stSusp">0° / 0°</b></span>
+          <span class="pill">Chispas pool: <b id="stPool">0/256</b></span>
+          <span class="pill">DPR SotC: <b id="stDpr">1.00×</b></span>
+        </div>
+      </div>
+      <aside class="side">
+        <h2>Cañón urbano real (MC4)</h2>
+        <p>Prueba en vivo con <b>edificios reales de Motor City 4.0.3</b> (Overture/OSM). Activa o apaga cada técnica clásica y maneja con <b>WASD / flechas</b> o los botones táctiles.</p>
+        <label class="slider-row">
+          <span><span>Escenario de datos</span><b id="lblCanon">Chelsea · NY</b></span>
+          <select id="selCanon" style="min-height:42px;background:var(--surf2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:0 10px;font:600 12.5px var(--sans)">
+            <option value="ny_chelsea">Manhattan · Chelsea (309 edificios reales MC4)</option>
+            <option value="ny_midtown">Manhattan · Midtown (231 edificios reales MC4)</option>
+            <option value="md_poblado">Medellín · El Poblado (518 edificios reales MC4)</option>
+            <option value="sintetico">Cuadrícula sintética (144 edificios)</option>
+          </select>
+        </label>
+        <div class="toggles">
+          <label class="tgl"><span>Oclusión 1D (Build Engine)</span><input type="checkbox" id="tgOcc" checked></label>
+          <label class="tgl"><span>Niebla = Far Plane (Silent Hill)</span><input type="checkbox" id="tgFog" checked></label>
+          <label class="tgl"><span>AO horneado por callejón (Quake)</span><input type="checkbox" id="tgAO" checked></label>
+          <label class="tgl"><span>Suspensión 4 resortes (Driver PS1)</span><input type="checkbox" id="tgSusp" checked></label>
+          <label class="tgl"><span>Escalador 60 FPS (SotC)</span><input type="checkbox" id="tgEsc" checked></label>
+        </div>
+        <label class="slider-row">
+          <span><span>Distancia niebla (Silent Hill)</span><b id="lblFog">210 m</b></span>
+          <input type="range" id="rgFog" min="90" max="420" value="210">
+        </label>
+        <div class="pad" aria-label="Controles táctiles">
+          <div></div><button type="button" data-k="up">▲</button><div></div>
+          <button type="button" data-k="left">◀</button><button type="button" data-k="down">▼</button><button type="button" data-k="right">▶</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- TAB 2: VOXEL SPACE -->
+  <section class="panel" id="tab-voxel">
+    <div class="stage-grid">
+      <div class="canvas-box">
+        <canvas id="cvVoxel" width="320" height="200" style="image-rendering:pixelated" aria-label="Terreno 3D Voxel Space real SRTM sin WebGL"></canvas>
+        <div class="hud-bar">
+          <span class="pill ok">Render: <b>100% CPU Canvas 2D (0 WebGL)</b></span>
+          <span class="pill">Relieve: <b id="vxSrc">Guatapé SRTM real</b></span>
+          <span class="pill">Tiempo: <b id="vxMs">0 ms</b></span>
+          <span class="pill">Columnas: <b id="vxCols">0</b></span>
+          <span class="pill">Altura: <b id="vxAlt">155</b></span>
+        </div>
+      </div>
+      <aside class="side">
+        <h2>Voxel Space sobre SRTM real</h2>
+        <p>Algoritmo de <b>Comanche (1992)</b> y <b>Outcast (1999)</b> leyendo el relieve <b>NASA SRTM + agua/vías reales</b> de los archivos <code>mundo.mc4</code> de Motor City a ~1 ms/cuadro sin WebGL.</p>
+        <label class="slider-row">
+          <span><span>Mapa de relieve</span><b id="lblVxMap">SRTM MC4</b></span>
+          <select id="selVoxel" style="min-height:42px;background:var(--surf2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:0 10px;font:600 12.5px var(--sans)">
+            <option value="guatape">Guatapé y El Peñol · SRTM real (1813–2028 m)</option>
+            <option value="medellin">Medellín · Valle de Aburrá SRTM real (1446–2789 m)</option>
+            <option value="proc">Guatapé procedural clásico</option>
+          </select>
+        </label>
+        <label class="slider-row">
+          <span><span>Altitud de vuelo</span><b id="lblAlt">165</b></span>
+          <input type="range" id="rgAlt" min="65" max="245" value="165">
+        </label>
+        <label class="slider-row">
+          <span><span>Distancia de horizonte</span><b id="lblVxDist">155</b></span>
+          <input type="range" id="rgVxDist" min="70" max="240" value="155">
+        </label>
+        <label class="tgl"><span>Piloto automático panorámico</span><input type="checkbox" id="tgAutoVx" checked></label>
+      </aside>
+    </div>
+  </section>
+
+  <!-- TAB 3: STREAMING RENDERWARE -->
+  <section class="panel" id="tab-stream">
+    <div class="stage-grid">
+      <div class="canvas-box">
+        <canvas id="cvStream" width="720" height="450" aria-label="Simulador de sectores 1 km RenderWare CStreaming"></canvas>
+        <div class="hud-bar">
+          <span class="pill ok">Ciudad activa: <b id="smCity">nueva_york</b></span>
+          <span class="pill ok">RAM anillo: <b id="smRam">0 MB</b> / <span id="smCap">12 MB</span></span>
+          <span class="pill">Sectores residentes: <b id="smSec">0</b></span>
+          <span class="pill">Expulsiones LRU: <b id="smEvict">0</b></span>
+        </div>
+      </div>
+      <aside class="side">
+        <h2>RenderWare CStreaming + GOAL</h2>
+        <p>Compara la retención de 3 ciudades medidas en Chromium móvil (<b>270,7 MB</b> en 4.0.3 y <b>279,6 MB</b> en PR #9) frente al anillo predictivo con presupuesto rígido y evacuación al cruzar de ciudad.</p>
+        <div class="toggles">
+          <button type="button" class="tgl" id="btnCityNY"><span>🗽 Saltar a Nueva York</span><b>10 MB MC4</b></button>
+          <button type="button" class="tgl" id="btnCityMD"><span>🚠 Saltar a Medellín</span><b>6,8 MB MC4</b></button>
+          <button type="button" class="tgl" id="btnCityGU"><span>🚤 Saltar a Guatapé</span><b>0,4 MB MC4</b></button>
+        </div>
+        <label class="slider-row">
+          <span><span>Presupuesto máximo RAM</span><b id="lblCap">12 MB</b></span>
+          <input type="range" id="rgCap" min="6" max="24" value="12">
+        </label>
+        <div class="mem-bars">
+          <div class="mbar">
+            <div class="mbar-top"><span>NY→MD→GU sin evacuar (4.0.3 / PR #9)</span><span style="color:#ff8a80">270–280 MB</span></div>
+            <div class="mtrack"><div class="mfill" style="width:100%;background:var(--crimson)"></div></div>
+          </div>
+          <div class="mbar">
+            <div class="mbar-top"><span>StreamAnillo RenderWare activo</span><span id="smPctTxt" style="color:var(--ok)">0 MB</span></div>
+            <div class="mtrack"><div class="mfill" id="smBarFill" style="width:5%;background:var(--ok)"></div></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- TAB 4: CATÁLOGO DE 10 MOTORES -->
+  <section class="panel" id="tab-catalogo">
+    <div class="cat-grid" id="catGrid"></div>
+  </section>
+</main>
+
+<script src="./mc-clasico.js"></script>
+<script src="./datos-reales-mc4.js"></script>
+<script>
+(function () {
+  'use strict';
+  const C = window.MCClasico;
+  const REAL = window.MC_DATOS_REALES || null;
+
+  /* ---------- Tabs ---------- */
+  let tabActiva = 'urbano';
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      tabActiva = b.dataset.tab;
+      document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'tab-' + tabActiva));
+    });
+  });
+
+  /* ---------- Controles compartidos ---------- */
+  const keys = new Set();
+  window.addEventListener('keydown', e => {
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].includes(e.code)) {
+      keys.add(e.code);
+    }
+  });
+  window.addEventListener('keyup', e => keys.delete(e.code));
+  const mapBtn = { up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight' };
+  document.querySelectorAll('.pad button').forEach(b => {
+    const code = mapBtn[b.dataset.k];
+    const on = () => keys.add(code), off = () => keys.delete(code);
+    b.addEventListener('pointerdown', on);
+    b.addEventListener('pointerup', off);
+    b.addEventListener('pointerleave', off);
+    b.addEventListener('pointercancel', off);
+  });
+
+  /* ---------- TAB 1: CAÑÓN URBANO (REAL MC4 + SINTÉTICO) ---------- */
+  const cvU = document.getElementById('cvUrbano');
+  const gU = cvU.getContext('2d');
+  let edificios = [];
+  let aoVals = new Float32Array(0);
+  const car = { x: 0, y: 0, a: 0.25, v: 9 };
+
+  function cargarCanon(id) {
+    const list = [];
+    if (id !== 'sintetico' && REAL && REAL.canones && REAL.canones[id]) {
+      const src = REAL.canones[id];
+      const pal = id.startsWith('md_')
+        ? [[152, 92, 68], [134, 86, 68], [108, 96, 86]]
+        : [[108, 72, 62], [66, 74, 86], [92, 84, 74]];
+      src.edificios.forEach((e, idx) => {
+        list.push({ x: e[0], y: e[1], r: e[2], h: e[3], hue: pal[idx % pal.length] });
+      });
+      document.getElementById('lblCanon').textContent = src.calle || id;
+    } else {
+      for (let gx = -9; gx <= 9; gx++) {
+        for (let gy = -9; gy <= 9; gy++) {
+          if (Math.abs(gx) % 3 === 0 || Math.abs(gy) % 3 === 0) continue;
+          const seed = Math.abs(gx * 73 + gy * 139);
+          list.push({
+            x: gx * 28, y: gy * 28, r: 11.5, h: 16 + (seed % 58),
+            hue: (seed % 3 === 0) ? [108, 72, 62] : (seed % 3 === 1) ? [64, 72, 82] : [92, 84, 74]
+          });
+        }
+      }
+      document.getElementById('lblCanon').textContent = 'Sintético';
+    }
+    edificios = list;
+    aoVals = C.hornearAOUrbano(edificios, 42);
+    car.x = 0; car.y = 0; car.a = 0.25; car.v = 9;
+  }
+  cargarCanon(REAL ? 'ny_chelsea' : 'sintetico');
+  document.getElementById('selCanon').addEventListener('change', e => cargarCanon(e.target.value));
+
+  const culleo = new C.CulleoUrbano(96);
+  const driver = new C.FisicaDriver();
+  const pool = new C.PoolParticulas(256);
+  const escalador = new C.EscaladorDinamico({ metaMs: 16.6, inicial: 1.0 });
+
+  const rgFog = document.getElementById('rgFog');
+  rgFog.addEventListener('input', () => { document.getElementById('lblFog').textContent = rgFog.value + ' m'; });
+
+  function stepUrbano(dt) {
+    const t0 = performance.now();
+    const acel = (keys.has('ArrowUp') || keys.has('KeyW')) ? 1 : (keys.has('ArrowDown') || keys.has('KeyS')) ? -1 : 0;
+    const giro = (keys.has('ArrowRight') || keys.has('KeyD')) ? 1 : (keys.has('ArrowLeft') || keys.has('KeyA')) ? -1 : 0;
+    if (acel !== 0) car.v = Math.max(-10, Math.min(34, car.v + acel * 26 * dt));
+    else car.v += (10 - car.v) * 0.4 * dt; /* crucero automatico suave si no se pulsa nada */
+    car.a += (giro !== 0 ? giro * 1.9 : Math.sin(performance.now() * 0.0005) * 0.12) * dt;
+    car.x += Math.cos(car.a) * car.v * dt;
+    car.y += Math.sin(car.a) * car.v * dt;
+    if (Math.abs(car.x) > 220) car.x = -Math.sign(car.x) * 210;
+    if (Math.abs(car.y) > 220) car.y = -Math.sign(car.y) * 210;
+
+    const usarSusp = document.getElementById('tgSusp').checked;
+    const susp = driver.paso(dt, car.v, car.a, giro, Math.sin(car.x * 0.25) * 0.15);
+    if (susp.derrape > 0.25 || Math.abs(giro) > 0) {
+      pool.emitir(1, car.x, car.y, 0.4, (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 3 + Math.random() * 4, 0.55);
+      pool.emitir(2, car.x, car.y, 0.2, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, 1.2, 0.7);
+    }
+    pool.paso(dt);
+
+    const usarOcc = document.getElementById('tgOcc').checked;
+    const usarFog = document.getElementById('tgFog').checked;
+    const usarAO = document.getElementById('tgAO').checked;
+    const usarEsc = document.getElementById('tgEsc').checked;
+    const fogEnd = usarEsc ? Math.min(+rgFog.value, escalador.fog) : +rgFog.value;
+
+    const cam = { x: car.x, y: car.y, a: car.a, z: 2.6 + (usarSusp ? susp.heave * 2 : 0) };
+    const res = culleo.filtrar(cam, edificios, { frustum: true, niebla: usarFog, oclusion: usarOcc, fogEnd });
+
+    const W = cvU.width, H = cvU.height;
+    const rollPx = usarSusp ? susp.roll * 45 : 0;
+    const pitchPx = usarSusp ? susp.pitch * 110 : 0;
+    const horiz = H * 0.46 + pitchPx;
+
+    /* cielo y asfalto */
+    const grSky = gU.createLinearGradient(0, 0, 0, horiz);
+    grSky.addColorStop(0, '#0a0e16');
+    grSky.addColorStop(1, usarFog ? '#2a2220' : '#1b2430');
+    gU.fillStyle = grSky;
+    gU.fillRect(0, 0, W, horiz);
+    gU.fillStyle = '#15181d';
+    gU.fillRect(0, horiz, W, H - horiz);
+
+    /* dibujar visibles de atras hacia adelante (painter) */
+    const fov = Math.PI * 0.48;
+    const focal = (W * 0.5) / Math.tan(fov * 0.5);
+    const list = res.visibles;
+    for (let k = list.length - 1; k >= 0; k--) {
+      const it = list[k];
+      const b = it.b;
+      const dist = Math.max(4, it.fwd);
+      const sx = W * 0.5 + Math.tan(it.ang) * focal;
+      const bw = Math.max(4, (b.r * 2.1 / dist) * focal);
+      const bh = (b.h / dist) * focal;
+      const baseY = horiz + (cam.z / dist) * focal + ((sx - W * 0.5) / W) * rollPx;
+      const topY = baseY - bh;
+
+      const ao = usarAO ? aoVals[it.i] : 1.0;
+      const fogF = usarFog ? Math.min(1, Math.max(0, (it.d - fogEnd * 0.25) / (fogEnd * 0.75))) : 0;
+      const rr = Math.round(b.hue[0] * ao * (1 - fogF) + 42 * fogF);
+      const gg = Math.round(b.hue[1] * ao * (1 - fogF) + 34 * fogF);
+      const bb = Math.round(b.hue[2] * ao * (1 - fogF) + 32 * fogF);
+
+      gU.fillStyle = `rgb(${rr},${gg},${bb})`;
+      gU.fillRect(sx - bw * 0.5, topY, bw, bh);
+
+      /* ventanas ambar estilo Manhattan/Medellin */
+      if (bw > 16 && fogF < 0.75) {
+        gU.fillStyle = `rgba(226,166,80,${(0.65 * (1 - fogF)).toFixed(2)})`;
+        const cols = Math.min(4, Math.max(2, Math.floor(bw / 10)));
+        const rows = Math.min(7, Math.max(2, Math.floor(bh / 18)));
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (((it.i + r * 5 + c * 3) & 3) === 0) continue;
+            gU.fillRect(sx - bw * 0.42 + c * (bw * 0.84 / cols), topY + 6 + r * (bh * 0.85 / rows), Math.max(2, bw * 0.12), Math.max(2, bh * 0.05));
+          }
+        }
+      }
+    }
+
+    /* capó del vehículo con cabeceo y balanceo Driver PS1 */
+    gU.save();
+    gU.translate(W * 0.5, H - 36 + pitchPx * 0.45);
+    gU.rotate(usarSusp ? -susp.roll * 0.35 : 0);
+    gU.fillStyle = '#1d222b';
+    gU.beginPath();
+    gU.moveTo(-115, 50); gU.lineTo(-78, -14); gU.lineTo(78, -14); gU.lineTo(115, 50);
+    gU.closePath();
+    gU.fill();
+    gU.strokeStyle = '#e29d3e';
+    gU.lineWidth = 1.5;
+    gU.stroke();
+    gU.restore();
+
+    /* chispas/humo del pool (cero GC) */
+    for (let i = 0; i < pool.cap; i++) {
+      if (pool.vida[i] <= 0) continue;
+      const frac = pool.vida[i] / pool.maxVida[i];
+      const px = W * 0.5 + (pool.vx[i] * 14) + Math.sin(i * 1.7) * 58;
+      const py = H - 32 - pool.z[i] * 16;
+      gU.fillStyle = pool.tipo[i] === 1 ? `rgba(255,190,78,${frac.toFixed(2)})` : `rgba(170,175,185,${(frac * 0.45).toFixed(2)})`;
+      gU.fillRect(px, py, pool.tipo[i] === 1 ? 3 : 7, pool.tipo[i] === 1 ? 3 : 7);
+    }
+
+    /* mini radar superior derecho con el cono de vision */
+    const rx = W - 66, ry = 66, rad = 52;
+    gU.fillStyle = 'rgba(10,12,16,.84)';
+    gU.beginPath(); gU.arc(rx, ry, rad, 0, Math.PI * 2); gU.fill();
+    gU.strokeStyle = 'rgba(237,231,219,.24)'; gU.stroke();
+    gU.fillStyle = 'rgba(226,157,62,.16)';
+    gU.beginPath(); gU.moveTo(rx, ry); gU.arc(rx, ry, rad * 0.9, car.a - fov * 0.5, car.a + fov * 0.5); gU.closePath(); gU.fill();
+    for (let k = 0; k < list.length; k++) {
+      const b = list[k].b;
+      const mx = rx + (b.x - car.x) * 0.16, my = ry + (b.y - car.y) * 0.16;
+      if (Math.hypot(mx - rx, my - ry) < rad - 3) {
+        gU.fillStyle = '#65a87a'; gU.fillRect(mx - 1.5, my - 1.5, 3, 3);
+      }
+    }
+    gU.fillStyle = '#e29d3e'; gU.beginPath(); gU.arc(rx, ry, 3, 0, Math.PI * 2); gU.fill();
+
+    const ms = performance.now() - t0;
+    const esc = escalador.medir(ms);
+    document.getElementById('stDraw').textContent = res.dibujados;
+    document.getElementById('stTotal').textContent = res.total;
+    document.getElementById('stCull').textContent = res.descartadosPct + '%';
+    document.getElementById('stMs').textContent = ms.toFixed(1) + ' ms';
+    document.getElementById('stSusp').textContent = `${(susp.pitch * 57.3).toFixed(1)}° / ${(susp.roll * 57.3).toFixed(1)}°`;
+    document.getElementById('stPool').textContent = `${pool.activas}/${pool.cap}`;
+    document.getElementById('stDpr').textContent = (usarEsc ? esc.escala : 1).toFixed(2) + '×';
+  }
+
+  /* ---------- TAB 2: VOXEL SPACE (SRTM REAL MC4 + PROCEDURAL) ---------- */
+  const cvV = document.getElementById('cvVoxel');
+  const gV = cvV.getContext('2d');
+  const imgV = gV.createImageData(cvV.width, cvV.height);
+  const bufV = new Uint32Array(imgV.data.buffer);
+  const voxel = new C.VoxelTerreno(128);
+  const vxCam = { x: 46, y: 74, z: 165, a: -0.55 };
+
+  function cargarVoxel(id) {
+    if (id !== 'proc' && REAL && REAL.relieves && REAL.relieves[id]) {
+      const snap = REAL.relieves[id];
+      voxel.cargarDesdeSnapshot(snap);
+      vxCam.x = snap.tam * 0.36; vxCam.y = snap.tam * 0.62; vxCam.a = -0.55;
+      document.getElementById('vxSrc').textContent = id === 'guatape' ? 'Guatapé SRTM real' : 'Medellín SRTM real';
+      document.getElementById('lblVxMap').textContent = `${snap.minCotaM}–${snap.maxCotaM} m`;
+    } else {
+      voxel.tam = 256; voxel.mascara = 255;
+      voxel.alturas = new Uint8Array(256 * 256);
+      voxel.colores = new Uint32Array(256 * 256);
+      voxel.generarGuatape();
+      vxCam.x = 88; vxCam.y = 165; vxCam.a = -0.65;
+      document.getElementById('vxSrc').textContent = 'Guatapé procedural';
+      document.getElementById('lblVxMap').textContent = 'Procedural 256×256';
+    }
+  }
+  cargarVoxel(REAL ? 'guatape' : 'proc');
+  document.getElementById('selVoxel').addEventListener('change', e => cargarVoxel(e.target.value));
+  document.getElementById('rgAlt').addEventListener('input', e => { document.getElementById('lblAlt').textContent = e.target.value; });
+  document.getElementById('rgVxDist').addEventListener('input', e => { document.getElementById('lblVxDist').textContent = e.target.value; });
+
+  function stepVoxel(dt) {
+    const t0 = performance.now();
+    const auto = document.getElementById('tgAutoVx').checked;
+    vxCam.z = +document.getElementById('rgAlt').value;
+    const tam = voxel.tam;
+    const vel = tam === 128 ? 9 : 16;
+    if (auto) {
+      vxCam.a += 0.22 * dt;
+      vxCam.x = (vxCam.x + Math.sin(vxCam.a) * vel * dt + tam) % tam;
+      vxCam.y = (vxCam.y - Math.cos(vxCam.a) * vel * dt + tam) % tam;
+    } else {
+      const giro = (keys.has('ArrowRight') || keys.has('KeyD')) ? 1 : (keys.has('ArrowLeft') || keys.has('KeyA')) ? -1 : 0;
+      const av = (keys.has('ArrowUp') || keys.has('KeyW')) ? 1 : (keys.has('ArrowDown') || keys.has('KeyS')) ? -1 : 0;
+      vxCam.a += giro * 1.4 * dt;
+      vxCam.x = (vxCam.x + Math.sin(vxCam.a) * av * (vel * 1.6) * dt + tam) % tam;
+      vxCam.y = (vxCam.y - Math.cos(vxCam.a) * av * (vel * 1.6) * dt + tam) % tam;
+    }
+    const r = voxel.renderizar(bufV, cvV.width, cvV.height, vxCam, { distancia: +document.getElementById('rgVxDist').value, escalaH: tam === 128 ? 55 : 110 });
+    gV.putImageData(imgV, 0, 0);
+    const ms = performance.now() - t0;
+    document.getElementById('vxMs').textContent = ms.toFixed(1) + ' ms';
+    document.getElementById('vxCols').textContent = r.columnasPintadas;
+    document.getElementById('vxAlt').textContent = vxCam.z;
+  }
+
+  /* ---------- TAB 3: STREAMING RENDERWARE ---------- */
+  const cvS = document.getElementById('cvStream');
+  const gS = cvS.getContext('2d');
+  const stream = new C.StreamAnillo({ tamSector: 1000, presupuestoKB: 12288, radio: 1, ciudad: 'nueva_york' });
+  const smPos = { x: 4200, y: 4200, vx: 38, vy: 22 };
+  const pesosCiudad = { nueva_york: 1450, medellin: 920, guatape: 280 };
+
+  document.getElementById('btnCityNY').addEventListener('click', () => { stream.cambiarCiudad('nueva_york'); });
+  document.getElementById('btnCityMD').addEventListener('click', () => { stream.cambiarCiudad('medellin'); });
+  document.getElementById('btnCityGU').addEventListener('click', () => { stream.cambiarCiudad('guatape'); });
+  document.getElementById('rgCap').addEventListener('input', e => {
+    stream.presupuestoKB = +e.target.value * 1024;
+    document.getElementById('lblCap').textContent = e.target.value + ' MB';
+    document.getElementById('smCap').textContent = e.target.value + ' MB';
+  });
+
+  function stepStream(dt) {
+    smPos.x += smPos.vx * dt * 14;
+    smPos.y += smPos.vy * dt * 14;
+    if (smPos.x > 11000 || smPos.x < 1000) smPos.vx *= -1;
+    if (smPos.y > 7000 || smPos.y < 1000) smPos.vy *= -1;
+    const kbSec = pesosCiudad[stream.ciudad] || 1000;
+    const st = stream.actualizar(smPos.x, smPos.y, smPos.vx, smPos.vy, () => ({ kb: kbSec, datos: true }));
+
+    const W = cvS.width, H = cvS.height;
+    gS.fillStyle = '#0c0e13';
+    gS.fillRect(0, 0, W, H);
+    const cols = 12, rows = 8;
+    const cw = W / cols, ch = H / rows;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const k = stream.clave(stream.ciudad, c, r);
+        const loaded = stream.cargados.has(k);
+        gS.fillStyle = loaded ? 'rgba(78,149,163,.35)' : '#14171f';
+        gS.fillRect(c * cw + 2, r * ch + 2, cw - 4, ch - 4);
+        gS.strokeStyle = loaded ? '#65a87a' : 'rgba(237,231,219,.08)';
+        gS.strokeRect(c * cw + 2, r * ch + 2, cw - 4, ch - 4);
+        gS.fillStyle = loaded ? '#ede7db' : '#585c66';
+        gS.font = '600 10px ui-monospace,monospace';
+        gS.fillText(`${c},${r}`, c * cw + 6, r * ch + 15);
+      }
+    }
+    /* vector de prefetcheo predictivo GOAL/GTA */
+    const px = (smPos.x / 12000) * W, py = (smPos.y / 8000) * H;
+    const ax = ((smPos.x + smPos.vx * 18) / 12000) * W, ay = ((smPos.y + smPos.vy * 18) / 8000) * H;
+    gS.strokeStyle = '#e29d3e'; gS.lineWidth = 2;
+    gS.beginPath(); gS.moveTo(px, py); gS.lineTo(ax, ay); gS.stroke();
+    gS.fillStyle = '#e29d3e'; gS.beginPath(); gS.arc(px, py, 6, 0, Math.PI * 2); gS.fill();
+
+    const mb = (st.usadoKB / 1024).toFixed(1);
+    document.getElementById('smCity').textContent = st.ciudad;
+    document.getElementById('smRam').textContent = mb + ' MB';
+    document.getElementById('smSec').textContent = st.sectores;
+    document.getElementById('smEvict').textContent = st.expulsiones;
+    document.getElementById('smPctTxt').textContent = mb + ' MB';
+    document.getElementById('smBarFill').style.width = Math.min(100, Math.max(3, (st.usadoKB / 1024 / 258.9) * 100)).toFixed(1) + '%';
+  }
+
+  /* ---------- TAB 4: CATÁLOGO ---------- */
+  const CATALOGO = [
+    ['RenderWare 3.x (2000)', 'PS2 · 32 MB RAM', 'GTA III / Vice City / San Andreas · Burnout 3', 'CStreaming LRU por sectores .IPL/.IMG, impostores de bloque y pools de chispas sin GC.', 'Propietario → Sala limpia en StreamAnillo + PoolParticulas → js/10-sectores.js y js/13-planeta.js'],
+    ['id Tech 2 & 3 (1996–99)', 'Pentium II · 16–64 MB', 'Quake · Quake II · Quake III Arena', 'BSP + PVS por mapa de bits RLE O(1), lightmaps y AO horneado por vértice.', 'GPLv2 → Sala limpia en PVSRejilla + hornearAOUrbano → js/45-gl.js y js/45-glb.js'],
+    ['Build Engine (1996)', 'Pentium 90 · 16 MB', 'Duke Nukem 3D · Blood · Shadow Warrior', 'Oclusión por portales y columnas 1D front-to-back, pisos inclinados y props vóxel.', 'Propietario no comercial → Sala limpia en CulleoUrbano → js/45-gl.js'],
+    ['Voxel Space (1992–99)', '386 / Pentium sin GPU', 'Comanche · Delta Force · Outcast', 'Raycaster de altura + color 2.5D con búfer de horizonte yBuf a 60 FPS en CPU pura.', 'Algoritmo libre (ref. MIT) → VoxelTerreno → respaldo panorámico Guatapé / embalse'],
+    ['Reflections Driver (1999)', 'PS1 · 2 MB RAM', 'Driver · Driver 2', '4 ciudades abiertas en 2 MB RAM + suspensión blanda de 4 resortes con cabeceo y derrape.', 'Propietario → Sala limpia en FisicaDriver → js/32-fisica.js y js/45-glb.js'],
+    ['GOAL Naughty Dog (2001)', 'PS2 · 32 MB RAM', 'Jak and Daxter · Jak II / 3', 'Mundo abierto continuo sin pantallas de carga con prefetcheo según vector de velocidad.', 'Propietario → Sala limpia en StreamAnillo predictivo → js/10-sectores.js'],
+    ['Team ICO PS2 (2005)', 'PS2 · 32 MB RAM', 'ICO · Shadow of the Colossus', 'Pseudo-HDR, impostores lejanos, capas shell y escalador dinámico para proteger FPS.', 'Propietario → Sala limpia en EscaladorDinamico → js/40-vistas.js'],
+    ['Team Silent (1999)', 'PS1 · 2 MB RAM', 'Silent Hill', 'Muro de niebla acoplado al plano lejano (farPlane = fogEnd): recorta >70% de polígonos.', 'Propietario → Sala limpia en CulleoUrbano → js/45-gl.js y clima lluvia/neblina'],
+    ['Unreal Engine 1 (1998)', 'Pentium II / Glide', 'Unreal · Unreal Tournament · Deus Ex', 'Zonas con portales, iluminación coloreada precalculada y texturas procedurales en KB.', 'Propietario → Sala limpia: portalizado interior/exterior y texturas animadas ligeras'],
+    ['Cube 2 · Irrlicht · Torque 3D', 'PC / OpenGL ES', 'Sauerbraten · Tribes 2 · indies', 'Octree editable en vivo, grafo de escena compacto y LOD de terreno auditables.', 'Licencias permisivas zlib / MIT → referencias directas legales para Motor City']
+  ];
+  document.getElementById('catGrid').innerHTML = CATALOGO.map(([n, hw, j, t, l]) => `
+    <article class="card">
+      <div class="top"><span>${n}</span><span>${hw}</span></div>
+      <h3>${j}</h3>
+      <p>${t}</p>
+      <div class="lic">${l}</div>
+    </article>
+  `).join('');
+
+  /* ---------- Bucle principal ---------- */
+  let prev = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.05, (now - prev) / 1000);
+    prev = now;
+    if (tabActiva === 'urbano') stepUrbano(dt);
+    else if (tabActiva === 'voxel') stepVoxel(dt);
+    else if (tabActiva === 'stream') stepStream(dt);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

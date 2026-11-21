@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-cm34",
+  "rama": "ia/chatgpt/cm34-cache-20261120",
+  "rol": "C-M34 caché ED1 + carga opcional MC4 por capas y QA",
+  "estado": "PR #9 en borrador, CI y pruebas físicas pendientes; no fusionada",
+  "ultima_actualizacion_local": "2026-11-20",
+  "zonas_reclamadas": [
+    "js/10-sectores.js",
+    "js/10-mundo.js",
+    "herramientas/construir.mjs",
+    "juegos/getaway/20-juego.js (solo cargador)",
+    "juegos/getaway/juego.json",
+    "pruebas/sectores-cm34.mjs",
+    "pruebas/paquete-capas-cm34.mjs",
+    "pruebas/paquete-capas-browser.mjs",
+    "docs/MC4-CAPAS-OFFLINE.md"
+  ],
+  "no_toco": [
+    "main",
+    "juegos/getaway/",
+    "arte/",
+    "datos/",
+    "repositorios de juegos"
+  ],
+  "pendiente": "Revisar CI completo del último commit; medir RAM/JS Heap real y preparar chunks geográficos con compatibilidad MC4"
+}

@@ -1,0 +1,245 @@
+{
+  "version": "4.0.1-gemini-art",
+  "nota": "Arte conceptual pintado (sin texto) y atlas PBR base para Turno Cero (propuesta aditiva en arte/gemini/turno-cero/, compatible con C-A17 y C-A16).",
+  "obras": {
+    "portada-turno-cero.webp": {
+      "w": 1080,
+      "h": 1920,
+      "kb": 162.1,
+      "paleta": [
+        "#867e71",
+        "#5d5650",
+        "#453e3b",
+        "#2f2725",
+        "#14181c"
+      ]
+    },
+    "acto1-manhattan.webp": {
+      "w": 1280,
+      "h": 720,
+      "kb": 168.8,
+      "paleta": [
+        "#726862",
+        "#3c3b3d",
+        "#292a2c",
+        "#1a1b1c",
+        "#0c0e11"
+      ]
+    },
+    "acto2-ruta-atlantico.webp": {
+      "w": 1280,
+      "h": 720,
+      "kb": 125.1,
+      "paleta": [
+        "#c87c44",
+        "#7c4e41",
+        "#5b3c34",
+        "#3b2924",
+        "#1c1615"
+      ]
+    },
+    "acto3-medellin-metro.webp": {
+      "w": 1280,
+      "h": 720,
+      "kb": 159.1,
+      "paleta": [
+        "#536572",
+        "#3e4a55",
+        "#313941",
+        "#282424",
+        "#121a20"
+      ]
+    },
+    "acto4-autopista-embalse.webp": {
+      "w": 1280,
+      "h": 720,
+      "kb": 151.3,
+      "paleta": [
+        "#6c7175",
+        "#2e363e",
+        "#1f1f23",
+        "#121a21",
+        "#080e13"
+      ]
+    },
+    "acto5-guatape-amanecer.webp": {
+      "w": 1280,
+      "h": 720,
+      "kb": 82.7,
+      "paleta": [
+        "#dbc09e",
+        "#bbad97",
+        "#908e7c",
+        "#434b3e",
+        "#192118"
+      ]
+    },
+    "texturas/atlas-pbr-3x3.webp": {
+      "w": 1024,
+      "h": 1024,
+      "kb": 251.8,
+      "paleta": [
+        "#a8724d",
+        "#645142",
+        "#3b3a35",
+        "#2d302d",
+        "#1d1f1a"
+      ]
+    }
+  },
+  "tiles_pbr": [
+    {
+      "archivo": "texturas/tiles/01-asfalto-manhattan.webp",
+      "material": "asfalto_humedo",
+      "celda": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.42,
+      "metalness": 0.05,
+      "kb": 16.6
+    },
+    {
+      "archivo": "texturas/tiles/02-ladrillo-manhattan.webp",
+      "material": "ladrillo_envejecido",
+      "celda": [
+        0,
+        1
+      ],
+      "uv": [
+        0.3333,
+        0.0,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.86,
+      "metalness": 0.0,
+      "kb": 12.2
+    },
+    {
+      "archivo": "texturas/tiles/03-carroceria-grafito.webp",
+      "material": "metal_carroceria",
+      "celda": [
+        0,
+        2
+      ],
+      "uv": [
+        0.6667,
+        0.0,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.34,
+      "metalness": 0.72,
+      "kb": 1.9
+    },
+    {
+      "archivo": "texturas/tiles/04-teja-medellin.webp",
+      "material": "teja_barro",
+      "celda": [
+        1,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.82,
+      "metalness": 0.0,
+      "kb": 10.2
+    },
+    {
+      "archivo": "texturas/tiles/05-nylon-tactico.webp",
+      "material": "tela_tactica",
+      "celda": [
+        1,
+        1
+      ],
+      "uv": [
+        0.3333,
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.88,
+      "metalness": 0.02,
+      "kb": 13.5
+    },
+    {
+      "archivo": "texturas/tiles/06-follaje-tropical.webp",
+      "material": "follaje_antioquia",
+      "celda": [
+        1,
+        2
+      ],
+      "uv": [
+        0.6667,
+        0.3333,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.74,
+      "metalness": 0.0,
+      "kb": 15.5
+    },
+    {
+      "archivo": "texturas/tiles/07-revoque-terracota.webp",
+      "material": "estuco_calido",
+      "celda": [
+        2,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.6667,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.9,
+      "metalness": 0.0,
+      "kb": 7.0
+    },
+    {
+      "archivo": "texturas/tiles/08-mezclilla-oscura.webp",
+      "material": "denim_personajes",
+      "celda": [
+        2,
+        1
+      ],
+      "uv": [
+        0.3333,
+        0.6667,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.92,
+      "metalness": 0.0,
+      "kb": 21.4
+    },
+    {
+      "archivo": "texturas/tiles/09-granito-penol.webp",
+      "material": "roca_granito_musgo",
+      "celda": [
+        2,
+        2
+      ],
+      "uv": [
+        0.6667,
+        0.6667,
+        0.3333,
+        0.3333
+      ],
+      "roughness": 0.84,
+      "metalness": 0.04,
+      "kb": 18.4
+    }
+  ]
+}

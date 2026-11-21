@@ -39,6 +39,36 @@ function capas(g, es2D) {
   g.save();
   /* la gente tendida en el asfalto */
   for (const c of G.caidos) { const p = pr(c.x, c.y, .05); if (!p) continue; const k = escalaEn(c.x, c.y); g.save(); g.translate(p[0], p[1]); g.rotate(c.a); g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0, 0, k * 1.0, k * .35, 0, 0, TAU); g.fill(); g.fillStyle = (c.aspecto && c.aspecto.cCamisa) || '#5a5a60'; g.fillRect(-k * .75, -k * .2, k * 1.2, k * .4); g.fillStyle = (c.aspecto && c.aspecto.cPiel) || '#c08a64'; g.beginPath(); g.arc(k * .6, 0, k * .17, 0, TAU); g.fill(); g.restore(); }
+  /* C-M35 / Gemini: vista de respaldo de piezas desprendidas en Canvas 2D y Raster software. */
+  if (es2D || (V.usaRaster && V.usaRaster())) {
+    const partes = (G.piezasFisicas && G.piezasFisicas.lista) || [];
+    for (const q of partes) {
+      const base = G.M.cota(q.x, q.y), altura = Math.max(0, q.z - base),
+        p = pr(q.x, q.y, altura), sombra = pr(q.x, q.y, .08);
+      if (!p) continue;
+      const k = Math.max(2,Math.min(26,escalaEn(q.x,q.y)));
+      g.save();
+      if (sombra) {g.fillStyle='rgba(5,8,11,.35)';g.beginPath();g.ellipse(sombra[0],sombra[1],k*.45,k*.17,0,0,TAU);g.fill();}
+      g.translate(p[0],p[1]);g.rotate(q.a||0);
+      const metal = q.tipo === 'rueda' ? '#252a30' : '#7b8792';
+      g.fillStyle = metal;g.strokeStyle='#171d23';g.lineWidth=Math.max(1,d);
+      g.fillRect(-k*.4,-k*.18,k*.8,k*.36);
+      g.strokeRect(-k*.4,-k*.18,k*.8,k*.36);
+      g.restore();
+    }
+    /* Humo discreto: no inventa fuego si el daño sólo está en el chasis. */
+    const dz=G.danoZonas||{},cr=G.cuerpo;
+    const dano=Math.max(dz.f||0,dz.b||0,dz.l||0,dz.r||0);
+    if (cr && cr.veh && cr.veh.clase!=='pie' && dano>.62) {
+      const k=Math.max(3,Math.min(18,escalaEn(cr.x,cr.y)));
+      for(let n=0;n<3;n++){
+        const f=(t*.42+n/3)%1,p=pr(cr.x+Math.cos(t+n)*f*.4,cr.y+Math.sin(t+n)*f*.4,1+3*f);
+        if(!p)continue;
+        g.fillStyle='rgba(38,42,48,'+((1-f)*.25)+')';
+        g.beginPath();g.arc(p[0],p[1],k*(.3+f*.6),0,TAU);g.fill();
+      }
+    }
+  }
   /* púas */
   for (const P of B.puas) { const ux = Math.cos(P.a) * P.largo / 2, uy = Math.sin(P.a) * P.largo / 2, a = pr(P.x - ux, P.y - uy, .05), b = pr(P.x + ux, P.y + uy, .05); if (!a || !b) continue; g.strokeStyle = '#141414'; g.lineWidth = 4 * d; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.strokeStyle = '#c9c9c9'; g.lineWidth = 1.5 * d; for (let i = 0; i <= 10; i++) { const f = i / 10, x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f; g.beginPath(); g.moveTo(x, y - 3 * d); g.lineTo(x, y + 3 * d); g.stroke(); } }
   /* conos de visión de los guardias (débiles siempre; fuertes con la lente o si el dron los marcó) */
@@ -71,6 +101,7 @@ function capas(g, es2D) {
   if (G.pulsoVis) { G.pulsoVis.t -= 1 / 60; const p = pr(G.cuerpo.x, G.cuerpo.y, 1); if (p) { const fr = 1 - G.pulsoVis.t / .5, k = escalaEn(G.cuerpo.x, G.cuerpo.y); g.strokeStyle = 'rgba(75,154,171,' + (1 - fr) + ')'; g.lineWidth = 3 * d; g.beginPath(); g.arc(p[0], p[1], k * 65 * fr, 0, TAU); g.stroke(); } if (G.pulsoVis.t <= 0) G.pulsoVis = null; }
   g.restore();
   /* la flecha al objetivo: pin si se ve, flecha en el borde si no */
+  for (const f of EXTRAS.capas) f(g, pr, d, t);
   const O = G.objetivo; if (O && !G.dron) { const sp = pr(O.x, O.y, 0); if (sp) { const Z = G.ui.zonaLibre(), d2 = G.W / innerWidth; MC.UI.indicador(g, G.W, G.H, sp[0], sp[1], { texto: Math.round(Math.hypot(O.x - G.cuerpo.x, O.y - G.cuerpo.y)) + ' m', escala: d, t, rect: [Z.x0 * d2 + 20 * d, Z.y0 * d2 + 10 * d, Z.x1 * d2 - 20 * d, Z.y1 * d2] }); } }
 }
 
@@ -102,7 +133,7 @@ function hud() {
   /* artefactos: listo o cuánto falta */
   const AR = $('#artefactos'); if (AR) { const pon = (k, txt, ok) => { const b = AR.querySelector('[data-k="' + k + '"]'); if (b) { b.querySelector('small').textContent = txt; b.classList.toggle('off', !ok); } }; pon('dron', G.dron ? Math.ceil(G.dron.bat) + 's' : G.recarga.dron ? Math.ceil(G.recarga.dron) + 's' : 'T02', !G.recarga.dron); pon('cebo', '×' + G.cebos, G.cebos > 0); pon('pulso', G.recarga.pulso ? Math.ceil(G.recarga.pulso) + 's' : 'T08', !G.recarga.pulso); pon('lente', G.lenteT > 0 ? Math.ceil(G.lenteT) + 's' : G.recarga.lente ? Math.ceil(G.recarga.lente) + 's' : 'T01', !G.recarga.lente); pon('disparar', '×' + G.municion, G.municion > 0); AR.querySelector('[data-k="disparar"]').hidden = !G.municion; }
   /* minimapa: objetivo, escondites y talleres si te buscan, el Contador marcado, rivales vistos */
-  const pts = []; if (O) pts.push({ x: O.x, y: O.y, color: '#dba65f' });
+  const pts = []; if (O) pts.push({ x: O.x, y: O.y, color: '#dba65f' }); for (const f of EXTRAS.mapa) f(pts);
   if (B.nivel) for (const s of sitiosEspeciales()) pts.push({ x: s.x, y: s.y, color: s.taller ? '#4b9aab' : '#7fc8a9' });
   for (const r of B.rivales) if (!r.roto && (r.marcado > G.t || r.ve)) pts.push({ x: r.cuerpo.x, y: r.cuerpo.y, color: r.bando === 'banda' ? '#c25542' : '#476e8a' });
   U.pintarMinimapa(C.x, C.y, G.camara.yaw, pts); mapaPts = pts;
@@ -128,8 +159,26 @@ function pintarGlobo(dt) {
   if (!Globo.gpu) Globo.gpu = new MC.GloboGPU($('#ggl'), planeta.anillo);
   const jugador = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y);
   const webgl = Globo.gpu.dibujar(W, H, { lon0: Globo.lon0, inc: Globo.inc, t: G.t, jugador });
-  c.style.opacity = webgl ? '0' : '1';
-  if (!webgl) {
+  c.style.opacity = '1'; // GPU usa #gcv como capa de etiquetas transparente.
+  if (webgl) {
+    if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    const g = c.getContext('2d'); g.clearRect(0,0,W,H);
+    const radio = Math.min(.68,(W/H)*.80)*H/2, incl = Globo.inc*Math.PI/180, lon0 = Globo.lon0*Math.PI/180;
+    const ciudades = planeta.anillo.filter(l => l.tipo === 'ciudad');
+    g.textAlign='left';g.font='700 '+Math.round(Math.max(12,Math.min(17,radio*.085)))+'px system-ui';
+    for(const C of ciudades){
+      const la=(C.lat || 0)*Math.PI/180,lo=C.lon*Math.PI/180-lon0,
+        x=Math.cos(la)*Math.sin(lo),y=Math.sin(la),z=Math.cos(la)*Math.cos(lo),
+        alto=y*Math.cos(incl)-z*Math.sin(incl),prof=y*Math.sin(incl)+z*Math.cos(incl);
+      if(prof<=0)continue;
+      const X=W/2+x*radio,Y=H/2-alto*radio;
+      if(X<8 || X>W-8 || Y<8 || Y>H-8)continue;
+      g.beginPath();g.fillStyle='#e8b875';g.arc(X,Y,Math.max(3,d*2.5),0,Math.PI*2);g.fill();
+      g.shadowColor='#000';g.shadowBlur=5;g.fillStyle='#f1ece4';
+      g.fillText(C.nombre, Math.max(8,Math.min(W-g.measureText(C.nombre).width-8,X+8)), Math.max(18,Math.min(H-16,Y+4)));
+      g.shadowBlur=0;
+    }
+  } else {
     c.width = W; c.height = H;
     planeta.globo(c.getContext('2d'), W, H, { lon0: Globo.lon0, inclinacion: Globo.inc, t: G.t, yo: { id: G.id, x: G.cuerpo.x, y: G.cuerpo.y } });
   }

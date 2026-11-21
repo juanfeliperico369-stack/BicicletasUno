@@ -40,8 +40,20 @@ const Snd = {
 
 /* ---------- el planeta y sus mundos (cada MC4 viene en un <script type="text/plain">) ---------- */
 async function cargarCiudad(id) {
-  const el = document.getElementById('mc4-' + id); if (!el) throw new Error('Este juego no trae el mundo ' + id);
   const C = MC_CIUDADES[id], cfg = Object.assign({}, C, { zonas: Object.assign({}, MC.ZONAS_BASE, C.zonas || {}) });
+  /* C-M34: preferir las capas comprimidas embebidas, sin decodificar el MC4
+     entero; el paquete monolítico anterior sigue admitido para guardados
+     y HTML de versiones previas. Nunca requiere conexión de red. */
+  const metaEl = document.getElementById('mc4meta-' + id);
+  if (metaEl) {
+    const meta = JSON.parse(metaEl.textContent);
+    return MC.Mundo.cargarPaquete(meta, nombre => {
+      const el = document.getElementById('mc4-' + id + '-' + nombre);
+      return el ? el.textContent : null;
+    }, cfg);
+  }
+  const el = document.getElementById('mc4-' + id);
+  if (!el) throw new Error('Este juego no trae el mundo ' + id);
   return MC.Mundo.cargar(el.textContent, cfg);
 }
 const planeta = new MC.Planeta({ cargar: cargarCiudad, radioVisual: R_PLANETA });
@@ -61,7 +73,7 @@ const G = window.TURNO = {
 };
 const ui = () => G.ui;
 /* ganchos para los extras (50-extras.js): botones, HUD, tráfico y obstáculos que se suman sin reescribir este archivo */
-const EXTRAS = { ui: [], hud: [], trafico: [], obstaculos: [] };
+const EXTRAS = { ui: [], hud: [], trafico: [], obstaculos: [], capas: [], mapa: [] };   /* 4.2: capas (dibujar encima del mundo) y mapa (puntos del minimapa) */
 
 /* lugar del juego → punto sobre una vía del mundo actual */
 function resolver(clave) {
@@ -76,7 +88,7 @@ function resolver(clave) {
 function sitiosEspeciales() {
   if (G._esp && G._esp.id === G.id) return G._esp.L; const L = [];
   for (const k of Object.keys(TC.LUGARES)) { const r = resolver(k); if (r && (r.taller || r.escondite)) L.push(r); }
-  if (!G.M.esCiudad) for (const l of G.M.lugares) { if (/Taller|Bomba|Paradero/.test(l.nombre || '')) { const q = G.M.viaCercana(l.x, l.y, 80); L.push({ x: q ? q.x : l.x, y: q ? q.y : l.y, n: l.nombre, taller: /Taller/.test(l.nombre), escondite: !/Taller/.test(l.nombre) }); } }
+  if (!G.M.esCiudad) for (const l of G.M.lugares) { const tipo = l.dibujo || '', taller = tipo === 'car_repair' || /Taller/.test(l.nombre || ''), escondite = ['fuel','motel','restaurant','bar'].includes(tipo) || /Bomba|Paradero/.test(l.nombre || ''); if (taller || escondite) { const q = G.M.viaCercana(l.x, l.y, 80); L.push({ x: q ? q.x : l.x, y: q ? q.y : l.y, n: l.nombre, taller, escondite }); } }
   G._esp = { id: G.id, L }; return L;
 }
 
@@ -95,6 +107,11 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const q = M.viaCercana(L.x, L.y, 60);
   const C = new MC.Cuerpo(M, { x: q ? q.x : L.x, y: q ? q.y : L.y, a: L.a ?? (q ? q.ang : 0), veh: spawn.aPie ? 'pie' : G.veh }); C.v = spawn.aPie ? 0 : Math.min(v0, 18);
   G.cuerpo = C; C.obstaculos = obstaculos;
+   /* C-M34/G-H24: sólo durante una transición jugable, el planeta libera las ciudades
+      y carreteras anteriores. Planeta.mundo() mantiene su semántica de precarga/QA. */
+   if (planeta.cache && planeta.cache.size > 1) {
+     for (const key of [...planeta.cache.keys()]) if (key !== id) planeta.cache.delete(key);
+   }
   const lat = M.cfgCiudad ? (M.cfgCiudad.lat ?? M.metrosAGeo(C.x, C.y).lat) : (planeta.enGlobo(id, C.x, C.y).lat);
   G.clima = new MC.ClimaGlobal({ lat: Math.abs(lat) > 1 ? lat : 6.2, alt: M.cota(C.x, C.y) }); C.clima = G.clima; if (G.climaForzado) G.clima.forzar(G.climaForzado);
   const dpr0 = Math.min(2, devicePixelRatio || 1);

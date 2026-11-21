@@ -31,15 +31,20 @@ const Extras = {
   },
   /* ---------- carreras callejeras ---------- */
   carrera(c) {
-    const C = G.cuerpo, d = Contratos.punto(C.x, C.y, 1100, 2000); if (!d) return G.ui.aviso('No hay calles para una carrera aquí');
-    const q = G.M.viaCercana(C.x + Math.cos(C.a + Math.PI / 2) * 4, C.y + Math.sin(C.a + Math.PI / 2) * 4, 20) || { x: C.x, y: C.y, ang: C.a }, R = new MC.Cuerpo(G.M, { x: q.x, y: q.y, a: C.a, veh: 'tc_noir' });
+    /* 4.2: la meta queda hacia adelante (antes, al azar: si quedaba atrás, los dos carros daban la vuelta y se estorbaban en la salida) */
+    const C = G.cuerpo; let d = null, mejor = -2; for (let k = 0; k < 10; k++) { const q = Contratos.punto(C.x, C.y, 1100, 2000); if (!q) continue; const c = Math.cos(Math.atan2(q.y - C.y, q.x - C.x) - C.a); if (c > mejor) { mejor = c; d = q; } if (c > .8) break; }
+    if (!d) return G.ui.aviso('No hay calles para una carrera aquí');
+    /* 4.2: el rival sale en el carril de al lado, nunca encima de uno (antes, al pegarse al eje de la calle, a veces quedaba sobre el carro del jugador y no arrancaba) */
+    const q = G.M.viaCercana(C.x + Math.cos(C.a + Math.PI / 2) * 4, C.y + Math.sin(C.a + Math.PI / 2) * 4, 20) || { x: C.x, y: C.y, ang: C.a }, aq = Math.cos((q.ang ?? C.a) - C.a) >= 0 ? (q.ang ?? C.a) : (q.ang ?? C.a) + Math.PI;
+    let rx = q.x + Math.cos(aq + Math.PI / 2) * 2.2, ry = q.y + Math.sin(aq + Math.PI / 2) * 2.2; if (Math.hypot(rx - C.x, ry - C.y) < 3.5) { rx += Math.cos(aq) * 7; ry += Math.sin(aq) * 7; }
+    const R = new MC.Cuerpo(G.M, { x: rx, y: ry, a: aq, veh: 'tc_noir' });
     G.contrato = { c, o: { x: C.x, y: C.y }, d, fase: 1, t: 0, fuera: 0, carrera: { cuerpo: R, ruta: null, rt: 0, cuenta: 3 } }; G.objetivo = { x: d.x, y: d.y, texto: 'Meta' };
     G.ui.aviso('🏁 ' + c.n + ': ' + Math.round(Math.hypot(d.x - C.x, d.y - C.y)) + ' m hasta la meta. Apuesta: ' + plata(c.pagoF), 2600, 'contrato');
   },
   pasoCarrera(dt) {
     const K = G.contrato, X = K.carrera, C = G.cuerpo, R = X.cuerpo; K.t += dt;
     if (X.cuenta > 0) { const antes = Math.ceil(X.cuenta); X.cuenta -= dt; if (Math.ceil(X.cuenta) !== antes) G.ui.aviso(X.cuenta > 0 ? '🏁 ' + Math.ceil(X.cuenta) : '🏁 ¡YA!', 700, 'carrera'); R.actualizar(dt, { acel: 0, giro: 0, salto: true }); return; }
-    if ((X.rt -= dt) <= 0) { X.rt = 1.6; const r = MC.Manejo.rutaA(G.M, R, K.d, 'rueda'); X.ruta = Array.isArray(r) && r.length >= 4 ? r : X.ruta; }
+    if ((X.rt -= dt) <= 0) { X.rt = 1.6; const r = MC.Manejo.rutaA(G.M, R, K.d, 'rueda'); X.ruta = Array.isArray(r) && r.length >= 4 ? r : X.ruta || [R.x, R.y, K.d.x, K.d.y]; }   /* sin ruta todavía: derecho hacia la meta (el piloto sabe salir de atascos) */
     const g = X.ruta ? MC.Manejo.pilotar(R, X.ruta, dt, { radio: 6, turbo: true, lluvia: G.clima.lluvia }) : (R.actualizar(dt, { acel: -.3, giro: 0 }), null); R.escala = .93 + Math.min(.12, Math.hypot(C.x - R.x, C.y - R.y) / 2000);   /* el rival no se escapa ni se rinde (goma elástica suave) */
     if (g && g.atascado) X.rt = 0;
     const dj = Math.hypot(K.d.x - C.x, K.d.y - C.y), dr = Math.hypot(K.d.x - R.x, K.d.y - R.y);

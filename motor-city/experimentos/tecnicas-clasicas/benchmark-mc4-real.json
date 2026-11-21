@@ -1,0 +1,71 @@
+{
+  "fecha": "2026-11-21",
+  "nota": "Medido directamente sobre datos/{guatape,medellin,nueva_york}/mundo.mc4 de Motor City 4.0.3",
+  "voxelSRTM": {
+    "guatape": {
+      "minCotaM": 1813,
+      "maxCotaM": 2028,
+      "anchoM": 4760,
+      "msPorCuadro320x200": 0.67
+    },
+    "medellin": {
+      "minCotaM": 1446,
+      "maxCotaM": 2789,
+      "anchoM": 13000
+    }
+  },
+  "canonesReales": [
+    {
+      "nombre": "Manhattan · Chelsea (West 17th St)",
+      "calle": "West 17th Street",
+      "edificiosEnRadio": 309,
+      "enFrustum": 38,
+      "dibujadosTrasOclusion": 16,
+      "descartadosPct": 94.8,
+      "msCulleo": 0.938,
+      "aoMin": 0.34,
+      "aoProm": 0.62,
+      "pvsRawBytes": 32,
+      "pvsRleBytes": 35
+    },
+    {
+      "nombre": "Manhattan · Midtown (42nd St)",
+      "calle": "6th Avenue",
+      "edificiosEnRadio": 231,
+      "enFrustum": 22,
+      "dibujadosTrasOclusion": 15,
+      "descartadosPct": 93.5,
+      "msCulleo": 0.23,
+      "aoMin": 0.34,
+      "aoProm": 0.67,
+      "pvsRawBytes": 32,
+      "pvsRleBytes": 34
+    },
+    {
+      "nombre": "Medellín · El Poblado (Parque Lleras)",
+      "calle": "Calle 9",
+      "edificiosEnRadio": 518,
+      "enFrustum": 104,
+      "dibujadosTrasOclusion": 26,
+      "descartadosPct": 95,
+      "msCulleo": 0.591,
+      "aoMin": 0.34,
+      "aoProm": 0.64,
+      "pvsRawBytes": 32,
+      "pvsRleBytes": 12
+    },
+    {
+      "nombre": "Medellín · Centro (Av. La Playa)",
+      "calle": "Calle 51",
+      "edificiosEnRadio": 520,
+      "enFrustum": 77,
+      "dibujadosTrasOclusion": 29,
+      "descartadosPct": 94.4,
+      "msCulleo": 0.453,
+      "aoMin": 0.34,
+      "aoProm": 0.64,
+      "pvsRawBytes": 32,
+      "pvsRleBytes": 33
+    }
+  ]
+}

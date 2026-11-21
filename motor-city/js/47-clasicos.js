@@ -252,7 +252,11 @@ class VoxelSpace {
     const M = this.M, C = cuerpoRetro(E), N = this.N, c = this.c, cielo = cieloRetro(E), oscuro = 1 - cielo.noche * .6;
     if (this.h == null) this.h = C.a; let dh = C.a - this.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); this.h += dh * clamp((E.dt || 1 / 60) * 2.2, 0, 1);
     const a = this.h, ca = Math.cos(a), sa = Math.sin(a), cx = C.x - ca * 90, cy = C.y - sa * 90;
-    if (this.x0 == null) this.preparar(cx + ca * 300, cy + sa * 300);
+    if (this.x0 == null) { /* 4.2: la primera ventana también se arma por franjas (antes trababa ~0,3 s): mientras, el cielo y un aviso */
+      if (!this._job) this._job = this._iniciar(cx + ca * 300, cy + sa * 300);
+      const t0 = MC.ahora(); let listo = false; while (!listo && MC.ahora() - t0 < 12) listo = this._trabajar(this._job, 24);
+      if (listo) this._usar(this._job);
+      else { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, rgbCss(cielo.top, oscuro)); gr.addColorStop(1, rgbCss(cielo.hor, oscuro)); g.fillStyle = gr; g.fillRect(0, 0, W, H); const J = this._job, f = (J.j + J.s) / (2 * N); g.fillStyle = 'rgba(255,255,255,.85)'; g.font = '700 ' + Math.round(W / 26) + 'px system-ui'; g.textAlign = 'center'; g.fillText('⛰️ Armando el vuelo… ' + Math.round(f * 100) + ' %', W / 2, H * .45); return; } }
     else if (this._job) { if (this._trabajar(this._job, Math.max(8, this.N >> 4))) this._usar(this._job); }
     else if (Math.abs(cx + ca * 300 - (this.x0 + N * c / 2)) > N * c * .2 || Math.abs(cy + sa * 300 - (this.y0 + N * c / 2)) > N * c * .2) this._job = this._iniciar(cx + ca * 400, cy + sa * 400);
     const w = Math.round(clamp(W / 2.2, 180, 380)), h = Math.max(100, Math.round(w * H / W)); if (!this._cv || this._cv.width !== w || this._cv.height !== h) { this._cv = lienzo(w, h); this._img = this._cv.getContext('2d').createImageData(w, h); this._u = new Uint32Array(this._img.data.buffer); this._yb = new Int32Array(w); }

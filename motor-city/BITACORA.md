@@ -1,5 +1,48 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.2.0 · Las entregas de las otras IA unidas, recorte por región, la historia se encuentra en el mundo abierto
+- **Unidas:**
+  - **ChatGPT/Codex** (`ia/chatgpt/4-0-2-gemini-auditoria`, 13 commits):
+    - el arte de Gemini en la portada (WebP adentro del HTML);
+    - 6 GLB con UV y PBR;
+    - una sola ciudad en memoria al viajar;
+    - el globo en celular vertical;
+    - piezas y humo también en 2D y en Raster.
+  - **C‑M34** (`ia/chatgpt/cm34-cache-20261120`, 26 commits): Turno Cero carga los MC4 **por capas comprimidas bajo demanda**, con caché LRU de sectores de Manhattan. Pruebas en Node y en Chromium.
+  - **Antigravity** (`ia/antigravity/motorcity-4.0`):
+    - las técnicas clásicas probadas sobre datos MC4 reales: `experimentos/tecnicas-clasicas/`, con laboratorio interactivo y 6/6 pruebas;
+    - `docs/MOTORES-CLASICOS-INGENIERIA.md` (RenderWare, *Driver*, Silent Hill, *Shadow of the Colossus*, Unreal…);
+    - la verificación visual 4.0.3.
+  - **Las paradas de carretera:** 56 (28 de Gemini y 28 de ChatGPT), con `id`, `nombre_es`, `nombre_en` y `rutas`. El generador las usa tal cual.
+- **Motor:**
+  - **recorte por región en el 3D (`js/45-gl.js`):**
+    - lo que está más allá del muro de niebla no se dibuja (Silent Hill);
+    - en las cámaras de manejo, lo que queda detrás de la cámara tampoco;
+    - en tercera persona se dibujan **17–18 de 58 regiones**; las cámaras aéreas no se recortan.
+  - **IA:**
+    - los carros de la IA atropellan lo menor del andén (poste, banca, paradero, caneca, hidrante) en lugar de trancarse; árboles y rocas sí los paran;
+    - cruzan las casillas de borde (ladrillo, o edificio sin edificio real encima).
+
+    Esa era la causa de la prueba que a veces fallaba: el rival de la carrera chocaba con un ladrillo del borde. Ahora avanza 55–87 m en 6 s.
+  - **⛰️ Vuelo sin pausa:** la primera ventana también se arma por franjas, con un aviso de carga. El peor cuadro baja de unos 300 ms a 24 ms.
+- **Turno Cero:**
+  - **la historia se encuentra en el mundo abierto** (`56-abierto.js`):
+    - un 📖 en la calle y en el minimapa donde empieza el próximo capítulo, o donde quedó la historia;
+    - al pasar cerca **solo avisa**; se juega si uno toca 📖 Historia;
+    - si el capítulo es en otra ciudad, lo dice al entrar;
+  - **la carrera callejera:**
+    - la meta queda hacia adelante;
+    - el rival sale en el carril de al lado, sin encimarse;
+    - si todavía no tiene ruta, va derecho a la meta.
+  - el HUD dice «🌎 Mundo abierto».
+- **Probado:**
+  - Node: 141;
+  - el contenido de Turno Cero;
+  - C‑M34 en Node y en Chromium;
+  - la técnica clásica de Antigravity (6/6);
+  - la batería de Chromium completa;
+  - capturas a `412 × 860`.
+
 ## 21-nov-2026 · 4.1.0 · Motores clásicos: lo que hicieron Comanche, OutRun, Thief, Wolfenstein y Elite, rehecho para Motor City
 - **El pedido del autor:**
   - investigar motores viejos que hoy son livianos pero potentes;
@@ -720,3 +763,21 @@ La calidad automática baja el detalle si hace falta. Bajar la maqueta a menos d
 - En el pixel, las etiquetas salían gigantes.
 
 **Lo que sigue:** ver `CONTEXTO-IA.md` §5.
+
+## C-M34 · 20-nov-2026 · Entrega candidata de ChatGPT (NO PUBLICADA EN MAIN)
+
+Rama: ia/chatgpt/cm34-cache-20261120. Motor 4.0.3 base sin incremento de versión.
+- MC.Sectores1km: precarga de sectores por cercanía al centro con presupuesto LRU estable, rechazo de coordenadas y configuración inválida.
+- Test nuevo: pruebas/sectores-cm34.mjs (5/5 grupos Node locales); paso añadido a motor-city-qa.yml.
+- Investigación aplicada a futuras versiones: Build, Quake/PVS, GTA III/LOD, Godot/HLOD; separación entre caché ED1 y streaming MC4 real.
+- Informe técnico y evidencias: reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md.
+- Pendiente: CI completa, mediciones GPU reales, streaming MC4 por chunks y revisión por Claude antes de integrar.
+
+## C-M34 · Continuación · paquetes MC4 offline por capas (PR #9, candidato)
+
+- API nueva compatible `MC.Mundo.desdePaquete` / `cargarPaquete`; decodificación de capas comprimidas a pedido.
+- Builder opt-in `mundos_capas:true` particiona el contenedor MC4 existente por capas sin alterar el formato ni sus bytes, mantiene HTML único sin internet.
+- Turno Cero usa el nuevo formato para Nueva York, Medellín y Guatapé; el cargador monolítico anterior sigue como respaldo.
+- Nuevas pruebas Node de equivalencia byte a byte y Chromium de juego real (`pruebas/paquete-capas-*.mjs`), añadidas a CI.
+- Guía `docs/MC4-CAPAS-OFFLINE.md`; informe `reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md`.
+- **No se fusionó ni incrementó versión.** Mantener pendiente hasta CI, benchmark JS Heap/CPU y GPU física. Todavía NO son sectores geográficos de 1 km.

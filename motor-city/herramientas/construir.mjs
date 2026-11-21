@@ -63,6 +63,30 @@ function paqueteArte(id) {
 }
 if (fs.existsSync(path.join(RAIZ, 'arte'))) for (const id of fs.readdirSync(path.join(RAIZ, 'arte'))) { const t = fs.existsSync(path.join(RAIZ, 'arte', id, 'manifiesto.json')) && paqueteArte(id); if (t) { fs.mkdirSync(path.join(DIST, 'arte'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'arte', id + '.js'), '/* Paquete de arte «' + id + '» para Motor City: var MC_ARTE.' + id + ' = { atlases, iconos, hitos, paletas }. Se instala con MC.Pieles.instalar(). */\nvar MC_ARTE = window.MC_ARTE || {}; MC_ARTE[' + JSON.stringify(id) + '] = ' + t.slice(t.indexOf(':') + 1) + ';\n'); } }
 
+/* C-M34 · partición opcional del contenedor MC4 en capas comprimidas.
+   Cada capa conserva exactamente los bytes deflate del MC4 original: el lector
+   puede decodificar solo lo que necesita. Sin peticiones de red ni cambio MC4. */
+function mundoPorCapas(id, bin) {
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) throw new Error('ID de mundo no seguro: ' + id);
+  if (bin.length < 8 || bin.toString('ascii', 0, 3) !== 'MC4') throw new Error('No es MC4: ' + id);
+  const n = bin.readUInt32LE(4), base = 8 + n;
+  if (n < 2 || base > bin.length) throw new Error('Cabecera MC4 truncada: ' + id);
+  const meta = JSON.parse(bin.subarray(8, base).toString('utf8'));
+  if (!meta.capas || meta.formato !== 'MC4') throw new Error('Metadatos MC4 inválidos: ' + id);
+  /* Reemplazar < impide cerrar un script desde metadatos de terceros. */
+  let html = '<script type="text/plain" id="mc4meta-' + id + '">' +
+    JSON.stringify(meta).replaceAll('<', '\\u003c') + '</script>\n';
+  for (const [nombre, c] of Object.entries(meta.capas)) {
+    if (!/^[a-zA-Z0-9_-]+$/.test(nombre)) throw new Error('Nombre de capa no seguro: ' + nombre);
+    if (!Number.isSafeInteger(c.o) || !Number.isSafeInteger(c.n) || c.o < 0 || c.n < 0 || base + c.o + c.n > bin.length) {
+      throw new Error('Capa MC4 fuera de límites: ' + id + '/' + nombre);
+    }
+    html += '<script type="text/plain" id="mc4-' + id + '-' + nombre + '">' +
+      bin.subarray(base + c.o, base + c.o + c.n).toString('base64') + '</script>\n';
+  }
+  return html;
+}
+
 /* ---------- los juegos de juegos/<id>/ (cada uno con su mundo): dist/juegos/<id>.html ---------- */
 const juegos = [];
 const dirJ = path.join(RAIZ, 'juegos');
@@ -73,7 +97,7 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   /* 4.0: varios mundos en un juego ("mundos": ["nueva_york", "medellin", "guatape"]): cada MC4 va en un <script type="text/plain">
      (el navegador no lo interpreta como JavaScript: se lee y se descomprime solo el mundo al que se llega) y sus reglas en MC_CIUDADES */
   let mundosHTML = '';
-  if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`; }
+  if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += J.mundos_capas ? mundoPorCapas(m, fs.readFileSync(f)) : `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`; }
     J._ciudades = C; }
   let mundoJ; const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')); mundoJ = J.mundos ? `var MC_CIUDADES = ${JSON.stringify(J._ciudades)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n` : `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
   /* arte en sprites: "arte": ["gemini"] en juego.json compila arte/<id>/ (atlas WebP + manifiesto + íconos + hitos + paletas) dentro del HTML */
@@ -82,7 +106,12 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   if (J.modelos) { const dm = path.join(RAIZ, J.modelos), MOD = {}; if (fs.existsSync(dm)) for (const f of fs.readdirSync(dm).filter(f => f.endsWith('.glb')).sort()) MOD[f.slice(0, -4)] = fs.readFileSync(path.join(dm, f)).toString('base64'); else console.warn('⚠ ' + id + ': falta ' + J.modelos); mundoJ += 'var MC_MODELOS = ' + JSON.stringify(MOD) + ';\n'; }
   const jsJ = fs.readdirSync(jd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(jd, f), 'utf8')).join('\n');
   const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
-  const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor + (J.run && fs.existsSync(path.join(RAIZ, 'run', 'run-scooter.js')) ? '\n' + fs.readFileSync(path.join(RAIZ, 'run', 'run-scooter.js'), 'utf8') : '')).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version);
+  const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor + (J.run && fs.existsSync(path.join(RAIZ, 'run', 'run-scooter.js')) ? '\n' + fs.readFileSync(path.join(RAIZ, 'run', 'run-scooter.js'), 'utf8') : '')).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version)
+    .replace('__PORTADA_BG__', () => {
+      if (id !== 'getaway') return 'none';
+      const portada = path.join(RAIZ, 'arte/gemini/turno-cero/portada-turno-cero.webp');
+      return fs.existsSync(portada) ? 'url("data:image/webp;base64,' + fs.readFileSync(portada).toString('base64') + '")' : 'none';
+    });
   fs.mkdirSync(path.join(DIST, 'juegos'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'juegos', id + '.html'), out);
   for (const f of J.extras || []) if (fs.existsSync(path.join(jd, f))) fs.copyFileSync(path.join(jd, f), path.join(DIST, 'juegos', path.basename(f)));   /* 4.0: páginas autónomas que acompañan al juego (la escena 3D de Codex) */ juegos.push(id + ' ' + Math.round(out.length / 1024) + ' KB');
 }

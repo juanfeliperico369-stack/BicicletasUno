@@ -37,6 +37,25 @@ class Mundo {
     await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
     return m;
   }
+  /* C-M34 · Mundo desde capas MC4 comprimidas y separadas (mismo formato de datos).
+     obtener(nombre) devuelve base64 o bytes SOLO para la capa pedida. No retiene
+     los bytes MC4 completos; el juego puede guardar las capas en su HTML offline.
+     Es particionado POR CAPA, no streaming espacial por kilómetros. */
+  static desdePaquete(meta, obtener, cfg) {
+    if (!meta || meta.formato !== 'MC4' || !meta.capas || typeof obtener !== 'function') throw new Error('Paquete MC4 inválido');
+    const m = Object.create(Mundo.prototype);
+    m.meta = meta; m.cfg = cfg || null; m.u8 = null; m.base = 0; m._c = new Map(); m._obtenerCapa = obtener;
+    m.W = meta.W; m.H = meta.H; m.tile = meta.tile; m.ancho = meta.W * meta.tile; m.alto = meta.H * meta.tile;
+    m.kx = meta.kx * meta.tile; m.ky = meta.ky * meta.tile;
+    const r = m.capaInfo('relieve'); m.eW = r.w; m.eH = r.h; m.es = r.paso * m.tile;
+    const c = m.capaInfo('municipio'); m.mW = c.w; m.mH = c.h; m.ms = c.paso * m.tile;
+    return m;
+  }
+  static async cargarPaquete(meta, obtener, cfg) {
+    const m = Mundo.desdePaquete(meta, obtener, cfg);
+    await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
+    return m;
+  }
   capaInfo(nombre) { const c = this.meta.capas[nombre]; if (!c) throw new Error('el mundo no trae la capa «' + nombre + '»'); return c; }
   tiene(nombre) { return !!this.meta.capas[nombre]; }
   _tipar(c, raw) {
@@ -48,11 +67,19 @@ class Mundo {
       default: return raw;
     }
   }
-  _bytes(c) { return this.u8.subarray(this.base + c.o, this.base + c.o + c.n); }
+  _bytes(c, nombre) {
+    if (this._obtenerCapa) {
+      const entrada = this._obtenerCapa(nombre);
+      const datos = typeof entrada === 'string' ? deB64(entrada) : entrada;
+      if (!datos || typeof datos.subarray !== 'function' || datos.byteLength !== c.n) throw new Error('Capa MC4 separada inválida: ' + nombre);
+      return datos;
+    }
+    return this.u8.subarray(this.base + c.o, this.base + c.o + c.n);
+  }
   /* la capa ya inflada (síncrona) */
   capa(nombre) {
     let v = this._c.get(nombre); if (v !== undefined) return v;
-    const c = this.capaInfo(nombre), b = this._bytes(c); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
+    const c = this.capaInfo(nombre), b = this._bytes(c, nombre); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
   }
   /* un mundo armado en memoria (generador procedural, editor o herramientas): capas ya tipadas, sin comprimir.
      d = { meta: { W, H, tile, lon0, latN, kx, ky, nombre, … }, capas: { suelo: Uint8Array, relieve: {datos: Int16Array, w, h, paso}, … } } */
@@ -64,7 +91,7 @@ class Mundo {
     const r = M.capaInfo('relieve'); M.eW = r.w; M.eH = r.h; M.es = r.paso * M.tile; const c2 = M.capaInfo('municipio'); M.mW = c2.w; M.mH = c2.h; M.ms = c2.paso * M.tile;
     return M;
   }
-  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c), c.raw))); })); return this; }
+  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c, n), c.raw))); })); return this; }
 
   /* ---------- coordenadas ---------- */
   geoAMetros(lat, lon) { return { x: (lon - this.meta.lon0) * this.kx, y: (this.meta.latN - lat) * this.ky }; }

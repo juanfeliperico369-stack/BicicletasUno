@@ -2268,6 +2268,14 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 
 
+### 21-nov-2026 · Motor City 4.2.0 en `motor-city/` (Claude)
+- Llegó el motor 4.2:
+  - recorte por región en el 3D (niebla y cono de visión);
+  - carros de la IA que no se trancan en el borde de la calle;
+  - el vuelo Voxel Space sin pausa;
+  - las entregas de ChatGPT (MC4 por capas) y de Antigravity unidas.
+- Probado: `node tools/build.js` y `node tests/run.js`.
+
 ### 21-nov-2026 · Motor City 4.1.0 en `motor-city/` (Claude)
 - Llegó el motor 4.1. Trae técnicas de motores clásicos, rehechas desde cero:
   - 🏁 Arcade (la carretera de OutRun);

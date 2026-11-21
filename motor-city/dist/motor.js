@@ -1,4 +1,4 @@
-/* Motor City 4.1.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.2.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.1.0',
+  version: '4.2.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -597,6 +597,25 @@ class Mundo {
     await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
     return m;
   }
+  /* C-M34 · Mundo desde capas MC4 comprimidas y separadas (mismo formato de datos).
+     obtener(nombre) devuelve base64 o bytes SOLO para la capa pedida. No retiene
+     los bytes MC4 completos; el juego puede guardar las capas en su HTML offline.
+     Es particionado POR CAPA, no streaming espacial por kilómetros. */
+  static desdePaquete(meta, obtener, cfg) {
+    if (!meta || meta.formato !== 'MC4' || !meta.capas || typeof obtener !== 'function') throw new Error('Paquete MC4 inválido');
+    const m = Object.create(Mundo.prototype);
+    m.meta = meta; m.cfg = cfg || null; m.u8 = null; m.base = 0; m._c = new Map(); m._obtenerCapa = obtener;
+    m.W = meta.W; m.H = meta.H; m.tile = meta.tile; m.ancho = meta.W * meta.tile; m.alto = meta.H * meta.tile;
+    m.kx = meta.kx * meta.tile; m.ky = meta.ky * meta.tile;
+    const r = m.capaInfo('relieve'); m.eW = r.w; m.eH = r.h; m.es = r.paso * m.tile;
+    const c = m.capaInfo('municipio'); m.mW = c.w; m.mH = c.h; m.ms = c.paso * m.tile;
+    return m;
+  }
+  static async cargarPaquete(meta, obtener, cfg) {
+    const m = Mundo.desdePaquete(meta, obtener, cfg);
+    await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
+    return m;
+  }
   capaInfo(nombre) { const c = this.meta.capas[nombre]; if (!c) throw new Error('el mundo no trae la capa «' + nombre + '»'); return c; }
   tiene(nombre) { return !!this.meta.capas[nombre]; }
   _tipar(c, raw) {
@@ -608,11 +627,19 @@ class Mundo {
       default: return raw;
     }
   }
-  _bytes(c) { return this.u8.subarray(this.base + c.o, this.base + c.o + c.n); }
+  _bytes(c, nombre) {
+    if (this._obtenerCapa) {
+      const entrada = this._obtenerCapa(nombre);
+      const datos = typeof entrada === 'string' ? deB64(entrada) : entrada;
+      if (!datos || typeof datos.subarray !== 'function' || datos.byteLength !== c.n) throw new Error('Capa MC4 separada inválida: ' + nombre);
+      return datos;
+    }
+    return this.u8.subarray(this.base + c.o, this.base + c.o + c.n);
+  }
   /* la capa ya inflada (síncrona) */
   capa(nombre) {
     let v = this._c.get(nombre); if (v !== undefined) return v;
-    const c = this.capaInfo(nombre), b = this._bytes(c); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
+    const c = this.capaInfo(nombre), b = this._bytes(c, nombre); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
   }
   /* un mundo armado en memoria (generador procedural, editor o herramientas): capas ya tipadas, sin comprimir.
      d = { meta: { W, H, tile, lon0, latN, kx, ky, nombre, … }, capas: { suelo: Uint8Array, relieve: {datos: Int16Array, w, h, paso}, … } } */
@@ -624,7 +651,7 @@ class Mundo {
     const r = M.capaInfo('relieve'); M.eW = r.w; M.eH = r.h; M.es = r.paso * M.tile; const c2 = M.capaInfo('municipio'); M.mW = c2.w; M.mH = c2.h; M.ms = c2.paso * M.tile;
     return M;
   }
-  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c), c.raw))); })); return this; }
+  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c, n), c.raw))); })); return this; }
 
   /* ---------- coordenadas ---------- */
   geoAMetros(lat, lon) { return { x: (lon - this.meta.lon0) * this.kx, y: (this.meta.latN - lat) * this.ky }; }
@@ -883,59 +910,82 @@ const ValleCompat = {
 MC.ValleCompat = ValleCompat; MC.Compat1 = ValleCompat;
 
 /* ---- js/10-sectores.js ---- */
-/* C-M34 · Primer paso hacia streaming MC4 por sectores de 1 km.
-   Reduce la memoria de regiones ED1 de edificios DECODIFICADOS cerca de la cámara;
-   el MC4 y las capas de suelo todavía permanecen completos en la memoria de la partida.
-   No intercambia ficheros ni descarga datos: funciona offline y no borra mundos. */
+/* C-M34 · Caché acotada de sectores de 1 km para edificios ED1.
+   El mundo MC4 y las capas de suelo permanecen en memoria: esto NO es
+   streaming de bytes. El cargador de chunks queda como etapa independiente.
+   Prioridad por proximidad: con radio > presupuesto, no recorrer/descartar
+   sectores lejanos cada actualización. Funciona sin red y no toca guardados. */
 class Sectores1km {
-  constructor(mundo,op={}){
-    this.mundo=mundo;this.lado=Math.max(250,op.lado||1000);
-    this.maxSectores=Math.max(1,Math.floor(op.maxSectores||9));
-    this.maxRegiones=Math.max(4,Math.floor(op.maxRegiones||36));
-    this.radio=Math.max(0,Math.min(3,op.radio??1));
-    this.cache=new Map();this.ultimo={sx:0,sy:0,antes:0,despues:0,evictas:0};
-  }
-  zona(x,y){return {sx:Math.floor(x/this.lado),sy:Math.floor(y/this.lado)};}
-  pedir(sx,sy){
-    if(!Number.isFinite(sx)||!Number.isFinite(sy))return null;
-    sx=Math.floor(sx);sy=Math.floor(sy);
-    const clave=sx+','+sy;
-    if(this.cache.has(clave)){
-      const c=this.cache.get(clave);this.cache.delete(clave);this.cache.set(clave,c);return c;
-    }
-    const x0=sx*this.lado,y0=sy*this.lado,x1=x0+this.lado,y1=y0+this.lado,m=this.mundo;
-    const sector={
-      id:clave,sx,sy,x0,y0,x1,y1,
-      /* Devuelve geometría de edificios a petición, no mantiene otra copia por sector. */
-      edificios:()=> typeof m?.edificiosEn==='function'?m.edificiosEn(x0,y0,x1,y1,[]):[]
+  constructor(mundo, op = {}) {
+    const positivo = (v, defecto, minimo, nombre) => {
+      if (v === undefined) return defecto;
+      if (!Number.isFinite(v) || v < minimo) throw new RangeError(nombre + ' inválido');
+      return Math.max(minimo, Math.floor(v));
     };
-    this.cache.set(clave,sector);
-    while(this.cache.size>this.maxSectores)this.cache.delete(this.cache.keys().next().value);
+    this.mundo = mundo;
+    this.lado = positivo(op.lado, 1000, 250, 'lado');
+    this.maxSectores = positivo(op.maxSectores, 9, 1, 'maxSectores');
+    this.maxRegiones = positivo(op.maxRegiones, 36, 4, 'maxRegiones');
+    this.radio = op.radio === undefined ? 1 : positivo(op.radio, 1, 0, 'radio');
+    if (this.radio > 3) throw new RangeError('radio superior a 3');
+    this.cache = new Map();
+    this.ultimo = { sx: 0, sy: 0, antes: 0, despues: 0, evictas: 0, sectores: 0 };
+    /* Se calcula una vez: distancia al centro, después prioridad axial.
+       Así siempre conserva el centro aun si maxSectores < (2*radio+1)^2. */
+    this.cercanos = [];
+    for (let dy = -this.radio; dy <= this.radio; dy++) {
+      for (let dx = -this.radio; dx <= this.radio; dx++) {
+        this.cercanos.push({ dx, dy, d: dx * dx + dy * dy });
+      }
+    }
+    this.cercanos.sort((a, b) => a.d - b.d || Math.abs(a.dx) + Math.abs(a.dy) - Math.abs(b.dx) - Math.abs(b.dy) || a.dy - b.dy || a.dx - b.dx);
+    this.cercanos.length = Math.min(this.cercanos.length, this.maxSectores);
+  }
+  zona(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new RangeError('Coordenadas de sector inválidas');
+    return { sx: Math.floor(x / this.lado), sy: Math.floor(y / this.lado) };
+  }
+  pedir(sx, sy) {
+    if (!Number.isFinite(sx) || !Number.isFinite(sy)) return null;
+    sx = Math.floor(sx); sy = Math.floor(sy);
+    const clave = sx + ',' + sy;
+    if (this.cache.has(clave)) {
+      const c = this.cache.get(clave);
+      this.cache.delete(clave); this.cache.set(clave, c);
+      return c;
+    }
+    const x0 = sx * this.lado, y0 = sy * this.lado, x1 = x0 + this.lado, y1 = y0 + this.lado, m = this.mundo;
+    const sector = {
+      id: clave, sx, sy, x0, y0, x1, y1,
+      /* Geometría a petición, nunca dos copias por sector. */
+      edificios: () => typeof m?.edificiosEn === 'function' ? m.edificiosEn(x0, y0, x1, y1, []) : []
+    };
+    this.cache.set(clave, sector);
+    while (this.cache.size > this.maxSectores) this.cache.delete(this.cache.keys().next().value);
     return sector;
   }
-  actualizar(x,y){
-    const {sx,sy}=this.zona(x,y);
-    for(let dy=-this.radio;dy<=this.radio;dy++)for(let dx=-this.radio;dx<=this.radio;dx++)this.pedir(sx+dx,sy+dy);
-    const E=this.mundo?._ED;
-    if(!E||!E.cache||!Number.isFinite(E.R)||!E.nx)return (this.ultimo={sx,sy,antes:0,despues:0,evictas:0,sectores:this.cache.size});
-    const ids=[...E.cache.keys()],antes=ids.length,max=this.maxRegiones;
-    ids.sort((a,b)=>{
-      const ra=Math.floor(a/E.nx),rb=Math.floor(b/E.nx),
-        ax=(a%E.nx+.5)*E.R-x,ay=(ra+.5)*E.R-y,
-        bx=(b%E.nx+.5)*E.R-x,by=(rb+.5)*E.R-y;
-      return ax*ax+ay*ay-(bx*bx+by*by);
-    });
-    const distanciaMax=Math.pow((this.radio+1.4)*this.lado,2),conservar=new Set();
-    for(const k of ids){
-      const rx=k%E.nx,ry=Math.floor(k/E.nx),dx=(rx+.5)*E.R-x,dy=(ry+.5)*E.R-y;
-      if(conservar.size<max&&dx*dx+dy*dy<=distanciaMax)conservar.add(k);
+  actualizar(x, y) {
+    const { sx, sy } = this.zona(x, y);
+    for (const { dx, dy } of this.cercanos) this.pedir(sx + dx, sy + dy);
+    const E = this.mundo?._ED;
+    if (!E || !E.cache || typeof E.cache.keys !== 'function' || typeof E.cache.delete !== 'function' || !Number.isFinite(E.R) || E.R <= 0 || !Number.isInteger(E.nx) || E.nx <= 0) {
+      return (this.ultimo = { sx, sy, antes: 0, despues: 0, evictas: 0, sectores: this.cache.size });
     }
-    for(const k of ids)if(!conservar.has(k))E.cache.delete(k);
-    return (this.ultimo={sx,sy,antes,despues:E.cache.size,evictas:antes-E.cache.size,sectores:this.cache.size});
+    const ids = [...E.cache.keys()], antes = ids.length, max = this.maxRegiones;
+    const dist2 = k => {
+      const rx = k % E.nx, ry = Math.floor(k / E.nx), dx = (rx + .5) * E.R - x, dy = (ry + .5) * E.R - y;
+      return dx * dx + dy * dy;
+    };
+    ids.sort((a, b) => dist2(a) - dist2(b));
+    const distanciaMax = Math.pow((this.radio + 1.4) * this.lado, 2), conservar = new Set();
+    for (const k of ids) if (conservar.size < max && dist2(k) <= distanciaMax) conservar.add(k);
+    for (const k of ids) if (!conservar.has(k)) E.cache.delete(k);
+    return (this.ultimo = { sx, sy, antes, despues: E.cache.size, evictas: antes - E.cache.size, sectores: this.cache.size });
   }
-  limpiar(){this.cache.clear();}
+  limpiar() { this.cache.clear(); }
 }
-MC.Sectores1km=Sectores1km;
+MC.Sectores1km = Sectores1km;
+
 /* ---- js/11-red.js ---- */
 /* =====================================================================
    RED · calles y ciclorrutas como grafo (nodos en los cruces, aristas con su curva real)
@@ -1374,7 +1424,7 @@ class GloboGPU {
       float fbm(vec2 p){float s=0.0,k=.52;for(int i=0;i<4;i++){s+=k*noise(p);p=p*2.03+vec2(5.3,1.7);k*=.5;}return s;}
       void main(){
         vec2 p=(gl_FragCoord.xy*2.0-uSize)/uSize.y;
-        float r=length(p),R=.68;
+        float r=length(p),R=min(.68,(uSize.x/uSize.y)*.80);
         float st=hash(floor(gl_FragCoord.xy/2.0));
         vec3 fondo=vec3(.012,.016,.025)+vec3(.6,.69,.78)*step(.9978,st)*(.22+.7*hash(floor(gl_FragCoord.xy/7.0)));
         if(r>R){
@@ -1393,7 +1443,7 @@ class GloboGPU {
         vec3 mar=vec3(.045,.105,.22);
         vec3 base=tierra>.48?b:mar;
         if(tierra>.74)base=mix(base,vec3(.48,.46,.41),.65);
-        if(abs(latD)>68.0)base=vec3(.84,.87,.89);
+        base=mix(base,vec3(.84,.87,.89),smoothstep(61.0,79.0,abs(latD))*(.91+.09*noise(vec2(lon*7.0,lat*4.0))));
         if(abs(latD-ruta)<1.2&&abs(latD)<67.0)base=mix(base,vec3(.75,.61,.34),.8);
         vec3 n=normalize(vec3(d.x,d.y,z));
         vec3 sol=normalize(vec3(cos(uTiempo*.035)*.7,-.25,.5+sin(uTiempo*.035)*.6));
@@ -1489,8 +1539,8 @@ const ZONAS_RUTA = {
   nieve: { nombre: 'Nevado', muros: ['#efefef', '#7a5a3a'], techos: ['#5a5f69', '#8e9095'], plancha: .3, tanques: 0, teja: .5, arboles: .12, densidad: .03, pisos: [1, 2], suelo: '#dfe6ea' },
   lagos: { nombre: 'Lagos', muros: ['#e8dfcc', '#3f7fbf'], techos: ['#b5542f', '#7d7f84'], plancha: .4, tanques: .1, teja: .6, arboles: .5, densidad: .05, pisos: [1, 2], suelo: '#7aa65a' }
 };
-/* G-H22: 56 paradas de ficción (Antigravity y ChatGPT, unidas); la fuente es contenido/paradas-carretera.json */
-const PARADAS_RUTA = {"costa":[{"nombre":"Estación Salitre 99","nombre_en":"Saltwind Gas 99","tipo":"fuel","ambiente":"Tres surtidores oxidados por la brisa marina y un foco amarillo zumbando sobre las conchas trituradas."},{"nombre":"Motel Marea Baja","nombre_en":"Low Tide Motor Inn","tipo":"motel","ambiente":"Puertas celestes despintadas mirando al rompeolas; el neón parpadea con el ritmo del oleaje."},{"nombre":"Paradero El Babor","nombre_en":"Portside Diner & Trucks","tipo":"restaurant","ambiente":"Olor a aceite caliente, café recalentado y tractomulas parqueadas con las luces de emergencia encendidas."},{"nombre":"Mirador del Espigón Viejo","nombre_en":"Old Breakwater Overlook","tipo":"mirador","ambiente":"Un muro bajo de concreto manchado de salitre desde donde se ve el horizonte curvo del mar."},{"nombre":"Bomba Brisa de Sal","nombre_en":"Saltwind Fuel","tipo":"fuel","ambiente":"Lámparas cálidas bajo una brisa de mar."},{"nombre":"Taller La Boya","nombre_en":"The Buoy Garage","tipo":"car_repair","ambiente":"Motores y redes húmedas junto al mar."},{"nombre":"Paradero Faro Viejo","nombre_en":"Old Beacon Diner","tipo":"restaurant","ambiente":"Café junto a los cristales empañados."},{"nombre":"Mirador del Salitre","nombre_en":"Salt Air Lookout","tipo":"mirador","ambiente":"La línea del mar desaparece en la bruma."}],"llanura":[{"nombre":"Taller Recta Larga","nombre_en":"Long Mile Auto & Tire","tipo":"car_repair","ambiente":"Una grúa vieja junto a pilas de llantas gastadas y el eco metálico de una llave de impacto."},{"nombre":"Estadéro Kilómetro Cero","nombre_en":"Milepost Zero Tavern","tipo":"bar","ambiente":"Música de radio AM saliendo por una persiana entreabierta mientras el viento barre el polvo del parqueadero."},{"nombre":"Bomba El Molino Seco","nombre_en":"Dry Mill Fuel Stop","tipo":"fuel","ambiente":"Un techo de zinc que traquea con cada ráfaga y un letrero de precios al que le faltan dos números."},{"nombre":"Caseta Vieja del Llano","nombre_en":"Plains Old Tollbooth","tipo":"toll","ambiente":"Talanqueras levantadas hace años, vidrios rotos y marcas frescas de frenada sobre los carriles vacíos."},{"nombre":"Bomba Horizonte Bajo","nombre_en":"Low Horizon Fuel","tipo":"fuel","ambiente":"Camiones diminutos en la recta interminable."},{"nombre":"Taller Tres Vientos","nombre_en":"Three Winds Garage","tipo":"car_repair","ambiente":"Herramientas en un galpón abierto."},{"nombre":"Paradero La Lumbre","nombre_en":"Lamplight Diner","tipo":"restaurant","ambiente":"Comida caliente bajo una luz amarilla."},{"nombre":"Motel Kilómetro Azul","nombre_en":"Blue Mile Motel","tipo":"motel","ambiente":"Un letrero cansado vibra con el viento."}],"desierto":[{"nombre":"Motel La Calima","nombre_en":"Heat Haze Motel","tipo":"motel","ambiente":"Paredes de adobe agrietado, ventiladores girando lento y ni una sola sombra en tres kilómetros a la redonda."},{"nombre":"Surtidor El Espejismo","nombre_en":"Mirage Diesel & Ice","tipo":"fuel","ambiente":"Un tanque metálico blanco brillando al sol, arena acumulada contra el andén y una nevera de hielo zumbando."},{"nombre":"Montallantas y Radiadores Arena Roja","nombre_en":"Red Sand Radiator & Tire","tipo":"car_repair","ambiente":"Bidones de refrigerante alineados bajo una polisombra y perros dormidos debajo de un chasis sin motor."},{"nombre":"Paradero Paso del Polvo","nombre_en":"Dust Pass Pullout","tipo":"mirador","ambiente":"Un ensanche de gravilla roja donde el motor caliente cruje al enfriarse frente a las dunas."},{"nombre":"Bomba Polvo Rojo","nombre_en":"Red Dust Fuel","tipo":"fuel","ambiente":"La arena golpea las ventanillas."},{"nombre":"Taller La Calima","nombre_en":"Heat Haze Garage","tipo":"car_repair","ambiente":"Metal caliente y una sombra mínima."},{"nombre":"Paradero Las Agujas","nombre_en":"Needles Diner","tipo":"restaurant","ambiente":"Un ventilador antiguo mueve el aire seco."},{"nombre":"Mirador del Mediodía","nombre_en":"High Noon Lookout","tipo":"mirador","ambiente":"La carretera tiembla entre las dunas."}],"bosque":[{"nombre":"Paradero Los Helechos","nombre_en":"Fern Bend Truck Stop","tipo":"restaurant","ambiente":"Humo de leña mezclándose con la humedad de los árboles altos y mesas de madera mojadas por el sereno."},{"nombre":"Taller del Aserradero","nombre_en":"Sawmill Garage","tipo":"car_repair","ambiente":"Olor a resina de pino y grasa de motor bajo un cobertizo de teja verde cubierto de musgo."},{"nombre":"Cabañas La Hojarasca","nombre_en":"Timberline Cabins","tipo":"motel","ambiente":"Luces cálidas filtrándose entre troncos oscuros y el canto constante de grillos a lado y lado del asfalto."},{"nombre":"Gruta del Cedro Alto","nombre_en":"Tall Cedar Wayside","tipo":"church","ambiente":"Un pequeño nicho de piedra junto a la berma con veladoras encendidas y flores frescas de la vereda."},{"nombre":"Bomba Los Helechos","nombre_en":"Fernwood Fuel","tipo":"fuel","ambiente":"Musgo sobre la marquesina."},{"nombre":"Taller Raíz Vieja","nombre_en":"Old Root Workshop","tipo":"car_repair","ambiente":"Ramas mojadas y faros entre los pinos."},{"nombre":"Paradero Sombra Larga","nombre_en":"Long Shade Diner","tipo":"restaurant","ambiente":"La conversación baja cuando cruje el bosque."},{"nombre":"Mirador Copa Alta","nombre_en":"High Canopy Lookout","tipo":"mirador","ambiente":"Una vía estrecha entre las copas."}],"montana":[{"nombre":"Mirador Alto del Viento","nombre_en":"High Wind Overlook","tipo":"mirador","ambiente":"Barandas metálicas golpeadas por la neblina; abajo se ven las luces de los carros serpenteando por la ladera."},{"nombre":"Fonda La Curva Brava","nombre_en":"Switchback Coffee House","tipo":"restaurant","ambiente":"Tinto humeante, arepas al carbón y camioneros revisando los frenos antes de bajar la pendiente."},{"nombre":"Frenos y Engrase La Cumbre","nombre_en":"Summit Brakes & Service","tipo":"car_repair","ambiente":"Una rampa de concreto sobre la berma con olor a balatas calientes y herramientas colgadas en madera."},{"nombre":"Retén Viejo de la Cordillera","nombre_en":"Ridge Old Checkpoint","tipo":"toll","ambiente":"Dos casetas grises desgastadas por la lluvia de altura y reflectores solitarios apuntando al túnel de niebla."},{"nombre":"Bomba Alto de Piedra","nombre_en":"Stonecrest Fuel","tipo":"fuel","ambiente":"Viento frío detrás de la estación."},{"nombre":"Taller Curva Cerrada","nombre_en":"Hairpin Garage","tipo":"car_repair","ambiente":"Frenos calientes y grava en la cuneta."},{"nombre":"Paradero La Cornisa","nombre_en":"Ledge Diner","tipo":"restaurant","ambiente":"La ventana da directamente al barranco."},{"nombre":"Mirador del Cóndor","nombre_en":"Condor Ridge Lookout","tipo":"mirador","ambiente":"Las nubes quedan debajo del camino."}],"nieve":[{"nombre":"Estación Escarcha Blanca","nombre_en":"White Frost Fuel","tipo":"fuel","ambiente":"Carámbanos colgando del techo iluminado con tubos blancos y surcos oscuros de llantas en la nieve apisonada."},{"nombre":"Posada La Ventisca","nombre_en":"Blizzard Pass Lodge","tipo":"motel","ambiente":"Chimenea humeando sin pausa y vidrios empañados que dejan ver siluetas calentándose las manos."},{"nombre":"Refugio Paso Helado","nombre_en":"Frozen Pass Outpost","tipo":"bar","ambiente":"Un quitanieves apagado en la entrada y el silencio sordo de la nieve cayendo bajo los postes de luz."},{"nombre":"Mirador de la Cresta Blanca","nombre_en":"White Crest Turnout","tipo":"mirador","ambiente":"Postes naranjas marcando el borde del abismo blanco y el silbido helado del viento entre las rocas."},{"nombre":"Bomba Último Refugio","nombre_en":"Last Shelter Fuel","tipo":"fuel","ambiente":"Hielo alrededor de los surtidores."},{"nombre":"Taller Cadena Norte","nombre_en":"North Chain Garage","tipo":"car_repair","ambiente":"Neumáticos de invierno junto a la estufa."},{"nombre":"Paradero Escarcha","nombre_en":"Frostline Diner","tipo":"restaurant","ambiente":"Cristales blancos ocultan la carretera."},{"nombre":"Motel Ventisca","nombre_en":"Snowdrift Motel","tipo":"motel","ambiente":"Una sola puerta iluminada en la nevada."}],"lagos":[{"nombre":"Paradero Brisa del Lago","nombre_en":"Lakeside Breeze Diner","tipo":"restaurant","ambiente":"Un deck sencillo de madera sobre la orilla con botes amarrados golpeando suavemente las llantas de protección."},{"nombre":"Estación Náutica y Vial El Espejo","nombre_en":"Mirror Lake Gas & Dock","tipo":"fuel","ambiente":"Surtidores para carros hacia la carretera y un muelle pequeño con pimpinas de gasolina hacia el agua quieta."},{"nombre":"Hostal Bahía Mansa","nombre_en":"Still Bay Motel","tipo":"motel","ambiente":"Balcones sencillos reflejándose en el agua oscura al atardecer y olor a tierra húmeda."},{"nombre":"Mirador del Islote","nombre_en":"Islet Viewpoint","tipo":"mirador","ambiente":"Una curva abierta con gravilla desde donde se dominan las islas verdes y la neblina pegada al agua."},{"nombre":"Bomba Agua Clara","nombre_en":"Clearwater Fuel","tipo":"fuel","ambiente":"Reflejos verdes bajo los surtidores."},{"nombre":"Taller El Pescador","nombre_en":"Fisher's Workshop","tipo":"car_repair","ambiente":"Motores de lancha junto a los carros."},{"nombre":"Paradero Orilla Norte","nombre_en":"North Shore Diner","tipo":"restaurant","ambiente":"Café con vista al muelle de tablas."},{"nombre":"Mirador Los Espejos","nombre_en":"Mirror Lake Lookout","tipo":"mirador","ambiente":"Las montañas duplicadas en el agua."}]};
+/* G-H22: 56 paradas de ficción (Gemini/Antigravity y ChatGPT, unidas por Claude); la fuente es contenido/paradas-carretera.json */
+const PARADAS_RUTA = {"costa":[{"id":"costa_bomba_salitre","tipo":"fuel","nombre_es":"Estación Salitre 99","nombre_en":"Saltwind Gas 99","rutas":["ruta_atlantico"],"ambiente":"Tres surtidores oxidados por la brisa marina y un foco amarillo zumbando sobre las conchas trituradas.","nombre":"Estación Salitre 99"},{"id":"costa_motel_marea","tipo":"motel","nombre_es":"Motel Marea Baja","nombre_en":"Low Tide Motor Inn","rutas":["ruta_atlantico"],"ambiente":"Puertas celestes despintadas mirando al rompeolas; el neón parpadea con el ritmo del oleaje.","nombre":"Motel Marea Baja"},{"id":"costa_paradero_babor","tipo":"restaurant","nombre_es":"Paradero El Babor","nombre_en":"Portside Diner & Trucks","rutas":["ruta_atlantico"],"ambiente":"Olor a aceite caliente, café recalentado y tractomulas parqueadas con las luces de emergencia encendidas.","nombre":"Paradero El Babor"},{"id":"costa_mirador_faro","tipo":"mirador","nombre_es":"Mirador del Espigón Viejo","nombre_en":"Old Breakwater Overlook","rutas":["ruta_atlantico"],"ambiente":"Un muro bajo de concreto manchado de salitre desde donde se ve el horizonte curvo del mar.","nombre":"Mirador del Espigón Viejo"},{"id":"costa_bomba_brisa_de_sal","tipo":"fuel","nombre_es":"Bomba Brisa de Sal","nombre_en":"Saltwind Fuel","rutas":["ruta_atlantico"],"ambiente":"Lámparas cálidas bajo una brisa de mar.","nombre":"Bomba Brisa de Sal"},{"id":"costa_taller_la_boya","tipo":"car_repair","nombre_es":"Taller La Boya","nombre_en":"The Buoy Garage","rutas":["ruta_atlantico"],"ambiente":"Motores y redes húmedas junto al mar.","nombre":"Taller La Boya"},{"id":"costa_paradero_faro_viejo","tipo":"restaurant","nombre_es":"Paradero Faro Viejo","nombre_en":"Old Beacon Diner","rutas":["ruta_atlantico"],"ambiente":"Café junto a los cristales empañados.","nombre":"Paradero Faro Viejo"},{"id":"costa_mirador_del_salitre","tipo":"mirador","nombre_es":"Mirador del Salitre","nombre_en":"Salt Air Lookout","rutas":["ruta_atlantico"],"ambiente":"La línea del mar desaparece en la bruma.","nombre":"Mirador del Salitre"}],"llanura":[{"id":"llanura_taller_horizonte","tipo":"car_repair","nombre_es":"Taller Recta Larga","nombre_en":"Long Mile Auto & Tire","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Una grúa vieja junto a pilas de llantas gastadas y el eco metálico de una llave de impacto.","nombre":"Taller Recta Larga"},{"id":"llanura_bar_poste","tipo":"bar","nombre_es":"Estadéro Kilómetro Cero","nombre_en":"Milepost Zero Tavern","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Música de radio AM saliendo por una persiana entreabierta mientras el viento barre el polvo del parqueadero.","nombre":"Estadéro Kilómetro Cero"},{"id":"llanura_bomba_molino","tipo":"fuel","nombre_es":"Bomba El Molino Seco","nombre_en":"Dry Mill Fuel Stop","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Un techo de zinc que traquea con cada ráfaga y un letrero de precios al que le faltan dos números.","nombre":"Bomba El Molino Seco"},{"id":"llanura_peaje_llano","tipo":"toll","nombre_es":"Caseta Vieja del Llano","nombre_en":"Plains Old Tollbooth","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Talanqueras levantadas hace años, vidrios rotos y marcas frescas de frenada sobre los carriles vacíos.","nombre":"Caseta Vieja del Llano"},{"id":"llanura_bomba_horizonte_bajo","tipo":"fuel","nombre_es":"Bomba Horizonte Bajo","nombre_en":"Low Horizon Fuel","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Camiones diminutos en la recta interminable.","nombre":"Bomba Horizonte Bajo"},{"id":"llanura_taller_tres_vientos","tipo":"car_repair","nombre_es":"Taller Tres Vientos","nombre_en":"Three Winds Garage","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Herramientas en un galpón abierto.","nombre":"Taller Tres Vientos"},{"id":"llanura_paradero_la_lumbre","tipo":"restaurant","nombre_es":"Paradero La Lumbre","nombre_en":"Lamplight Diner","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Comida caliente bajo una luz amarilla.","nombre":"Paradero La Lumbre"},{"id":"llanura_motel_kilometro_azul","tipo":"motel","nombre_es":"Motel Kilómetro Azul","nombre_en":"Blue Mile Motel","rutas":["ruta_atlantico","ruta_norte"],"ambiente":"Un letrero cansado vibra con el viento.","nombre":"Motel Kilómetro Azul"}],"desierto":[{"id":"desierto_motel_calima","tipo":"motel","nombre_es":"Motel La Calima","nombre_en":"Heat Haze Motel","rutas":["ruta_atlantico"],"ambiente":"Paredes de adobe agrietado, ventiladores girando lento y ni una sola sombra en tres kilómetros a la redonda.","nombre":"Motel La Calima"},{"id":"desierto_bomba_espejismo","tipo":"fuel","nombre_es":"Surtidor El Espejismo","nombre_en":"Mirage Diesel & Ice","rutas":["ruta_atlantico"],"ambiente":"Un tanque metálico blanco brillando al sol, arena acumulada contra el andén y una nevera de hielo zumbando.","nombre":"Surtidor El Espejismo"},{"id":"desierto_taller_radiador","tipo":"car_repair","nombre_es":"Montallantas y Radiadores Arena Roja","nombre_en":"Red Sand Radiator & Tire","rutas":["ruta_atlantico"],"ambiente":"Bidones de refrigerante alineados bajo una polisombra y perros dormidos debajo de un chasis sin motor.","nombre":"Montallantas y Radiadores Arena Roja"},{"id":"desierto_mirador_dunas","tipo":"mirador","nombre_es":"Paradero Paso del Polvo","nombre_en":"Dust Pass Pullout","rutas":["ruta_atlantico"],"ambiente":"Un ensanche de gravilla roja donde el motor caliente cruje al enfriarse frente a las dunas.","nombre":"Paradero Paso del Polvo"},{"id":"desierto_bomba_polvo_rojo","tipo":"fuel","nombre_es":"Bomba Polvo Rojo","nombre_en":"Red Dust Fuel","rutas":["ruta_atlantico"],"ambiente":"La arena golpea las ventanillas.","nombre":"Bomba Polvo Rojo"},{"id":"desierto_taller_la_calima","tipo":"car_repair","nombre_es":"Taller La Calima","nombre_en":"Heat Haze Garage","rutas":["ruta_atlantico"],"ambiente":"Metal caliente y una sombra mínima.","nombre":"Taller La Calima"},{"id":"desierto_paradero_las_agujas","tipo":"restaurant","nombre_es":"Paradero Las Agujas","nombre_en":"Needles Diner","rutas":["ruta_atlantico"],"ambiente":"Un ventilador antiguo mueve el aire seco.","nombre":"Paradero Las Agujas"},{"id":"desierto_mirador_del_mediodia","tipo":"mirador","nombre_es":"Mirador del Mediodía","nombre_en":"High Noon Lookout","rutas":["ruta_atlantico"],"ambiente":"La carretera tiembla entre las dunas.","nombre":"Mirador del Mediodía"}],"bosque":[{"id":"bosque_paradero_helechos","tipo":"restaurant","nombre_es":"Paradero Los Helechos","nombre_en":"Fern Bend Truck Stop","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Humo de leña mezclándose con la humedad de los árboles altos y mesas de madera mojadas por el sereno.","nombre":"Paradero Los Helechos"},{"id":"bosque_taller_aserradero","tipo":"car_repair","nombre_es":"Taller del Aserradero","nombre_en":"Sawmill Garage","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Olor a resina de pino y grasa de motor bajo un cobertizo de teja verde cubierto de musgo.","nombre":"Taller del Aserradero"},{"id":"bosque_motel_neblina","tipo":"motel","nombre_es":"Cabañas La Hojarasca","nombre_en":"Timberline Cabins","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Luces cálidas filtrándose entre troncos oscuros y el canto constante de grillos a lado y lado del asfalto.","nombre":"Cabañas La Hojarasca"},{"id":"bosque_capilla_cedro","tipo":"church","nombre_es":"Gruta del Cedro Alto","nombre_en":"Tall Cedar Wayside","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Un pequeño nicho de piedra junto a la berma con veladoras encendidas y flores frescas de la vereda.","nombre":"Gruta del Cedro Alto"},{"id":"bosque_bomba_los_helechos","tipo":"fuel","nombre_es":"Bomba Los Helechos","nombre_en":"Fernwood Fuel","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Musgo sobre la marquesina.","nombre":"Bomba Los Helechos"},{"id":"bosque_taller_raiz_vieja","tipo":"car_repair","nombre_es":"Taller Raíz Vieja","nombre_en":"Old Root Workshop","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Ramas mojadas y faros entre los pinos.","nombre":"Taller Raíz Vieja"},{"id":"bosque_paradero_sombra_larga","tipo":"restaurant","nombre_es":"Paradero Sombra Larga","nombre_en":"Long Shade Diner","rutas":["ruta_embalse","ruta_norte"],"ambiente":"La conversación baja cuando cruje el bosque.","nombre":"Paradero Sombra Larga"},{"id":"bosque_mirador_copa_alta","tipo":"mirador","nombre_es":"Mirador Copa Alta","nombre_en":"High Canopy Lookout","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Una vía estrecha entre las copas.","nombre":"Mirador Copa Alta"}],"montana":[{"id":"montana_mirador_neblina","tipo":"mirador","nombre_es":"Mirador Alto del Viento","nombre_en":"High Wind Overlook","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"Barandas metálicas golpeadas por la neblina; abajo se ven las luces de los carros serpenteando por la ladera.","nombre":"Mirador Alto del Viento"},{"id":"montana_paradero_curva","tipo":"restaurant","nombre_es":"Fonda La Curva Brava","nombre_en":"Switchback Coffee House","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"Tinto humeante, arepas al carbón y camioneros revisando los frenos antes de bajar la pendiente.","nombre":"Fonda La Curva Brava"},{"id":"montana_taller_frenos","tipo":"car_repair","nombre_es":"Frenos y Engrase La Cumbre","nombre_en":"Summit Brakes & Service","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"Una rampa de concreto sobre la berma con olor a balatas calientes y herramientas colgadas en madera.","nombre":"Frenos y Engrase La Cumbre"},{"id":"montana_peaje_cordillera","tipo":"toll","nombre_es":"Retén Viejo de la Cordillera","nombre_en":"Ridge Old Checkpoint","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"Dos casetas grises desgastadas por la lluvia de altura y reflectores solitarios apuntando al túnel de niebla.","nombre":"Retén Viejo de la Cordillera"},{"id":"montana_bomba_alto_de_piedra","tipo":"fuel","nombre_es":"Bomba Alto de Piedra","nombre_en":"Stonecrest Fuel","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"Viento frío detrás de la estación.","nombre":"Bomba Alto de Piedra"},{"id":"montana_taller_curva_cerrada","tipo":"car_repair","nombre_es":"Taller Curva Cerrada","nombre_en":"Hairpin Garage","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"Frenos calientes y grava en la cuneta.","nombre":"Taller Curva Cerrada"},{"id":"montana_paradero_la_cornisa","tipo":"restaurant","nombre_es":"Paradero La Cornisa","nombre_en":"Ledge Diner","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"La ventana da directamente al barranco.","nombre":"Paradero La Cornisa"},{"id":"montana_mirador_del_condor","tipo":"mirador","nombre_es":"Mirador del Cóndor","nombre_en":"Condor Ridge Lookout","rutas":["ruta_atlantico","ruta_embalse"],"ambiente":"Las nubes quedan debajo del camino.","nombre":"Mirador del Cóndor"}],"nieve":[{"id":"nieve_bomba_escarcha","tipo":"fuel","nombre_es":"Estación Escarcha Blanca","nombre_en":"White Frost Fuel","rutas":["ruta_norte"],"ambiente":"Carámbanos colgando del techo iluminado con tubos blancos y surcos oscuros de llantas en la nieve apisonada.","nombre":"Estación Escarcha Blanca"},{"id":"nieve_motel_ventisca","tipo":"motel","nombre_es":"Posada La Ventisca","nombre_en":"Blizzard Pass Lodge","rutas":["ruta_norte"],"ambiente":"Chimenea humeando sin pausa y vidrios empañados que dejan ver siluetas calentándose las manos.","nombre":"Posada La Ventisca"},{"id":"nieve_bar_puerto_frio","tipo":"bar","nombre_es":"Refugio Paso Helado","nombre_en":"Frozen Pass Outpost","rutas":["ruta_norte"],"ambiente":"Un quitanieves apagado en la entrada y el silencio sordo de la nieve cayendo bajo los postes de luz.","nombre":"Refugio Paso Helado"},{"id":"nieve_mirador_glaciar","tipo":"mirador","nombre_es":"Mirador de la Cresta Blanca","nombre_en":"White Crest Turnout","rutas":["ruta_norte"],"ambiente":"Postes naranjas marcando el borde del abismo blanco y el silbido helado del viento entre las rocas.","nombre":"Mirador de la Cresta Blanca"},{"id":"nieve_bomba_ultimo_refugio","tipo":"fuel","nombre_es":"Bomba Último Refugio","nombre_en":"Last Shelter Fuel","rutas":["ruta_norte"],"ambiente":"Hielo alrededor de los surtidores.","nombre":"Bomba Último Refugio"},{"id":"nieve_taller_cadena_norte","tipo":"car_repair","nombre_es":"Taller Cadena Norte","nombre_en":"North Chain Garage","rutas":["ruta_norte"],"ambiente":"Neumáticos de invierno junto a la estufa.","nombre":"Taller Cadena Norte"},{"id":"nieve_paradero_escarcha","tipo":"restaurant","nombre_es":"Paradero Escarcha","nombre_en":"Frostline Diner","rutas":["ruta_norte"],"ambiente":"Cristales blancos ocultan la carretera.","nombre":"Paradero Escarcha"},{"id":"nieve_motel_ventisca_2","tipo":"motel","nombre_es":"Motel Ventisca","nombre_en":"Snowdrift Motel","rutas":["ruta_norte"],"ambiente":"Una sola puerta iluminada en la nevada.","nombre":"Motel Ventisca"}],"lagos":[{"id":"lagos_paradero_muelle","tipo":"restaurant","nombre_es":"Paradero Brisa del Lago","nombre_en":"Lakeside Breeze Diner","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Un deck sencillo de madera sobre la orilla con botes amarrados golpeando suavemente las llantas de protección.","nombre":"Paradero Brisa del Lago"},{"id":"lagos_bomba_represa","tipo":"fuel","nombre_es":"Estación Náutica y Vial El Espejo","nombre_en":"Mirror Lake Gas & Dock","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Surtidores para carros hacia la carretera y un muelle pequeño con pimpinas de gasolina hacia el agua quieta.","nombre":"Estación Náutica y Vial El Espejo"},{"id":"lagos_motel_bahia","tipo":"motel","nombre_es":"Hostal Bahía Mansa","nombre_en":"Still Bay Motel","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Balcones sencillos reflejándose en el agua oscura al atardecer y olor a tierra húmeda.","nombre":"Hostal Bahía Mansa"},{"id":"lagos_mirador_islote","tipo":"mirador","nombre_es":"Mirador del Islote","nombre_en":"Islet Viewpoint","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Una curva abierta con gravilla desde donde se dominan las islas verdes y la neblina pegada al agua.","nombre":"Mirador del Islote"},{"id":"lagos_bomba_agua_clara","tipo":"fuel","nombre_es":"Bomba Agua Clara","nombre_en":"Clearwater Fuel","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Reflejos verdes bajo los surtidores.","nombre":"Bomba Agua Clara"},{"id":"lagos_taller_el_pescador","tipo":"car_repair","nombre_es":"Taller El Pescador","nombre_en":"Fisher's Workshop","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Motores de lancha junto a los carros.","nombre":"Taller El Pescador"},{"id":"lagos_paradero_orilla_norte","tipo":"restaurant","nombre_es":"Paradero Orilla Norte","nombre_en":"North Shore Diner","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Café con vista al muelle de tablas.","nombre":"Paradero Orilla Norte"},{"id":"lagos_mirador_los_espejos","tipo":"mirador","nombre_es":"Mirador Los Espejos","nombre_en":"Mirror Lake Lookout","rutas":["ruta_embalse","ruta_norte"],"ambiente":"Las montañas duplicadas en el agua.","nombre":"Mirador Los Espejos"}]};
 /* la carretera larga por la nada: un mundo de `largo` metros de norte (y = 0) a sur, con su autopista en el medio */
 Generador.carretera = function (op = {}) {
   const sem = op.semilla ?? 7, r = new Azar(sem), N = new Ruido(sem), T = op.tile || 10, largo = op.largo || 14000, anchoM = op.ancho || 2400, W = Math.ceil(anchoM / T), H = Math.ceil(largo / T);
@@ -1528,10 +1578,10 @@ Generador.carretera = function (op = {}) {
   for (let k = 0; k + 3 < P.length; k += 2) { const ax = P[k], ay = P[k + 1], bx = P[k + 2], by = P[k + 3]; for (let q = 0; q <= 4; q++) pon(ax + (bx - ax) * q / 4, ay + (by - ay) * q / 4, TT.AVE, 8); }
   const KIND = ['casa', 'edificio', 'torre', 'nave', 'educativo', 'salud', 'iglesia', 'civico', 'comercio', 'deporte', 'techo', 'invernadero', 'tanque', 'transporte', 'parqueadero', 'rural'];
   for (let y = 1500 + r.f() * 800, n = 0; y < largo - 900; y += 2600 + r.f() * 1400, n++) {
-    const c = centro(y), lado = r.f() < .5 ? -1 : 1, px = c + lado * 46, biomaP = biomas[bioma(y)], lista = PARADAS_RUTA[biomaP], ficha = lista[(n + sem) % lista.length], nomP = ficha.nombre, tipo = ficha.tipo, km = Math.round(y / 1000);
+    const c = centro(y), lado = r.f() < .5 ? -1 : 1, px = c + lado * 46, biomaP = biomas[bioma(y)], lista = PARADAS_RUTA[biomaP], ruta = lista.filter(q => !op.id || !q.rutas || q.rutas.includes(op.id)), catalogo = ruta.length ? ruta : lista, ficha = catalogo[(n + sem) % catalogo.length], nomP = ficha.nombre_es || ficha.nombre, tipo = ficha.tipo, km = Math.round(y / 1000);
     if (BIOMAS_RUTA[biomas[bioma(y)]].mar && lado > 0) continue;
     const kind = tipo === 'fuel' || tipo === 'car_repair' ? 3 : tipo === 'church' ? 6 : tipo === 'motel' ? 1 : 8, pisos = tipo === 'motel' ? 2 : 1;
-    edJ.push([Math.round(px * 10) / 10, Math.round(y * 10) / 10, tipo === 'motel' ? 14 : 9, 7, Math.PI / 2, pisos, kind, nomP]); pon(px, y, TT.BLDG, 8);
+    edJ.push([Math.round(px * 10) / 10, Math.round(y * 10) / 10, tipo === 'motel' ? 14 : 9, 7, Math.PI / 2, pisos, kind, null]); /* EDJ[7] es anillo de vértices, no nombre. El rótulo vive en lugares[]. */ pon(px, y, TT.BLDG, 8);
     for (let a = -18; a <= 18; a += 6) pon(c + lado * 24, y + a, TT.AUTO, 4);
     lugares.push({ id: 'parada-' + n, nombre: nomP + (tipo === 'mirador' ? ' ' + km : ''), municipio: '', x: px, y, ancho: 30, alto: 24, dibujo: tipo, dato: 'Kilómetro ' + km + ' de ' + nombre + '. ' + ficha.ambiente + (nombre === 'Ruta del Atlántico' ? ' / ' + ficha.nombre_en : ''), secreto: false });
   }
@@ -1573,7 +1623,7 @@ class Planeta {
   /* el mundo de una parada del anillo (carga perezosa; se guardan a lo sumo dos en memoria) */
   async mundo(id) {
     if (this.cache.has(id)) return this.cache.get(id); const d = this.def(id); if (!d) throw new Error('el planeta no tiene ' + id);
-    const M = d.tipo === 'tramo' ? Generador.carretera({ largo: d.largo, biomas: d.biomas, semilla: d.semilla, nombre: d.nombre }) : await this.cargar(id);
+    const M = d.tipo === 'tramo' ? Generador.carretera({ largo: d.largo, biomas: d.biomas, semilla: d.semilla, nombre: d.nombre, id: d.id }) : await this.cargar(id);
     M.planetaId = id; this.cache.set(id, M); while (this.cache.size > 2) { const k = this.cache.keys().next().value; if (k === id) break; this.cache.delete(k); }
     return M;
   }
@@ -2738,7 +2788,9 @@ const AccionPie = {
   ocluido(mundo, desde, hasta) {
     if (!mundo || typeof mundo.edificioEn !== 'function') return false;
     const d = Math.hypot(hasta.x - desde.x, hasta.y - desde.y);
-    const n = Math.min(64, Math.ceil(d));   /* una muestra por metro: a 3 m se saltaba muros de 2 m (relevo Claude) */
+    /* Muestreo <=1 m: paredes de 1–2 m no pueden quedar entre dos rayos. */
+    if (mundo.edificioEn(hasta.x, hasta.y, 0)) return true;
+    const n = Math.max(2, Math.min(96, Math.ceil(d)));
     for (let i = 1; i < n; i++) {
       const t = i / n, x = desde.x + (hasta.x-desde.x)*t, y = desde.y + (hasta.y-desde.y)*t;
       if (mundo.edificioEn(x,y,0)) return true;
@@ -3469,6 +3521,7 @@ MC.Vehiculos = Vehiculos;
    - Saltos con gravedad, vuelo (jetpack y avionetas) y agua (lanchas).
    Entrada: { giro: −1..1, acel: −1..1, dir: {x,y,m}|null (rumbo deseado en el mundo), salto, turbo, correr, sube, baja }
    ===================================================================== */
+const MENOR_IA = new Set(['poste', 'banca', 'paradero', 'caneca', 'hidrante']), BORDE_IA = new Set([TT.BLDG, TT.BRICK]);   /* lo menor del andén que la IA atropella (4.2) */
 const GRAV = 19.6;   // gravedad de juego (el doble de la real: saltos cortos y con peso)
 class Cuerpo {
   constructor(mundo, op = {}) {
@@ -3500,7 +3553,7 @@ class Cuerpo {
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
     /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
-    const T = Terreno.paso(this, x, y); if (!T.ok) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }
+    const T = Terreno.paso(this, x, y); if (!T.ok && !(this.ia && !T.agua && BORDE_IA.has(this.mundo.suelo(x, y)) && !this.mundo.edificioEn(x, y, .3))) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }   /* 4.2: las casillas del borde de la calle (ladrillo o edificio sin edificio real encima) no traban a la IA; la huella de verdad se revisa abajo */
     if (this.chocaEdificios && V.clase !== 'agua') {
       /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
          y también los edificios de los sitios y las partes bajas de los emblemáticos */
@@ -3508,7 +3561,8 @@ class Cuerpo {
       if (this.mundo.edificioEn(x, y, enVia ? -1 : r)) return this._bloquea('un edificio');
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
       /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
-      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+      /* 4.2: y en el andén, los carros de la IA tampoco se trancan con lo menor (poste, banca, paradero, caneca, hidrante): lo atropellan como en GTA; árboles y rocas sí los paran */
+      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }
@@ -5640,7 +5694,7 @@ class VistaGL {
     for (let gy = Math.floor((cy - radio) / R); gy <= Math.floor((cy + radio) / R); gy++) for (let gx = Math.floor((cx - radio) / R); gx <= Math.floor((cx + radio) / R); gx++) { const d = Math.hypot((gx + .5) * R - cx, (gy + .5) * R - cy); if (d > radio + R) continue; quiero.set(gx + ',' + gy, d < 100 && cal > .7 ? 4 : d < 170 && cal > .5 ? 3 : d < 300 ? 2 : d < 600 ? 1 : 0); }
     for (const [k, r] of this.regiones) if (!quiero.has(k)) { this._borrar(r); this.regiones.delete(k); }
     const t0 = MC.ahora(), faltan = [...quiero].filter(([k, d]) => { const r = this.regiones.get(k); return !r || r.detalle < d; }).sort((a, b) => { const [ax, ay] = a[0].split(',').map(Number), [bx, by] = b[0].split(',').map(Number); return Math.hypot((ax + .5) * R - cx, (ay + .5) * R - cy) - Math.hypot((bx + .5) * R - cx, (by + .5) * R - cy); });
-    for (const [k, d] of faltan) { if (MC.ahora() - t0 > (op.presupuesto || 8) && this.regiones.size) break; const [gx, gy] = k.split(',').map(Number), viejo = this.regiones.get(k); if (viejo) this._borrar(viejo); this.regiones.set(k, this._region(gx, gy, d)); }
+    for (const [k, d] of faltan) { if (MC.ahora() - t0 > (op.presupuesto || 8) && this.regiones.size) break; const [gx, gy] = k.split(',').map(Number), viejo = this.regiones.get(k); if (viejo) this._borrar(viejo); const nr = this._region(gx, gy, d); nr.gx = gx; nr.gy = gy; this.regiones.set(k, nr); }
     this.pendientes = faltan.length;
     /* cámara y luz */
     const O = this.O, e = [C.ojo[0] - O[0], C.ojo[2] - O[2], C.ojo[1] - O[1]], b = [C.blanco[0] - O[0], C.blanco[2] - O[2], C.blanco[1] - O[1]];
@@ -5658,9 +5712,17 @@ class VistaGL {
     /* relieve lejano (sin los bloques que caen bajo el detalle) */
     gl.useProgram(this.pC.p); uni(this.pC); gl.disable(gl.CULL_FACE);
     for (const B of this.lejos) { if (Math.hypot(B.cx - cx, B.cy - cy) < radio - 1100) continue; gl.bindBuffer(gl.ARRAY_BUFFER, B.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, B.n / 10); }
+    /* 4.2 · recorte por región antes de dibujar (motores clásicos, investigación de Antigravity):
+       - Silent Hill (PS1): lo que queda más allá del muro de niebla no se dibuja;
+       - cono de visión horizontal: en las cámaras de manejo (tercera, primera, cine) las regiones detrás de la cámara tampoco.
+       Las aéreas miran hacia abajo y no se recortan por cono. */
+    const vis = [], fx = C.blanco[0] - C.ojo[0], fy = C.blanco[1] - C.ojo[1], fl = Math.hypot(fx, fy), rad = R * .75 + 30, finNiebla = fr[1] + rad, medio = Math.atan(Math.tan((C.fov || 1) / 2) * W / H) + .15, conCono = !aerea && fl > 1e-3 && Math.abs(C.ojo[2] - C.blanco[2]) < fl * 1.2;
+    for (const r of this.regiones.values()) { if (r.gx == null) { vis.push(r); continue; } const rx = (r.gx + .5) * R - C.ojo[0], ry = (r.gy + .5) * R - C.ojo[1], d = Math.hypot(rx, ry); if (d - rad > finNiebla) continue;
+      if (conCono && d > rad) { const f = (rx * fx + ry * fy) / fl, l = (-rx * fy + ry * fx) / fl; if (Math.abs(Math.atan2(l, f)) - Math.asin(Math.min(1, rad / d)) > medio) continue; } vis.push(r); }
+    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length };
     /* regiones: suelo con su losa */
     gl.useProgram(this.pT.p); uni(this.pT); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(this.pT.u.uS, 0);
-    for (const r of this.regiones.values()) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
+    for (const r of vis) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
     /* C-M27: sombras solares planas sobre el terreno antes de dibujar volúmenes.
        Cache por celda de ~25 m, para no reconstruir centenares de triángulos por cuadro.
        Se desactivan con noche, lluvia fuerte o calidad baja (respaldo visual del 2D). */
@@ -5686,7 +5748,7 @@ class VistaGL {
       }
     }
     gl.useProgram(this.pC.p); uni(this.pC);
-    for (const r of this.regiones.values()) if (r.cosas) { gl.bindBuffer(gl.ARRAY_BUFFER, r.cosas.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, r.cosas.n / 10); }
+    for (const r of vis) if (r.cosas) { gl.bindBuffer(gl.ARRAY_BUFFER, r.cosas.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, r.cosas.n / 10); }
     const D = this._dinamico(E); if (D.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(D), gl.DYNAMIC_DRAW); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, D.length / 10);
       /* 3.0: rayos X del jugador en las cámaras aéreas: si un árbol o un techo lo tapan, se ve igual (encima de todo) */
       if (aerea && this._njug > 0) { gl.disable(gl.DEPTH_TEST); gl.drawArrays(gl.TRIANGLES, 0, this._njug / 10); gl.enable(gl.DEPTH_TEST); } }
@@ -6336,7 +6398,11 @@ class VoxelSpace {
     const M = this.M, C = cuerpoRetro(E), N = this.N, c = this.c, cielo = cieloRetro(E), oscuro = 1 - cielo.noche * .6;
     if (this.h == null) this.h = C.a; let dh = C.a - this.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); this.h += dh * clamp((E.dt || 1 / 60) * 2.2, 0, 1);
     const a = this.h, ca = Math.cos(a), sa = Math.sin(a), cx = C.x - ca * 90, cy = C.y - sa * 90;
-    if (this.x0 == null) this.preparar(cx + ca * 300, cy + sa * 300);
+    if (this.x0 == null) { /* 4.2: la primera ventana también se arma por franjas (antes trababa ~0,3 s): mientras, el cielo y un aviso */
+      if (!this._job) this._job = this._iniciar(cx + ca * 300, cy + sa * 300);
+      const t0 = MC.ahora(); let listo = false; while (!listo && MC.ahora() - t0 < 12) listo = this._trabajar(this._job, 24);
+      if (listo) this._usar(this._job);
+      else { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, rgbCss(cielo.top, oscuro)); gr.addColorStop(1, rgbCss(cielo.hor, oscuro)); g.fillStyle = gr; g.fillRect(0, 0, W, H); const J = this._job, f = (J.j + J.s) / (2 * N); g.fillStyle = 'rgba(255,255,255,.85)'; g.font = '700 ' + Math.round(W / 26) + 'px system-ui'; g.textAlign = 'center'; g.fillText('⛰️ Armando el vuelo… ' + Math.round(f * 100) + ' %', W / 2, H * .45); return; } }
     else if (this._job) { if (this._trabajar(this._job, Math.max(8, this.N >> 4))) this._usar(this._job); }
     else if (Math.abs(cx + ca * 300 - (this.x0 + N * c / 2)) > N * c * .2 || Math.abs(cy + sa * 300 - (this.y0 + N * c / 2)) > N * c * .2) this._job = this._iniciar(cx + ca * 400, cy + sa * 400);
     const w = Math.round(clamp(W / 2.2, 180, 380)), h = Math.max(100, Math.round(w * H / W)); if (!this._cv || this._cv.width !== w || this._cv.height !== h) { this._cv = lienzo(w, h); this._img = this._cv.getContext('2d').createImageData(w, h); this._u = new Uint32Array(this._img.data.buffer); this._yb = new Int32Array(w); }

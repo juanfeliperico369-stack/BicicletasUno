@@ -28,3 +28,16 @@ Abrir `visor-3d.html` localmente con WebGL2; trae un rastreador de prueba incrus
 El generador exporta **9 personajes** (Mara, Rook, guardia, Nadia, Noah, Cross, El Contador y dos peatones), cada uno con **12 huesos, 8 clips** y pesos compartidos en codos/rodillas. El validador comprueba los 9 GLB y pesos sumando 255. El catálogo generable es 42 básicos + 9 articulados (**51 GLB**).
 
 Los personajes adicionales son **activos de desarrollo** descargables desde Actions; no reemplazan automáticamente los modelos de la compilación ni constituyen LOD1/LOD2 o arte PBR cinematográfico.
+
+
+## C-A16 · 6 modelos GLB con UV y materiales PBR procedurales
+Ejecuta tras generar los 42 modelos básicos y 9 articulados:
+
+```bash
+python3 juegos/getaway/arte3d/texturizar_pbr.py
+python3 juegos/getaway/arte3d/validar_pbr.py
+```
+
+Exporta **4 vehículos y 2 personajes** como seis nuevos archivos `_pbr.glb` autosuficientes. Cada uno incluye atributos `TEXCOORD_0`, atlas 1024×1024 de albedo procedimental y mapa metallic-roughness, más los **12 PNG de edición separada**. Conserva las animaciones y skin (12 huesos, 8 clips) de Mara y un guardia. El catálogo de desarrollo suma **51 originales + 6 variantes PBR = 57 archivos GLB** en Actions.
+
+**Límites:** la textura es un tratamiento original *procedural* para probar UV/PBR; no es material escaneado, textura facial, mapa normal ni acabado de producción. El motor WebGL del juego principal utiliza todavía el color por vértice e ignora esos mapas; pueden inspeccionarse o editarse en Blender y otros visores glTF.

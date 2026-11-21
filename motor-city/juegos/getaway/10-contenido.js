@@ -44,7 +44,7 @@ TC.LUGARES = {
   md_envigado: { mundo: 'medellin', n: 'Garaje de la 40 Sur (Envigado)', lat: 6.16694, lon: -75.58799, escondite: true },
   gu_taller: { mundo: 'guatape', n: 'Taller Sin Nombre (Guatapé)', lat: 6.2328, lon: -75.1590, taller: true },
   gu_malecon: { mundo: 'guatape', n: 'Malecón de Guatapé', lugar: 'Malecon De Guatape' },
-  gu_finca: { mundo: 'guatape', n: 'Refugio La Esperanza (escenario ficticio)', lat: 6.23636, lon: -75.18186, ficcion: true },
+  gu_finca: { mundo: 'guatape', n: 'Refugio La Esperanza (escenario ficticio)', lat: 6.2301, lon: -75.1648, ficcion: true },
   gu_piedra: { mundo: 'guatape', n: 'Pie de la Piedra del Peñol', lugar: 'Guatapé Represa, Piedra Mirador' }
 };
 

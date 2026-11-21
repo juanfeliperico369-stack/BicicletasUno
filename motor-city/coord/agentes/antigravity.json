@@ -1,18 +1,27 @@
 {
   "agente": "antigravity",
-  "rol": "QA móvil, auditoría visual, datos de mundo, verificación de lugares/lenguaje y pruebas (Gemini · Antigravity)",
+  "rol": "QA móvil, revisión multi-IA, arte conceptual/PBR aditivo, ingeniería inversa limpia de motores clásicos sobre MC4 real y pruebas",
   "rama": "ia/antigravity/motorcity-4.0",
-  "base": "c898a0a",
-  "version_motor": "4.0.1",
-  "actualizado": "2026-11-21T03:20:00Z",
+  "base": "ae098eb",
+  "version_motor": "4.0.3",
+  "actualizado": "2026-11-21T04:45:00Z",
   "estado": "entregado",
   "zonas_exclusivas": [
-    "contenido/paradas-carretera.json",
+    "arte/gemini/turno-cero/",
+    "docs/MOTORES-CLASICOS-INGENIERIA.md",
+    "experimentos/tecnicas-clasicas/",
     "reportes/2026-11-21-gemini-herramientas-4.0.md",
     "reportes/2026-11-21-gemini-turno-cero.md",
+    "reportes/2026-11-21-gemini-revision-pr7.md",
+    "reportes/2026-11-21-gemini-verificacion-4.0.3-y-pr9.md",
     "reportes/img/turno-cero-4.0/",
+    "reportes/img/pr7-revision/",
+    "reportes/img/verificacion-4.0.3/",
     "coord/agentes/antigravity.json",
-    "coord/buzon/20261121-0320-antigravity-relevo-4.0.md"
+    "coord/buzon/20261121-0320-antigravity-relevo-4.0.md",
+    "coord/buzon/20261121-0400-antigravity-revision-pr7-y-arte.md",
+    "coord/buzon/20261121-0420-antigravity-motores-clasicos.md",
+    "coord/buzon/20261121-0445-antigravity-mc4-real-y-pr9.md"
   ],
   "zonas_no_tocadas": [
     "js/",
@@ -24,27 +33,22 @@
     "juegos/getaway/turno-cero-accion-3d.html"
   ],
   "tareas_completadas": [
-    "G-H22: contenido/paradas-carretera.json (28 paradas originales, 4 por bioma x 7 biomas, bilingue es/en)",
-    "G-H12: 4 skills externas instaladas para antigravity + auditoria de node motor.mjs publico (4 perfiles)",
-    "G-H13: modern-web-guidance legacy-scan js (6 hallazgos structured-clone -> todos dropWhen por compatibilidad node:vm)",
-    "G-H6: node motor.mjs prueba --navegador 151/151 en verde (89.8 s) + pruebas/portada.mjs 4/4 en verde",
-    "G-H20: 12 capturas moviles 412x860 revisadas a ojo en reportes/img/turno-cero-4.0/ + telemetria base VM + plantilla para celular real",
-    "G-H21: 19 lugares de TC.LUGARES verificados en MC4 (hallazgo ALTO: gu_finca apunta al hotel real La valentina finca hotel; 4 calles corregidas)",
-    "G-H23: 445 cadenas y filtro Lenguaje: suave auditados (bug real 'coro' inexistente en juegos/getaway/20-juego.js:256 + 3 fallos de regex + contratos sin filtrar)",
-    "G-H24: carga y JS Heap medidos en Chromium movil (nueva_york 2850 ms / 215.3 MB; medellin 1746 ms / 66.3 MB; guatape 985 ms / 13.6 MB)"
+    "Fase 1 (integrada en 4.0.3): G-H20..24, G-H12/13/6, 12 capturas, 19 lugares, lenguaje, paradas y pruebas",
+    "Fase 2: revision tecnica/visual/memoria PR #7 + paquete de arte pintado C-A17/C-A16 (arte/gemini/turno-cero/ + galeria.html)",
+    "Fase 3: guia clean-room de 10 motores clasicos (docs/MOTORES-CLASICOS-INGENIERIA.md) + mc-clasico.js + prueba-clasico.mjs + laboratorio.html",
+    "Fase 4: conexion de algoritmos clasicos a datos/{guatape,medellin,nueva_york}/mundo.mc4 reales (extraer-mc4-demo.mjs, 93.5-95.0% descarte en Chelsea/Midtown/Poblado/Centro, Guatape SRTM Voxel Space 0.99 ms CPU, datos-reales-mc4.js 101.7 KB) + verificacion visual 4.0.3 (regresion ALTA menu pausa cortado arriba) + auditoria completa PR #9 C-M34 (HTML -60% arranque, NY -12.5 MB, fuga multi-ciudad 270.7 vs 279.6 MB)"
   ],
   "pendientes_siguiente_ia": [
-    "Claude: corregir gu_finca y 4 calles en juegos/getaway/10-contenido.js; corregir 'coro'->'camara' en 20-juego.js:256; pulir LENGUAJE_SUAVE y conectar contenido/paradas-carretera.json; resolver portada bajo el pliegue, opacidad del menu pausa y cierre de dialogo al abrir Menu/Calle libre",
-    "Codex: priorizar C-M34 (Manhattan por sectores 1 km: hoy consume 215.3 MB JS Heap); ajustar ancho de texto 'SENUELO' en turno-cero-accion-3d.html; actualizar ruta de modelos en juegos/getaway/arte3d/pruebas-modelos.py; continuar C-M31/C-M32/C-M33/C-M35",
-    "Autor / QA fisico: medir Turno Cero en celular real con GPU (llenar tabla 1.3 de reportes/2026-11-21-gemini-turno-cero.md)",
-    "OBLIGATORIO para la siguiente IA: dejar su propia entrada de relevo en CONTEXTO-RELEVO.md seccion 8, actualizar su ficha en coord/agentes/ y dejar mensaje en coord/buzon/"
+    "Claude (URGENTE 4.0.4): corregir recorte superior del menu de pausa en 412x860 (reportes/img/verificacion-4.0.3/02-menu-pausa-403.webp corta 'Seguir' y 4 botones arriba)",
+    "Claude / Codex (ALTA): evacuar mundo anterior en MC.Planeta al cambiar de ciudad (ahorra ~190-210 MB en 4.0.3 y PR #9)",
+    "Claude / Codex: integrar CulleoUrbano (93.5-95% descarte real MC4), hornearAOUrbano, FisicaDriver, PoolParticulas y EscaladorDinamico de mc-clasico.js + adoptar arte/gemini/turno-cero/ + arreglar encuadre/etiquetas MC.GloboGPU",
+    "Autor / QA fisico: medir Turno Cero en celular real con GPU (tabla 1.3 de reportes/2026-11-21-gemini-turno-cero.md)",
+    "OBLIGATORIO para la siguiente IA: dejar entrada en CONTEXTO-RELEVO.md seccion 8, ficha en coord/agentes/ y mensaje en coord/buzon/"
   ],
   "pruebas": {
-    "motor_navegador": "151/151 verde (89.8 s, CPU 4x)",
-    "portada": "4/4 perfiles verde",
-    "publico": "4 perfiles ejecutados (Sofia mal, Don Gilberto bien, Valentina bien, Mark revisar)",
-    "legacy_scan": "6/6 structured-clone evaluados como dropWhen",
-    "turno_cero_capturas": "12/12 WebP (907 KB total), 0 errores consola",
-    "accion_3d_codex": "WebGL2 OK (87 draw calls, 19842 tris, 0 errores)"
+    "clasico_unitarias_y_mc4_real": "6/6 verde incluyendo VoxelTerreno.cargarDesdeSnapshot sobre Guatape SRTM real",
+    "pr9_ci_local": "construir OK + sectores-cm34 5/5 + paquete-capas-cm34 OK + paquete-capas-browser 412x860 OK (0 errores)",
+    "verificacion_403_visual": "4 capturas 412x860: portada OK, G CEBO OK, regresion ALTA menu pausa cortado arriba, globo GPU pendiente",
+    "laboratorio_mc4_real": "verificado en Chromium con datos reales Chelsea/Poblado y SRTM real Guatape/Medellin"
   }
 }

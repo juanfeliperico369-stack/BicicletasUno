@@ -19,8 +19,8 @@ try{
   await p.evaluate(()=>{window.__qa=true});
   await p.setContent(html,{waitUntil:'domcontentloaded'});
   await p.waitForFunction(()=>window.TC3D?.estado().drawCalls>20,{timeout:15000});
-  const pre=await p.evaluate(()=>({s:TC3D.estado(),overflow:document.documentElement.scrollWidth-innerWidth,touch:Array.from(document.querySelectorAll('[data-hold],[data-action]')).every(e=>e.getBoundingClientRect().height>=44),assets:TC3D.assets}));
-  if(!pre.s.webgl||pre.s.stage!==0||pre.overflow>1||!pre.touch||pre.assets.length!==4)throw Error(`Inicio 3D ${w}: ${JSON.stringify(pre)}`);
+  const pre=await p.evaluate(()=>({s:TC3D.estado(),overflow:document.documentElement.scrollWidth-innerWidth,touch:Array.from(document.querySelectorAll('[data-hold],[data-action]')).every(e=>e.getBoundingClientRect().height>=44),assets:TC3D.assets, botonesDesbordan:[...document.querySelectorAll('.actions button')].some(x=>x.scrollWidth>x.clientWidth+1)}));
+  if(!pre.s.webgl||pre.s.stage!==0||pre.overflow>1||!pre.touch||pre.botonesDesbordan||pre.assets.length!==4)throw Error(`Inicio 3D ${w}: ${JSON.stringify(pre)}`);
   await p.click('#startGame');
   const before=await p.evaluate(()=>TC3D.estado().player.z);
   await p.keyboard.down('w');await p.waitForTimeout(450);await p.keyboard.up('w');

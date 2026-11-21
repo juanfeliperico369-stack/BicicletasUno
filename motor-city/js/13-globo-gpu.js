@@ -31,7 +31,7 @@ class GloboGPU {
       float fbm(vec2 p){float s=0.0,k=.52;for(int i=0;i<4;i++){s+=k*noise(p);p=p*2.03+vec2(5.3,1.7);k*=.5;}return s;}
       void main(){
         vec2 p=(gl_FragCoord.xy*2.0-uSize)/uSize.y;
-        float r=length(p),R=.68;
+        float r=length(p),R=min(.68,(uSize.x/uSize.y)*.80);
         float st=hash(floor(gl_FragCoord.xy/2.0));
         vec3 fondo=vec3(.012,.016,.025)+vec3(.6,.69,.78)*step(.9978,st)*(.22+.7*hash(floor(gl_FragCoord.xy/7.0)));
         if(r>R){
@@ -50,7 +50,7 @@ class GloboGPU {
         vec3 mar=vec3(.045,.105,.22);
         vec3 base=tierra>.48?b:mar;
         if(tierra>.74)base=mix(base,vec3(.48,.46,.41),.65);
-        if(abs(latD)>68.0)base=vec3(.84,.87,.89);
+        base=mix(base,vec3(.84,.87,.89),smoothstep(61.0,79.0,abs(latD))*(.91+.09*noise(vec2(lon*7.0,lat*4.0))));
         if(abs(latD-ruta)<1.2&&abs(latD)<67.0)base=mix(base,vec3(.75,.61,.34),.8);
         vec3 n=normalize(vec3(d.x,d.y,z));
         vec3 sol=normalize(vec3(cos(uTiempo*.035)*.7,-.25,.5+sin(uTiempo*.035)*.6));
