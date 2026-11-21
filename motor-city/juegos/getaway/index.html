@@ -63,6 +63,8 @@ html,body{margin:0;height:100%;background:var(--fondo);color:var(--tinta);font:1
 #acceso .cta{display:flex;justify-content:space-between;align-items:center}#acceso button{min-height:52px;padding:0 18px;border-radius:6px;border:1px solid var(--ambar);background:#1b140b;color:var(--ambar);font:800 17px system-ui}
 .flash{position:fixed;inset:0;z-index:47;background:#fff;opacity:.85;pointer-events:none;animation:fl .26s forwards}@keyframes fl{to{opacity:0}}
 #ciudades{display:grid;gap:8px}
+#run{position:fixed;inset:0;z-index:44;background:#000}#runCv{position:absolute;inset:0;width:100vw;height:100vh;touch-action:none}#runHud{position:absolute;inset:0;pointer-events:none}#runHud button{pointer-events:auto}
+body.subtGrandes #subt{font-size:19px;line-height:1.4}
 @media (prefers-reduced-motion:reduce){#transicion,#subt{transition:none}.flash{animation:none;opacity:0}}
 </style>
 </head>
@@ -104,6 +106,7 @@ html,body{margin:0;height:100%;background:var(--fondo);color:var(--tinta);font:1
 <div id="transicion" class="capa"><p id="trP"></p><h2 id="trH"></h2><small id="trS"></small></div>
 <div id="globo" class="capa" hidden><canvas id="gcv"></canvas><button id="gCerrar" aria-label="Cerrar el planeta">✕</button><div class="info" id="gInfo"></div></div>
 <div id="artefactos" hidden><button data-k="dron" aria-label="Dron Cuervo">🛸<small>T02</small></button><button data-k="cebo" aria-label="Cebo acústico">📢<small>×2</small></button><button data-k="pulso" aria-label="Pulso de interferencia">📡<small>T08</small></button><button data-k="lente" aria-label="Lente espectral">👁️<small>T01</small></button><button data-k="disparar" aria-label="Disparar">🔫<small>×0</small></button></div>
+<div id="run" hidden><canvas id="runCv"></canvas><div id="runHud"></div></div>
 <div id="final" class="capa" hidden><div class="marco"><p id="fP" style="color:var(--ambar);font:800 12px system-ui;letter-spacing:.2em;text-transform:uppercase">Fin</p><h2 id="fH"></h2><p id="fX"></p><div class="cuentas" id="fC"></div><div class="fila"><button id="fLibre">🌎 Calle libre</button><button id="fPortada" class="b2" style="border-color:var(--linea);background:#121214;color:var(--tinta)">Volver a la portada</button></div></div></div>
 <!--MUNDOS-->
 <script>/*MUNDO*/</script>

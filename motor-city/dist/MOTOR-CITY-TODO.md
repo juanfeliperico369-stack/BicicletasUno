@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 4.0.1 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.0.2 · no se edita a mano: edita los documentos de origen -->
 
 # Documento de relevo · Motor City y *Turno Cero*
 
@@ -14,7 +14,7 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 20‑nov‑2026, Claude (motor 4.0.1). **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. `main` de `motorcity` se avanza en rápido para GitHub Pages.
+**Última actualización:** 21‑nov‑2026, Claude (motor 4.0.2). **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
 ---
 
@@ -42,11 +42,12 @@
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
 ## 3. Estado (20‑nov‑2026)
-- **Motor 4.0.1**, 64 fragmentos y más de 150 pruebas en verde. Ya trae:
+- **Motor 4.0.2**, 64 fragmentos y 152 pruebas en verde. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
   - **`MC.Modelos`**: lector GLB, con piel y animación glTF, faros de noche y abolladuras por zona;
-  - **juegos con varios mundos**.
+  - **juegos con varios mundos**;
+  - **manejo con reversa y el piloto de la IA**, `MC.Manejo.pilotar`, con rutas que siguen la calle.
 - **Turno Cero, jugable de punta a punta:**
   - cinco actos, siete misiones y finales A, B y C;
   - las tres ciudades y tres carreteras de 12 a 16 km;
@@ -64,6 +65,7 @@
 | 2.0–2.11 | El mundo MC4 y el craqueo de territorios (`geo/territorio.py`), física, vehículos, clima, tráfico, transporte con horario, vistas 2D, estilos, `MC.Vida`, telemetría y guardado por sectores. Ver `BITACORA.md`. |
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
+| 4.0.2 | Reversa y vuelta en tres puntos; `MC.Manejo.pilotar` (la IA sale de atascos); `rutaA` por la forma de la calle. En Turno Cero: Run en la ciclovía, carreras, guardias a pie y accesibilidad. |
 | 4.0.1 | Relevo (este documento y `coord/`), luces y abolladuras de los GLB, motor y Doppler, dron policial 3D, reducción no letal, alejar hasta el planeta, eventos de carretera, contratos nuevos y arte de portada |
 
 ## 5. Falta (en orden de valor) y a quién le toca
@@ -141,6 +143,22 @@
   - EnCicla y El Metro con sus pruebas.
 - **No toqué** el `src/` de los juegos: Antigravity y Codex trabajan allí en sus ramas (`ia/antigravity/…`, `codex/encicla-motorcity`). Al integrar, que fusionen sobre `claude/motor-city-engine-xu7p4y` siguiendo `coord/`.
 - **A la IA que siga:** empieza por § 5. Al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
+
+### Claude · 21‑nov‑2026 · 4.0.2
+- **Hecho:**
+  - reversa y vuelta en tres puntos en el modelo de carro;
+  - `MC.Manejo.pilotar`, el piloto de la IA que usan las patrullas, la banda, El Contador y los rivales;
+  - `rutaA`, que sigue la forma de la calle (antes cortaba por encima de casas);
+  - en Turno Cero: Run en la ciclovía, carreras callejeras, guardias que persiguen a pie y opciones de accesibilidad.
+- **Probé:**
+  - 152 de 152 en verde;
+  - simulación del piloto en Medellín (1,7 km en unos 60 s) y en Guatapé (3 de 4);
+  - en Chromium, Run y la carrera;
+  - el bot de la historia completa.
+- **Riesgo:**
+  - en Guatapé hay calles que los datos marcan como edificio o como muy empinadas, y la IA se puede trabar allí;
+  - el jugador ahora retrocede al frenar estando quieto, el comportamiento normal de los juegos, pero hay que confirmarlo en un celular.
+- **Sigue:** § 5, sin cambios en el orden. Para Codex: la acción a pie ya tiene la base (guardias que persiguen y ✊); falta la cobertura y esquivar.
 - **A la IA que siga:** al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
 
 # MOTOR CITY · Documento único
@@ -1802,6 +1820,11 @@ MC.arte.registrar('encicla', {
   - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
   - `E.modelos3d = [{ id, x, y, a, k, clip }]` pone modelos en el mundo;
   - `MC.Modelos.posar(Mo, clip, t)` anima modelos con piel glTF, y `E.jugador.modelo` anima al jugador a pie.
+- **Manejo de la IA (4.0.2):**
+  - `MC.Manejo.pilotar(cuerpo, ruta, dt, { radio, turbo, mira })` mira adelante en la ruta, frena según la curva que viene y sale de los atascos (reversa o reacomodo hacia la calle);
+  - devuelve `{ atascado }` cuando conviene volver a planear;
+  - `MC.Manejo.rutaA` sigue la forma de la calle de punta a punta;
+  - el carro con física (`ManejoCarro`) tiene reversa y vuelta en tres puntos.
 - **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
 
 ### 10. Hoja de ruta (lo que sigue)
@@ -3423,6 +3446,35 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 21-nov-2026 · 4.0.2 · La IA que maneja de verdad, Run en Turno Cero, carreras y guardias a pie
+- **Pedido:** «Continúa mejorando».
+- **Hallazgos al probar una carrera:**
+  - **los carros no tenían reversa:** frenar con el carro quieto lo dejaba en cero, y si el destino quedaba atrás, el modelo frenaba para siempre;
+  - **`MC.Manejo.rutaA` unía el punto de salida y el de llegada con el primer y el último nodo en línea recta**, por encima de casas y laderas.
+  - Las dos cosas afectaban a toda la IA (patrullas, banda y El Contador), al «tocar para ir» y al jugador (el joystick hacia atrás no daba la vuelta).
+- **Motor:**
+  - **reversa** en `ManejoCarro`: quieto, frenar es reversa hasta 8 m/s;
+  - **vuelta en tres puntos** cuando el destino queda atrás;
+  - **`rutaA` sigue la forma de la calle** al salir y al llegar, y cuesta por distancia sobre la vía (prueba: 0 tramos sobre casas);
+  - **`MC.Manejo.pilotar`**, el piloto de la IA:
+    - mira adelante en la ruta y frena según la curva que viene;
+    - retoma la ruta nueva por delante (no vuelve al nodo de atrás);
+    - con el destino atrás, gira en su sitio (arcade, solo la IA);
+    - si se atasca, retrocede, y si se traba dos veces se reacomoda hacia la calle, sin cruzar casas;
+  - los carros de la IA, sobre la calle, no chocan con árboles, postes ni bancas (`C.ia`).
+  - **Medido:** en Medellín una patrulla recorre 1,7 km de ruta en unos 60 s, a unos 32 m/s; en Guatapé llega en 3 de 4 casos (el que falla arranca sobre una calle que los datos marcan como edificio).
+- **Turno Cero:**
+  - **Run en la ciclovía**, el modo de Medellín: 🛴 sobre una ciclorruta, a pie, en EnCicla, patinete, skate o patines; si sales con más de 300 m, la policía te pierde, y los puntos dan plata;
+  - **carreras callejeras** contra un coupé dorado por la red vial real, con apuestas;
+  - **guardias que persiguen a pie** con la alarma, golpean de cerca y se reducen con ✊;
+  - **accesibilidad**: menos destellos, sin sacudidas de cámara y subtítulos grandes (con el lenguaje suave, en ♿ del menú);
+  - las metas de los contratos solo caen en calles para carro.
+- **Pruebas:**
+  - 152 de 152 en verde, con la sección 21 (reversa y piloto) y la prueba de rutas que siguen la calle;
+  - en Chromium, Run y la carrera;
+  - el bot de la historia completa sin errores.
 
 
 ### 20-nov-2026 · 4.0.1 · Relevo entre IAs y mejoras de los pedidos 4.0

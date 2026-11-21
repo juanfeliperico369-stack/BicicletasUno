@@ -43,7 +43,7 @@ class ManejoCarro {
   /* E: { acel, giro, freno de mano (salto) } · ambiente: { agarre (clima × suelo), pend } · devuelve { avance, lateral, giro } por segundo */
   paso(dt, C2, E, amb = {}) {
     const v = this.v, F = v.ficha || {}, mu = this.mu * (amb.agarre ?? 1), N = this.m * C.g, delta = (E.giro || 0) * (.55 - .35 * clamp(Math.abs(this.vx) / 40, 0, 1)), mano = !!E.salto;
-    const Pm = (F.potenciaKW || v.vmax * v.acc * this.m / 1000 * .5) * 1000, Fmotor = (E.acel || 0) > 0 ? Math.min(Pm / Math.max(3, Math.abs(this.vx)), mu * N * (F.traccion || .6)) * E.acel : 0, Ffreno = (E.acel || 0) < 0 ? -E.acel * mu * N * .9 * Math.sign(this.vx || 1) : 0;
+    const Pm = (F.potenciaKW || v.vmax * v.acc * this.m / 1000 * .5) * 1000, rev = (E.acel || 0) < 0 && this.vx < 1, Fmotor = (E.acel || 0) > 0 ? Math.min(Pm / Math.max(3, Math.abs(this.vx)), mu * N * (F.traccion || .6)) * E.acel : rev && this.vx > -8 ? Math.min(Pm / 3, mu * N * (F.traccion || .6)) * .45 * E.acel : 0, Ffreno = (E.acel || 0) < 0 && !rev ? -E.acel * mu * N * .9 * Math.sign(this.vx || 1) : 0;   /* 4.0.2: con el carro casi quieto, frenar es reversa (hasta 8 m/s) */
     const Fres = Fis.arrastre(C.rhoAire, this.vx, F.cd || .32, F.area || 2.1) * Math.sign(this.vx) + Fis.rodadura(F.crr || .012, this.m) * Math.sign(this.vx) + Fis.pendiente(this.m, amb.pend || 0);
     /* ángulos de deriva de cada eje y fuerzas laterales con saturación (μ·carga del eje) */
     const vx = Math.max(.5, Math.abs(this.vx)) * Math.sign(this.vx || 1), af = Math.atan2(this.vy + this.a * this.r, Math.abs(vx)) - delta * Math.sign(vx), ar = Math.atan2(this.vy - this.b * this.r, Math.abs(vx));
@@ -60,7 +60,11 @@ Cuerpo.prototype._actualizarBase = Cuerpo.prototype.actualizar;
 Cuerpo.prototype.actualizar = function (dt, E = {}) {
   const V = this.veh; if (V.dinamica !== 'carro') { this._carro = null; return this._actualizarBase(dt, E); }
   dt = Math.min(dt, .05); this.eventos.length = 0; if (!this._carro || this._carro.v !== V) { this._carro = new ManejoCarro(V); this._carro.vx = this.v; }
-  let acel = E.acel || 0, giro = E.giro || 0; if (E.dir && E.dir.m > .08) { const d = angDif(this.a, Math.atan2(E.dir.y, E.dir.x)); giro = clamp(d * 2, -1, 1); acel = E.dir.m * (Math.abs(d) > 2.4 ? -.5 : 1); }
+  let acel = E.acel || 0, giro = E.giro || 0;
+  if (E.dir && E.dir.m > .08) { const d = angDif(this.a, Math.atan2(E.dir.y, E.dir.x));
+    /* 4.0.2: el destino quedó atrás → frena y, ya despacio, retrocede girando al revés (vuelta en tres puntos); antes se quedaba quieto */
+    if (Math.abs(d) > 2.2) { if (this._carro.vx > 2) { acel = -.7; giro = clamp(d * 2, -1, 1); } else { acel = -.6 * Math.max(.5, E.dir.m); giro = -Math.sign(d); } }
+    else { giro = clamp(d * 2, -1, 1); acel = E.dir.m; } }
   this.tt = this.mundo.suelo(this.x, this.y); this.pend = this.mundo.pendiente(this.x, this.y, this.a, 12);
   const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), R = this._carro.paso(dt, null, { acel, giro, salto: E.salto || E.turbo && false }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
   const ca = Math.cos(this.a), sa = Math.sin(this.a), nx = this.x + (ca * R.avance - sa * R.lateral) * dt, ny = this.y + (sa * R.avance + ca * R.lateral) * dt;

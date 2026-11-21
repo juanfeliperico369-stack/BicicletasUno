@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v2.0.1 · compilado el 2026-11-20.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v2.0.1 · compilado el 2026-11-21.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-20 | Claude Code | documento creado (v2.0.1) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-21 | Claude Code | documento creado (v2.0.1) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 

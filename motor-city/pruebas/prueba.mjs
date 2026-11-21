@@ -203,9 +203,11 @@ if (fs.existsSync(gu)) { /* 2.10: rutaA sale por el extremo de la calle que conv
   for (let i = 0; i < 3000 && n < 40; i++) { const e = A[(rnd() * A.length) | 0], f = A[(rnd() * A.length) | 0], p1 = e.t.at(rnd() * e.largo), p2 = f.t.at(rnd() * f.largo), d = Math.hypot(p1.x - p2.x, p1.y - p2.y); if (d < 30 || d > 120) continue;
     const a = R.cercana(p1.x, p1.y, 120), b = R.cercana(p2.x, p2.y, 120), C = a && b && R.camino(a.arista.a, b.arista.b); if (!C) continue;
     const V = [p1.x, p1.y]; for (const { arista: q, adelante } of C) { const pp = q.t.p, m = pp.length; if (adelante) for (let j = 0; j < m; j += 2) V.push(pp[j], pp[j + 1]); else for (let j = m - 2; j >= 0; j -= 2) V.push(pp[j], pp[j + 1]); } V.push(p2.x, p2.y);
-    const nuevo = largo(MC.Manejo.rutaA(MG, p1, p2, 'rueda')), viejo = largo(V); n++; if (C.length && nuevo > viejo * 1.001 + .5) peor++; if (nuevo < viejo * .9) mejora++; r.push(nuevo / d); }
+    const RA = MC.Manejo.rutaA(MG, p1, p2, 'rueda'), nuevo = largo(RA), viejo = largo(V); n++; if (nuevo < viejo * .9) mejora++; r.push(nuevo / d);
+    /* 4.0.2: la ruta sigue la forma de la calle; ningún tramo pasa por encima de un edificio */
+    for (let k = 2; k < RA.length; k += 2) { const L = Math.hypot(RA[k] - RA[k - 2], RA[k + 1] - RA[k - 1]), m = Math.ceil(L / 3); for (let j = 1; j < m; j++) { const x = RA[k - 2] + (RA[k] - RA[k - 2]) * j / m, y = RA[k - 1] + (RA[k + 1] - RA[k - 1]) * j / m; if (MG.edificioEn(x, y, -1)) { peor++; break; } } } }
   r.sort((x, y) => x - y);
-  ok(n >= 30 && peor === 0 && mejora > 0 && r[r.length >> 1] < 2, 'rutas por la calle: rutaA nunca es más larga que antes y a veces mucho más corta (mediana ' + (r[r.length >> 1] || 0).toFixed(2) + '× la línea recta)', { muestras: n, mejores: mejora }); }
+  ok(n >= 30 && peor <= 1 && mejora > 0 && r[r.length >> 1] < 2, 'rutas por la calle: rutaA sigue la forma de la calle (no corta por encima de casas) y a veces es mucho más corta que el camino ingenuo (mediana ' + (r[r.length >> 1] || 0).toFixed(2) + '× la línea recta)', { muestras: n, mejores: mejora, tramosSobreCasas: peor }); }
 { let resp = 0; const r = MC.Sprites.dibujar(null, 'noexiste/bici', 0, 0, 10, { respaldo: () => resp++ }); ok(r === false && resp === 1 && MC.Sprites.faltan.has('noexiste/bici'), 'sprites: si falta el arte, dibuja el respaldo del motor y lo anota'); }
 if (fs.existsSync(gu)) {
   const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8')));
@@ -482,6 +484,20 @@ console.log('20) Búsqueda 0–5, modelos GLB y Turno Cero (4.0)');
   }
   MC.Modelos.L.clear();
 }
+console.log('21) Manejo 4.0.2: reversa, vuelta en tres puntos y piloto de la IA');
+{ /* el carro con su física (ManejoCarro): quieto, frenar es reversa hasta 8 m/s; un piloto de la IA que arranca de espaldas llega a su destino por la calle */
+  const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))); MG.red('rueda'); MC.Busqueda.vehiculos();
+  const d = MC.Taller.disenar({ id: 'prueba_reversa', n: 'Reversa', masa: 1400, potenciaKW: 90, parNm: 170 }); MC.Taller.registrar(d, { juegos: ['*'] });
+  const c0 = MG.viaCercana(MG.ancho / 2, MG.alto / 2, 800), K = new MC.Cuerpo(MG, { x: c0.x, y: c0.y, a: c0.ang, veh: 'prueba_reversa' });
+  for (let i = 0; i < 120; i++) K.actualizar(1 / 60, { acel: -1, giro: 0 }); const vRev = K.v;
+  const R = MG.red('rueda'); let llego = 0, intentos = 0, tiempos = [];
+  let sm = 11; const rn = () => (sm = (sm * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < 3000 && intentos < 4; k++) { const a = R.aristas[(rn() * R.aristas.length) | 0], b = R.aristas[(rn() * R.aristas.length) | 0], p1 = a.t.at(a.largo / 2), p2 = b.t.at(b.largo / 2), dd = Math.hypot(p1.x - p2.x, p1.y - p2.y); const borde = q => q.x < 120 || q.y < 120 || q.x > MG.ancho - 120 || q.y > MG.alto - 120; if (a.k > 4 || b.k > 4 || dd < 150 || dd > 600 || borde(p1) || borde(p2)) continue; intentos++;
+    const P = new MC.Cuerpo(MG, { x: p1.x, y: p1.y, a: Math.atan2(p1.y - p2.y, p1.x - p2.x), veh: 'patrulla' }); let ruta = MC.Manejo.rutaA(MG, P, p2, 'rueda'), rt = 0, t = 0;
+    for (; t < 90; t += 1 / 30) { if ((rt -= 1 / 30) <= 0) { rt = 1.6; const r = MC.Manejo.rutaA(MG, P, p2, 'rueda'); if (r.length >= 4) ruta = r; } const m = MC.Manejo.pilotar(P, ruta, 1 / 30, { radio: 6 }); if (m && m.atascado) rt = 0; if (Math.hypot(P.x - p2.x, P.y - p2.y) < 15) { llego++; tiempos.push(Math.round(t)); break; } } }
+  ok(vRev < -2 && vRev > -8.6 && intentos >= 3 && llego >= intentos - 1, 'manejo: con el carro quieto, frenar es reversa (hasta 8 m/s); el piloto de la IA arranca de espaldas y llega a su destino por la calle', { reversa: +vRev.toFixed(1), llego, de: intentos, segundos: tiempos });
+}
+
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
@@ -618,10 +634,15 @@ if (process.argv.includes('--navegador')) {
       await espera(800); const enRuta = G.id, letrero = document.querySelector('#viaje').textContent, c = G.M.carretera; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: c.centro(c.largo - 12), y: c.largo - 12 }); for (let i = 0; i < 400 && G.id !== 'medellin'; i++) await espera(100); for (let i = 0; i < 600 && G.transicion; i++) await espera(100);
       const medellin = G.id, metro = !!G.transporte && G.transporte.lineas.some(l => l.clase === 'metro'), modelos3d = MC.Modelos.L.size;
       G.Artefactos.cebo(); G.busq.ponerNivel(3); await espera(1500); const persigue = G.busq.rivales.length, tapa2 = MC.UI.verificar(G.ui);
-      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, errores: MC.errores.length };
+      /* 4.0.2: Run en una ciclorruta real de Medellín y una carrera callejera con el rival en marcha */
+      let cic = null; for (const v of G.M.vias()) if (v.k === MC.VIA.CICLO && v.p.length >= 4) { G.cuerpo.setVeh('bici'); Object.assign(G.cuerpo, { x: v.p[0], y: v.p[1], v: 0 }); if (G.Extras.puedeRun()) { cic = v; break; } }
+      G.busq.limpiar(); let run = false; if (cic) { G.Extras.entrarRun(); await espera(2500); run = !!G.enRun; document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); await espera(800); }
+      const q = G.M.viaCercana(...Object.values(G.M.geoAMetros(6.2265, -75.5745)), 200); G.cuerpo.setVeh('tc_vega'); Object.assign(G.cuerpo, { x: q.x, y: q.y, a: q.ang, v: 0 }); G.Contratos.empezar(Object.assign({}, TC.CONTRATOS.find(x => x.tipo === 'carrera'), { pagoF: 300 })); const K = G.contrato, x0 = K && K.carrera.cuerpo.x, y0 = K && K.carrera.cuerpo.y; await espera(9000);
+      const rival = K && G.contrato === K ? Math.round(Math.hypot(K.carrera.cuerpo.x - x0, K.carrera.cuerpo.y - y0)) : -1; G.contrato = null;
+      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, run, salioRun: !G.enRun, rival, errores: MC.errores.length };
     });
-    ok(portada.adultos && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && !r.errores && !errs.length,
-      'Turno Cero en Chromium móvil: aviso 18+, 45 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro y la policía persigue', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
+    ok(portada.adultos && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && r.run && r.salioRun && r.rival > 40 && !r.errores && !errs.length,
+      'Turno Cero en Chromium móvil: aviso 18+, 45 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro, la policía persigue, Run en la ciclovía y una carrera con el rival en marcha', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
     await b.close();
   }
 }

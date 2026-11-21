@@ -123,7 +123,7 @@ const Historia = {
   seguir(dt) {
     const S = G.seguido, E = this.est; if (!S) return; const C = G.cuerpo, B = S.cuerpo, d = Math.hypot(B.x - C.x, B.y - C.y);
     if ((S.rt -= dt) <= 0) { S.rt = 2; const r = MC.Manejo.rutaA(G.M, B, S.dest, 'rueda'); S.ruta = Array.isArray(r) && r.length >= 4 ? r : S.ruta; }
-    const g = S.ruta && MC.Manejo.seguirRuta(B, S.ruta, { radio: 6 }); B.escala = S.marcado ? 1 : .82 + (d < 60 ? .2 : 0); if (g && g.dir) { const f = MC.IA.llegar([B.x, B.y], [B.x + g.dir.x * 8, B.y + g.dir.y * 8], 1, 4); B.actualizar(dt, { dir: { x: f[0], y: f[1], m: clamp(Math.hypot(f[0], f[1]), .4, 1) } }); } else B.actualizar(dt, { acel: -.3, giro: 0 });
+    B.escala = S.marcado ? 1 : .82 + (d < 60 ? .2 : 0); if (S.ruta) { const g = MC.Manejo.pilotar(B, S.ruta, dt, { radio: 6 }); if (g && g.atascado) S.rt = 0; } else B.actualizar(dt, { acel: -.3, giro: 0 });
     G.objetivo = { x: B.x, y: B.y, texto: S.marcado ? '📍 El Contador (marcado)' : 'El Contador' };
     if (!S.marcado && d < 4.6) { S.marcado = true; G.ui.aviso('📍 Rastreador Cerbero pegado. Ya no se te escapa', 2400, 'rast'); Subt.decir([['rook', 'Lo tiene. Ahora déjelo correr y no lo pierda de vista hasta la autopista.']]); }
     if (!S.marcado && E.t > 90) { this.ocupado = true; fallar('🚙 Se te escapó', 'El Contador se perdió en el tráfico de la Avenida El Poblado. Sin rastreador no hay rastro.'); return; }
@@ -152,7 +152,8 @@ const Contratos = {
     if (!G.M.esCiudad) return G.ui.aviso('📞 En la carretera no hay contratos: llega a una ciudad', 2000, 'contrato'); if (G.contrato) return G.ui.dialogo('📞 ' + G.contrato.c.n, G.contrato.c.texto, ['Seguir', 'Abandonar']).then(i => { if (i === 1) { G.contrato = null; G.objetivo = null; G.ui.aviso('Contrato abandonado'); } });
     const O = this.ofertas(); G.ui.menu('📞 Contratos · ' + planeta.def(G.id).nombre, O.map((c, i) => ({ id: String(i), texto: '<b>' + c.n + '</b> · ' + plata(c.pagoF) + '<br><small>' + c.texto + ' · ' + '🚨'.repeat(c.heat) + '</small>' })), id => this.empezar(O[+id]));
   },
-  punto(cx, cy, r0, r1) { const M = G.M; for (let k = 0; k < 40; k++) { const a = Math.random() * TAU, d = r0 + Math.random() * (r1 - r0), q = M.viaCercana(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 80); if (q && M.dentro(q.x, q.y)) return { x: q.x, y: q.y }; } return null; },
+  /* un punto sobre una calle para carros (no escaleras, senderos ni ciclorrutas: el rival y la policía también tienen que llegar) */
+  punto(cx, cy, r0, r1) { const M = G.M, R = M.red('rueda'); for (let k = 0; k < 60; k++) { const a = Math.random() * TAU, d = r0 + Math.random() * (r1 - r0), q = R.cercana(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 80, e => e.k >= 1 && e.k <= 4); if (q && M.dentro(q.x, q.y)) return { x: q.x, y: q.y }; } return null; },
   empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + c.n + ': ve a recoger', 2200, 'contrato'); },
   paso(dt) {
     const K = G.contrato; if (!K || G.pausa) return; const C = G.cuerpo; K.t += dt;

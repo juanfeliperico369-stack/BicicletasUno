@@ -232,6 +232,11 @@ MC.arte.registrar('encicla', {
   - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
   - `E.modelos3d = [{ id, x, y, a, k, clip }]` pone modelos en el mundo;
   - `MC.Modelos.posar(Mo, clip, t)` anima modelos con piel glTF, y `E.jugador.modelo` anima al jugador a pie.
+- **Manejo de la IA (4.0.2):**
+  - `MC.Manejo.pilotar(cuerpo, ruta, dt, { radio, turbo, mira })` mira adelante en la ruta, frena según la curva que viene y sale de los atascos (reversa o reacomodo hacia la calle);
+  - devuelve `{ atascado }` cuando conviene volver a planear;
+  - `MC.Manejo.rutaA` sigue la forma de la calle de punta a punta;
+  - el carro con física (`ManejoCarro`) tiene reversa y vuelta en tres puntos.
 - **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
 
 ## 10. Hoja de ruta (lo que sigue)

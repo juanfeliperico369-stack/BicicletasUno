@@ -1,5 +1,5 @@
 {
-  "version": "4.0.1",
+  "version": "4.0.2",
   "fecha": "2026-11-20",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
@@ -7,5 +7,5 @@
     "BicicletasUno: integración del motor en main no comprobada",
     "MetroZero: integración del motor en main no comprobada"
   ],
-  "estado": "4.0.1 en la rama de integración y en main (Pages): planeta, búsqueda 0–5, GLB con piel y animación, luces y abolladuras; Turno Cero con sonido de motor y Doppler, dron policial 3D, reducción no letal y eventos de carretera"
+  "estado": "4.0.2 en la rama de integración y en main (Pages): manejo con reversa y vuelta en tres puntos, piloto de la IA (MC.Manejo.pilotar), rutas que siguen la forma de la calle; Turno Cero con Run en la ciclovía, carreras callejeras, guardias que persiguen a pie y opciones de accesibilidad"
 }

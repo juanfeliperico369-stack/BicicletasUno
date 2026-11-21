@@ -46,8 +46,8 @@ class Cuerpo {
       const tt = this.mundo.suelo(x, y), enVia = VIA_TT.has(tt), r = V.clase === 'pie' ? .2 : .4;
       if (this.mundo.edificioEn(x, y, enVia ? -1 : r)) return this._bloquea('un edificio');
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
-      /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente) */
-      if (!(this.z > 1.2)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+      /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
+      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }

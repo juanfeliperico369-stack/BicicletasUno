@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.0.1 terminada: relevo, mejoras del motor y de Turno Cero",
+  "fase_actual": "4.0.2 terminada: manejo con reversa, piloto de la IA, Run en la ciclovía, carreras, guardias a pie, accesibilidad",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-20T23:30:00Z",
+  "ultima_actualizacion_utc": "2026-11-21T03:00:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -31,10 +31,13 @@
     "Vistas.liberar",
     "MC.Modelos.brillo",
     "Malla.modelo op.dano",
-    "Busqueda evento abolladura"
+    "Busqueda evento abolladura",
+    "MC.Manejo.pilotar",
+    "Cuerpo.ia (sin obstáculos menores en la calle)",
+    "ManejoCarro: reversa"
   ],
   "pruebas_verificadas": {
-    "motor": "node motor.mjs prueba --navegador: 150/150",
+    "motor": "node motor.mjs prueba --navegador: 152/152",
     "encicla": "tests/run.js en verde",
     "el_metro": "test.mjs 100: 0 errores"
   },

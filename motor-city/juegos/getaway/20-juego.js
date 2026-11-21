@@ -60,6 +60,8 @@ const G = window.TURNO = {
   hist: null, objetivo: null, contrato: null, evidencia: 0, municion: 0, dron: null, lenteT: 0, recarga: { dron: 0, pulso: 0, lente: 0 }, cebos: 2, rastreado: null, guardias: [], modelos3d: [], caidos: [], humo: [], lugaresCache: {}, viaje: null, rapido: false, errores: MC.errores, listo: false, t: 0
 };
 const ui = () => G.ui;
+/* ganchos para los extras (50-extras.js): botones, HUD, tráfico y obstáculos que se suman sin reescribir este archivo */
+const EXTRAS = { ui: [], hud: [], trafico: [], obstaculos: [] };
 
 /* lugar del juego → punto sobre una vía del mundo actual */
 function resolver(clave) {
@@ -121,6 +123,7 @@ function obstaculos() {
   for (const v of G.trafico ? G.trafico.agentes : []) { const r = (v.ancho || 1.8) / 2 + .15, l = (v.largo || 4.3) / 3, c = Math.cos(v.a || 0), s = Math.sin(v.a || 0); for (const k of [-1, 0, 1]) L.push({ x: v.x + c * l * k, y: v.y + s * l * k, r, motivo: 'un vehículo' }); }
   if (G.busq) for (const o of G.busq.obstaculos()) L.push(o);
   if (!rapido) for (const p of G.E.peatones || []) L.push({ x: p.x, y: p.y, r: .28, motivo: 'una persona' });
+  for (const f of EXTRAS.obstaculos) for (const o of f()) L.push(o);
   if (G.seguido) { const B = G.seguido.cuerpo, cs = Math.cos(B.a), sn = Math.sin(B.a); for (const k of [-1, 0, 1]) L.push({ x: B.x + cs * 1.6 * k, y: B.y + sn * 1.6 * k, r: 1.05, motivo: 'rival:contador' }); }
   return L;
 }
@@ -168,7 +171,7 @@ const Busq_umbral = n => MC.Busqueda.UMBRAL[clamp(n, 0, 5)];
 let t0 = 0, hudT = 0, sonT = 0, musT = 0, tocando = null, ultBloqueo = null, rozados = new WeakMap(), insultoT = 0, radioT = 40;
 function cuadro(ahora) {
   requestAnimationFrame(cuadro);
-  const dtR = Math.min(.1, (ahora - t0) / 1000); t0 = ahora; if (!G.M || G.transicion) return;
+  const dtR = Math.min(.1, (ahora - t0) / 1000); t0 = ahora; if (!G.M || G.transicion || G.enRun) return;
   if (G.globo) { pintarGlobo(dtR); return; }
   const pasos = G.rapido && !G.pausa ? 3 : 1;
   for (let k = 0; k < pasos; k++) paso(G.pausa ? 0 : dtR, k === pasos - 1 ? dtR : 0);

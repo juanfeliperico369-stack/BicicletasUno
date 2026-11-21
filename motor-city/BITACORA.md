@@ -1,5 +1,34 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.0.2 · La IA que maneja de verdad, Run en Turno Cero, carreras y guardias a pie
+- **Pedido:** «Continúa mejorando».
+- **Hallazgos al probar una carrera:**
+  - **los carros no tenían reversa:** frenar con el carro quieto lo dejaba en cero, y si el destino quedaba atrás, el modelo frenaba para siempre;
+  - **`MC.Manejo.rutaA` unía el punto de salida y el de llegada con el primer y el último nodo en línea recta**, por encima de casas y laderas.
+  - Las dos cosas afectaban a toda la IA (patrullas, banda y El Contador), al «tocar para ir» y al jugador (el joystick hacia atrás no daba la vuelta).
+- **Motor:**
+  - **reversa** en `ManejoCarro`: quieto, frenar es reversa hasta 8 m/s;
+  - **vuelta en tres puntos** cuando el destino queda atrás;
+  - **`rutaA` sigue la forma de la calle** al salir y al llegar, y cuesta por distancia sobre la vía (prueba: 0 tramos sobre casas);
+  - **`MC.Manejo.pilotar`**, el piloto de la IA:
+    - mira adelante en la ruta y frena según la curva que viene;
+    - retoma la ruta nueva por delante (no vuelve al nodo de atrás);
+    - con el destino atrás, gira en su sitio (arcade, solo la IA);
+    - si se atasca, retrocede, y si se traba dos veces se reacomoda hacia la calle, sin cruzar casas;
+  - los carros de la IA, sobre la calle, no chocan con árboles, postes ni bancas (`C.ia`).
+  - **Medido:** en Medellín una patrulla recorre 1,7 km de ruta en unos 60 s, a unos 32 m/s; en Guatapé llega en 3 de 4 casos (el que falla arranca sobre una calle que los datos marcan como edificio).
+- **Turno Cero:**
+  - **Run en la ciclovía**, el modo de Medellín: 🛴 sobre una ciclorruta, a pie, en EnCicla, patinete, skate o patines; si sales con más de 300 m, la policía te pierde, y los puntos dan plata;
+  - **carreras callejeras** contra un coupé dorado por la red vial real, con apuestas;
+  - **guardias que persiguen a pie** con la alarma, golpean de cerca y se reducen con ✊;
+  - **accesibilidad**: menos destellos, sin sacudidas de cámara y subtítulos grandes (con el lenguaje suave, en ♿ del menú);
+  - las metas de los contratos solo caen en calles para carro.
+- **Pruebas:**
+  - 152 de 152 en verde, con la sección 21 (reversa y piloto) y la prueba de rutas que siguen la calle;
+  - en Chromium, Run y la carrera;
+  - el bot de la historia completa sin errores.
+
+
 ## 20-nov-2026 · 4.0.1 · Relevo entre IAs y mejoras de los pedidos 4.0
 - **Pedido del autor:** «Retoma, continúa y termina: el HTML, el link, todo actualizado y siempre un documento de contexto con todo el plan, lo hecho y lo que falta (y que la otra IA haga el suyo). Retoma las nuevas peticiones y mejora el motor, el juego de prueba, el arte y la tecnología».
 - **Relevo:**

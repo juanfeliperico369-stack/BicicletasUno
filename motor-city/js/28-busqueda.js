@@ -133,9 +133,8 @@ class Busqueda {
             let meta = sabe && !this.cebo ? { x: J.x + ca * adel, y: J.y + sa * adel } : this.cebo ? { x: this.cebo.x, y: this.cebo.y } : { x: this.ultima.x, y: this.ultima.y };
             if (!sabe && !this.cebo && Math.hypot(C.x - meta.x, C.y - meta.y) < 18) { const g = this._r() * TAU, d2 = 40 + this._r() * 80; meta = { x: meta.x + Math.cos(g) * d2, y: meta.y + Math.sin(g) * d2 }; }   /* busca alrededor */
             const p = MC.Manejo.rutaA(M, C, meta, 'rueda'); r.ruta = Array.isArray(p) && p.length >= 4 ? p : null; r.tiempoRuta = 1.2 + (this._n % 3) * .2; }
-          const m = r.ruta && MC.Manejo.seguirRuta(C, r.ruta, { radio: 5 });
-          if (!m || !m.dir) C.actualizar(dt, { acel: -.4, giro: 0 });
-          else { const meta = [C.x + m.dir.x * 8, C.y + m.dir.y * 8], f = MC.IA.llegar([C.x, C.y], meta, 1, 4); C.actualizar(dt, { dir: { x: f[0], y: f[1], m: clamp(Math.hypot(f[0], f[1]), .35, 1) }, turbo: d > 60 }); }
+          if (!r.ruta) C.actualizar(dt, { acel: -.4, giro: 0 });
+          else { const m = MC.Manejo.pilotar(C, r.ruta, dt, { radio: 5, turbo: d > 60 }); if (m && m.atascado) r.tiempoRuta = 0; }   /* 4.0.2: piloto con mirada adelante y salida de atascos */
         }
       }
       /* contacto con el jugador: empuje por masas, daño a los dos */
