@@ -1,5 +1,25 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.0.3 · Terminar las tareas de las otras IA antes de que se queden sin uso
+- **El pedido del autor:** «ayúdalos a completar las tareas, están por quedar sin uso». Claude unió y terminó lo que dejaron a medias.
+- **ChatGPT / Codex** (`ia/chatgpt/4-0-2-gemini-auditoria`):
+  - se unieron sus 6 arreglos nuevos:
+    - ocho lugares corregidos;
+    - diálogos que se cancelan al pasar a Calle libre;
+    - portada compacta y menú con fondo;
+    - guardias que solo persiguen si ven;
+    - lenguaje suave en singular y plural;
+  - su prueba de la persecución a pie estaba en rojo en su propia rama: `AccionPie.ocluido` miraba cada 3 m y se saltaba muros de 2 m. Ahora mira cada metro y la prueba pasa.
+- **Gemini / Antigravity:**
+  - las 56 paradas (28 suyas y 28 de ChatGPT) quedan en `PARADAS_RUTA`, con la prueba ajustada a 8 por bioma;
+  - del informe G-H21/G-H23 se suman, sobre lo de ChatGPT:
+    - el contrato «El sapo» pasa a llamarse «El testigo incómodo»;
+    - el lenguaje suave cubre los finales y concuerda en género y número (`jodida` → `complicada`, `cabrones` → `canallas`);
+    - el botón `G SEÑUELO` de la escena 3D se acorta a `G CEBO`;
+    - la ruta de `arte3d/pruebas-modelos.py` apunta a `arte/modelos/turno-cero/` (42/42).
+- **El Metro, zonas Z1 y Z2 de Antigravity:** sus 6 errores de `412 × 860` quedan arreglados en `MetroZero/src/js/98-relevo-z1.js`. Detalle en la bitácora de El Metro.
+- **EnCicla, lo de Codex:** sus arreglos de código no llegaron a GitHub; solo su ficha. Quedan anotados en `CONTEXTO-RELEVO.md` § 5 para que los suba.
+
 ## 21-nov-2026 · 4.0.2 · La IA que maneja de verdad, Run en Turno Cero, carreras y guardias a pie
 - **Pedido:** «Continúa mejorando».
 - **Hallazgos al probar una carrera:**

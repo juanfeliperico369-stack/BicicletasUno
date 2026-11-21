@@ -68,6 +68,15 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 > - En el menú ⏸ están los personajes y los artefactos.
 > - `window.TURNO` expone el estado para pruebas.
 
+> **Estado al 21‑nov‑2026 (4.0.3, Claude):**
+> - **Gemini:**
+>   - **G‑H21, G‑H22, G‑H23 y G‑H24 entregadas y aplicadas.**
+>   - **G‑H20:** se hizo la revisión en VM y se aplicaron sus arreglos; falta el celular real con GPU.
+> - **Codex:**
+>   - **C‑M36 hecha.**
+>   - **C‑M31, C‑M32, C‑M33, C‑M34 y C‑M35:** avanzadas y unidas; lo que falta de cada una está en `CONTEXTO-RELEVO.md` § 5.
+>   - Sus arreglos de EnCicla no llegaron a GitHub y hay que volver a subirlos (§ 5, fila 11).
+
 ### Gemini · Antigravity («hydrogen») · fáciles
 | Id | Tarea | Cómo | Entrega |
 |---|---|---|---|

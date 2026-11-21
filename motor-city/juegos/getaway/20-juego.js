@@ -29,12 +29,12 @@ const Snd = {
   ruido(dur, f, vol) { const ac = this.ac; if (!ac || !this.on || vol < .02) return; const n = Math.round(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3); const s = ac.createBufferSource(); s.buffer = b; const fl = ac.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = f; const g = ac.createGain(); g.gain.value = vol; s.connect(fl); fl.connect(g); g.connect(this.out); s.start(); },
   disparo(d) { this.ruido(.22, 2600, clamp(1 - d / 100, .04, .8)); },
   golpe(k) { this.ruido(.45, 520, clamp(k, .05, 1)); },
-  sirenaVol(v) { const ac = this.ac; if (!ac || !this.on) return; if (!this.sirena) { const o = ac.createOscillator(), g = ac.createGain(), l = ac.createOscillator(), lg = ac.createGain(), fl = ac.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = 760; l.type = 'square'; l.frequency.value = 1.4; lg.gain.value = 170; l.connect(lg); lg.connect(o.frequency); fl.type = 'bandpass'; fl.frequency.value = 900; g.gain.value = 0; o.connect(fl); fl.connect(g); g.connect(this.out); o.start(); l.start(); this.sirena = { o, g, l }; } this.sirena.g.gain.setTargetAtTime(clamp(v, 0, 1) * .1, ac.currentTime, .25); },
+  sirenaVol(v, corte = 900) { const ac = this.ac; if (!ac || !this.on) return; if (!this.sirena) { const o = ac.createOscillator(), g = ac.createGain(), l = ac.createOscillator(), lg = ac.createGain(), fl = ac.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = 760; l.type = 'square'; l.frequency.value = 1.4; lg.gain.value = 170; l.connect(lg); lg.connect(o.frequency); fl.type = 'bandpass'; fl.frequency.value = 900; g.gain.value = 0; o.connect(fl); fl.connect(g); g.connect(this.out); o.start(); l.start(); this.sirena = { o, g, l, fl }; } this.sirena.g.gain.setTargetAtTime(clamp(v, 0, 1) * .1, ac.currentTime, .25); this.sirena.fl.frequency.setTargetAtTime(clamp(corte, 350, 4000), ac.currentTime, .2); },
   /* 4.0.x · efecto Doppler de la sirena: f = f0·c/(c + vr), vr > 0 si se aleja (c = 343 m/s) */
-  doppler(vr) { if (!this.sirena || !this.ac) return; const k = clamp(343 / (343 + vr), .8, 1.25); this.sirena.o.frequency.setTargetAtTime(760 * k, this.ac.currentTime, .15); },
+  doppler(vr) { if (!this.sirena || !this.ac) return; const k = MC.PersecucionAudio.plan({ velocidadRadial: vr }).doppler; this.sirena.o.frequency.setTargetAtTime(760 * k, this.ac.currentTime, .15); },
   /* 4.0.x · motor por capas: un diente de sierra que sube con las rpm (cambios simulados) y un zumbido grave */
   motor(v, enCarro, acel) { const ac = this.ac; if (!ac || !this.on) return; if (!this.mot) { const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), fl = ac.createBiquadFilter(); o.type = 'sawtooth'; o2.type = 'triangle'; fl.type = 'lowpass'; fl.frequency.value = 700; g.gain.value = 0; o.connect(fl); o2.connect(fl); fl.connect(g); g.connect(this.out); o.start(); o2.start(); this.mot = { o, o2, g, fl }; }
-    const va = Math.abs(v), marcha = Math.min(5, Math.floor(va / 9)), rpm = .25 + ((va - marcha * 9) / 9) * .75, f = 42 + rpm * 70 + marcha * 6, t = ac.currentTime; this.mot.o.frequency.setTargetAtTime(f, t, .08); this.mot.o2.frequency.setTargetAtTime(f / 2, t, .08); this.mot.fl.frequency.setTargetAtTime(500 + rpm * 900 + acel * 400, t, .1); this.mot.g.gain.setTargetAtTime(enCarro ? .035 + rpm * .03 + Math.max(0, acel) * .02 : 0, t, .15); },
+    const P = MC.PersecucionAudio.motor({ velocidad: v, aceleracion: acel, activo: enCarro }), t = ac.currentTime; this.mot.o.frequency.setTargetAtTime(P.agudo, t, .08); this.mot.o2.frequency.setTargetAtTime(P.grave, t, .08); this.mot.fl.frequency.setTargetAtTime(P.corte, t, .1); this.mot.g.gain.setTargetAtTime(P.volumen, t, .15); },
   apagar() { this.on = false; this.sirenaVol(0); if (this.mot) this.mot.g.gain.value = 0; if (this.ac) this.ac.suspend(); MC.Musica.parar(); }, prender() { this.on = true; if (this.ac) this.ac.resume(); else this.ini(); }
 };
 
@@ -56,7 +56,7 @@ const G = window.TURNO = {
   modo: 'historia', id: null, M: null, cuerpo: null, camara: null, vistas: null, E: null, trafico: null, pobl: null, transporte: null, busq: null, objetos: null,
   reloj: new MC.Reloj({ vel: .25 }), clima: null, ui: null, ctl: null, cv: null, g: null, W: 0, H: 0,
   dinero: 380, rep: { taller: 0, vecindarios: 0, garantias: 0, coro: 0, northquay: 0 }, flags: {}, veh: 'tc_vega', tengo: ['tc_vega'],
-  carro: 1, vida: 1, nitro: .6, danoZonas: { f: 0, b: 0, l: 0, r: 0 }, pausa: false, transicion: false, vistaId: 'cenital', zoom: null, km: 0, destrozados: 0, civiles: 0, disparosRecibidos: 0,
+  carro: 1, vida: 1, nitro: .6, danoZonas: { f: 0, b: 0, l: 0, r: 0 }, piezasFisicas: null, piezasSueltas: {}, pausa: false, transicion: false, vistaId: 'cenital', zoom: null, km: 0, destrozados: 0, civiles: 0, disparosRecibidos: 0,
   hist: null, objetivo: null, contrato: null, evidencia: 0, municion: 0, dron: null, lenteT: 0, recarga: { dron: 0, pulso: 0, lente: 0 }, cebos: 2, rastreado: null, guardias: [], modelos3d: [], caidos: [], humo: [], lugaresCache: {}, viaje: null, rapido: false, errores: MC.errores, listo: false, t: 0
 };
 const ui = () => G.ui;
@@ -88,7 +88,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const v0 = G.cuerpo ? G.cuerpo.v : 0, heat0 = G.busq ? G.busq.heat : 0, desde = G.id;
   const M = await mundoListo(id);
   if (G.vistas) G.vistas.liberar();
-  G.id = id; G.M = M; G._esp = null;
+  G.id = id; G.M = M; G._esp = null; G.sectores = id === 'nueva_york' ? new MC.Sectores1km(M, { lado: 1000, radio: 1, maxRegiones: 36 }) : null; G._sectoresT = 0;
   let L = spawn.x != null ? spawn : spawn.lugar ? resolver(spawn.lugar) : null;
   if (!L && desde) L = planeta.llegada(id, desde);
   if (!L) { const c = M.carretera ? M.carretera.inicio : M.viaCercana(M.ancho / 2, M.alto / 2, 2000) || { x: M.ancho / 2, y: M.alto / 2 }; L = { x: c.x, y: c.y, a: c.a ?? c.ang ?? 0 }; }
@@ -105,7 +105,8 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   G.transporte = M.transporte && M.transporte.lineas && M.transporte.lineas.length ? new MC.Transporte(M, M.cfgCiudad || {}) : null;
   G.busq = new MC.Busqueda(M, { heat: spawn.heat ?? heat0 * .6, semilla: (G.t * 1000) | 0 });
   G.objetos = new MC.Objetos(M, {}); try { G.objetos.sembrar(C.x, C.y, 320, 40); } catch (e) { /* sin objetos */ }
-  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto, modelo: 'personaje_mara_rig', dano: G.danoZonas }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, curvatura: CURVATURA, modelos3d: G.modelos3d,
+   G.piezasFisicas = new MC.Piezas(M);
+  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto, modelo: 'personaje_mara_rig', dano: G.danoZonas }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, piezas: G.piezasFisicas, curvatura: CURVATURA, modelos3d: G.modelos3d,
     bloqueosEtiquetas: (w, h) => [[w - 84 * w / innerWidth, 0, w, h]] };
   G.vistas.usar(G.vistaId, G.E); G.vistas.dpr = G.dEf || 1;
   if (G.ui && G.ui._mini) G.ui._mini.vistas = G.vistas; else if (G.ui) G.ui.minimapa(G.vistas);
@@ -144,9 +145,14 @@ const Subt = { cola: [], t: 0,
   limpiar() { this.cola = []; this.t = 0; $('#subt').hidden = true; }
 };
 async function escena(lineas) {
+  const token = G.narrativaEpoch || 0;
   G.pausa = true; Subt.limpiar();
-  for (const [q, x] of lineas) { const Q = TC.QUIEN[q] || { n: q, c: '#fff' }; await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']); }
-  G.pausa = false;
+  for (const [q, x] of lineas) {
+    if (token !== (G.narrativaEpoch || 0)) return;
+    const Q = TC.QUIEN[q] || { n: q, c: '#fff' };
+    await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']);
+  }
+  if (token === (G.narrativaEpoch || 0)) G.pausa = false;
 }
 async function decision(D) {
   G.pausa = true; const i = await G.ui.dialogo('<span style="color:#e8a33c">❓ ' + D.pregunta + '</span>', '', D.opciones.map(o => o.texto)); G.pausa = false;
@@ -210,6 +216,11 @@ function paso(dt, dtVisual) {
     for (const ev of B.sacar()) eventoBusqueda(ev);
     /* objetos físicos (conos, vallas, canecas) */
     { const cs = [{ x: C.x, y: C.y, z: C.z, r: V.clase === 'pie' ? .35 : Math.max(.4, (V.ancho || .8) / 2), masa: V.masa || 1400, vx: Math.cos(C.a) * C.v, vy: Math.sin(C.a) * C.v }]; for (const t of E.trafico) if (Math.hypot(t.x - C.x, t.y - C.y) < 140) cs.push({ x: t.x, y: t.y, z: 0, r: 1, masa: 1400, vx: Math.cos(t.a) * (t.v || 0), vy: Math.sin(t.a) * (t.v || 0) }); G.objetos.actualizar(dt, cs); }
+     if (G.piezasFisicas) G.piezasFisicas.paso(dt);
+     if (G.sectores && (G._sectoresT -= dt) <= 0) { G._sectoresT = 2; G.sectorStats = G.sectores.actualizar(C.x, C.y); }
+     if (B.pinchado && !G.piezasSueltas.rueda && enCarro) {
+       G.piezasSueltas.rueda = true; G.piezasFisicas.soltar('rueda', C);
+     }
     /* el planeta: ¿cruzaste una puerta? */
     const cr = planeta.cruce(G.id, C.x, C.y, dt); if (cr && !G.viaje) { const desde = planeta.def(G.id), hacia = planeta.def(cr.a); entrarMundo(cr.a, {}, desde.tipo === 'ciudad' ? ['Saliendo de ' + desde.nombre, (planeta.puertas(G.id) && (planeta.puertas(G.id).siguiente.nombre || '')) ] : null); return; }
     if (!M.esCiudad) eventosRuta();
@@ -256,7 +267,7 @@ function eventoBusqueda(ev) {
   else if (ev.tipo === 'escondido') U.aviso('🅿️ Escondida: la policía te perdió', 2400, 'nivel');
   else if (ev.tipo === 'alerta' && ev.causa) U.aviso('+alerta: ' + ev.causa, 1800, 'alerta');
   else if (ev.tipo === 'abolladura') abollar(ev.zona, ev.fuerza);
-  else if (ev.tipo === 'embestida') { Snd.golpe(ev.fuerza / 16); G.camara.sacudir(Math.min(.35, ev.fuerza * .025)); if (MC.Vida) MC.Vida.emitir('chispa', ev.x, ev.y, 10); if (ev.quien === 'rival' && ev.bando === 'banda' && (insultoT -= 1) <= 0) { insultoT = 4; Subt.decir([['coro', TC.INSULTOS_BANDA[(Math.random() * TC.INSULTOS_BANDA.length) | 0]]]); } }
+  else if (ev.tipo === 'embestida') { Snd.golpe(ev.fuerza / 16); G.camara.sacudir(Math.min(.35, ev.fuerza * .025)); if (MC.Vida) MC.Vida.emitir('chispa', ev.x, ev.y, 10); if (ev.quien === 'rival' && ev.bando === 'banda' && (insultoT -= 1) <= 0) { insultoT = 4; Subt.decir([['camara', TC.INSULTOS_BANDA[(Math.random() * TC.INSULTOS_BANDA.length) | 0]]]); } }
   else if (ev.tipo === 'disparo') { Snd.disparo(d); }
   else if (ev.tipo === 'herido') { G.disparosRecibidos++; if (C.veh.clase === 'pie' || C.veh.clase === 'moto' || C.veh.clase === 'rueda') G.vida = Math.max(0, G.vida - .09); else G.vida = Math.max(0, G.vida - .025); $('#vineta').classList.add('herido'); clearTimeout(G._vt); G._vt = setTimeout(() => $('#vineta').classList.remove('herido'), 350); }
   else if (ev.tipo === 'fuera') { G.destrozados++; U.aviso(ev.bando === 'banda' ? '💥 Una camioneta de la banda, fuera' : '💥 Patrulla destrozada', 1800, 'fuera'); Snd.golpe(1); G.humo.push({ x: ev.x, y: ev.y, t: 0 }); if (Math.random() < .5) Subt.decir([['mara', TC.INSULTOS_MARA[(Math.random() * TC.INSULTOS_MARA.length) | 0]]]); if (G.hist) Historia.fuera(ev); if (G.contrato) Contratos.fuera(ev); }
@@ -275,8 +286,13 @@ function escondites(dt) {
 }
 /* eventos de la carretera (los de la historia: la banda y los retenes a cierta altura del tramo) */
 /* las abolladuras por zona (se ven en el modelo 3D del carro): f frente, b atrás, l izquierda, r derecha */
-function abollar(z, fuerza) { const D = G.danoZonas; if (!D || !(z in D)) return; D[z] = Math.min(1, D[z] + clamp(fuerza, 0, 30) * .028 / (VEH(G.veh).salud || 1)); }
-function reparaZonas() { Object.assign(G.danoZonas, { f: 0, b: 0, l: 0, r: 0 }); }
+function abollar(z, fuerza) { const D = G.danoZonas; if (!D || !(z in D)) return; D[z] = Math.min(1, D[z] + clamp(fuerza, 0, 30) * .028 / (VEH(G.veh).salud || 1));
+  const tipo = { f: 'capo', b: 'baul', l: 'puerta_izq', r: 'puerta_der' }[z];
+  if (D[z] >= .75 && !G.piezasSueltas[z] && G.piezasFisicas && G.cuerpo?.veh.clase !== 'pie') {
+    G.piezasSueltas[z] = true; G.piezasFisicas.soltar(tipo, G.cuerpo);
+  }
+}
+function reparaZonas() { Object.assign(G.danoZonas, { f: 0, b: 0, l: 0, r: 0 }); G.piezasSueltas = {}; if (G.piezasFisicas) G.piezasFisicas.limpiar(); }
 /* Calle libre: lo que pasa en la carretera de la nada (al azar en cada viaje) */
 function eventosCarreteraLibre() {
   const r = () => Math.random(), L = [];

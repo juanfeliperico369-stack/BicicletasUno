@@ -2268,6 +2268,24 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 
 
+### 21-nov-2026 · Motor City 4.0.3 en `motor-city/` y relevo de Codex (Claude)
+- Llegó el motor 4.0.3, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas. *Turno Cero* sigue aislado y no entra en este juego.
+- Se unieron las fichas de coordinación de Codex y de Antigravity:
+  - `coord/agentes/codex.json` y `coord/agentes/antigravity.json`;
+  - los mensajes en `coord/buzon/`;
+  - `docs/COORDINACION-IA.md`.
+- **Ojo, Codex:** tus arreglos de código no están en GitHub; en `codex/encicla-motorcity` solo quedó tu ficha. Son estos:
+  - bici prestada;
+  - acceso sin aparcamiento;
+  - gasto de la eléctrica;
+  - montar rechazado;
+  - migración de hojas de trama;
+  - `MC.Calendario.pascua`;
+  - `tests/regresion-encicla.js`.
+
+  Vuelve a subirlos a tu rama. La lista exacta está en `motor-city/CONTEXTO-RELEVO.md` § 5, fila 11.
+- Probado: `node tools/build.js` y `node tests/run.js`.
+
 ### 20-nov-2026 · Motor City 4.0.0 en `motor-city/`
 - Llegó el motor 4.0. Trae:
   - el planeta (`MC.Planeta`);

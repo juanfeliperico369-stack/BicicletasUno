@@ -10,11 +10,13 @@ const Historia = {
   cap: 0, i: 0, sub: null, p: null, est: {}, ocupado: false,
   pasosDe() { return this.sub || TC.HISTORIA[this.cap].pasos; },
   async empezar(cap, i = 0, op = {}) {
+    const token = G.narrativaEpoch || 0;
     G.hist = this; G.contrato = null; G.modo = 'historia'; this.p = null; this.ocupado = true; this.cap = cap;   /* nada se completa mientras cambia de capítulo */ this.sub = op.sub ? (TC.HISTORIA[cap].pasos.find(q => q.tipo === 'si' && G.flags[q.flag]) || {}).pasos || null : null; const H = TC.HISTORIA[cap];
     if (i === 0) { G.cebos = 2; G.reloj.min = H.hora * 60; G.climaForzado = H.clima; if (G.clima) G.clima.forzar(H.clima); }
     if (op.donde) await entrarMundo(op.donde.mundo, { x: op.donde.x, y: op.donde.y, a: op.donde.a, heat: 0 });
     else if (G.id !== H.mundo) await entrarMundo(H.mundo, { lugar: H.inicio, heat: 0 });
     if (i === 0) { await tarjeta('Acto ' + H.acto + ' · Capítulo ' + H.cap, H.titulo, TC.QUIEN.mara.n); if (H.intro && !op.sinIntro) await escena(H.intro); }
+    if ((G.narrativaEpoch || 0) !== token || G.modo !== 'historia') return;
     this.empezarPaso(i);
   },
   empezarPaso(i) {
@@ -84,22 +86,26 @@ const Historia = {
   terminar() {
     const k = TC.final(G.flags, G.evidencia), F = TC.FINALES[k]; this.p = null; G.objetivo = null; G.busq.limpiar(); Snd.sirenaVol(0);
     const fin = leerG().finales || []; if (!fin.includes(k)) fin.push(k); escribirG({ finales: fin, capitulos: TC.HISTORIA.length, hist: null });
-    $('#fH').textContent = F.t; $('#fX').textContent = F.x;
+    $('#fH').textContent = suave(F.t); $('#fX').textContent = suave(F.x);
     $('#fC').innerHTML = 'Pruebas: ' + G.evidencia + ' · Plata: ' + plata(G.dinero) + ' · Kilómetros: ' + G.km.toFixed(1) + ' · Rivales fuera de la vía: ' + G.destrozados + ' · Civiles heridos: ' + G.civiles + ' · Tiros recibidos: ' + G.disparosRecibidos + '<br>Confianza · Nadia ' + (G.rep.nadia || 0) + ' · Noah ' + (G.rep.noah || 0) + ' · Cross ' + (G.rep.cross || 0) + '<br>Finales vistos: ' + fin.join(', ');
     $('#final').hidden = false; G.pausa = true; MC.emit('turno:final', { final: k });
   },
   /* ---- sigilo: guardias con vista (24 m, 60°) y línea de visión; el cebo los distrae; si te ven, entrada a las malas ---- */
   ponerGuardias(p) {
     const m = resolver(p.a); if (!m) return; const M = G.M, n = p.guardias || 3;
-    for (let k = 0; k < n * 6 && G.guardias.length < n; k++) { const ang = k / n * TAU + (k % 3) * .4, r = 20 + (k % 4) * 7, x = m.x + Math.cos(ang) * r, y = m.y + Math.sin(ang) * r; if (M.edificioEn(x, y, 0) || M.suelo(x, y) === MC.TT.WATER) continue; G.guardias.push({ x, y, a0: ang, a: ang, vista: 24, cono: 1.05, distraido: 0, fase: k * 1.7, modelo: MC.Modelos.tiene('personaje_guard_rig') ? 'personaje_guard_rig' : k % 2 ? 'personaje_operative' : 'personaje_guard' }); }
+    for (let k = 0; k < n * 6 && G.guardias.length < n; k++) { const ang = k / n * TAU + (k % 3) * .4, r = 20 + (k % 4) * 7, x = m.x + Math.cos(ang) * r, y = m.y + Math.sin(ang) * r; if (M.edificioEn(x, y, 0) || M.suelo(x, y) === MC.TT.WATER) continue; G.guardias.push({ x, y, a0: ang, a: ang, origen: { x, y }, estado: 'patrulla', ultima: null, busquedaT: 0, vista: 24, cono: 1.05, distraido: 0, fase: k * 1.7, modelo: MC.Modelos.tiene('personaje_guard_rig') ? 'personaje_guard_rig' : k % 2 ? 'personaje_operative' : 'personaje_guard' }); }
     for (const q of G.guardias) { const Mo = MC.Modelos.get(q.modelo); G.modelos3d.push(q.m3 = { id: q.modelo, x: q.x, y: q.y, a: q.a, k: Mo ? 1.75 / Mo.alto : 1, clip: 'idle_breath', fase: q.fase }); }
     for (let k = 0; k < 4; k++) { const ang = k * 1.6 + .5, x = m.x + Math.cos(ang) * 14, y = m.y + Math.sin(ang) * 14; if (!M.edificioEn(x, y, 0)) G.modelos3d.push({ id: G.id === 'nueva_york' ? 'escenario_container' : k % 2 ? 'escenario_container' : 'escenario_barrier', x, y, a: ang }); }
     G.modelos3d.push({ id: 'escenario_checkpoint', x: m.x, y: m.y, a: m.a || 0 });
   },
   sigilo(dt, d) {
     const C = G.cuerpo, E = this.est; let visto = false;
-    for (const q of G.guardias) { q.fase += dt; if (q.distraido > 0) { q.distraido -= dt; q.a = Math.atan2((G.ceboVis ? G.ceboVis.y : q.y) - q.y, (G.ceboVis ? G.ceboVis.x : q.x) - q.x); } else q.a = q.a0 + Math.sin(q.fase * .6) * .9; if (q.m3) { q.m3.a = q.a; q.m3.clip = q.distraido > 0 ? 'interact_device' : q.alerta > 0 || E.alarma ? 'sprint_loop' : 'idle_breath'; }
-      if (q.fuera) continue; if (q.distraido > 0 || E.alarma) continue; const dx = C.x - q.x, dy = C.y - q.y, dd = Math.hypot(dx, dy); if (dd < q.vista && Math.abs(angDif(Math.atan2(dy, dx), q.a)) < q.cono && G.busq.vista(q.x, q.y, C.x, C.y)) { visto = true; q.alerta = 1; } else q.alerta = Math.max(0, (q.alerta || 0) - dt); }
+    for (const q of G.guardias) {
+      const ve = MC.AccionPie.paso(q, dt, { jugador: C, mundo: G.M, alarma: E.alarma, cebo: G.ceboVis, distraido: q.distraido > 0 });
+      if (q.distraido > 0) q.distraido = Math.max(0, q.distraido - dt);
+      if (q.m3) { q.m3.x = q.x; q.m3.y = q.y; q.m3.a = q.a; q.m3.clip = q.estado === 'distraccion' ? 'interact_device' : q.estado === 'alerta' || q.estado === 'busqueda' ? 'sprint_loop' : 'idle_breath'; }
+      if (ve.ve && q.distraido <= 0) visto = true;
+    }
     E.vistoT = visto ? E.vistoT + dt : Math.max(0, E.vistoT - dt * .5);
     /* a pie y pegada a un guardia: ✊ reducirlo sin matarlo (la animación de golpe no letal de Codex) */
     G.puedeReducir = C.veh.clase === 'pie' ? G.guardias.find(q => !q.fuera && Math.hypot(q.x - C.x, q.y - C.y) < 2.6) || null : null;
@@ -149,12 +155,12 @@ async function tarjeta(p, h, s) { const tr = $('#transicion'); $('#trP').textCon
 const Contratos = {
   ofertas() { const L = TC.CONTRATOS.slice().sort(() => Math.random() - .5).slice(0, 3); return L.map(c => Object.assign({}, c, { pagoF: Math.round(c.pago[0] + Math.random() * (c.pago[1] - c.pago[0])) })); },
   menu() {
-    if (!G.M.esCiudad) return G.ui.aviso('📞 En la carretera no hay contratos: llega a una ciudad', 2000, 'contrato'); if (G.contrato) return G.ui.dialogo('📞 ' + G.contrato.c.n, G.contrato.c.texto, ['Seguir', 'Abandonar']).then(i => { if (i === 1) { G.contrato = null; G.objetivo = null; G.ui.aviso('Contrato abandonado'); } });
-    const O = this.ofertas(); G.ui.menu('📞 Contratos · ' + planeta.def(G.id).nombre, O.map((c, i) => ({ id: String(i), texto: '<b>' + c.n + '</b> · ' + plata(c.pagoF) + '<br><small>' + c.texto + ' · ' + '🚨'.repeat(c.heat) + '</small>' })), id => this.empezar(O[+id]));
+    if (!G.M.esCiudad) return G.ui.aviso('📞 En la carretera no hay contratos: llega a una ciudad', 2000, 'contrato'); if (G.contrato) return G.ui.dialogo('📞 ' + suave(G.contrato.c.n), suave(G.contrato.c.texto), ['Seguir', 'Abandonar']).then(i => { if (i === 1) { G.contrato = null; G.objetivo = null; G.ui.aviso('Contrato abandonado'); } });
+    const O = this.ofertas(); G.ui.menu('📞 Contratos · ' + planeta.def(G.id).nombre, O.map((c, i) => ({ id: String(i), texto: '<b>' + suave(c.n) + '</b> · ' + plata(c.pagoF) + '<br><small>' + suave(c.texto) + ' · ' + '🚨'.repeat(c.heat) + '</small>' })), id => this.empezar(O[+id]));
   },
   /* un punto sobre una calle para carros (no escaleras, senderos ni ciclorrutas: el rival y la policía también tienen que llegar) */
   punto(cx, cy, r0, r1) { const M = G.M, R = M.red('rueda'); for (let k = 0; k < 60; k++) { const a = Math.random() * TAU, d = r0 + Math.random() * (r1 - r0), q = R.cercana(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 80, e => e.k >= 1 && e.k <= 4); if (q && M.dentro(q.x, q.y)) return { x: q.x, y: q.y }; } return null; },
-  empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + c.n + ': ve a recoger', 2200, 'contrato'); },
+  empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + suave(c.n) + ': ve a recoger', 2200, 'contrato'); },
   paso(dt) {
     const K = G.contrato; if (!K || G.pausa) return; const C = G.cuerpo; K.t += dt;
     if (K.c.limite && K.t > K.c.limite) { G.ui.aviso('⏱ ' + K.c.n + ': se acabó el tiempo. Sin pago', 2600, 'contrato'); G.contrato = null; G.objetivo = null; return; }
@@ -164,5 +170,19 @@ const Contratos = {
   fuera(ev) { if (G.contrato && ev.bando === 'banda') G.contrato.fuera++; }
 };
 const Libre = {
-  async empezar(id, donde) { G.hist = null; G.modo = 'libre'; Historia.p = null; G.climaForzado = null; await entrarMundo(id, donde || {}); await tarjeta('Calle libre', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada'); G.ui.aviso('📞 Toca Contratos para trabajar · 🌍 para ver el planeta', 3200, 'libre'); }
+  async empezar(id, donde) {
+    /* G-H20: cancelamos diálogos antiguos sin dejar al Acto anterior continuar por detrás. */
+    G.narrativaEpoch = (G.narrativaEpoch || 0) + 1;
+    Subt.limpiar();
+    if (G.ui?.capa) {
+      for (const d of G.ui.capa.querySelectorAll('.dialogo')) {
+        const first = d.querySelector('button'); if (first) first.click(); else d.remove();
+      }
+      for (const m of G.ui.capa.querySelectorAll('.menu')) m.remove();
+    }
+    G.pausa = false; G.hist = null; G.modo = 'libre'; Historia.p = null; G.climaForzado = null;
+    await entrarMundo(id, donde || {});
+    await tarjeta('Calle libre', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada');
+    G.ui.aviso('📞 Toca Contratos para trabajar · 🌍 para ver el planeta', 3200, 'libre');
+  }
 };

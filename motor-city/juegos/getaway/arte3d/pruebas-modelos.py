@@ -6,7 +6,7 @@ catalog=json.loads((root/'manifest.json').read_text())
 assert len(catalog['assets'])==catalog['total']==42
 names=set()
 for a in catalog['assets']:
- p=root/'modelos'/a['archivo'];buf=p.read_bytes()
+ p=root.parent.parent.parent/'arte'/'modelos'/'turno-cero'/a['archivo'];buf=p.read_bytes()   # los GLB viven en arte/modelos/turno-cero
  assert a['id'] not in names,names
  names.add(a['id'])
  assert buf[:4]==b'glTF' and struct.unpack_from('<I',buf,4)[0]==2,(p,'not GLB2')

@@ -41,7 +41,13 @@ def rot(axis,deg):
 def export(kind,path):
  pal={'mara':['#333f4a','#28343f','#c8ab93','#1b2733','#9c695c'],
  'rook':['#38414a','#202b37','#c3a48b','#252e39','#5e6d74'],
- 'guard':['#53606a','#303943','#a58c78','#26353e','#737e85']}[kind]
+ 'guard':['#53606a','#303943','#a58c78','#26353e','#737e85'],
+ 'nadia':['#586e68','#263b3c','#bda390','#26323a','#758c75'],
+ 'noah':['#5c6170','#2d3442','#b88b72','#272c35','#7d858a'],
+ 'cross':['#3d4d5e','#293544','#d1ac96','#171f2d','#647483'],
+ 'contador':['#48444c','#292b33','#a18d80','#1c2027','#8c6d5f'],
+ 'peaton_a':['#95785d','#3e4851','#bf9c81','#424347','#c1a76e'],
+ 'peaton_b':['#527184','#394650','#81685b','#171c21','#a4a09a']}[kind]
  pos=[];norm=[];cols=[];joints=[];weights=[];indices=[]
  def tri(a,b,d,color,joint):
   u=[b[k]-a[k] for k in range(3)];v=[d[k]-a[k] for k in range(3)]
@@ -49,7 +55,15 @@ def export(kind,path):
   length=math.hypot(*n) or 1;n=[t/length for t in n]
   i=len(pos)
   for p in [a,b,d]:
-   pos.append(p);norm.append(n);cols.append(c(color));joints.append((joint,0,0,0));weights.append((255,0,0,0))
+   # C-M33: peso compartido cerca de codos y rodillas, sin quiebres rígidos.
+   pares={3:(4,1.13),4:(3,1.13),5:(6,1.13),6:(5,1.13),7:(8,.42),8:(7,.42),9:(10,.42),10:(9,.42)}
+   if joint in pares:
+    otro,altura=pares[joint]
+    mezcla=round(max(0,1-abs(p[1]-altura)/.28)*68)
+    joints.append((joint,otro,0,0));weights.append((255-mezcla,mezcla,0,0))
+   else:
+    joints.append((joint,0,0,0));weights.append((255,0,0,0))
+   pos.append(p);norm.append(n);cols.append(c(color))
   indices.extend([i,i+1,i+2])
  def box(x,y,z,sx,sy,sz,col,joint):
   X=[x-sx/2,x+sx/2];Y=[y-sy/2,y+sy/2];Z=[z-sz/2,z+sz/2]
@@ -152,6 +166,6 @@ def export(kind,path):
  return {'file':path.name,'bones':len(SKELETON),'animations':[a['name'] for a in anim],'vertices':len(pos),'triangles':len(indices)//3,'bytes':len(glb)}
 
 if __name__=='__main__':
- results=[export(k,OUT/('personaje_'+k+'_rig.glb')) for k in ['mara','rook','guard']]
+ results=[export(k,OUT/('personaje_'+k+'_rig.glb')) for k in ['mara','rook','guard','nadia','noah','cross','contador','peaton_a','peaton_b']]
  (OUT/'manifest-rig.json').write_text(json.dumps({'schema_version':1,'license':'CC0-1.0','unit':'m','axis':'Y-up','result':results},ensure_ascii=False,indent=2),encoding='utf-8')
  for result in results: print(result)

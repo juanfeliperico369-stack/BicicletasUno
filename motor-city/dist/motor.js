@@ -1,4 +1,4 @@
-/* Motor City 4.0.2 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.0.3 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.0.2',
+  version: '4.0.3',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -882,6 +882,60 @@ const ValleCompat = {
 };
 MC.ValleCompat = ValleCompat; MC.Compat1 = ValleCompat;
 
+/* ---- js/10-sectores.js ---- */
+/* C-M34 · Primer paso hacia streaming MC4 por sectores de 1 km.
+   Reduce la memoria de regiones ED1 de edificios DECODIFICADOS cerca de la cámara;
+   el MC4 y las capas de suelo todavía permanecen completos en la memoria de la partida.
+   No intercambia ficheros ni descarga datos: funciona offline y no borra mundos. */
+class Sectores1km {
+  constructor(mundo,op={}){
+    this.mundo=mundo;this.lado=Math.max(250,op.lado||1000);
+    this.maxSectores=Math.max(1,Math.floor(op.maxSectores||9));
+    this.maxRegiones=Math.max(4,Math.floor(op.maxRegiones||36));
+    this.radio=Math.max(0,Math.min(3,op.radio??1));
+    this.cache=new Map();this.ultimo={sx:0,sy:0,antes:0,despues:0,evictas:0};
+  }
+  zona(x,y){return {sx:Math.floor(x/this.lado),sy:Math.floor(y/this.lado)};}
+  pedir(sx,sy){
+    if(!Number.isFinite(sx)||!Number.isFinite(sy))return null;
+    sx=Math.floor(sx);sy=Math.floor(sy);
+    const clave=sx+','+sy;
+    if(this.cache.has(clave)){
+      const c=this.cache.get(clave);this.cache.delete(clave);this.cache.set(clave,c);return c;
+    }
+    const x0=sx*this.lado,y0=sy*this.lado,x1=x0+this.lado,y1=y0+this.lado,m=this.mundo;
+    const sector={
+      id:clave,sx,sy,x0,y0,x1,y1,
+      /* Devuelve geometría de edificios a petición, no mantiene otra copia por sector. */
+      edificios:()=> typeof m?.edificiosEn==='function'?m.edificiosEn(x0,y0,x1,y1,[]):[]
+    };
+    this.cache.set(clave,sector);
+    while(this.cache.size>this.maxSectores)this.cache.delete(this.cache.keys().next().value);
+    return sector;
+  }
+  actualizar(x,y){
+    const {sx,sy}=this.zona(x,y);
+    for(let dy=-this.radio;dy<=this.radio;dy++)for(let dx=-this.radio;dx<=this.radio;dx++)this.pedir(sx+dx,sy+dy);
+    const E=this.mundo?._ED;
+    if(!E||!E.cache||!Number.isFinite(E.R)||!E.nx)return (this.ultimo={sx,sy,antes:0,despues:0,evictas:0,sectores:this.cache.size});
+    const ids=[...E.cache.keys()],antes=ids.length,max=this.maxRegiones;
+    ids.sort((a,b)=>{
+      const ra=Math.floor(a/E.nx),rb=Math.floor(b/E.nx),
+        ax=(a%E.nx+.5)*E.R-x,ay=(ra+.5)*E.R-y,
+        bx=(b%E.nx+.5)*E.R-x,by=(rb+.5)*E.R-y;
+      return ax*ax+ay*ay-(bx*bx+by*by);
+    });
+    const distanciaMax=Math.pow((this.radio+1.4)*this.lado,2),conservar=new Set();
+    for(const k of ids){
+      const rx=k%E.nx,ry=Math.floor(k/E.nx),dx=(rx+.5)*E.R-x,dy=(ry+.5)*E.R-y;
+      if(conservar.size<max&&dx*dx+dy*dy<=distanciaMax)conservar.add(k);
+    }
+    for(const k of ids)if(!conservar.has(k))E.cache.delete(k);
+    return (this.ultimo={sx,sy,antes,despues:E.cache.size,evictas:antes-E.cache.size,sectores:this.cache.size});
+  }
+  limpiar(){this.cache.clear();}
+}
+MC.Sectores1km=Sectores1km;
 /* ---- js/11-red.js ---- */
 /* =====================================================================
    RED · calles y ciclorrutas como grafo (nodos en los cruces, aristas con su curva real)
@@ -1286,6 +1340,121 @@ const Cosmos = {
 };
 Object.assign(MC, { Cosmos });
 
+/* ---- js/13-globo-gpu.js ---- */
+/* C-M31 · Globo WebGL2 ligero de Motor City: usa la misma semilla y anillo de MC.Planeta.
+   El mundo jugable permanece en su renderizador; esto acelera el planeta en una capa propia.
+   Sin WebGL2 se mantiene el respaldo 2D de Planeta.globo. No usa redes ni bibliotecas. */
+class GloboGPU {
+  constructor(canvas,anillo){
+    this.canvas=canvas;this.ok=false;this.error='';
+    try{
+      const gl=canvas?.getContext('webgl2',{alpha:false,antialias:true,depth:false,preserveDrawingBuffer:false});
+      if(!gl)throw new Error('WebGL2 no disponible');
+      const vs=String.raw`#version 300 es
+      void main(){
+        vec2 p=vec2(float((gl_VertexID << 1)&2),float(gl_VertexID&2));
+        gl_Position=vec4(p*2.0-1.0,0.0,1.0);
+      }`;
+      const fs=String.raw`#version 300 es
+      precision highp float;
+      out vec4 color;
+      uniform vec2 uSize;
+      uniform float uLon;
+      uniform float uInc;
+      uniform float uTiempo;
+      uniform float uStops[11];
+      uniform vec3 uPal[11];
+      uniform vec2 uJugador;
+      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      float noise(vec2 p){
+        vec2 a=floor(p),f=fract(p);
+        f=f*f*(3.0-2.0*f);
+        return mix(mix(hash(a),hash(a+vec2(1,0)),f.x),mix(hash(a+vec2(0,1)),hash(a+vec2(1,1)),f.x),f.y);
+      }
+      float fbm(vec2 p){float s=0.0,k=.52;for(int i=0;i<4;i++){s+=k*noise(p);p=p*2.03+vec2(5.3,1.7);k*=.5;}return s;}
+      void main(){
+        vec2 p=(gl_FragCoord.xy*2.0-uSize)/uSize.y;
+        float r=length(p),R=.68;
+        float st=hash(floor(gl_FragCoord.xy/2.0));
+        vec3 fondo=vec3(.012,.016,.025)+vec3(.6,.69,.78)*step(.9978,st)*(.22+.7*hash(floor(gl_FragCoord.xy/7.0)));
+        if(r>R){
+          float a=exp(-pow((r-R)/.095,2.0))* .19;
+          color=vec4(fondo+vec3(.16,.29,.49)*a,1.0);return;
+        }
+        vec2 d=p/R;
+        float z=sqrt(max(0.0,1.0-dot(d,d)));
+        float y=d.y*cos(uInc)+z*sin(uInc),zz=z*cos(uInc)-d.y*sin(uInc);
+        float lat=asin(clamp(y,-1.0,1.0)),lon=atan(d.x,zz)+uLon;
+        float deg=mod(degrees(lon)+3600.0,360.0),latD=degrees(lat);
+        float ruta=14.0*sin(lon*2.0);
+        float tierra=fbm(vec2(cos(lon)*2.5+4.0,sin(lon)*2.5+latD/45.0))+.23-abs(latD-ruta)/70.0;
+        vec3 b=vec3(.12,.3,.21);
+        for(int i=0;i<11;i++){if(deg<=uStops[i]){b=uPal[i];break;}}
+        vec3 mar=vec3(.045,.105,.22);
+        vec3 base=tierra>.48?b:mar;
+        if(tierra>.74)base=mix(base,vec3(.48,.46,.41),.65);
+        if(abs(latD)>68.0)base=vec3(.84,.87,.89);
+        if(abs(latD-ruta)<1.2&&abs(latD)<67.0)base=mix(base,vec3(.75,.61,.34),.8);
+        vec3 n=normalize(vec3(d.x,d.y,z));
+        vec3 sol=normalize(vec3(cos(uTiempo*.035)*.7,-.25,.5+sin(uTiempo*.035)*.6));
+        float luz=clamp(dot(n,sol)*.8+.21,.085,1.0);
+        base*=luz;
+        float borde=pow(1.0-z,3.2);
+        base+=vec3(.14,.28,.51)*borde;
+        /* Ciudades ubicadas en el planeta narrativo, no en una Tierra geodésica. */
+        float ciudad=0.0;
+        vec2 c0=vec2(0.0,22.0),c1=vec2(120.0,6.0),c2=vec2(220.0,4.0);
+        for(int i=0;i<3;i++){
+          vec2 c=i==0?c0:(i==1?c1:c2);
+          float dl=abs(mod(deg-c.x+540.0,360.0)-180.0);
+          ciudad=max(ciudad,1.0-smoothstep(.5,2.8,length(vec2(dl*cos(lat),latD-c.y))));
+        }
+        base+=vec3(.9,.63,.35)*ciudad*(.55+.45*(1.0-luz));
+        float jLon=abs(mod(lon-uJugador.x+9.424778,6.283185)-3.141593);
+        float dj=length(vec2(jLon*cos(lat),lat-uJugador.y));
+        base=mix(base,vec3(.15,.86,.7),1.0-smoothstep(.008,.025,dj));
+        color=vec4(clamp(base,0.0,1.0),1.0);
+      }`;
+      const shader=(type,source)=>{const q=gl.createShader(type);gl.shaderSource(q,source);gl.compileShader(q);if(!gl.getShaderParameter(q,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(q)||'Shader no compiló');return q;};
+      const v=shader(gl.VERTEX_SHADER,vs),f=shader(gl.FRAGMENT_SHADER,fs),program=gl.createProgram();
+      gl.attachShader(program,v);gl.attachShader(program,f);gl.linkProgram(program);
+      if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program)||'Programa no enlazó');
+      gl.deleteShader(v);gl.deleteShader(f);
+      this.gl=gl;this.program=program;this.vao=gl.createVertexArray();
+      this.u={size:gl.getUniformLocation(program,'uSize'),lon:gl.getUniformLocation(program,'uLon'),
+        inc:gl.getUniformLocation(program,'uInc'),time:gl.getUniformLocation(program,'uTiempo'),
+        stops:gl.getUniformLocation(program,'uStops[0]'),colors:gl.getUniformLocation(program,'uPal[0]'),
+        player:gl.getUniformLocation(program,'uJugador')};
+      const pal={costa:[.43,.58,.36],llanura:[.35,.48,.28],desierto:[.69,.53,.31],bosque:[.2,.42,.27],
+        montana:[.42,.42,.4],nieve:[.82,.86,.89],lagos:[.34,.48,.35]};
+      const stops=[],colors=[];
+      const R=anillo||[];
+      for(let i=0;i<R.length;i++){
+        const q=R[i];if(q.tipo!=='tramo')continue;
+        const ant=R[(i-1+R.length)%R.length],sig=R[(i+1)%R.length],inicio=ant.lon||0,fin=sig.lon<=inicio?sig.lon+360:sig.lon;
+        for(let j=0;j<q.biomas.length;j++){stops.push(inicio+(fin-inicio)*(j+1)/q.biomas.length);colors.push(...(pal[q.biomas[j]]||pal.llanura));}
+      }
+      if(stops.length!==11)throw new Error('Planeta debe tener 11 segmentos de bioma');
+      this.stops=new Float32Array(stops);this.colors=new Float32Array(colors);this.ok=true;
+    }catch(e){this.error=String(e.message||e);this.ok=false;}
+  }
+  dibujar(W,H,op={}){
+    if(!this.ok)return false;
+    const gl=this.gl;
+    try{
+      if(this.canvas.width!==W||this.canvas.height!==H){this.canvas.width=W;this.canvas.height=H;}
+      gl.viewport(0,0,W,H);gl.useProgram(this.program);gl.bindVertexArray(this.vao);
+      gl.uniform2f(this.u.size,W,H);gl.uniform1f(this.u.lon,(op.lon0||0)*Math.PI/180);
+      gl.uniform1f(this.u.inc,(op.inc||0)*Math.PI/180);gl.uniform1f(this.u.time,op.t||0);
+      gl.uniform1fv(this.u.stops,this.stops);gl.uniform3fv(this.u.colors,this.colors);
+      gl.uniform2f(this.u.player,(op.jugador?.lon||0)*Math.PI/180,(op.jugador?.lat||0)*Math.PI/180);
+      gl.drawArrays(gl.TRIANGLES,0,3);
+      const err=gl.getError();if(err!==gl.NO_ERROR)throw new Error('WebGL '+err);
+      return true;
+    }catch(e){this.error=String(e.message||e);this.ok=false;return false;}
+  }
+}
+MC.GloboGPU=GloboGPU;
 /* ---- js/13-planeta.js ---- */
 /* =====================================================================
    PLANETA (4.0) · varias ciudades reales en un mismo planeta, unidas por carreteras largas por «la nada»
@@ -1320,7 +1489,8 @@ const ZONAS_RUTA = {
   nieve: { nombre: 'Nevado', muros: ['#efefef', '#7a5a3a'], techos: ['#5a5f69', '#8e9095'], plancha: .3, tanques: 0, teja: .5, arboles: .12, densidad: .03, pisos: [1, 2], suelo: '#dfe6ea' },
   lagos: { nombre: 'Lagos', muros: ['#e8dfcc', '#3f7fbf'], techos: ['#b5542f', '#7d7f84'], plancha: .4, tanques: .1, teja: .6, arboles: .5, densidad: .05, pisos: [1, 2], suelo: '#7aa65a' }
 };
-const PARADAS_RUTA = [['Bomba La Última Gota', 'fuel'], ['Motel El Olvido', 'motel'], ['Bar La Nada', 'bar'], ['Taller Sin Nombre', 'car_repair'], ['Mirador del Kilómetro', 'mirador'], ['Peaje Abandonado', 'toll'], ['Paradero de Camioneros', 'restaurant'], ['Iglesia de Paso', 'church']];
+/* G-H22: 56 paradas de ficción (Antigravity y ChatGPT, unidas); la fuente es contenido/paradas-carretera.json */
+const PARADAS_RUTA = {"costa":[{"nombre":"Estación Salitre 99","nombre_en":"Saltwind Gas 99","tipo":"fuel","ambiente":"Tres surtidores oxidados por la brisa marina y un foco amarillo zumbando sobre las conchas trituradas."},{"nombre":"Motel Marea Baja","nombre_en":"Low Tide Motor Inn","tipo":"motel","ambiente":"Puertas celestes despintadas mirando al rompeolas; el neón parpadea con el ritmo del oleaje."},{"nombre":"Paradero El Babor","nombre_en":"Portside Diner & Trucks","tipo":"restaurant","ambiente":"Olor a aceite caliente, café recalentado y tractomulas parqueadas con las luces de emergencia encendidas."},{"nombre":"Mirador del Espigón Viejo","nombre_en":"Old Breakwater Overlook","tipo":"mirador","ambiente":"Un muro bajo de concreto manchado de salitre desde donde se ve el horizonte curvo del mar."},{"nombre":"Bomba Brisa de Sal","nombre_en":"Saltwind Fuel","tipo":"fuel","ambiente":"Lámparas cálidas bajo una brisa de mar."},{"nombre":"Taller La Boya","nombre_en":"The Buoy Garage","tipo":"car_repair","ambiente":"Motores y redes húmedas junto al mar."},{"nombre":"Paradero Faro Viejo","nombre_en":"Old Beacon Diner","tipo":"restaurant","ambiente":"Café junto a los cristales empañados."},{"nombre":"Mirador del Salitre","nombre_en":"Salt Air Lookout","tipo":"mirador","ambiente":"La línea del mar desaparece en la bruma."}],"llanura":[{"nombre":"Taller Recta Larga","nombre_en":"Long Mile Auto & Tire","tipo":"car_repair","ambiente":"Una grúa vieja junto a pilas de llantas gastadas y el eco metálico de una llave de impacto."},{"nombre":"Estadéro Kilómetro Cero","nombre_en":"Milepost Zero Tavern","tipo":"bar","ambiente":"Música de radio AM saliendo por una persiana entreabierta mientras el viento barre el polvo del parqueadero."},{"nombre":"Bomba El Molino Seco","nombre_en":"Dry Mill Fuel Stop","tipo":"fuel","ambiente":"Un techo de zinc que traquea con cada ráfaga y un letrero de precios al que le faltan dos números."},{"nombre":"Caseta Vieja del Llano","nombre_en":"Plains Old Tollbooth","tipo":"toll","ambiente":"Talanqueras levantadas hace años, vidrios rotos y marcas frescas de frenada sobre los carriles vacíos."},{"nombre":"Bomba Horizonte Bajo","nombre_en":"Low Horizon Fuel","tipo":"fuel","ambiente":"Camiones diminutos en la recta interminable."},{"nombre":"Taller Tres Vientos","nombre_en":"Three Winds Garage","tipo":"car_repair","ambiente":"Herramientas en un galpón abierto."},{"nombre":"Paradero La Lumbre","nombre_en":"Lamplight Diner","tipo":"restaurant","ambiente":"Comida caliente bajo una luz amarilla."},{"nombre":"Motel Kilómetro Azul","nombre_en":"Blue Mile Motel","tipo":"motel","ambiente":"Un letrero cansado vibra con el viento."}],"desierto":[{"nombre":"Motel La Calima","nombre_en":"Heat Haze Motel","tipo":"motel","ambiente":"Paredes de adobe agrietado, ventiladores girando lento y ni una sola sombra en tres kilómetros a la redonda."},{"nombre":"Surtidor El Espejismo","nombre_en":"Mirage Diesel & Ice","tipo":"fuel","ambiente":"Un tanque metálico blanco brillando al sol, arena acumulada contra el andén y una nevera de hielo zumbando."},{"nombre":"Montallantas y Radiadores Arena Roja","nombre_en":"Red Sand Radiator & Tire","tipo":"car_repair","ambiente":"Bidones de refrigerante alineados bajo una polisombra y perros dormidos debajo de un chasis sin motor."},{"nombre":"Paradero Paso del Polvo","nombre_en":"Dust Pass Pullout","tipo":"mirador","ambiente":"Un ensanche de gravilla roja donde el motor caliente cruje al enfriarse frente a las dunas."},{"nombre":"Bomba Polvo Rojo","nombre_en":"Red Dust Fuel","tipo":"fuel","ambiente":"La arena golpea las ventanillas."},{"nombre":"Taller La Calima","nombre_en":"Heat Haze Garage","tipo":"car_repair","ambiente":"Metal caliente y una sombra mínima."},{"nombre":"Paradero Las Agujas","nombre_en":"Needles Diner","tipo":"restaurant","ambiente":"Un ventilador antiguo mueve el aire seco."},{"nombre":"Mirador del Mediodía","nombre_en":"High Noon Lookout","tipo":"mirador","ambiente":"La carretera tiembla entre las dunas."}],"bosque":[{"nombre":"Paradero Los Helechos","nombre_en":"Fern Bend Truck Stop","tipo":"restaurant","ambiente":"Humo de leña mezclándose con la humedad de los árboles altos y mesas de madera mojadas por el sereno."},{"nombre":"Taller del Aserradero","nombre_en":"Sawmill Garage","tipo":"car_repair","ambiente":"Olor a resina de pino y grasa de motor bajo un cobertizo de teja verde cubierto de musgo."},{"nombre":"Cabañas La Hojarasca","nombre_en":"Timberline Cabins","tipo":"motel","ambiente":"Luces cálidas filtrándose entre troncos oscuros y el canto constante de grillos a lado y lado del asfalto."},{"nombre":"Gruta del Cedro Alto","nombre_en":"Tall Cedar Wayside","tipo":"church","ambiente":"Un pequeño nicho de piedra junto a la berma con veladoras encendidas y flores frescas de la vereda."},{"nombre":"Bomba Los Helechos","nombre_en":"Fernwood Fuel","tipo":"fuel","ambiente":"Musgo sobre la marquesina."},{"nombre":"Taller Raíz Vieja","nombre_en":"Old Root Workshop","tipo":"car_repair","ambiente":"Ramas mojadas y faros entre los pinos."},{"nombre":"Paradero Sombra Larga","nombre_en":"Long Shade Diner","tipo":"restaurant","ambiente":"La conversación baja cuando cruje el bosque."},{"nombre":"Mirador Copa Alta","nombre_en":"High Canopy Lookout","tipo":"mirador","ambiente":"Una vía estrecha entre las copas."}],"montana":[{"nombre":"Mirador Alto del Viento","nombre_en":"High Wind Overlook","tipo":"mirador","ambiente":"Barandas metálicas golpeadas por la neblina; abajo se ven las luces de los carros serpenteando por la ladera."},{"nombre":"Fonda La Curva Brava","nombre_en":"Switchback Coffee House","tipo":"restaurant","ambiente":"Tinto humeante, arepas al carbón y camioneros revisando los frenos antes de bajar la pendiente."},{"nombre":"Frenos y Engrase La Cumbre","nombre_en":"Summit Brakes & Service","tipo":"car_repair","ambiente":"Una rampa de concreto sobre la berma con olor a balatas calientes y herramientas colgadas en madera."},{"nombre":"Retén Viejo de la Cordillera","nombre_en":"Ridge Old Checkpoint","tipo":"toll","ambiente":"Dos casetas grises desgastadas por la lluvia de altura y reflectores solitarios apuntando al túnel de niebla."},{"nombre":"Bomba Alto de Piedra","nombre_en":"Stonecrest Fuel","tipo":"fuel","ambiente":"Viento frío detrás de la estación."},{"nombre":"Taller Curva Cerrada","nombre_en":"Hairpin Garage","tipo":"car_repair","ambiente":"Frenos calientes y grava en la cuneta."},{"nombre":"Paradero La Cornisa","nombre_en":"Ledge Diner","tipo":"restaurant","ambiente":"La ventana da directamente al barranco."},{"nombre":"Mirador del Cóndor","nombre_en":"Condor Ridge Lookout","tipo":"mirador","ambiente":"Las nubes quedan debajo del camino."}],"nieve":[{"nombre":"Estación Escarcha Blanca","nombre_en":"White Frost Fuel","tipo":"fuel","ambiente":"Carámbanos colgando del techo iluminado con tubos blancos y surcos oscuros de llantas en la nieve apisonada."},{"nombre":"Posada La Ventisca","nombre_en":"Blizzard Pass Lodge","tipo":"motel","ambiente":"Chimenea humeando sin pausa y vidrios empañados que dejan ver siluetas calentándose las manos."},{"nombre":"Refugio Paso Helado","nombre_en":"Frozen Pass Outpost","tipo":"bar","ambiente":"Un quitanieves apagado en la entrada y el silencio sordo de la nieve cayendo bajo los postes de luz."},{"nombre":"Mirador de la Cresta Blanca","nombre_en":"White Crest Turnout","tipo":"mirador","ambiente":"Postes naranjas marcando el borde del abismo blanco y el silbido helado del viento entre las rocas."},{"nombre":"Bomba Último Refugio","nombre_en":"Last Shelter Fuel","tipo":"fuel","ambiente":"Hielo alrededor de los surtidores."},{"nombre":"Taller Cadena Norte","nombre_en":"North Chain Garage","tipo":"car_repair","ambiente":"Neumáticos de invierno junto a la estufa."},{"nombre":"Paradero Escarcha","nombre_en":"Frostline Diner","tipo":"restaurant","ambiente":"Cristales blancos ocultan la carretera."},{"nombre":"Motel Ventisca","nombre_en":"Snowdrift Motel","tipo":"motel","ambiente":"Una sola puerta iluminada en la nevada."}],"lagos":[{"nombre":"Paradero Brisa del Lago","nombre_en":"Lakeside Breeze Diner","tipo":"restaurant","ambiente":"Un deck sencillo de madera sobre la orilla con botes amarrados golpeando suavemente las llantas de protección."},{"nombre":"Estación Náutica y Vial El Espejo","nombre_en":"Mirror Lake Gas & Dock","tipo":"fuel","ambiente":"Surtidores para carros hacia la carretera y un muelle pequeño con pimpinas de gasolina hacia el agua quieta."},{"nombre":"Hostal Bahía Mansa","nombre_en":"Still Bay Motel","tipo":"motel","ambiente":"Balcones sencillos reflejándose en el agua oscura al atardecer y olor a tierra húmeda."},{"nombre":"Mirador del Islote","nombre_en":"Islet Viewpoint","tipo":"mirador","ambiente":"Una curva abierta con gravilla desde donde se dominan las islas verdes y la neblina pegada al agua."},{"nombre":"Bomba Agua Clara","nombre_en":"Clearwater Fuel","tipo":"fuel","ambiente":"Reflejos verdes bajo los surtidores."},{"nombre":"Taller El Pescador","nombre_en":"Fisher's Workshop","tipo":"car_repair","ambiente":"Motores de lancha junto a los carros."},{"nombre":"Paradero Orilla Norte","nombre_en":"North Shore Diner","tipo":"restaurant","ambiente":"Café con vista al muelle de tablas."},{"nombre":"Mirador Los Espejos","nombre_en":"Mirror Lake Lookout","tipo":"mirador","ambiente":"Las montañas duplicadas en el agua."}]};
 /* la carretera larga por la nada: un mundo de `largo` metros de norte (y = 0) a sur, con su autopista en el medio */
 Generador.carretera = function (op = {}) {
   const sem = op.semilla ?? 7, r = new Azar(sem), N = new Ruido(sem), T = op.tile || 10, largo = op.largo || 14000, anchoM = op.ancho || 2400, W = Math.ceil(anchoM / T), H = Math.ceil(largo / T);
@@ -1358,12 +1528,12 @@ Generador.carretera = function (op = {}) {
   for (let k = 0; k + 3 < P.length; k += 2) { const ax = P[k], ay = P[k + 1], bx = P[k + 2], by = P[k + 3]; for (let q = 0; q <= 4; q++) pon(ax + (bx - ax) * q / 4, ay + (by - ay) * q / 4, TT.AVE, 8); }
   const KIND = ['casa', 'edificio', 'torre', 'nave', 'educativo', 'salud', 'iglesia', 'civico', 'comercio', 'deporte', 'techo', 'invernadero', 'tanque', 'transporte', 'parqueadero', 'rural'];
   for (let y = 1500 + r.f() * 800, n = 0; y < largo - 900; y += 2600 + r.f() * 1400, n++) {
-    const c = centro(y), lado = r.f() < .5 ? -1 : 1, px = c + lado * 46, [nomP, tipo] = PARADAS_RUTA[(n + sem) % PARADAS_RUTA.length], km = Math.round(y / 1000);
+    const c = centro(y), lado = r.f() < .5 ? -1 : 1, px = c + lado * 46, biomaP = biomas[bioma(y)], lista = PARADAS_RUTA[biomaP], ficha = lista[(n + sem) % lista.length], nomP = ficha.nombre, tipo = ficha.tipo, km = Math.round(y / 1000);
     if (BIOMAS_RUTA[biomas[bioma(y)]].mar && lado > 0) continue;
     const kind = tipo === 'fuel' || tipo === 'car_repair' ? 3 : tipo === 'church' ? 6 : tipo === 'motel' ? 1 : 8, pisos = tipo === 'motel' ? 2 : 1;
     edJ.push([Math.round(px * 10) / 10, Math.round(y * 10) / 10, tipo === 'motel' ? 14 : 9, 7, Math.PI / 2, pisos, kind, nomP]); pon(px, y, TT.BLDG, 8);
     for (let a = -18; a <= 18; a += 6) pon(c + lado * 24, y + a, TT.AUTO, 4);
-    lugares.push({ id: 'parada-' + n, nombre: nomP + (tipo === 'mirador' ? ' ' + km : ''), municipio: '', x: px, y, ancho: 30, alto: 24, dibujo: tipo, dato: 'Kilómetro ' + km + ' de ' + nombre + '.', secreto: false });
+    lugares.push({ id: 'parada-' + n, nombre: nomP + (tipo === 'mirador' ? ' ' + km : ''), municipio: '', x: px, y, ancho: 30, alto: 24, dibujo: tipo, dato: 'Kilómetro ' + km + ' de ' + nombre + '. ' + ficha.ambiente + (nombre === 'Ruta del Atlántico' ? ' / ' + ficha.nombre_en : ''), secreto: false });
   }
   for (const e of edJ) { const i = Math.min(mW - 1, Math.floor(e[0] / T / cel)), j = Math.min(mH - 1, Math.floor(e[1] / T / cel)); pis[j * mW + i] = Math.max(pis[j * mW + i], e[5]); }
   const relieve = new Int16Array(eW * eH); for (let k = 0; k < E.length; k++) relieve[k] = Math.round(Math.max(-8, E[k]));
@@ -1468,7 +1638,7 @@ class Planeta {
     /* nombres de las ciudades y el jugador */
     const proy = (latD, lonD) => { const la = latD * Math.PI / 180, lo = lonD * Math.PI / 180 - lon0, x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo), v = -(y * Math.cos(tilt) - z * Math.sin(tilt)), zz = y * Math.sin(tilt) + z * Math.cos(tilt); return { x: cx + x * R, y: cy + v * R, ve: zz > 0 }; };
     g.font = '700 ' + Math.max(11, R * .07) + 'px system-ui'; g.textAlign = 'left';
-    for (const C of ciudades) { const p = proy(C.lat ?? ruta(C.lon * Math.PI / 180), C.lon); if (!p.ve) continue; g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(p.x, p.y, Math.max(3, R * .02), 0, TAU); g.fill(); g.fillStyle = '#fff'; g.shadowColor = '#000'; g.shadowBlur = 4; g.fillText(C.nombre, p.x + 8, p.y + 4); g.shadowBlur = 0; }
+    for (const C of ciudades) { const p = proy(C.lat ?? ruta(C.lon * Math.PI / 180), C.lon); if (!p.ve) continue; g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(p.x, p.y, Math.max(3, R * .02), 0, TAU); g.fill(); g.fillStyle = '#fff'; g.shadowColor = '#000'; g.shadowBlur = 4; const tw = g.measureText(C.nombre).width; g.fillText(C.nombre, clamp(p.x + 8, 8, Math.max(8, W - tw - 8)), clamp(p.y + 4, 14, H - 14)); g.shadowBlur = 0; }
     if (op.yo) { const G = this.enGlobo(op.yo.id, op.yo.x, op.yo.y), p = proy(G.lat, G.lon); if (p.ve) { g.fillStyle = '#2ee6a6'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, Math.max(4, R * .028), 0, TAU); g.fill(); g.stroke(); } }
   }
 }
@@ -2551,6 +2721,83 @@ const Mobiliario = {
 };
 MC.Mobiliario = Mobiliario;
 
+/* ---- js/28-accion-pie.js ---- */
+/* MOTOR CITY · accion a pie (C-M32): máquina de estados pura, sin control de armas, reusable.
+   Los guardias sólo perciben a través de una línea de visión; jamás conocen la posición actual
+   después de perder contacto. El sistema de cobertura reutiliza los edificios del mundo. */
+const AccionPie = {
+  ver(guardia, jugador, mundo, op = {}) {
+    if (!guardia || !jugador || guardia.fuera) return false;
+    const dx = jugador.x - guardia.x, dy = jugador.y - guardia.y, d = Math.hypot(dx,dy);
+    const rango = op.rango ?? guardia.vista ?? 24, cono = op.cono ?? guardia.cono ?? 1.05;
+    if (d > rango || d < .001) return d < .001;
+    const ang = Math.atan2(dy, dx), dif = Math.atan2(Math.sin(ang - guardia.a), Math.cos(ang - guardia.a));
+    if (Math.abs(dif) > cono) return false;
+    return !this.ocluido(mundo, guardia, jugador);
+  },
+  ocluido(mundo, desde, hasta) {
+    if (!mundo || typeof mundo.edificioEn !== 'function') return false;
+    const d = Math.hypot(hasta.x - desde.x, hasta.y - desde.y);
+    const n = Math.min(64, Math.ceil(d));   /* una muestra por metro: a 3 m se saltaba muros de 2 m (relevo Claude) */
+    for (let i = 1; i < n; i++) {
+      const t = i / n, x = desde.x + (hasta.x-desde.x)*t, y = desde.y + (hasta.y-desde.y)*t;
+      if (mundo.edificioEn(x,y,0)) return true;
+    }
+    return false;
+  },
+  /* Persecución en alarma: sólo acercarse si el jugador sigue visible. La búsqueda de
+     la última posición vista ya la hace paso(). Nunca leer la posición actual a ciegas. */
+  perseguir(q, jugador, mundo, dt, op = {}) {
+    if (!q || !jugador || q.fuera || q.distraido > 0 || !(dt > 0))
+      return { visible: false, golpe: false, movio: false };
+    const radio = op.radio ?? q.vista ?? 24, alcance = op.alcance ?? 1.1, rapidez = op.rapidez ?? 4.6;
+    const visible = this.ver(q, jugador, mundo, { rango: radio });
+    if (!visible) return { visible: false, golpe: false, movio: false };
+    q.ultima = { x: jugador.x, y: jugador.y };
+    q.busquedaT = 5; q.estado = 'alerta';
+    const dx = jugador.x - q.x, dy = jugador.y - q.y, d = Math.hypot(dx, dy);
+    if (d <= alcance) return { visible: true, golpe: true, movio: false };
+    const paso = Math.min(d-alcance, rapidez*Math.min(dt,.05));
+    const nx = q.x + dx/d*paso, ny = q.y + dy/d*paso;
+    if (mundo && typeof mundo.edificioEn === 'function' &&
+       (mundo.edificioEn(nx,ny,0) || mundo.edificioEn((nx+q.x)/2,(ny+q.y)/2,0)))
+      return { visible: true, golpe: false, movio: false };
+    q.x = nx; q.y = ny; q.a = Math.atan2(dy,dx);
+    return { visible: true, golpe: false, movio: true };
+  },
+  paso(q, dt, op = {}) {
+    if (!q || q.fuera || !(dt > 0)) return { ve: false, estado: 'fuera' };
+    dt = Math.min(dt, .05);
+    const J = op.jugador, M = op.mundo, cebo = op.cebo, t = (q.fase = (q.fase || 0) + dt);
+    const ve = !op.distraido && this.ver(q,J,M), vistaAntes = !!q.ve;
+    q.ve = ve;
+    if (ve) { q.ultima = {x:J.x,y:J.y}; q.busquedaT = 5; q.alerta = 1; q.estado='alerta'; }
+    else if (q.busquedaT > 0) { q.busquedaT = Math.max(0,q.busquedaT-dt); q.estado='busqueda'; }
+    else if (cebo && (q.distraido > 0)) q.estado='distraccion';
+    else q.estado='patrulla';
+    let meta=null, rapidez=0;
+    if (q.estado==='alerta' && op.alarma && q.ultima) {meta=q.ultima; rapidez=2.4;}
+    else if (q.estado==='busqueda' && q.ultima) {meta=q.ultima; rapidez=1.55;}
+    else if (q.estado==='distraccion' && cebo) {meta=cebo; rapidez=1.25;}
+    else if (q.estado==='patrulla' && q.origen) {
+      const fase=Math.floor(t/5)%2;
+      meta={x:q.origen.x+Math.cos(q.a0||0)*(fase?4:-4),y:q.origen.y+Math.sin(q.a0||0)*(fase?4:-4)};
+      rapidez=.65;
+    }
+    if(meta) {
+      const dx=meta.x-q.x,dy=meta.y-q.y,d=Math.hypot(dx,dy);
+      if(d>.6) {
+        const a=Math.atan2(dy,dx), paso=Math.min(d-.5,rapidez*dt);
+        const nx=q.x+Math.cos(a)*paso,ny=q.y+Math.sin(a)*paso;
+        /* comprobar punto final y punto intermedio: nadie atraviesa una fachada */
+        if(!M || typeof M.edificioEn!=='function'||(!M.edificioEn(nx,ny,0)&&!M.edificioEn((nx+q.x)/2,(ny+q.y)/2,0))) {q.x=nx;q.y=ny;}
+        q.a=a;
+      } else if(q.estado==='busqueda') q.busquedaT=Math.min(q.busquedaT,.6);
+    } else if (q.origen) q.a=(q.a0||0)+Math.sin(t*.6)*.4;
+    return {ve, primeraVista:ve&&!vistaAntes, estado:q.estado, x:q.x, y:q.y};
+  }
+};
+MC.AccionPie = AccionPie;
 /* ---- js/28-busqueda.js ---- */
 /* =====================================================================
    BÚSQUEDA (4.0) · nivel de búsqueda de 0 a 5, policía y bandas que persiguen por calles reales
@@ -3546,6 +3793,64 @@ class Objetos {
 }
 Object.assign(MC, { Objetos, TIPOS_OBJ });
 
+/* ---- js/32-piezas.js ---- */
+/* Motor City · C-M35: desprendimiento de piezas visuales con gravedad y rebote local.
+   Elementos procedurales y originales: no modifica mallas GLB ni simula un taller real.
+   Se usa únicamente en el juego que pida daños por piezas (Turno Cero, 18+). */
+const TIPOS_PIEZA = {
+  capo: {l:1.15,w:1.45,h:.08,color:'#45464a',pos:[1.2,0]},
+  baul: {l:.8,w:1.35,h:.09,color:'#45464a',pos:[-1.4,0]},
+  puerta_izq:{l:1.1,w:.12,h:.9,color:'#45464a',pos:[0,-.85]},
+  puerta_der:{l:1.1,w:.12,h:.9,color:'#45464a',pos:[0,.85]},
+  rueda:{l:.52,w:.25,h:.52,color:'#191d23',pos:[-1.1,.75]}
+};
+class Piezas {
+  constructor(mundo,op={}) {this.mundo=mundo;this.lista=[];this.max=op.max||22;this.gravedad=9.81;}
+  soltar(tipo,cuerpo,op={}) {
+    const cfg=TIPOS_PIEZA[tipo];if(!cfg||!cuerpo||!Number.isFinite(cuerpo.x)||!Number.isFinite(cuerpo.y))return null;
+    const a=Number(cuerpo.a)||0,v=Number(cuerpo.v)||0,[u,w]=cfg.pos,ca=Math.cos(a),sa=Math.sin(a),lado=tipo==='puerta_izq'?-1:1;
+    const q={tipo,x:cuerpo.x+u*ca-w*sa,y:cuerpo.y+u*sa+w*ca,z:(this.mundo?.cota?.(cuerpo.x,cuerpo.y)||0)+(tipo.includes('puerta')?.65:1.1),
+      vx:Math.cos(a)*v*.4-Math.sin(a)*lado*3,vy:Math.sin(a)*v*.4+Math.cos(a)*lado*3,
+      vz:2.1+Math.min(4,Math.abs(v)*.16),a,rot:lado*2.3,edad:0,reposo:false};
+    this.lista.push(q);if(this.lista.length>this.max)this.lista.shift();
+    return q;
+  }
+  paso(dt) {
+    if(!(dt>0)||!Number.isFinite(dt))return;
+    dt=Math.min(dt,.05);
+    for(const p of this.lista){
+      p.edad+=dt;if(p.reposo)continue;
+      p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vz-=this.gravedad*dt;p.a+=p.rot*dt;
+      const suelo=this.mundo?.cota?.(p.x,p.y)||0;
+      if(p.z<=suelo+.08){p.z=suelo+.08;if(Math.abs(p.vz)<1.2){p.vz=0;p.reposo=true;}else p.vz=-p.vz*.26;p.vx*=.68;p.vy*=.68;p.rot*=.6;}
+    }
+    this.lista=this.lista.filter(p=>p.edad<14);
+  }
+  limpiar(){this.lista=[];}
+  /* Render real 3D a partir de mallas orientadas; sin sprites. */
+  malla(m,rel,centro,radio=170){
+    if(!m||typeof m.cajaF!=='function')return;
+    for(const p of this.lista){
+      if(centro&&Math.hypot(p.x-centro.x,p.y-centro.y)>radio)continue;
+      const cfg=TIPOS_PIEZA[p.tipo],t=rel(p.x,p.y,p.z);
+      m.cajaF(t[0],t[1],t[2],p.a,cfg.l,cfg.w,cfg.h,hex3(cfg.color),0);
+    }
+  }
+  /* Humo 3D austero sobre un vehículo muy dañado; fuego sólo en daño crítico. */
+  static motorDano(m,r,a,D,tiempo=0) {
+    if(!m||!D||!m.esfera)return;
+    const f=Math.max(0,D.f||0,D.b||0,D.l||0,D.r||0);
+    if(f<.62)return;
+    const c=Math.cos(a),s=Math.sin(a),h=Math.sin(tiempo*2);
+    for(let i=0;i<3;i++){
+      const v=(tiempo*.4+i/3)%1, x=r[0]+c*1.25+Math.sin(tiempo+i*2)*v*.35, z=r[2]+s*1.25+Math.cos(tiempo+i)*v*.35,
+        y=r[1]+1.1+v*2.8;
+      m.esfera(x,y,z,.22+v*.35,.18+v*.4,.2+v*.35,[.24,.25,.27],[.16,.16,.18],i,0);
+    }
+    if(f>.9&&typeof m.cil==='function')m.cil(r[0]+c*1.35,r[1]+1.0,r[2]+s*1.35,.22,.65+Math.abs(h)*.25,5,[.85,.32,.1],0);
+  }
+}
+MC.Piezas = Piezas;
 /* ---- js/33-controles.js ---- */
 /* =====================================================================
    CONTROLES · teclado, pantalla táctil (joystick virtual y gestos) y control de juegos (gamepad)
@@ -5303,14 +5608,19 @@ class VistaGL {
     const m = new Malla(), M = this.mundo, O = this.O, rel = (x, y, z) => [x - O[0], z - O[2], y - O[1]];
     const pj = E.jugador; if (pj && !E._sinJugador) { const C = pj.cuerpo, A = pj.aspecto, zb = M.cota(C.x, C.y) + C.zPaso + C.z, J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: C.veh.manubrio }), ca = Math.cos(C.a), sa = Math.sin(C.a), P = j => rel(C.x + ca * j[0], C.y + sa * j[0], zb + j[1]), Lp = (j, l) => { const p = P(j); return [p[0] - sa * l, p[1], p[2] + ca * l]; };
       const piel = hex3(A.cPiel), cam = hex3(A.cCamisa), pan = hex3(A.cPantalon);
-      if (C.veh.clase !== 'pie') { const V = C.veh; if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
+      if (C.veh.clase !== 'pie') { const V = C.veh; if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null, distancia: 0 }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
       const MoJ = C.veh.clase === 'pie' && pj.modelo && !C.nadando ? Modelos.L.get(pj.modelo) : null; if (MoJ) { const r = rel(C.x, C.y, zb), clip = C.estado === 'corre' ? 'sprint_loop' : C.estado === 'camina' || Math.abs(C.v) > .3 ? (Math.abs(C.v) > 3.2 ? 'sprint_loop' : 'walk_loop') : 'idle_breath'; m.modelo(MoJ, r[0], r[1], r[2], C.a, { k: (A.alto || 1.7) / MoJ.alto, clip, t: E.t || 0 }); } else if (!(C.veh.clase === 'auto' || C.veh.clase === 'pesado')) { m.hueso(Lp(J.cadera, .12), Lp(J.rodI, .12), .07, pan); m.hueso(Lp(J.rodI, .12), Lp(J.pieI, .12), .06, pan); m.hueso(Lp(J.cadera, -.12), Lp(J.rodD, -.12), .07, pan); m.hueso(Lp(J.rodD, -.12), Lp(J.pieD, -.12), .06, pan); if (!this._sinCabeza) m.hueso(P(J.cadera), P(J.pecho), .17, cam); m.hueso(Lp(J.pecho, .2), Lp(J.codoI, .22), .05, cam); m.hueso(Lp(J.codoI, .22), Lp(J.manoI, .2), .045, A.manga ? cam : piel); m.hueso(Lp(J.pecho, -.2), Lp(J.codoD, -.22), .05, cam); m.hueso(Lp(J.codoD, -.22), Lp(J.manoD, -.2), .045, A.manga ? cam : piel); const h = P(J.cabeza); if (!this._sinCabeza) m.caja(h[0], h[1] - .13, h[2], C.a, .24, .22, .26, piel); if (this._sinCabeza) { /* en primera persona se ven las manos y el manubrio */ } else if (A.cCasco) m.caja(h[0], h[1] + .06, h[2], C.a, .3, .27, .12, hex3(A.cCasco)); else m.caja(h[0] - ca * .03, h[1] + .07, h[2] - sa * .03, C.a, .26, .24, .08, hex3(A.cPelo)); }
     }
     this._njug = m.d.length;   // 3.0: lo del jugador va primero (se repinta encima en las cámaras aéreas)
-    for (const v of E.trafico || []) { const T2 = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, r = rel(v.x, v.y, M.cota(v.x, v.y)), h = v.tipo === 'buseta' || v.tipo === 'camion' ? 2.9 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.1; const Mo = Modelos.L.size && Math.hypot(v.x - E.camara.x, v.y - E.camara.y) < Modelos.lejos ? Modelos.vehiculo(v) : null; if (Mo) { m.modelo(Mo, r[0], r[1], r[2], v.a, { largo: v.largo || T2.largo, tinte: v.sirena || v.bando ? null : v.color, oscuro: v.roto ? .65 : 0, dano: v.dano || null }); if (v.sirena) { const f = Math.floor(performance.now() / 160) % 2, ca = Math.cos(v.a), sa = Math.sin(v.a); m.cajaF(r[0] - ca * .35 - sa * .25, r[1] + 1.56, r[2] - sa * .35 + ca * .25, v.a, .3, .16, .12, f ? [1, .1, .1] : [.35, .05, .05], f); m.cajaF(r[0] - ca * .35 + sa * .25, r[1] + 1.56, r[2] - sa * .35 - ca * .25, v.a, .3, .16, .12, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); } } else m.carro3d(r[0], r[1], r[2], v.a, T2.largo, T2.ancho, v.color, v.tipo === 'buseta' || v.tipo === 'camion' || v.tipo === 'moto' || v.tipo === 'bici' ? v.tipo : 'carro', E.cielo ? E.cielo.noche : 0, v.sirena ? v : null); }
+    for (const v of E.trafico || []) { const T2 = TRAF_TIPOS[v.tipo] || TRAF_TIPOS.carro, r = rel(v.x, v.y, M.cota(v.x, v.y)), h = v.tipo === 'buseta' || v.tipo === 'camion' ? 2.9 : v.tipo === 'moto' || v.tipo === 'bici' ? 1.2 : 1.1; const Mo = Modelos.L.size && Math.hypot(v.x - E.camara.x, v.y - E.camara.y) < Modelos.lejos ? Modelos.vehiculo(v) : null; if (Mo) { m.modelo(Mo, r[0], r[1], r[2], v.a, { largo: v.largo || T2.largo, tinte: v.sirena || v.bando ? null : v.color, oscuro: v.roto ? .65 : 0, dano: v.dano || null, distancia: Math.hypot(v.x - E.camara.x, v.y - E.camara.y), calidad: E.calidad }); if (v.sirena) { const f = Math.floor(performance.now() / 160) % 2, ca = Math.cos(v.a), sa = Math.sin(v.a); m.cajaF(r[0] - ca * .35 - sa * .25, r[1] + 1.56, r[2] - sa * .35 + ca * .25, v.a, .3, .16, .12, f ? [1, .1, .1] : [.35, .05, .05], f); m.cajaF(r[0] - ca * .35 + sa * .25, r[1] + 1.56, r[2] - sa * .35 - ca * .25, v.a, .3, .16, .12, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); } } else m.carro3d(r[0], r[1], r[2], v.a, T2.largo, T2.ancho, v.color, v.tipo === 'buseta' || v.tipo === 'camion' || v.tipo === 'moto' || v.tipo === 'bici' ? v.tipo : 'carro', E.cielo ? E.cielo.noche : 0, v.sirena ? v : null); }
     /* 4.0: modelos GLB que el juego pone en el mundo (personas de la historia, retenes, contenedores, escondites…) */
-    for (const q of E.modelos3d || []) { const Mo = Modelos.L.get(q.id); if (!Mo || Math.hypot(q.x - E.camara.x, q.y - E.camara.y) > (q.lejos || 260)) continue; const r = rel(q.x, q.y, M.cota(q.x, q.y) + (q.z || 0)); m.modelo(Mo, r[0], r[1], r[2], q.a || 0, { k: q.k || 1, ky: q.ky, largo: q.largo, tinte: q.tinte || null, e: q.e || 0, clip: q.clip, t: (E.t || 0) + (q.fase || 0) }); }
+    for (const q of E.modelos3d || []) { const Mo = Modelos.L.get(q.id); if (!Mo || Math.hypot(q.x - E.camara.x, q.y - E.camara.y) > (q.lejos || 260)) continue; const r = rel(q.x, q.y, M.cota(q.x, q.y) + (q.z || 0)); m.modelo(Mo, r[0], r[1], r[2], q.a || 0, { k: q.k || 1, ky: q.ky, largo: q.largo, tinte: q.tinte || null, e: q.e || 0, clip: q.clip, t: (E.t || 0) + (q.fase || 0), distancia: Math.hypot(q.x - E.camara.x, q.y - E.camara.y), calidad: E.calidad }); }
     for (const p of E.peatones || []) { const r = rel(p.x, p.y, M.cota(p.x, p.y)), A = p.aspecto || (p.aspecto = Personaje.azar(p.semilla || 1)), sw = Math.sin(p.fase) * .25; m.persona3d(r[0], r[1], r[2], p.a, A, p.fase || 0, A.alto || 1.7); }
+    if (E.piezas && typeof E.piezas.malla === 'function') E.piezas.malla(m, rel, E.camara, 170);
+    if (E.jugador && E.jugador.cuerpo && E.jugador.cuerpo.veh.clase !== 'pie' && E.jugador.dano) {
+      const C = E.jugador.cuerpo, r = rel(C.x, C.y, M.cota(C.x, C.y));
+      MC.Piezas.motorDano(m, r, C.a, E.jugador.dano, E.t || 0);
+    }
     if (E.objetos) E.objetos.malla(m, rel, pj ? pj.cuerpo : null, 170);   // 3.0: artilugios físicos (MC.Objetos)
     for (const v of E.vehiculos || []) { const zt = M.cota(v.x, v.y) + (v.z || 0); if (v.clase === 'cable') { const r = rel(v.x, v.y, zt); m.caja(r[0], r[1] - 2.2, r[2], v.a, 2.2, 2, 2, hex3(v.color), .5); m.caja(r[0], r[1] - .2, r[2], v.a, .15, .15, .4, hex3('#2d3138')); continue; } const L = E.transporte && E.transporte.lineas.find(l => l.id === v.linea); if (!L) continue; const n = v.clase === 'metro' ? 6 : v.clase === 'tram' ? 2 : 1, coche = v.largo / n; for (let i = 0; i < n; i++) { const sc = v.s - v.dir * (i + .5) * coche, c = L.T.at(sc), r = rel(c.x, c.y, M.cota(c.x, c.y) + (v.z || 0)); m.caja(r[0], r[1] + .4, r[2], c.a, coche - .6, v.clase === 'brt' || v.clase === 'feeder' ? 2.5 : 3, 3.2, hex3('#e6e9ee'), .35); m.caja(r[0], r[1] + 1.4, r[2], c.a, coche - .5, (v.clase === 'brt' ? 2.5 : 3) + .04, .5, hex3(v.color)); } }
     return m.d;
@@ -5531,6 +5841,34 @@ MC.Mundo3D = { PAL_ZOCALO };
    ===================================================================== */
 const Modelos = {
   L: new Map(), lejos: 140,
+  /* C-M33 · LOD por triángulos: el detalle cercano es íntegro; las dos mallas intermedias son
+     selecciones estables de las caras de mayor superficie (no se descargan nuevos GLB).
+     Esto conserva los cuerpos grandes y el material emissivo pero omite detalles pequeños lejanos.
+     No sustituye a la retopología/LOD artístico de producción. */
+  nivelLOD(distancia, op = {}) {
+    if (op.forzarLOD != null) return clamp(op.forzarLOD | 0, 0, 2);
+    const calidad = op.calidad === 0 ? .7 : op.calidad === 1 ? .85 : 1;
+    return distancia < 48 * calidad ? 0 : distancia < 105 * calidad ? 1 : 2;
+  },
+  indicesLOD(Mo, nivel = 0) {
+    if (!Mo || nivel <= 0 || Mo.n < 48) return null;
+    if (!Mo._lod) Mo._lod = new Map();
+    nivel = Math.min(2, Math.max(1, nivel | 0));
+    if (Mo._lod.has(nivel)) return Mo._lod.get(nivel);
+    const T = Mo.tris, N = Mo.n, ratio = nivel === 1 ? .64 : .3, contar = Math.max(24, Math.ceil(N * ratio));
+    const importancia = new Array(N);
+    for (let i = 0; i < N; i++) {
+      const o = i * 21, ux = T[o + 3] - T[o], uy = T[o + 4] - T[o + 1], uz = T[o + 5] - T[o + 2],
+        vx = T[o + 6] - T[o], vy = T[o + 7] - T[o + 1], vz = T[o + 8] - T[o + 2],
+        area = Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) * .5;
+      /* Faros y señales importantes, detectados por la marca que ya escribe el lector GLB. */
+      importancia[i] = { i, k: area + (T[o + 15] >= 2 ? .1 : 0) };
+    }
+    importancia.sort((a,b) => b.k - a.k || a.i - b.i);
+    const I = Uint32Array.from(importancia.slice(0, contar).map(x => x.i).sort((a,b) => a - b));
+    Mo._lod.set(nivel, I);
+    return I;
+  },
   tiene(id) { return this.L.has(id); },
   get(id) { return this.L.get(id) || null; },
   /* GLB (ArrayBuffer, Uint8Array o base64) → { tris, n, bounds, frente } */
@@ -5604,14 +5942,17 @@ const Modelos = {
 };
 /* un modelo en la malla: posición GL relativa (x, y = altura, z = sur), rumbo a del mundo; escala k o el largo deseado */
 Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
-  const T = op.clip && Mo.piel ? Modelos.posar(Mo, op.clip, op.t || 0) : Mo.tris, n = Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d, fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
+  const T = op.clip && Mo.piel ? Modelos.posar(Mo, op.clip, op.t || 0) : Mo.tris,
+    lod = Modelos.nivelLOD(op.distancia ?? 0, op), indices = Modelos.indicesLOD(Mo, lod),
+    n = indices ? indices.length : Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d,
+    fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
   const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, D = op.dano, ky = op.ky || k;
   /* 4.0.x: de noche cada modelo tiene un mínimo de luz propia (el sombreador solo usa la emisión de noche) y los faros se encienden */
   const e0 = op.e != null ? op.e : Modelos.brillo, osc = Math.min(.8, (op.oscuro || 0) + (D ? Math.max(D.f || 0, D.b || 0, D.l || 0, D.r || 0) * .25 : 0));
   /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
   const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
-    const o = t * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
+    const o = (indices ? indices[t] : t) * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
     const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
     for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
       if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;
@@ -6338,6 +6679,34 @@ const Paisaje = {
   parar() { if (this._pulsos) clearInterval(this._pulsos); this._pulsos = null; if (this._ac) { try { this._ac.close(); } catch (e) { /* ya cerrado */ } } this._ac = null; this._capas = null; }
 };
 MC.Paisaje = Paisaje;
+
+
+/* C-M36 · Percepción acústica espacial de persecución: pura, sin samples, compatible con todos los juegos.
+   La oclusión se estima contra huellas del mundo; no afirma simular propagación acústica real. */
+const PersecucionAudio = {
+  plan(op = {}) {
+    const d = Math.max(0, Number(op.distancia) || 0), vr = clamp(Number(op.velocidadRadial) || 0, -90, 90),
+      factor = clamp(343 / (343 + vr), .8, 1.25), at = 1 / (1 + (d / 95) ** 2),
+      obst = op.ocluido ? .38 : 1, int = op.interior ? .75 : 1;
+    return { doppler: factor, volumen: clamp((op.intensidad ?? 1) * at * obst * int, 0, 1), corte: op.ocluido ? 650 : op.interior ? 1600 : 3200 };
+  },
+  motor(op = {}) {
+    const v = Math.max(0, Math.abs(Number(op.velocidad) || 0)), a = clamp(Number(op.aceleracion) || 0, -1, 1),
+      marcha = Math.min(5, Math.floor(v / 9)), rpm = clamp(.25 + ((v - marcha * 9) / 9) * .75, .25, 1);
+    return { agudo: 42 + rpm * 70 + marcha * 6, grave: (42 + rpm * 70 + marcha * 6) / 2,
+      corte: 500 + rpm * 900 + a * 400, volumen: op.activo ? .035 + rpm * .03 + Math.max(0, a) * .02 : 0 };
+  },
+  ocluido(mundo, a, b) {
+    if (!mundo || typeof mundo.edificioEn !== 'function' || !a || !b) return false;
+    const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.min(12, Math.max(2, Math.ceil(d / 14)));
+    for (let i = 1; i < n; i++) {
+      const t = i / n;
+      if (mundo.edificioEn(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, 0)) return true;
+    }
+    return false;
+  }
+};
+MC.PersecucionAudio = PersecucionAudio;
 
 /* ---- js/70-interfaz.js ---- */
 /* =====================================================================
@@ -7485,7 +7854,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

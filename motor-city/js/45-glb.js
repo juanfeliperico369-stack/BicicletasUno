@@ -15,6 +15,34 @@
    ===================================================================== */
 const Modelos = {
   L: new Map(), lejos: 140,
+  /* C-M33 · LOD por triángulos: el detalle cercano es íntegro; las dos mallas intermedias son
+     selecciones estables de las caras de mayor superficie (no se descargan nuevos GLB).
+     Esto conserva los cuerpos grandes y el material emissivo pero omite detalles pequeños lejanos.
+     No sustituye a la retopología/LOD artístico de producción. */
+  nivelLOD(distancia, op = {}) {
+    if (op.forzarLOD != null) return clamp(op.forzarLOD | 0, 0, 2);
+    const calidad = op.calidad === 0 ? .7 : op.calidad === 1 ? .85 : 1;
+    return distancia < 48 * calidad ? 0 : distancia < 105 * calidad ? 1 : 2;
+  },
+  indicesLOD(Mo, nivel = 0) {
+    if (!Mo || nivel <= 0 || Mo.n < 48) return null;
+    if (!Mo._lod) Mo._lod = new Map();
+    nivel = Math.min(2, Math.max(1, nivel | 0));
+    if (Mo._lod.has(nivel)) return Mo._lod.get(nivel);
+    const T = Mo.tris, N = Mo.n, ratio = nivel === 1 ? .64 : .3, contar = Math.max(24, Math.ceil(N * ratio));
+    const importancia = new Array(N);
+    for (let i = 0; i < N; i++) {
+      const o = i * 21, ux = T[o + 3] - T[o], uy = T[o + 4] - T[o + 1], uz = T[o + 5] - T[o + 2],
+        vx = T[o + 6] - T[o], vy = T[o + 7] - T[o + 1], vz = T[o + 8] - T[o + 2],
+        area = Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) * .5;
+      /* Faros y señales importantes, detectados por la marca que ya escribe el lector GLB. */
+      importancia[i] = { i, k: area + (T[o + 15] >= 2 ? .1 : 0) };
+    }
+    importancia.sort((a,b) => b.k - a.k || a.i - b.i);
+    const I = Uint32Array.from(importancia.slice(0, contar).map(x => x.i).sort((a,b) => a - b));
+    Mo._lod.set(nivel, I);
+    return I;
+  },
   tiene(id) { return this.L.has(id); },
   get(id) { return this.L.get(id) || null; },
   /* GLB (ArrayBuffer, Uint8Array o base64) → { tris, n, bounds, frente } */
@@ -88,14 +116,17 @@ const Modelos = {
 };
 /* un modelo en la malla: posición GL relativa (x, y = altura, z = sur), rumbo a del mundo; escala k o el largo deseado */
 Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
-  const T = op.clip && Mo.piel ? Modelos.posar(Mo, op.clip, op.t || 0) : Mo.tris, n = Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d, fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
+  const T = op.clip && Mo.piel ? Modelos.posar(Mo, op.clip, op.t || 0) : Mo.tris,
+    lod = Modelos.nivelLOD(op.distancia ?? 0, op), indices = Modelos.indicesLOD(Mo, lod),
+    n = indices ? indices.length : Mo.n, ca = Math.cos(a), sa = Math.sin(a), d = this.d,
+    fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
   const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, D = op.dano, ky = op.ky || k;
   /* 4.0.x: de noche cada modelo tiene un mínimo de luz propia (el sombreador solo usa la emisión de noche) y los faros se encienden */
   const e0 = op.e != null ? op.e : Modelos.brillo, osc = Math.min(.8, (op.oscuro || 0) + (D ? Math.max(D.f || 0, D.b || 0, D.l || 0, D.r || 0) * .25 : 0));
   /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
   const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
-    const o = t * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
+    const o = (indices ? indices[t] : t) * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
     const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
     for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
       if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;

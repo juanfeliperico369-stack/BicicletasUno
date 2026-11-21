@@ -4,7 +4,7 @@ import json,struct,sys
 from pathlib import Path
 root=Path(sys.argv[1] if len(sys.argv)>1 else Path(__file__).with_name('rigged'))
 expected={'idle_breath','walk_loop','sprint_loop','sneak_loop','nonlethal_strike','interact_device','dodge_step','hit_reaction'}
-for who in ('mara','rook','guard'):
+for who in ('mara','rook','guard','nadia','noah','cross','contador','peaton_a','peaton_b'):
  p=root/f'personaje_{who}_rig.glb'
  data=p.read_bytes()
  assert data[:4]==b'glTF' and struct.unpack_from('<I',data,4)[0]==2
@@ -37,5 +37,9 @@ for who in ('mara','rook','guard'):
  ws=doc['accessors'][prim['attributes']['WEIGHTS_0']]
  assert js['type']=='VEC4' and ws['type']=='VEC4' and ws['normalized']
  assert js['count']==ws['count']>=600
+ wv=doc['bufferViews'][ws['bufferView']]
+ weights=data[off+8+wv['byteOffset']:off+8+wv['byteOffset']+wv['byteLength']]
+ assert len(weights)%4==0 and all(sum(weights[i:i+4])==255 for i in range(0,len(weights),4))
+ assert any(weights[i+1]>0 for i in range(0,len(weights),4)), 'sin pesos suaves en articulaciones'
  print(f'✓ {p.name}: {len(doc["skins"][0]["joints"])} huesos, 8 animaciones, {js["count"]} vértices, GLB correcto')
-print('✓ 3/3 modelos articulados validados')
+print('✓ 9/9 modelos articulados validados')

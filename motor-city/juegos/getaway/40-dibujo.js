@@ -5,8 +5,19 @@
    el Dron Cuervo, el cebo, la gente tendida y la flecha al objetivo. El HUD sigue la biblia: objetivo y plata
    a la izquierda, la búsqueda en una cinta estrecha, el volante abajo y lo secundario en el menú.
    ===================================================================== */
-const LENGUAJE_SUAVE = [[/hijueputas?/gi, 'desgraciados'], [/malparid[oa]s?/gi, 'miserables'], [/gonorreas?/gi, 'basura'], [/güevón/gi, 'bobo'], [/tombos/gi, 'policías']];
-const suave = t => (leerG().suave ? LENGUAJE_SUAVE.reduce((s, [r, x]) => s.replace(r, x), t) : t);
+/* G-H23 (Gemini y ChatGPT, unidas): conserva la mayúscula, separa singular y plural y cubre las variantes del guion */
+const LENGUAJE_SUAVE = [
+  [/hijueputas?/gi, m => /s$/i.test(m) ? 'desgraciados' : 'desgraciado'],
+  [/malparid[oa]s?/gi, m => /s$/i.test(m) ? 'miserables' : 'miserable'],
+  [/gonorreas?/gi, m => /s$/i.test(m) ? 'canallas' : 'canalla'],
+  [/(?:güe|gue|hue)vones/gi, 'bobos'], [/(?:güe|gue|hue)v[oó]n/gi, 'bobo'],
+  [/tombos?/gi, m => /s$/i.test(m) ? 'agentes' : 'agente'],
+  [/mierdas?/gi, 'rayos'], [/jodid[oa]s?/gi, m => 'complicad' + m.slice(5).toLowerCase()],
+  [/cabr[oó]n(?:es)?/gi, m => /es$/i.test(m) ? 'canallas' : 'canalla'], [/\bputas?\b/gi, 'pesados'],
+  [/\bputos?\b/gi, 'pesados'], [/\bcarajo\b/gi, 'rayos'],
+  [/\bcoño\b/gi, 'caramba'], [/\bel sapo\b/gi, 'el informante']
+];
+const suave = t => (leerG().suave ? LENGUAJE_SUAVE.reduce((s,[r,x]) => s.replace(r,m => { const v = typeof x === 'function' ? x(m) : x; return /^[A-ZÁÉÍÓÚÑÜ]/.test(m) ? v.charAt(0).toLocaleUpperCase('es') + v.slice(1) : v; }),String(t)) : String(t));
 let hudT2 = 0, mapaPts = [];
 function dibujar(dt) {
   const g = G.g, E = G.E, V = G.vistas, W = G.W, H = G.H; if (!E) return;
@@ -97,7 +108,7 @@ function hud() {
   U.pintarMinimapa(C.x, C.y, G.camara.yaw, pts); mapaPts = pts;
   /* la sirena más cercana suena con Doppler (se acerca: más aguda; se aleja: más grave) y el motor sigue las rpm */
   let pol = null, dp = 160; for (const r of B.rivales) if (r.bando === 'policia' && !r.roto && !r.retirada) { const d = Math.hypot(r.cuerpo.x - C.x, r.cuerpo.y - C.y); if (d < dp) { dp = d; pol = r; } }
-  Snd.sirenaVol(pol ? clamp(1.1 - dp / 160, .15, 1) : 0); if (pol) { const vr = G._dpol != null && G._polId === pol.id ? (dp - G._dpol) / .25 : 0; Snd.doppler(vr); G._dpol = dp; G._polId = pol.id; } else G._dpol = null;
+  if (pol) { const vr = G._dpol != null && G._polId === pol.id ? (dp - G._dpol) / .25 : 0; if (G._ocPolId !== pol.id || G.t - (G._ocT ?? -1e8) > .25) { G._ocluido = MC.PersecucionAudio.ocluido(G.M, C, pol.cuerpo); G._ocT = G.t; G._ocPolId = pol.id; } const p = MC.PersecucionAudio.plan({ distancia: dp, velocidadRadial: vr, ocluido: G._ocluido, interior: !!G.enInterior }); Snd.sirenaVol(p.volumen, p.corte); Snd.doppler(vr); G._dpol = dp; G._polId = pol.id; } else { Snd.sirenaVol(0); G._dpol = null; G._ocPolId = null; }
   Snd.motor(C.v, enCarro && G.carro > 0, G.ctl.botones.has('freno') ? -1 : 1);
   /* la música sigue la tensión (MC.Musica, compuesta en el momento) */
   if ((musT -= .25) <= 0 && Snd.on && Snd.ac) { musT = 20; const tension = clamp(B.nivel / 5 + (banda ? .4 : 0), 0, 1), A = MC.Musica.adaptar({ velocidad: Math.abs(C.v), hora: G.reloj.hora, clima: G.clima, tension }); if (!tocando || A.estilo !== G._estiloMus) { G._estiloMus = A.estilo; tocando = MC.Musica.tocar({ estilo: A.estilo, energia: A.energia, compases: 16 }); MC.Musica.volumen(.32); } }
@@ -106,9 +117,20 @@ function hud() {
 /* ---------- el planeta entero (MC.Planeta.globo): se arrastra para girarlo ---------- */
 const Globo = {
   lon0: null, inc: .32,
-  abrir(desdeZoom) { const P = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y); this.lon0 = P.lon; G.globo = true; G.pausa = true; $('#globo').hidden = false; const cv0 = $('#gcv'); cv0.classList.remove('llega'); void cv0.offsetWidth; cv0.classList.add('llega'); if (desdeZoom) G.ui.aviso('🌍 Te alejaste hasta ver el planeta entero', 2200, 'globo'); const c = $('#gcv'); let x0 = null; c.onpointerdown = e => { x0 = e.clientX; c.setPointerCapture(e.pointerId); }; c.onpointermove = e => { if (x0 == null) return; this.lon0 -= (e.clientX - x0) * .35; x0 = e.clientX; }; c.onpointerup = () => { x0 = null; };
+  abrir(desdeZoom) { const P = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y); this.lon0 = P.lon; G.globo = true; G.pausa = true; $('#globo').hidden = false; const cv0 = $('#gcv'), cvGPU = $('#ggl'); cv0.classList.remove('llega'); cvGPU.classList.remove('llega'); void cv0.offsetWidth; cv0.classList.add('llega'); cvGPU.classList.add('llega'); if (desdeZoom) G.ui.aviso('🌍 Te alejaste hasta ver el planeta entero', 2200, 'globo'); const c = $('#gcv'); let x0 = null; c.onpointerdown = e => { x0 = e.clientX; c.setPointerCapture(e.pointerId); }; c.onpointermove = e => { if (x0 == null) return; this.lon0 -= (e.clientX - x0) * .35; x0 = e.clientX; }; c.onpointerup = () => { x0 = null; };
     const d = planeta.def(G.id), C = G.cuerpo, txt = d.tipo === 'tramo' ? 'Vas por la <b>' + d.nombre + '</b>, km ' + (C.y / 1000).toFixed(1) + ' de ' + (d.largo / 1000).toFixed(0) + ' · Sigue: <b>' + planeta.vecino(G.id, 1).nombre + '</b>' : 'Estás en <b>' + d.nombre + '</b> · Siguiente parada: <b>' + planeta.vecino(G.id, 1).nombre + '</b> · Anterior: ' + planeta.vecino(G.id, -1).nombre;
     $('#gInfo').innerHTML = txt + '<br><small>Un planeta: tres ciudades reales y kilómetros de nada entre ellas. Arrastra para girarlo.</small>'; },
   cerrar() { G.globo = false; G.pausa = false; $('#globo').hidden = true; }
 };
-function pintarGlobo(dt) { const c = $('#gcv'), dp = Math.min(2, devicePixelRatio || 1), W = c.width = Math.round(innerWidth * dp), H = c.height = Math.round(innerHeight * dp), g = c.getContext('2d'); G.t += dt * .2; Globo.lon0 += dt * 2; planeta.globo(g, W, H, { lon0: Globo.lon0, inclinacion: Globo.inc, t: G.t, yo: { id: G.id, x: G.cuerpo.x, y: G.cuerpo.y } }); }
+function pintarGlobo(dt) {
+  const c = $('#gcv'), d = Math.min(1.5, devicePixelRatio || 1), W = Math.round(innerWidth * d), H = Math.round(innerHeight * d);
+  G.t += dt * .2; Globo.lon0 += dt * 2;
+  if (!Globo.gpu) Globo.gpu = new MC.GloboGPU($('#ggl'), planeta.anillo);
+  const jugador = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y);
+  const webgl = Globo.gpu.dibujar(W, H, { lon0: Globo.lon0, inc: Globo.inc, t: G.t, jugador });
+  c.style.opacity = webgl ? '0' : '1';
+  if (!webgl) {
+    c.width = W; c.height = H;
+    planeta.globo(c.getContext('2d'), W, H, { lon0: Globo.lon0, inclinacion: Globo.inc, t: G.t, yo: { id: G.id, x: G.cuerpo.x, y: G.cuerpo.y } });
+  }
+}

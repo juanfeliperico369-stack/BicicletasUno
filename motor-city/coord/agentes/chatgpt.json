@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt",
+  "rama": "ia/chatgpt/4-0-2-gemini-auditoria",
+  "rol": "Auditoría del contenido 4.0, catalogación de paradas, pruebas",
+  "fase_actual": "C-M31 GPU, C-M32 base, C-M33 LOD, C-M34 cache ED1, C-M35 piezas, C-M36 audio, G-H21/22/23",
+  "estado": "PR en revisión",
+  "ultima_actualizacion_utc": "2026-11-21T03:12:00Z",
+  "zonas_reclamadas": [
+    "js/13-planeta.js",
+    "juegos/getaway/10-contenido.js",
+    "juegos/getaway/40-dibujo.js",
+    "contenido/paradas-carretera.json",
+    "js/61-sonido.js",
+    "juegos/getaway/20-juego.js",
+    "js/28-accion-pie.js",
+    "juegos/getaway/30-historia.js",
+    "juegos/getaway/arte3d/generar_actores_rig.py",
+    "juegos/getaway/arte3d/validar_actores_rig.py",
+    "js/45-glb.js",
+    "js/45-gl.js",
+    "js/32-piezas.js",
+    "js/13-globo-gpu.js",
+    "juegos/getaway/index.html",
+    "js/10-sectores.js"
+  ],
+  "no_toco": [
+    "ramas ajenas",
+    "datos geográficos binarios"
+  ],
+  "pendiente_para_compañeras": "G-H20/24 teléfono real y cotejo de 19 parcelas"
+}

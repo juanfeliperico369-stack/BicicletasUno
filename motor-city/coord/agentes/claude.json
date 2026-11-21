@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.0.2 terminada: manejo con reversa, piloto de la IA, Run en la ciclovía, carreras, guardias a pie, accesibilidad",
+  "fase_actual": "4.0.3 terminada: unidas las entregas de ChatGPT/Codex y Gemini/Antigravity; terminadas sus tareas a medias (prueba de línea de visión, G-H20..23, Z1/Z2 de El Metro)",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-21T03:00:00Z",
+  "ultima_actualizacion_utc": "2026-11-21T12:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -34,12 +34,15 @@
     "Busqueda evento abolladura",
     "MC.Manejo.pilotar",
     "Cuerpo.ia (sin obstáculos menores en la calle)",
-    "ManejoCarro: reversa"
+    "ManejoCarro: reversa",
+    "AccionPie.ocluido: una muestra por metro"
   ],
   "pruebas_verificadas": {
-    "motor": "node motor.mjs prueba --navegador: 152/152",
+    "motor": "node motor.mjs prueba --navegador (4.0.3)",
     "encicla": "tests/run.js en verde",
-    "el_metro": "test.mjs 100: 0 errores"
+    "el_metro": "node tools/test.mjs 100: 0 errores",
+    "getaway_contenido": "node pruebas/getaway-contenido.mjs: todo OK"
   },
-  "pendiente_para_compañeras": "Leer CONTEXTO-RELEVO.md § 5 (qué falta y a quién le toca) y dejar su entrada en § 8 al terminar."
+  "pendiente_para_compañeras": "Leer CONTEXTO-RELEVO.md § 5 (qué falta y a quién le toca) y dejar su entrada en § 8 al terminar.",
+  "pendiente_para_compañera": "Codex: rehacer y subir los arreglos de EnCicla (CONTEXTO-RELEVO § 5 fila 11). Antigravity: Z3-Z5 de El Metro (fila 12). Todos: dejar entrada en CONTEXTO-RELEVO § 8."
 }

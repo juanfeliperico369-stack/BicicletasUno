@@ -23,3 +23,8 @@ Abrir `visor-3d.html` localmente con WebGL2; trae un rastreador de prueba incrus
 - [Juego standalone WebGL2](../turno-cero-accion-3d.html) con controles de escritorio y táctiles; 4 GLB previos incrustados y actores animados proceduralmente.
 - `python3 generar_actores_rig.py && python3 validar_actores_rig.py` crea 3 GLB nuevos de personaje con 12 huesos y 8 clips cada uno. Son **animaciones exportadas** todavía no ejecutadas por el visor del juego.
 - [Guía y límites](README-ACCION-3D.md). El workflow de activos entrega 45 GLB como un artifact descargable.
+
+## C-M33 · nuevos personajes articulados
+El generador exporta **9 personajes** (Mara, Rook, guardia, Nadia, Noah, Cross, El Contador y dos peatones), cada uno con **12 huesos, 8 clips** y pesos compartidos en codos/rodillas. El validador comprueba los 9 GLB y pesos sumando 255. El catálogo generable es 42 básicos + 9 articulados (**51 GLB**).
+
+Los personajes adicionales son **activos de desarrollo** descargables desde Actions; no reemplazan automáticamente los modelos de la compilación ni constituyen LOD1/LOD2 o arte PBR cinematográfico.

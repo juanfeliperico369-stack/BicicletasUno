@@ -28,23 +28,23 @@ TC.QUIEN = {
 /* ---------- lugares: calles y barrios reales; los negocios son inventados ---------- */
 TC.LUGARES = {
   ny_taller: { mundo: 'nueva_york', n: 'Taller Vega (sur de Chelsea)', lat: 40.7432, lon: -74.0055, taller: true },
-  ny_argenta: { mundo: 'nueva_york', n: 'Depósito de Argenta Quay (Gansevoort Street)', lat: 40.7395, lon: -74.0080 },
+  ny_argenta: { mundo: 'nueva_york', n: 'Depósito de Argenta Quay (Gansevoort Street)', lat: 40.73939, lon: -74.00792 },
   ny_nadia: { mundo: 'nueva_york', n: 'Water Street con Old Slip (Lower Manhattan)', lat: 40.7040, lon: -74.0085 },
-  ny_noah: { mundo: 'nueva_york', n: 'Azotea de la radio de Noah (Eldridge Street)', lat: 40.7175, lon: -73.9915 },
-  ny_muelle4: { mundo: 'nueva_york', n: 'Muelle 4 de Argenta Quay (Cherry Street, East River)', lat: 40.7112, lon: -73.9855 },
+  ny_noah: { mundo: 'nueva_york', n: 'Azotea de la radio de Noah (Eldridge Street)', lat: 40.71767, lon: -73.99222 },
+  ny_muelle4: { mundo: 'nueva_york', n: 'Muelle 4 de Argenta Quay (Cherry Street, East River)', lat: 40.71171, lon: -73.9849 },
   ny_harlem: { mundo: 'nueva_york', n: 'Garaje de la 145 (Harlem)', lat: 40.8240, lon: -73.9440, escondite: true },
-  ny_oeste: { mundo: 'nueva_york', n: 'Parqueadero de la 30 Oeste', lat: 40.7530, lon: -74.0010, escondite: true },
+  ny_oeste: { mundo: 'nueva_york', n: 'Parqueadero de la 30 Oeste', lat: 40.75225, lon: -74.00086, escondite: true },
   ny_les: { mundo: 'nueva_york', n: 'Garaje de Delancey (Lower East Side)', lat: 40.7185, lon: -73.9870, escondite: true },
   md_efrain: { mundo: 'medellin', n: 'Taller de Don Efraín (Barrio Colombia)', lat: 6.2265, lon: -75.5745, taller: true },
   md_lleras: { mundo: 'medellin', n: 'Parque Lleras (El Poblado)', lat: 6.2087, lon: -75.5677 },
   md_bodega: { mundo: 'medellin', n: 'Bodega 9 de Argenta Andina (Itagüí)', lat: 6.1745, lon: -75.6050 },
   md_torre: { mundo: 'medellin', n: 'Torre de Argenta Andina (El Poblado)', lat: 6.2010, lon: -75.5735 },
-  md_centro: { mundo: 'medellin', n: 'Parqueadero La Playa (Centro)', lat: 6.2470, lon: -75.5650, escondite: true },
-  md_bello: { mundo: 'medellin', n: 'Lavadero El Último Brillo (Bello)', lat: 6.3330, lon: -75.5580, escondite: true },
-  md_envigado: { mundo: 'medellin', n: 'Garaje de la 40 Sur (Envigado)', lat: 6.1720, lon: -75.5850, escondite: true },
+  md_centro: { mundo: 'medellin', n: 'Parqueadero La Playa (Centro)', lat: 6.24921, lon: -75.56502, escondite: true },
+  md_bello: { mundo: 'medellin', n: 'Lavadero El Último Brillo (Bello)', lat: 6.33368, lon: -75.55846, escondite: true },
+  md_envigado: { mundo: 'medellin', n: 'Garaje de la 40 Sur (Envigado)', lat: 6.16694, lon: -75.58799, escondite: true },
   gu_taller: { mundo: 'guatape', n: 'Taller Sin Nombre (Guatapé)', lat: 6.2328, lon: -75.1590, taller: true },
   gu_malecon: { mundo: 'guatape', n: 'Malecón de Guatapé', lugar: 'Malecon De Guatape' },
-  gu_finca: { mundo: 'guatape', n: 'Finca La Esperanza (refugio de El Contador)', lugar: 'La valentina finca hotel' },
+  gu_finca: { mundo: 'guatape', n: 'Refugio La Esperanza (escenario ficticio)', lat: 6.23636, lon: -75.18186, ficcion: true },
   gu_piedra: { mundo: 'guatape', n: 'Pie de la Piedra del Peñol', lugar: 'Guatapé Represa, Piedra Mirador' }
 };
 
@@ -53,7 +53,7 @@ TC.ARTEFACTOS = {
   dron: { cod: 'T02', n: 'Dron Cuervo', icon: '🛸', dur: 50, alcance: 70, recarga: 18, d: 'Cámara aérea de 70 m de radio y 50 s de batería. Marca a los rivales que ve. Tu carro se queda quieto mientras vuela.' },
   cebo: { cod: 'T05', n: 'Cebo acústico', icon: '📢', cargas: 2, dur: 9, d: 'Lleva a la policía que no te ve a revisar otro punto. Dos cargas por capítulo.' },
   pulso: { cod: 'T08', n: 'Pulso de interferencia', icon: '📡', recarga: 45, d: 'Apaga 4 s al rival más cercano o al helicóptero. Sube la alerta.' },
-  lente: { cod: 'T01', n: 'Lente espectral', icon: '👁️', dur: 8, recarga: 35, d: 'Filtro térmico: ves calor y electrónica a través de los muros por 8 s. Con lluvia pierde detalle.' },
+  lente: { cod: 'T01', n: 'Lente espectral', icon: '👁️', dur: 8, recarga: 35, d: 'Filtro térmico: resalta calor y electrónica visibles durante 8 s; no atraviesa muros. Con lluvia pierde detalle.' },
   rastreador: { cod: 'T03', n: 'Rastreador Cerbero', icon: '📍', d: 'Tocas un vehículo con el tuyo y queda marcado en el mapa.' },
   acceso: { cod: 'T06', n: 'Módulo de acceso', icon: '🔓', d: 'Abre una cerradura con un ejercicio de sincronización. Consume tiempo.' },
   camara: { cod: 'T11', n: 'Cámara de bolsillo', icon: '📷', d: 'Fotos con metadatos: pruebas válidas si el ángulo se puede verificar.' },
@@ -183,7 +183,7 @@ TC.CONTRATOS = [
   { id: 'cobro', n: 'No todo se cobra', tipo: 'cobro', pago: [300, 480], heat: 1, banda: 1, texto: 'Saca de la vía a los cobradores que acosan a una familia del barrio.' },
   { id: 'cerco', n: 'Puertas cerradas', tipo: 'fuga', pago: [520, 760], heat: 4, texto: 'Sal de un cerco policial con la carga intacta.' },
   { id: 'contrarreloj', n: 'Contrarreloj', tipo: 'entrega', pago: [420, 640], heat: 0, limite: 150, texto: 'Un sobre que tiene que llegar antes de que cierre un juzgado. Dos minutos y medio.' },
-  { id: 'chivato', n: 'El sapo', tipo: 'escolta', pago: [450, 700], heat: 1, banda: 3, texto: 'Saca de la ciudad a un testigo que habló de más. La Cámara manda tres camionetas.' },
+  { id: 'chivato', n: 'El testigo incómodo', tipo: 'escolta', pago: [450, 700], heat: 1, banda: 3, texto: 'Saca de la ciudad a un testigo que habló de más. La Cámara manda tres camionetas.' },
   { id: 'vitrina', n: 'Vitrina rota', tipo: 'fuga', pago: [600, 900], heat: 5, texto: 'Recoge a dos que acaban de romper una vitrina. Cinco sirenas desde el primer segundo.' }
 ];
 

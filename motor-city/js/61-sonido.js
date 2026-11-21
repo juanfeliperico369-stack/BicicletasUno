@@ -45,3 +45,31 @@ const Paisaje = {
   parar() { if (this._pulsos) clearInterval(this._pulsos); this._pulsos = null; if (this._ac) { try { this._ac.close(); } catch (e) { /* ya cerrado */ } } this._ac = null; this._capas = null; }
 };
 MC.Paisaje = Paisaje;
+
+
+/* C-M36 · Percepción acústica espacial de persecución: pura, sin samples, compatible con todos los juegos.
+   La oclusión se estima contra huellas del mundo; no afirma simular propagación acústica real. */
+const PersecucionAudio = {
+  plan(op = {}) {
+    const d = Math.max(0, Number(op.distancia) || 0), vr = clamp(Number(op.velocidadRadial) || 0, -90, 90),
+      factor = clamp(343 / (343 + vr), .8, 1.25), at = 1 / (1 + (d / 95) ** 2),
+      obst = op.ocluido ? .38 : 1, int = op.interior ? .75 : 1;
+    return { doppler: factor, volumen: clamp((op.intensidad ?? 1) * at * obst * int, 0, 1), corte: op.ocluido ? 650 : op.interior ? 1600 : 3200 };
+  },
+  motor(op = {}) {
+    const v = Math.max(0, Math.abs(Number(op.velocidad) || 0)), a = clamp(Number(op.aceleracion) || 0, -1, 1),
+      marcha = Math.min(5, Math.floor(v / 9)), rpm = clamp(.25 + ((v - marcha * 9) / 9) * .75, .25, 1);
+    return { agudo: 42 + rpm * 70 + marcha * 6, grave: (42 + rpm * 70 + marcha * 6) / 2,
+      corte: 500 + rpm * 900 + a * 400, volumen: op.activo ? .035 + rpm * .03 + Math.max(0, a) * .02 : 0 };
+  },
+  ocluido(mundo, a, b) {
+    if (!mundo || typeof mundo.edificioEn !== 'function' || !a || !b) return false;
+    const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.min(12, Math.max(2, Math.ceil(d / 14)));
+    for (let i = 1; i < n; i++) {
+      const t = i / n;
+      if (mundo.edificioEn(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, 0)) return true;
+    }
+    return false;
+  }
+};
+MC.PersecucionAudio = PersecucionAudio;

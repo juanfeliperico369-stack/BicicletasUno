@@ -50,11 +50,22 @@ const Extras = {
   obstaculosCarrera() { const K = G.contrato; if (!K || !K.carrera) return []; const R = K.carrera.cuerpo, cs = Math.cos(R.a), sn = Math.sin(R.a); return [-1, 0, 1].map(k => ({ x: R.x + cs * 1.5 * k, y: R.y + sn * 1.5 * k, r: 1, motivo: 'rival:carrera' })); },
   /* ---------- guardias que persiguen a pie ---------- */
   guardiasPersiguen(dt) {
-    const H = Historia, C = G.cuerpo; if (!H.p || H.p.tipo !== 'sigilo' || !H.est.alarma) return; const aPie = C.veh.clase === 'pie';
-    for (const q of G.guardias) { if (q.fuera) continue; const dx = C.x - q.x, dy = C.y - q.y, d = Math.hypot(dx, dy); q.golpeT = Math.max(0, (q.golpeT || 0) - dt);
-      if (aPie && d < 45 && d > 1.1) { const v = 4.6, nx = q.x + dx / d * v * dt, ny = q.y + dy / d * v * dt; if (!G.M.edificioEn(nx, ny, 0)) { q.x = nx; q.y = ny; } q.a = Math.atan2(dy, dx); if (q.m3) { q.m3.x = q.x; q.m3.y = q.y; q.m3.clip = 'sprint_loop'; } }
-      else if (aPie && d <= 1.1 && q.golpeT <= 0) { q.golpeT = 1.3; G.vida = Math.max(0, G.vida - .1); G.camara.sacudir(.1); Snd.golpe(.35); if (q.m3) q.m3.clip = 'nonlethal_strike'; G.ui.aviso('👊 Un guardia te golpea: redúcelo ✊ o súbete al carro', 1500, 'golpe'); }
-      else if (!aPie && q.m3) q.m3.clip = 'idle_breath'; }
+    const H = Historia, C = G.cuerpo;
+    if (!H.p || H.p.tipo !== 'sigilo' || !H.est.alarma) return;
+    const aPie = C.veh.clase === 'pie';
+    for (const q of G.guardias) {
+      if (q.fuera) continue;
+      q.golpeT = Math.max(0, (q.golpeT || 0) - dt);
+      /* Si pierde el campo visual, MC.AccionPie.paso sigue buscando en su último avistamiento. */
+      const P = aPie ? MC.AccionPie.perseguir(q, C, G.M, dt) : { visible:false, golpe:false, movio:false };
+      if (P.movio && q.m3) { q.m3.x=q.x; q.m3.y=q.y; q.m3.a=q.a; q.m3.clip='sprint_loop'; }
+      if (P.golpe && q.golpeT <= 0) {
+        q.golpeT = 1.3; G.vida = Math.max(0, G.vida - .1);
+        G.camara.sacudir(.1); Snd.golpe(.35);
+        if (q.m3) q.m3.clip = 'nonlethal_strike';
+        G.ui.aviso('👊 Un guardia te golpea: redúcelo ✊ o súbete al carro', 1500, 'golpe');
+      } else if (!P.visible && q.m3 && q.estado !== 'busqueda') q.m3.clip = 'idle_breath';
+    }
   }
 };
 /* ganchos: la carrera es otro tipo de contrato */
