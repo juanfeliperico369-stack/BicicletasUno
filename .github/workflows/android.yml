@@ -69,3 +69,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.apk.outputs.path }}
+
+      # Claude 4.5: a mano (workflow_dispatch) también crea la release v<versión del juego> y le adjunta la APK
+      - name: Release al lanzarlo a mano
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v$(node -p "require('./dist/build.json').version")"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --target "$GITHUB_SHA" --title "Juega EnCicla $TAG" --notes "APK de depuración de Juega EnCicla."
+          gh release upload "$TAG" "${{ steps.apk.outputs.path }}" --clobber
