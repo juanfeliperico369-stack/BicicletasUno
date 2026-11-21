@@ -1,5 +1,50 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.1.0 · Motores clásicos: lo que hicieron Comanche, OutRun, Thief, Wolfenstein y Elite, rehecho para Motor City
+- **El pedido del autor:**
+  - investigar motores viejos que hoy son livianos pero potentes;
+  - ver cómo los usaron los mejores juegos;
+  - traer sus partes al motor.
+- **Regla:** sala limpia. Se toman las ideas publicadas y se escribe el código desde cero. No se copia código GPL, ni de licencias propias, ni filtrado. Licencias y fuentes en `docs/INVESTIGACION-MOTORES-CLASICOS.md`.
+- **`js/47-clasicos.js`:**
+  - **🏁 Arcade (`MC.Arcade`):** la carretera pseudo-3D de Pole Position y OutRun, sobre la vía real:
+    - proyección por segmentos con recorte en el plano cercano;
+    - franjas fijas al mundo y lomas del relieve;
+    - montañas en paralaje con el rumbo;
+    - pinos, palmas y cactus según el bioma; postes; letreros de veredas;
+    - edificios del mapa como cajas; carros y patrullas con sirena;
+    - faros de noche;
+    - en celular vertical, la cámara se ajusta para no abrir demasiado el campo.
+  - **⛰️ Vuelo (`MC.VoxelSpace`):** el Voxel Space de Comanche:
+    - mapa de alturas y de color desde el MC4, con los edificios encima y la luz horneada;
+    - columnas con y-buffer de adelante hacia atrás;
+    - la ventana nueva se arma por franjas, para no trabar el juego.
+  - **`MC.Sigilo` (Thief):**
+    - la gema de luz: sol, sombra de los edificios hacia el sol, postes de noche y faros;
+    - el ruido que rodea los edificios (Dijkstra en una rejilla de 4 m).
+  - **`MC.DDA` (Wolfenstein 3D):** las casillas exactas de un rayo.
+  - **`MC.Semilla` (Elite):** nombres de veredas siempre iguales desde tres números de 16 bits.
+- **Turno Cero: mundo abierto desde el principio.** Pedido del autor: «quiero mundo abierto desde el principio; el tutorial o el contexto de la historia es opcional».
+  - En la portada, el primer botón es ▶ **Jugar · mundo abierto**: Medellín (la ciudad más liviana en memoria) o donde quedaste, sin tarjetas ni diálogos. En la VM tarda 1,7 s.
+  - La historia es opcional: 📖 en la portada, el botón 📖 Historia en el juego, ⏸ Menú y la tecla H (seguir, empezar o repetir un capítulo).
+  - La casilla «Entrar directo» salta la portada la próxima vez, solo si ya se aceptó el 18+. Con `?portada` vuelve.
+  - El HUD dice «🌎 Mundo abierto».
+- **Turno Cero (`juegos/getaway/55-clasicos.js`):**
+  - en las misiones de sigilo hay una gema ◆ que brilla según la luz; en lo oscuro, los guardias ven a un tercio de la distancia;
+  - correr a pie o el motor cerca hace que un guardia vaya a mirar («👂 Un guardia oyó tus pasos»);
+  - en 🎥 Cámara están las cámaras 🏁 Arcade y ⛰️ Vuelo.
+- **Probado:**
+  - § 22 de `pruebas/prueba.mjs`:
+    - el DDA visita las casillas `0,0 1,0 2,0 3,0`;
+    - Elite da los mismos 64 nombres, 64 distintos;
+    - la luz vale 0,96 a mediodía y 0,24 a medianoche bajo un poste;
+    - un guardia ve a 9,7 m en lo oscuro y a 24 m a pleno sol;
+    - el ruido rodea un edificio: 55 m de camino contra 34 m en línea recta;
+    - el camino arcade queda 100 % en la calle;
+    - el voxel pone edificios de hasta 56 m;
+  - el banco ahora tiene 11 vistas;
+  - capturas en Chromium `412 × 860` de Medellín y de la Autopista del Embalse, de día y de noche.
+
 ## 21-nov-2026 · 4.0.3 · Terminar las tareas de las otras IA antes de que se queden sin uso
 - **El pedido del autor:** «ayúdalos a completar las tareas, están por quedar sin uso». Claude unió y terminó lo que dejaron a medias.
 - **ChatGPT / Codex** (`ia/chatgpt/4-0-2-gemini-auditoria`):

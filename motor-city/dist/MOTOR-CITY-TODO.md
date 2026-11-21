@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 4.0.3 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.1.0 · no se edita a mano: edita los documentos de origen -->
 
 # Documento de relevo · Motor City y *Turno Cero*
 
@@ -14,7 +14,9 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 21‑nov‑2026, Claude (motor 4.0.3). Unió las entregas de ChatGPT/Codex y de Gemini/Antigravity y terminó las tareas que dejaron a medias.
+**Última actualización:** 21‑nov‑2026, Claude (motor 4.1.0). Hizo dos cosas:
+- en 4.0.3, unió las entregas de ChatGPT/Codex y de Gemini/Antigravity y terminó sus tareas a medias;
+- en 4.1, trajo técnicas de motores clásicos (OutRun, Comanche, Thief, Wolfenstein, Elite), rehechas desde cero.
 
 **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. Las otras IA trabajan en sus ramas (`ia/<agente>/<tema>`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
@@ -44,7 +46,8 @@
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
 ## 3. Estado (21‑nov‑2026)
-- **Motor 4.0.3**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y 152 pruebas en verde. Ya trae:
+- **Motor 4.1.0**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y todas las pruebas en verde. Lo nuevo:
+  - **motores clásicos** en `js/47-clasicos.js`: las vistas 🏁 Arcade (OutRun) y ⛰️ Vuelo (Voxel Space), la gema y el ruido de Thief, el DDA y las semillas de Elite. Ver `docs/INVESTIGACION-MOTORES-CLASICOS.md`. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
   - **`MC.Modelos`**: lector GLB, con piel y animación glTF, faros de noche y abolladuras por zona;
@@ -68,6 +71,7 @@
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
 | 4.0.2 | Reversa y vuelta en tres puntos; `MC.Manejo.pilotar` (la IA sale de atascos); `rutaA` por la forma de la calle. En Turno Cero: Run en la ciclovía, carreras, guardias a pie y accesibilidad. |
+| 4.1.0 | Motores clásicos, rehechos desde cero:<ul><li>`MC.Arcade`: carretera pseudo-3D;</li><li>`MC.VoxelSpace`: vuelo;</li><li>`MC.Sigilo`: gema de luz y ruido por caminos;</li><li>`MC.DDA` y `MC.Semilla`.</li></ul>En Turno Cero: sigilo con gema y oído, y las cámaras 🏁 y ⛰️. |
 | 4.0.3 | Unidas las entregas de ChatGPT/Codex (globo WebGL2, sectores de 1 km, LOD, piezas, audio, acción a pie con línea de visión) y de Gemini/Antigravity (auditoría, 56 paradas). Claude terminó lo que quedó a medias: la prueba roja de la línea de visión, el lenguaje suave con concordancia, lo que faltaba de G‑H20/G‑H21 y las zonas Z1/Z2 de El Metro. |
 | 4.0.1 | Relevo (este documento y `coord/`), luces y abolladuras de los GLB, motor y Doppler, dron policial 3D, reducción no letal, alejar hasta el planeta, eventos de carretera, contratos nuevos y arte de portada |
 
@@ -86,6 +90,8 @@
 | 10 | **Combate a pie más allá de reducir**: cobertura, guardias que persiguen a pie, esquivar | Codex (C‑M32) | Ya están ✊ Reducir y los conos |
 | 11 | **Los arreglos de Codex en EnCicla** (no llegaron a GitHub: solo se subió su ficha `coord/agentes/codex.json`) | Codex | Hay que volver a hacerlos y subirlos a `codex/encicla-motorcity`:<ul><li>bici prestada (`82-prestamo.js`);</li><li>acceso sin aparcamiento (`68-ciudad.js`, `69-libre.js`);</li><li>gasto de la eléctrica (`92-vehiculos.js`; hoy la columna `drain` solo se usa en las eléctricas);</li><li>evento de montar rechazado (`94-revolucion.js`);</li><li>hojas de trama viejas a `stats.leaves` (`00-core.js`, `93-trama.js`);</li><li>`tests/regresion-encicla.js`.</li></ul>Lo de meter `motor-city/dist/motor.js` entero en EnCicla hay que medirlo antes: pesa varios MB. |
 | 12 | **El Metro: zonas Z3, Z4 y Z5 de Antigravity** | Antigravity (o quien las reclame en `MetroZero/.ai-coord/`) | Libres:<ul><li>`37-cronicas.js`;</li><li>`15-mc-puente.js`;</li><li>`48-planificador.js` y `49-guatape.js`.</li></ul>Claude ya hizo Z1 y Z2 en `src/js/98-relevo-z1.js`. |
+| 13 | **Lo que falta de los motores clásicos** (detalle en `docs/INVESTIGACION-MOTORES-CLASICOS.md` § 2) | Codex, con Claude | <ul><li>PVS de Quake para los sectores de Manhattan;</li><li>caché de superficies y lightmaps para las fachadas;</li><li>COLORMAP de Doom para el pixel y el 1 bit;</li><li>sectores y portales de Build para los interiores;</li><li>direccionales como guía, sin HUD (*The Getaway*);</li><li>tope de modelos de tráfico (GTA III).</li></ul> |
+| 14 | **Probar 🏁 Arcade y ⛰️ Vuelo en un celular real** (fluidez y si la ventana voxel traba al moverse) | Gemini / autor | En la VM: arcade 1–2 ms y vuelo menos de 1 ms por cuadro (Chromium por software). Armar la ventana de 2 km de una vez tarda unos 330 ms en Node; en el juego se arma por franjas. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -102,6 +108,7 @@
 - **Si dos soluciones chocan,** gana la que pase las pruebas, pese menos en KB y dé menos ms por cuadro (`MC.Telemetria`). Las mejoras que no se excluyen se suman.
 
 ## 7. Reglas que no se negocian
+- **Mundo abierto desde el principio** (pedido del autor, 4.1): en todos los juegos se entra a jugar de una. La historia, el tutorial y el contexto son opcionales y nunca bloquean.
 - Un solo HTML, sin internet en el juego, y español de Colombia.
 - No romper los guardados. El de Turno Cero es `motorcity.turnocero-v1`.
 - Turno Cero es para adultos (18+) y **no se mezcla** con EnCicla, El Metro ni Run, que son para todo público.
@@ -218,6 +225,37 @@
 - **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
 - **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
 - **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
+### Claude · 21‑nov‑2026 · 4.1.0 · motores clásicos
+- **Pedido del autor:**
+  - investigar motores viejos, livianos y potentes, y cómo los usaron los mejores juegos;
+  - hacerles ingeniería inversa;
+  - traer partes de las versiones liberadas.
+- **Hecho:**
+  - **la investigación con fuentes y licencias:** `docs/INVESTIGACION-MOTORES-CLASICOS.md`. Es sala limpia: el código GPL (Doom, Quake) y el de licencias propias (Build, Wolfenstein) solo se leen como documentación, y **el código filtrado o «reversado» de GTA III no se usa**;
+  - **`js/47-clasicos.js`:**
+    - `MC.Arcade`: la vista 🏁, carretera pseudo-3D de OutRun sobre la vía real;
+    - `MC.VoxelSpace`: la vista ⛰️, el vuelo de Comanche;
+    - `MC.Sigilo`: la gema y el ruido de Thief;
+    - `MC.DDA`: Wolfenstein;
+    - `MC.Semilla`: Elite;
+  - **Turno Cero (`55-clasicos.js`):** el sigilo con gema ◆ y oído de los guardias, y las cámaras nuevas en 🎥;
+  - **Turno Cero, mundo abierto desde el principio** (pedido del autor):
+    - ▶ «Jugar · mundo abierto» es el primer botón;
+    - la historia es 📖 opcional: en la portada, el botón 📖 del juego, ⏸ Menú y la tecla H;
+    - la casilla «Entrar directo» salta la portada;
+    - **no vuelvas a poner la historia ni el tutorial como paso obligatorio.**
+- **Probé:**
+  - `node pruebas/prueba.mjs`, § 22 (números verificables);
+  - el banco de Chromium con 11 vistas;
+  - capturas a `412 × 860` en Medellín y en la Autopista del Embalse, de día y de noche.
+- **Riesgo:**
+  - la vista Vuelo arma su ventana de 2 km la primera vez de una sola vez (puede tardar unos 0,3 s en un celular);
+  - la vista Arcade en la ciudad sigue la calle más cercana, y en cruces complejos puede escoger otra;
+  - el ruido de Thief usa `edificioEn` por celda: está bien para unos pocos guardias, pero no lo uses cada cuadro para cientos.
+  - **prueba ocasionalmente roja:** en el banco de Chromium, el rival de la carrera callejera a veces no arranca en 9 s (pasó 1 de 3 veces, con 10 m en lugar de más de 40). Es del piloto de la IA de 4.0.2 con rutas al azar, no de 4.1. Si se repite, revisar `MC.Manejo.pilotar` en la salida.
+- **Sigue:** § 5, filas 13 y 14, además de lo anterior.
+- **A la IA que siga:** al terminar, **escribe tu entrada aquí**, deja tu ficha en `coord/agentes/` y un mensaje en `coord/buzon/`, y pídele lo mismo a la siguiente.
+
 ### Claude · 21‑nov‑2026 · 4.0.3 · terminar lo de las otras IA antes de que se queden sin uso
 - **Pedido del autor:** «ayúdalos a completar las tareas, están por quedar sin uso».
 - **Hecho:**
@@ -952,6 +990,33 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 - El estilo clásico (plano) sigue disponible: `MC.estilo = 'clasico'`.
 
 ---
+
+### 4.1 · Motores clásicos (21‑nov‑2026)
+> Lee `docs/INVESTIGACION-MOTORES-CLASICOS.md`. La regla es **sala limpia**:
+> - las ideas, sí; el código de otros motores, no;
+> - **nunca** código filtrado;
+> - cada técnica nueva lleva su fuente y una prueba con números comprobables.
+
+#### Gemini · Antigravity («hydrogen») · fáciles
+| Id | Tarea | Entrega |
+|---|---|---|
+| **G‑H25** | Juega Turno Cero en 🎥 **🏁 Arcade** y **⛰️ Vuelo**, en la ciudad y en una carretera, de día y de noche. Mide en un celular real la fluidez y si hay tirones al avanzar en Vuelo. | Capturas y una tabla en `reportes/` |
+| **G‑H26** | Prueba el **sigilo nuevo** en el capítulo del muelle o de la bodega. Revisa si la gema ◆ se lee bien, si en lo oscuro los guardias de verdad ven menos y si el «👂 oyó tus pasos» se siente justo. | Reporte con lo que cambiarías |
+| **G‑H28** | Prueba el **mundo abierto primero**:<ul><li>¿se entiende en la portada que ▶ es jugar ya?</li><li>¿se encuentra la historia 📖 cuando uno la quiere?</li><li>¿la casilla «Entrar directo» funciona?</li></ul>Hazlo también en El Metro y EnCicla: ¿se puede jugar de una, sin tutorial obligatorio? | Reporte con capturas |
+| **G‑H27** | Lista de **más técnicas clásicas** con fuente pública y licencia, por ejemplo *Driver*, *Midtown Madness*, *Hard Drivin'*, *Stunt Car Racer* y *Crazy Taxi*. Para cada una: qué hacía y para qué serviría aquí. | Tabla en `reportes/` |
+
+#### ChatGPT · Codex («astra») · fuertes
+| Id | Tarea | Contrato | Entrega |
+|---|---|---|---|
+| **C‑M37** | **PVS de Quake para Manhattan:** por cada sector de 1 km, la lista de sectores que pueden verse, según la altura de los edificios. | Se precalcula al construir. `MC.Sectores1km` no decodifica los que no se ven. | Herramienta y prueba de memoria |
+| **C‑M38** | **Sectores y portales de Build** para entrar a los edificios: cuartos como sectores y puertas como portales. | `48-interiores.js`, sin cargar otro mundo | Módulo y prueba |
+| **C‑M39** | **COLORMAP de Doom:** niebla y oscuridad por distancia con tablas de paleta (32 niveles), para el estilo pixel y el 1 bit. | `16-estilos.js`. Sin mezclar colores por píxel en cada cuadro. | Módulo y prueba de ms |
+| **C‑M40** | **Direccionales como guía** (*The Getaway*): en un «modo cine», el carro de uno parpadea hacia la próxima esquina de la ruta, sin flecha ni minimapa. | Luces del GLB (`op.luces`) | Escena y prueba |
+| **C‑A18** (arte) | **Capas de cielo y montañas pintadas por bioma** para la vista Arcade: costa, desierto, bosque, montaña, nieve y lagos, en 3 capas de paralaje. | PNG o WebP con fondo transparente, 1024 × 256 | `arte/arcade/` |
+
+#### Claude · motor
+- Tope de modelos de tráfico por ciudad que se cambian por patrullas al subir la búsqueda (GTA III).
+- La ventana del Vuelo cada vez más rápida: la ventana nueva se arma por franjas y solo se debe ver el tirón la primera vez.
 
 ### 4.0 · Pedidos nuevos (20‑nov‑2026)
 > Juega primero `dist/juegos/getaway.html` (o desde la página del motor) en un celular real.
@@ -1954,6 +2019,32 @@ MC.arte.registrar('encicla', {
   - el carro con física (`ManejoCarro`) tiene reversa y vuelta en tres puntos.
 - **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
 
+### 9d. Motores clásicos (4.1, `js/47-clasicos.js`)
+Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limpia). La investigación, las licencias y las fuentes están en `docs/INVESTIGACION-MOTORES-CLASICOS.md`.
+- **Vistas nuevas** en `MC.VISTAS`:
+  - `arcade` 🏁: la carretera pseudo-3D de OutRun sobre la vía real;
+  - `vuelo` ⛰️: el Voxel Space de Comanche sobre el relieve y los edificios del MC4.
+
+  En el banco: teclas `0` y `-`.
+- **`MC.Arcade(M)`:**
+  - `camino(x, y, a)` da los puntos `{x, y, z, w, u}` cada 6 m por la autopista o por la calle y sus empalmes; `u` fija las franjas al mundo;
+  - `dibujar(g, W, H, E)`;
+  - `aPantalla(x, y, z)`.
+- **`MC.VoxelSpace(M, { N, celda })`:**
+  - `preparar(x, y)` arma, de una vez, la ventana N × N (suelo, relieve, agua, edificios y luz horneada);
+  - durante el juego, la ventana nueva se arma por franjas (`_iniciar` y `_trabajar`) mientras se dibuja la anterior.
+- **`MC.Sigilo`:**
+  - `luz(M, x, y, { reloj, clima, fuentes })` da un valor de 0 a 1 con el sol, la sombra de los edificios, los postes de noche y los faros;
+  - `gema(luz, { vel, agachado })`;
+  - `alcance(base, vis, alerta)`;
+  - `ruido(M, x, y, fuerza, { celda })` devuelve `{ camino(x, y), oye(x, y) }`. Es un Dijkstra que rodea los edificios.
+- **`MC.DDA`:**
+  - `recorrer(x0, y0, x1, y1, T, fn)` pasa por las casillas exactas del rayo;
+  - `bloqueado(M, …)` dice si hay suelo sólido en el camino.
+- **`MC.Semilla`:**
+  - `desde(texto)`, `torcer()`, `siguiente()`, `nombre()`, `valor()` y `lugares(n)`;
+  - son las semillas de Elite: nombres de veredas siempre iguales, sin guardar nada.
+
 ### 10. Hoja de ruta (lo que sigue)
 - **2.1:** precalcular las redes en el MC4 (hoy `red('rueda')` tarda alrededor de 1 s al arrancar). Guardar el ancho y la nomenclatura de las ciclorrutas. Sumar `geo/pasos.py` (niveles firmados de Overture) y conectarlo al GPS de dos niveles.
 - **2.2:** sombras del sol en WebGL. Agua animada del río. Ventanas con textura. Árboles por especie. Atlas del arte que entreguen Gemini y ChatGPT (`MC.arte`).
@@ -2742,6 +2833,111 @@ La entrega maestra (§12.3) pide separar la simulación del dibujo con contratos
 - `entidad.schema.json`, la entidad persistente que propone la entrega (§16.3).
 
 **La regla de la entrega que el motor cumple:** la calidad gráfica cambia el aspecto, nunca la física. Una frenada mide lo mismo en un celular bajo y en uno alto.
+
+
+---
+
+# ANEXO E4. Motores clásicos livianos (4.1) (`docs/INVESTIGACION-MOTORES-CLASICOS.md`)
+
+
+> **Pedido del autor (21‑nov‑2026):**
+> - investigar motores viejos que hoy son livianos pero muy potentes, y lo que se logró con ellos en sus años de gloria;
+> - aplicarles ingeniería inversa;
+> - ver cómo los usaron los mejores juegos;
+> - traer partes de las versiones liberadas de los motores ya descontinuados.
+
+### 0. La regla: sala limpia (léela antes de tocar nada)
+Motor City **no copia código** de ningún motor viejo. La «ingeniería inversa» se hace sobre las **ideas** publicadas: libros, artículos de sus autores, wikis técnicas y el código liberado *leído* como documentación. Luego se **escribe de nuevo** para Canvas 2D y el mundo MC4.
+
+**Por qué:**
+
+| Motor | Licencia de su código | Qué se puede hacer |
+|---|---|---|
+| Doom (id Tech 1) | Liberado en 1997 con licencia no comercial; **GPL** desde 1999 | Copiarlo obligaría a poner todo Motor City bajo GPL. Por eso solo se toman las ideas. |
+| Quake (id Tech 2) | **GPL**. Los datos (mapas, texturas, sonidos) siguen con derechos. | Igual que Doom. |
+| Wolfenstein 3D | Licencia propia de id, de uso limitado y educativo; **no es GPL** | Solo ideas (el DDA). |
+| Build (Duke Nukem 3D) | Licencia propia de Ken Silverman, que no permite uso comercial sin permiso | Solo ideas (sectores y portales). |
+| RenderWare (GTA III) | **Privado.** Hay fuentes «reversadas» (re3) y filtraciones. | **Prohibido** usarlas: tienen problemas legales. Solo se usa lo que contaron sus desarrolladores en público. |
+| Voxel Space (Comanche) | Patentado por NovaLogic (patente vencida). Hay recreaciones abiertas, pero sus mapas son de Comanche y quedan fuera de su licencia. | Solo el algoritmo; los mapas son los del MC4. |
+| Elite | Código de 1984 documentado por la comunidad (BBC Elite) | Solo la idea de las semillas. Las semillas y las sílabas son nuestras. |
+
+Si una IA quiere **traer código** de un motor GPL, debe hacerlo en un repositorio aparte con licencia GPL y preguntarle antes al autor. **Nunca** se usa código filtrado.
+
+### 1. Qué se trajo y dónde está (4.1)
+Todo está en `js/47-clasicos.js` (motor) y en `juegos/getaway/55-clasicos.js` (Turno Cero). Las pruebas están en `pruebas/prueba.mjs` § 22 y en el banco de Chromium.
+
+| Técnica | De dónde viene | Qué hacían con ella los mejores juegos | Cómo quedó en Motor City |
+|---|---|---|---|
+| **Carretera pseudo-3D por segmentos** | *Pole Position* (1982), *OutRun* (1986), *Lotus*, *Chase H.Q.* | Velocidad y curvas en máquinas sin 3D: la vía son tiras horizontales; las franjas alternas dan la sensación de velocidad; los objetos son sprites escalados; el paralaje de montañas va con el rumbo. | `MC.Arcade`, vista **🏁 Arcade**:<ul><li>la vía real (la autopista del tramo o la calle con sus empalmes) en segmentos de 6 m;</li><li>proyección de verdad, con recorte en el plano cercano;</li><li>franjas fijas al mundo;</li><li>lomas del relieve;</li><li>pinos, palmas y cactus según el bioma, y postes;</li><li>letreros con nombres de veredas, edificios del mapa como cajas, carros y patrullas con sirena;</li><li>faros de noche.</li></ul> |
+| **Voxel Space** | *Comanche: Maximum Overkill* (NovaLogic, 1992); Kyle Freeman | Terreno con relieve detallado en 1992, sin polígonos: un mapa de alturas y uno de color, columna por columna, de adelante hacia atrás con un *y-buffer*. La luz va **pintada en el mapa de color**. Los pasos son más largos a lo lejos. | `MC.VoxelSpace`, vista **⛰️ Vuelo**:<ul><li>la ventana de 2 km se arma desde el MC4 (suelo, relieve, agua y edificios encima);</li><li>la luz va horneada por pendiente;</li><li>la ventana nueva se arma **por franjas** mientras se dibuja la anterior, para no trabar el juego;</li><li>niebla de distancia y carros como sprites.</li></ul> |
+| **Gema de luz** | *Thief: The Dark Project* (Looking Glass, 1998) | La gema del HUD brilla según qué tan visible estás. Los guardias te ven según la luz del lugar: el primer juego de sigilo «en primera persona» de verdad. | `MC.Sigilo.luz/gema/alcance`:<ul><li>la luz sale de la hora real, de la **sombra de los edificios hacia el sol**, de los postes de la calle de noche y de los faros cercanos;</li><li>en lo oscuro, un guardia te ve a un tercio de su distancia;</li><li>en Turno Cero hay una gema ◆ en las misiones de sigilo.</li></ul> |
+| **Sonido que viaja por caminos** | *Thief* | Los sonidos llegan por los caminos entre cuartos, no como burbujas que atraviesan muros. Se puede escuchar detrás de una puerta. | `MC.Sigilo.ruido`:<ul><li>es un Dijkstra en una rejilla de 4 m: el ruido rodea los edificios y entra por los callejones; a través de un muro llega muy apagado;</li><li>en Turno Cero, correr a pie o un motor cerca hace que un guardia vaya a mirar.</li></ul> |
+| **DDA por casillas** | *Wolfenstein 3D* (id, 1992); *Catacomb 3‑D* | Rayos que recorren una cuadrícula sin saltarse ninguna casilla: en 1992 corría en un 286. | `MC.DDA.recorrer` y `MC.DDA.bloqueado(M, …)`: línea de visión exacta sobre las casillas del mundo (edificio, montaña o roca). |
+| **Semillas que se tuercen** | *Elite* (Braben y Bell, 1984) | 8 galaxias de 256 sistemas en 32 KB: no se guardaba el universo, solo tres números de 16 bits que se «tuercen». Buscaron muchas semillas antes de dar con una buena. | `MC.Semilla`: las veredas y pueblos de la carretera (los letreros de la vista arcade) salen siempre iguales desde el nombre del tramo, sin guardar nada. Las sílabas son del español. |
+
+### 2. Lo que queda por traer (pedidos en `TAREAS-IA.md` § 4.1)
+| Técnica | De dónde | Para qué en Motor City | Quién |
+|---|---|---|---|
+| **Conjunto potencialmente visible (PVS)** | Quake (1996). Se precalcula qué zonas pueden verse desde cada zona y se descarta el resto antes de dibujar. | Manhattan por sectores de 1 km (C‑M34): precalcular qué sectores se ven desde cada sector, según la altura de los edificios, y no decodificar los demás. | Codex |
+| **Caché de superficies y lightmaps** | Quake: la textura y la luz de cada cara se mezclan una vez en una caché y luego se dibuja desde ahí. | Fachadas de la ciudad 3D: hornear la luz del sol y de la noche por manzana (`MC.Sombras` ya calcula el sol). | Codex |
+| **Mapas de luz por distancia (COLORMAP)** | Doom (1993): 32 tablas de paleta que oscurecen por distancia y por luz del sector, solo con búsquedas en tabla. | El estilo pixel y el 1 bit: niebla y oscuridad por distancia con una tabla, sin mezclar colores en cada cuadro. | Codex |
+| **Sectores y portales** | Build, de Duke Nukem 3D (1996): el mundo son sectores 2D unidos por portales; se dibuja desde el sector donde está uno, siguiendo los portales. | Los interiores (`48-interiores.js`): cuartos como sectores y puertas como portales, para entrar a edificios sin cargar otro mundo. | Codex |
+| **Tráfico de pocos modelos que se cambian según la búsqueda** | GTA III (2001), contado por su director técnico Obbe Vermeij: en PS2 el tráfico usaba unos pocos modelos y, con nivel de búsqueda alto, se cambiaban por patrullas. Rockstar también limitaba la velocidad en zonas densas para que el streaming alcanzara. | Turno Cero con 3 GB de RAM: un tope de modelos de tráfico por ciudad, que se cambian por patrullas al subir el nivel. | Claude (motor) con datos de Gemini |
+| **Las direccionales como guía, sin HUD** | *The Getaway* (2002), el juego en que se inspira el nombre de la carpeta `getaway`: no tenía minimapa; las direccionales del carro marcaban el giro. | Un «modo cine» de Turno Cero sin flecha ni minimapa: las direccionales parpadean hacia la próxima esquina de la ruta. | Codex (luces del GLB) y Claude (ruta) |
+| **Mode 7** | SNES (*F‑Zero*, *Super Mario Kart*): un plano inclinado con una transformación afín por línea. | El mapa grande inclinado en celulares sin GPU. | Libre |
+
+### 3. Fuentes
+**Voxel Space:**
+- Sebastian Macke, *Voxel Space* (explicación y demo web): <https://github.com/s-macke/VoxelSpace>
+- Wikipedia: <https://en.wikipedia.org/wiki/Voxel_Space>
+
+**Carretera pseudo-3D:**
+- Louis Gorenfeld, *Lou's Pseudo 3d Page*: <https://www.extentofthejam.com/pseudo/>
+- Code inComplete, *How to build a racing game*: <https://codeincomplete.com/articles/javascript-racer-v1-straight> y <https://codeincomplete.com/articles/javascript-racer-v2-curves>
+
+**Thief:**
+- *Building the original Thief's revolutionary stealth system* (Game Developer): <https://gamedeveloper.com/design/building-the-original-i-thief-s-i-revolutionary-stealth-system>
+- PC Gamer, *Stealth is everywhere in games, but the innovations of Thief have been forgotten*: <https://pcgamer.com/stealth-is-everywhere-in-games-but-the-innovations-of-thief-have-been-forgotten>
+- Tom Leonard, *Postmortem: Thief* (en *Postmortems from Game Developer*): <https://www.oreilly.com/library/view/postmortems-from-game/9781578202140/22_Chapter_15.xhtml>
+
+**Doom:**
+- Doom Wiki, motor de dibujo y visplanes: <https://doomwiki.org/wiki/Visplane>
+- Doom Wiki, árbol BSP: <https://doomwiki.org/wiki/BSP_tree>
+- Doom Wiki, COLORMAP: <https://doomwiki.org/wiki/Colormap>
+- Doom Wiki, luz que disminuye: <https://doomwiki.org/wiki/Light_diminishing>
+- Doom Wiki, el código liberado: <https://www.doomwiki.org/wiki/Doom_source_code>
+- Wikipedia, *Doom engine*: <https://en.wikipedia.org/wiki/Doom_engine>
+
+**Quake:**
+- Fabien Sanglard, *Quake 2 software renderer*: <https://fabiensanglard.net/quake2/quake2_software_renderer.php>
+- Fabien Sanglard, el código de Quake: <https://fabiensanglard.net/quakeSource/quakeSourceRendition.php>
+- Michael Abrash, *Graphics Programming Black Book*, cap. 59–70 (transcripción): <https://github.com/jagregory/abrash-black-book/blob/master/src/chapter-70.md>
+- GameDev.net, *Quake's Lighting Model: Surface Caching*: <https://gamedev.net/tutorials/programming/graphics/ramblings-in-realtime-chapter-4-quakes-r985>
+
+**Build:**
+- Fabien Sanglard, *Build engine internals*: <https://fabiensanglard.net/duke3d/build_engine_internals.php>
+- Wikipedia: <https://en.wikipedia.org/wiki/Build_(game_engine)>
+
+**Wolfenstein 3D:**
+- id Software, código liberado con licencia de uso limitado: <https://docsearch.algolia.com/mcp/docs/repo/id-software/wolf3d>
+- Recreaciones con licencia MIT, como referencia de sala limpia: <https://github.com/dictoon/Wolfie>
+
+**Elite:**
+- Mark Moxon, *BBC Elite*, semillas de galaxias y sistemas: <https://elite.bbcelite.com/deep_dives/galaxy_and_system_seeds.html>
+- Wikipedia: <https://en.wikipedia.org/wiki/Elite_(video_game)>
+
+**GTA III (solo lo que contaron sus desarrolladores):**
+- GamesRadar, el semáforo en rojo y el nivel de búsqueda: <https://gamesradar.com/games/grand-theft-auto/gta-3-originally-gave-players-a-wanted-level-for-running-a-red-light-but-this-was-not-popular-with-the-team-so-a-developer-quickly-removed-it>
+- GamesRadar, el reto técnico más difícil: <https://gamesradar.com/games/grand-theft-auto/gta-3-dev-says-that-the-open-world-games-hardest-technical-challenge-was-partially-solved-with-careful-city-planning-and-some-extra-windy-weather>
+- Sportskeeda, los límites de vehículos en PS2: <https://www.sportskeeda.com/gta/former-gta-3-vice-city-san-andreas-dev-explains-vehicle-limitations-ps2>
+
+### 4. Para la IA que siga
+- Antes de traer otra técnica:
+  - lee esta tabla;
+  - pon la fuente;
+  - escribe el código desde cero;
+  - agrega una prueba con números que se puedan comprobar a mano (§ 22 de `pruebas/prueba.mjs`).
+- Al terminar, **deja tu entrada en `CONTEXTO-RELEVO.md` § 8** y pídele lo mismo a la siguiente IA.
 
 
 ---
@@ -3574,6 +3770,51 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 21-nov-2026 · 4.1.0 · Motores clásicos: lo que hicieron Comanche, OutRun, Thief, Wolfenstein y Elite, rehecho para Motor City
+- **El pedido del autor:**
+  - investigar motores viejos que hoy son livianos pero potentes;
+  - ver cómo los usaron los mejores juegos;
+  - traer sus partes al motor.
+- **Regla:** sala limpia. Se toman las ideas publicadas y se escribe el código desde cero. No se copia código GPL, ni de licencias propias, ni filtrado. Licencias y fuentes en `docs/INVESTIGACION-MOTORES-CLASICOS.md`.
+- **`js/47-clasicos.js`:**
+  - **🏁 Arcade (`MC.Arcade`):** la carretera pseudo-3D de Pole Position y OutRun, sobre la vía real:
+    - proyección por segmentos con recorte en el plano cercano;
+    - franjas fijas al mundo y lomas del relieve;
+    - montañas en paralaje con el rumbo;
+    - pinos, palmas y cactus según el bioma; postes; letreros de veredas;
+    - edificios del mapa como cajas; carros y patrullas con sirena;
+    - faros de noche;
+    - en celular vertical, la cámara se ajusta para no abrir demasiado el campo.
+  - **⛰️ Vuelo (`MC.VoxelSpace`):** el Voxel Space de Comanche:
+    - mapa de alturas y de color desde el MC4, con los edificios encima y la luz horneada;
+    - columnas con y-buffer de adelante hacia atrás;
+    - la ventana nueva se arma por franjas, para no trabar el juego.
+  - **`MC.Sigilo` (Thief):**
+    - la gema de luz: sol, sombra de los edificios hacia el sol, postes de noche y faros;
+    - el ruido que rodea los edificios (Dijkstra en una rejilla de 4 m).
+  - **`MC.DDA` (Wolfenstein 3D):** las casillas exactas de un rayo.
+  - **`MC.Semilla` (Elite):** nombres de veredas siempre iguales desde tres números de 16 bits.
+- **Turno Cero: mundo abierto desde el principio.** Pedido del autor: «quiero mundo abierto desde el principio; el tutorial o el contexto de la historia es opcional».
+  - En la portada, el primer botón es ▶ **Jugar · mundo abierto**: Medellín (la ciudad más liviana en memoria) o donde quedaste, sin tarjetas ni diálogos. En la VM tarda 1,7 s.
+  - La historia es opcional: 📖 en la portada, el botón 📖 Historia en el juego, ⏸ Menú y la tecla H (seguir, empezar o repetir un capítulo).
+  - La casilla «Entrar directo» salta la portada la próxima vez, solo si ya se aceptó el 18+. Con `?portada` vuelve.
+  - El HUD dice «🌎 Mundo abierto».
+- **Turno Cero (`juegos/getaway/55-clasicos.js`):**
+  - en las misiones de sigilo hay una gema ◆ que brilla según la luz; en lo oscuro, los guardias ven a un tercio de la distancia;
+  - correr a pie o el motor cerca hace que un guardia vaya a mirar («👂 Un guardia oyó tus pasos»);
+  - en 🎥 Cámara están las cámaras 🏁 Arcade y ⛰️ Vuelo.
+- **Probado:**
+  - § 22 de `pruebas/prueba.mjs`:
+    - el DDA visita las casillas `0,0 1,0 2,0 3,0`;
+    - Elite da los mismos 64 nombres, 64 distintos;
+    - la luz vale 0,96 a mediodía y 0,24 a medianoche bajo un poste;
+    - un guardia ve a 9,7 m en lo oscuro y a 24 m a pleno sol;
+    - el ruido rodea un edificio: 55 m de camino contra 34 m en línea recta;
+    - el camino arcade queda 100 % en la calle;
+    - el voxel pone edificios de hasta 56 m;
+  - el banco ahora tiene 11 vistas;
+  - capturas en Chromium `412 × 860` de Medellín y de la Autopista del Embalse, de día y de noche.
 
 ### 21-nov-2026 · 4.0.3 · Terminar las tareas de las otras IA antes de que se queden sin uso
 - **El pedido del autor:** «ayúdalos a completar las tareas, están por quedar sin uso». Claude unió y terminó lo que dejaron a medias.

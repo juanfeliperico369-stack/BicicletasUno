@@ -107,11 +107,13 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
     <p>2026. Mara Vega, mecánica y conductora de turno cero, abre un paquete que no debía abrir: una hoja de rutas que prueba cómo la Cámara de Rutas borra salarios y cómo Dirección Argo vende vigilancia a todos los bandos. Para proteger a quien se la dio tendrá que manejar, esconderse, espiar y disparar desde Manhattan hasta el Valle de Aburrá y el embalse de Guatapé. Entre ciudad y ciudad solo hay carretera, kilómetros de nada y lo que venga detrás.</p>
     <div id="aviso18"><b>Contenido para adultos.</b> Violencia con armas de fuego, persecuciones, crimen organizado, espionaje, amenazas, secuestro y lenguaje fuerte (se puede suavizar en el menú). La historia, sus personas, empresas, bandas y cuerpos de policía son ficción; las calles son reales. Universo «Turno Cero» de Codex, llevado al planeta de Motor City.</div>
     <div class="bts">
-      <button id="bSeguir" hidden>▶ <span>Seguir la historia<small id="sSeguir"></small></span></button>
-      <button id="bHistoria">▶ <span>Historia nueva<small>Acto I · Papel de ruta · Manhattan</small></span></button>
-      <button id="bLibre" class="b2">🌎 <span>Calle libre<small>Elige ciudad: contratos, persecuciones y el planeta entero</small></span></button>
+      <button id="bAbierto">▶ <span>Jugar · mundo abierto<small id="sAbierto">Medellín y el Valle: maneja a donde quieras · la historia es opcional</small></span></button>
+      <button id="bSeguir" class="b2" hidden>📖 <span>Seguir la historia<small id="sSeguir"></small></span></button>
+      <button id="bHistoria" class="b2">📖 <span>Historia (opcional)<small>Acto I · Papel de ruta · Manhattan</small></span></button>
+      <button id="bLibre" class="b2">🏙️ <span>Elegir ciudad<small>Nueva York, Medellín y el Valle o Guatapé · contratos y el planeta entero</small></span></button>
       <button id="bAccion" class="b2" onclick="location.href='turno-cero-accion-3d.html'">🎯 <span>Misión de acción 3D (Codex)<small>A pie, sigilo, dron y combate no letal en un distrito de prueba · WebGL2</small></span></button>
     </div>
+    <label id="lDirecto" style="display:flex;gap:8px;align-items:center;font:600 12.5px system-ui;color:var(--tinta);opacity:.85;margin-top:2px"><input type="checkbox" id="cDirecto" style="width:18px;height:18px"> Entrar directo al mundo abierto la próxima vez (sin esta portada)</label>
     <div id="capitulos" hidden></div>
     <div id="ciudades" class="bts" hidden></div>
     <details id="comoSe"><summary>❓ Cómo se juega (opcional)</summary><ul>
@@ -132,7 +134,7 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
 <div id="globo" class="capa" hidden><canvas id="ggl" aria-hidden="true"></canvas><canvas id="gcv"></canvas><button id="gCerrar" aria-label="Cerrar el planeta">✕</button><div class="info" id="gInfo"></div></div>
 <div id="artefactos" hidden><button data-k="dron" aria-label="Dron Cuervo">🛸<small>T02</small></button><button data-k="cebo" aria-label="Cebo acústico">📢<small>×2</small></button><button data-k="pulso" aria-label="Pulso de interferencia">📡<small>T08</small></button><button data-k="lente" aria-label="Lente espectral">👁️<small>T01</small></button><button data-k="disparar" aria-label="Disparar">🔫<small>×0</small></button></div>
 <div id="run" hidden><canvas id="runCv"></canvas><div id="runHud"></div></div>
-<div id="final" class="capa" hidden><div class="marco"><p id="fP" style="color:var(--ambar);font:800 12px system-ui;letter-spacing:.2em;text-transform:uppercase">Fin</p><h2 id="fH"></h2><p id="fX"></p><div class="cuentas" id="fC"></div><div class="fila"><button id="fLibre">🌎 Calle libre</button><button id="fPortada" class="b2" style="border-color:var(--linea);background:#121214;color:var(--tinta)">Volver a la portada</button></div></div></div>
+<div id="final" class="capa" hidden><div class="marco"><p id="fP" style="color:var(--ambar);font:800 12px system-ui;letter-spacing:.2em;text-transform:uppercase">Fin</p><h2 id="fH"></h2><p id="fX"></p><div class="cuentas" id="fC"></div><div class="fila"><button id="fLibre">🌎 Seguir en el mundo abierto</button><button id="fPortada" class="b2" style="border-color:var(--linea);background:#121214;color:var(--tinta)">Volver a la portada</button></div></div></div>
 <!--MUNDOS-->
 <script>/*MUNDO*/</script>
 <script>/*MOTOR*/</script>

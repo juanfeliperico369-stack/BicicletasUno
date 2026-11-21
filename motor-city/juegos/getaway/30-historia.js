@@ -170,7 +170,7 @@ const Contratos = {
   fuera(ev) { if (G.contrato && ev.bando === 'banda') G.contrato.fuera++; }
 };
 const Libre = {
-  async empezar(id, donde) {
+  async empezar(id, donde, op = {}) {
     /* G-H20: cancelamos diálogos antiguos sin dejar al Acto anterior continuar por detrás. */
     G.narrativaEpoch = (G.narrativaEpoch || 0) + 1;
     Subt.limpiar();
@@ -182,7 +182,7 @@ const Libre = {
     }
     G.pausa = false; G.hist = null; G.modo = 'libre'; Historia.p = null; G.climaForzado = null;
     await entrarMundo(id, donde || {});
-    await tarjeta('Calle libre', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada');
-    G.ui.aviso('📞 Toca Contratos para trabajar · 🌍 para ver el planeta', 3200, 'libre');
+    if (!op.rapido) await tarjeta('Mundo abierto', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada');
+    G.ui.aviso(op.rapido ? '🌎 Mundo abierto: ve a donde quieras · 📖 la historia es opcional · 📞 contratos' : '📞 Toca Contratos para trabajar · 🌍 para ver el planeta · 📖 la historia cuando quieras', 3600, 'libre');
   }
 };

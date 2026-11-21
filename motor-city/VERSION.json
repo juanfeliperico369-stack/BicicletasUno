@@ -1,5 +1,5 @@
 {
-  "version": "4.0.3",
+  "version": "4.1.0",
   "fecha": "2026-11-21",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
@@ -7,5 +7,5 @@
     "BicicletasUno: integración del motor en main no comprobada",
     "MetroZero: integración del motor en main no comprobada"
   ],
-  "estado": "4.0.3 en la rama de integración y en main (Pages): unidas las entregas de ChatGPT/Codex (globo WebGL2, sectores de 1 km, LOD, piezas que se sueltan, audio de persecución, acción a pie con línea de visión) y de Gemini/Antigravity (auditoría, 56 paradas de carretera, lugares neutros, lenguaje suave); arreglos G-H20 a G-H23"
+  "estado": "4.1.0 en la rama de integración y en main (Pages): técnicas de motores clásicos rehechas desde cero (js/47-clasicos.js): carretera arcade pseudo-3D (OutRun), vuelo Voxel Space (Comanche), gema de luz y ruido por caminos (Thief), DDA (Wolfenstein 3D) y semillas (Elite); en Turno Cero, sigilo con gema y oído y dos cámaras nuevas"
 }

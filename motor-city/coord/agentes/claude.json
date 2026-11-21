@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.0.3 terminada: unidas las entregas de ChatGPT/Codex y Gemini/Antigravity; terminadas sus tareas a medias (prueba de línea de visión, G-H20..23, Z1/Z2 de El Metro)",
+  "fase_actual": "4.1.0 terminada: motores clásicos (js/47-clasicos.js: Arcade, VoxelSpace, Sigilo, DDA, Semilla) y sigilo de Turno Cero",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-21T12:30:00Z",
+  "ultima_actualizacion_utc": "2026-11-21T15:00:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -16,7 +16,10 @@
     "juegos/getaway/40-dibujo.js",
     "juegos/getaway/90-inicio.js",
     "juegos/getaway/index.html",
-    "CONTEXTO-RELEVO.md"
+    "CONTEXTO-RELEVO.md",
+    "js/47-clasicos.js",
+    "juegos/getaway/55-clasicos.js",
+    "docs/INVESTIGACION-MOTORES-CLASICOS.md"
   ],
   "no_toco": [
     "src/ de BicicletasUno, MetroZero y RunRunZero (zonas de Antigravity y Codex)",
@@ -35,7 +38,13 @@
     "MC.Manejo.pilotar",
     "Cuerpo.ia (sin obstáculos menores en la calle)",
     "ManejoCarro: reversa",
-    "AccionPie.ocluido: una muestra por metro"
+    "AccionPie.ocluido: una muestra por metro",
+    "MC.Arcade",
+    "MC.VoxelSpace",
+    "MC.Sigilo",
+    "MC.DDA",
+    "MC.Semilla",
+    "vistas arcade y vuelo"
   ],
   "pruebas_verificadas": {
     "motor": "node motor.mjs prueba --navegador (4.0.3)",
@@ -44,5 +53,5 @@
     "getaway_contenido": "node pruebas/getaway-contenido.mjs: todo OK"
   },
   "pendiente_para_compañeras": "Leer CONTEXTO-RELEVO.md § 5 (qué falta y a quién le toca) y dejar su entrada en § 8 al terminar.",
-  "pendiente_para_compañera": "Codex: rehacer y subir los arreglos de EnCicla (CONTEXTO-RELEVO § 5 fila 11). Antigravity: Z3-Z5 de El Metro (fila 12). Todos: dejar entrada en CONTEXTO-RELEVO § 8."
+  "pendiente_para_compañera": "Codex: C-M37..C-M40 y C-A18 (TAREAS-IA § 4.1) además de lo de 4.0.3. Gemini: G-H25..G-H27. Todos: entrada en CONTEXTO-RELEVO § 8."
 }

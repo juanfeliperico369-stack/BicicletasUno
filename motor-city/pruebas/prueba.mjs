@@ -498,6 +498,23 @@ console.log('21) Manejo 4.0.2: reversa, vuelta en tres puntos y piloto de la IA'
   ok(vRev < -2 && vRev > -8.6 && intentos >= 3 && llego >= intentos - 1, 'manejo: con el carro quieto, frenar es reversa (hasta 8 m/s); el piloto de la IA arranca de espaldas y llega a su destino por la calle', { reversa: +vRev.toFixed(1), llego, de: intentos, segundos: tiempos });
 }
 
+console.log('22) Motores clásicos 4.1: DDA (Wolfenstein), semillas (Elite), gema y ruido (Thief), carretera arcade (OutRun) y Voxel Space (Comanche)');
+{ /* todo rehecho desde cero: se prueba con números que se pueden comprobar a mano */
+  const cas = []; MC.DDA.recorrer(.5, .5, 3.5, .5, 1, (x, y) => { cas.push(x + ',' + y); }); const diag = []; MC.DDA.recorrer(.5, .5, 2.5, 2.5, 1, (x, y) => { diag.push(x + ',' + y); });
+  const S1 = MC.Semilla.desde('ruta_atlantico'), S2 = MC.Semilla.desde('ruta_atlantico'), L1 = S1.lugares(64), L2 = S2.lugares(64), distintos = new Set(L1.map(q => q.nombre)).size;
+  /* la gema: a mediodía en una calle abierta hay más luz que a medianoche; el ruido rodea un edificio (el camino es más largo que la recta) */
+  const cE = M.viaCercana(...Object.values(M.geoAMetros(6.2442, -75.5812)), 300), dia = new MC.Reloj({ fecha: '2026-11-20', min: 12 * 60 }), noche = new MC.Reloj({ fecha: '2026-11-20', min: 0 });
+  const luzDia = MC.Sigilo.luz(M, cE.x, cE.y, { reloj: dia }), luzNoche = MC.Sigilo.luz(M, cE.x, cE.y, { reloj: noche }), alc = [MC.Sigilo.alcance(24, MC.Sigilo.gema(luzNoche, { agachado: true })), MC.Sigilo.alcance(24, MC.Sigilo.gema(luzDia, { vel: 5 }))];
+  let rodea = null; { const Lb = M.edificiosEn(cE.x - 150, cE.y - 150, cE.x + 150, cE.y + 150).filter(e => e.hw > 8 && e.hd > 6); for (const e of Lb) { const a = { x: e.x - e.ux * (e.hw + 3), y: e.y - e.uy * (e.hw + 3) }, b = { x: e.x + e.ux * (e.hw + 3), y: e.y + e.uy * (e.hw + 3) }; if (M.edificioEn(a.x, a.y, 0) || M.edificioEn(b.x, b.y, 0)) continue; const R = MC.Sigilo.ruido(M, a.x, a.y, 60, { celda: 2 }), cam = R.camino(b.x, b.y), rec = Math.hypot(b.x - a.x, b.y - a.y); if (isFinite(cam)) { rodea = { recta: Math.round(rec), camino: Math.round(cam), oye: +R.oye(b.x, b.y).toFixed(2) }; break; } } }
+  /* la carretera arcade sigue la calle; el Voxel Space arma su mapa de alturas con los edificios encima del relieve */
+  const A = new MC.Arcade(M), P = A.camino(cE.x, cE.y, cE.ang), enCalle = P.filter(q => M.viaCercana(q.x, q.y, 14)).length / P.length;
+  const V = new MC.VoxelSpace(M, { N: 256, celda: 4 }).preparar(cE.x, cE.y); let maxSalto = 0; for (let k = 1; k < V.alt.length; k++) maxSalto = Math.max(maxSalto, V.alt[k] - V.alt[k - 1]);
+  const Gt = MC.Generador.carretera({ largo: 4000, biomas: ['costa', 'desierto'], semilla: 3, nombre: 'Prueba' }), At = new MC.Arcade(Gt), Pt = At.camino(Gt.carretera.inicio.x, Gt.carretera.inicio.y + 200, Math.PI / 2), recta = Pt.every((q, i) => !i || Math.abs(q.y - Pt[i - 1].y - 6) < .01 && q.u === Math.round(q.y / 6));
+  ok(cas.join(' ') === '0,0 1,0 2,0 3,0' && diag.length === 5 && diag[0] === '0,0' && diag[4] === '2,2' && L1.every((q, i) => q.nombre === L2[i].nombre) && distintos > 50 && luzDia > luzNoche + .25 && alc[0] < alc[1] * .6 && rodea && rodea.camino > rodea.recta * 1.15 && P.length > 120 && enCalle > .8 && maxSalto > 6 && V.ms < 2500 && Pt.length > 150 && recta,
+    'clásicos: el DDA visita cada casilla del rayo; Elite da los mismos 64 nombres con la misma semilla; la gema baja de noche y en lo oscuro te ven de cerca; el ruido rodea los edificios; la carretera arcade sigue la calle y la autopista; el Voxel Space pone los edificios sobre el relieve',
+    { cas, diag: diag.length, nombres: L1.slice(0, 5).map(q => q.nombre), distintos, luzDia: +luzDia.toFixed(2), luzNoche: +luzNoche.toFixed(2), alcance: alc.map(x => +x.toFixed(1)), rodea, arcade: { puntos: P.length, enCalle: +enCalle.toFixed(2) }, voxel: { ms: Math.round(V.ms), maxSalto: Math.round(maxSalto) }, autopista: { puntos: Pt.length, recta } });
+}
+
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
@@ -509,8 +526,8 @@ if (process.argv.includes('--navegador')) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.goto(urlPrueba(html)); await p.waitForFunction(() => window.MCS && MCS.listo, null, { timeout: 120000 });
-    const vistas = await p.evaluate(async () => { const out = {}; for (const [i, v] of MC.VISTAS.entries()) { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (i + 1) })); await new Promise(r => setTimeout(r, 900)); out[v.id] = MCS.vistas.actual.id; } MCS.vistas.pixel = true; await new Promise(r => setTimeout(r, 600)); MCS.vistas.pixel = false; return out; });
-    ok(Object.keys(vistas).length === 9 && Object.entries(vistas).every(([k, v]) => k === v) && !errs.length, 'las 9 vistas (con la lateral) y el pixel sin errores', vistas);
+    const vistas = await p.evaluate(async () => { const out = {}; for (const [i, v] of MC.VISTAS.entries()) { window.dispatchEvent(new KeyboardEvent('keydown', { code: i < 9 ? 'Digit' + (i + 1) : i === 9 ? 'Digit0' : 'Minus' })); await new Promise(r => setTimeout(r, 900)); out[v.id] = MCS.vistas.actual.id; } MCS.vistas.pixel = true; await new Promise(r => setTimeout(r, 600)); MCS.vistas.pixel = false; return out; });
+    ok(Object.keys(vistas).length === 11 && Object.entries(vistas).every(([k, v]) => k === v) && !errs.length, 'las 11 vistas (con la lateral, la arcade de OutRun y el vuelo de Comanche) y el pixel sin errores', vistas);
     const ras = await p.evaluate(async () => { MCS.vistas.motor3d = 'raster'; window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (MC.VISTAS.findIndex(q => q.id === 'tercera') + 1) })); await new Promise(r => setTimeout(r, 1500)); const n = MCS.vistas.raster ? MCS.vistas.raster.n : 0, gpu = MC.GPU.perfil(); MCS.vistas.motor3d = 'auto'; return { poligonos: n, nivel: gpu.nivel, webgl: gpu.webgl, software: gpu.software, escala: +MCS.vistas.res.escala.toFixed(2) }; });
     ok(ras.poligonos > 200 && !errs.length, 'GPU virtual: la 3D por software (MC.Raster) dibuja la ciudad sin WebGL', ras);
     const glSombra = await p.evaluate(async () => {
@@ -622,7 +639,7 @@ if (process.argv.includes('--navegador')) {
     const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 }, hasTouch: true }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.goto(urlPrueba(tc)); await p.waitForFunction(() => window.TURNO_LISTO, null, { timeout: 120000 });
-    const portada = await p.evaluate(() => ({ adultos: /18\+/.test(document.querySelector('.sello').textContent), modelos: MC.Modelos.L.size, mundos: Object.keys(MC_CIUDADES), ctaVisible: document.querySelector('#bHistoria').getBoundingClientRect().bottom <= innerHeight }));
+    const portada = await p.evaluate(() => ({ adultos: /18\+/.test(document.querySelector('.sello').textContent), modelos: MC.Modelos.L.size, mundos: Object.keys(MC_CIUDADES), ctaVisible: document.querySelector('#bAbierto').getBoundingClientRect().bottom <= innerHeight && document.querySelector('#bAbierto').compareDocumentPosition(document.querySelector('#bHistoria')) === 4 }));
     await p.click('#bHistoria'); await p.waitForFunction(() => window.TURNO && TURNO.M && !TURNO.transicion, null, { timeout: 120000 });
     for (let i = 0; i < 120; i++) { const d = await p.$('.dialogo button'); if (d) await d.click({ timeout: 3000 }).catch(() => {}); else if (await p.evaluate(() => !!(TURNO.hist && TURNO.hist.p && !TURNO.pausa))) break; await p.waitForTimeout(150); }
     const r = await p.evaluate(async () => {

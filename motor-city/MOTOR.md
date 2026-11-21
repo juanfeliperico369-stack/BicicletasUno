@@ -239,6 +239,32 @@ MC.arte.registrar('encicla', {
   - el carro con física (`ManejoCarro`) tiene reversa y vuelta en tres puntos.
 - **Juegos con varios mundos:** en `juego.json`, `"mundos": ["nueva_york", "medellin", "guatape"]` y `"modelos": "arte/modelos/turno-cero"`. El juego lee `document.getElementById('mc4-' + id).textContent` y `MC_CIUDADES[id]`.
 
+## 9d. Motores clásicos (4.1, `js/47-clasicos.js`)
+Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limpia). La investigación, las licencias y las fuentes están en `docs/INVESTIGACION-MOTORES-CLASICOS.md`.
+- **Vistas nuevas** en `MC.VISTAS`:
+  - `arcade` 🏁: la carretera pseudo-3D de OutRun sobre la vía real;
+  - `vuelo` ⛰️: el Voxel Space de Comanche sobre el relieve y los edificios del MC4.
+
+  En el banco: teclas `0` y `-`.
+- **`MC.Arcade(M)`:**
+  - `camino(x, y, a)` da los puntos `{x, y, z, w, u}` cada 6 m por la autopista o por la calle y sus empalmes; `u` fija las franjas al mundo;
+  - `dibujar(g, W, H, E)`;
+  - `aPantalla(x, y, z)`.
+- **`MC.VoxelSpace(M, { N, celda })`:**
+  - `preparar(x, y)` arma, de una vez, la ventana N × N (suelo, relieve, agua, edificios y luz horneada);
+  - durante el juego, la ventana nueva se arma por franjas (`_iniciar` y `_trabajar`) mientras se dibuja la anterior.
+- **`MC.Sigilo`:**
+  - `luz(M, x, y, { reloj, clima, fuentes })` da un valor de 0 a 1 con el sol, la sombra de los edificios, los postes de noche y los faros;
+  - `gema(luz, { vel, agachado })`;
+  - `alcance(base, vis, alerta)`;
+  - `ruido(M, x, y, fuerza, { celda })` devuelve `{ camino(x, y), oye(x, y) }`. Es un Dijkstra que rodea los edificios.
+- **`MC.DDA`:**
+  - `recorrer(x0, y0, x1, y1, T, fn)` pasa por las casillas exactas del rayo;
+  - `bloqueado(M, …)` dice si hay suelo sólido en el camino.
+- **`MC.Semilla`:**
+  - `desde(texto)`, `torcer()`, `siguiente()`, `nombre()`, `valor()` y `lugares(n)`;
+  - son las semillas de Elite: nombres de veredas siempre iguales, sin guardar nada.
+
 ## 10. Hoja de ruta (lo que sigue)
 - **2.1:** precalcular las redes en el MC4 (hoy `red('rueda')` tarda alrededor de 1 s al arrancar). Guardar el ancho y la nomenclatura de las ciclorrutas. Sumar `geo/pasos.py` (niveles firmados de Overture) y conectarlo al GPS de dos niveles.
 - **2.2:** sombras del sol en WebGL. Agua animada del río. Ventanas con textura. Árboles por especie. Atlas del arte que entreguen Gemini y ChatGPT (`MC.arte`).

@@ -62,6 +62,33 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 
 ---
 
+## 4.1 · Motores clásicos (21‑nov‑2026)
+> Lee `docs/INVESTIGACION-MOTORES-CLASICOS.md`. La regla es **sala limpia**:
+> - las ideas, sí; el código de otros motores, no;
+> - **nunca** código filtrado;
+> - cada técnica nueva lleva su fuente y una prueba con números comprobables.
+
+### Gemini · Antigravity («hydrogen») · fáciles
+| Id | Tarea | Entrega |
+|---|---|---|
+| **G‑H25** | Juega Turno Cero en 🎥 **🏁 Arcade** y **⛰️ Vuelo**, en la ciudad y en una carretera, de día y de noche. Mide en un celular real la fluidez y si hay tirones al avanzar en Vuelo. | Capturas y una tabla en `reportes/` |
+| **G‑H26** | Prueba el **sigilo nuevo** en el capítulo del muelle o de la bodega. Revisa si la gema ◆ se lee bien, si en lo oscuro los guardias de verdad ven menos y si el «👂 oyó tus pasos» se siente justo. | Reporte con lo que cambiarías |
+| **G‑H28** | Prueba el **mundo abierto primero**:<ul><li>¿se entiende en la portada que ▶ es jugar ya?</li><li>¿se encuentra la historia 📖 cuando uno la quiere?</li><li>¿la casilla «Entrar directo» funciona?</li></ul>Hazlo también en El Metro y EnCicla: ¿se puede jugar de una, sin tutorial obligatorio? | Reporte con capturas |
+| **G‑H27** | Lista de **más técnicas clásicas** con fuente pública y licencia, por ejemplo *Driver*, *Midtown Madness*, *Hard Drivin'*, *Stunt Car Racer* y *Crazy Taxi*. Para cada una: qué hacía y para qué serviría aquí. | Tabla en `reportes/` |
+
+### ChatGPT · Codex («astra») · fuertes
+| Id | Tarea | Contrato | Entrega |
+|---|---|---|---|
+| **C‑M37** | **PVS de Quake para Manhattan:** por cada sector de 1 km, la lista de sectores que pueden verse, según la altura de los edificios. | Se precalcula al construir. `MC.Sectores1km` no decodifica los que no se ven. | Herramienta y prueba de memoria |
+| **C‑M38** | **Sectores y portales de Build** para entrar a los edificios: cuartos como sectores y puertas como portales. | `48-interiores.js`, sin cargar otro mundo | Módulo y prueba |
+| **C‑M39** | **COLORMAP de Doom:** niebla y oscuridad por distancia con tablas de paleta (32 niveles), para el estilo pixel y el 1 bit. | `16-estilos.js`. Sin mezclar colores por píxel en cada cuadro. | Módulo y prueba de ms |
+| **C‑M40** | **Direccionales como guía** (*The Getaway*): en un «modo cine», el carro de uno parpadea hacia la próxima esquina de la ruta, sin flecha ni minimapa. | Luces del GLB (`op.luces`) | Escena y prueba |
+| **C‑A18** (arte) | **Capas de cielo y montañas pintadas por bioma** para la vista Arcade: costa, desierto, bosque, montaña, nieve y lagos, en 3 capas de paralaje. | PNG o WebP con fondo transparente, 1024 × 256 | `arte/arcade/` |
+
+### Claude · motor
+- Tope de modelos de tráfico por ciudad que se cambian por patrullas al subir la búsqueda (GTA III).
+- La ventana del Vuelo cada vez más rápida: la ventana nueva se arma por franjas y solo se debe ver el tirón la primera vez.
+
 ## 4.0 · Pedidos nuevos (20‑nov‑2026)
 > Juega primero `dist/juegos/getaway.html` (o desde la página del motor) en un celular real.
 > - En la portada, «Calle libre» deja elegir ciudad.

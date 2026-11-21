@@ -78,7 +78,7 @@ function capas(g, es2D) {
 const BOT = {};
 function hud() {
   const U = G.ui, C = G.cuerpo, B = G.busq, M = G.M, V = C.veh, enCarro = V.clase !== 'pie' && V.clase !== 'rueda', tramo = !M.esCiudad, H = G.hist && TC.HISTORIA[Historia.cap];
-  U.ficha('cap', G.hist ? 'Acto ' + H.acto + ' · ' + H.titulo : '🌎 Calle libre');
+  U.ficha('cap', G.hist ? 'Acto ' + H.acto + ' · ' + H.titulo : '🌎 Mundo abierto');
   U.ficha('plata', plata(G.dinero) + (G.municion ? ' · 🔫 ' + G.municion : ''));
   const banda = B.rivales.some(r => r.bando === 'banda' && !r.roto);
   U.ficha('heat', '🚨'.repeat(B.nivel) + '◦'.repeat(5 - B.nivel) + (banda ? ' · 🔫 banda' : '') + (B.visto ? ' · 👁' : B.nivel ? ' · buscando' : '')).hidden = !(B.nivel || banda);

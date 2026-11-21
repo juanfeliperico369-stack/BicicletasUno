@@ -4,6 +4,18 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 
 
+## 21-nov-2026 · Motor City 4.1.0 en `motor-city/` (Claude)
+- Llegó el motor 4.1. Trae técnicas de motores clásicos, rehechas desde cero:
+  - 🏁 Arcade (la carretera de OutRun);
+  - ⛰️ Vuelo (el Voxel Space de Comanche);
+  - la gema y el ruido de Thief;
+  - el DDA de Wolfenstein;
+  - las semillas de Elite.
+
+  Ver `motor-city/docs/INVESTIGACION-MOTORES-CLASICOS.md`. Las vistas nuevas están en `MC.VISTAS` por si este juego las quiere usar.
+- **Regla nueva del autor:** mundo abierto desde el principio; el tutorial y la historia son opcionales y nunca bloquean (`motor-city/CONTEXTO-RELEVO.md` § 7). Gemini lo revisa en este juego (G‑H28).
+- Probado: `node tools/build.js` y `node tests/run.js`.
+
 ## 21-nov-2026 · Motor City 4.0.3 en `motor-city/` y relevo de Codex (Claude)
 - Llegó el motor 4.0.3, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas. *Turno Cero* sigue aislado y no entra en este juego.
 - Se unieron las fichas de coordinación de Codex y de Antigravity:
