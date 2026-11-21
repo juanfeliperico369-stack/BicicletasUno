@@ -390,6 +390,14 @@ body.big .turnos button{font-size:18px}
 .tlVeh{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:6px 0 4px}
 .tlVeh .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:14px}
 .tlVeh canvas{width:96px;height:54px;background:#eef3e6;border-radius:8px}
+
+/* alto contraste (Más > Alto contraste): textos y bordes marcados y el mapa del juego con más contraste */
+body.contraste #cv{filter:contrast(1.25) saturate(1.15)}
+body.contraste .chip,body.contraste .btn,body.contraste .sw,body.contraste .seg button,body.contraste .paper,body.contraste #toast{outline:3px solid #000;outline-offset:0}
+body.contraste .m,body.contraste small,body.contraste .pag{color:inherit!important;opacity:1!important}
+body.contraste #toast{background:#fff200;color:#000;font-weight:800}
+body.contraste #modal{background:#000000e6}
+body.contraste .paper{background:#fff;color:#000}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -6565,7 +6573,7 @@ class ModeUsuarioR extends ModeUsuario {
     const hr = this.clock / 60, base = this.mods.ciclovia ? .5 : 1; R.traffic = base * (hr < 5 ? .25 : hr < 6 ? .5 : (hr < 9 || (hr >= 17 && hr < 19.5)) ? 1.3 : hr >= 21 ? .55 : 1);
     if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.lend && m < sv.lend + 2 && !this.lendTold) { this.lendTold = 1; JE.ui && JE.ui.toast('🕘 Ya no se prestan bicis; puedes devolver la tuya hasta las ' + Cal.hora(sv.close)); } if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
     // energía: las subidas cansan, parar descansa; con poca energía se pedalea más lento (proporcional a la distancia recorrida con velMul)
-    const sl = Math.max(0, R.sl || 0), VG = vehDef(P.veh).gasto, drain = P.v > 5 ? (VG != null ? VG : P.veh === 'walk' ? .12 : .35 + sl * 30) * velMul(this) : -3;
+    const sl = Math.max(0, R.sl || 0), VG = vehDef(P.veh === 'bike' && (R.ebike || this.ebike) ? 'ebike' : P.veh).gasto,   /* la eléctrica es 'bike' con R.ebike: gasta como eléctrica (sin castigo en subida) */ drain = P.v > 5 ? (VG != null ? VG : P.veh === 'walk' ? .12 : .35 + sl * 30) * velMul(this) : -3;
     this.energy = clamp(this.energy - drain * dt, 0, 100); if (this.energy < 15 && !this.tiredTold) { this.tiredTold = 1; JE.ui && JE.ui.toast('😮‍💨 Poca energía: siéntate en una banca de un parque o para un momento'); } if (this.energy > 40) this.tiredTold = 0;
     // ciclovía y ciclorrutas: distancia
     const v = R.tileAt(); if ((this.mods.ciclovia && (v === TT.AVE || v === TT.AUTO)) || v === TT.CICLO) this.cvDist += P.v * dt;
@@ -12234,7 +12242,7 @@ const Trama = JE.trama = {
       const E = this.estado();
       if (!E.done.includes(C.id)) E.done.push(C.id);
       const premio = C.hojas || 15;
-      Save.data.leaves = (Save.data.leaves | 0) + premio;
+      Save.data.stats.leaves = (Save.data.stats.leaves | 0) + premio;
       M.score += premio * 2;
       if (E.done.length >= (this.guion().capitulos || []).length) {
         Save.data.flags = Save.data.flags || {};
@@ -12266,7 +12274,7 @@ const Trama = JE.trama = {
     const E = this.estado();
     if (E.frags.includes(f.id)) return;
     E.frags.push(f.id);
-    Save.data.leaves = (Save.data.leaves | 0) + 10;
+    Save.data.stats.leaves = (Save.data.stats.leaves | 0) + 10;
     if (E.frags.length >= this.fragmentos().length) {
       Save.data.flags = Save.data.flags || {};
       Save.data.flags.rieles_ruedas = 1;
@@ -12295,7 +12303,7 @@ const Trama = JE.trama = {
     const E = this.estado();
     if (!E.charlas.includes(p.id)) {
       E.charlas.push(p.id);
-      Save.data.leaves = (Save.data.leaves | 0) + 3;
+      Save.data.stats.leaves = (Save.data.stats.leaves | 0) + 3;
       if (E.charlas.length >= 8) { Save.data.flags = Save.data.flags || {}; Save.data.flags.vecinos_valle = 1; }
       Logros.check(); Save.save();
     }
@@ -12554,6 +12562,185 @@ Art.shareImage = function (w = 1200, h = 630) {
   x.font = '700 22px Cuerpo, sans-serif'; x.textAlign = 'right'; if (w - 40 - x.measureText('Juega sin internet · Web y Android').width > 40 + tw + 30) x.fillText('Juega sin internet · Web y Android', w - 40, h - 36);
   return c;
 };
+
+/* ---- 96-accesible.js ---- */
+/* =====================================================================
+   ACCESIBLE Y FIEL (traído de la rama revolucion-v2, 2.0.1, al unir las ramas el 20-nov-2026)
+   - Alto contraste: opción en Más, junto a «Letra grande»; se aplica al arrancar.
+   - El viaducto del metro y el tranvía no pasan sobre casas: bajo su trazado, las casas o edificios pasan a andén
+     (se mide con tools/auditoria-mapa.js; antes A 7,8 %, B 5,9 % y T 7 % del trazado iban sobre casas).
+   Los trenes de noche ya quedan guardados con Ride.metroOn() (30-ride.js).
+   ===================================================================== */
+const _init96 = UI.init; UI.init = function () { _init96.apply(this, arguments); document.body.classList.toggle('contraste', !!(Save.data && Save.data.settings && Save.data.settings.contraste)); };
+const _mas96 = UI.renderMas;
+UI.renderMas = function () {
+  _mas96.apply(this, arguments); const S = Save.data.settings, big = document.querySelector('#tab-mas [data-sw="big"]'); if (!big || document.querySelector('#tab-mas [data-sw="contraste"]')) return;
+  const o = document.createElement('div'); o.className = 'opt'; o.innerHTML = `<span>Alto contraste<br><small class="m">Textos y bordes marcados, mapa más nítido</small></span><button class="sw ${S.contraste ? 'on' : ''}" data-sw="contraste" aria-label="Alto contraste"></button>`;
+  big.closest('.opt').after(o); const b = o.querySelector('button');
+  b.onclick = () => { S.contraste = !S.contraste; Save.save(); b.classList.toggle('on', S.contraste); document.body.classList.toggle('contraste', S.contraste); Snd.sfx('tap'); };
+};
+const _rail96 = CityMap.buildRail;
+CityMap.buildRail = function () {
+  _rail96.apply(this, arguments); const casa = v => v === TT.BRICK || v === TT.BLDG; let n = 0;
+  for (const [P, r] of [[this.lineA, 7], [this.lineB, 7], [this.tram, 5]]) {
+    if (!P) continue; const paso = 4 / M_PER_PX, R = r / M_PER_PX;
+    for (let s = 0; s <= P.len; s += paso) {
+      const q = this.at(P, s), tx0 = Math.floor((q.x - R) / TS), tx1 = Math.floor((q.x + R) / TS), ty0 = Math.floor((q.y - R) / TS), ty1 = Math.floor((q.y + R) / TS);
+      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) if (Math.hypot((tx + .5) * TS - q.x, (ty + .5) * TS - q.y) <= R + TS / 2 && casa(this.get(tx, ty))) { this.set(tx, ty, TT.WALK); n++; }
+    }
+  }
+  this.corredorRiel = n;
+};
+
+/* ---- 97-motor30.js ---- */
+/* =====================================================================
+   MOTOR CITY 3.0 EN JUEGA ENCICLA (adaptado a su forma: mapa de casillas de 10 m y sprites)
+   1) Calidad automática del 3.0: mide el tiempo REAL entre cuadros (media móvil), reacciona en ~1 s y solo deja
+      un escalón más bajo si de verdad mejoró (si no, vuelve y no insiste por 60 s: la pantalla puede ir a 30 Hz).
+   2) Artilugios físicos (MC.Objetos del motor, a la escala de los sprites): conos de obra en las ciclorrutas y
+      balones en las plazas. La bici los tumba y los hace rodar; saltan un poco, caen, ruedan con roce, chocan con las
+      casas y se duermen quietos. No frenan la bici: son vida, no castigo.
+   ===================================================================== */
+Calidad.cuadro = function (t) {
+  const dt = t - this.last; this.last = t; const M = Game.mode; if (!M || !M.ride || M.sub || Game.paused || JE.headless || !(dt > 0 && dt < 250)) return;
+  const q = View.calidad || 1, base = Math.min(window.devicePixelRatio || 1, 2), ahora = performance.now();
+  this.ema = this.ema == null ? dt : this.ema * .9 + dt * .1;
+  const P = this.prueba; if (P) { P.t += dt; if (P.t > 600) P.m = P.m == null ? dt : P.m * .9 + dt * .1; if (P.t > 2200) { if (P.m > P.antes * .93) { if (P.tipo === 'q') { View.calidad = P.q0; View.resize(); } else { this.d3 = 1; JE.calidad3D = 1; } this.piso = ahora + 60000; } this.ema = P.m; this.prueba = null; } return; }
+  if (this.ema > 21) { this.lento = (this.lento || 0) + dt; this.holgado = 0; } else if (this.ema < 18.2) { this.holgado = (this.holgado || 0) + dt; this.lento = 0; } else { this.lento = Math.max(0, (this.lento || 0) - dt / 2); this.holgado = 0; }
+  if (this.lento > 800 && !(this.piso > ahora)) {
+    this.lento = 0;
+    if (this.d3 > 0) { this.prueba = { tipo: 'd3', antes: this.ema, t: 0 }; this.d3 = 0; JE.calidad3D = 0; }
+    else if (base > 1.01 && q > .6) { this.prueba = { tipo: 'q', q0: q, antes: this.ema, t: 0 }; View.calidad = Math.round((q - .2) * 10) / 10; View.resize(); }
+  } else if (this.holgado > 4000) {
+    this.holgado = 0; if (q < 1 && base > 1.01) { View.calidad = Math.round((q + .2) * 10) / 10; View.resize(); } else if (this.d3 < 1) { this.d3 = 1; JE.calidad3D = 1; }
+  }
+};
+const Artilugios = JE.artilugios = {
+  L: [], K: 2.6,   // K: los objetos se ven K veces su tamaño real, como los demás sprites del mapa
+  TIPOS: { cono: { r: .25, h: .7, masa: 2, rebote: .3, roce: 2.6, col: '#ff6a13', col2: '#f4f4f4' }, balon: { r: .12, h: .24, masa: .45, rebote: .7, roce: 1.4, col: '#f5f5f5', col2: '#1b1b1b' } },
+  poner(tipo, x, y) { const T = this.TIPOS[tipo]; const o = Object.assign({ tipo, x, y, z: 0, vx: 0, vy: 0, vz: 0, a: 0, va: 0, vuelco: 0, dormido: true }, T); this.L.push(o); return o; },
+  /* conos de obra en grupos de 3 sobre ciclorrutas y balones en plazas, alrededor del punto (x, y en px del mapa) */
+  sembrar(cx, cy, radioPx = 900, n = 36, sem = 1) {
+    const map = JE.map; if (!map) return 0; let k = 0, s = sem * 9301 + 49297;
+    const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+    for (let i = 0; i < n * 30 && k < n; i++) {
+      const a = r() * Math.PI * 2, d = Math.sqrt(r()) * radioPx, x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d, tt = map.get(Math.floor(x / TS), Math.floor(y / TS));
+      if (tt === TT.CICLO && r() < .5) { for (let j = 0; j < 3; j++) this.poner('cono', x + j * 1.6, y + j * .5); k += 3; }
+      else if (tt === TT.PLAZA) { this.poner('balon', x, y); k++; }
+    }
+    return k;
+  },
+  /* la bici (o el que vaya) empuja: impulso según su masa; gravedad y roce en px del mapa */
+  actualizar(ride, dt) {
+    dt = Math.min(dt, .05); const P = ride.p, map = JE.map, mpp = M_PER_PX, G = 9.81 / mpp, vx = Math.cos(P.a) * P.v, vy = Math.sin(P.a) * P.v, masa = P.veh === 'walk' ? 70 : 85;
+    for (const o of this.L) {
+      const dx = o.x - P.x, dy = o.y - P.y, d = Math.hypot(dx, dy), R = o.r * this.K / mpp + 2.2;   // lo que se ve: el objeto a escala de sprite más la bici
+      if (d < R && d > 1e-3) { const nx = dx / d, ny = dy / d, rel = (vx - o.vx) * nx + (vy - o.vy) * ny; o.x += nx * (R - d); o.y += ny * (R - d);
+        if (rel > .3) { const J = rel * (1 + o.rebote) * masa / (masa + o.masa); o.vx += nx * J; o.vy += ny * J; o.vz = Math.min(4.5 / mpp, J * (o.tipo === 'balon' ? .3 : .18)); o.va += (Math.random() - .5) * 6; if (o.tipo === 'cono') o.vuelco = 1; o.dormido = false; this.golpes = (this.golpes || 0) + 1; if (typeof vib === 'function') vib(15); if (J * mpp > 2 && typeof Snd !== 'undefined') Snd.sfx('tap'); } }
+      if (o.dormido) continue;
+      o.vz -= G * dt; o.z += o.vz * dt; if (o.z <= 0) { o.z = 0; o.vz = Math.abs(o.vz) * mpp > 1 ? -o.vz * o.rebote : 0; const f = Math.max(0, 1 - o.roce * dt); o.vx *= f; o.vy *= f; o.va *= f; }
+      const nx = o.x + o.vx * dt, ny = o.y + o.vy * dt, tt = map.get(Math.floor(nx / TS), Math.floor(ny / TS));
+      if (tt === TT.BLDG || tt === TT.BRICK || tt === TT.WATER) { o.vx *= -o.rebote; o.vy *= -o.rebote; } else { o.x = nx; o.y = ny; }
+      o.a += o.va * dt; if (o.z === 0 && Math.hypot(o.vx, o.vy) * mpp < .05) { o.vx = o.vy = o.va = 0; o.dormido = true; }
+    }
+  },
+  /* encima de la ciudad, con la misma cámara (w2s ya sabe del giro) */
+  dibujar(ride, V) {
+    if (!this.L.length) return; const c = V.ctx, s = V.s, k = this.K / M_PER_PX * s; c.save(); c.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
+    for (const o of this.L) {
+      const p = ride.w2s(o.x, o.y); if (p.x < -20 || p.y < -20 || p.x > V.vw * s + 20 || p.y > V.vh * s + 20) continue; const r = Math.max(1.5, o.r * k), zp = o.z * s * .6;
+      c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(p.x + r * .3, p.y + r * .3, r * 1.1, r * .65, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = o.col; c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 1;
+      if (o.tipo === 'balon') { c.beginPath(); c.arc(p.x, p.y - r - zp, r, 0, Math.PI * 2); c.fill(); c.stroke(); c.fillStyle = o.col2; c.beginPath(); c.arc(p.x, p.y - r - zp, r * .35, 0, Math.PI * 2); c.fill(); }
+      else if (!o.vuelco) { const h = o.h * k; c.beginPath(); c.moveTo(p.x - r, p.y); c.lineTo(p.x, p.y - h); c.lineTo(p.x + r, p.y); c.closePath(); c.fill(); c.stroke(); c.fillStyle = o.col2; c.fillRect(p.x - r * .45, p.y - h * .55, r * .9, Math.max(1, h * .14)); }
+      else { c.save(); c.translate(p.x, p.y - zp); c.rotate(o.a); c.beginPath(); c.moveTo(-o.h * k * .5, -r * .8); c.lineTo(o.h * k * .5, 0); c.lineTo(-o.h * k * .5, r * .8); c.closePath(); c.fill(); c.stroke(); c.restore(); }
+    }
+    c.restore();
+  }
+};
+const _upd97 = Ride.prototype.update;
+Ride.prototype.update = function (dt, dir) {
+  const r = _upd97.call(this, dt, dir);
+  if (!this._artis && this.p && JE.map) { this._artis = true; Artilugios.L = []; Artilugios.sembrar(this.p.x, this.p.y, 1100, 40, (Game.mode && Game.mode.seed) || 1); }
+  Artilugios.actualizar(this, dt); return r;
+};
+const _top97 = Ride.prototype.renderTop0;
+Ride.prototype.renderTop0 = function (V, sw, sh) { _top97.call(this, V, sw, sh); try { Artilugios.dibujar(this, V); } catch (e) { JE.errors && JE.errors.push(String(e)); } };
+
+/* ---- 98n-abierto.js ---- */
+/* =====================================================================
+   MUNDO ABIERTO PRIMERO (Claude, 21‑nov‑2026) · regla del autor para todos los juegos de Motor City:
+   «mundo abierto desde el principio; el tutorial y el contexto de la historia son opcionales y nunca bloquean».
+   Antigravity lo midió en su auditoría G‑H28 (motor-city/reportes/2026-11-21-gemini-clasicos-4.1.md):
+   aquí ▶ Jugar abría «BIENVENIDA 1 DE 4» y luego «Crea tu personaje» (4 toques o más y desplazar).
+   - ▶ Jugar entra DIRECTO al modo libre: pedaleando por el valle con un ciclista listo (1 toque).
+     Con EnCicla abierta sale en bici de EnCicla; de noche o con suspensión, en su bici.
+   - Lo demás queda opcional:
+     · un botón nuevo, «🏆 Oficios y modos», lleva al escalafón (los 11 oficios, el álbum, las partidas);
+     · la bienvenida está en «Cómo jugar»;
+     · el personaje se arma cuando uno quiera, en Mi ciclista.
+   Archivo aditivo (rango 98n–98z, libre según coord/agentes/antigravity.json): envuelve UI.init sin reescribir 60-ui.js.
+   ===================================================================== */
+(function () {
+  const libreYa = () => {
+    Snd.init(); Snd.resume && Snd.resume(); Snd.sfx('tap');
+    const now = Cal.now(), f = Cal.fiesta(now), all = NOVEDADES.concat(typeof NOV_EXTRA !== 'undefined' ? NOV_EXTRA : []), id = Cal.cicloviaNow(now) ? 'ciclovia' : f && f.nov;
+    const nov = (id && all.find(n => n.id === id)) || NOVEDADES[0], susp = JE.cuenta && JE.cuenta.suspHasta && JE.cuenta.suspHasta(), bici = Cal.open(now) && !susp ? 'encicla' : 'propia';
+    Game.start('usuario', 1, { free: true, seed: Date.now() >>> 0, nov, bici });
+  };
+  const montar = () => {
+    const play = document.getElementById('bPlay'); if (!play || !play.onclick || play.onclick === libreYa) return;
+    /* el arranque puede asignar los botones después de que este archivo corre: se guarda el manejador original cada vez que aparezca uno nuevo */
+    montar.viejo = play.onclick; play.onclick = libreYa; play.innerHTML = '▶ Jugar <small style="display:block;font-size:12px;font-weight:600;opacity:.85">Modo libre: pedalea por el valle</small>';
+    if (!document.getElementById('bOficios')) { const b = document.createElement('button'); b.className = 'btn'; b.id = 'bOficios'; b.textContent = '🏆 Oficios y modos'; b.onclick = e => { Snd.sfx && Snd.sfx('tap'); montar.viejo && montar.viejo.call(play, e); }; play.insertAdjacentElement('afterend', b); }
+  };
+  /* UI.init asigna los botones al arrancar: se monta después */
+  if (UI && UI.init) { const _init = UI.init; UI.init = function () { const r = _init.apply(this, arguments); try { montar(); } catch (e) { console.error(e); } return r; }; }
+  window.addEventListener('load', () => setTimeout(() => { try { montar(); } catch (e) { /* aún no */ } }, 0));
+})();
+
+/* ---- 98o-arreglos.js ---- */
+/* =====================================================================
+   ARREGLOS DE ENCICLA (Claude, 21‑nov‑2026) · los que Codex describió en coord/buzon/20261120-2121-codex-relevo.md
+   y nunca llegaron a GitHub. El autor pidió resolverlos. Reproducidos y comprobados en tests/regresion-encicla.js.
+   1) Bici prestada: al cambiar de la bici de EnCicla a otro vehículo, la bici quedaba guardada en el modo (M.parked) y no
+      en la vía (R.parked): no contaba como abandonada y se podía volver a montar desde cualquier lugar del mapa.
+      Ahora queda parqueada en la vía, cuenta para el reporte de abandono y para montarla hay que volver hasta ella.
+   2) Acceso sin aparcamiento: a pie y sin bici parqueada, «Ir a la bici» rompía el juego (R.parked era null).
+   3) Gasto de la eléctrica (arreglado en 69-libre.js): la eléctrica es 'bike' con R.ebike y gastaba como una bici normal.
+   4) Montar: subirse a la bici a pie (Subirse) no avisaba el evento «montar» de los boletos de Rosalba.
+   5) Hojas de la trama (arreglado en 93-trama.js): los premios iban a Save.data.leaves y la tienda lee stats.leaves;
+      aquí se migran las hojas viejas al cargar o importar la partida.
+   Archivo aditivo (rango 98n–98z): ganchos sobre Save, Ride y ModeUsuarioR.
+   ===================================================================== */
+(function () {
+  /* 5) migración de hojas viejas */
+  const migrar = d => { if (d && d.leaves > 0 && d.stats) { d.stats.leaves = (d.stats.leaves | 0) + (d.leaves | 0); d.leaves = 0; return true; } return false; };
+  const _load = Save.load; Save.load = function () { const r = _load.apply(this, arguments); if (migrar(this.data)) this.save(); return r; };
+  const _imp = Save.importText; Save.importText = function () { const r = _imp.apply(this, arguments); if (migrar(this.data)) this.save(); return r; };
+  JE.migrarHojas = migrar;
+
+  /* 4) el evento «montar» también al subirse a pie */
+  const _on = Ride.prototype.getOn; Ride.prototype.getOn = function () { const ok = _on.apply(this, arguments); if (ok && this.mode && this.mode.free && typeof Boleto !== 'undefined') Boleto.evento(this.mode, 'montar'); return ok; };
+
+  /* 2) sin bici parqueada no hay «Ir a la bici» */
+  const _act = ModeUsuarioR.prototype.actions; ModeUsuarioR.prototype.actions = function () { const a = _act.apply(this, arguments), R = this.ride; return R && !R.parked ? a.filter(x => x.id !== 'on') : a; };
+
+  /* 1) la bici de EnCicla queda en la vía y hay que volver por ella */
+  const _cv = ModeUsuarioR.prototype.cambiarVehiculo;
+  ModeUsuarioR.prototype.cambiarVehiculo = function (id) {
+    const R = this.ride, P = R && R.p, aBici = id === 'bike' || id === 'ebike';
+    if (R && P && !this.ownBike && aBici && P.veh !== 'bike') {
+      const pk = R.parked || this.parked;
+      if (pk && dist(pk.x, pk.y, P.x, P.y) > 22 * WK) { if (JE.ui) JE.ui.toast('🚲 Tu bici de EnCicla quedó parqueada: ve hasta ella para montarla'); if (!R.target) R.target = R.marker({ x: pk.x, y: pk.y, r: 12, col: PAL.vd, label: 'Tu bici EnCicla', enter: m => R.removeMarker(m) }); return false; }
+    }
+    const eraEnCicla = R && P && !this.ownBike && P.veh === 'bike', a0 = P ? P.a : 0, x0 = P ? P.x : 0, y0 = P ? P.y : 0;
+    const r = _cv.apply(this, arguments);
+    if (R && eraEnCicla && !aBici && id !== 'walk') R.parked = { x: x0, y: y0, a: a0, veh: 'bike' };
+    if (R && aBici) R.parked = null;
+    return r;
+  };
+})();
 
 /* ---- 99-boot.js ---- */
 /* =====================================================================
