@@ -106,7 +106,8 @@ class Objetos {
   /* cuerpos: [{ x, y, z, r, masa, vx, vy }] (el jugador, el tráfico): los que chocan empujan */
   actualizar(dt, cuerpos = []) {
     if (!Number.isFinite(dt) || dt <= 0) return;
-    dt = Math.min(dt, .05); const M = this.M, G = 9.81;
+    if (dt > .051) { const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.actualizar(Math.min(.05, dt / n), cuerpos); return r; } /* 4.6: subpasos */
+    const M = this.M, G = 9.81;
     for (const o of this.L) {
       for (const c of cuerpos) {
         const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy), R = o.r + (c.r || .4); if (d >= R || d < 1e-4 || Math.abs((c.z || 0) - o.z) > o.h + 1.5) continue;

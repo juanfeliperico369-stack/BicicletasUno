@@ -229,3 +229,16 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Documento detallado a cada repositorio; que sigan con su motor del Valle | ✅ | `docs/INFORME-MOTOR-CITY-4.5.md` en BicicletasUno, MetroZero y RunRunZero; el motor va en `motor-city/` como referencia. |
 | El mapa | No se tocó | Por pedido del autor: es de las IA que lo desarrollan. El PVS es un dato derivado del mapa, no lo cambia. |
 | HTML, APK y enlace de cada juego | ✅ | Ver `CONTEXTO-RELEVO.md` § 1. |
+
+## 17. «Injugables, toscos como GTA IV… básate en EnCicla, arregla El Metro, el mapa congela, no hay horizontal» y «un solo juego de prueba con todo» (4.6, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Manejo fluido, que arranque, avance y retome rápido, sin derrapes por nada | ✅ | El modelo de EnCicla (`30-ride.js`) en `js/32-fisica.js` (`_arcade`) y `js/31-vehiculos.js` (`ARCADE`); subpasos de 25 ms; prueba §26. |
+| Movimiento del personaje como en EnCicla | ✅ | A pie, el mismo modelo: gira al instante y trota con el joystick a fondo. |
+| Horizontal | ✅ | Portada y HUD de Turno Cero a 860×412; los APK giran con el celular (Turno Cero y Run Scooter). |
+| El mapa: brújula, acercar y alejar, que no congele | ✅ | `js/70-mapa.js`: vista general armada de a poco, detalle con presupuesto, pausa, ✕ + − ◎ 🧭, tocar = destino. Tocar el minimapa lo abre. |
+| Arreglar El Metro | ✅ | `MetroZero/src/js/36-libre.js` (`driveArcade`, a pie y cámara). APK 2.0.2 (código 28). |
+| Un solo juego de prueba: los cuatro en Turno Cero | ✅ | `juegos/getaway/60-modos.js`: 🏁 Carreras, 🚵 Extremo, 📦 Mandados, 🚲 EnCicla (racha por la ciclorruta, semáforo en rojo, rebalanceo), 🚇 Metro, tranvía y Metroplús (manejar y parar en el andén), 🧪 Laboratorio. `pruebas/modos.mjs`. |
+| Lo que dije que faltaba | Parcial | Hecho: mapa, horizontal, manejo. Pendiente: el globo en la misma escena 3D (C‑M31) y la prueba en un celular real. |
+| HTML, APK y enlace de cada juego | ✅ | `CONTEXTO-RELEVO.md` § 0. |
+

@@ -104,6 +104,30 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
 .mcui > .menu{z-index:2;}
 .mcui:has(> .menu) > .menu{position:fixed!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;width:min(370px,90vw);max-height:min(84dvh,84vh,690px)!important;overflow-y:auto;overscroll-behavior:contain;padding:16px;background:#12171c;border:1px solid rgba(232,163,60,.55);box-shadow:0 24px 90px #000e;pointer-events:auto;}
 
+/* 4.6 · horizontal (el autor: «no hay adaptación al horizontal»): portada a dos columnas y HUD que no se monta */
+@media (orientation:landscape) and (max-height:560px){
+ #portada{padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left));place-content:start stretch}
+ #portada .marco{max-width:980px;grid-template-columns:minmax(0,1fr) minmax(300px,1fr);column-gap:24px;row-gap:6px;align-items:start}
+ #portada svg.arte{display:none}
+ #portada .sello{grid-column:1;grid-row:1;justify-self:start}
+ #portada h1{grid-column:1;grid-row:2;font-size:clamp(34px,7.2vw,58px)}
+ #portada h1 span{font-size:.3em;letter-spacing:.14em;margin-top:4px}
+ #portada .ruta{grid-column:1;grid-row:3;font-size:10px;line-height:1.3}
+ #portada p{grid-column:1;grid-row:4;font-size:12px;line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+ #portada #aviso18{grid-column:1;grid-row:5;font-size:11px}
+ #portada #comoSe{grid-column:1;grid-row:6}
+ #portada small.pie{grid-column:1;grid-row:7}
+ #portada .bts{grid-column:2;grid-row:1 / span 5;gap:6px}
+ #portada .bts button{min-height:44px;padding:0 12px;font-size:15px}
+ #portada .bts button small{font-size:10px}
+ #portada #lDirecto{grid-column:2;grid-row:6}
+ #portada #capitulos,#portada #ciudades{grid-column:2;grid-row:7}
+ #portada #estado{grid-column:2;grid-row:8}
+ #artefactos{left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);flex-direction:row;gap:6px}
+ #artefactos button{width:44px;height:44px;font-size:18px}
+ #subt{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 84px);width:min(520px,56vw);font-size:14px}
+ .mcui .izq{max-width:min(300px,36vw)!important}
+}
 </style>
 </head>
 <body>
@@ -121,6 +145,7 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
     <div id="aviso18"><b>Contenido para adultos.</b> Violencia con armas de fuego, persecuciones, crimen organizado, espionaje, amenazas, secuestro y lenguaje fuerte (se puede suavizar en el menú). La historia, sus personas, empresas, bandas y cuerpos de policía son ficción; las calles son reales. Universo «Turno Cero» de Codex, llevado al planeta de Motor City.</div>
     <div class="bts">
       <button id="bAbierto">▶ <span>Jugar · mundo abierto<small id="sAbierto">Medellín y el Valle: maneja a donde quieras · la historia es opcional</small></span></button>
+      <button id="bModos" class="b2">🎮 <span>Modos de juego<small>Carreras, Extremo, Mandados, EnCicla y manejar el Metro · en la misma ciudad</small></span></button>
       <button id="bSeguir" class="b2" hidden>📖 <span>Seguir la historia<small id="sSeguir"></small></span></button>
       <button id="bHistoria" class="b2">📖 <span>Historia (opcional)<small>Acto I · Papel de ruta · Manhattan</small></span></button>
       <button id="bLibre" class="b2">🏙️ <span>Elegir ciudad<small>Nueva York, Medellín y el Valle o Guatapé · contratos y el planeta entero</small></span></button>

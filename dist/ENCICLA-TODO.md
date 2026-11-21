@@ -2267,6 +2267,18 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
 
+### 21-nov-2026 · Motor City 4.6.0 en `motor-city/` e informe (Claude)
+- El motor y El Metro copiaron el manejo y el mapa de EnCicla (pedido del autor: «básate en EnCicla, que es fluido»). `motor-city/` pasó a 4.6.0; el juego no cambió (sigue con su Motor del Valle; APK 2.0.1).
+- Informe para la IA que siga: `docs/INFORME-MOTOR-CITY-4.6.md`.
+
+### 21-nov-2026 · Motor City 4.5.0 en `motor-city/` e informe para la IA que siga (Claude)
+- **El autor decidió:** el juego **sigue con su Motor del Valle**; Motor City se comparte como referencia. Todo lo que cambió, mejoró, falta auditar y les toca, y cómo usar el motor sin dejar el propio: **`docs/INFORME-MOTOR-CITY-4.5.md`**.
+- **La prueba de WebRTC** ya no espera tiempos fijos: espera a que el invitado 2 vea a los otros dos y sus posiciones nuevas.
+- **Publicado:** `main` al día con la rama de Claude y `gh-pages` con el `dist/web/` nuevo, **conservando `/metro/` y `descargas/`**.
+- **Probado:** `node tools/build.js` y `node tests/run.js` en verde.
+- **Falta:** ver el informe, § 4 y § 5.
+
+
 
 ### 21-nov-2026 · Los arreglos de Codex, hechos por Claude
 - Codex describió estos arreglos y nunca los subió. El autor pidió resolverlos. Cada uno se reprodujo y quedó con su prueba en `tests/regresion-encicla.js`, que se llama desde `tests/run.js`.

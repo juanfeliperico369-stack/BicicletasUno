@@ -45,7 +45,7 @@ const AccionPie = {
   },
   paso(q, dt, op = {}) {
     if (!q || q.fuera || !(dt > 0)) return { ve: false, estado: 'fuera' };
-    dt = Math.min(dt, .05);
+    if (dt > .051) { const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.paso(q, Math.min(.05, dt / n), op); return r; } /* 4.6: subpasos */
     const J = op.jugador, M = op.mundo, cebo = op.cebo, t = (q.fase = (q.fase || 0) + dt);
     const ve = !op.distraido && this.ver(q,J,M), vistaAntes = !!q.ve;
     q.ve = ve;

@@ -65,7 +65,8 @@ class Persecucion {
   }
   actualizar(dt, jugador, trafico = []) {
     if (this.estado !== 'activa' || !Number.isFinite(dt) || dt <= 0) return;
-    dt = Math.min(dt, .05); this.t += dt; this.turbo = Math.max(0, this.turbo - dt);
+    if (dt > .051) { const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.actualizar(Math.min(.05, dt / n), jugador, trafico); return r; } /* 4.6: subpasos */
+    this.t += dt; this.turbo = Math.max(0, this.turbo - dt);
     this.casiChoques(jugador, trafico);
     let mejor = Infinity;
     for (const p of this.rivales) {

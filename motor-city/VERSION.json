@@ -1,12 +1,12 @@
 {
-  "version": "4.5.0",
+  "version": "4.6.0",
   "fecha": "2026-11-21",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 4.5.0 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.5.md)",
-    "MetroZero: motor-city/ 4.5.0 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.5.md)",
-    "RunRunZero: motor-city/ 4.5.0 como referencia (docs/INFORME-MOTOR-CITY-4.5.md)"
+    "BicicletasUno: motor-city/ 4.6.0 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "MetroZero: motor-city/ 4.6.0 como referencia; el juego sigue con su Motor del Valle, ahora con el manejo de EnCicla (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "RunRunZero: motor-city/ 4.6.0 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
   ],
-  "estado": "4.5.0: PVS de Quake horneado (Manhattan y Guatapé), 42 modelos 3D pulidos con caras, techos a cuatro aguas y terrazas, sin conexión (sw.js) y GLB comprimidos, manejo que no se traba (desliza, se desatasca, asistencia, derrape, pisa andén/arena/nieve, moto por escalas), cosas que se rompen, efectos de choques, derrapes y explosiones, rostros detallados, árboles con lógica, sigilo a la manera de Hunter Assassin, y los juegos nuevos Motor City (carreras) y Extremo"
+  "estado": "4.6.0: manejo de EnCicla en el motor (arranca rápido, gira cerrado, sin derrapes por nada, subpasos al ritmo del reloj), mapa grande como el de EnCicla (no congela, acerca y aleja, brújula, destino), horizontal, y un solo juego de prueba: Turno Cero con los modos Carreras, Extremo, Mandados, EnCicla y manejar el Metro; El Metro con el mismo manejo"
 }

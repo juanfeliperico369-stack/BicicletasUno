@@ -99,7 +99,7 @@ class Busqueda {
     this._ev('bloqueo');
   }
   actualizar(dt, J, trafico = []) {
-    if (!J || !Number.isFinite(dt) || dt <= 0) return; dt = Math.min(dt, .05); this.t += dt; this._J = J; const M = this.mundo, vj = J.v || 0;
+    if (!J || !Number.isFinite(dt) || dt <= 0) return; if (dt > .051) { /* 4.6: subpasos (antes el tope de 50 ms ponía la búsqueda en cámara lenta a pocos cuadros por segundo) */ const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.actualizar(Math.min(.05, dt / n), J, trafico); return r; } this.t += dt; this._J = J; const M = this.mundo, vj = J.v || 0;
     /* ¿alguien te ve? (cada 0,25 s: línea de visión de los rivales y la luz del helicóptero) */
     if ((this._vistaT -= dt) <= 0) { this._vistaT = .25; let v = false; for (const r of this.rivales) { if (r.roto || r.retirada) continue; const C = r.cuerpo, d = Math.hypot(C.x - J.x, C.y - J.y); r.ve = d < this.op.radioVista && this.vista(C.x, C.y, J.x, J.y); if (r.ve && r.bando === 'policia') v = true; } if (this.heli && !(this.heli.aturdido > 0) && Math.hypot(this.heli.lx - J.x, this.heli.ly - J.y) < 16) v = true; this.visto = v; if (v) this.ultima = { x: J.x, y: J.y, a: J.a || 0, t: this.t }; }
     if (this.cebo && (this.cebo.t -= dt) <= 0) this.cebo = null; if (this.heli && this.heli.aturdido > 0) this.heli.aturdido -= dt;
