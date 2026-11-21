@@ -427,6 +427,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   const mv12 = await p.evaluate(() => ({ v: typeof Valle !== 'undefined' && Valle.version, alias: typeof MotorValle !== 'undefined' && MotorValle === Valle && JE.valle === Valle, em: typeof Valle.elmetro === 'object' && Valle.elmetro.map === null, suelo: (() => { const q = Valle.decodificar(); return !!q && typeof q.suelo(10, 10) === 'number'; })() }));
   ok(mv12.v === '1.2.0' && mv12.alias && mv12.em && mv12.suelo, 'Motor del Valle 1.2.0 en el juego: Valle (lector de EnCicla) y MotorValle (nombre de El Metro) ' + JSON.stringify(mv12));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
+  await require('./regresion-encicla')(p, ok);   /* los arreglos que Codex describió (Claude, 21-nov-2026) */
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};
   for (const role of ['usuario', 'anfitrion', 'monitoreo']) {

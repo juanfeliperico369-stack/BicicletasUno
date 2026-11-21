@@ -203,7 +203,7 @@ class ModeUsuarioR extends ModeUsuario {
     const hr = this.clock / 60, base = this.mods.ciclovia ? .5 : 1; R.traffic = base * (hr < 5 ? .25 : hr < 6 ? .5 : (hr < 9 || (hr >= 17 && hr < 19.5)) ? 1.3 : hr >= 21 ? .55 : 1);
     if (!this.ownBike) { const sv = Cal.service(this.fecha), m = this.clock; if (m >= sv.lend && m < sv.lend + 2 && !this.lendTold) { this.lendTold = 1; JE.ui && JE.ui.toast('🕘 Ya no se prestan bicis; puedes devolver la tuya hasta las ' + Cal.hora(sv.close)); } if (m >= sv.close - 30 && m < sv.close && !this.closeTold) { this.closeTold = 1; JE.ui && JE.ui.toast('🕘 EnCicla cierra a las ' + Cal.hora(sv.close) + ': devuelve la bici en una estación'); } }
     // energía: las subidas cansan, parar descansa; con poca energía se pedalea más lento (proporcional a la distancia recorrida con velMul)
-    const sl = Math.max(0, R.sl || 0), VG = vehDef(P.veh).gasto, drain = P.v > 5 ? (VG != null ? VG : P.veh === 'walk' ? .12 : .35 + sl * 30) * velMul(this) : -3;
+    const sl = Math.max(0, R.sl || 0), VG = vehDef(P.veh === 'bike' && (R.ebike || this.ebike) ? 'ebike' : P.veh).gasto,   /* la eléctrica es 'bike' con R.ebike: gasta como eléctrica (sin castigo en subida) */ drain = P.v > 5 ? (VG != null ? VG : P.veh === 'walk' ? .12 : .35 + sl * 30) * velMul(this) : -3;
     this.energy = clamp(this.energy - drain * dt, 0, 100); if (this.energy < 15 && !this.tiredTold) { this.tiredTold = 1; JE.ui && JE.ui.toast('😮‍💨 Poca energía: siéntate en una banca de un parque o para un momento'); } if (this.energy > 40) this.tiredTold = 0;
     // ciclovía y ciclorrutas: distancia
     const v = R.tileAt(); if ((this.mods.ciclovia && (v === TT.AVE || v === TT.AUTO)) || v === TT.CICLO) this.cvDist += P.v * dt;

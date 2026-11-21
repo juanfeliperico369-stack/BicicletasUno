@@ -82,7 +82,7 @@ const Trama = JE.trama = {
       const E = this.estado();
       if (!E.done.includes(C.id)) E.done.push(C.id);
       const premio = C.hojas || 15;
-      Save.data.leaves = (Save.data.leaves | 0) + premio;
+      Save.data.stats.leaves = (Save.data.stats.leaves | 0) + premio;
       M.score += premio * 2;
       if (E.done.length >= (this.guion().capitulos || []).length) {
         Save.data.flags = Save.data.flags || {};
@@ -114,7 +114,7 @@ const Trama = JE.trama = {
     const E = this.estado();
     if (E.frags.includes(f.id)) return;
     E.frags.push(f.id);
-    Save.data.leaves = (Save.data.leaves | 0) + 10;
+    Save.data.stats.leaves = (Save.data.stats.leaves | 0) + 10;
     if (E.frags.length >= this.fragmentos().length) {
       Save.data.flags = Save.data.flags || {};
       Save.data.flags.rieles_ruedas = 1;
@@ -143,7 +143,7 @@ const Trama = JE.trama = {
     const E = this.estado();
     if (!E.charlas.includes(p.id)) {
       E.charlas.push(p.id);
-      Save.data.leaves = (Save.data.leaves | 0) + 3;
+      Save.data.stats.leaves = (Save.data.stats.leaves | 0) + 3;
       if (E.charlas.length >= 8) { Save.data.flags = Save.data.flags || {}; Save.data.flags.vecinos_valle = 1; }
       Logros.check(); Save.save();
     }
