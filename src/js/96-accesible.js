@@ -8,9 +8,9 @@
 const _init96 = UI.init; UI.init = function () { _init96.apply(this, arguments); document.body.classList.toggle('contraste', !!(Save.data && Save.data.settings && Save.data.settings.contraste)); };
 const _mas96 = UI.renderMas;
 UI.renderMas = function () {
-  _mas96.apply(this, arguments); const S = Save.data.settings, big = document.querySelector('#tab-mas [data-sw="big"]'); if (!big || document.querySelector('#tab-mas [data-sw="contraste"]')) return;
+  _mas96.apply(this, arguments); const S = Save.data.settings, big = document.querySelector('#tab-mas [data-sw="big"]') || document.querySelector('#tab-mas [data-tamopt]'); if (!big || document.querySelector('#tab-mas [data-sw="contraste"]')) return;
   const o = document.createElement('div'); o.className = 'opt'; o.innerHTML = `<span>Alto contraste<br><small class="m">Textos y bordes marcados, mapa más nítido</small></span><button class="sw ${S.contraste ? 'on' : ''}" data-sw="contraste" aria-label="Alto contraste"></button>`;
-  big.closest('.opt').after(o); const b = o.querySelector('button');
+  (big.closest('.opt') || big).after(o);   /* v2.1: junto a «Tamaño de textos y botones» */ const b = o.querySelector('button');
   b.onclick = () => { S.contraste = !S.contraste; Save.save(); b.classList.toggle('on', S.contraste); document.body.classList.toggle('contraste', S.contraste); Snd.sfx('tap'); };
 };
 const _rail96 = CityMap.buildRail;

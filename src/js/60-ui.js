@@ -123,7 +123,7 @@ const UI = JE.ui = {
     let h = `<div class="pag">Ajustes, reto y más</div><div class="sect"><span class="outline">+</span><h2 class="mega">Más</h2></div>`;
     h += `<div class="opt"><span>Efectos de sonido</span><button class="sw ${S.sfx ? 'on' : ''}" data-sw="sfx" aria-label="Sonido"></button></div>`;
     h += `<div class="opt"><span>Música</span><button class="sw ${S.music ? 'on' : ''}" data-sw="music" aria-label="Música"></button></div>`;
-    h += `<div class="opt"><span>Letra grande</span><button class="sw ${S.big ? 'on' : ''}" data-sw="big" aria-label="Letra grande"></button></div>`;
+    h += `<div class="opt" data-tamopt="1"><span>Tamaño de textos y botones<br><small class="m">Pequeño deja ver más el juego</small></span><div class="seg wrap">${['Pequeño', 'Mediano', 'Normal', 'Grande'].map((n, i) => `<button data-ui="${i}" class="${(JE.tam ? JE.tam.nivel() : 1) === i ? 'on' : ''}">${n}</button>`).join('')}</div></div>`;   // v2.1: cuatro tamaños (antes: grande o enorme)
     h += `<div class="opt"><span>Mano guía (ayudas)</span><button class="sw ${S.hints !== false ? 'on' : ''}" data-sw="hints" aria-label="Ayudas"></button></div>`;
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
@@ -408,8 +408,10 @@ const Game = JE.game = {
     }
     this.layout(ride);
     const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
-    if (ak !== this.actKey) { this.actKey = ak; const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn${x.label.length > 8 ? ' l9' : x.label.length > 6 ? ' l7' : ''}" data-i="${i}" aria-label="${esc(x.label)}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); this.layout(true); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); }
+    if (ak !== this.actKey) { this.actKey = ak; this.barra(acts, M); }
   },
+  /* los botones de acción (v2.1: 98r-hud.js los reemplaza por la barra según el contexto) */
+  barra(acts, M) { const bar = $('#actBar'); bar.innerHTML = acts.map((x, i) => `<button class="abtn${x.label.length > 8 ? ' l9' : x.label.length > 6 ? ' l7' : ''}" data-i="${i}" aria-label="${esc(x.label)}"><img class="px" src="${Art.iconURL(x.icon, 2)}" alt="">${esc(x.label)}</button>`).join(''); this.layout(true); $$('.abtn', bar).forEach(b => b.onclick = () => { const x = (M.actions())[+b.dataset.i]; if (x) x.fn(); }); },
   /* lo que siente la música: velocidad, racha, pendiente, noche y apuro */
   moodOf(M) {
     const a = M.sub || M, R = M.ride; let e = .4, t = 0, k = 0, sl = 0; const n = Art.night(M.clock || 600);
@@ -425,13 +427,13 @@ const Game = JE.game = {
   layout(ride) {
     const hud = $('#hud').getBoundingClientRect(), gm = $('#goalsMini'), hb = Math.round(hud.bottom);
     const gt = (hb + 6) + 'px'; if (gm.style.top !== gt) gm.style.top = gt;
-    const g = gm.style.display === 'none' ? { bottom: hb } : gm.getBoundingClientRect(), mmB = ride ? hb + 8 + Math.round(Math.min(84, View.w * .21) * 1.55) + 22 : hb;
+    const g = gm.style.display === 'none' ? { bottom: hb } : gm.getBoundingClientRect(), mmB = ride ? hb + 8 + Math.round(Math.min(84, View.w * .21) * (JE.tam ? JE.tam.k() : 1) * 1.55) + 22 : hb;
     View.hudB = hb; View.top = Math.max(hb, Math.round(g.bottom)) + 6;
     const tt = Math.max(View.top, mmB) + 8 + 'px'; document.documentElement.style.setProperty('--toastTop', tt);
     const ctrl = ride && Ctrl.pad() && Ctrl.side() === 'der'; document.body.classList.toggle('ctrlR', ctrl);
     const ab = $('#actBar'); if (ab && ab.childElementCount) {   // los botones no tapan el minimapa: si no caben, segunda columna
       const r = ab.getBoundingClientRect(), bt = ab.firstElementChild.getBoundingClientRect().height || 58, libre = Math.round(r.bottom - (ride ? mmB : hb) - 10);
-      const lado = ride && libre < bt ? Math.round(Math.min(84, View.w * .21)) + 22 : 0;   // sin espacio debajo del minimapa (celular acostado con el control a la derecha): los botones van a su izquierda
+      const lado = ride && libre < bt ? Math.round(Math.min(84, View.w * .21) * (JE.tam ? JE.tam.k() : 1)) + 22 : 0;   // sin espacio debajo del minimapa (celular acostado con el control a la derecha): los botones van a su izquierda
       const rt = lado ? 'calc(' + lado + 'px + var(--sar))' : ''; if (ab.style.right !== rt) ab.style.right = rt;
       const mh = Math.max(84, lado ? Math.round(r.bottom - hb - 10) : libre) + 'px'; if (ab.style.maxHeight !== mh) ab.style.maxHeight = mh;
     }

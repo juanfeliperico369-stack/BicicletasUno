@@ -2,6 +2,22 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 21-nov-2026 · v2.1.0 · La revolución con Motor City 4.5 (Claude)
+Pedido del autor: «comprende todo, el motor, las ideas y sugerencias, y ahora sí revoluciona el videojuego»; luego: «mejora los iconos y la información en pantalla (tapan el juego; el tamaño solo es grande o enorme)» y «usa El Metro para terminar las estaciones del metro, metrocable, tranvía, tren, Metroplús, las líneas alternativas y los alimentadores». El juego sigue con su Motor del Valle; del motor 4.5 se portó lo que sirve (manera A y B del informe). Detalle: **`docs/REVOLUCION-2.1.md`**.
+1. **Manejo (lo más importante):** choque que **desliza** a lo largo de la pared (normal por 8 puntos; el golpe quita según impacto² y el roce sigue suave), **se desatasca** sola, **asistencia** que mira adelante y evita la pared (interruptor 🛞 en Más y en la pausa; el bot no la usa), giro amortiguado, **bordillo** con tumbo, polvo en pasto y tierra, salpicaduras con lluvia y **marca de frenada**. Contra el manejo de antes (`ab.js`): a 15° +15 %, a 30° +39 %, a 45° +44 % y en pared diagonal +38 % de avance; de frente sigue frenando (`30-ride.js` `mover`, `98q-manejo.js`).
+2. **HUD según el contexto:** de 8 botones de 68 px a 3 (la acción del momento con pulso, el timbre y «⋯ Más» con la bandeja); el consejo del modo libre va arriba a la izquierda (`98r-hud.js`).
+3. **Cuatro tamaños** de textos y botones (Pequeño, Mediano —el nuevo de siempre—, Normal y Grande), en Más y en la pausa; escalan HUD, botones, avisos, minimapa, sello y tarjetas. **Iconos vectoriales** nítidos en las acciones. Los avisos son compactos (3 líneas) y lo que dice un personaje va a su tarjeta con cara (`98y-tamano.js`).
+4. **Lectura cenital (a la manera de *Hunter Assassin*):** halo del ciclista, cono de luz que se corta en los edificios (de noche, el farol), estaciones cercanas que respiran y la bici parqueada que late (`98s-lectura.js`).
+5. **Efectos para todo público:** polvo, chispas (el camión), pedazos, hojas, gotas, aros y marcas, sin explosiones (`98p-efectos.js`).
+6. **Rostros de Motor City** (`98t-rostros.js`, manera B) y **una cara por persona** en historias, tutor, «Un día del valle», Personajes (ahora con los 15 vecinos de la trama) y la tarjeta de charla (`98u-caras.js`). Rosalba y la gente de El Metro, como en su biblia de estilo.
+7. **Árboles con lógica:** 70 de 23.404 árboles de avenida caían en canchas, pistas o piscinas; ahora 0 (`75-graficos.js`).
+8. **Registro de claves del guardado** (`Save.CLAVES`, `Save.registrar`, `Save.revisarClaves`; TAREAS 10) con prueba al final de la batería (`98v-claves.js`). El guardado sigue siendo `juegaencicla.v1`.
+9. **Ruta a Guatapé en bici** (C‑E40): 3 tramos de 4 km por el embalse (El Peñol → Mirador, Mirador → La Piedra, La Piedra → Guatapé) en carretera pseudo‑3D, física con unidades reales (30 km/h en plano, 11 en subida del 6 %, 55 bajando), agua que se gasta, 6 fondas con «lo que todos saben» y «lo poco conocido» (datos con fuente), letreros de km, la Piedra que crece, la orilla de 1,5 m (Ley 1811), chivas, vacas, lanchas y el malecón con zócalos. En el menú y en el Taller del modo libre; 2 logros (`98w-guatape.js`).
+10. **La red completa de El Metro:** los **15 alimentadores** con su recorrido por las calles, 84 paraderos con su código y buses que paran; el **Metro de la 80** (en obra: vallas y conos en sus estaciones), el **Tren del Río** y el **cable a San Antonio de Prado** (proyectos) punteados en el mapa grande; las escaleras de la Comuna 13; y el dato de cada estación al detenerse junto a ella (`tools/red_metro.js` → `src/data/red_metro.json`, `98x-red.js`). Metro, tranvía, 6 cables y Metroplús 1, 2 y O ya estaban.
+11. **Arreglos:** los botones de la bandeja apuntaban a una acción inexistente (`data-i = -1`); ahora tienen prueba que los toca.
+**Probado:** `node tools/build.js` y `node tests/run.js` (nuevas secciones V, V2 y V3 en `tests/revolucion-encicla.js` y las claves del guardado al final); capturas en 412 × 860.
+**Falta:** ver `docs/REVOLUCION-2.1.md` § 6 (probar en un celular real, la incoherencia de oficios entre mentores y trama, publicar).
+
 
 ## 21-nov-2026 · Motor City 4.5.0 en `motor-city/` e informe para la IA que siga (Claude)
 - **El autor decidió:** el juego **sigue con su Motor del Valle**; Motor City se comparte como referencia. Todo lo que cambió, mejoró, falta auditar y les toca, y cómo usar el motor sin dejar el propio: **`docs/INFORME-MOTOR-CITY-4.5.md`**.

@@ -74,7 +74,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   for (const t of ['album', 'parts', 'mas', 'ruta']) { await p.click(`#tabs button[data-tab=${t}]`); await p.waitForTimeout(150); }
   if (SHOTS) { await p.click('#tabs button[data-tab=album]'); await p.screenshot({ path: path.join(OUT, 'album.png') }); await p.click('#tabs button[data-tab=mas]'); }
   else await p.click('#tabs button[data-tab=mas]');
-  await p.click('#tab-mas [data-sw=big]'); ok(await p.evaluate(() => document.body.classList.contains('big') && Save.data.settings.big), 'letra grande'); await p.click('#tab-mas [data-sw=big]');
+  await p.click('#tab-mas [data-ui="3"]'); ok(await p.evaluate(() => document.body.classList.contains('big') && Save.data.settings.big && Save.data.settings.ui === 3 && getComputedStyle(document.documentElement).getPropertyValue('--u').trim() === '1.18'), 'tamaño de textos y botones: Grande (antes «letra grande»)'); await p.click('#tab-mas [data-ui="1"]');
   for (const act of ['avatar', 'historia', 'personajes', 'ranking', 'multi', 'howto', 'cred', 'intro', 'apoya']) { await p.click(`#tab-mas [data-act=${act}]`); await p.waitForTimeout(120); ok(await p.isVisible('#modal'), 'modal ' + act); await p.evaluate(() => UI.closeModal()); }
   await p.click('#tab-mas [data-act=bot]'); await p.click('#dRun'); await p.waitForFunction(() => /SIN ERRORES|PROBLEMAS/.test(document.querySelector('#dOut').textContent), null, { timeout: 120000 });
   ok(await p.evaluate(() => /SIN ERRORES/.test(document.querySelector('#dOut').textContent)), 'bot desde Ajustes > Diagnóstico'); await p.evaluate(() => UI.closeModal());
@@ -428,6 +428,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(mv12.v === '1.2.0' && mv12.alias && mv12.em && mv12.suelo, 'Motor del Valle 1.2.0 en el juego: Valle (lector de EnCicla) y MotorValle (nombre de El Metro) ' + JSON.stringify(mv12));
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   await require('./regresion-encicla')(p, ok);   /* los arreglos que Codex describió (Claude, 21-nov-2026) */
+  await require('./revolucion-encicla')(p, ok);  /* v2.1: lo de Motor City 4.5 adaptado (manejo, HUD, lectura, efectos, rostros, claves, Guatapé) */
+  await require('./revolucion-encicla').v3(p, ok);   /* v2.1: Ruta a Guatapé, la red de El Metro y los cuatro tamaños */
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};
   for (const role of ['usuario', 'anfitrion', 'monitoreo']) {
@@ -437,6 +439,9 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   ok(+perf.usuario.med < 40, 'mapa fluido en CPU lenta (mediana < 40 ms)');
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   ok(!errs.length, 'sin errores de consola al final ' + errs.slice(0, 3).join(' | '));
+  /* v2.1 · registro de claves del guardado (TAREAS-IA 10): después de jugar todo, cada clave de Save.data está registrada con su tipo */
+  const claves = await p.evaluate(() => ({ mal: Save.revisarClaves(), n: Object.keys(Save.data).length, reg: Object.keys(Save.CLAVES).length }));
+  ok(!claves.mal.length, 'claves del guardado registradas y con su tipo (' + claves.n + ' en uso de ' + claves.reg + ' registradas) ' + claves.mal.join(', '));
   await b.close();
 
   console.log('5) Multijugador: sala WebRTC con 3 dispositivos (anfitrión + 2 invitados, reenvío en estrella)');

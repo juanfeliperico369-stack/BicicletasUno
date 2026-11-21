@@ -19,7 +19,9 @@ const GUION = fs.existsSync(GDIR) ? Object.fromEntries(fs.readdirSync(GDIR).filt
 const ALT = fs.existsSync(path.join(SRC, 'data', 'alturas.json')) ? rd('data/alturas.json') : 'null';
 // Metroplús como en El Metro (motor-valle/geo/metroplus_elmetro.py): corredores de OSM de las Líneas 1 y 2 y andenes reales
 const MPR = fs.existsSync(path.join(SRC, 'data', 'metroplus.json')) ? rd('data/metroplus.json') : 'null';
-js = VALLE + `const GUION = ${JSON.stringify(GUION)};\nconst ALTURAS = ${ALT};\nconst MP_REAL = ${MPR};\n` + js;
+// la red completa de El Metro (tools/red_metro.js): alimentadores, líneas futuras, escaleras de la Comuna 13 y datos de las estaciones
+const REDM = fs.existsSync(path.join(SRC, 'data', 'red_metro.json')) ? rd('data/red_metro.json') : 'null';
+js = VALLE + `const GUION = ${JSON.stringify(GUION)};\nconst ALTURAS = ${ALT};\nconst MP_REAL = ${MPR};\nconst RED_M = ${REDM};\n` + js;
 const version = (js.match(/version: '([^']+)'/) || [])[1] || '0.0.0';
 const b64 = f => fs.readFileSync(path.join(SRC, 'assets', f)).toString('base64');
 const fonts = `@font-face{font-family:"Titulos";font-weight:300 700;font-stretch:75% 125%;src:url(data:font/woff2;base64,${b64('titulos.woff2')}) format("woff2");font-display:swap}@font-face{font-family:"Cuerpo";font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}`;
