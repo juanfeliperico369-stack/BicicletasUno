@@ -71,13 +71,20 @@ function capas(g, es2D) {
   }
   /* púas */
   for (const P of B.puas) { const ux = Math.cos(P.a) * P.largo / 2, uy = Math.sin(P.a) * P.largo / 2, a = pr(P.x - ux, P.y - uy, .05), b = pr(P.x + ux, P.y + uy, .05); if (!a || !b) continue; g.strokeStyle = '#141414'; g.lineWidth = 4 * d; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.strokeStyle = '#c9c9c9'; g.lineWidth = 1.5 * d; for (let i = 0; i <= 10; i++) { const f = i / 10, x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f; g.beginPath(); g.moveTo(x, y - 3 * d); g.lineTo(x, y + 3 * d); g.stroke(); } }
-  /* conos de visión de los guardias (débiles siempre; fuertes con la lente o si el dron los marcó) */
+  /* conos de visión de los guardias · 4.5, a la manera de Hunter Assassin (Ruby Games): una linterna amarilla que se corta en los
+     muros (cada rayo llega hasta el primer edificio), naranja si busca algo, roja si te vio; «?» cuando oyó y «!» cuando alerta */
   for (const q of G.guardias) {
-    const fuerte = G.lenteT > 0 || q.marcado > t, col = q.distraido > 0 ? '219,166,95' : q.alerta > 0 ? '194,85,66' : '228,217,197', pts = [];
-    for (let i = -6; i <= 6; i++) { const ang = q.a + q.cono * i / 6, p = pr(q.x + Math.cos(ang) * q.vista, q.y + Math.sin(ang) * q.vista, .1); if (p) pts.push(p); }
-    const o = pr(q.x, q.y, .1); if (!o || pts.length < 3) continue; g.fillStyle = 'rgba(' + col + ',' + (fuerte ? .28 : .12) + ')'; g.beginPath(); g.moveTo(o[0], o[1]); for (const p of pts) g.lineTo(p[0], p[1]); g.closePath(); g.fill();
+    if (q.fuera) continue; const fuerte = G.lenteT > 0 || q.marcado > t || (Historia.p && Historia.p.tipo === 'sigilo'), col = q.alerta > 0 ? '228,74,58' : q.distraido > 0 || q.busquedaT > 0 ? '240,150,60' : '255,214,102';
+    const o = pr(q.x, q.y, .1); if (!o) continue;
+    /* los rayos: se recalculan solo si el guardia se movió o giró (caché por guardia) */
+    const cc = q._cono || (q._cono = { x: 1e9, y: 0, a: 0, v: 0, L: [] }); if (Math.hypot(cc.x - q.x, cc.y - q.y) > .4 || Math.abs(angDif(cc.a, q.a)) > .04 || cc.v !== q.vista) { cc.x = q.x; cc.y = q.y; cc.a = q.a; cc.v = q.vista; cc.L = [];
+      for (let i = -10; i <= 10; i++) { const ang = q.a + q.cono * i / 10, ca = Math.cos(ang), sa = Math.sin(ang); let d = 1; for (; d < q.vista; d += 1) if (G.M.edificioEn(q.x + ca * d, q.y + sa * d, 0)) break; cc.L.push([ang, Math.min(q.vista, d)]); } }
+    const pts = []; for (const [ang, d] of cc.L) { const p = pr(q.x + Math.cos(ang) * d, q.y + Math.sin(ang) * d, .1); if (p) pts.push(p); } if (pts.length < 3) continue;
+    const R = Math.max(...pts.map(p => Math.hypot(p[0] - o[0], p[1] - o[1]))), gr = g.createRadialGradient(o[0], o[1], 0, o[0], o[1], R || 1); gr.addColorStop(0, 'rgba(' + col + ',' + (fuerte ? .5 : .2) + ')'); gr.addColorStop(.75, 'rgba(' + col + ',' + (fuerte ? .22 : .08) + ')'); gr.addColorStop(1, 'rgba(' + col + ',0)');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(o[0], o[1]); for (const p of pts) g.lineTo(p[0], p[1]); g.closePath(); g.fill();
+    if (fuerte) { g.strokeStyle = 'rgba(' + col + ',.55)'; g.lineWidth = 1.2 * d; g.beginPath(); g.moveTo(o[0], o[1]); g.lineTo(pts[0][0], pts[0][1]); g.moveTo(o[0], o[1]); g.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]); g.stroke(); }
     if (es2D || fuerte) { const k = escalaEn(q.x, q.y); g.fillStyle = q.alerta > 0 ? '#c25542' : '#475563'; g.strokeStyle = '#111'; g.lineWidth = 1.5 * d; g.beginPath(); g.arc(o[0], o[1], Math.max(4 * d, k * .4), 0, TAU); g.fill(); g.stroke(); }
-    if (q.alerta > 0) { g.fillStyle = '#c25542'; g.font = '900 ' + 16 * d + 'px system-ui'; g.textAlign = 'center'; g.fillText('!', o[0], o[1] - 14 * d); }
+    const marca = q.alerta > 0 ? '!' : q.busquedaT > 0 || q.distraido > 0 ? '?' : ''; if (marca) { g.font = '900 ' + 18 * d + 'px system-ui'; g.textAlign = 'center'; g.lineWidth = 4 * d; g.strokeStyle = '#111'; g.strokeText(marca, o[0], o[1] - 14 * d); g.fillStyle = marca === '!' ? '#e44a3a' : '#f0963c'; g.fillText(marca, o[0], o[1] - 14 * d); }
   }
   /* humo de los destrozados */
   const humos = G.humo.slice(); for (const r of B.rivales) if (r.roto) humos.push({ x: r.cuerpo.x, y: r.cuerpo.y, t: r.humo });

@@ -36,6 +36,12 @@ class Malla {
     }
     /* techo: abanico (los polígonos de huella son casi convexos) o a dos aguas en casas rectangulares */
     if (op.dosAguas && n === 4) { const c = op.dosAguas, h = Math.min(2.4, c.ancho * .45), m = [(V[0][0] + V[1][0]) / 2, y1 + h, (V[0][1] + V[1][1]) / 2], m2 = [(V[2][0] + V[3][0]) / 2, y1 + h, (V[2][1] + V[3][1]) / 2], p = V.map(v => [v[0], y1, v[1]]); if (cw) { this.quad(p[0], m, m2, p[3], techo); this.quad(p[2], m2, m, p[1], techo); this.tri(p[0], p[1], m, muro); this.tri(p[2], p[3], m2, muro); } else { this.quad(p[0], p[3], m2, m, techo); this.quad(p[2], p[1], m, m2, techo); this.tri(p[0], m, p[1], muro); this.tri(p[2], m2, p[3], muro); } return; }
+    /* 4.5 · a cuatro aguas (casas con huella real y teja, iglesias, hitos): un tronco de pirámide hacia el centro.
+       Cada faldón queda con su propia luz (se lee el techo desde arriba en vez de una placa plana) */
+    if (op.cuatro && n >= 4 && n <= 24) { let cx = 0, cz = 0; for (const v of V) { cx += v[0] / n; cz += v[1] / n; }
+      const k = op.cuatro.k ?? .3, h = op.cuatro.alto, B = V.map(v => [v[0], y1, v[1]]), T = V.map(v => [cx + (v[0] - cx) * k, y1 + h, cz + (v[1] - cz) * k]);
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; if (cw) this.quad(B[i], T[i], T[j], B[j], techo); else this.quad(B[i], B[j], T[j], T[i], techo); }
+      const cum = op.cuatro.cumbrera || techo; for (let i = 1; i < n - 1; i++) { if (cw) this.tri(T[0], T[i + 1], T[i], cum); else this.tri(T[0], T[i], T[i + 1], cum); } return; }
     const top = V.map(v => [v[0], y1, v[1]]); for (let i = 1; i < n - 1; i++) { if (cw) this.tri(top[0], top[i + 1], top[i], techo); else this.tri(top[0], top[i], top[i + 1], techo); }
   }
   /* caja orientada: centro (x, y, z), largo en el rumbo a, ancho y alto */
@@ -127,7 +133,7 @@ class VistaGL {
   }
   /* una región de 160 m: suelo con textura de la losa y las cosas con volumen */
   _region(gx, gy, detalle) {
-    const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = 8, st = R / n, suelo = [];
+    const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = detalle >= 3 ? 16 : 8, st = R / n, suelo = [];   /* 4.5: el relieve cercano con malla de 10 m (lomas y taludes más fieles) */
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const P = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([u, v]) => { const x = x0 + u * st, y = y0 + v * st, nn = M.normal(x, y, 10); return [x - O[0], M.cota(x, y) - O[2], y - O[1], nn[0], nn[1], nn[2], u / n, v / n]; }); for (const q of [P[0], P[2], P[1], P[0], P[3], P[2]]) suelo.push(...q); }
     /* texturas de lado potencia de 2 (512, 256 o 128 px por losa de 160 m) para tener mipmaps y filtro anisótropo: el piso se ve nítido a lo lejos */
     const res = (detalle > 3 ? 1024 : detalle > 2 ? 512 : detalle > 1 ? 256 : 128) / R, L = this.losas.losa(gx, gy, res, false, 3), tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -137,7 +143,7 @@ class VistaGL {
     if (pot && this.aniso) gl.texParameterf(gl.TEXTURE_2D, this.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(this.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     const m = new Malla(), minH = detalle >= 2 ? 0 : detalle === 1 ? 10 : 24;
     for (const e of M.edificiosEn(x0, y0, x0 + R, y0 + R)) { if (e.x < x0 || e.x >= x0 + R || e.y < y0 || e.y >= y0 + R || e.h < minH) continue; const st2 = estiloEdificio(M, e), P = Mundo.esquinas(e); let zb = 1e9; for (let i = 0; i < P.length; i += 2) zb = Math.min(zb, M.cota(P[i], P[i + 1])); zb -= O[2] + .3; m.edificio3d(P, O, zb, e, st2, detalle, M.estilo(e.x, e.y)); }   /* 3.0: con fachada (js/45b-mundo3d.js) */
-    for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0 }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
+    for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0, cuatro: q.techo === 'dos' || q.techo === 'cuatro' ? { alto: Math.min(7, Math.max(2, h0 * .28)), cumbrera: osc3(te, .85) } : null }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
     for (const P of M.pasosEn(x0, y0, x0 + R, y0 + R)) { if (P.nivel <= 0) continue; const T = P.trazo || (P.trazo = new Trazo(P.p)), vi = P.tipo === 'viaducto', rampa = vi ? 0 : Math.min(P.largo * .4, P.peatonal ? 9 : 22), h = s => P.nivel * NIVEL_M * (vi ? 1 : suave(Math.min(s, P.largo - s) / rampa)), paso = 6;
       for (let s = 0; s < P.largo; s += paso) { const a = T.at(s), b = T.at(Math.min(P.largo, s + paso)); if (a.x < x0 || a.x >= x0 + R || a.y < y0 || a.y >= y0 + R) continue; const ha = M.cota(a.x, a.y) + h(s) - O[2], hb = M.cota(b.x, b.y) + h(Math.min(P.largo, s + paso)) - O[2], w = P.ancho / 2, nx = -Math.sin(a.a) * w, ny = Math.cos(a.a) * w, A = [a.x - O[0], a.y - O[1]], Bq = [b.x - O[0], b.y - O[1]], c = hex3(vi ? '#c9cfd8' : P.peatonal ? '#d8cfbd' : '#6a6f79'); m.quad([A[0] + nx, ha, A[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [Bq[0] - nx, hb, Bq[1] - ny], [A[0] - nx, ha, A[1] - ny], c); m.quad([A[0] - nx, ha - 1, A[1] - ny], [A[0] - nx, ha, A[1] - ny], [Bq[0] - nx, hb, Bq[1] - ny], [Bq[0] - nx, hb - 1, Bq[1] - ny], hex3('#8e8a80')); m.quad([A[0] + nx, ha - 1, A[1] + ny], [Bq[0] + nx, hb - 1, Bq[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [A[0] + nx, ha, A[1] + ny], hex3('#8e8a80'));
         if ((s % (vi ? 30 : 24)) < paso && h(s) > 3) m.caja(A[0], M.cota(a.x, a.y) - O[2], A[1], a.a, 1.4, vi ? 2.2 : 1, h(s) - 1, hex3('#9aa3ad')); } }
@@ -206,9 +212,12 @@ class VistaGL {
        - cono de visión horizontal: en las cámaras de manejo (tercera, primera, cine) las regiones detrás de la cámara tampoco.
        Las aéreas miran hacia abajo y no se recortan por cono. */
     const vis = [], fx = C.blanco[0] - C.ojo[0], fy = C.blanco[1] - C.ojo[1], fl = Math.hypot(fx, fy), rad = R * .75 + 30, finNiebla = fr[1] + rad, medio = Math.atan(Math.tan((C.fov || 1) / 2) * W / H) + .15, conCono = !aerea && fl > 1e-3 && Math.abs(C.ojo[2] - C.blanco[2]) < fl * 1.2;
+    /* 4.5 · PVS horneado (C‑M37, idea de Quake): con la cámara a ras de calle, lo que la tabla dice que no se ve no se dibuja */
+    const pvs = !aerea && M.pvs && C.ojo[2] - M.cota(C.ojo[0], C.ojo[1]) < M.pvs.he ? M.pvs.desde(C.ojo[0], C.ojo[1]) : null; let porPVS = 0;
     for (const r of this.regiones.values()) { if (r.gx == null) { vis.push(r); continue; } const rx = (r.gx + .5) * R - C.ojo[0], ry = (r.gy + .5) * R - C.ojo[1], d = Math.hypot(rx, ry); if (d - rad > finNiebla) continue;
+      if (pvs && !pvs.ve((r.gx + .5) * R, (r.gy + .5) * R)) { porPVS++; continue; }
       if (conCono && d > rad) { const f = (rx * fx + ry * fy) / fl, l = (-rx * fy + ry * fx) / fl; if (Math.abs(Math.atan2(l, f)) - Math.asin(Math.min(1, rad / d)) > medio) continue; } vis.push(r); }
-    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length };
+    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length, porPVS, pvs: !!pvs };
     /* regiones: suelo con su losa */
     gl.useProgram(this.pT.p); uni(this.pT); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(this.pT.u.uS, 0);
     for (const r of vis) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }

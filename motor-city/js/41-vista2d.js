@@ -123,6 +123,7 @@ const Vista2D = {
     if (E.cables) this.cables(dibCtx, E.cables);
     /* 2.7: el pase final del estilo (manga en grises, líneas de velocidad) y la vida (partículas, pájaros, onomatopeyas) */
     if (MC.Vida && op.vida !== false) MC.Vida.dibujar(dibCtx);
+    if (MC.Efectos && op.vida !== false) MC.Efectos.dibujar(g, pr, E);   /* 4.5: choques, derrapes, explosiones y restos */
     if (dibCtx.mapa) Estilo.final(g, W, H, E);
     /* etiquetas (estaciones, lugares) */
     if (op.etiquetas !== false) this.etiquetas(dibCtx);

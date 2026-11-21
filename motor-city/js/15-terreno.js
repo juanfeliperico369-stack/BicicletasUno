@@ -99,15 +99,16 @@ const Terreno = {
   arbolLosaEn(M, x, y, r) {
     const cel = 7; for (let gy = Math.floor((y - 3) / cel) * cel; gy <= y + 3; gy += cel) for (let gx = Math.floor((x - 3) / cel) * cel; gx <= x + 3; gx += cel) {
       const tt = M.suelo(gx, gy); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(gx, gy), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(gx, gy, 41) > dens) continue;
-      const tx = gx + h2(gx, gy, 42) * cel, ty = gy + h2(gx, gy, 43) * cel; if (Math.hypot(tx - x, ty - y) < .38 + r) return { t: 'arbol', x: tx, y: ty };
+      const tx = gx + h2(gx, gy, 42) * cel, ty = gy + h2(gx, gy, 43) * cel; if (Math.hypot(tx - x, ty - y) < .38 + r && (!MC.Arboleda || MC.Arboleda.sembrable(M, tx, ty, 3, tt))) return { t: 'arbol', x: tx, y: ty };   /* 4.5: el mismo filtro que los árboles que se ven */
     }
     return null;
   },
   /* el obstáculo que toca el círculo (x, y, r): mobiliario, naturaleza, árboles de las losas y lo que diga el juego */
   obstaculo(C, x, y, r) {
     const M = C.mundo, k = 3 + r;
-    if (MC.Mobiliario) for (const p of Mobiliario.en(M, x - k, y - k, x + k, y + k, 200)) { const R = OBST_R[p.t]; if (R && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
-    if (MC.Naturaleza) for (const p of Naturaleza.en(M, x - k, y - k, x + k, y + k)) { const R = p.t === 'roca' ? p.s * .45 : OBST_R[p.t]; if (R && (p.t !== 'roca' || p.s > .7 || C.veh.clase !== 'pie') && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
+    if (MC.Mobiliario) for (const p of Mobiliario.en(M, x - k, y - k, x + k, y + k, 200)) { const R = OBST_R[p.t]; if (R && Math.hypot(p.x - x, p.y - y) < R + r && !(M._rotos && MC.Rotos.esta(M, p))) return p; }
+    /* 4.5: las rocas pequeñas no paran un carro (se pasan con un tumbo); a pie solo estorban las grandes */
+    if (MC.Naturaleza) for (const p of Naturaleza.en(M, x - k, y - k, x + k, y + k)) { const R = p.t === 'roca' ? p.s * .45 : OBST_R[p.t]; if (R && (p.t !== 'roca' || p.s > (C.veh.clase === 'pie' ? .7 : .45)) && Math.hypot(p.x - x, p.y - y) < R + r && !(M._rotos && MC.Rotos.esta(M, p))) return p; }
     if (Terreno.arbolLosaEn(M, x, y, r)) return { t: 'arbol' };
     if (C.obstaculos) for (const o of C.obstaculos()) if (Math.hypot(o.x - x, o.y - y) < (o.r || .5) + r) return o;
     return null;

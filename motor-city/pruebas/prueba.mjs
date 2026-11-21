@@ -499,6 +499,37 @@ console.log('21) Manejo 4.0.2: reversa, vuelta en tres puntos y piloto de la IA'
   ok(vRev < -2 && vRev > -8.6 && intentos >= 3 && llego >= intentos - 1, 'manejo: con el carro quieto, frenar es reversa (hasta 8 m/s); el piloto de la IA arranca de espaldas y llega a su destino por la calle', { reversa: +vRev.toFixed(1), llego, de: intentos, segundos: tiempos });
 }
 
+console.log('24) PVS 4.5 (Quake): la tabla horneada de lo que se ve desde cada celda de 160 m');
+{ const fp = path.join(RAIZ, 'datos/guatape/pvs.bin');
+  if (fs.existsSync(fp)) { const pv = MC.PVS.leer(new Uint8Array(fs.readFileSync(fp))), rs = pv.resumen();
+    /* las vecinas siempre se ven; desde un punto se unen las celdas que toca su margen; fuera de la ventana no recorta */
+    let vecinas = true, cx = 0, cy = 0; for (let k = 0; k < pv.nx * pv.ny; k++) { const x = k % pv.nx, y = k / pv.nx | 0; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!pv.veCelda(x, y, x + i, y + j)) vecinas = false; }
+    for (let k = 0; k < pv.nx * pv.ny; k++) { const x = k % pv.nx, y = k / pv.nx | 0; let n = 0; for (let j = -pv.r; j <= pv.r; j++) for (let i = -pv.r; i <= pv.r; i++) n += pv.veCelda(x, y, x + i, y + j) ? 0 : 1; if (n > 20) { cx = x; cy = y; break; } }
+    const V = pv.desde((cx + .5) * pv.P, (cy + .5) * pv.P), fuera = pv.veCelda(cx, cy, cx + pv.r + 3, cy);
+    ok(rs.conDatos > 100 && rs.recorteMedio > .2 && vecinas && fuera && V.celdas.length === 1 && V.ve((cx + .5) * pv.P, (cy + .5) * pv.P), 'pvs: Guatapé horneado, las vecinas siempre visibles, la ventana recorta y lo de afuera no se toca', rs);
+  } else console.log('  · sin datos/guatape/pvs.bin (node herramientas/pvs.mjs guatape)'); }
+
+console.log('25) Manejo 4.5: desliza contra la pared, pierde velocidad según el golpe, se desatasca, tumba lo menor y no hay árboles en las canchas');
+{ /* un edificio grande cerca del centro y un carro que le llega rasante (25°) y otro de frente */
+  const c0 = M.geoAMetros(6.2442, -75.5812), L0 = M.edificiosEn(c0.x - 400, c0.y - 400, c0.x + 400, c0.y + 400).filter(e => !e.P && e.hw > 12 && e.hd > 6).sort((a, b) => b.hw - a.hw);
+  let rasante = null, frente = null, desatasca = null;
+  for (const e of L0.slice(0, 12)) {
+    /* punto frente a la cara larga del edificio, a 9 m, en la calle */
+    const nx = -e.uy, ny = e.ux, px = e.x + nx * (e.hd + 9), py = e.y + ny * (e.hd + 9); if (M.edificioEn(px, py, 2)) continue;
+    const correr = (ang, v0, seg, E0 = {}) => { const C = new MC.Cuerpo(M, { x: px, y: py, a: ang, veh: 'carro' }); C.v = v0; let ch = false, des = false; const x0 = C.x, y0 = C.y; for (let t = 0; t < seg; t += 1 / 60) { C.actualizar(1 / 60, Object.assign({ acel: 1, asistencia: false }, E0)); if (C.eventos.includes('choque')) ch = true; if (C.eventos.includes('desatasco')) des = true; } return { C, ch, des, avance: Math.hypot(C.x - x0, C.y - y0) }; };
+    const haciaPared = Math.atan2(-ny, -nx), r1 = correr(haciaPared + 1.2, 12, 1.6), r2 = correr(haciaPared, 14, .9);
+    /* atascado de verdad: aparece metido 1,5 m dentro de la huella y empuja hacia adentro */
+    const C3 = new MC.Cuerpo(M, { x: e.x + nx * (e.hd - 1.5), y: e.y + ny * (e.hd - 1.5), a: haciaPared, veh: 'carro' }); let des3 = false; for (let t = 0; t < 2.5; t += 1 / 60) { C3.actualizar(1 / 60, { acel: 1, asistencia: false }); if (C3.eventos.includes('desatasco')) des3 = true; } const r3 = { des: des3, avance: Math.hypot(C3.x - (e.x + nx * (e.hd - 1.5)), C3.y - (e.y + ny * (e.hd - 1.5))) };
+    rasante = { v: +Math.abs(r1.C.v).toFixed(1), avance: +r1.avance.toFixed(1), choque: r1.ch }; frente = { v: +Math.abs(r2.C.v).toFixed(1), choque: r2.ch }; desatasca = { des: r3.des, avance: +r3.avance.toFixed(1) };
+    if (r1.ch || r2.ch) break;
+  }
+  /* tumbar una caneca a 8 m/s: sigue de largo; a pie se choca con ella */
+  let rompe = null; { const cv = M.viaCercana(c0.x, c0.y, 300), Lm = MC.Mobiliario.en(M, cv.x - 300, cv.y - 300, cv.x + 300, cv.y + 300).filter(p => p.t === 'caneca');
+    for (const q of Lm.slice(0, 20)) { const ang = Math.random() * 0 + 0, px = q.x - 6, py = q.y; if (M.edificioEn(px, py, 1.5)) continue; const C = new MC.Cuerpo(M, { x: px, y: py, a: 0, veh: 'carro' }); C.v = 8; let r = false; MC.on('rompe', () => { r = true; }); for (let t = 0; t < 1.2 && !r; t += 1 / 60) C.actualizar(1 / 60, { acel: 1, asistencia: false }); if (r) { rompe = { roto: MC.Rotos.esta(M, q), quedaV: +C.v.toFixed(1), noEstorba: !MC.Terreno.obstaculo(C, q.x, q.y, .3) }; break; } } }
+  /* canchas: ningún árbol adentro */
+  const S = M.sitios(); let enCancha = 0, revisadas = 0; for (const c of S.C.slice(0, 400)) { const R = Math.hypot(c.largo, c.ancho) / 2; for (const t of MC.Arboleda.en(M, c.x - R, c.y - R, c.x + R, c.y + R)) { const dx = t.x - c.x, dy = t.y - c.y, u = dx * Math.cos(c.ang) + dy * Math.sin(c.ang), v = -dx * Math.sin(c.ang) + dy * Math.cos(c.ang); if (Math.abs(u) < c.largo / 2 && Math.abs(v) < c.ancho / 2) enCancha++; } revisadas++; }
+  ok(rasante && rasante.avance > 8 && rasante.v > 6 && frente && frente.v < 6 && desatasca && desatasca.des && desatasca.avance > .5 && rompe && rompe.roto && rompe.quedaV > 5 && rompe.noEstorba && enCancha === 0 && revisadas > 50, 'manejo 4.5: rasante desliza y conserva velocidad; de frente frena; se desatasca; tumba la caneca y sigue; cero árboles en ' + revisadas + ' canchas', { rasante, frente, desatasca, rompe, enCancha }); }
+
 console.log('23) COLORMAP 4.4 (Doom): paleta de 256, tabla RGB15 y 32 niveles de luz por búsqueda en tabla');
 { const w = 64, h = 32, data = new Uint8ClampedArray(w * h * 4); for (let i = 0; i < w * h; i++) { data[i * 4] = 200; data[i * 4 + 1] = 120; data[i * 4 + 2] = 60; data[i * 4 + 3] = 255; }
   const img = { data, width: w, height: h }, T = MC.Colormap.tablas(); MC.Colormap.aplicar(img, { cx: 0, cy: 16, base: 0, caida: 30 / (w * w) });

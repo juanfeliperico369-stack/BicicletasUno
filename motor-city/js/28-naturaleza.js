@@ -16,6 +16,7 @@ const Naturaleza = {
       const x = (gx + r()) * S, y = (gy + r()) * S, u = r(), s = r(); if (!M.dentro(x, y)) continue; const tt = M.suelo(x, y);
       if (tt === TT.WATER || tt === TT.CANAL) { const ag = Terreno.aguaEn(M, x, y); if (ag && ag.prof < .45 && ag.tipo !== 'mar' && u < .35) L.push({ t: 'junco', x, y, s: .6 + s }); else if (ag && ag.tipo !== 'lago' && ag.tipo !== 'mar' && ag.prof < .9 && u < .12) L.push({ t: 'roca', x, y, s: .4 + s * .8 }); continue; }
       if (VIA_TT.has(tt) || tt === TT.BLDG || tt === TT.BRICK || M.edificioEn(x, y, 1)) continue;
+      if (MC.Arboleda && MC.Arboleda.despejada(M, x, y)) continue;   /* 4.5: ni palmas ni rocas en una cancha o una piscina */
       const pend = Terreno.pendiente(M, x, y), alt = M.cota(x, y);
       if (tt === TT.ROCA) { if (u < .55) L.push({ t: 'roca', x, y, s: .5 + s * 2.5 }); continue; }
       if (tt === TT.ARENA) { if (u < .1) L.push({ t: 'palma', x, y, s: .8 + s * .4 }); else if (u < .16) L.push({ t: 'roca', x, y, s: .4 + s }); continue; }
@@ -26,7 +27,7 @@ const Naturaleza = {
     }
     C.set(k, L); if (C.size > 20000) C.delete(C.keys().next().value); return L;
   },
-  en(M, x0, y0, x1, y1, max = 3000) { const S = Naturaleza.CELDA, out = []; for (let gy = Math.floor(y0 / S); gy <= Math.floor(y1 / S); gy++) for (let gx = Math.floor(x0 / S); gx <= Math.floor(x1 / S); gx++) { for (const p of Naturaleza._celda(M, gx, gy)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } } return out; },
+  en(M, x0, y0, x1, y1, max = 3000) { const S = Naturaleza.CELDA, out = []; for (let gy = Math.floor(y0 / S); gy <= Math.floor(y1 / S); gy++) for (let gx = Math.floor(x0 / S); gx <= Math.floor(x1 / S); gx++) { for (const p of Naturaleza._celda(M, gx, gy)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(M._rotos && MC.Rotos.esta(M, p))) { out.push(p); if (out.length >= max) return out; } } return out; },
   /* dibujo 2D: pr(x, y, h) del mundo a la pantalla, z = px por metro */
   objeto(D, p) {
     const { g, pr, z, P, noche, modo } = D, [x, y] = pr(p.x, p.y, 0), cen = modo === 'cenital', fa = MC.arte.f('naturaleza'); if (fa && fa(g, p, x, y, z, D) === true) return;

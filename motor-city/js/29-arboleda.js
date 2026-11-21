@@ -30,9 +30,31 @@ const Arboleda = {
     for (let y = by * B; y < (by + 1) * B; y += cel) for (let x = bx * B; x < (bx + 1) * B; x += cel) {
       const tt = M.suelo(x, y); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(x, y), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(x, y, 41) > dens) continue;
       const tx = x + h2(x, y, 42) * cel, ty = y + h2(x, y, 43) * cel, r = 2.2 + h2(x, y, 44) * 2.6, s = h2(x, y, 45), e = this.especie(tt, s, r), E = this.ESPECIES[e];
+      /* 4.5 · con lógica: nada en una cancha, una pista o una piscina, ni encima de la calle; en las plazas duras (que en el mapa
+         incluyen canchas y estadios) los árboles van en el borde, no en la mitad */
+      if (!this.sembrable(M, tx, ty, r, tt)) continue;
       L.push({ x: tx, y: ty, r, s, e, h: r * (2.05 + h2(x, y, 46) * .5) * E.alto, v: (h2(x, y, 47) * 3) | 0, espejo: h2(x, y, 48) < .5 });
     }
     C.set(k, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
+  },
+  /* zonas sin árboles: canchas (con 3 m de margen), piscinas y pistas de los sitios del mapa, en una rejilla de 64 m */
+  _despejadas(M) {
+    if (M._despejo) return M._despejo; const G = new Map(), Cs = 64, poner = (x0, y0, x1, y1, z) => { for (let gy = Math.floor(y0 / Cs); gy <= Math.floor(y1 / Cs); gy++) for (let gx = Math.floor(x0 / Cs); gx <= Math.floor(x1 / Cs); gx++) { const k = gx * 65536 + gy; (G.get(k) || G.set(k, []).get(k)).push(z); } };
+    let S = null; try { S = M.sitios ? M.sitios() : null; } catch (e) { S = null; }
+    if (S) { for (const c of S.C || []) { const z = { c, ca: Math.cos(c.ang), sa: Math.sin(c.ang), hl: c.largo / 2 + 3, ha: c.ancho / 2 + 3 }, R = Math.hypot(z.hl, z.ha); poner(c.x - R, c.y - R, c.x + R, c.y + R, z); }
+      for (const q of S.P || []) poner(q.caja[0] - 2, q.caja[1] - 2, q.caja[2] + 2, q.caja[3] + 2, { R: q.R }); }
+    return (M._despejo = { G, Cs });
+  },
+  despejada(M, x, y) {
+    const D = this._despejadas(M), L = D.G.get(Math.floor(x / D.Cs) * 65536 + Math.floor(y / D.Cs)); if (!L) return false;
+    for (const z of L) { if (z.c) { const dx = x - z.c.x, dy = y - z.c.y, u = dx * z.ca + dy * z.sa, v = -dx * z.sa + dy * z.ca; if (Math.abs(u) < z.hl && Math.abs(v) < z.ha) return true; } else if (z.R.some(R => dentroPol(R, x, y))) return true; }
+    return false;
+  },
+  sembrable(M, x, y, r = 3, tt = M.suelo(x, y)) {
+    const t2 = M.suelo(x, y); if (t2 !== TT.GRASS && t2 !== TT.MOUNT && t2 !== TT.PLAZA) return false;
+    if (this.despejada(M, x, y)) return false;
+    if (tt === TT.PLAZA || t2 === TT.PLAZA) { const d = 7; let dentro = 0; for (const [a, b] of [[d, 0], [-d, 0], [0, d], [0, -d]]) if (M.suelo(x + a, y + b) === TT.PLAZA) dentro++; if (dentro >= 4) return false; }
+    return true;
   },
   en(M, x0, y0, x1, y1, max = 2000) { const B = this.BLOQUE, out = []; for (let by = Math.floor(y0 / B); by <= Math.floor(y1 / B); by++) for (let bx = Math.floor(x0 / B); bx <= Math.floor(x1 / B); bx++) for (const t of this._bloque(M, bx, by)) if (t.x >= x0 && t.x <= x1 && t.y >= y0 && t.y <= y1) { out.push(t); if (out.length >= max) return out; } return out; },
   /* ---------- horneado: un lienzo por especie, variante y vista ---------- */

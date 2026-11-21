@@ -204,3 +204,28 @@ Versión **3.0.0** en `main`; **3.0.1 propuesta en la PR #5** · 20‑nov‑2026
 
 ## Nota de consolidación · 3.1.0
 Esta página conserva la historia original de los pedidos, incluso estados de 2.10/3.0 ahora superados. El **estado actualizado y con evidencias** se mantiene en [`docs/ESTADO-3.1.0.md`](ESTADO-3.1.0.md). No leer «Hecho» de versiones anteriores como una certificación de la rama principal ni del rendimiento en teléfonos físicos.
+
+## 15. «Investiga motores viejos y livianos» y «mundo abierto desde el principio» (4.1 a 4.4)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Investigar motores clásicos (Wolfenstein, Doom, Build, Quake, Elite, Thief, OutRun, Comanche) y adaptar sus técnicas, desde cero | ✅ | `docs/INVESTIGACION-MOTORES-CLASICOS.md`, `js/47-clasicos.js` (DDA, semillas, gema de luz y ruido, carretera arcade, Voxel Space), `js/47-colormap.js` (COLORMAP) |
+| Mundo abierto desde el principio; tutorial e historia opcionales | ✅ | Turno Cero (🌎 Mundo abierto), El Metro y EnCicla (Jugar abre la ciudad), Run Scooter (regalo diario sin ventana) |
+| Lo que dejaron Codex, ChatGPT y Antigravity | ✅ | Modo cine con direccionales (C‑M40), cubierta y esquivar (C‑M32), COLORMAP (C‑M39), pool de partículas y escalador, arreglos de EnCicla, la carretera de Run |
+
+## 16. «Retoca modelos, haz el PVS, mejora topografías y edificios… comparte el motor con un informe a cada repositorio» y «pule el manejo, los rostros, los árboles, Hunter Assassin, explosiones» (4.5, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| PVS de Quake (C‑M37) | ✅ | `herramientas/pvs.mjs`, `js/45-pvs.js`, `datos/nueva_york/pvs.bin`, `datos/guatape/pvs.bin`; prueba sin fugas `pruebas/pvs.mjs`. Recorta 26 % en Manhattan y 28 % en Guatapé (cámara a ras de calle). Medellín: horneado y medido (15 %), no se mete al HTML porque pesa 1 MB para poco. |
+| Modelos 3D pulidos | ✅ | `juegos/getaway/arte3d/generar_modelos.py` 0.3.1: silueta de carro con capó, cabina y baúl, rines, faros, espejos; personas con cara (ojos, cejas, orejas, nariz, labios), manos y peinado; AO horneada; malla indexada. |
+| Edificios, casas y relieve (sin cambiar el mapa) | ✅ | Techos a cuatro aguas en casas de teja y en los hitos, terrazas con aires y cuarto de escalera, coronas y agujas en las torres, relieve cercano con malla de 10 m. |
+| Peso y uso sin internet | ✅ | GLB comprimidos (2 MB → 0,4 MB en el HTML); `sw.js`: lo abierto una vez abre sin internet, y solo se consulta `VERSION.json` para saber si hay versión nueva (`pruebas/sin-conexion.mjs`). |
+| Manejo y controles | ✅ | `docs/INVESTIGACION-MANEJO.md`: deslizar contra la pared, pérdida según el ángulo, desatascar, asistencia que evita estrellarse, derrape con freno de mano, pisar andén, ladrillo, arena, nieve y roca suelta, moto por escalas. |
+| Explosiones, choques, derrapes y cosas rotas | ✅ | `js/88-efectos.js` y `js/32-rotos.js`. |
+| Rostros detallados | ✅ | `js/71-rostros.js` (retratos en los diálogos y subtítulos de Turno Cero) y caras en los modelos 3D. |
+| Árboles con lógica | ✅ | `js/29-arboleda.js`: nada en canchas, piscinas ni en la mitad de una plaza dura; la colisión usa el mismo filtro. |
+| La forma cenital de Hunter Assassin | ✅ | Linternas que se cortan en los muros, «?» y «!», cámara cenital sola en el sigilo a pie (`juegos/getaway/58-sigilo.js`). |
+| Interfaz y espaciados (juego de prueba) | ✅ | Rejilla de 8 px y área segura en el HUD de Turno Cero. |
+| Bot de la historia en las pruebas | ✅ | `pruebas/getaway-historia.mjs` (`node motor.mjs prueba --historia`) y en la integración continua. |
+| Documento detallado a cada repositorio; que sigan con su motor del Valle | ✅ | `docs/INFORME-MOTOR-CITY-4.5.md` en BicicletasUno, MetroZero y RunRunZero; el motor va en `motor-city/` como referencia. |
+| El mapa | No se tocó | Por pedido del autor: es de las IA que lo desarrollan. El PVS es un dato derivado del mapa, no lo cambia. |
+| HTML, APK y enlace de cada juego | ✅ | Ver `CONTEXTO-RELEVO.md` § 1. |

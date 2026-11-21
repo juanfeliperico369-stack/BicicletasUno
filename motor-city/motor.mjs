@@ -55,6 +55,7 @@ const nodo = (script, extra = []) => { const r = spawnSync(process.execPath, [pa
 if (cmd === 'mundo') nodo('herramientas/fusionar.mjs', args.slice(1));
 else if (cmd === 'construir') nodo('herramientas/construir.mjs', args.slice(1));
 else if (cmd === 'run') nodo('herramientas/importar-run.mjs', args.slice(1));
+else if (cmd === 'prueba' && args.includes('--historia')) nodo('pruebas/getaway-historia.mjs', []);   /* 4.5: la historia de Turno Cero entera */
 else if (cmd === 'prueba') nodo('pruebas/prueba.mjs', args.slice(1));
 else if (cmd === 'sincronizar') nodo('herramientas/sincronizar.mjs', args.slice(1));
 else if (cmd === 'nuevo') nodo('herramientas/nuevo.mjs', args.slice(1));

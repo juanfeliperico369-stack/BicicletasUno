@@ -2,7 +2,7 @@
    MODELOS GLB (4.0) · el mundo único 3D lee modelos glTF 2.0 binarios (.glb), sin librerías
    Para los 42 modelos de bloqueo de Codex («Turno Cero», CC0; juegos/getaway/arte3d): vehículos, personas,
    tecnología, edificios y escenarios, en metros y con color por vértice. Un juego los mete en su HTML
-   ("modelos" en juego.json → var MC_MODELOS = { id: 'base64' }) y la vista 3D los usa en vez de las cajas:
+   ("modelos" en juego.json → var MC_MODELOS = { id: 'base64' } o, desde 4.5, 'z:<bytes>:<base64 deflate>') y la vista 3D los usa en vez de las cajas:
    carros del tráfico, patrullas, camionetas de la banda, el carro del jugador y lo que el juego ponga en E.modelos3d.
    - Lee POSITION, COLOR_0 (u8 normalizado o float) e índices (u16/u32) de la primera malla; sin texturas ni huesos.
    - Color dominante = carrocería: se puede teñir por instancia (cada carro del tráfico con su color).
@@ -47,7 +47,8 @@ const Modelos = {
   get(id) { return this.L.get(id) || null; },
   /* GLB (ArrayBuffer, Uint8Array o base64) → { tris, n, bounds, frente } */
   leer(fuente, op = {}) {
-    let u8 = fuente; if (typeof fuente === 'string') u8 = Modelos._b64(fuente); else if (fuente instanceof ArrayBuffer) u8 = new Uint8Array(fuente);
+    let u8 = fuente; if (typeof fuente === 'string' && fuente.startsWith('z:')) { const i = fuente.indexOf(':', 2); u8 = inflarSync(deB64(fuente.slice(i + 1)), +fuente.slice(2, i)); }   /* 4.5: GLB comprimido en el HTML ('z:<bytes>:<base64 deflate>') */
+    else if (typeof fuente === 'string') u8 = Modelos._b64(fuente); else if (fuente instanceof ArrayBuffer) u8 = new Uint8Array(fuente);
     const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); if (dv.getUint32(0, true) !== 0x46546C67) throw new Error('no es GLB');
     let o = 12, json = null, bin = null;
     while (o < u8.byteLength) { const len = dv.getUint32(o, true), tipo = dv.getUint32(o + 4, true), d = u8.subarray(o + 8, o + 8 + len); if (tipo === 0x4E4F534A) json = JSON.parse(new TextDecoder().decode(d)); else if (tipo === 0x004E4942) bin = d; o += 8 + len; }
@@ -81,11 +82,17 @@ const Modelos = {
     for (let t = 0; t < nt; t++) { const o2 = t * 21, gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3 - cx, gy = (T[o2 + 1] + T[o2 + 4] + T[o2 + 7]) / 3 - cy, gz = (T[o2 + 2] + T[o2 + 5] + T[o2 + 8]) / 3 - cz; if (gx * T[o2 + 9] + gy * T[o2 + 10] + gz * T[o2 + 11] < 0) { T[o2 + 9] = -T[o2 + 9]; T[o2 + 10] = -T[o2 + 10]; T[o2 + 11] = -T[o2 + 11]; } }
     /* la carrocería: el color con más área (las llantas tienen muchos triángulos pequeños) */
     let cuerpo = null, max = 0; for (const [k, n] of cuenta) { const [r, g, b] = k.split(',').map(Number); if (n > max) { max = n; cuerpo = k; } }
-    if (cuerpo) for (let t = 0; t < nt; t++) { const o2 = t * 21, key = Math.round(T[o2 + 12] * 255) + ',' + Math.round(T[o2 + 13] * 255) + ',' + Math.round(T[o2 + 14] * 255); if (key === cuerpo) T[o2 + 15] = 1; }
+    /* 4.5: los modelos 0.3.0 traen la oclusión ambiental horneada en el color: las caras de la carrocería más oscuras
+       (mismo color × 0,65–0,99) también se tiñen, y guardan su sombra en tono[] para que el tinte la respete */
+    let tono = null;
+    if (cuerpo) { const cb = cuerpo.split(',').map(Number);
+      for (let t = 0; t < nt; t++) { const o2 = t * 21, r = Math.round(T[o2 + 12] * 255), g = Math.round(T[o2 + 13] * 255), b = Math.round(T[o2 + 14] * 255), key = r + ',' + g + ',' + b; if (key === cuerpo) { T[o2 + 15] = 1; continue; }
+        if (cb[0] + cb[1] + cb[2] < 30) continue; const kr = (r + .5) / (cb[0] + .5), kg = (g + .5) / (cb[1] + .5), kb = (b + .5) / (cb[2] + .5), km = (kr + kg + kb) / 3;
+        if (km >= .65 && km < .995 && Math.max(Math.abs(kr - km), Math.abs(kg - km), Math.abs(kb - km)) < .035) { T[o2 + 15] = 1; (tono || (tono = new Float32Array(nt).fill(1)))[t] = km; } } }
     /* faros y luces traseras de los vehículos (se encienden de noche): blanco cálido adelante (+X), rojo atrás */
     if (mx[0] - mn[0] > 2 && mx[1] - mn[1] < 3.2) for (let t = 0; t < nt; t++) { const o2 = t * 21, r = T[o2 + 12], g = T[o2 + 13], b = T[o2 + 14], gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3;
       if (gx > mx[0] - .12 && r > .7 && g > .65 && b > .6) T[o2 + 15] = 2; else if (gx < mn[0] + .12 && r > .6 && g < .45 && b < .4) T[o2 + 15] = 3; }
-    return { tris: T, n: nt, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
+    return { tris: T, n: nt, tono, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
   },
   registrar(id, fuente, op = {}) { try { const m = Modelos.leer(fuente, Object.assign({ frente: /_rig$/.test(id) ? '-z' : /^personaje_/.test(id) ? 'z' : 'x' }, op)); m.id = id; Modelos.L.set(id, m); return m; } catch (e) { MC.falla('modelo ' + id, e); return null; } },
   /* todos los de un paquete { id: base64 } */
@@ -126,7 +133,7 @@ Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
   /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
   const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
-    const o = (indices ? indices[t] : t) * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
+    const ti = indices ? indices[t] : t, o = ti * 21, fl = T[o + 15], cuerpo = fl === 1, sh = cuerpo && tin && Mo.tono ? Mo.tono[ti] : 1, r0 = cuerpo && tin ? tin[0] * sh : T[o + 12], g0 = cuerpo && tin ? tin[1] * sh : T[o + 13], b0 = cuerpo && tin ? tin[2] * sh : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
     const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
     for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
       if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;

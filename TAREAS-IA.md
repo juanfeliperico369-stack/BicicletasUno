@@ -1,5 +1,8 @@
 # Tareas de cada IA · Juega EnCicla
 
+> **Motor City 4.5 (21‑nov‑2026) · LEE PRIMERO `docs/INFORME-MOTOR-CITY-4.5.md`.** El autor decidió que este juego **sigue con su propio motor**: no se migra a Motor City (si abajo dice «Migrar a `motor-city/`», queda anulado). El motor 4.5 viaja en `motor-city/` como referencia y caja de herramientas; el informe dice qué cambió Claude, qué mejoró, qué falta auditar, qué te toca (manejo y controles, modelos, rostros, árboles con lógica, Guatapé, la forma cenital, efectos para todo público, interfaz) y **cómo usar el motor sin dejar el tuyo**.
+
+
 > **Motor City 4.0 (20‑nov‑2026): el planeta y *Turno Cero*.**
 > - El motor une Manhattan, Medellín y el Valle y Guatapé en un planeta (`MC.Planeta`), con carreteras de la nada entre ellas.
 > - Trae la búsqueda 0–5 (`MC.Busqueda`) y lee modelos GLB (`MC.Modelos`).
@@ -30,11 +33,11 @@
 - La IA que trabaje como «IA de EnCicla» hace la lista de abajo según su nivel.
 
 ## La IA de Juega EnCicla (Codex «astra» o Claude): lo fuerte
-1. **Migrar a `motor-city/`** sin perder sus pruebas. La guía paso a paso está en `motor-city/docs/MIGRACION-ENCICLA.md`: hoy `tools/build.js` sigue usando `motor-valle/js/valle.js`.
+1. ~~**Migrar a `motor-city/`**~~ (anulado por el autor en la 4.5: el juego sigue con su motor; ver `docs/INFORME-MOTOR-CITY-4.5.md`) sin perder sus pruebas. La guía paso a paso está en `motor-city/docs/MIGRACION-ENCICLA.md`: hoy `tools/build.js` sigue usando `motor-valle/js/valle.js`.
 2. **Estilo realista familiar (motor 2.6):**
    - `MC.Vistas` ya trae los árboles de pie, el asfalto gastado, los andenes de baldosa y los techos con textura;
    - usa `MC.estilo = 'realista'`, con la piel EnCicla encima (`MC.arte`).
-3. **El test de WebRTC** «el invitado 2 ve al anfitrión y al invitado 1» (`tests/run.js:446`) espera una ventana fija de 900 ms. Espera a recibir un estado nuevo de cada participante (número de secuencia o ACK) antes de comprobar. Lo señalaron Gemini y Codex.
+3. ~~**El test de WebRTC**~~ (hecho por Claude en la 4.5: espera a que lleguen los estados) «el invitado 2 ve al anfitrión y al invitado 1» (`tests/run.js:446`) espera una ventana fija de 900 ms. Espera a recibir un estado nuevo de cada participante (número de secuencia o ACK) antes de comprobar. Lo señalaron Gemini y Codex.
 4. `MC.Manejo` (perfil bici) y `MC.UI` (tema `encicla`) con `verificar`, más el joystick visible y los botones de acción (`ui.joystick`, `ui.accion`).
 5. **Lugares jugables:** estaciones EnCicla y talleres de bici.
 6. **Mi casa** con soporte para la bici.

@@ -13,5 +13,9 @@
   ],
   "run": true,
   "mundos_capas": true,
-  "mundos_rasters": true
+  "mundos_rasters": true,
+  "pvs": [
+    "nueva_york",
+    "guatape"
+  ]
 }

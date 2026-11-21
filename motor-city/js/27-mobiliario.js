@@ -31,7 +31,7 @@ const Mobiliario = {
   en(mundo, x0, y0, x1, y1, max = 2000) {
     if (!mundo._rejillaVias) return []; const { G, C } = mundo._rejillaVias(), VV = mundo.vias(), vis = new Set(), out = [];
     for (let gy = Math.floor(y0 / C); gy <= Math.floor(y1 / C); gy++) for (let gx = Math.floor(x0 / C); gx <= Math.floor(x1 / C); gx++) { const a = G.get(gx * 65536 + gy); if (a) for (let q = 0; q < a.length; q += 2) vis.add(a[q]); }
-    for (const i of vis) { for (const p of Mobiliario.deVia(mundo, VV[i], i)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } }
+    for (const i of vis) { for (const p of Mobiliario.deVia(mundo, VV[i], i)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(mundo._rotos && MC.Rotos.esta(mundo, p))) { out.push(p); if (out.length >= max) return out; } }
     return out;
   },
   /* dibujo en las vistas 2D: cebras en el piso (antes de lo demás); el resto, de pie con su sombra de contacto */

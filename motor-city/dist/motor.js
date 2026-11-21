@@ -1,4 +1,4 @@
-/* Motor City 4.4.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.5.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.4.0',
+  version: '4.5.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -2102,15 +2102,16 @@ const Terreno = {
   arbolLosaEn(M, x, y, r) {
     const cel = 7; for (let gy = Math.floor((y - 3) / cel) * cel; gy <= y + 3; gy += cel) for (let gx = Math.floor((x - 3) / cel) * cel; gx <= x + 3; gx += cel) {
       const tt = M.suelo(gx, gy); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(gx, gy), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(gx, gy, 41) > dens) continue;
-      const tx = gx + h2(gx, gy, 42) * cel, ty = gy + h2(gx, gy, 43) * cel; if (Math.hypot(tx - x, ty - y) < .38 + r) return { t: 'arbol', x: tx, y: ty };
+      const tx = gx + h2(gx, gy, 42) * cel, ty = gy + h2(gx, gy, 43) * cel; if (Math.hypot(tx - x, ty - y) < .38 + r && (!MC.Arboleda || MC.Arboleda.sembrable(M, tx, ty, 3, tt))) return { t: 'arbol', x: tx, y: ty };   /* 4.5: el mismo filtro que los árboles que se ven */
     }
     return null;
   },
   /* el obstáculo que toca el círculo (x, y, r): mobiliario, naturaleza, árboles de las losas y lo que diga el juego */
   obstaculo(C, x, y, r) {
     const M = C.mundo, k = 3 + r;
-    if (MC.Mobiliario) for (const p of Mobiliario.en(M, x - k, y - k, x + k, y + k, 200)) { const R = OBST_R[p.t]; if (R && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
-    if (MC.Naturaleza) for (const p of Naturaleza.en(M, x - k, y - k, x + k, y + k)) { const R = p.t === 'roca' ? p.s * .45 : OBST_R[p.t]; if (R && (p.t !== 'roca' || p.s > .7 || C.veh.clase !== 'pie') && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
+    if (MC.Mobiliario) for (const p of Mobiliario.en(M, x - k, y - k, x + k, y + k, 200)) { const R = OBST_R[p.t]; if (R && Math.hypot(p.x - x, p.y - y) < R + r && !(M._rotos && MC.Rotos.esta(M, p))) return p; }
+    /* 4.5: las rocas pequeñas no paran un carro (se pasan con un tumbo); a pie solo estorban las grandes */
+    if (MC.Naturaleza) for (const p of Naturaleza.en(M, x - k, y - k, x + k, y + k)) { const R = p.t === 'roca' ? p.s * .45 : OBST_R[p.t]; if (R && (p.t !== 'roca' || p.s > (C.veh.clase === 'pie' ? .7 : .45)) && Math.hypot(p.x - x, p.y - y) < R + r && !(M._rotos && MC.Rotos.esta(M, p))) return p; }
     if (Terreno.arbolLosaEn(M, x, y, r)) return { t: 'arbol' };
     if (C.obstaculos) for (const o of C.obstaculos()) if (Math.hypot(o.x - x, o.y - y) < (o.r || .5) + r) return o;
     return null;
@@ -2973,7 +2974,7 @@ const Mobiliario = {
   en(mundo, x0, y0, x1, y1, max = 2000) {
     if (!mundo._rejillaVias) return []; const { G, C } = mundo._rejillaVias(), VV = mundo.vias(), vis = new Set(), out = [];
     for (let gy = Math.floor(y0 / C); gy <= Math.floor(y1 / C); gy++) for (let gx = Math.floor(x0 / C); gx <= Math.floor(x1 / C); gx++) { const a = G.get(gx * 65536 + gy); if (a) for (let q = 0; q < a.length; q += 2) vis.add(a[q]); }
-    for (const i of vis) { for (const p of Mobiliario.deVia(mundo, VV[i], i)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } }
+    for (const i of vis) { for (const p of Mobiliario.deVia(mundo, VV[i], i)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(mundo._rotos && MC.Rotos.esta(mundo, p))) { out.push(p); if (out.length >= max) return out; } }
     return out;
   },
   /* dibujo en las vistas 2D: cebras en el piso (antes de lo demás); el resto, de pie con su sombra de contacto */
@@ -3279,6 +3280,7 @@ const Naturaleza = {
       const x = (gx + r()) * S, y = (gy + r()) * S, u = r(), s = r(); if (!M.dentro(x, y)) continue; const tt = M.suelo(x, y);
       if (tt === TT.WATER || tt === TT.CANAL) { const ag = Terreno.aguaEn(M, x, y); if (ag && ag.prof < .45 && ag.tipo !== 'mar' && u < .35) L.push({ t: 'junco', x, y, s: .6 + s }); else if (ag && ag.tipo !== 'lago' && ag.tipo !== 'mar' && ag.prof < .9 && u < .12) L.push({ t: 'roca', x, y, s: .4 + s * .8 }); continue; }
       if (VIA_TT.has(tt) || tt === TT.BLDG || tt === TT.BRICK || M.edificioEn(x, y, 1)) continue;
+      if (MC.Arboleda && MC.Arboleda.despejada(M, x, y)) continue;   /* 4.5: ni palmas ni rocas en una cancha o una piscina */
       const pend = Terreno.pendiente(M, x, y), alt = M.cota(x, y);
       if (tt === TT.ROCA) { if (u < .55) L.push({ t: 'roca', x, y, s: .5 + s * 2.5 }); continue; }
       if (tt === TT.ARENA) { if (u < .1) L.push({ t: 'palma', x, y, s: .8 + s * .4 }); else if (u < .16) L.push({ t: 'roca', x, y, s: .4 + s }); continue; }
@@ -3289,7 +3291,7 @@ const Naturaleza = {
     }
     C.set(k, L); if (C.size > 20000) C.delete(C.keys().next().value); return L;
   },
-  en(M, x0, y0, x1, y1, max = 3000) { const S = Naturaleza.CELDA, out = []; for (let gy = Math.floor(y0 / S); gy <= Math.floor(y1 / S); gy++) for (let gx = Math.floor(x0 / S); gx <= Math.floor(x1 / S); gx++) { for (const p of Naturaleza._celda(M, gx, gy)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } } return out; },
+  en(M, x0, y0, x1, y1, max = 3000) { const S = Naturaleza.CELDA, out = []; for (let gy = Math.floor(y0 / S); gy <= Math.floor(y1 / S); gy++) for (let gx = Math.floor(x0 / S); gx <= Math.floor(x1 / S); gx++) { for (const p of Naturaleza._celda(M, gx, gy)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(M._rotos && MC.Rotos.esta(M, p))) { out.push(p); if (out.length >= max) return out; } } return out; },
   /* dibujo 2D: pr(x, y, h) del mundo a la pantalla, z = px por metro */
   objeto(D, p) {
     const { g, pr, z, P, noche, modo } = D, [x, y] = pr(p.x, p.y, 0), cen = modo === 'cenital', fa = MC.arte.f('naturaleza'); if (fa && fa(g, p, x, y, z, D) === true) return;
@@ -3452,9 +3454,31 @@ const Arboleda = {
     for (let y = by * B; y < (by + 1) * B; y += cel) for (let x = bx * B; x < (bx + 1) * B; x += cel) {
       const tt = M.suelo(x, y); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(x, y), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(x, y, 41) > dens) continue;
       const tx = x + h2(x, y, 42) * cel, ty = y + h2(x, y, 43) * cel, r = 2.2 + h2(x, y, 44) * 2.6, s = h2(x, y, 45), e = this.especie(tt, s, r), E = this.ESPECIES[e];
+      /* 4.5 · con lógica: nada en una cancha, una pista o una piscina, ni encima de la calle; en las plazas duras (que en el mapa
+         incluyen canchas y estadios) los árboles van en el borde, no en la mitad */
+      if (!this.sembrable(M, tx, ty, r, tt)) continue;
       L.push({ x: tx, y: ty, r, s, e, h: r * (2.05 + h2(x, y, 46) * .5) * E.alto, v: (h2(x, y, 47) * 3) | 0, espejo: h2(x, y, 48) < .5 });
     }
     C.set(k, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
+  },
+  /* zonas sin árboles: canchas (con 3 m de margen), piscinas y pistas de los sitios del mapa, en una rejilla de 64 m */
+  _despejadas(M) {
+    if (M._despejo) return M._despejo; const G = new Map(), Cs = 64, poner = (x0, y0, x1, y1, z) => { for (let gy = Math.floor(y0 / Cs); gy <= Math.floor(y1 / Cs); gy++) for (let gx = Math.floor(x0 / Cs); gx <= Math.floor(x1 / Cs); gx++) { const k = gx * 65536 + gy; (G.get(k) || G.set(k, []).get(k)).push(z); } };
+    let S = null; try { S = M.sitios ? M.sitios() : null; } catch (e) { S = null; }
+    if (S) { for (const c of S.C || []) { const z = { c, ca: Math.cos(c.ang), sa: Math.sin(c.ang), hl: c.largo / 2 + 3, ha: c.ancho / 2 + 3 }, R = Math.hypot(z.hl, z.ha); poner(c.x - R, c.y - R, c.x + R, c.y + R, z); }
+      for (const q of S.P || []) poner(q.caja[0] - 2, q.caja[1] - 2, q.caja[2] + 2, q.caja[3] + 2, { R: q.R }); }
+    return (M._despejo = { G, Cs });
+  },
+  despejada(M, x, y) {
+    const D = this._despejadas(M), L = D.G.get(Math.floor(x / D.Cs) * 65536 + Math.floor(y / D.Cs)); if (!L) return false;
+    for (const z of L) { if (z.c) { const dx = x - z.c.x, dy = y - z.c.y, u = dx * z.ca + dy * z.sa, v = -dx * z.sa + dy * z.ca; if (Math.abs(u) < z.hl && Math.abs(v) < z.ha) return true; } else if (z.R.some(R => dentroPol(R, x, y))) return true; }
+    return false;
+  },
+  sembrable(M, x, y, r = 3, tt = M.suelo(x, y)) {
+    const t2 = M.suelo(x, y); if (t2 !== TT.GRASS && t2 !== TT.MOUNT && t2 !== TT.PLAZA) return false;
+    if (this.despejada(M, x, y)) return false;
+    if (tt === TT.PLAZA || t2 === TT.PLAZA) { const d = 7; let dentro = 0; for (const [a, b] of [[d, 0], [-d, 0], [0, d], [0, -d]]) if (M.suelo(x + a, y + b) === TT.PLAZA) dentro++; if (dentro >= 4) return false; }
+    return true;
   },
   en(M, x0, y0, x1, y1, max = 2000) { const B = this.BLOQUE, out = []; for (let by = Math.floor(y0 / B); by <= Math.floor(y1 / B); by++) for (let bx = Math.floor(x0 / B); bx <= Math.floor(x1 / B); bx++) for (const t of this._bloque(M, bx, by)) if (t.x >= x0 && t.x <= x1 && t.y >= y0 && t.y <= y1) { out.push(t); if (out.length >= max) return out; } return out; },
   /* ---------- horneado: un lienzo por especie, variante y vista ---------- */
@@ -3673,7 +3697,11 @@ Object.assign(MC, { Personaje });
    ===================================================================== */
 const VEH_SUELO_RUEDA = [.55, .25, .3, .3, 1, 1, .7, 1.15, 0, 0, .85, 1, .75, 0, .95, .9, .35];   // por tipo de casilla (TT)
 const VEH_SUELO_PIE = [.85, .6, .7, .7, .95, .95, 1, 1, 0, 0, 1, 1, 1, 0, .9, 1, .8];
-const VEH_SUELO_CARRO = [.25, .1, 0, 0, 1, 1, .3, .5, 0, 0, .5, 1, 0, 0, 1, .9, 0];
+/* 4.5 · por dónde puede meterse un carro (verosímil, no todo es pared): pasto y tierra despacio, el ladrillo del borde de la calle y
+   el andén como en GTA (despacio y atropellando lo menor), arena, nieve y roca suelta a paso de tortuga; escalas y edificios no */
+const VEH_SUELO_CARRO = [.32, .12, .45, 0, 1, 1, .45, .55, 0, 0, .55, 1, 0, .25, 1, .9, 0, .28, .3, .22];
+/* la moto sí baja y sube escalas (despacio) y se mete por donde el carro no cabe */
+const VEH_SUELO_MOTO = [.45, .2, .6, 0, 1, 1, .55, .85, 0, 0, .7, 1, .3, .35, 1, .9, .3, .35, .25, .28];
 const VEH_LISTA = [
   /* a pie y micromovilidad (Juega EnCicla, Run Scooter y Gemini) */
   { id: 'pie', n: 'A pie', icon: '🚶', clase: 'pie', cuerpo: 'pie', vmax: 1.6, vcorre: 4.6, acc: 3, freno: 8, giro: [6, 5], largo: .5, ancho: .5, masa: 70, suelo: VEH_SUELO_PIE, loma: [1.1, .6, 1.15], salto: 1, run: 1 },
@@ -3694,7 +3722,7 @@ const VEH_LISTA = [
   { id: 'triciclo', n: 'Triciclo de carga', icon: '🚲', de: 'bici', vmax: 5.5, acc: 1, giro: [2.2, 1], largo: 2.4, ancho: 1.1, masa: 160, carga: 1, color: '#ffb300' },
   { id: 'jetpack', n: 'Jetpack', icon: '🚀', clase: 'aire', cuerpo: 'pie', vmax: 14, acc: 5, freno: 5, giro: [3, 2], largo: .6, ancho: .6, masa: 90, suelo: VEH_SUELO_PIE, loma: [0, 1, 1], vuela: 1, techo: 60, run: 1, futuro: 1, color: '#ff7043' },
   /* motor (Juega EnCicla: camión de Balance; El Metro: buses; Motor City: carros, motos y lo que viene) */
-  { id: 'moto', n: 'Moto', icon: '🏍️', clase: 'moto', cuerpo: 'sentado', vmax: 22, acc: 5, freno: 8, giro: [2.6, .9], largo: 2, ancho: .8, masa: 260, suelo: VEH_SUELO_CARRO, loma: [.3, .85, 1.1], electrico: 0, via: 1, salto: .4, color: '#1d1f24', manubrio: [.5, 1.05] },
+  { id: 'moto', n: 'Moto', icon: '🏍️', clase: 'moto', cuerpo: 'sentado', vmax: 22, acc: 5, freno: 8, giro: [2.6, .9], largo: 2, ancho: .8, masa: 260, suelo: VEH_SUELO_MOTO, loma: [.3, .85, 1.1], electrico: 0, via: 1, salto: .4, color: '#1d1f24', manubrio: [.5, 1.05] },
   { id: 'carro', n: 'Carro', icon: '🚗', clase: 'auto', cuerpo: 'sentado', vmax: 25, acc: 3.6, freno: 8.5, giro: [1.8, .55], largo: 4.3, ancho: 1.8, masa: 1200, suelo: VEH_SUELO_CARRO, loma: [.2, .9, 1.05], via: 1, color: '#c43a26' },
   { id: 'taxi', n: 'Taxi', icon: '🚕', de: 'carro', color: '#f2c400' },
   { id: 'camion', n: 'Camión de Balance', icon: '🚚', clase: 'pesado', cuerpo: 'sentado', vmax: 14, acc: 1.6, freno: 6, giro: [1.2, .4], largo: 6.5, ancho: 2.3, masa: 6500, suelo: VEH_SUELO_CARRO, loma: [.6, .6, 1.08], via: 1, color: '#7ab800' },
@@ -3703,7 +3731,7 @@ const VEH_LISTA = [
   { id: 'formula', n: 'Fórmula', icon: '🏁', de: 'carro', vmax: 90, acc: 14, freno: 30, giro: [2.2, .5], largo: 5.6, ancho: 2, masa: 800, color: '#d50000', futuro: 1 },
   { id: 'nascar', n: 'Óvalo (NASCAR)', icon: '🏁', de: 'carro', vmax: 80, acc: 9, freno: 14, largo: 5.2, masa: 1500, color: '#2962ff', futuro: 1 },
   { id: 'drift', n: 'Carro de drift', icon: '💨', de: 'carro', vmax: 45, acc: 7, deriva: 1, color: '#00e5ff', futuro: 1 },
-  { id: 'todoterreno', n: 'Todoterreno', icon: '🚙', de: 'carro', vmax: 30, suelo: [.8, .65, 0, 0, 1, 1, .6, .7, 0, 0, .8, 1, 0, 0, 1, .9, .3], via: 0, color: '#6d4c41', futuro: 1 },
+  { id: 'todoterreno', n: 'Todoterreno', icon: '🚙', de: 'carro', vmax: 30, suelo: [.8, .65, .6, 0, 1, 1, .6, .7, 0, 0, .8, 1, 0, .6, 1, .9, .3, .6, .55, .5], via: 0, color: '#6d4c41', futuro: 1 },
   /* aire y agua (los juegos que vienen) */
   { id: 'avioneta', n: 'Avioneta', icon: '🛩️', clase: 'aire', cuerpo: 'sentado', vmax: 60, vmin: 22, acc: 6, freno: 3, giro: [.9, .7], largo: 8, ancho: 10, masa: 900, suelo: VEH_SUELO_CARRO, loma: [0, 1, 1], vuela: 1, techo: 1200, color: '#eceff1', futuro: 1 },
   { id: 'avion', n: 'Avión de combate', icon: '✈️', de: 'avioneta', vmax: 260, vmin: 70, acc: 30, giro: [1.6, 1.1], techo: 9000, color: '#78909c', futuro: 1 },
@@ -3745,6 +3773,7 @@ MC.Vehiculos = Vehiculos;
    - Saltos con gravedad, vuelo (jetpack y avionetas) y agua (lanchas).
    Entrada: { giro: −1..1, acel: −1..1, dir: {x,y,m}|null (rumbo deseado en el mundo), salto, turbo, correr, sube, baja }
    ===================================================================== */
+const CALZADA_TT = new Set([4, 5, 11, 14]);   /* calle, avenida, puente y autopista: salir de ahí es subir un bordillo */
 const MENOR_IA = new Set(['poste', 'banca', 'paradero', 'caneca', 'hidrante']), BORDE_IA = new Set([TT.BLDG, TT.BRICK]);   /* lo menor del andén que la IA atropella (4.2) */
 const GRAV = 19.6;   // gravedad de juego (el doble de la real: saltos cortos y con peso)
 class Cuerpo {
@@ -3771,7 +3800,7 @@ class Cuerpo {
   get altura() { return this.alturaSuelo + this.z; }
   vmax() { const V = this.veh, base = V.id === 'pie' ? (this.corriendo ? V.vcorre : V.vmax) : V.vmax; return base * this.escala * (Vehiculos.escala || 1); }
   /* ¿puede este vehículo estar en (x, y)? */
-  puede(x, y) {
+  puede(x, y, sondeo = false) {
     const V = this.veh; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
     if (this.paso) return true;
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
@@ -3786,7 +3815,10 @@ class Cuerpo {
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
       /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
       /* 4.2: y en el andén, los carros de la IA tampoco se trancan con lo menor (poste, banca, paradero, caneca, hidrante): lo atropellan como en GTA; árboles y rocas sí los paran */
-      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); /* 4.5: lo que se rompe (canecas, conos, bancas, hidrantes, postes, paraderos…) no frena en seco: se lo lleva por delante si va rápido */
+        if (o && !sondeo && MC.Rotos && MC.Rotos.puede(o, this)) { MC.Rotos.romper(this.mundo, o, this); return true; }
+        if (o && sondeo && MC.Rotos && MC.Rotos.puede(o, this)) return true;
+        if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }
@@ -3797,7 +3829,12 @@ class Cuerpo {
     this.corriendo = !!E.correr && V.id === 'pie';
     /* rumbo deseado (joystick que apunta en el mundo) o giro (volante) */
     let acel = E.acel || 0, giro = E.giro || 0;
-    if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2, -1, 1); acel = E.dir.m * (Math.abs(d) > 2.2 && V.clase !== 'pie' ? .2 : 1); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
+    /* 4.5 · el joystick apunta en el mundo: el giro sigue la dirección con amortiguación (no zigzaguea a alta velocidad) y el acelerador
+       se recoge en las curvas cerradas para poder darlas (como la asistencia de frenado de los juegos de carreras para celular) */
+    if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2 - (this.giroV || 0) * .12, -1, 1); acel = E.dir.m * (V.clase === 'pie' ? 1 : clamp(1.15 - Math.abs(d) * .55, .25, 1)); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
+    /* 4.5 · asistencia que evita estrellarse: mira adelante (más lejos cuanto más rápido); si hay pared y el jugador no está girando
+       fuerte, empuja el volante hacia el lado libre que más se parece a lo que pide. Se apaga con E.asistencia === false */
+    ({ giro, acel } = this._asistencia(E, giro, acel, dt));
     /* suelo, pendiente y velocidad objetivo */
     this.tt = M.suelo(this.x, this.y); this.pend = this.paso ? 0 : M.pendiente(this.x, this.y, this.a, 12); this.tBloqueo = Math.max(0, (this.tBloqueo || 0) - dt); if (!this.tBloqueo) this.bloqueo = null;
     /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
@@ -3811,7 +3848,7 @@ class Cuerpo {
     if (!V.electrico && V.clase === 'rueda' && !this.enAire && this.pend < -.03 && acel <= 0) this.v += -this.pend * 9.8 * .55 * dt;   // la bajada empuja
     /* giro: más ágil quieto que rápido; inercia corta */
     const tg = lerp(V.giro[0], V.giro[1], clamp(Math.abs(this.v) / Math.max(1, vmax), 0, 1)) * giro * (V.clase === 'pie' ? 0 : 1) * (this.v < 0 ? -1 : 1);
-    this.giroV = lerp(this.giroV, tg, Math.min(1, dt * 10)); if (V.clase !== 'pie' || !E.dir) this.a += this.giroV * dt * (V.clase === 'pie' ? 1 : Math.min(1, .25 + Math.abs(this.v) / 2.5));
+    this.giroV = lerp(this.giroV, tg * (E.derrape && Math.abs(this.v) > 6 ? 1.45 : 1), Math.min(1, dt * 10)); if (V.clase !== 'pie' || !E.dir) this.a += this.giroV * dt * (V.clase === 'pie' ? 1 : Math.min(1, .25 + Math.abs(this.v) / 2.5));
     if (V.clase === 'pie' && !E.dir) this.a += giro * V.giro[0] * dt;
     /* vuelo */
     if (V.clase === 'aire') this._vuelo(dt, E);
@@ -3828,14 +3865,17 @@ class Cuerpo {
     const auto = V.clase === 'auto' || V.clase === 'pesado';
     const suelto = auto && !this.paso && (this.tt === TT.NIEVE || (this.tt === TT.LAND || this.tt === TT.GRASS) && (E.lluvia || E.clima?.lluvia || 0) > .35);
     const rumboPrevio = this.rumboRodado ?? this.a;
-    this.rumboRodado = suelto ? rumboPrevio + Math.atan2(Math.sin(this.a-rumboPrevio), Math.cos(this.a-rumboPrevio)) * (1-Math.exp(-dt*2.8)) : this.a;
+    /* 4.5 · agarre: el rumbo por donde rueda sigue a la trompa con un retraso; en piso suelto o con el freno de mano (E.derrape)
+       el retraso es grande y el carro derrapa (y avisa 'derrape' para las marcas de llanta y el humo) */
+    const agarre = !auto ? 99 : E.derrape && Math.abs(this.v) > 6 ? 1.6 : suelto ? 2.8 : 16 - clamp(Math.abs(this.v) / 30, 0, 1) * 6;
+    const desliz = angDif(rumboPrevio, this.a); this.rumboRodado = agarre >= 99 ? this.a : rumboPrevio + desliz * (1 - Math.exp(-dt * agarre));
+    this.deslizamiento = auto ? Math.abs(angDif(this.rumboRodado, this.a)) : 0;
+    if (auto && this.deslizamiento > .22 && Math.abs(this.v) > 6 && !this.enAire) { this.eventos.push('derrape'); this.v *= 1 - dt * .35 * Math.min(1, this.deslizamiento); }
     this.inclinacion = auto ? Math.atan(clamp(this.pend,-.65,.65)) : 0;
     const dx = Math.cos(this.rumboRodado) * this.v * dt, dy = Math.sin(this.rumboRodado) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
-    if (this.puede(nx, ny)) { this.x = nx; this.y = ny; }
-    else if (this.puede(nx, this.y)) { this.x = nx; this.v *= .7; }
-    else if (this.puede(this.x, ny)) { this.y = ny; this.v *= .7; }
-    else { if (Math.abs(this.v) > 2.5) { this.eventos.push('choque'); this.choque = .4; MC.emit('choque', this); } this.v *= -.15; }
+    const x0m = this.x, y0m = this.y; this._mover(dx, dy, dt);
     this.choque = Math.max(0, this.choque - dt);
+    this._despues(E, x0m, y0m, dt);
     this._niveles(dt);
     this.fase += Math.abs(this.v) * dt * (V.clase === 'pie' ? (this.corriendo ? 2.4 : 3.2) : V.cuerpo === 'pedalea' ? 1.6 : 1.2);
     this.estado = this.nadando && V.clase === 'pie' ? (this.buceando ? 'bucea' : 'nada') : Personaje.estadoPara(V, Math.abs(this.v), this.enAire && V.clase !== 'aire');
@@ -3856,6 +3896,52 @@ class Cuerpo {
      tableros con su rampa). El cuerpo se apoya en la más alta que le quede a la altura de un escalón; lo que queda
      entre los pies y la cabeza es pared; lo que queda arriba de la cabeza se pasa por debajo. Si el apoyo desaparece,
      cae con gravedad (y aterriza en lo que haya abajo). Las barandas no dejan caer del tablero. */
+  /* 4.5 · moverse con choques: en vez de trabarse contra los ejes del mapa, desliza a lo largo de la pared (su normal se estima
+     tanteando alrededor del punto bloqueado), pierde velocidad según el ángulo del golpe (rasante: casi nada; de frente: casi toda)
+     y el carro se alinea con la pared, como en los juegos de carreras arcade */
+  _mover(dx, dy, dt) {
+    const L = Math.hypot(dx, dy); if (L < 1e-7) return;
+    if (this.puede(this.x + dx, this.y + dy)) { this.x += dx; this.y += dy; return; }
+    const V = this.veh, auto = V.clase !== 'pie' && V.clase !== 'rueda', r = Math.max(.5, Math.min(1.4, (V.ancho || .6) * .65)), px = this.x + dx, py = this.y + dy; let bx = 0, by = 0;
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); if (!this.puede(px + cx * r, py + cy * r, true)) { bx += cx; by += cy; } }
+    const bl = Math.hypot(bx, by), nx = bl > .01 ? -bx / bl : -dx / L, ny = bl > .01 ? -by / bl : -dy / L, ux = dx / L, uy = dy / L, dot = ux * nx + uy * ny, impacto = clamp(-dot, 0, 1);
+    let tx = ux - dot * nx, ty = uy - dot * ny; const tl = Math.hypot(tx, ty); let movio = false;
+    if (tl > .05) { tx /= tl; ty /= tl; const s = L * tl; if (this.puede(this.x + tx * s, this.y + ty * s, true)) { this.x += tx * s; this.y += ty * s; movio = true; } }
+    if (!movio) { if (this.puede(this.x + dx, this.y, true)) { this.x += dx; movio = true; } else if (this.puede(this.x, this.y + dy, true)) { this.y += dy; movio = true; } }
+    const sp = Math.abs(this.v);
+    if (sp * impacto > 2.5 && !(this.choque > .15)) { this.eventos.push('choque'); this.choque = .4; this.impacto = sp * impacto; this.normalChoque = [nx, ny]; MC.emit('choque', this); }
+    if (movio) { this.v *= 1 - Math.min(.95, impacto * impacto * .9 + dt * .6);
+      if (auto && tl > .05) { const dir = this.v >= 0 ? Math.atan2(ty, tx) : Math.atan2(-ty, -tx); this.a += angDif(this.a, dir) * Math.min(1, dt * 7) * (1 - impacto * .6); this.rumboRodado = this.a; } }
+    else { this.v *= auto ? -.18 : 0; if (this.puede(this.x + nx * .06, this.y + ny * .06, true)) { this.x += nx * .06; this.y += ny * .06; } }
+  }
+  /* 4.5 · asistencia que evita estrellarse: mira adelante (más lejos cuanto más rápido); si hay pared y el jugador no está girando
+     fuerte, empuja el volante hacia el lado libre que más se parece a lo que pide, y no deja ir a fondo hacia la pared.
+     Como la «dirección asistida» de los juegos de carreras para celular. Se apaga con E.asistencia === false */
+  _asistencia(E, giro, acel, dt) {
+    const V = this.veh; if (V.clase === 'pie' || V.clase === 'aire' || this.ia || E.asistencia === false || Math.abs(this.v) < 3) { this._asis = 0; this._asisFreno = 0; return { giro, acel }; }
+    if ((this._tAsis = (this._tAsis || 0) - dt) <= 0) {
+      this._tAsis = .08; const la = clamp(Math.abs(this.v) * .45, 3, 12), sg = this.v >= 0 ? 1 : -1, libre = da => this.puede(this.x + Math.cos(this.a + da) * la * sg, this.y + Math.sin(this.a + da) * la * sg, true);
+      this._asis = 0; this._asisFreno = 0;
+      if (!libre(0)) { const pide = E.dir ? angDif(this.a, Math.atan2(E.dir.y, E.dir.x)) : giro; for (const da of (pide >= 0 ? [.3, -.3, .6, -.6] : [-.3, .3, -.6, .6])) if (libre(da)) { this._asis = Math.sign(da) * sg * (Math.abs(da) > .4 ? .75 : .5); break; } this._asisFreno = 1; }
+    }
+    if (this._asis && Math.abs(giro) < .7) giro = clamp(giro + this._asis, -1, 1);
+    if (this._asisFreno && acel > .5 && Math.abs(this.v) > 9) acel = .5;
+    return { giro, acel };
+  }
+  /* 4.5 · después de moverse: desatascar si empuja y no avanza, el empujón hacia el hueco y el tumbo del bordillo */
+  _despues(E, x0m, y0m, dt) {
+    const V = this.veh, auto = V.clase === 'auto' || V.clase === 'pesado', empuja = (E.dir && E.dir.m > .3) || Math.abs(E.acel || 0) > .3;
+    if (!this.ia && empuja && V.clase !== 'aire' && !this.nadando && Math.hypot(this.x - x0m, this.y - y0m) < .015) this.atasco = (this.atasco || 0) + dt; else this.atasco = Math.max(0, (this.atasco || 0) - dt * 2);
+    if (this.atasco > .85) { this.atasco = 0; this._desatascar(E); }
+    if (this._empujon) { const q = this._empujon, f = Math.min(1, dt * 8), metido = !this.puede(this.x, this.y, true); if (metido || this.puede(this.x + q.x * f, this.y + q.y * f, true)) { this.x += q.x * f; this.y += q.y * f; } q.x *= 1 - f; q.y *= 1 - f; if (Math.hypot(q.x, q.y) < .02) this._empujon = null; }   /* metido dentro de algo: sale derecho hacia el hueco libre */
+    /* bordillo: al subir de la calzada al andén o a un patio, un tumbo (para la cámara y la suspensión) */
+    const ttN = this.mundo.suelo(this.x, this.y); if (auto && CALZADA_TT.has(this.tt) !== CALZADA_TT.has(ttN) && Math.abs(this.v) > 2) { this.tumbo = Math.min(1, Math.abs(this.v) / 12); this.eventos.push('bordillo'); } this.tumbo = Math.max(0, (this.tumbo || 0) - dt * 3);
+  }
+  _desatascar(E) {
+    const quiere = E.dir ? Math.atan2(E.dir.y, E.dir.x) : this.a + (this.v < 0 || (E.acel || 0) < 0 ? Math.PI : 0); let mejor = null, md = 1e9;
+    for (const d of [.8, 1.4, 2.2, 3.2]) { for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, x = this.x + Math.cos(a) * d, y = this.y + Math.sin(a) * d; if (!this.puede(x, y, true)) continue; const pen = d * .6 + Math.abs(angDif(quiere, a)) * 1.2; if (pen < md) { md = pen; mejor = { x: x - this.x, y: y - this.y, a }; } } if (mejor) break; }
+    if (!mejor) return false; this._empujon = { x: mejor.x, y: mejor.y }; if (this.veh.clase !== 'pie') { this.a += angDif(this.a, mejor.a) * .5; this.rumboRodado = this.a; } this.v = 0; this.eventos.push('desatasco'); MC.emit('desatasco', this); return true;
+  }
   escalon() { const V = this.veh; return V.clase === 'pie' ? .5 : V.clase === 'aire' ? 1.2 : .35; }
   /* el escalón crece con lo que se avanza en el cuadro: la rampa más empinada sube ~0,62 m por metro */
   escalonDin() { return this.escalon() + Math.abs(this.v) * (this._dt || 1 / 60) * .7; }
@@ -4129,6 +4215,44 @@ class Piezas {
   }
 }
 MC.Piezas = Piezas;
+/* ---- js/32-rotos.js ---- */
+/* =====================================================================
+   ROTOS (4.5) · lo que un vehículo se lleva por delante: con lógica, no todo es pared
+   - Una caneca, un cono, una valla, una banca, un hidrante, un paradero o un poste no frenan en seco al carro: si va lo bastante
+     rápido para tumbarlo, lo tumba, pierde algo de velocidad (según la masa de lo que golpea) y sigue. Despacio, sí lo para.
+   - Un arbusto se aplasta; un árbol grande, una roca grande, un muro y un edificio no se rompen nunca.
+   - A pie y en bici no se rompe nada (se choca). La moto solo tumba lo liviano.
+   - Lo roto queda registrado en el mundo (M._rotos): no se vuelve a dibujar de pie ni a chocar, y MC.Efectos dibuja los restos
+     (el poste caído, la caneca regada, el chorro del hidrante). Evento: MC.on('rompe', { o, cuerpo, v }).
+   ===================================================================== */
+const ROMPE_V = { cono: 1, caneca: 2.5, arbusto: 1.5, valla: 3, banca: 4, hidrante: 5, paradero: 8, poste: 8.5 };   /* m/s mínimos para tumbarlo en carro */
+const ROMPE_FRENA = { cono: .98, caneca: .93, arbusto: .9, valla: .86, banca: .8, hidrante: .7, paradero: .62, poste: .55 };   /* velocidad que queda */
+const ROMPE_MOTO = new Set(['cono', 'caneca', 'arbusto', 'valla']);
+const Rotos = {
+  V: ROMPE_V,
+  clave(p) { return p.t + ':' + Math.round(p.x * 2) + ',' + Math.round(p.y * 2); },
+  esta(M, p) { return !!(M && M._rotos && p && p.t && M._rotos.has(Rotos.clave(p))); },
+  /* ¿este cuerpo, a esta velocidad, tumba ese objeto? */
+  puede(o, C) {
+    const lim = o && ROMPE_V[o.t], cl = C.veh.clase; if (lim == null || cl === 'pie' || cl === 'rueda' || cl === 'agua') return false;
+    if (cl === 'moto' && !ROMPE_MOTO.has(o.t)) return false;
+    return Math.abs(C.v) >= lim * (cl === 'pesado' ? .55 : 1);
+  },
+  romper(M, o, C) {
+    if (!M || Rotos.esta(M, o)) return null; const v = Math.abs(C.v), r = { t: o.t, x: o.x, y: o.y, a: C.a, v, t0: MC.ahora ? MC.ahora() : Date.now(), dir: C.v >= 0 ? C.a : C.a + Math.PI };
+    (M._rotos || (M._rotos = new Map())).set(Rotos.clave(o), r);
+    const k = ROMPE_FRENA[o.t] ?? .8, masa = C.veh.masa || 1200; C.v *= 1 - (1 - k) * Math.min(1.4, 1500 / masa);
+    if (C.eventos) C.eventos.push('rompe');
+    MC.emit('rompe', { o: r, cuerpo: C, v });
+    /* que no se acumule sin fin en una partida larga: los más viejos se olvidan (vuelven a aparecer de pie, como en GTA) */
+    if (M._rotos.size > 400) M._rotos.delete(M._rotos.keys().next().value);
+    return r;
+  },
+  lista(M) { return M && M._rotos ? [...M._rotos.values()] : []; },
+  reparar(M) { if (M) M._rotos = null; }
+};
+MC.Rotos = Rotos;
+
 /* ---- js/33-controles.js ---- */
 /* =====================================================================
    CONTROLES · teclado, pantalla táctil (joystick virtual y gestos) y control de juegos (gamepad)
@@ -4491,16 +4615,30 @@ Cuerpo.prototype._actualizarBase = Cuerpo.prototype.actualizar;
 Cuerpo.prototype.actualizar = function (dt, E = {}) {
   const V = this.veh; if (V.dinamica !== 'carro') { this._carro = null; return this._actualizarBase(dt, E); }
   dt = Math.min(dt, .05); this.eventos.length = 0; if (!this._carro || this._carro.v !== V) { this._carro = new ManejoCarro(V); this._carro.vx = this.v; }
+  /* 4.5: si el juego cambió la velocidad desde afuera (teletransporte, salida de un cinemático), el modelo la toma */
+  if (Math.abs(this.v - this._carro.vx) > 1.5) { this._carro.vx = this.v; this._carro.vy = 0; this._carro.r = 0; }
   let acel = E.acel || 0, giro = E.giro || 0;
   if (E.dir && E.dir.m > .08) { const d = angDif(this.a, Math.atan2(E.dir.y, E.dir.x));
     /* 4.0.2: el destino quedó atrás → frena y, ya despacio, retrocede girando al revés (vuelta en tres puntos); antes se quedaba quieto */
     if (Math.abs(d) > 2.2) { if (this._carro.vx > 2) { acel = -.7; giro = clamp(d * 2, -1, 1); } else { acel = -.6 * Math.max(.5, E.dir.m); giro = -Math.sign(d); } }
-    else { giro = clamp(d * 2, -1, 1); acel = E.dir.m; } }
+    /* 4.5: giro amortiguado (sin zigzag a alta velocidad) y acelerador recogido en las curvas cerradas para poder darlas */
+    else { giro = clamp(d * 2 - this._carro.r * .25, -1, 1); acel = E.dir.m * clamp(1.15 - Math.abs(d) * .55, .25, 1); } }
+  ({ giro, acel } = this._asistencia(E, giro, acel, dt));
   this.tt = this.mundo.suelo(this.x, this.y); this.pend = this.mundo.pendiente(this.x, this.y, this.a, 12);
-  const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), R = this._carro.paso(dt, null, { acel, giro, salto: E.salto || E.turbo && false }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
-  const ca = Math.cos(this.a), sa = Math.sin(this.a), nx = this.x + (ca * R.avance - sa * R.lateral) * dt, ny = this.y + (sa * R.avance + ca * R.lateral) * dt;
-  if (this.puede(nx, ny)) { this.x = nx; this.y = ny; } else { if (Math.abs(R.avance) > 4) { this.eventos.push('choque'); MC.emit('choque', this); } this._carro.vx *= -.2; this._carro.vy = 0; this._carro.r = 0; }
-  this.a += R.giro * dt; this.v = R.avance; this.derrape = R.derrape; this._niveles(dt); this.estado = 'sentado'; return this;
+  const Tp = Terreno.paso(this, this.x, this.y), suelo = Math.max(.15, Tp.ok === false ? .2 : Tp.f || 1);
+  const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), turbo = !!E.turbo && acel > 0;
+  const R = this._carro.paso(dt, null, { acel: acel * (turbo ? 1.4 : 1), giro, salto: !!(E.derrape || E.salto) }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
+  /* 4.5: el suelo, el daño (escala) y el turbo ponen el tope de velocidad, como en la física base */
+  const vlim = this.vmax() * suelo * (turbo ? 1.25 : 1); if (this._carro.vx > vlim) this._carro.vx -= (this._carro.vx - vlim) * Math.min(1, dt * 2.5); if (this._carro.vx < -vlim * .4) this._carro.vx = -vlim * .4;
+  const ca = Math.cos(this.a), sa = Math.sin(this.a), dx = (ca * R.avance - sa * R.lateral) * dt, dy = (sa * R.avance + ca * R.lateral) * dt, x0m = this.x, y0m = this.y;
+  this.a += R.giro * dt; this.v = this._carro.vx;
+  /* 4.5: el mismo choque que la física base: desliza a lo largo de la pared, pierde según el ángulo y se alinea */
+  const v0 = this.v; this._mover(dx, dy, dt);
+  if (this.v !== v0) { const k = v0 ? clamp(this.v / v0, -.3, 1) : 0; this._carro.vx = this.v; this._carro.vy *= Math.max(0, k); this._carro.r *= k > .7 ? .7 : .2; }
+  this.choque = Math.max(0, (this.choque || 0) - dt);
+  this.derrape = R.derrape; this.deslizamiento = R.derrape; if (R.derrape > .22 && Math.abs(R.avance) > 6) this.eventos.push('derrape');
+  this._despues(E, x0m, y0m, dt);
+  this._niveles(dt); this.estado = 'sentado'; return this;
 };
 
 /* ---- js/37-manejo.js ---- */
@@ -5119,6 +5257,7 @@ const Vista2D = {
     if (E.cables) this.cables(dibCtx, E.cables);
     /* 2.7: el pase final del estilo (manga en grises, líneas de velocidad) y la vida (partículas, pájaros, onomatopeyas) */
     if (MC.Vida && op.vida !== false) MC.Vida.dibujar(dibCtx);
+    if (MC.Efectos && op.vida !== false) MC.Efectos.dibujar(g, pr, E);   /* 4.5: choques, derrapes, explosiones y restos */
     if (dibCtx.mapa) Estilo.final(g, W, H, E);
     /* etiquetas (estaciones, lugares) */
     if (op.etiquetas !== false) this.etiquetas(dibCtx);
@@ -5771,6 +5910,12 @@ class Malla {
     }
     /* techo: abanico (los polígonos de huella son casi convexos) o a dos aguas en casas rectangulares */
     if (op.dosAguas && n === 4) { const c = op.dosAguas, h = Math.min(2.4, c.ancho * .45), m = [(V[0][0] + V[1][0]) / 2, y1 + h, (V[0][1] + V[1][1]) / 2], m2 = [(V[2][0] + V[3][0]) / 2, y1 + h, (V[2][1] + V[3][1]) / 2], p = V.map(v => [v[0], y1, v[1]]); if (cw) { this.quad(p[0], m, m2, p[3], techo); this.quad(p[2], m2, m, p[1], techo); this.tri(p[0], p[1], m, muro); this.tri(p[2], p[3], m2, muro); } else { this.quad(p[0], p[3], m2, m, techo); this.quad(p[2], p[1], m, m2, techo); this.tri(p[0], m, p[1], muro); this.tri(p[2], m2, p[3], muro); } return; }
+    /* 4.5 · a cuatro aguas (casas con huella real y teja, iglesias, hitos): un tronco de pirámide hacia el centro.
+       Cada faldón queda con su propia luz (se lee el techo desde arriba en vez de una placa plana) */
+    if (op.cuatro && n >= 4 && n <= 24) { let cx = 0, cz = 0; for (const v of V) { cx += v[0] / n; cz += v[1] / n; }
+      const k = op.cuatro.k ?? .3, h = op.cuatro.alto, B = V.map(v => [v[0], y1, v[1]]), T = V.map(v => [cx + (v[0] - cx) * k, y1 + h, cz + (v[1] - cz) * k]);
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; if (cw) this.quad(B[i], T[i], T[j], B[j], techo); else this.quad(B[i], B[j], T[j], T[i], techo); }
+      const cum = op.cuatro.cumbrera || techo; for (let i = 1; i < n - 1; i++) { if (cw) this.tri(T[0], T[i + 1], T[i], cum); else this.tri(T[0], T[i], T[i + 1], cum); } return; }
     const top = V.map(v => [v[0], y1, v[1]]); for (let i = 1; i < n - 1; i++) { if (cw) this.tri(top[0], top[i + 1], top[i], techo); else this.tri(top[0], top[i], top[i + 1], techo); }
   }
   /* caja orientada: centro (x, y, z), largo en el rumbo a, ancho y alto */
@@ -5862,7 +6007,7 @@ class VistaGL {
   }
   /* una región de 160 m: suelo con textura de la losa y las cosas con volumen */
   _region(gx, gy, detalle) {
-    const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = 8, st = R / n, suelo = [];
+    const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = detalle >= 3 ? 16 : 8, st = R / n, suelo = [];   /* 4.5: el relieve cercano con malla de 10 m (lomas y taludes más fieles) */
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const P = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([u, v]) => { const x = x0 + u * st, y = y0 + v * st, nn = M.normal(x, y, 10); return [x - O[0], M.cota(x, y) - O[2], y - O[1], nn[0], nn[1], nn[2], u / n, v / n]; }); for (const q of [P[0], P[2], P[1], P[0], P[3], P[2]]) suelo.push(...q); }
     /* texturas de lado potencia de 2 (512, 256 o 128 px por losa de 160 m) para tener mipmaps y filtro anisótropo: el piso se ve nítido a lo lejos */
     const res = (detalle > 3 ? 1024 : detalle > 2 ? 512 : detalle > 1 ? 256 : 128) / R, L = this.losas.losa(gx, gy, res, false, 3), tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -5872,7 +6017,7 @@ class VistaGL {
     if (pot && this.aniso) gl.texParameterf(gl.TEXTURE_2D, this.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(this.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     const m = new Malla(), minH = detalle >= 2 ? 0 : detalle === 1 ? 10 : 24;
     for (const e of M.edificiosEn(x0, y0, x0 + R, y0 + R)) { if (e.x < x0 || e.x >= x0 + R || e.y < y0 || e.y >= y0 + R || e.h < minH) continue; const st2 = estiloEdificio(M, e), P = Mundo.esquinas(e); let zb = 1e9; for (let i = 0; i < P.length; i += 2) zb = Math.min(zb, M.cota(P[i], P[i + 1])); zb -= O[2] + .3; m.edificio3d(P, O, zb, e, st2, detalle, M.estilo(e.x, e.y)); }   /* 3.0: con fachada (js/45b-mundo3d.js) */
-    for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0 }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
+    for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0, cuatro: q.techo === 'dos' || q.techo === 'cuatro' ? { alto: Math.min(7, Math.max(2, h0 * .28)), cumbrera: osc3(te, .85) } : null }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
     for (const P of M.pasosEn(x0, y0, x0 + R, y0 + R)) { if (P.nivel <= 0) continue; const T = P.trazo || (P.trazo = new Trazo(P.p)), vi = P.tipo === 'viaducto', rampa = vi ? 0 : Math.min(P.largo * .4, P.peatonal ? 9 : 22), h = s => P.nivel * NIVEL_M * (vi ? 1 : suave(Math.min(s, P.largo - s) / rampa)), paso = 6;
       for (let s = 0; s < P.largo; s += paso) { const a = T.at(s), b = T.at(Math.min(P.largo, s + paso)); if (a.x < x0 || a.x >= x0 + R || a.y < y0 || a.y >= y0 + R) continue; const ha = M.cota(a.x, a.y) + h(s) - O[2], hb = M.cota(b.x, b.y) + h(Math.min(P.largo, s + paso)) - O[2], w = P.ancho / 2, nx = -Math.sin(a.a) * w, ny = Math.cos(a.a) * w, A = [a.x - O[0], a.y - O[1]], Bq = [b.x - O[0], b.y - O[1]], c = hex3(vi ? '#c9cfd8' : P.peatonal ? '#d8cfbd' : '#6a6f79'); m.quad([A[0] + nx, ha, A[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [Bq[0] - nx, hb, Bq[1] - ny], [A[0] - nx, ha, A[1] - ny], c); m.quad([A[0] - nx, ha - 1, A[1] - ny], [A[0] - nx, ha, A[1] - ny], [Bq[0] - nx, hb, Bq[1] - ny], [Bq[0] - nx, hb - 1, Bq[1] - ny], hex3('#8e8a80')); m.quad([A[0] + nx, ha - 1, A[1] + ny], [Bq[0] + nx, hb - 1, Bq[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [A[0] + nx, ha, A[1] + ny], hex3('#8e8a80'));
         if ((s % (vi ? 30 : 24)) < paso && h(s) > 3) m.caja(A[0], M.cota(a.x, a.y) - O[2], A[1], a.a, 1.4, vi ? 2.2 : 1, h(s) - 1, hex3('#9aa3ad')); } }
@@ -5941,9 +6086,12 @@ class VistaGL {
        - cono de visión horizontal: en las cámaras de manejo (tercera, primera, cine) las regiones detrás de la cámara tampoco.
        Las aéreas miran hacia abajo y no se recortan por cono. */
     const vis = [], fx = C.blanco[0] - C.ojo[0], fy = C.blanco[1] - C.ojo[1], fl = Math.hypot(fx, fy), rad = R * .75 + 30, finNiebla = fr[1] + rad, medio = Math.atan(Math.tan((C.fov || 1) / 2) * W / H) + .15, conCono = !aerea && fl > 1e-3 && Math.abs(C.ojo[2] - C.blanco[2]) < fl * 1.2;
+    /* 4.5 · PVS horneado (C‑M37, idea de Quake): con la cámara a ras de calle, lo que la tabla dice que no se ve no se dibuja */
+    const pvs = !aerea && M.pvs && C.ojo[2] - M.cota(C.ojo[0], C.ojo[1]) < M.pvs.he ? M.pvs.desde(C.ojo[0], C.ojo[1]) : null; let porPVS = 0;
     for (const r of this.regiones.values()) { if (r.gx == null) { vis.push(r); continue; } const rx = (r.gx + .5) * R - C.ojo[0], ry = (r.gy + .5) * R - C.ojo[1], d = Math.hypot(rx, ry); if (d - rad > finNiebla) continue;
+      if (pvs && !pvs.ve((r.gx + .5) * R, (r.gy + .5) * R)) { porPVS++; continue; }
       if (conCono && d > rad) { const f = (rx * fx + ry * fy) / fl, l = (-rx * fy + ry * fx) / fl; if (Math.abs(Math.atan2(l, f)) - Math.asin(Math.min(1, rad / d)) > medio) continue; } vis.push(r); }
-    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length };
+    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length, porPVS, pvs: !!pvs };
     /* regiones: suelo con su losa */
     gl.useProgram(this.pT.p); uni(this.pT); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(this.pT.u.uS, 0);
     for (const r of vis) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
@@ -6040,9 +6188,9 @@ Object.assign(Malla.prototype, {
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; A += V[i][0] * V[j][1] - V[j][0] * V[i][1]; }
     const sg = A > 0 ? 1 : -1, ctr = [cx, zb + H / 2, cz];   // normal hacia afuera: (dz, −dx) si la huella va antihoraria (A > 0)
     /* cuerpo y techo (a dos aguas con alero en casas rectangulares; plancha con pretil y tanque en el resto) */
-    const dos = !st.plano && !e.P && n === 4;
-    this.prisma(P, O, zb, zt, muro, techo, dos ? { dosAguas: { ancho: Math.min(e.hw, e.hd) * 2 } } : {});
-    if (dos) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
+    const dos = !st.plano && !e.P && n === 4, cuatro = !st.plano && !dos && n <= 16 && H <= 16;   /* 4.5: la huella real con teja lleva techo a cuatro aguas */
+    this.prisma(P, O, zb, zt, muro, techo, dos ? { dosAguas: { ancho: Math.min(e.hw, e.hd) * 2 } } : cuatro ? { cuatro: { alto: Math.min(2.6, Math.min(e.hw, e.hd) * .55), k: .25, cumbrera: osc3(techo, .88) } } : {});
+    if (dos || cuatro) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
     else if (detalle >= 3 || !casa) {
       for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < .8) continue; const nx = (b[1] - a[1]) / L * sg * .18, nz = -(b[0] - a[0]) / L * sg * .18, a2 = [a[0] - nx, a[1] - nz], b2 = [b[0] - nx, b[1] - nz]; this.quadF([a[0], zt, a[1]], [b[0], zt, b[1]], [b[0], zt + .55, b[1]], [a[0], zt + .55, a[1]], osc3(muro, .93), 0, ctr); this.quadF([a2[0], zt, a2[1]], [b2[0], zt, b2[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], osc3(muro, .8), 0, [cx, zt + 5, cz]); this.quadF([a[0], zt + .55, a[1]], [b[0], zt + .55, b[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], acl3(muro, .2), 0, [cx, zt - 5, cz]); }
       const tx = cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), tz = cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4);
@@ -6050,6 +6198,19 @@ Object.assign(Malla.prototype, {
         for (const [px, pz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) this.cajaF(tx + px * .9, zt + .55, tz + pz * .9, 0, .14, .14, 2.2, hex3('#2a2b2e'));
         this.cil(tx, zt + 2.7, tz, 1.25, 2.6, 9, hex3('#6b4e35'), 1.25, hex3('#5a412c')); this.cil(tx, zt + 5.3, tz, 1.35, 1.1, 9, hex3('#3b3d42'), 0);
       } else if (st.tanque || h2(sem, 3, 82) < .35) this.cil(tx, zt, tz, .62, 1.25, 7, hex3('#1d2228'), .62, hex3('#2b3138'));
+      /* 4.5 · la terraza: aires acondicionados y el cuarto de la escalera; las torres altas llevan corona, mástil o aguja */
+      if (!casa && detalle >= 3) {
+        const r0 = Math.min(e.hw, e.hd), gris = hex3('#9aa0a6'), osc = hex3('#5d636b');
+        if (r0 > 3.5) { const ang = Math.atan2(e.uy, e.ux), k = 1 + (h2(sem, 9, 88) * 3 | 0);
+          for (let j = 0; j < k; j++) { const u = (h2(sem, 10 + j, 88) - .5) * r0, v = (h2(sem, 20 + j, 88) - .5) * r0; this.cajaF(cx + u * e.ux - v * e.uy, zt + .55, cz + u * e.uy + v * e.ux, ang, 1.4, 1.0, .9, gris, 0, osc); }
+          if (H > 12) { const u = -r0 * .35, v = r0 * .3; this.cajaF(cx + u * e.ux - v * e.uy, zt + .55, cz + u * e.uy + v * e.ux, ang, 2.6, 2.2, 2.6, osc3(muro, .85), 0, techo); } }
+        if (H > 70) {
+          const tope = zt + .55, alto = H > 150 ? Math.min(60, H * .22) : H * .08, ang = Math.atan2(e.uy, e.ux);
+          if (H > 150) { this.cajaF(cx, tope, cz, ang, r0 * 1.1, r0 * 1.1, alto * .3, osc3(muro, .9), 0, acl3(muro, .1)); this.cil(cx, tope + alto * .3, cz, r0 * .18, alto * .7, 6, hex3('#c9cfd6'), .08); }
+          else if (h2(sem, 30, 88) < .5) { this.cajaF(cx, tope, cz, ang, r0 * 1.2, r0 * 1.2, alto, osc3(muro, .9), noche > .5 ? .35 : 0, acl3(muro, .15)); this.cil(cx, tope + alto, cz, .12, 6, 4, hex3('#c9cfd6'), .05); }
+          else this.cil(cx, tope, cz, .15, 9 + H * .05, 4, hex3('#c9cfd6'), .06);
+        }
+      }
     }
     if (detalle < 3 && !casa) return;
     /* fachada por cada muro: zócalo, ventanas con marco y vidrio, puerta, balcones y cornisa */
@@ -6059,7 +6220,7 @@ Object.assign(Malla.prototype, {
     for (let i = 0; i < n; i++) {
       const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 2) continue;
       pared(a, b, 0, 1, zb, zb + .95, .03, zoc);                                   // zócalo
-      if (!dos) pared(a, b, 0, 1, zt - .38, zt, .05, cor);                      // cornisa
+      if (!dos && !cuatro) pared(a, b, 0, 1, zt - .38, zt, .05, cor);                      // cornisa
       const cols = Math.max(1, Math.floor(L / 2.7)), pta = i === iL ? Math.floor(cols / 2) : -1;
       for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) {
         const um = (q + .5) / cols, w = Math.min(1.1, L / cols * .45) / L, y0 = zb + (p === 0 ? 1.15 : 1.0 + p * 3), y1 = y0 + (p === 0 ? 1.15 : 1.3);
@@ -6114,7 +6275,7 @@ MC.Mundo3D = { PAL_ZOCALO };
    MODELOS GLB (4.0) · el mundo único 3D lee modelos glTF 2.0 binarios (.glb), sin librerías
    Para los 42 modelos de bloqueo de Codex («Turno Cero», CC0; juegos/getaway/arte3d): vehículos, personas,
    tecnología, edificios y escenarios, en metros y con color por vértice. Un juego los mete en su HTML
-   ("modelos" en juego.json → var MC_MODELOS = { id: 'base64' }) y la vista 3D los usa en vez de las cajas:
+   ("modelos" en juego.json → var MC_MODELOS = { id: 'base64' } o, desde 4.5, 'z:<bytes>:<base64 deflate>') y la vista 3D los usa en vez de las cajas:
    carros del tráfico, patrullas, camionetas de la banda, el carro del jugador y lo que el juego ponga en E.modelos3d.
    - Lee POSITION, COLOR_0 (u8 normalizado o float) e índices (u16/u32) de la primera malla; sin texturas ni huesos.
    - Color dominante = carrocería: se puede teñir por instancia (cada carro del tráfico con su color).
@@ -6159,7 +6320,8 @@ const Modelos = {
   get(id) { return this.L.get(id) || null; },
   /* GLB (ArrayBuffer, Uint8Array o base64) → { tris, n, bounds, frente } */
   leer(fuente, op = {}) {
-    let u8 = fuente; if (typeof fuente === 'string') u8 = Modelos._b64(fuente); else if (fuente instanceof ArrayBuffer) u8 = new Uint8Array(fuente);
+    let u8 = fuente; if (typeof fuente === 'string' && fuente.startsWith('z:')) { const i = fuente.indexOf(':', 2); u8 = inflarSync(deB64(fuente.slice(i + 1)), +fuente.slice(2, i)); }   /* 4.5: GLB comprimido en el HTML ('z:<bytes>:<base64 deflate>') */
+    else if (typeof fuente === 'string') u8 = Modelos._b64(fuente); else if (fuente instanceof ArrayBuffer) u8 = new Uint8Array(fuente);
     const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); if (dv.getUint32(0, true) !== 0x46546C67) throw new Error('no es GLB');
     let o = 12, json = null, bin = null;
     while (o < u8.byteLength) { const len = dv.getUint32(o, true), tipo = dv.getUint32(o + 4, true), d = u8.subarray(o + 8, o + 8 + len); if (tipo === 0x4E4F534A) json = JSON.parse(new TextDecoder().decode(d)); else if (tipo === 0x004E4942) bin = d; o += 8 + len; }
@@ -6193,11 +6355,17 @@ const Modelos = {
     for (let t = 0; t < nt; t++) { const o2 = t * 21, gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3 - cx, gy = (T[o2 + 1] + T[o2 + 4] + T[o2 + 7]) / 3 - cy, gz = (T[o2 + 2] + T[o2 + 5] + T[o2 + 8]) / 3 - cz; if (gx * T[o2 + 9] + gy * T[o2 + 10] + gz * T[o2 + 11] < 0) { T[o2 + 9] = -T[o2 + 9]; T[o2 + 10] = -T[o2 + 10]; T[o2 + 11] = -T[o2 + 11]; } }
     /* la carrocería: el color con más área (las llantas tienen muchos triángulos pequeños) */
     let cuerpo = null, max = 0; for (const [k, n] of cuenta) { const [r, g, b] = k.split(',').map(Number); if (n > max) { max = n; cuerpo = k; } }
-    if (cuerpo) for (let t = 0; t < nt; t++) { const o2 = t * 21, key = Math.round(T[o2 + 12] * 255) + ',' + Math.round(T[o2 + 13] * 255) + ',' + Math.round(T[o2 + 14] * 255); if (key === cuerpo) T[o2 + 15] = 1; }
+    /* 4.5: los modelos 0.3.0 traen la oclusión ambiental horneada en el color: las caras de la carrocería más oscuras
+       (mismo color × 0,65–0,99) también se tiñen, y guardan su sombra en tono[] para que el tinte la respete */
+    let tono = null;
+    if (cuerpo) { const cb = cuerpo.split(',').map(Number);
+      for (let t = 0; t < nt; t++) { const o2 = t * 21, r = Math.round(T[o2 + 12] * 255), g = Math.round(T[o2 + 13] * 255), b = Math.round(T[o2 + 14] * 255), key = r + ',' + g + ',' + b; if (key === cuerpo) { T[o2 + 15] = 1; continue; }
+        if (cb[0] + cb[1] + cb[2] < 30) continue; const kr = (r + .5) / (cb[0] + .5), kg = (g + .5) / (cb[1] + .5), kb = (b + .5) / (cb[2] + .5), km = (kr + kg + kb) / 3;
+        if (km >= .65 && km < .995 && Math.max(Math.abs(kr - km), Math.abs(kg - km), Math.abs(kb - km)) < .035) { T[o2 + 15] = 1; (tono || (tono = new Float32Array(nt).fill(1)))[t] = km; } } }
     /* faros y luces traseras de los vehículos (se encienden de noche): blanco cálido adelante (+X), rojo atrás */
     if (mx[0] - mn[0] > 2 && mx[1] - mn[1] < 3.2) for (let t = 0; t < nt; t++) { const o2 = t * 21, r = T[o2 + 12], g = T[o2 + 13], b = T[o2 + 14], gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3;
       if (gx > mx[0] - .12 && r > .7 && g > .65 && b > .6) T[o2 + 15] = 2; else if (gx < mn[0] + .12 && r > .6 && g < .45 && b < .4) T[o2 + 15] = 3; }
-    return { tris: T, n: nt, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
+    return { tris: T, n: nt, tono, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
   },
   registrar(id, fuente, op = {}) { try { const m = Modelos.leer(fuente, Object.assign({ frente: /_rig$/.test(id) ? '-z' : /^personaje_/.test(id) ? 'z' : 'x' }, op)); m.id = id; Modelos.L.set(id, m); return m; } catch (e) { MC.falla('modelo ' + id, e); return null; } },
   /* todos los de un paquete { id: base64 } */
@@ -6238,7 +6406,7 @@ Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
   /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
   const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
-    const o = (indices ? indices[t] : t) * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
+    const ti = indices ? indices[t] : t, o = ti * 21, fl = T[o + 15], cuerpo = fl === 1, sh = cuerpo && tin && Mo.tono ? Mo.tono[ti] : 1, r0 = cuerpo && tin ? tin[0] * sh : T[o + 12], g0 = cuerpo && tin ? tin[1] * sh : T[o + 13], b0 = cuerpo && tin ? tin[2] * sh : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
     const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
     for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
       if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;
@@ -6253,6 +6421,59 @@ function m4trs(t, q, sc) { const [x, y, z, w] = q, x2 = x + x, y2 = y + y, z2 = 
   return [(1 - (yy + zz)) * sc[0], (xy + wz) * sc[0], (xz - wy) * sc[0], 0, (xy - wz) * sc[1], (1 - (xx + zz)) * sc[1], (yz + wx) * sc[1], 0, (xz + wy) * sc[2], (yz - wx) * sc[2], (1 - (xx + yy)) * sc[2], 0, t[0], t[1], t[2], 1]; }
 function m4mul(a, b) { const o = new Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3]; return o; }
 MC.Modelos = Modelos;
+
+/* ---- js/45-pvs.js ---- */
+/* =====================================================================
+   PVS · conjunto potencialmente visible, calculado por adelantado (4.5, C‑M37)
+   Idea de Quake (id Software, 1996), rehecha desde cero (sala limpia): el mapa se parte en celdas y, antes de jugar,
+   se calcula desde cada celda qué otras se alcanzan a ver. En el juego basta con mirar una tabla de bits.
+   Aquí la ciudad es un campo de alturas (suelo + edificios, 2,5D), así que el cálculo es el del horizonte de Comanche:
+   desde unos ojos repartidos por las calles de cada celda de 160 m se lanzan rayos en 720 direcciones y se marca toda
+   columna cuya cima asoma por encima del horizonte que va dejando lo más alto que el rayo ya cruzó
+   (herramientas/pvs.mjs, con varios núcleos). La comprobación (pruebas/pvs.mjs) usa cámaras al azar que no son esos ojos.
+   Formato (datos/<mundo>/pvs.bin): 'PVS1' · u32 largo del JSON · JSON { P, r, nx, ny, he, bytes, ... } · bits (deflate crudo).
+   Cada celda guarda una ventana de (2r+1)² bits alrededor suyo: 1 = se puede ver. Lo que cae fuera de la ventana no se
+   recorta con el PVS (lo recorta la niebla). Una celda sin ojos (agua, un edificio enorme) tiene la ventana llena de unos.
+   Uso: M.pvs = MC.PVS.leer(bytes); y en la vista 3D: const V = M.pvs.desde(x, y); V.ve(x2, y2)
+   ===================================================================== */
+class PVS {
+  constructor(meta, bits) {
+    this.meta = meta; this.P = meta.P; this.r = meta.r; this.nx = meta.nx; this.ny = meta.ny; this.he = meta.he || 16;
+    this.lado = 2 * this.r + 1; this.porCelda = Math.ceil(this.lado * this.lado / 8); this.bits = bits;
+    if (bits.length !== this.nx * this.ny * this.porCelda) throw new Error('PVS: tamaño inconsistente');
+  }
+  static leer(fuente) {
+    const u8 = typeof fuente === 'string' ? deB64(fuente) : fuente;
+    if (String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'PVS1') throw new Error('no es un PVS1');
+    const n = u8[4] | u8[5] << 8 | u8[6] << 16 | u8[7] << 24, meta = JSON.parse(new TextDecoder().decode(u8.subarray(8, 8 + n)));
+    return new PVS(meta, inflarSync(u8.subarray(8 + n), meta.bytes));
+  }
+  /* del HTML de un juego: <script type="text/plain" id="pvs-<mundo>"> (si no está, null y todo sigue igual) */
+  static deElemento(id) { try { const el = typeof document !== 'undefined' && document.getElementById('pvs-' + id); return el ? PVS.leer(el.textContent.trim()) : null; } catch (e) { MC.falla && MC.falla('pvs ' + id, e); return null; } }
+  celda(x, y) { return [Math.floor(x / this.P), Math.floor(y / this.P)]; }
+  /* ¿desde la celda (cx, cy) se ve la celda (tx, ty)? */
+  veCelda(cx, cy, tx, ty) {
+    const dx = tx - cx, dy = ty - cy, r = this.r;
+    if (dx < -r || dx > r || dy < -r || dy > r || cx < 0 || cy < 0 || cx >= this.nx || cy >= this.ny) return true;
+    const b = (dy + r) * this.lado + dx + r, o = (cy * this.nx + cx) * this.porCelda;
+    return (this.bits[o + (b >> 3)] >> (b & 7) & 1) === 1;
+  }
+  /* desde un punto: la unión de las celdas que toca un cuadrado de ±margen (la cámara se mueve entre celdas y queda
+     unos metros detrás del jugador). Devuelve { ve(x, y), celdas } para preguntar por puntos del mundo. */
+  desde(x, y, margen = 28) {
+    const P = this.P, cs = [], vistas = new Set();
+    for (const [ax, ay] of [[-margen, -margen], [margen, -margen], [-margen, margen], [margen, margen]]) { const cx = Math.floor((x + ax) / P), cy = Math.floor((y + ay) / P), k = cx + ',' + cy; if (!vistas.has(k)) { vistas.add(k); cs.push([cx, cy]); } }
+    return { celdas: cs, ve: (px, py) => { const tx = Math.floor(px / P), ty = Math.floor(py / P); for (const [cx, cy] of cs) if (this.veCelda(cx, cy, tx, ty)) return true; return false; } };
+  }
+  /* cuántas celdas de la ventana se ven, en promedio (para el informe y las pruebas) */
+  resumen() {
+    let tot = 0, llenas = 0; const W2 = this.lado * this.lado;
+    for (let c = 0; c < this.nx * this.ny; c++) { let n = 0; const o = c * this.porCelda; for (let b = 0; b < W2; b++) n += this.bits[o + (b >> 3)] >> (b & 7) & 1; if (n === W2) llenas++; else tot += n; }
+    const conDatos = this.nx * this.ny - llenas;
+    return { celdas: this.nx * this.ny, conDatos, ventana: W2, vistasMedia: conDatos ? +(tot / conDatos).toFixed(1) : W2, recorteMedio: conDatos ? +(1 - tot / conDatos / W2).toFixed(3) : 0 };
+  }
+}
+MC.PVS = PVS;
 
 /* ---- js/46-vistas.js ---- */
 /* =====================================================================
@@ -6324,6 +6545,8 @@ class Vistas {
         E.factorNiebla = this.auto ? (this.res.factorNiebla ?? 1) : 1;
         if (this.usaRaster()) { if (!this.raster) this.raster = new Raster(this.mundo); if (!this._rb || this._rb.width !== rw || this._rb.height !== rh) this._rb = lienzo(rw, rh); this.raster.dibujar(this._rb.getContext('2d'), rw, rh, E); dst.drawImage(this._rb, 0, 0, w, h); }
         else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
+        /* 4.5: los efectos (choques, derrapes, explosiones, restos) encima de la 3D, con la misma proyección */
+        if (MC.Efectos && this.gl && this.gl.mvp && !this.usaRaster()) { try { MC.Efectos.dibujar(dst, (x, y, z) => this.gl.aPantalla(x, y, z, w, h), E); } catch (e) { MC.falla('efectos', e); } }
         this._clima2D(dst, w, h, E, true);
       }
     } catch (e) { MC.falla('vista ' + v.id, e); }
@@ -7490,6 +7713,118 @@ UI.indicador = function (g, W, H, sx, sy, op = {}) {
 };
 MC.UI = UI;
 
+/* ---- js/71-rostros.js ---- */
+/* =====================================================================
+   ROSTROS (4.5) · retratos detallados hechos a mano en Canvas 2D, sin imágenes ni librerías
+   Cada personaje se describe con unos pocos rasgos y el motor dibuja su cara con volumen:
+   - piel con luz desde arriba a la izquierda (degradados), sombra bajo la mandíbula, mejillas y orejas con su pliegue;
+   - ojos con esclerótica, iris en degradado, pupila, brillo, párpado superior con pestañas y párpado inferior;
+   - cejas con trazos de pelo, nariz con puente, aletas y fosas, labios con su comisura y brillo, surco nasolabial;
+   - edad (arrugas en la frente, patas de gallo, canas), barba (sombra, bigote, candado o completa), cicatriz, lunar,
+     gafas, arete, audífono, gorra o sombrero; peinados: corto, largo, moño, cola, rapado, rizado, calvo, canoso;
+   - expresiones: neutral, sonrisa, seria, preocupada, enojada; parpadeo con t.
+   Uso: MC.Rostro.dibujar(g, rasgos, x, y, tam, { expresion, t })  ·  MC.Rostro.url(rasgos, 128) → dataURL (con caché)
+        MC.Rostro.azar(semilla) → rasgos de una persona cualquiera (guardias, transeúntes)
+   ===================================================================== */
+const ROSTRO_PIELES = ['#f1d3bd', '#e8bd98', '#d9a47c', '#c68a5e', '#a96f45', '#8a5634', '#6b3f24', '#4e2c18'];
+const ROSTRO_PELOS = ['#16110d', '#2b1d14', '#4a3020', '#6e4a2c', '#9a6b3c', '#c4924f', '#d9b77a', '#8a8580', '#c9c5bf'];
+const Rostro = {
+  _cache: new Map(),
+  azar(semilla = 1) {
+    const r = mulberry32((semilla * 2654435761) >>> 0), el = L => L[(r() * L.length) | 0], fem = r() < .45;
+    return { piel: el(ROSTRO_PIELES), pelo: el(ROSTRO_PELOS.slice(0, 7)), ojos: el(['#3b2414', '#4a2f1a', '#2c5d3f', '#3d5f86', '#6b4a2b']), peinado: fem ? el(['largo', 'moño', 'cola', 'rizado', 'corto']) : el(['corto', 'rapado', 'rizado', 'calvo', 'corto']),
+      barba: fem ? 'ninguna' : el(['ninguna', 'sombra', 'bigote', 'candado', 'completa', 'ninguna']), edad: r() * .8, nariz: el(['recta', 'ancha', 'aguilena']), ropa: el(['#2b343d', '#475563', '#6b2f2a', '#2f5d45', '#1d2833', '#7a6a55']), fem,
+      labios: fem ? el(['#b5645a', '#9a4a48', '#c27a6a']) : null, acc: r() < .2 ? ['gafas'] : r() < .15 ? ['arete'] : [] };
+  },
+  url(R, tam = 128, op = {}) {
+    const k = JSON.stringify(R) + tam + (op.expresion || ''); let u = this._cache.get(k); if (u) return u;
+    if (typeof document === 'undefined') return ''; const cv = document.createElement('canvas'); cv.width = tam; cv.height = tam; this.dibujar(cv.getContext('2d'), R, 0, 0, tam, op);
+    u = cv.toDataURL('image/png'); this._cache.set(k, u); if (this._cache.size > 80) this._cache.delete(this._cache.keys().next().value); return u;
+  },
+  /* dibuja el retrato en un cuadrado de lado tam con esquina en (x, y) */
+  dibujar(g, R, x, y, tam, op = {}) {
+    const ex = op.expresion || R.expresion || 'neutral', t = op.t || 0, parpadeo = op.t != null && (t % 4.2) < .12;
+    const piel = hex3(R.piel || ROSTRO_PIELES[3]), pelo = R.pelo || ROSTRO_PELOS[1], css = (c, k = 0) => css3(k >= 0 ? mez3(c, [1, 1, 1], k) : mez3(c, [0, 0, 0], -k)), sombra = css(piel, -.22), luz = css(piel, .16), med = css(piel, 0);
+    const edad = R.edad || 0, canas = edad > .65 || R.peinado === 'canoso';
+    g.save(); g.translate(x, y); g.scale(tam / 100, tam / 100);
+    /* fondo: un círculo suave del color del personaje */
+    const fg = g.createRadialGradient(50, 40, 10, 50, 50, 70); fg.addColorStop(0, R.fondo || '#3a4450'); fg.addColorStop(1, '#14181d'); g.fillStyle = fg; g.fillRect(0, 0, 100, 100);
+    /* pelo de atrás (largo, cola, moño, rizado) */
+    const colPelo = canas ? css(hex3('#bdb8b0'), 0) : pelo, peloOsc = css(hex3(canas ? '#9a958e' : pelo), -.25);
+    if (R.peinado === 'largo') { g.fillStyle = peloOsc; g.beginPath(); g.moveTo(26, 40); g.quadraticCurveTo(20, 80, 30, 96); g.lineTo(70, 96); g.quadraticCurveTo(80, 80, 74, 40); g.closePath(); g.fill(); }
+    if (R.peinado === 'rizado') { g.fillStyle = peloOsc; for (let i = 0; i < 16; i++) { const a = Math.PI * (1.05 + i / 15 * .9), rr = 27 + (i % 3) * 2; g.beginPath(); g.arc(50 + Math.cos(a) * rr * 1.05, 44 + Math.sin(a) * rr, 7.5, 0, TAU); g.fill(); } }
+    /* cuello y hombros con la ropa */
+    g.fillStyle = sombra; g.beginPath(); g.moveTo(40, 66); g.lineTo(60, 66); g.lineTo(62, 84); g.lineTo(38, 84); g.closePath(); g.fill();
+    const ropa = hex3(R.ropa || '#2b343d'); const rg = g.createLinearGradient(0, 78, 0, 100); rg.addColorStop(0, css(ropa, .12)); rg.addColorStop(1, css(ropa, -.25)); g.fillStyle = rg;
+    g.beginPath(); g.moveTo(8, 100); g.quadraticCurveTo(12, 82, 36, 78); g.lineTo(50, 90); g.lineTo(64, 78); g.quadraticCurveTo(88, 82, 92, 100); g.closePath(); g.fill();
+    g.strokeStyle = css(ropa, -.4); g.lineWidth = 1.2; g.beginPath(); g.moveTo(36, 78); g.lineTo(46, 100); g.moveTo(64, 78); g.lineTo(54, 100); g.stroke();   /* solapas */
+    if (R.cuello !== 'chaqueta') { g.fillStyle = R.camisa || '#d8d2c4'; g.beginPath(); g.moveTo(40, 78); g.lineTo(50, 92); g.lineTo(60, 78); g.lineTo(55, 76); g.lineTo(50, 84); g.lineTo(45, 76); g.closePath(); g.fill(); }
+    /* orejas */
+    for (const s of [-1, 1]) { const ox = 50 + s * 25; g.fillStyle = med; g.beginPath(); g.ellipse(ox, 47, 4.2, 7, s * .15, 0, TAU); g.fill(); g.strokeStyle = sombra; g.lineWidth = 1; g.beginPath(); g.arc(ox + s * .6, 47, 2.6, s > 0 ? -1.2 : 1.9, s > 0 ? 1.2 : 4.3); g.stroke(); }
+    if (R.acc && R.acc.includes('arete')) { g.fillStyle = '#e8c56a'; g.beginPath(); g.arc(25.5, 54.5, 1.4, 0, TAU); g.arc(74.5, 54.5, 1.4, 0, TAU); g.fill(); }
+    if (R.acc && R.acc.includes('audifono')) { g.fillStyle = '#1b1f24'; g.beginPath(); g.ellipse(76, 47, 2.6, 3.6, 0, 0, TAU); g.fill(); g.fillStyle = '#4b9aab'; g.fillRect(75.4, 45.8, 1.3, 1.3); }
+    /* la cabeza: óvalo con mandíbula, luz arriba a la izquierda */
+    const anch = R.fem ? 23 : 24.5, cg = g.createRadialGradient(42, 36, 4, 50, 48, 34); cg.addColorStop(0, luz); cg.addColorStop(.55, med); cg.addColorStop(1, sombra); g.fillStyle = cg;
+    g.beginPath(); g.moveTo(50, 18); g.bezierCurveTo(50 + anch * 1.15, 18, 50 + anch, 42, 50 + anch * .92, 52); g.bezierCurveTo(50 + anch * .8, 63, 58, 72, 50, 72); g.bezierCurveTo(42, 72, 50 - anch * .8, 63, 50 - anch * .92, 52); g.bezierCurveTo(50 - anch, 42, 50 - anch * 1.15, 18, 50, 18); g.closePath(); g.fill();
+    /* sombra de la mandíbula sobre el cuello y mejillas */
+    g.fillStyle = 'rgba(80,40,30,.10)'; g.beginPath(); g.ellipse(35, 57, 6, 4, -.3, 0, TAU); g.ellipse(65, 57, 6, 4, .3, 0, TAU); g.fill();
+    if (R.fem || ex === 'sonrisa') { g.fillStyle = 'rgba(210,90,80,.13)'; g.beginPath(); g.ellipse(36, 56, 5, 3, 0, 0, TAU); g.ellipse(64, 56, 5, 3, 0, 0, TAU); g.fill(); }
+    /* barba (debajo de los labios) */
+    const barba = R.barba || 'ninguna', cb = css(hex3(canas ? '#a8a39b' : pelo), 0);
+    if (barba === 'sombra' || barba === 'completa' || barba === 'candado') { const a = barba === 'sombra' ? .22 : .85; g.fillStyle = cb; g.globalAlpha = a;
+      g.beginPath(); if (barba === 'candado') { g.ellipse(50, 66, 7, 6, 0, 0, TAU); } else { g.moveTo(28, 54); g.bezierCurveTo(30, 66, 40, 73, 50, 73); g.bezierCurveTo(60, 73, 70, 66, 72, 54); g.bezierCurveTo(66, 60, 60, 61, 50, 61); g.bezierCurveTo(40, 61, 34, 60, 28, 54); } g.fill(); g.globalAlpha = 1;
+      if (barba !== 'sombra') { g.strokeStyle = css(hex3(cb), -.3); g.lineWidth = .5; for (let i = 0; i < 26; i++) { const px = 34 + (i * 37 % 32), py = 60 + (i * 13 % 11); g.beginPath(); g.moveTo(px, py); g.lineTo(px + .5, py + 1.6); g.stroke(); } } }
+    /* ojos */
+    const ojo = hex3(R.ojos || '#3b2414'), oy = 44, abierto = parpadeo ? .1 : ex === 'enojada' ? .75 : ex === 'preocupada' ? 1.05 : 1;
+    for (const s of [-1, 1]) { const ox = 50 + s * 10;
+      g.fillStyle = 'rgba(70,40,30,.18)'; g.beginPath(); g.ellipse(ox, oy - 1, 6.8, 4.2, 0, Math.PI, 0); g.fill();   /* cuenca */
+      g.save(); g.beginPath(); g.moveTo(ox - 5.6, oy); g.quadraticCurveTo(ox, oy - 4.4 * abierto, ox + 5.6, oy); g.quadraticCurveTo(ox, oy + 3 * abierto, ox - 5.6, oy); g.closePath(); g.fillStyle = '#f4efe8'; g.fill(); g.clip();
+      if (!parpadeo) { const ig = g.createRadialGradient(ox - .6, oy - .6, .3, ox, oy, 3.2); ig.addColorStop(0, css(ojo, .35)); ig.addColorStop(.7, css(ojo, 0)); ig.addColorStop(1, css(ojo, -.45)); g.fillStyle = ig; g.beginPath(); g.arc(ox, oy, 3.1, 0, TAU); g.fill(); g.fillStyle = '#0b0807'; g.beginPath(); g.arc(ox, oy, 1.35, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(ox - 1, oy - 1.1, .7, 0, TAU); g.fill(); }
+      g.fillStyle = 'rgba(80,50,40,.25)'; g.fillRect(ox - 6, oy - 4.6 * abierto, 12, 1.4); g.restore();   /* sombra del párpado sobre el ojo */
+      g.strokeStyle = '#1d140f'; g.lineWidth = 1.3; g.beginPath(); g.moveTo(ox - 5.8, oy + .2); g.quadraticCurveTo(ox, oy - 4.6 * abierto, ox + 5.8, oy + .2); g.stroke();   /* párpado y pestañas */
+      if (R.fem) { g.lineWidth = .7; for (const q of [-4, -2, 2.2, 4.3]) { g.beginPath(); g.moveTo(ox + q * s, oy - 3.2 * abierto); g.lineTo(ox + q * s * 1.2, oy - 4.6 * abierto); g.stroke(); } }
+      g.strokeStyle = 'rgba(90,55,40,.45)'; g.lineWidth = .6; g.beginPath(); g.moveTo(ox - 4.6, oy + 1.8); g.quadraticCurveTo(ox, oy + 3.4, ox + 4.6, oy + 1.6); g.stroke();   /* párpado inferior */
+      if (edad > .45) { g.strokeStyle = 'rgba(90,55,40,.35)'; g.lineWidth = .5; for (const k of [-1.6, 0, 1.6]) { g.beginPath(); g.moveTo(ox + s * 6.5, oy + k * .8); g.lineTo(ox + s * 9, oy + k * 1.5); g.stroke(); } }
+      /* cejas: trazos de pelo con la expresión */
+      const cy = oy - 7.5 - (ex === 'preocupada' ? 1 : 0), inc = ex === 'enojada' ? 2.4 * s : ex === 'preocupada' ? -1.8 * s : 0, gros = R.fem ? 1 : 1.7;
+      g.strokeStyle = css(hex3(canas ? '#9a958e' : pelo), -.1); g.lineWidth = .75; for (let i = 0; i < 11; i++) { const u = i / 10, px = ox - 6 * s * (u - .5) * -2 * .5 + (u - .5) * 12 * s * 0, bx = ox + (u - .5) * 12, by = cy - Math.sin(u * Math.PI) * 1.6 + (s > 0 ? -inc * (1 - u) : inc * u) * .5; g.beginPath(); g.moveTo(bx - .9, by + gros * .6); g.lineTo(bx + .9, by - gros * .6); g.stroke(); }
+    }
+    /* nariz: puente, aletas y fosas */
+    const nz = R.nariz || 'recta', na = nz === 'ancha' ? 6.2 : 4.6; g.strokeStyle = 'rgba(90,50,35,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(47.5, 45); g.quadraticCurveTo(nz === 'aguilena' ? 45 : 46.5, 52, 46.5, 56); g.stroke();
+    g.fillStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(50.6, 52, 1.2, 4, 0, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(90,50,35,.25)'; g.beginPath(); g.ellipse(50, 58, na, 2.4, 0, 0, Math.PI); g.fill(); g.fillStyle = 'rgba(40,20,15,.55)'; g.beginPath(); g.ellipse(50 - na * .45, 58.3, 1.3, .8, .3, 0, TAU); g.ellipse(50 + na * .45, 58.3, 1.3, .8, -.3, 0, TAU); g.fill();
+    /* surco nasolabial (más marcado con la edad o al sonreír) */
+    g.strokeStyle = 'rgba(90,50,35,' + (.12 + edad * .25 + (ex === 'sonrisa' ? .15 : 0)).toFixed(2) + ')'; g.lineWidth = .8; for (const s of [-1, 1]) { g.beginPath(); g.moveTo(50 + s * (na + 1), 57); g.quadraticCurveTo(50 + s * (na + 5), 61, 50 + s * (na + 5), 65); g.stroke(); }
+    /* bigote */
+    if (barba === 'bigote' || barba === 'completa' || barba === 'candado') { g.fillStyle = cb; g.beginPath(); g.moveTo(42, 62.5); g.quadraticCurveTo(50, 58.6, 58, 62.5); g.quadraticCurveTo(50, 61.4, 42, 62.5); g.fill(); }
+    /* boca */
+    const sonr = ex === 'sonrisa' ? 2.2 : ex === 'enojada' ? -1.4 : ex === 'preocupada' ? -.8 : ex === 'seria' ? -.3 : .3, lab = R.labios || css(piel, -.28);
+    g.fillStyle = css(hex3(lab), -.12); g.beginPath(); g.moveTo(43, 64); g.quadraticCurveTo(46.5, 62.4, 50, 63.2); g.quadraticCurveTo(53.5, 62.4, 57, 64); g.quadraticCurveTo(50, 64.6 + sonr * .3, 43, 64); g.fill();   /* labio de arriba */
+    g.fillStyle = lab; g.beginPath(); g.moveTo(43.6, 64.2); g.quadraticCurveTo(50, 64.6 + sonr * .4, 56.4, 64.2); g.quadraticCurveTo(50, 68.2, 43.6, 64.2); g.fill();   /* de abajo */
+    g.fillStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.ellipse(50, 66, 2.6, .8, 0, 0, TAU); g.fill();
+    g.strokeStyle = 'rgba(60,25,20,.7)'; g.lineWidth = .8; g.beginPath(); g.moveTo(43, 64 - sonr * .5); g.quadraticCurveTo(50, 64.6 + sonr, 57, 64 - sonr * .5); g.stroke();   /* comisura */
+    /* arrugas de la frente */
+    if (edad > .35) { g.strokeStyle = 'rgba(90,55,40,' + (.12 + edad * .2).toFixed(2) + ')'; g.lineWidth = .6; for (let i = 0; i < (edad > .7 ? 3 : 2); i++) { g.beginPath(); g.moveTo(40, 31 + i * 2.6); g.quadraticCurveTo(50, 29.5 + i * 2.6, 60, 31 + i * 2.6); g.stroke(); } }
+    if (R.acc && R.acc.includes('cicatriz')) { g.strokeStyle = 'rgba(150,80,70,.8)'; g.lineWidth = 1.1; g.beginPath(); g.moveTo(63, 36); g.lineTo(58, 50); g.stroke(); g.lineWidth = .5; for (const k of [.25, .5, .75]) { const px = 63 - 5 * k, py = 36 + 14 * k; g.beginPath(); g.moveTo(px - 1.4, py - .5); g.lineTo(px + 1.4, py + .5); g.stroke(); } }
+    if (R.acc && R.acc.includes('lunar')) { g.fillStyle = '#3a2418'; g.beginPath(); g.arc(59, 59, .9, 0, TAU); g.fill(); }
+    /* pelo de adelante */
+    g.fillStyle = colPelo; const p = R.peinado || 'corto';
+    if (p !== 'calvo' && p !== 'rapado') { g.beginPath(); g.moveTo(24, 46); g.bezierCurveTo(20, 18, 38, 10, 52, 12); g.bezierCurveTo(68, 12, 81, 22, 76, 46); if (p === 'largo' || p === 'cola' || p === 'moño') { g.bezierCurveTo(72, 30, 64, 24, 54, 23); g.bezierCurveTo(44, 26, 34, 24, 28, 36); } else { g.bezierCurveTo(73, 32, 66, 25, 56, 25); g.bezierCurveTo(46, 25, 32, 26, 27, 38); } g.closePath(); g.fill();
+      g.strokeStyle = css(hex3(canas ? '#d9d5cf' : pelo), .22); g.lineWidth = .6; for (let i = 0; i < 14; i++) { const u = i / 13; g.beginPath(); g.moveTo(28 + u * 46, 22 + Math.abs(u - .5) * 14); g.quadraticCurveTo(32 + u * 42, 16 + Math.abs(u - .5) * 8, 40 + u * 24, 13); g.stroke(); } }
+    if (p === 'rapado') { g.fillStyle = colPelo; g.globalAlpha = .55; g.beginPath(); g.moveTo(26, 40); g.bezierCurveTo(22, 18, 40, 13, 50, 13); g.bezierCurveTo(60, 13, 78, 18, 74, 40); g.bezierCurveTo(68, 26, 60, 22, 50, 22); g.bezierCurveTo(40, 22, 32, 26, 26, 40); g.fill(); g.globalAlpha = 1; }
+    if (p === 'moño') { g.fillStyle = colPelo; g.beginPath(); g.arc(50, 10, 8, 0, TAU); g.fill(); }
+    if (p === 'cola') { g.fillStyle = colPelo; g.beginPath(); g.ellipse(76, 30, 5, 13, .5, 0, TAU); g.fill(); }
+    if (p === 'calvo') { g.fillStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(44, 24, 9, 4, -.3, 0, TAU); g.fill(); if (canas || edad > .5) { g.fillStyle = css(hex3('#bdb8b0'), 0); g.beginPath(); g.ellipse(26.5, 42, 3, 8, 0, 0, TAU); g.ellipse(73.5, 42, 3, 8, 0, 0, TAU); g.fill(); } }
+    /* gorra o sombrero */
+    if (R.acc && R.acc.includes('gorra')) { const cgc = R.colorGorra || '#2f4a63'; g.fillStyle = cgc; g.beginPath(); g.moveTo(24, 34); g.bezierCurveTo(24, 12, 76, 12, 76, 34); g.closePath(); g.fill(); g.fillStyle = css(hex3(cgc), -.3); g.beginPath(); g.ellipse(50, 34, 28, 4, 0, 0, Math.PI); g.fill(); g.fillStyle = '#d8d2c4'; g.fillRect(46, 22, 8, 5); }
+    if (R.acc && R.acc.includes('sombrero')) { g.fillStyle = '#7a5233'; g.beginPath(); g.ellipse(50, 26, 36, 6, 0, 0, TAU); g.fill(); g.beginPath(); g.moveTo(32, 26); g.bezierCurveTo(32, 6, 68, 6, 68, 26); g.closePath(); g.fill(); g.fillStyle = '#3b2418'; g.fillRect(32, 21, 36, 3); }
+    /* gafas */
+    if (R.acc && R.acc.includes('gafas')) { g.strokeStyle = '#121418'; g.lineWidth = 1.4; g.fillStyle = 'rgba(160,200,220,.18)'; for (const s of [-1, 1]) { g.beginPath(); g.roundRect ? g.roundRect(50 + s * 10 - 7, 39.5, 14, 9, 3) : g.rect(50 + s * 10 - 7, 39.5, 14, 9); g.fill(); g.stroke(); } g.beginPath(); g.moveTo(47, 43); g.lineTo(53, 43); g.moveTo(26, 42); g.lineTo(33, 42); g.moveTo(67, 42); g.lineTo(74, 42); g.stroke(); }
+    g.restore();
+  }
+};
+MC.Rostro = Rostro;
+
 /* ---- js/80-mecanicas.js ---- */
 /* =====================================================================
    MECÁNICAS · piezas de jugabilidad listas para armar juegos (las guarda y las comparte el motor)
@@ -7966,6 +8301,139 @@ const Pieles = {
   faltan() { return [...Sprites.faltan]; }
 };
 MC.Pieles = Pieles;
+
+/* ---- js/88-efectos.js ---- */
+/* =====================================================================
+   EFECTOS (4.5) · explosiones, choques, derrapes y cosas rotas, con peso y lógica
+   Hecho desde la idea de los juegos de acción y carreras (Burnout, GTA, Need for Speed): el golpe se ve, se oye y se siente.
+   - EXPLOSIÓN: destello, bola de fuego que crece y se apaga, onda expansiva, pedazos que vuelan y rebotan, columna de humo
+     negro que sube unos segundos, mancha quemada en el piso y sacudida de cámara. MC.Efectos.explosion(x, y, k)
+   - CHOQUE: chispas que salen en abanico desde el punto del golpe, vidrio si fue duro, pedazos de lata si fue muy duro.
+   - DERRAPE: las dos llantas traseras dejan su marca (se borra despacio) y sueltan humo blanco.
+   - ROTOS (MC.Rotos): cada cosa deja sus restos: el poste tendido, la caneca regada con papeles, la banca en tablas, el cono
+     rodando, el paradero en vidrios y el hidrante con su chorro de agua unos segundos.
+   - FUEGO: un carro destrozado arde (llamas que titilan y humo) antes de estallar.
+   Todo vive en arreglos con tope (sin crear basura cada cuadro) y se dibuja encima de cualquier vista con pr(x, y, z).
+   Se enciende solo con los eventos del motor: 'choque', 'rompe' y 'derrape' (del cuerpo del jugador).
+   ===================================================================== */
+const Efectos = {
+  P: [], MAXP: 700, marcas: [], MAXM: 1200, restos: [], MAXR: 180, fuegos: [], ondas: [], _t: null, _ult: null,
+  _p(tipo, x, y, z, vx, vy, vz, vida, r, col) {
+    let p; if (this.P.length >= this.MAXP) { p = this.P[(this._i = ((this._i || 0) + 1) % this.P.length)]; } else { p = {}; this.P.push(p); }
+    p.tipo = tipo; p.x = x; p.y = y; p.z = z; p.vx = vx; p.vy = vy; p.vz = vz; p.t = 0; p.vida = vida; p.r = r; p.col = col || null; p.rot = Math.random() * TAU; p.vr = (Math.random() - .5) * 14; return p;
+  },
+  /* ---------- emisores ---------- */
+  chispas(x, y, n = 12, dir = null, k = 1) {
+    for (let i = 0; i < n; i++) { const a = dir == null ? Math.random() * TAU : dir + (Math.random() - .5) * 1.6, s = (4 + Math.random() * 9) * k; this._p('chispa', x, y, .5 + Math.random() * .6, Math.cos(a) * s, Math.sin(a) * s, 1 + Math.random() * 3, .25 + Math.random() * .35, .05); }
+  },
+  humo(x, y, n = 4, op = {}) {
+    for (let i = 0; i < n; i++) { const q = this._p('humo', x + (Math.random() - .5) * (op.r || 1), y + (Math.random() - .5) * (op.r || 1), op.z ?? .6, (Math.random() - .5) * .8 + (op.vx || 0), (Math.random() - .5) * .8 + (op.vy || 0), (op.sube ?? 1.4) * (.6 + Math.random() * .6), op.vida || 2.6 + Math.random() * 1.6, op.tam || .7 + Math.random() * .5, op.col || (op.negro ? '#1d1f23' : '#d9d6cf')); if (op.retardo) q.t = -op.retardo * (.6 + Math.random() * .8); }
+  },
+  pedazos(x, y, n = 8, col = '#2b343d', k = 1, tipo = 'pedazo') {
+    for (let i = 0; i < n; i++) { const a = Math.random() * TAU, s = (2 + Math.random() * 6) * k; this._p(tipo, x, y, .4 + Math.random(), Math.cos(a) * s, Math.sin(a) * s, 2 + Math.random() * 5 * k, 1.6 + Math.random() * 2.4, tipo === 'vidrio' ? .06 + Math.random() * .08 : .1 + Math.random() * .22 * k, col); }
+  },
+  agua(x, y, n = 6, alto = 6) { for (let i = 0; i < n; i++) { const a = Math.random() * TAU, s = .4 + Math.random() * .9; this._p('agua', x, y, .3, Math.cos(a) * s, Math.sin(a) * s, alto * (.8 + Math.random() * .4), 1.3, .09); } },
+  fuego(x, y, dur = 3, op = {}) { const f = { x, y, t: 0, dur, k: op.k || 1, sigue: op.sigue || null, alEstallar: op.alEstallar || null, estalla: op.estalla !== false }; this.fuegos.push(f); if (this.fuegos.length > 24) this.fuegos.shift(); return f; },
+  explosion(x, y, k = 1) {
+    this.ondas.push({ x, y, t: 0, k }); if (this.ondas.length > 12) this.ondas.shift();
+    this._p('flash', x, y, 1, 0, 0, 0, .22, 6 * k);
+    for (let i = 0; i < 26 * k; i++) { const a = Math.random() * TAU, s = (2 + Math.random() * 7) * k; this._p('fuego', x, y, .8 + Math.random() * 1.5, Math.cos(a) * s, Math.sin(a) * s, 2 + Math.random() * 4, .7 + Math.random() * .6, 1.2 + Math.random() * 1.4 * k); }
+    this.pedazos(x, y, 16 * k, '#1d2228', 1.4 * k); this.pedazos(x, y, 6 * k, '#4b9aab', 1.2 * k, 'vidrio'); this.chispas(x, y, 22 * k, null, 1.3 * k);
+    this.humo(x, y, 10 * k, { negro: true, r: 3 * k, sube: 2.4, vida: 5 + Math.random() * 3, tam: 1.6 * k, retardo: .35 });
+    this.resto('quemado', x, y, Math.random() * TAU, { r: 3.5 * k });
+    MC.emit('explosion', { x, y, k }); if (MC.Vida) { MC.Vida.impacto(.09 * k); MC.Vida.onomatopeya && MC.Vida.onomatopeya(x, y, '¡BOOM!', '#ff7a1a'); }
+  },
+  marca(x1, y1, x2, y2, w = .22, a = .55) { if (Math.hypot(x2 - x1, y2 - y1) > 3) return; const m = { x1, y1, x2, y2, w, a, t0: this._t || 0 }; if (this.marcas.length >= this.MAXM) this.marcas[(this._im = ((this._im || 0) + 1) % this.MAXM)] = m; else this.marcas.push(m); },
+  resto(t, x, y, a = 0, op = {}) { const r = Object.assign({ t, x, y, a, t0: this._t || 0, s: Math.random() }, op); if (this.restos.length >= this.MAXR) this.restos.shift(); this.restos.push(r);
+    if (t === 'hidrante') r.chorro = 9; return r; },
+  /* ---------- lo que pasa en el mundo ---------- */
+  _choque(C) {
+    const k = clamp((C.impacto || Math.abs(C.v) || 4) / 14, .3, 2.2), n = C.normalChoque, L = (C.veh.largo || 4) / 2, a = C.v >= 0 ? C.a : C.a + Math.PI, px = C.x + Math.cos(a) * L * .9, py = C.y + Math.sin(a) * L * .9, dir = n ? Math.atan2(n[1], n[0]) : a + Math.PI;
+    if (C.veh.clase === 'pie' || C.veh.clase === 'rueda') return;
+    this.chispas(px, py, (10 + 14 * k) | 0, dir, .8 + k * .4);
+    if (k > .7) this.pedazos(px, py, (4 * k) | 0, '#9fc4cf', .9, 'vidrio');
+    if (k > 1.1) { this.pedazos(px, py, (5 * k) | 0, C.veh.color || '#2b343d', 1); this.humo(px, py, 3, { tam: .6 }); }
+  },
+  _rompe(ev) {
+    const o = ev.o, v = ev.v || 8, d = o.dir || 0, ca = Math.cos(d), sa = Math.sin(d);
+    this.resto(o.t, o.x + ca * 1.2, o.y + sa * 1.2, d + (Math.random() - .5) * .8);
+    const col = { caneca: '#2f6b45', cono: '#ff6a1a', banca: '#7a5233', valla: '#e8e4d8', hidrante: '#c0392b', paradero: '#9fc4cf', poste: '#6b7078', arbusto: '#3e6b34' }[o.t] || '#6b7078';
+    this.pedazos(o.x, o.y, o.t === 'paradero' ? 18 : 8, col, clamp(v / 12, .6, 1.6), o.t === 'paradero' ? 'vidrio' : 'pedazo');
+    if (o.t === 'caneca') this.pedazos(o.x, o.y, 10, '#efe9da', .8, 'papel');
+    if (o.t === 'poste' || o.t === 'hidrante') this.chispas(o.x, o.y, 14, d, 1);
+    if (o.t === 'arbusto') this.pedazos(o.x, o.y, 12, '#4f8a3c', .7, 'hoja');
+  },
+  /* el jugador: marcas de llanta y humo al derrapar o frenar en seco */
+  _jugador(E, dt) {
+    const C = E.jugador && E.jugador.cuerpo; if (!C || !C.veh || (C.veh.clase !== 'auto' && C.veh.clase !== 'pesado' && C.veh.clase !== 'moto')) { this._ult = null; return; }
+    const der = C.eventos && C.eventos.includes('derrape'), fren = this._vPrev != null && (this._vPrev - Math.abs(C.v)) / Math.max(1e-3, dt) > 7.5 && Math.abs(C.v) > 5; this._vPrev = Math.abs(C.v);
+    const L = (C.veh.largo || 4.3) * .32, W = (C.veh.ancho || 1.8) * .42, ca = Math.cos(C.a), sa = Math.sin(C.a), moto = C.veh.clase === 'moto';
+    const ruedas = moto ? [[-L, 0]] : [[-L, W], [-L, -W]].concat(der ? [[L, W], [L, -W]] : []), pts = ruedas.map(([u, v]) => [C.x + u * ca - v * sa, C.y + u * sa + v * ca]);
+    if ((der || fren) && !C.enAire && !C.nadando) {
+      if (this._ult && this._ult.length === pts.length) for (let i = 0; i < pts.length; i++) this.marca(this._ult[i][0], this._ult[i][1], pts[i][0], pts[i][1], moto ? .14 : .2, der ? .5 : .38);
+      this._ult = pts; if (Math.random() < (der ? .7 : .35)) { const q = pts[(Math.random() * pts.length) | 0]; this.humo(q[0], q[1], 1, { tam: .5 + Math.min(1, C.deslizamiento || 0), sube: .7, vida: 1.6, z: .3 }); }
+    } else this._ult = null;
+  },
+  actualizar(E) {
+    const t = E && E.t != null ? E.t : (MC.ahora ? MC.ahora() / 1000 : 0), dt = this._t == null ? 0 : clamp(t - this._t, 0, .1); this._t = t; if (!dt) return;
+    if (E) this._jugador(E, dt);
+    for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t < 0) continue; if (p.t > p.vida) { this.P[i] = this.P[this.P.length - 1]; this.P.pop(); continue; }
+      if (p.tipo === 'humo') { p.vx *= 1 - dt * .6; p.vy *= 1 - dt * .6; p.vz *= 1 - dt * .3; p.r += dt * .9; }
+      else if (p.tipo === 'fuego') { p.vx *= 1 - dt * 3; p.vy *= 1 - dt * 3; p.vz = p.vz * (1 - dt * 2) + dt * 3; }
+      else if (p.tipo === 'flash') { p.r += dt * 40; }
+      else { const g = p.tipo === 'papel' || p.tipo === 'hoja' ? 2.5 : 9.8; p.vz -= g * dt; p.rot += p.vr * dt; if (p.tipo === 'papel' || p.tipo === 'hoja') { p.vx += Math.sin(p.t * 3 + p.rot) * dt; p.vx *= 1 - dt; p.vy *= 1 - dt; } }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+      if (p.z < 0 && p.tipo !== 'humo' && p.tipo !== 'fuego') { p.z = 0; if (p.tipo === 'chispa' || p.tipo === 'agua') p.t = p.vida; else { p.vz = -p.vz * .35; p.vx *= .55; p.vy *= .55; p.vr *= .5; } } }
+    for (let i = this.fuegos.length - 1; i >= 0; i--) { const f = this.fuegos[i]; f.t += dt; if (f.sigue) { if (f.sigue.veh && f.sigue.veh.clase === 'pie') f.sigue = null; else { f.x = f.sigue.x; f.y = f.sigue.y; } }   /* si se bajan, el fuego se queda en el carro */
+      if (Math.random() < .55) this._p('fuego', f.x + (Math.random() - .5) * 1.4 * f.k, f.y + (Math.random() - .5) * 1.4 * f.k, .7, (Math.random() - .5) * .4, (Math.random() - .5) * .4, 1.2 + Math.random() * 1.5, .45 + Math.random() * .3, .5 + Math.random() * .5 * f.k);
+      if (Math.random() < .3) this.humo(f.x, f.y, 1, { negro: true, sube: 2, vida: 3.5, tam: .9 * f.k });
+      if (f.t > f.dur) { this.fuegos.splice(i, 1); if (f.estalla) { this.explosion(f.x, f.y, f.k); if (f.alEstallar) f.alEstallar(f); } } }
+    for (let i = this.ondas.length - 1; i >= 0; i--) if ((this.ondas[i].t += dt) > .6) this.ondas.splice(i, 1);
+    for (const r of this.restos) if (r.chorro > 0) { r.chorro -= dt; if (Math.random() < .8) this.agua(r.x, r.y, 2, 4 + r.chorro * .4); }
+    /* lo muy viejo se va: marcas a los 40 s, restos a los 90 s (como en GTA, la calle se limpia sola) */
+    while (this.marcas.length && t - this.marcas[0].t0 > 40) this.marcas.shift();
+    while (this.restos.length && t - this.restos[0].t0 > 90) this.restos.shift();
+  },
+  /* ---------- dibujo encima de cualquier vista: pr(x, y, z) → [px, py] o null ---------- */
+  dibujar(g, pr, E) {
+    this.actualizar(E); if (!this.P.length && !this.marcas.length && !this.restos.length && !this.ondas.length) return;
+    const t = this._t || 0, esc = (x, y, z = 0) => { const a = pr(x, y, z), b = pr(x + 1, y, z); return a && b ? Math.max(.4, Math.hypot(b[0] - a[0], b[1] - a[1])) : 0; };
+    g.save();
+    /* 1. en el piso: marcas de llanta y restos */
+    g.lineCap = 'round'; for (const m of this.marcas) { const a = pr(m.x1, m.y1, 0), b = pr(m.x2, m.y2, 0); if (!a || !b) continue; const s = esc(m.x1, m.y1); const f = 1 - (t - m.t0) / 40; g.strokeStyle = 'rgba(18,18,20,' + (m.a * f).toFixed(3) + ')'; g.lineWidth = Math.max(1, m.w * s); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }
+    for (const r of this.restos) this._resto(g, pr, r, esc(r.x, r.y), t);
+    /* 2. ondas expansivas */
+    for (const o of this.ondas) { const p = pr(o.x, o.y, .2), s = esc(o.x, o.y); if (!p) continue; const k = o.t / .6; g.strokeStyle = 'rgba(255,236,200,' + (.55 * (1 - k)).toFixed(3) + ')'; g.lineWidth = Math.max(1, (1 - k) * 6); g.beginPath(); g.ellipse(p[0], p[1], s * 14 * o.k * k, s * 14 * o.k * k * .62, 0, 0, TAU); g.stroke(); }
+    /* 3. partículas (el fuego y el destello se suman como luz) */
+    for (const p of this.P) { if (p.t < 0) continue; const q = pr(p.x, p.y, Math.max(0, p.z)); if (!q) continue; const s = esc(p.x, p.y, p.z), k = p.t / p.vida;
+      if (p.tipo === 'chispa') { const q2 = pr(p.x - p.vx * .035, p.y - p.vy * .035, Math.max(0, p.z - p.vz * .035)); if (!q2) continue; g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(255,' + (200 - k * 120 | 0) + ',80,' + (1 - k).toFixed(2) + ')'; g.lineWidth = Math.max(1, s * .06); g.beginPath(); g.moveTo(q2[0], q2[1]); g.lineTo(q[0], q[1]); g.stroke(); g.globalCompositeOperation = 'source-over'; }
+      else if (p.tipo === 'fuego') { g.globalCompositeOperation = 'lighter'; const r = Math.max(1.5, p.r * s * (1 - k * .5)), gr = g.createRadialGradient(q[0], q[1], 0, q[0], q[1], r); gr.addColorStop(0, 'rgba(255,240,180,' + (.9 * (1 - k)).toFixed(2) + ')'); gr.addColorStop(.4, 'rgba(255,140,30,' + (.7 * (1 - k)).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(200,40,0,0)'); g.fillStyle = gr; g.beginPath(); g.arc(q[0], q[1], r, 0, TAU); g.fill(); g.globalCompositeOperation = 'source-over'; }
+      else if (p.tipo === 'flash') { g.globalCompositeOperation = 'lighter'; const r = p.r * s * .25, gr = g.createRadialGradient(q[0], q[1], 0, q[0], q[1], r); gr.addColorStop(0, 'rgba(255,255,235,' + (1 - k).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(255,200,120,0)'); g.fillStyle = gr; g.beginPath(); g.arc(q[0], q[1], r, 0, TAU); g.fill(); g.globalCompositeOperation = 'source-over'; }
+      else if (p.tipo === 'humo') { const r = Math.max(2, p.r * s), al = (p.col === '#1d1f23' ? .5 : .32) * (1 - k) * Math.min(1, p.t * 4); g.fillStyle = p.col; g.globalAlpha = al; g.beginPath(); g.arc(q[0], q[1], r, 0, TAU); g.fill(); g.globalAlpha = 1; }
+      else if (p.tipo === 'agua') { g.fillStyle = 'rgba(210,235,255,' + (.8 * (1 - k)).toFixed(2) + ')'; g.beginPath(); g.arc(q[0], q[1], Math.max(1, p.r * s), 0, TAU); g.fill(); }
+      else { const r = Math.max(1.2, p.r * s); g.save(); g.translate(q[0], q[1]); g.rotate(p.rot); g.globalAlpha = Math.min(1, (1 - k) * 3); g.fillStyle = p.col || '#2b343d'; if (p.tipo === 'vidrio') { g.beginPath(); g.moveTo(-r, 0); g.lineTo(0, -r * .6); g.lineTo(r, r * .3); g.closePath(); g.fill(); } else if (p.tipo === 'papel' || p.tipo === 'hoja') g.fillRect(-r, -r * .6, r * 2, r * 1.2); else g.fillRect(-r, -r * .45, r * 2, r * .9); g.restore(); } }
+    g.restore();
+  },
+  _resto(g, pr, r, s, t) {
+    const p = pr(r.x, r.y, 0); if (!p || !s) return; const ca = Math.cos(r.a), sa = Math.sin(r.a), P = (u, v, z = 0) => pr(r.x + u * ca - v * sa, r.y + u * sa + v * ca, z), viejo = clamp(1 - (t - r.t0 - 80) / 10, 0, 1); g.globalAlpha = viejo;
+    const linea = (a, b, w, col) => { if (!a || !b) return; g.strokeStyle = col; g.lineWidth = Math.max(1, w * s); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); };
+    const caja = (u, v, L, W, col) => { const q = [P(u - L / 2, v - W / 2), P(u + L / 2, v - W / 2), P(u + L / 2, v + W / 2), P(u - L / 2, v + W / 2)]; if (q.some(x => !x)) return; g.fillStyle = col; g.beginPath(); g.moveTo(q[0][0], q[0][1]); for (const x of q) g.lineTo(x[0], x[1]); g.closePath(); g.fill(); };
+    if (r.t === 'quemado') { g.fillStyle = 'rgba(15,12,10,.5)'; g.beginPath(); g.ellipse(p[0], p[1], (r.r || 3) * s, (r.r || 3) * s * .7, r.a, 0, TAU); g.fill(); }
+    else if (r.t === 'carro') { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(p[0], p[1], 2.6 * s, 1.4 * s, 0, 0, TAU); g.fill(); caja(0, 0, 4.4, 1.8, '#1b1c1f'); caja(-.3, 0, 2, 1.5, '#2b2623'); }
+    else if (r.t === 'poste') { linea(P(0, 0), P(7.2, 0), .2, '#6b7078'); caja(7.4, 0, .7, .32, '#c9cfd6'); }
+    else if (r.t === 'caneca') { caja(0, 0, .8, .5, '#2f6b45'); for (let i = 0; i < 5; i++) caja(.6 + h2(i, r.s * 99 | 0, 3) * 1.6, (h2(i, 5, r.s * 99 | 0) - .5) * 1.6, .25, .18, '#efe9da'); }
+    else if (r.t === 'banca') { for (let i = 0; i < 3; i++) caja((i - 1) * .7, (h2(i, 2, 7) - .5) * .9, 1.3, .14, '#7a5233'); caja(.1, .3, .9, .1, '#3b3f45'); }
+    else if (r.t === 'cono') { const a = P(0, 0), b = P(.7, 0); if (a && b) { g.fillStyle = '#ff6a1a'; g.beginPath(); g.moveTo(b[0], b[1]); const n = [-sa, ca], w = .22 * s; g.lineTo(a[0] + n[0] * w, a[1] + n[1] * w); g.lineTo(a[0] - n[0] * w, a[1] - n[1] * w); g.closePath(); g.fill(); } }
+    else if (r.t === 'valla') { caja(0, 0, 2.2, .1, '#e8e4d8'); caja(-.6, 0, .4, .12, '#c0392b'); caja(.6, 0, .4, .12, '#c0392b'); }
+    else if (r.t === 'hidrante') { caja(0, 0, .35, .35, '#c0392b'); if (r.chorro > 0) { g.fillStyle = 'rgba(160,200,230,.35)'; g.beginPath(); g.ellipse(p[0], p[1], 2.4 * s, 1.6 * s, 0, 0, TAU); g.fill(); } }
+    else if (r.t === 'paradero') { linea(P(-1.5, 0), P(1.5, .3), .12, '#5d636b'); for (let i = 0; i < 9; i++) caja((h2(i, 1, 3) - .5) * 3, (h2(i, 2, 3) - .5) * 2, .2, .14, 'rgba(159,196,207,.8)'); }
+    else if (r.t === 'arbusto') { g.fillStyle = 'rgba(62,107,52,.75)'; g.beginPath(); g.ellipse(p[0], p[1], .9 * s, .45 * s, r.a, 0, TAU); g.fill(); }
+    g.globalAlpha = 1;
+  }
+};
+MC.on('choque', C => { if (C && C.veh) Efectos._choque(C); });
+MC.on('rompe', ev => { if (ev && ev.o) Efectos._rompe(ev); });
+MC.Efectos = Efectos;
 
 /* ---- js/88-vida.js ---- */
 /* =====================================================================
@@ -8542,7 +9010,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

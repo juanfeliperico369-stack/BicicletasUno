@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 4.4.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.5.0 · no se edita a mano: edita los documentos de origen -->
 
 # Documento de relevo · Motor City y *Turno Cero*
 
@@ -1896,6 +1896,31 @@ Versión **3.0.0** en `main`; **3.0.1 propuesta en la PR #5** · 20‑nov‑2026
 
 ### Nota de consolidación · 3.1.0
 Esta página conserva la historia original de los pedidos, incluso estados de 2.10/3.0 ahora superados. El **estado actualizado y con evidencias** se mantiene en [`docs/ESTADO-3.1.0.md`](ESTADO-3.1.0.md). No leer «Hecho» de versiones anteriores como una certificación de la rama principal ni del rendimiento en teléfonos físicos.
+
+### 15. «Investiga motores viejos y livianos» y «mundo abierto desde el principio» (4.1 a 4.4)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Investigar motores clásicos (Wolfenstein, Doom, Build, Quake, Elite, Thief, OutRun, Comanche) y adaptar sus técnicas, desde cero | ✅ | `docs/INVESTIGACION-MOTORES-CLASICOS.md`, `js/47-clasicos.js` (DDA, semillas, gema de luz y ruido, carretera arcade, Voxel Space), `js/47-colormap.js` (COLORMAP) |
+| Mundo abierto desde el principio; tutorial e historia opcionales | ✅ | Turno Cero (🌎 Mundo abierto), El Metro y EnCicla (Jugar abre la ciudad), Run Scooter (regalo diario sin ventana) |
+| Lo que dejaron Codex, ChatGPT y Antigravity | ✅ | Modo cine con direccionales (C‑M40), cubierta y esquivar (C‑M32), COLORMAP (C‑M39), pool de partículas y escalador, arreglos de EnCicla, la carretera de Run |
+
+### 16. «Retoca modelos, haz el PVS, mejora topografías y edificios… comparte el motor con un informe a cada repositorio» y «pule el manejo, los rostros, los árboles, Hunter Assassin, explosiones» (4.5, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| PVS de Quake (C‑M37) | ✅ | `herramientas/pvs.mjs`, `js/45-pvs.js`, `datos/nueva_york/pvs.bin`, `datos/guatape/pvs.bin`; prueba sin fugas `pruebas/pvs.mjs`. Recorta 26 % en Manhattan y 28 % en Guatapé (cámara a ras de calle). Medellín: horneado y medido (15 %), no se mete al HTML porque pesa 1 MB para poco. |
+| Modelos 3D pulidos | ✅ | `juegos/getaway/arte3d/generar_modelos.py` 0.3.1: silueta de carro con capó, cabina y baúl, rines, faros, espejos; personas con cara (ojos, cejas, orejas, nariz, labios), manos y peinado; AO horneada; malla indexada. |
+| Edificios, casas y relieve (sin cambiar el mapa) | ✅ | Techos a cuatro aguas en casas de teja y en los hitos, terrazas con aires y cuarto de escalera, coronas y agujas en las torres, relieve cercano con malla de 10 m. |
+| Peso y uso sin internet | ✅ | GLB comprimidos (2 MB → 0,4 MB en el HTML); `sw.js`: lo abierto una vez abre sin internet, y solo se consulta `VERSION.json` para saber si hay versión nueva (`pruebas/sin-conexion.mjs`). |
+| Manejo y controles | ✅ | `docs/INVESTIGACION-MANEJO.md`: deslizar contra la pared, pérdida según el ángulo, desatascar, asistencia que evita estrellarse, derrape con freno de mano, pisar andén, ladrillo, arena, nieve y roca suelta, moto por escalas. |
+| Explosiones, choques, derrapes y cosas rotas | ✅ | `js/88-efectos.js` y `js/32-rotos.js`. |
+| Rostros detallados | ✅ | `js/71-rostros.js` (retratos en los diálogos y subtítulos de Turno Cero) y caras en los modelos 3D. |
+| Árboles con lógica | ✅ | `js/29-arboleda.js`: nada en canchas, piscinas ni en la mitad de una plaza dura; la colisión usa el mismo filtro. |
+| La forma cenital de Hunter Assassin | ✅ | Linternas que se cortan en los muros, «?» y «!», cámara cenital sola en el sigilo a pie (`juegos/getaway/58-sigilo.js`). |
+| Interfaz y espaciados (juego de prueba) | ✅ | Rejilla de 8 px y área segura en el HUD de Turno Cero. |
+| Bot de la historia en las pruebas | ✅ | `pruebas/getaway-historia.mjs` (`node motor.mjs prueba --historia`) y en la integración continua. |
+| Documento detallado a cada repositorio; que sigan con su motor del Valle | ✅ | `docs/INFORME-MOTOR-CITY-4.5.md` en BicicletasUno, MetroZero y RunRunZero; el motor va en `motor-city/` como referencia. |
+| El mapa | No se tocó | Por pedido del autor: es de las IA que lo desarrollan. El PVS es un dato derivado del mapa, no lo cambia. |
+| HTML, APK y enlace de cada juego | ✅ | Ver `CONTEXTO-RELEVO.md` § 1. |
 
 
 ---
@@ -4041,6 +4066,19 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 21-nov-2026 · 4.5.0 · PVS, modelos y ciudad pulidos, manejo que no se traba, efectos, rostros, Hunter Assassin, y los juegos Motor City y Extremo
+- **El autor:** retocar modelos 3D, 2D y pixel; el PVS; Guatapé en los juegos hermanos; topografías, relieve, casas y edificios; luego, «mejor un informe detallado a cada repositorio y que sigan con su motor del Valle, solo compárteles el motor»; y en el motor y el juego de prueba, todo lo que falta, sin cambiar el mapa. Después: manejo y controles («ahí yace toda la jugabilidad»), rostros detallados, árboles con lógica, vehículos que suben por algunas cosas, la forma cenital de *Hunter Assassin* y explosiones, choques, derrapes y cosas rotas.
+- **PVS de Quake (C‑M37):** `herramientas/pvs.mjs` hornea, para cada celda de 160 m, qué celdas se ven (horizonte de Comanche desde ojos en la calle y sobre las vías, 4 núcleos); `js/45-pvs.js` y la vista 3D lo usan con la cámara a ras de calle. Recorta 26 % en Manhattan y 28 % en Guatapé, sin fugas grandes (`pruebas/pvs.mjs`). Medellín se midió (15 %) y no se mete al HTML.
+- **Modelos y ciudad:** generador 0.3.1 (carros con capó, cabina y baúl, rines, faros y espejos; personas con cara, manos y peinado; AO horneada; malla indexada); techos a cuatro aguas; terrazas con aires y escalera; coronas y agujas; relieve cercano a 10 m. El mapa no se tocó.
+- **Peso y sin conexión:** GLB comprimidos (2 MB → 0,4 MB); `sw.js` con prueba (`pruebas/sin-conexion.mjs`).
+- **Manejo (`docs/INVESTIGACION-MANEJO.md`):** deslizar contra la pared, pérdida según el ángulo, desatascar, asistencia que evita estrellarse (se apaga), derrape con freno de mano, andén, ladrillo, arena, nieve y roca suelta; la moto por escalas. Lo mismo para el modelo de bicicleta de los carros de Turno Cero, que era el que frenaba en seco.
+- **Efectos y rotos:** `js/88-efectos.js` y `js/32-rotos.js`.
+- **Rostros:** `js/71-rostros.js`, retratos en los diálogos y subtítulos de Turno Cero; caras en los modelos 3D.
+- **Árboles:** nada en canchas, piscinas ni en la mitad de las plazas duras.
+- **Turno Cero:** linternas que se cortan en los muros y cámara cenital en el sigilo a pie (*Hunter Assassin*), el carro destrozado arde y estalla, HUD en rejilla de 8 px.
+- **Juegos nuevos:** `juegos/carreras/` (Motor City · Carreras) y `juegos/extremo/` (Extremo), mundo abierto en Guatapé con banderas de carrera; `pruebas/carreras.mjs`.
+- **Pruebas:** 144 Node, 156 navegador, PVS, sin conexión, carreras y la historia entera de Turno Cero (Final A en 162 s, 0 errores); todo en la integración continua.
 
 ### 21-nov-2026 · 4.4.0 · Claude asume lo que dejaron las otras IA
 - **El autor:** «Y ya ni lo harán, resuelve tú lo que falta».

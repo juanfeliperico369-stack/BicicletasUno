@@ -1,6 +1,6 @@
 {
   "proyecto": "TURNO CERO: MANHATTAN",
-  "version": "0.2.0-preproduccion",
+  "version": "0.3.1-preproduccion",
   "licencia": "CC0-1.0 - geometria procedural original",
   "escala": "1 unidad = 1 metro; glTF Y-up",
   "nota": "Modelos GLB para bloqueo de escenas y adaptación; NO assets de lanzamiento ni modelos detallados / animados. Sin datos GIS oficiales.",
@@ -10,19 +10,19 @@
       "id": "vehiculo_sedan",
       "categoria": "vehiculos",
       "archivo": "vehiculo_sedan.glb",
-      "vertices": 1620,
-      "triangulos": 540,
-      "bytes": 52960,
+      "vertices": 1892,
+      "triangulos": 1046,
+      "bytes": 60392,
       "bounds_metros": [
         [
-          -2.36,
-          0.01,
-          -1.053
+          -2.425,
+          0.0,
+          -1.03
         ],
         [
-          2.38,
+          2.425,
           1.42,
-          1.053
+          1.03
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -32,19 +32,19 @@
       "id": "vehiculo_suv",
       "categoria": "vehiculos",
       "archivo": "vehiculo_suv.glb",
-      "vertices": 1656,
-      "triangulos": 552,
-      "bytes": 54108,
+      "vertices": 2156,
+      "triangulos": 1194,
+      "bytes": 68672,
       "bounds_metros": [
         [
-          -2.7,
-          0.01,
-          -1.15
+          -2.95,
+          0.0,
+          -1.12
         ],
         [
-          2.505,
-          2.045,
-          1.15
+          2.55,
+          2.035,
+          1.12
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -54,19 +54,19 @@
       "id": "vehiculo_van",
       "categoria": "vehiculos",
       "archivo": "vehiculo_van.glb",
-      "vertices": 1836,
-      "triangulos": 612,
-      "bytes": 59884,
+      "vertices": 1940,
+      "triangulos": 1078,
+      "bytes": 61924,
       "bounds_metros": [
         [
-          -2.834,
-          0.01,
-          -1.193
+          -2.9,
+          0.0,
+          -1.16
         ],
         [
-          2.855,
+          2.9,
           2.73,
-          1.193
+          1.16
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -76,19 +76,19 @@
       "id": "vehiculo_taxi",
       "categoria": "vehiculos",
       "archivo": "vehiculo_taxi.glb",
-      "vertices": 1656,
-      "triangulos": 552,
-      "bytes": 54112,
+      "vertices": 2300,
+      "triangulos": 1246,
+      "bytes": 73016,
       "bounds_metros": [
         [
-          -2.36,
-          0.01,
-          -1.053
+          -2.425,
+          0.0,
+          -1.03
         ],
         [
-          2.38,
-          1.605,
-          1.053
+          2.425,
+          1.62,
+          1.03
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -98,19 +98,19 @@
       "id": "vehiculo_police",
       "categoria": "vehiculos",
       "archivo": "vehiculo_police.glb",
-      "vertices": 1656,
-      "triangulos": 552,
-      "bytes": 54112,
+      "vertices": 2180,
+      "triangulos": 1182,
+      "bytes": 69256,
       "bounds_metros": [
         [
-          -2.36,
-          0.01,
-          -1.085
+          -2.425,
+          0.0,
+          -1.06
         ],
         [
-          2.38,
+          2.475,
           1.61,
-          1.085
+          1.06
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -120,19 +120,19 @@
       "id": "vehiculo_coupe",
       "categoria": "vehiculos",
       "archivo": "vehiculo_coupe.glb",
-      "vertices": 1656,
-      "triangulos": 552,
-      "bytes": 54096,
+      "vertices": 2036,
+      "triangulos": 1114,
+      "bytes": 64804,
       "bounds_metros": [
         [
-          -2.395,
-          0.01,
-          -1.042
+          -2.275,
+          0.0,
+          -1.02
         ],
         [
-          2.23,
+          2.275,
           1.29,
-          1.042
+          1.02
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -142,19 +142,19 @@
       "id": "vehiculo_motocicleta",
       "categoria": "vehiculos",
       "archivo": "vehiculo_motocicleta.glb",
-      "vertices": 924,
-      "triangulos": 308,
-      "bytes": 30656,
+      "vertices": 1200,
+      "triangulos": 660,
+      "bytes": 38704,
       "bounds_metros": [
         [
-          -1.31,
-          0.01,
-          -0.415
+          -1.13,
+          0.005,
+          -0.395
         ],
         [
-          1.31,
-          1.81,
-          0.415
+          1.15,
+          1.21,
+          0.48
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -164,19 +164,19 @@
       "id": "personaje_mara",
       "categoria": "personajes",
       "archivo": "personaje_mara.glb",
-      "vertices": 1776,
-      "triangulos": 592,
-      "bytes": 57924,
+      "vertices": 2408,
+      "triangulos": 1560,
+      "bytes": 77944,
       "bounds_metros": [
         [
-          -0.435,
-          0.03,
-          -0.208
+          -0.36,
+          -0.001,
+          -0.178
         ],
         [
-          0.435,
-          2.167,
-          0.26
+          0.36,
+          1.945,
+          0.205
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -186,19 +186,19 @@
       "id": "personaje_nadia",
       "categoria": "personajes",
       "archivo": "personaje_nadia.glb",
-      "vertices": 1704,
-      "triangulos": 568,
-      "bytes": 55620,
+      "vertices": 2288,
+      "triangulos": 1504,
+      "bytes": 74232,
       "bounds_metros": [
         [
-          -0.435,
-          0.03,
-          -0.285
+          -0.36,
+          -0.001,
+          -0.177
         ],
         [
-          0.435,
-          2.167,
-          0.23
+          0.36,
+          1.945,
+          0.22
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -208,19 +208,19 @@
       "id": "personaje_guard",
       "categoria": "personajes",
       "archivo": "personaje_guard.glb",
-      "vertices": 1704,
-      "triangulos": 568,
-      "bytes": 55632,
+      "vertices": 2210,
+      "triangulos": 1432,
+      "bytes": 71620,
       "bounds_metros": [
         [
-          -0.435,
-          0.03,
-          -0.208
+          -0.36,
+          -0.001,
+          -0.135
         ],
         [
-          0.435,
-          2.167,
-          0.23
+          0.36,
+          1.935,
+          0.205
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -230,19 +230,19 @@
       "id": "personaje_courier",
       "categoria": "personajes",
       "archivo": "personaje_courier.glb",
-      "vertices": 1704,
-      "triangulos": 568,
-      "bytes": 55620,
+      "vertices": 2258,
+      "triangulos": 1452,
+      "bytes": 73096,
       "bounds_metros": [
         [
-          -0.435,
-          0.03,
-          -0.37
+          -0.36,
+          -0.001,
+          -0.33
         ],
         [
-          0.435,
-          2.167,
-          0.23
+          0.36,
+          1.96,
+          0.205
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -252,19 +252,19 @@
       "id": "personaje_operative",
       "categoria": "personajes",
       "archivo": "personaje_operative.glb",
-      "vertices": 1776,
-      "triangulos": 592,
-      "bytes": 57924,
+      "vertices": 2354,
+      "triangulos": 1496,
+      "bytes": 76036,
       "bounds_metros": [
         [
-          -0.435,
-          0.03,
-          -0.208
+          -0.36,
+          -0.001,
+          -0.135
         ],
         [
-          0.435,
-          2.167,
-          0.26
+          0.36,
+          1.945,
+          0.205
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -274,19 +274,19 @@
       "id": "personaje_informant",
       "categoria": "personajes",
       "archivo": "personaje_informant.glb",
-      "vertices": 1668,
-      "triangulos": 556,
-      "bytes": 54480,
+      "vertices": 2222,
+      "triangulos": 1444,
+      "bytes": 72024,
       "bounds_metros": [
         [
-          -0.435,
-          0.03,
-          -0.208
+          -0.36,
+          -0.001,
+          -0.15
         ],
         [
-          0.435,
-          2.167,
-          0.23
+          0.36,
+          2.03,
+          0.205
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -296,9 +296,9 @@
       "id": "tecnologia_smartwatch",
       "categoria": "tecnologia",
       "archivo": "tecnologia_smartwatch.glb",
-      "vertices": 180,
-      "triangulos": 60,
-      "bytes": 6840,
+      "vertices": 108,
+      "triangulos": 58,
+      "bytes": 4492,
       "bounds_metros": [
         [
           -0.225,
@@ -318,9 +318,9 @@
       "id": "tecnologia_tracker",
       "categoria": "tecnologia",
       "archivo": "tecnologia_tracker.glb",
-      "vertices": 324,
-      "triangulos": 108,
-      "bytes": 11448,
+      "vertices": 156,
+      "triangulos": 98,
+      "bytes": 6072,
       "bounds_metros": [
         [
           -0.29,
@@ -340,9 +340,9 @@
       "id": "tecnologia_phone",
       "categoria": "tecnologia",
       "archivo": "tecnologia_phone.glb",
-      "vertices": 144,
+      "vertices": 96,
       "triangulos": 48,
-      "bytes": 5688,
+      "bytes": 4092,
       "bounds_metros": [
         [
           -0.185,
@@ -362,9 +362,9 @@
       "id": "tecnologia_scanner",
       "categoria": "tecnologia",
       "archivo": "tecnologia_scanner.glb",
-      "vertices": 252,
-      "triangulos": 84,
-      "bytes": 9132,
+      "vertices": 144,
+      "triangulos": 80,
+      "bytes": 5616,
       "bounds_metros": [
         [
           -0.34,
@@ -384,9 +384,9 @@
       "id": "tecnologia_camera",
       "categoria": "tecnologia",
       "archivo": "tecnologia_camera.glb",
-      "vertices": 216,
-      "triangulos": 72,
-      "bytes": 7976,
+      "vertices": 120,
+      "triangulos": 68,
+      "bytes": 4872,
       "bounds_metros": [
         [
           -0.215,
@@ -406,9 +406,9 @@
       "id": "tecnologia_breaker",
       "categoria": "tecnologia",
       "archivo": "tecnologia_breaker.glb",
-      "vertices": 216,
+      "vertices": 144,
       "triangulos": 72,
-      "bytes": 7988,
+      "bytes": 5580,
       "bounds_metros": [
         [
           -0.39,
@@ -428,9 +428,9 @@
       "id": "tecnologia_earpiece",
       "categoria": "tecnologia",
       "archivo": "tecnologia_earpiece.glb",
-      "vertices": 480,
-      "triangulos": 160,
-      "bytes": 16456,
+      "vertices": 173,
+      "triangulos": 156,
+      "bytes": 6912,
       "bounds_metros": [
         [
           -0.16,
@@ -450,9 +450,9 @@
       "id": "tecnologia_case",
       "categoria": "tecnologia",
       "archivo": "tecnologia_case.glb",
-      "vertices": 180,
+      "vertices": 120,
       "triangulos": 60,
-      "bytes": 6840,
+      "bytes": 4840,
       "bounds_metros": [
         [
           -0.415,
@@ -472,9 +472,9 @@
       "id": "tecnologia_router",
       "categoria": "tecnologia",
       "archivo": "tecnologia_router.glb",
-      "vertices": 360,
-      "triangulos": 120,
-      "bytes": 12588,
+      "vertices": 192,
+      "triangulos": 112,
+      "bytes": 7152,
       "bounds_metros": [
         [
           -0.295,
@@ -494,18 +494,18 @@
       "id": "tecnologia_drone",
       "categoria": "tecnologia",
       "archivo": "tecnologia_drone.glb",
-      "vertices": 1080,
-      "triangulos": 360,
-      "bytes": 35648,
+      "vertices": 1374,
+      "triangulos": 776,
+      "bytes": 44240,
       "bounds_metros": [
         [
           -0.82,
-          0.195,
+          0.24,
           -0.82
         ],
         [
           0.82,
-          0.76,
+          0.769,
           0.82
         ]
       ],
@@ -516,19 +516,19 @@
       "id": "edificio_office",
       "categoria": "arquitectura",
       "archivo": "edificio_office.glb",
-      "vertices": 1260,
-      "triangulos": 420,
-      "bytes": 41392,
+      "vertices": 2620,
+      "triangulos": 1308,
+      "bytes": 82336,
       "bounds_metros": [
         [
-          -3.075,
+          -3.175,
           0.0,
-          -2.58
+          -2.675
         ],
         [
-          3.075,
-          14.2,
-          2.58
+          3.175,
+          16.65,
+          3.35
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -538,19 +538,19 @@
       "id": "edificio_residential",
       "categoria": "arquitectura",
       "archivo": "edificio_residential.glb",
-      "vertices": 1764,
-      "triangulos": 588,
-      "bytes": 57536,
+      "vertices": 3020,
+      "triangulos": 1508,
+      "bytes": 94724,
       "bounds_metros": [
         [
-          -2.575,
+          -2.675,
           0.0,
-          -2.08
+          -2.475
         ],
         [
-          2.575,
-          11.2,
-          2.095
+          2.675,
+          13.65,
+          2.85
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -560,19 +560,19 @@
       "id": "edificio_hotel",
       "categoria": "arquitectura",
       "archivo": "edificio_hotel.glb",
-      "vertices": 1764,
-      "triangulos": 588,
-      "bytes": 57536,
+      "vertices": 3668,
+      "triangulos": 1828,
+      "bytes": 114804,
       "bounds_metros": [
         [
-          -4.075,
+          -4.175,
           0.0,
-          -2.58
+          -2.675
         ],
         [
-          4.075,
-          16.69,
-          2.58
+          4.175,
+          18.65,
+          3.35
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -582,19 +582,19 @@
       "id": "edificio_depot",
       "categoria": "arquitectura",
       "archivo": "edificio_depot.glb",
-      "vertices": 324,
-      "triangulos": 108,
-      "bytes": 11444,
+      "vertices": 484,
+      "triangulos": 238,
+      "bytes": 16088,
       "bounds_metros": [
         [
-          -4.575,
+          -4.675,
           0.0,
-          -3.58
+          -3.675
         ],
         [
-          4.575,
-          4.2,
-          3.58
+          4.675,
+          4.78,
+          4.35
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -604,9 +604,9 @@
       "id": "escenario_asphalt",
       "categoria": "escenarios",
       "archivo": "escenario_asphalt.glb",
-      "vertices": 216,
+      "vertices": 144,
       "triangulos": 72,
-      "bytes": 7972,
+      "bytes": 5560,
       "bounds_metros": [
         [
           -5.5,
@@ -626,9 +626,9 @@
       "id": "escenario_sidewalk",
       "categoria": "escenarios",
       "archivo": "escenario_sidewalk.glb",
-      "vertices": 216,
+      "vertices": 144,
       "triangulos": 72,
-      "bytes": 7968,
+      "bytes": 5560,
       "bounds_metros": [
         [
           -4.0,
@@ -648,19 +648,19 @@
       "id": "escenario_traffic_light",
       "categoria": "escenarios",
       "archivo": "escenario_traffic_light.glb",
-      "vertices": 648,
-      "triangulos": 216,
-      "bytes": 21804,
+      "vertices": 960,
+      "triangulos": 516,
+      "bytes": 31096,
       "bounds_metros": [
         [
-          -0.095,
+          -0.18,
           0.0,
-          -0.14
+          -0.171
         ],
         [
-          0.895,
+          3.2,
           5.4,
-          0.182
+          0.26
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -670,19 +670,19 @@
       "id": "escenario_street_lamp",
       "categoria": "escenarios",
       "archivo": "escenario_street_lamp.glb",
-      "vertices": 216,
-      "triangulos": 72,
-      "bytes": 7972,
+      "vertices": 264,
+      "triangulos": 140,
+      "bytes": 9344,
       "bounds_metros": [
         [
-          -0.1,
+          -0.17,
           0.0,
-          -0.16
+          -0.17
         ],
         [
-          1.775,
+          1.8,
           6.8,
-          0.16
+          0.17
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -692,19 +692,19 @@
       "id": "escenario_barrier",
       "categoria": "escenarios",
       "archivo": "escenario_barrier.glb",
-      "vertices": 288,
-      "triangulos": 96,
-      "bytes": 10296,
+      "vertices": 672,
+      "triangulos": 332,
+      "bytes": 21932,
       "bounds_metros": [
         [
-          -1.8,
+          -1.85,
           -0.005,
-          -0.145
+          -0.35
         ],
         [
-          1.8,
-          0.945,
-          0.145
+          1.85,
+          1.06,
+          0.35
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -714,9 +714,9 @@
       "id": "escenario_bollards",
       "categoria": "escenarios",
       "archivo": "escenario_bollards.glb",
-      "vertices": 1152,
-      "triangulos": 384,
-      "bytes": 37968,
+      "vertices": 576,
+      "triangulos": 352,
+      "bytes": 19376,
       "bounds_metros": [
         [
           -1.66,
@@ -736,19 +736,19 @@
       "id": "escenario_container",
       "categoria": "escenarios",
       "archivo": "escenario_container.glb",
-      "vertices": 504,
-      "triangulos": 168,
-      "bytes": 17196,
+      "vertices": 1416,
+      "triangulos": 700,
+      "bytes": 44976,
       "bounds_metros": [
         [
-          -3.025,
-          0.0,
-          -1.225
+          -3.05,
+          -0.025,
+          -1.25
         ],
         [
-          3.025,
-          2.5,
-          1.285
+          3.055,
+          2.525,
+          1.25
         ]
       ],
       "estado": "proxy_3d_no_final",
@@ -758,9 +758,9 @@
       "id": "escenario_checkpoint",
       "categoria": "escenarios",
       "archivo": "escenario_checkpoint.glb",
-      "vertices": 216,
+      "vertices": 144,
       "triangulos": 72,
-      "bytes": 7968,
+      "bytes": 5560,
       "bounds_metros": [
         [
           -4.5,
@@ -780,9 +780,9 @@
       "id": "escenario_safehouse",
       "categoria": "escenarios",
       "archivo": "escenario_safehouse.glb",
-      "vertices": 612,
+      "vertices": 408,
       "triangulos": 204,
-      "bytes": 20644,
+      "bytes": 13748,
       "bounds_metros": [
         [
           -4.6,
@@ -802,9 +802,9 @@
       "id": "escenario_rooftop",
       "categoria": "escenarios",
       "archivo": "escenario_rooftop.glb",
-      "vertices": 576,
-      "triangulos": 192,
-      "bytes": 19492,
+      "vertices": 336,
+      "triangulos": 184,
+      "bytes": 11612,
       "bounds_metros": [
         [
           -4.5,
@@ -824,9 +824,9 @@
       "id": "escenario_subway",
       "categoria": "escenarios",
       "archivo": "escenario_subway.glb",
-      "vertices": 432,
+      "vertices": 288,
       "triangulos": 144,
-      "bytes": 14888,
+      "bytes": 10028,
       "bounds_metros": [
         [
           -2.5,
@@ -846,9 +846,9 @@
       "id": "escenario_dock",
       "categoria": "escenarios",
       "archivo": "escenario_dock.glb",
-      "vertices": 1008,
-      "triangulos": 336,
-      "bytes": 33328,
+      "vertices": 528,
+      "triangulos": 312,
+      "bytes": 17760,
       "bounds_metros": [
         [
           -4.5,
@@ -868,9 +868,9 @@
       "id": "escenario_server_room",
       "categoria": "escenarios",
       "archivo": "escenario_server_room.glb",
-      "vertices": 972,
+      "vertices": 648,
       "triangulos": 324,
-      "bytes": 32168,
+      "bytes": 21188,
       "bounds_metros": [
         [
           -3.5,
@@ -890,9 +890,9 @@
       "id": "escenario_stairwell",
       "categoria": "escenarios",
       "archivo": "escenario_stairwell.glb",
-      "vertices": 396,
+      "vertices": 264,
       "triangulos": 132,
-      "bytes": 13736,
+      "bytes": 9284,
       "bounds_metros": [
         [
           -2.5,
@@ -912,19 +912,19 @@
       "id": "escenario_news_kiosk",
       "categoria": "escenarios",
       "archivo": "escenario_news_kiosk.glb",
-      "vertices": 144,
-      "triangulos": 48,
-      "bytes": 5668,
+      "vertices": 340,
+      "triangulos": 162,
+      "bytes": 11592,
       "bounds_metros": [
         [
-          -1.3,
+          -1.35,
           0.0,
-          -0.975
+          -1.0
         ],
         [
-          1.3,
-          2.475,
-          1.075
+          1.35,
+          2.46,
+          1.45
         ]
       ],
       "estado": "proxy_3d_no_final",

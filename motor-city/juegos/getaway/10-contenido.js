@@ -9,6 +9,18 @@
    ===================================================================== */
 const TC = window.TC = {};
 
+/* 4.5 · los rostros (MC.Rostro): rasgos fijos de cada personaje para los retratos de los diálogos y los subtítulos */
+TC.ROSTROS = {
+  mara: { piel: '#c68a5e', pelo: '#16110d', ojos: '#3b2414', peinado: 'cola', fem: true, edad: .15, nariz: 'recta', ropa: '#2b343d', cuello: 'chaqueta', labios: '#a2564c', acc: ['audifono', 'cicatriz'], fondo: '#4a3a24' },
+  nadia: { piel: '#e8bd98', pelo: '#2b1d14', ojos: '#2c5d3f', peinado: 'moño', fem: true, edad: .3, nariz: 'recta', ropa: '#475563', labios: '#b5645a', acc: ['gafas'], fondo: '#24403a' },
+  ward: { piel: '#f1d3bd', pelo: '#8a8580', ojos: '#3d5f86', peinado: 'corto', edad: .55, nariz: 'aguilena', ropa: '#1d2833', barba: 'sombra', camisa: '#e8e4d8', fondo: '#3a3a40' },
+  noah: { piel: '#d9a47c', pelo: '#16110d', ojos: '#2b1d14', peinado: 'rizado', edad: .1, nariz: 'ancha', ropa: '#3d5f86', barba: 'candado', acc: ['arete'], fondo: '#26324a' },
+  cross: { piel: '#a96f45', pelo: '#16110d', ojos: '#3b2414', peinado: 'moño', fem: true, edad: .4, nariz: 'recta', ropa: '#2f4a63', labios: '#8a4a42', acc: ['gorra'], colorGorra: '#2f4a63', fondo: '#2a3440' },
+  rook: { piel: '#e8bd98', pelo: '#4a3020', ojos: '#3d5f86', peinado: 'rapado', edad: .5, nariz: 'ancha', ropa: '#475563', barba: 'completa', acc: ['cicatriz'], fondo: '#333a40' },
+  contador: { piel: '#f1d3bd', pelo: '#c9c5bf', ojos: '#3d5f86', peinado: 'canoso', edad: .75, nariz: 'aguilena', ropa: '#14181d', camisa: '#d8d2c4', acc: ['gafas'], expresion: 'seria', fondo: '#3a1e1c' },
+  efrain: { piel: '#a96f45', pelo: '#8a8580', ojos: '#2b1d14', peinado: 'calvo', edad: .85, nariz: 'ancha', ropa: '#6e4a2c', barba: 'bigote', acc: ['sombrero'], fondo: '#4a3a24' },
+  vela: { piel: '#6b3f24', pelo: '#16110d', ojos: '#2b1d14', peinado: 'rapado', edad: .2, nariz: 'recta', ropa: '#1d2833', acc: ['audifono'], fondo: '#1d3a40' }
+};
 /* ---------- personajes (ficticios) ---------- */
 TC.QUIEN = {
   mara: { n: 'Mara Vega', c: '#dba65f', d: '34 años. Mecánica y conductora nocturna. Nació en Medellín, se crió en Queens. Confía en los sistemas que parecen racionales.' },

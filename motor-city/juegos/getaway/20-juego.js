@@ -65,7 +65,7 @@ async function cargarCiudad(id) {
 const planeta = new MC.Planeta({ cargar: cargarCiudad, radioVisual: R_PLANETA });
 async function mundoListo(id) {
   const M = await planeta.mundo(id);
-  if (!M._nc) { M._nc = true; try { M.red('rueda'); } catch (e) { MC.falla('red ' + id, e); } try { MC.Terreno.agua(M); } catch (e) { /* sin agua */ } M.esCiudad = planeta.def(id).tipo === 'ciudad'; M.cfgCiudad = MC_CIUDADES[id] || null; }
+  if (!M._nc) { M._nc = true; try { M.red('rueda'); } catch (e) { MC.falla('red ' + id, e); } try { MC.Terreno.agua(M); } catch (e) { /* sin agua */ } M.esCiudad = planeta.def(id).tipo === 'ciudad'; M.cfgCiudad = MC_CIUDADES[id] || null; if (MC.PVS && !M.pvs) M.pvs = MC.PVS.deElemento(id); }
   return M;
 }
 
@@ -161,7 +161,7 @@ function redensificar(d) { if (d === G.dEf) return; const k = d / G.dEf; G.camar
 /* ---------- subtítulos (llamadas que no frenan el volante) y escenas ---------- */
 const Subt = { cola: [], t: 0,
   decir(lineas) { for (const [q, x] of lineas) this.cola.push([q, x]); },
-  paso(dt) { const el = $('#subt'); if (this.t > 0) { this.t -= dt; if (this.t <= 0) el.hidden = true; return; } const s = this.cola.shift(); if (!s) return; const Q = TC.QUIEN[s[0]] || { n: s[0], c: '#fff' }; el.innerHTML = (s[0] === 'radio' ? '' : '<b style="color:' + Q.c + '">' + Q.n + ':</b> ') + suave(s[1]); el.hidden = false; this.t = Math.max(3, s[1].length * .058); },
+  paso(dt) { const el = $('#subt'); if (this.t > 0) { this.t -= dt; if (this.t <= 0) el.hidden = true; return; } const s = this.cola.shift(); if (!s) return; const Q = TC.QUIEN[s[0]] || { n: s[0], c: '#fff' }, Rr = TC.ROSTROS && TC.ROSTROS[s[0]] && MC.Rostro ? '<img class="cara" alt="" src="' + MC.Rostro.url(TC.ROSTROS[s[0]], 96) + '">' : ''; el.innerHTML = Rr + (s[0] === 'radio' ? '' : '<b style="color:' + Q.c + '">' + Q.n + ':</b> ') + suave(s[1]); el.hidden = false; this.t = Math.max(3, s[1].length * .058); },
   limpiar() { this.cola = []; this.t = 0; $('#subt').hidden = true; }
 };
 async function escena(lineas) {
@@ -170,7 +170,8 @@ async function escena(lineas) {
   for (const [q, x] of lineas) {
     if (token !== (G.narrativaEpoch || 0)) return;
     const Q = TC.QUIEN[q] || { n: q, c: '#fff' };
-    await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']);
+    const cara = TC.ROSTROS && TC.ROSTROS[q] && MC.Rostro ? '<img class="retrato" alt="Retrato de ' + Q.n + '" src="' + MC.Rostro.url(TC.ROSTROS[q], 160, { expresion: /[!¡]|maldit|corr|ya\b/i.test(x) ? 'preocupada' : TC.ROSTROS[q].expresion }) + '">' : '';
+    await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : cara + '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']);
   }
   if (token === (G.narrativaEpoch || 0)) G.pausa = false;
 }
@@ -216,14 +217,16 @@ function paso(dt, dtVisual) {
     const gl = G.vistas.actual.control === 'volante', via = V.clase !== 'pie' ? M.viaCercana(C.x, C.y, 12) : null;
     const e = MC.Manejo.aplicar(ent, C, { camara: G.camara, esquema: 'joystick', vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null });
     const freno = G.ctl.botones.has('freno') || ent.pulsos.has('Space');
-    if (freno && V.clase !== 'pie') { e.dir = null; e.acel = -1; }
+    /* 4.5 · freno de mano: con velocidad y girando, derrapa (sigue girando, se cruza la cola, deja marcas y humo); quieto o derecho, frena */
+    if (freno && V.clase !== 'pie') { const gira = (e.dir && Math.abs(angDif(C.a, Math.atan2(e.dir.y, e.dir.x))) > .25) || Math.abs(e.giro || 0) > .25; if (gira && Math.abs(C.v) > 7 && enCarro) { e.derrape = true; e.acel = Math.min(e.acel || 0, .3); } else { e.dir = null; e.acel = -1; } }
+    if (G.asistencia == null) G.asistencia = leerG().asistencia !== false; e.asistencia = G.asistencia;
     e.turbo = false; if ((ent.turbo || G.ctl.botones.has('turbo')) && G.nitro > .02 && enCarro && G.carro > 0) { e.turbo = true; G.nitro = Math.max(0, G.nitro - dt * .18); } else G.nitro = Math.min(1, G.nitro + dt * .012);
     e.lluvia = G.clima.lluvia; C.actualizar(dt, e);
   }
   if (dt > 0) {
     /* daño por golpes: lo que se perdió de velocidad de un cuadro a otro */
     const dv = v0 - Math.abs(C.v);
-    if (enCarro && (C.eventos.includes('choque') || dv > 5.5) && dv > 3) { const k = dv * .011 / (VEH(G.veh).salud || 1); G.carro = Math.max(0, G.carro - k); abollar(sv0 >= 0 ? 'f' : 'b', dv); G.camara.sacudir(Math.min(.3, dv * .02)); Snd.golpe(dv / 18); if (MC.Vida) MC.Vida.emitir('chispa', C.x + Math.cos(C.a) * 2, C.y + Math.sin(C.a) * 2, 8); if (/persona/.test(C.bloqueo || '')) atropello(null); if (G.carro <= 0) G.ui.aviso('🔥 El carro no da más: bájate 🚪 y consigue otro 🚗', 4000, 'carro'); }
+    if (enCarro && (C.eventos.includes('choque') || dv > 5.5) && dv > 3) { const k = dv * .011 / (VEH(G.veh).salud || 1), antes = G.carro; G.carro = Math.max(0, G.carro - k); if (antes > 0 && G.carro <= 0) carroArde(); abollar(sv0 >= 0 ? 'f' : 'b', dv); G.camara.sacudir(Math.min(.3, dv * .02)); Snd.golpe(dv / 18); if (MC.Vida) MC.Vida.emitir('chispa', C.x + Math.cos(C.a) * 2, C.y + Math.sin(C.a) * 2, 8); if (/persona/.test(C.bloqueo || '')) atropello(null); if (G.carro <= 0) G.ui.aviso('🔥 El carro no da más: bájate 🚪 y consigue otro 🚗', 4000, 'carro'); }
     G.km += Math.hypot(C.x - x0, C.y - y0) / 1000;
     /* el mundo vivo alrededor */
     E.trafico = G.trafico.paso(dt, C.x, C.y, G.reloj.seg, G.vistas.calidad);
@@ -290,7 +293,7 @@ function eventoBusqueda(ev) {
   else if (ev.tipo === 'embestida') { Snd.golpe(ev.fuerza / 16); G.camara.sacudir(Math.min(.35, ev.fuerza * .025)); if (MC.Vida) MC.Vida.emitir('chispa', ev.x, ev.y, 10); if (ev.quien === 'rival' && ev.bando === 'banda' && (insultoT -= 1) <= 0) { insultoT = 4; Subt.decir([['camara', TC.INSULTOS_BANDA[(Math.random() * TC.INSULTOS_BANDA.length) | 0]]]); } }
   else if (ev.tipo === 'disparo') { Snd.disparo(d); }
   else if (ev.tipo === 'herido') { G.disparosRecibidos++; if (C.veh.clase === 'pie' || C.veh.clase === 'moto' || C.veh.clase === 'rueda') G.vida = Math.max(0, G.vida - .09); else G.vida = Math.max(0, G.vida - .025); $('#vineta').classList.add('herido'); clearTimeout(G._vt); G._vt = setTimeout(() => $('#vineta').classList.remove('herido'), 350); }
-  else if (ev.tipo === 'fuera') { G.destrozados++; U.aviso(ev.bando === 'banda' ? '💥 Una camioneta de la banda, fuera' : '💥 Patrulla destrozada', 1800, 'fuera'); Snd.golpe(1); G.humo.push({ x: ev.x, y: ev.y, t: 0 }); if (Math.random() < .5) Subt.decir([['mara', TC.INSULTOS_MARA[(Math.random() * TC.INSULTOS_MARA.length) | 0]]]); if (G.hist) Historia.fuera(ev); if (G.contrato) Contratos.fuera(ev); }
+  else if (ev.tipo === 'fuera') { if (MC.Efectos) MC.Efectos.fuego(ev.x, ev.y, 1.4, { k: 1, alEstallar: f => { MC.Efectos.resto('carro', f.x, f.y, Math.random() * TAU); if (Math.hypot(G.cuerpo.x - f.x, G.cuerpo.y - f.y) < 60) G.camara.sacudir(.3); } }); G.destrozados++; U.aviso(ev.bando === 'banda' ? '💥 Una camioneta de la banda, fuera' : '💥 Patrulla destrozada', 1800, 'fuera'); Snd.golpe(1); G.humo.push({ x: ev.x, y: ev.y, t: 0 }); if (Math.random() < .5) Subt.decir([['mara', TC.INSULTOS_MARA[(Math.random() * TC.INSULTOS_MARA.length) | 0]]]); if (G.hist) Historia.fuera(ev); if (G.contrato) Contratos.fuera(ev); }
   else if (ev.tipo === 'pinchado') { U.aviso('💥 ¡Púas! Llantas pinchadas: arréglalas en un taller 🔧', 3000, 'puas'); Snd.golpe(.4); }
   else if (ev.tipo === 'puas') U.aviso('⚠️ Púas en la vía de adelante', 1500, 'puas');
   else if (ev.tipo === 'bloqueo') U.aviso('⚠️ Retén adelante: busca otra calle o embístelo de lado', 2200, 'puas');
@@ -306,6 +309,12 @@ function escondites(dt) {
 }
 /* eventos de la carretera (los de la historia: la banda y los retenes a cierta altura del tramo) */
 /* las abolladuras por zona (se ven en el modelo 3D del carro): f frente, b atrás, l izquierda, r derecha */
+/* 4.5 · el carro propio destrozado arde unos segundos y estalla: hay que bajarse (o salir disparado) */
+function carroArde() {
+  if (!MC.Efectos || G.ardiendo) return; const C = G.cuerpo; G.ardiendo = true; G.ui.aviso('🔥 ¡El carro se está quemando! Bájate ya', 3200, 'arde'); Snd.golpe(.4);
+  MC.Efectos.fuego(C.x, C.y, 4.2, { sigue: C.veh.clase !== 'pie' ? C : null, k: 1.1, alEstallar: f => { G.ardiendo = false; const dentro = G.cuerpo.veh.clase !== 'pie' && Math.hypot(G.cuerpo.x - f.x, G.cuerpo.y - f.y) < 3; MC.Efectos.resto('carro', f.x, f.y, G.cuerpo.a);
+    G.camara.sacudir(.45); Snd.golpe(1); if (dentro) { G.cuerpo.bajarse('explota'); G.vida = Math.max(.05, G.vida - .45); G.cuerpo.x += 4; } else { const d = Math.hypot(G.cuerpo.x - f.x, G.cuerpo.y - f.y); if (d < 8) G.vida = Math.max(.05, G.vida - (8 - d) * .04); } } });
+}
 function abollar(z, fuerza) { const D = G.danoZonas; if (!D || !(z in D)) return; D[z] = Math.min(1, D[z] + clamp(fuerza, 0, 30) * .028 / (VEH(G.veh).salud || 1));
   const tipo = { f: 'capo', b: 'baul', l: 'puerta_izq', r: 'puerta_der' }[z];
   if (D[z] >= .75 && !G.piezasSueltas[z] && G.piezasFisicas && G.cuerpo?.veh.clase !== 'pie') {

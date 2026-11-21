@@ -7,6 +7,9 @@
    Uso: node herramientas/construir.mjs [--ciudad medellin] [--sin-sandbox]
    ===================================================================== */
 import fs from 'node:fs'; import path from 'node:path'; import { execSync } from 'node:child_process'; import crypto from 'node:crypto'; import zlib from 'node:zlib'; import { fileURLToPath } from 'node:url';
+/* 4.5 · sin conexión en la página del motor: cada HTML registra sw.js (raíz del repositorio) solo si se sirve por https.
+   En un archivo abierto a mano, en la APK o en otra página sin sw.js no pasa nada. rel: ruta desde el HTML hasta la raíz. */
+const conSW = (html, rel) => html.includes('id="mcSW"') ? html : html.replace(/<\/body>(?![\s\S]*<\/body>)/, `<script id="mcSW">if('serviceWorker'in navigator&&location.protocol==='https:'&&/\\/motorcity\\//.test(location.pathname))addEventListener('load',()=>navigator.serviceWorker.register(new URL('${rel}sw.js',location.href)).catch(()=>{}));</script>\n</body>`);
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), DIST = path.join(RAIZ, 'dist');
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const CIUDAD = arg('--ciudad', 'medellin'), VER = JSON.parse(fs.readFileSync(path.join(RAIZ, 'VERSION.json'), 'utf8'));
@@ -51,7 +54,7 @@ if (!process.argv.includes('--sin-sandbox') && fs.existsSync(path.join(RAIZ, 'sa
     .replace('/*RUN*/', () => run)
     .replace('/*SANDBOX*/', () => `(function(){'use strict';\n${jsS}\n})();`)
     .replaceAll('%VERSION%', VER.version);
-  fs.writeFileSync(path.join(DIST, 'motor-city.html'), html);
+  fs.writeFileSync(path.join(DIST, 'motor-city.html'), conSW(html, '../'));
 }
 /* ---------- paquetes de arte (arte/<id>/): también sueltos en dist/arte/<id>.js para que cualquier juego los incluya ---------- */
 function paqueteArte(id) {
@@ -140,14 +143,18 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   /* 4.0: varios mundos en un juego ("mundos": ["nueva_york", "medellin", "guatape"]): cada MC4 va en un <script type="text/plain">
      (el navegador no lo interpreta como JavaScript: se lee y se descomprime solo el mundo al que se llega) y sus reglas en MC_CIUDADES */
   let mundosHTML = '';
-  if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += J.mundos_capas ? mundoPorCapas(m, fs.readFileSync(f), { rasters: J.mundos_rasters === true }) : `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`; }
+  if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += J.mundos_capas ? mundoPorCapas(m, fs.readFileSync(f), { rasters: J.mundos_rasters === true }) : `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`;
+    /* 4.5 · el PVS horneado del mundo (herramientas/pvs.mjs), si existe y el juego no lo apaga ("pvs": false) o lo limita ("pvs": ["nueva_york"]) */
+    const fp = path.join(RAIZ, 'datos', m, 'pvs.bin'); if (J.pvs !== false && (!Array.isArray(J.pvs) || J.pvs.includes(m)) && fs.existsSync(fp)) mundosHTML += `<script type="text/plain" id="pvs-${m}">${fs.readFileSync(fp).toString('base64')}</script>\n`; }
     J._ciudades = C; }
   let mundoJ; const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')); mundoJ = J.mundos ? `var MC_CIUDADES = ${JSON.stringify(J._ciudades)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n` : `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
   /* arte en sprites: "arte": ["gemini"] en juego.json compila arte/<id>/ (atlas WebP + manifiesto + íconos + hitos + paletas) dentro del HTML */
   const arteJ = (J.arte || []).map(a => paqueteArte(a)).filter(Boolean); if (arteJ.length) mundoJ += 'var MC_ARTE = {' + arteJ.join(',') + '};\n';
   /* 4.0: modelos GLB ("modelos": "arte/modelos/turno-cero") → var MC_MODELOS = { id: base64 } (MC.Modelos los lee) */
-  if (J.modelos) { const dm = path.join(RAIZ, J.modelos), MOD = {}; if (fs.existsSync(dm)) for (const f of fs.readdirSync(dm).filter(f => f.endsWith('.glb')).sort()) MOD[f.slice(0, -4)] = fs.readFileSync(path.join(dm, f)).toString('base64'); else console.warn('⚠ ' + id + ': falta ' + J.modelos); mundoJ += 'var MC_MODELOS = ' + JSON.stringify(MOD) + ';\n'; }
-  const jsJ = fs.readdirSync(jd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(jd, f), 'utf8')).join('\n');
+  if (J.modelos) { const dm = path.join(RAIZ, J.modelos), MOD = {}; if (fs.existsSync(dm)) for (const f of fs.readdirSync(dm).filter(f => f.endsWith('.glb')).sort()) { const b = fs.readFileSync(path.join(dm, f)); MOD[f.slice(0, -4)] = 'z:' + b.length + ':' + zlib.deflateRawSync(b, { level: 9 }).toString('base64'); }   /* 4.5: comprimidos (2 MB → 0,4 MB en el HTML) */ else console.warn('⚠ ' + id + ': falta ' + J.modelos); mundoJ += 'var MC_MODELOS = ' + JSON.stringify(MOD) + ';\n'; }
+  /* 4.5: "comparte": ["carreras"] en juego.json antepone el código de otro juego (Extremo usa el de Carreras con otro modo) */
+  const dirsJ = (J.comparte || []).map(c => path.join(dirJ, c)).concat([jd]);
+  const jsJ = dirsJ.flatMap(dd => fs.readdirSync(dd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(dd, f), 'utf8'))).join('\n');
   const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
   const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor + (J.run && fs.existsSync(path.join(RAIZ, 'run', 'run-scooter.js')) ? '\n' + fs.readFileSync(path.join(RAIZ, 'run', 'run-scooter.js'), 'utf8') : '')).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version)
     .replace('__PORTADA_BG__', () => {
@@ -155,7 +162,7 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
       const portada = path.join(RAIZ, 'arte/gemini/turno-cero/portada-turno-cero.webp');
       return fs.existsSync(portada) ? 'url("data:image/webp;base64,' + fs.readFileSync(portada).toString('base64') + '")' : 'none';
     });
-  fs.mkdirSync(path.join(DIST, 'juegos'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'juegos', id + '.html'), out);
+  fs.mkdirSync(path.join(DIST, 'juegos'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'juegos', id + '.html'), conSW(out, '../../'));
   for (const f of J.extras || []) if (fs.existsSync(path.join(jd, f))) fs.copyFileSync(path.join(jd, f), path.join(DIST, 'juegos', path.basename(f)));   /* 4.0: páginas autónomas que acompañan al juego (la escena 3D de Codex) */ juegos.push(id + ' ' + Math.round(out.length / 1024) + ' KB');
 }
 const sha = b => crypto.createHash('sha1').update(b).digest('hex').slice(0, 8);

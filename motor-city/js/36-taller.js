@@ -60,14 +60,28 @@ Cuerpo.prototype._actualizarBase = Cuerpo.prototype.actualizar;
 Cuerpo.prototype.actualizar = function (dt, E = {}) {
   const V = this.veh; if (V.dinamica !== 'carro') { this._carro = null; return this._actualizarBase(dt, E); }
   dt = Math.min(dt, .05); this.eventos.length = 0; if (!this._carro || this._carro.v !== V) { this._carro = new ManejoCarro(V); this._carro.vx = this.v; }
+  /* 4.5: si el juego cambió la velocidad desde afuera (teletransporte, salida de un cinemático), el modelo la toma */
+  if (Math.abs(this.v - this._carro.vx) > 1.5) { this._carro.vx = this.v; this._carro.vy = 0; this._carro.r = 0; }
   let acel = E.acel || 0, giro = E.giro || 0;
   if (E.dir && E.dir.m > .08) { const d = angDif(this.a, Math.atan2(E.dir.y, E.dir.x));
     /* 4.0.2: el destino quedó atrás → frena y, ya despacio, retrocede girando al revés (vuelta en tres puntos); antes se quedaba quieto */
     if (Math.abs(d) > 2.2) { if (this._carro.vx > 2) { acel = -.7; giro = clamp(d * 2, -1, 1); } else { acel = -.6 * Math.max(.5, E.dir.m); giro = -Math.sign(d); } }
-    else { giro = clamp(d * 2, -1, 1); acel = E.dir.m; } }
+    /* 4.5: giro amortiguado (sin zigzag a alta velocidad) y acelerador recogido en las curvas cerradas para poder darlas */
+    else { giro = clamp(d * 2 - this._carro.r * .25, -1, 1); acel = E.dir.m * clamp(1.15 - Math.abs(d) * .55, .25, 1); } }
+  ({ giro, acel } = this._asistencia(E, giro, acel, dt));
   this.tt = this.mundo.suelo(this.x, this.y); this.pend = this.mundo.pendiente(this.x, this.y, this.a, 12);
-  const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), R = this._carro.paso(dt, null, { acel, giro, salto: E.salto || E.turbo && false }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
-  const ca = Math.cos(this.a), sa = Math.sin(this.a), nx = this.x + (ca * R.avance - sa * R.lateral) * dt, ny = this.y + (sa * R.avance + ca * R.lateral) * dt;
-  if (this.puede(nx, ny)) { this.x = nx; this.y = ny; } else { if (Math.abs(R.avance) > 4) { this.eventos.push('choque'); MC.emit('choque', this); } this._carro.vx *= -.2; this._carro.vy = 0; this._carro.r = 0; }
-  this.a += R.giro * dt; this.v = R.avance; this.derrape = R.derrape; this._niveles(dt); this.estado = 'sentado'; return this;
+  const Tp = Terreno.paso(this, this.x, this.y), suelo = Math.max(.15, Tp.ok === false ? .2 : Tp.f || 1);
+  const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), turbo = !!E.turbo && acel > 0;
+  const R = this._carro.paso(dt, null, { acel: acel * (turbo ? 1.4 : 1), giro, salto: !!(E.derrape || E.salto) }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
+  /* 4.5: el suelo, el daño (escala) y el turbo ponen el tope de velocidad, como en la física base */
+  const vlim = this.vmax() * suelo * (turbo ? 1.25 : 1); if (this._carro.vx > vlim) this._carro.vx -= (this._carro.vx - vlim) * Math.min(1, dt * 2.5); if (this._carro.vx < -vlim * .4) this._carro.vx = -vlim * .4;
+  const ca = Math.cos(this.a), sa = Math.sin(this.a), dx = (ca * R.avance - sa * R.lateral) * dt, dy = (sa * R.avance + ca * R.lateral) * dt, x0m = this.x, y0m = this.y;
+  this.a += R.giro * dt; this.v = this._carro.vx;
+  /* 4.5: el mismo choque que la física base: desliza a lo largo de la pared, pierde según el ángulo y se alinea */
+  const v0 = this.v; this._mover(dx, dy, dt);
+  if (this.v !== v0) { const k = v0 ? clamp(this.v / v0, -.3, 1) : 0; this._carro.vx = this.v; this._carro.vy *= Math.max(0, k); this._carro.r *= k > .7 ? .7 : .2; }
+  this.choque = Math.max(0, (this.choque || 0) - dt);
+  this.derrape = R.derrape; this.deslizamiento = R.derrape; if (R.derrape > .22 && Math.abs(R.avance) > 6) this.eventos.push('derrape');
+  this._despues(E, x0m, y0m, dt);
+  this._niveles(dt); this.estado = 'sentado'; return this;
 };

@@ -1,5 +1,18 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.5.0 · PVS, modelos y ciudad pulidos, manejo que no se traba, efectos, rostros, Hunter Assassin, y los juegos Motor City y Extremo
+- **El autor:** retocar modelos 3D, 2D y pixel; el PVS; Guatapé en los juegos hermanos; topografías, relieve, casas y edificios; luego, «mejor un informe detallado a cada repositorio y que sigan con su motor del Valle, solo compárteles el motor»; y en el motor y el juego de prueba, todo lo que falta, sin cambiar el mapa. Después: manejo y controles («ahí yace toda la jugabilidad»), rostros detallados, árboles con lógica, vehículos que suben por algunas cosas, la forma cenital de *Hunter Assassin* y explosiones, choques, derrapes y cosas rotas.
+- **PVS de Quake (C‑M37):** `herramientas/pvs.mjs` hornea, para cada celda de 160 m, qué celdas se ven (horizonte de Comanche desde ojos en la calle y sobre las vías, 4 núcleos); `js/45-pvs.js` y la vista 3D lo usan con la cámara a ras de calle. Recorta 26 % en Manhattan y 28 % en Guatapé, sin fugas grandes (`pruebas/pvs.mjs`). Medellín se midió (15 %) y no se mete al HTML.
+- **Modelos y ciudad:** generador 0.3.1 (carros con capó, cabina y baúl, rines, faros y espejos; personas con cara, manos y peinado; AO horneada; malla indexada); techos a cuatro aguas; terrazas con aires y escalera; coronas y agujas; relieve cercano a 10 m. El mapa no se tocó.
+- **Peso y sin conexión:** GLB comprimidos (2 MB → 0,4 MB); `sw.js` con prueba (`pruebas/sin-conexion.mjs`).
+- **Manejo (`docs/INVESTIGACION-MANEJO.md`):** deslizar contra la pared, pérdida según el ángulo, desatascar, asistencia que evita estrellarse (se apaga), derrape con freno de mano, andén, ladrillo, arena, nieve y roca suelta; la moto por escalas. Lo mismo para el modelo de bicicleta de los carros de Turno Cero, que era el que frenaba en seco.
+- **Efectos y rotos:** `js/88-efectos.js` y `js/32-rotos.js`.
+- **Rostros:** `js/71-rostros.js`, retratos en los diálogos y subtítulos de Turno Cero; caras en los modelos 3D.
+- **Árboles:** nada en canchas, piscinas ni en la mitad de las plazas duras.
+- **Turno Cero:** linternas que se cortan en los muros y cámara cenital en el sigilo a pie (*Hunter Assassin*), el carro destrozado arde y estalla, HUD en rejilla de 8 px.
+- **Juegos nuevos:** `juegos/carreras/` (Motor City · Carreras) y `juegos/extremo/` (Extremo), mundo abierto en Guatapé con banderas de carrera; `pruebas/carreras.mjs`.
+- **Pruebas:** 144 Node, 156 navegador, PVS, sin conexión, carreras y la historia entera de Turno Cero (Final A en 162 s, 0 errores); todo en la integración continua.
+
 ## 21-nov-2026 · 4.4.0 · Claude asume lo que dejaron las otras IA
 - **El autor:** «Y ya ni lo harán, resuelve tú lo que falta».
 - **Unidas las últimas entregas:**

@@ -8,6 +8,7 @@
    - Saltos con gravedad, vuelo (jetpack y avionetas) y agua (lanchas).
    Entrada: { giro: −1..1, acel: −1..1, dir: {x,y,m}|null (rumbo deseado en el mundo), salto, turbo, correr, sube, baja }
    ===================================================================== */
+const CALZADA_TT = new Set([4, 5, 11, 14]);   /* calle, avenida, puente y autopista: salir de ahí es subir un bordillo */
 const MENOR_IA = new Set(['poste', 'banca', 'paradero', 'caneca', 'hidrante']), BORDE_IA = new Set([TT.BLDG, TT.BRICK]);   /* lo menor del andén que la IA atropella (4.2) */
 const GRAV = 19.6;   // gravedad de juego (el doble de la real: saltos cortos y con peso)
 class Cuerpo {
@@ -34,7 +35,7 @@ class Cuerpo {
   get altura() { return this.alturaSuelo + this.z; }
   vmax() { const V = this.veh, base = V.id === 'pie' ? (this.corriendo ? V.vcorre : V.vmax) : V.vmax; return base * this.escala * (Vehiculos.escala || 1); }
   /* ¿puede este vehículo estar en (x, y)? */
-  puede(x, y) {
+  puede(x, y, sondeo = false) {
     const V = this.veh; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
     if (this.paso) return true;
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
@@ -49,7 +50,10 @@ class Cuerpo {
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
       /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
       /* 4.2: y en el andén, los carros de la IA tampoco se trancan con lo menor (poste, banca, paradero, caneca, hidrante): lo atropellan como en GTA; árboles y rocas sí los paran */
-      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); /* 4.5: lo que se rompe (canecas, conos, bancas, hidrantes, postes, paraderos…) no frena en seco: se lo lleva por delante si va rápido */
+        if (o && !sondeo && MC.Rotos && MC.Rotos.puede(o, this)) { MC.Rotos.romper(this.mundo, o, this); return true; }
+        if (o && sondeo && MC.Rotos && MC.Rotos.puede(o, this)) return true;
+        if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }
@@ -60,7 +64,12 @@ class Cuerpo {
     this.corriendo = !!E.correr && V.id === 'pie';
     /* rumbo deseado (joystick que apunta en el mundo) o giro (volante) */
     let acel = E.acel || 0, giro = E.giro || 0;
-    if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2, -1, 1); acel = E.dir.m * (Math.abs(d) > 2.2 && V.clase !== 'pie' ? .2 : 1); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
+    /* 4.5 · el joystick apunta en el mundo: el giro sigue la dirección con amortiguación (no zigzaguea a alta velocidad) y el acelerador
+       se recoge en las curvas cerradas para poder darlas (como la asistencia de frenado de los juegos de carreras para celular) */
+    if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2 - (this.giroV || 0) * .12, -1, 1); acel = E.dir.m * (V.clase === 'pie' ? 1 : clamp(1.15 - Math.abs(d) * .55, .25, 1)); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
+    /* 4.5 · asistencia que evita estrellarse: mira adelante (más lejos cuanto más rápido); si hay pared y el jugador no está girando
+       fuerte, empuja el volante hacia el lado libre que más se parece a lo que pide. Se apaga con E.asistencia === false */
+    ({ giro, acel } = this._asistencia(E, giro, acel, dt));
     /* suelo, pendiente y velocidad objetivo */
     this.tt = M.suelo(this.x, this.y); this.pend = this.paso ? 0 : M.pendiente(this.x, this.y, this.a, 12); this.tBloqueo = Math.max(0, (this.tBloqueo || 0) - dt); if (!this.tBloqueo) this.bloqueo = null;
     /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
@@ -74,7 +83,7 @@ class Cuerpo {
     if (!V.electrico && V.clase === 'rueda' && !this.enAire && this.pend < -.03 && acel <= 0) this.v += -this.pend * 9.8 * .55 * dt;   // la bajada empuja
     /* giro: más ágil quieto que rápido; inercia corta */
     const tg = lerp(V.giro[0], V.giro[1], clamp(Math.abs(this.v) / Math.max(1, vmax), 0, 1)) * giro * (V.clase === 'pie' ? 0 : 1) * (this.v < 0 ? -1 : 1);
-    this.giroV = lerp(this.giroV, tg, Math.min(1, dt * 10)); if (V.clase !== 'pie' || !E.dir) this.a += this.giroV * dt * (V.clase === 'pie' ? 1 : Math.min(1, .25 + Math.abs(this.v) / 2.5));
+    this.giroV = lerp(this.giroV, tg * (E.derrape && Math.abs(this.v) > 6 ? 1.45 : 1), Math.min(1, dt * 10)); if (V.clase !== 'pie' || !E.dir) this.a += this.giroV * dt * (V.clase === 'pie' ? 1 : Math.min(1, .25 + Math.abs(this.v) / 2.5));
     if (V.clase === 'pie' && !E.dir) this.a += giro * V.giro[0] * dt;
     /* vuelo */
     if (V.clase === 'aire') this._vuelo(dt, E);
@@ -91,14 +100,17 @@ class Cuerpo {
     const auto = V.clase === 'auto' || V.clase === 'pesado';
     const suelto = auto && !this.paso && (this.tt === TT.NIEVE || (this.tt === TT.LAND || this.tt === TT.GRASS) && (E.lluvia || E.clima?.lluvia || 0) > .35);
     const rumboPrevio = this.rumboRodado ?? this.a;
-    this.rumboRodado = suelto ? rumboPrevio + Math.atan2(Math.sin(this.a-rumboPrevio), Math.cos(this.a-rumboPrevio)) * (1-Math.exp(-dt*2.8)) : this.a;
+    /* 4.5 · agarre: el rumbo por donde rueda sigue a la trompa con un retraso; en piso suelto o con el freno de mano (E.derrape)
+       el retraso es grande y el carro derrapa (y avisa 'derrape' para las marcas de llanta y el humo) */
+    const agarre = !auto ? 99 : E.derrape && Math.abs(this.v) > 6 ? 1.6 : suelto ? 2.8 : 16 - clamp(Math.abs(this.v) / 30, 0, 1) * 6;
+    const desliz = angDif(rumboPrevio, this.a); this.rumboRodado = agarre >= 99 ? this.a : rumboPrevio + desliz * (1 - Math.exp(-dt * agarre));
+    this.deslizamiento = auto ? Math.abs(angDif(this.rumboRodado, this.a)) : 0;
+    if (auto && this.deslizamiento > .22 && Math.abs(this.v) > 6 && !this.enAire) { this.eventos.push('derrape'); this.v *= 1 - dt * .35 * Math.min(1, this.deslizamiento); }
     this.inclinacion = auto ? Math.atan(clamp(this.pend,-.65,.65)) : 0;
     const dx = Math.cos(this.rumboRodado) * this.v * dt, dy = Math.sin(this.rumboRodado) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
-    if (this.puede(nx, ny)) { this.x = nx; this.y = ny; }
-    else if (this.puede(nx, this.y)) { this.x = nx; this.v *= .7; }
-    else if (this.puede(this.x, ny)) { this.y = ny; this.v *= .7; }
-    else { if (Math.abs(this.v) > 2.5) { this.eventos.push('choque'); this.choque = .4; MC.emit('choque', this); } this.v *= -.15; }
+    const x0m = this.x, y0m = this.y; this._mover(dx, dy, dt);
     this.choque = Math.max(0, this.choque - dt);
+    this._despues(E, x0m, y0m, dt);
     this._niveles(dt);
     this.fase += Math.abs(this.v) * dt * (V.clase === 'pie' ? (this.corriendo ? 2.4 : 3.2) : V.cuerpo === 'pedalea' ? 1.6 : 1.2);
     this.estado = this.nadando && V.clase === 'pie' ? (this.buceando ? 'bucea' : 'nada') : Personaje.estadoPara(V, Math.abs(this.v), this.enAire && V.clase !== 'aire');
@@ -119,6 +131,52 @@ class Cuerpo {
      tableros con su rampa). El cuerpo se apoya en la más alta que le quede a la altura de un escalón; lo que queda
      entre los pies y la cabeza es pared; lo que queda arriba de la cabeza se pasa por debajo. Si el apoyo desaparece,
      cae con gravedad (y aterriza en lo que haya abajo). Las barandas no dejan caer del tablero. */
+  /* 4.5 · moverse con choques: en vez de trabarse contra los ejes del mapa, desliza a lo largo de la pared (su normal se estima
+     tanteando alrededor del punto bloqueado), pierde velocidad según el ángulo del golpe (rasante: casi nada; de frente: casi toda)
+     y el carro se alinea con la pared, como en los juegos de carreras arcade */
+  _mover(dx, dy, dt) {
+    const L = Math.hypot(dx, dy); if (L < 1e-7) return;
+    if (this.puede(this.x + dx, this.y + dy)) { this.x += dx; this.y += dy; return; }
+    const V = this.veh, auto = V.clase !== 'pie' && V.clase !== 'rueda', r = Math.max(.5, Math.min(1.4, (V.ancho || .6) * .65)), px = this.x + dx, py = this.y + dy; let bx = 0, by = 0;
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); if (!this.puede(px + cx * r, py + cy * r, true)) { bx += cx; by += cy; } }
+    const bl = Math.hypot(bx, by), nx = bl > .01 ? -bx / bl : -dx / L, ny = bl > .01 ? -by / bl : -dy / L, ux = dx / L, uy = dy / L, dot = ux * nx + uy * ny, impacto = clamp(-dot, 0, 1);
+    let tx = ux - dot * nx, ty = uy - dot * ny; const tl = Math.hypot(tx, ty); let movio = false;
+    if (tl > .05) { tx /= tl; ty /= tl; const s = L * tl; if (this.puede(this.x + tx * s, this.y + ty * s, true)) { this.x += tx * s; this.y += ty * s; movio = true; } }
+    if (!movio) { if (this.puede(this.x + dx, this.y, true)) { this.x += dx; movio = true; } else if (this.puede(this.x, this.y + dy, true)) { this.y += dy; movio = true; } }
+    const sp = Math.abs(this.v);
+    if (sp * impacto > 2.5 && !(this.choque > .15)) { this.eventos.push('choque'); this.choque = .4; this.impacto = sp * impacto; this.normalChoque = [nx, ny]; MC.emit('choque', this); }
+    if (movio) { this.v *= 1 - Math.min(.95, impacto * impacto * .9 + dt * .6);
+      if (auto && tl > .05) { const dir = this.v >= 0 ? Math.atan2(ty, tx) : Math.atan2(-ty, -tx); this.a += angDif(this.a, dir) * Math.min(1, dt * 7) * (1 - impacto * .6); this.rumboRodado = this.a; } }
+    else { this.v *= auto ? -.18 : 0; if (this.puede(this.x + nx * .06, this.y + ny * .06, true)) { this.x += nx * .06; this.y += ny * .06; } }
+  }
+  /* 4.5 · asistencia que evita estrellarse: mira adelante (más lejos cuanto más rápido); si hay pared y el jugador no está girando
+     fuerte, empuja el volante hacia el lado libre que más se parece a lo que pide, y no deja ir a fondo hacia la pared.
+     Como la «dirección asistida» de los juegos de carreras para celular. Se apaga con E.asistencia === false */
+  _asistencia(E, giro, acel, dt) {
+    const V = this.veh; if (V.clase === 'pie' || V.clase === 'aire' || this.ia || E.asistencia === false || Math.abs(this.v) < 3) { this._asis = 0; this._asisFreno = 0; return { giro, acel }; }
+    if ((this._tAsis = (this._tAsis || 0) - dt) <= 0) {
+      this._tAsis = .08; const la = clamp(Math.abs(this.v) * .45, 3, 12), sg = this.v >= 0 ? 1 : -1, libre = da => this.puede(this.x + Math.cos(this.a + da) * la * sg, this.y + Math.sin(this.a + da) * la * sg, true);
+      this._asis = 0; this._asisFreno = 0;
+      if (!libre(0)) { const pide = E.dir ? angDif(this.a, Math.atan2(E.dir.y, E.dir.x)) : giro; for (const da of (pide >= 0 ? [.3, -.3, .6, -.6] : [-.3, .3, -.6, .6])) if (libre(da)) { this._asis = Math.sign(da) * sg * (Math.abs(da) > .4 ? .75 : .5); break; } this._asisFreno = 1; }
+    }
+    if (this._asis && Math.abs(giro) < .7) giro = clamp(giro + this._asis, -1, 1);
+    if (this._asisFreno && acel > .5 && Math.abs(this.v) > 9) acel = .5;
+    return { giro, acel };
+  }
+  /* 4.5 · después de moverse: desatascar si empuja y no avanza, el empujón hacia el hueco y el tumbo del bordillo */
+  _despues(E, x0m, y0m, dt) {
+    const V = this.veh, auto = V.clase === 'auto' || V.clase === 'pesado', empuja = (E.dir && E.dir.m > .3) || Math.abs(E.acel || 0) > .3;
+    if (!this.ia && empuja && V.clase !== 'aire' && !this.nadando && Math.hypot(this.x - x0m, this.y - y0m) < .015) this.atasco = (this.atasco || 0) + dt; else this.atasco = Math.max(0, (this.atasco || 0) - dt * 2);
+    if (this.atasco > .85) { this.atasco = 0; this._desatascar(E); }
+    if (this._empujon) { const q = this._empujon, f = Math.min(1, dt * 8), metido = !this.puede(this.x, this.y, true); if (metido || this.puede(this.x + q.x * f, this.y + q.y * f, true)) { this.x += q.x * f; this.y += q.y * f; } q.x *= 1 - f; q.y *= 1 - f; if (Math.hypot(q.x, q.y) < .02) this._empujon = null; }   /* metido dentro de algo: sale derecho hacia el hueco libre */
+    /* bordillo: al subir de la calzada al andén o a un patio, un tumbo (para la cámara y la suspensión) */
+    const ttN = this.mundo.suelo(this.x, this.y); if (auto && CALZADA_TT.has(this.tt) !== CALZADA_TT.has(ttN) && Math.abs(this.v) > 2) { this.tumbo = Math.min(1, Math.abs(this.v) / 12); this.eventos.push('bordillo'); } this.tumbo = Math.max(0, (this.tumbo || 0) - dt * 3);
+  }
+  _desatascar(E) {
+    const quiere = E.dir ? Math.atan2(E.dir.y, E.dir.x) : this.a + (this.v < 0 || (E.acel || 0) < 0 ? Math.PI : 0); let mejor = null, md = 1e9;
+    for (const d of [.8, 1.4, 2.2, 3.2]) { for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, x = this.x + Math.cos(a) * d, y = this.y + Math.sin(a) * d; if (!this.puede(x, y, true)) continue; const pen = d * .6 + Math.abs(angDif(quiere, a)) * 1.2; if (pen < md) { md = pen; mejor = { x: x - this.x, y: y - this.y, a }; } } if (mejor) break; }
+    if (!mejor) return false; this._empujon = { x: mejor.x, y: mejor.y }; if (this.veh.clase !== 'pie') { this.a += angDif(this.a, mejor.a) * .5; this.rumboRodado = this.a; } this.v = 0; this.eventos.push('desatasco'); MC.emit('desatasco', this); return true;
+  }
   escalon() { const V = this.veh; return V.clase === 'pie' ? .5 : V.clase === 'aire' ? 1.2 : .35; }
   /* el escalón crece con lo que se avanza en el cuadro: la rampa más empinada sube ~0,62 m por metro */
   escalonDin() { return this.escalon() + Math.abs(this.v) * (this._dt || 1 / 60) * .7; }

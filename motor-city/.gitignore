@@ -19,3 +19,7 @@ node_modules/
 skills-lock.json
 dist/publico.md
 dist/publico.json
+# salidas de los generadores 3D (se rehacen con python3 juegos/getaway/arte3d/*.py; el juego usa arte/modelos/turno-cero)
+juegos/getaway/arte3d/modelos/
+juegos/getaway/arte3d/pbr/
+juegos/getaway/arte3d/rigged/
