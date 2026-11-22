@@ -2,7 +2,7 @@
 **Auditoría independiente, investigación comparativa, ingeniería de jugabilidad y plan de lanzamiento**  
 **22 de noviembre de 2026 · Agente: OpenAI GPT-6 · Repositorio único de intervención: BicicletasUno**
 
-> **Estado real:** análisis del código de la rama `ccr-6f184fb6-vtpkye` (EnCicla 2.1.0, anterior a las propuestas nuevas de Gemini), revisión de instrucciones, informes y coordinación entre IAs, consulta de documentación oficial y corrección aditiva en rama `openai-gpt6/encicla-auditoria-20261122`. **No se ejecutó una partida real en Android/iOS/Chromium en esta sesión** ni se verificó el APK. No presentar hipótesis como bugs arreglados o pruebas que no se corrieron.
+> **Estado real:** análisis del código de la rama `ccr-6f184fb6-vtpkye` (EnCicla 2.1.0, anterior a las nuevas propuestas de Gemini), revisión de instrucciones y coordinación entre IAs, consulta de documentación oficial y cambios en `openai-gpt6/encicla-auditoria-20261122`. **Se ejecutaron pruebas automatizadas en Chromium/Playwright mediante GitHub Actions, además de tests aislados y compilación offline, todas exitosas.** No se ha probado manualmente en un teléfono Android/iOS físico ni se verificó un APK nuevo.
 
 ## 0. Decisiones irrevocables del producto
 
@@ -46,8 +46,8 @@
 
 **Corrección aditiva:** el runner clásico en mundo libre comprueba cercanía a un trazado de bici (12 m) o `TT.CICLO`/ciclovía dominical habilitada; el Taller sólo abre la carrera de ciclorruta si se está junto a una geometría de ciclorruta real; los niveles independientes del menú siguen abiertos. El camión no puede entrar en la carrera para bici/skate. **Pendiente:** reemplazar los corredores de `MGRunner3D.posMapa()` por una ruta y cámara realmente ancladas a la malla vial y respetar continuidad al salir.
 
-### H-03 · Velocímetro de Run 3D subestima la velocidad — DETECTADO, SIN TOCAR ARCHIVO RECLAMADO
-En `src/js/91-runner.js`, el motor usa `this.spd` en **m/s** para sumar `this.distM += this.spd * dt`. Pero en el HUD convierte a km/h usando `this.spd * 2.4`. La conversión correcta de m/s a km/h es **×3,6**; a 12 m/s el HUD muestra ~29 km/h cuando serían 43,2. Corregir en el propietario del archivo o en su integración Gemini sin duplicar el render.
+### H-03 · Velocímetro de Run 3D subestima la velocidad — CORREGIDO EN ESTA RAMA
+En `src/js/91-runner.js`, el motor usa `this.spd` en **m/s** para sumar `this.distM += this.spd * dt`. Pero en el HUD convierte a km/h usando `this.spd * 2.4`. La conversión correcta de m/s a km/h es **×3,6**; a 12 m/s el HUD anterior mostraba ~29 km/h cuando deberían ser 43,2. Se corrigió el factor en **una línea** de `src/js/91-runner.js`, sin cambiar física ni distancia. Revisar en la integración Gemini si esa rama también modifica el HUD.
 
 ### H-04 · El tiempo de juego puede desacelerarse bajo caídas de FPS — RIESGO FUNDADO EN CÓDIGO
 `src/js/60-ui.js` usa `dt = min(0.05, (t-last)/1000)` y sólo un `mode.update(dt)` por cuadro. Si el navegador tarda 90 ms en presentar uno, la simulación sólo avanza 50 ms. Eso protege de saltos bruscos, pero dilata reloj, desplazamiento y temporizadores en dispositivos lentos. **No conviene cambiar esta función a ciegas**: requiere pruebas sobre los modos existentes, pausa, submodo y WebRTC. Plan: acumulador a paso fijo (1/60 s, máximo 4 pasos, descarte explícito tras pausa), separación entre reloj simulado y tiempo real, y pruebas contra caídas artificiales de 16/33/66/100 ms.
@@ -238,7 +238,7 @@ node tests/run.js
 # Sólo después: Chromium con inputs sintéticos y Android/iOS físicos.
 ```
 
-**No ejecutados en esta sesión:** los cuatro comandos y las pruebas E2E. No publicitar “verde” hasta ver salida reproducible con hash de commit.
+**Ejecuciones verificadas en GitHub Actions:** [CI de geometría/build](https://github.com/juanfeliperico369-stack/BicicletasUno/actions/runs/45034570000) (unitaria, `node tools/build.js` y `node tests/prueba-niveles.mjs`, verde) y [Chromium/Playwright](https://github.com/juanfeliperico369-stack/BicicletasUno/actions/runs/45034570068) (`node tests/run.js --n=8 --shots`, **TODAS LAS PRUEBAS PASARON**). Incluye bot de minijuegos, carriles, movimiento táctil, vistas, modos, guardado, rendimiento en CPU emulada lenta y WebRTC tres sesiones. El archivo `tools/auditoria-mapa.js` **no se ejecutó** en estos workflows. La verificación física Android/iOS y el APK siguen pendientes. Tras la corrección final del HUD, repetir los workflows en el nuevo hash.
 
 ## 12. Priorización y entregables por etapa
 
@@ -258,18 +258,18 @@ Se consultó el Issue [#2, Coordinación IA](https://github.com/juanfeliperico36
 
 **22-nov-2026, información de Gemini en el Issue:** trabaja en `99n` controles/desbloqueo, `99o` cámaras, `99p` runner/skate y `99q` RPG; reportó además correcciones en vehículos/arte/CSS. Claude tendría el rango `99a–99m`. Estos informes del Issue **no equivalen a integración ni pruebas nuestras**.
 
-**OpenAI GPT-6 reclama únicamente:** `src/js/99r-ciclo-geometria-gpt6.js`, `tests/prueba-gpt6-ciclorrutas.mjs`, `docs/EVOLUCION-ENCICLA-OPENAI-GPT6.md`, `coord/agentes/openai-gpt6.json` y un buzón propio. No se tocan archivos de Gemini, Claude, `dist` ni otros repositorios.
+**OpenAI GPT-6 reclama:** `src/js/99r-ciclo-geometria-gpt6.js`, `tests/prueba-gpt6-ciclorrutas.mjs`, `docs/EVOLUCION-ENCICLA-OPENAI-GPT6.md`, `coord/agentes/openai-gpt6.json`, buzón propio y workflows `.github/workflows/openai-gpt6-*.yml`. **Cambio compartido adicional, avisado en Issue #2:** una línea de `src/js/91-runner.js` para corregir km/h. No se tocan archivos de Gemini (`99n–99q`), Claude (`99a–99m`), `dist` ni otros repositorios.
 
-**Relevo a Gemini:** incorporar `CicloGeo.cercana/acceso` o adaptar a su propia `99p`; resolver H-03 (m/s ×3.6); asegurar que el runner tras cruce conserve `RouteCursor`. No duplicar guard de contexto si su módulo ya trae otro; mantener ambos compatibles. **Relevo a Claude:** H-04 (delta de tiempo), catálogo E2E de modos y futura refactorización de geografía/cámara.
+**Relevo a Gemini:** incorporar `CicloGeo.cercana/acceso` o adaptar a su propia `99p`; conservar la corrección **ya aplicada** de H-03 (m/s ×3.6); asegurar que el runner tras cruce conserve `RouteCursor`. No duplicar guard de contexto si su módulo ya trae otro; mantener ambos compatibles. **Relevo a Claude:** H-04 (delta de tiempo), catálogo E2E de modos y futura refactorización de geografía/cámara.
 
 **Regla de mezcla:** antes de fusionar, comparar `99n–99q`, nuestros wrappers y `Mode.prototype.runSub`; ejecutar pruebas en branch integrada y **regenerar** `dist`, nunca fusionar HTML compilados a mano. La referencia pública de la build debe apuntar al commit integrado, no a `main` anterior.
 
 ## 14. Bitácora de esta intervención OpenAI GPT-6
 
-- **Código añadido:** corrección geométrica de distancia a polilínea, progresiva en metros y entrada anclada; guard contextual de runner 3D y CarreraCiclovia en Taller, permitiendo niveles del menú.
-- **Prueba escrita:** dataset sintético con rutas muy largas de inicio lejano, otra paralela, un tramo demasiado corto, posiciones cercanas/lejos, modo libre, camión, ciclovía dominical y menú cerrado.
+- **Código añadido:** corrección geométrica de distancia a polilínea, progresiva en metros y entrada anclada; guard contextual de runner 3D y CarreraCiclovia en Taller, permitiendo niveles del menú; conversión m/s→km/h corregida en el HUD de Run 3D.
+- **Pruebas escritas y ejecutadas:** dataset sintético con rutas de inicio lejano, paralela y degenerada, acceso próximo/lejos, camión, ciclovía dominical y menú cerrado. CI de compilación HTML offline y prueba de niveles verde. Playwright/Chromium corrió el suite completo: [ejecución verde](https://github.com/juanfeliperico369-stack/BicicletasUno/actions/runs/45034570068), [14 archivos de resultados/capturas](https://github.com/juanfeliperico369-stack/BicicletasUno/actions/runs/45034570068/artifacts/14758294358). En CPU emulada lenta, registró p95 de cuadros: Usuario 33,4 ms, Anfitrión 16,8 ms, Monitoreo 16,8 ms. Son mediciones de CI, **no** de teléfono real.
 - **Investigación:** lectura técnica de arquitectura y juego existente; benchmark desde fichas oficiales y MDN/Godot; matriz de implementación realista por valor y coste.
-- **No hecho:** no se ejecutó el código en teléfono, no se probó el juego en navegador, no se midieron FPS, no se generaron nuevos GLB ni assets, no se regeneró `dist`, no se publicó una nueva APK o GitHub Pages.
-- **Siguiente paso de integración:** ejecutar comandos y E2E; corregir incompatibilidades con ramas de Gemini/Claude si aparecen; sólo entonces fusionar y lanzar.
+- **No hecho:** no se probó el juego manualmente en teléfonos reales, no se midió FPS en hardware Android/iOS, no se generaron GLB ni assets nuevos, no se comprometió `dist` (el CI sí generó HTML compilado), no se publicó una nueva APK ni se actualizó GitHub Pages.
+- **Siguiente paso de integración:** repetir CI tras último cambio de HUD, comparar rama nueva de Gemini/Claude y corregir incompatibilidades si aparecen; ejecutar E2E físico Android/iOS; fusionar sólo tras validación. No desplazar el trabajo de otras IA ni desplegar sin aprobación.
 
 **Conclusión:** la experiencia no se vuelve completa por sumar géneros o más botones. Se vuelve completa cuando **cada interacción mueve algo real del mundo, responde de inmediato y produce una consecuencia clara**. La mejor evolución de EnCicla es una ciudad viva y coherente que se juega con libertad, de forma divertida y con curiosidad; no ocho mundos simulados con ocho cámaras inconexas.

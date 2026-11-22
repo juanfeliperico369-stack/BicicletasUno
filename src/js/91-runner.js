@@ -394,7 +394,7 @@ class MGRunner3D extends MG {
   hud(V) {
     this.btns = [];
     const pct = Math.min(100, Math.round(this.distM / this.metaM * 100));
-    const kmh = Math.round(this.spd * 2.4);
+    const kmh = Math.round(this.spd * 3.6); // GPT-6: m/s → km/h, coherente con distM += spd * dt
     V.text('🏁 ' + this.corr.name + ' · ' + this.barrio, 12, Math.max((View.hudB || 50) + 18, (View.top || 0) + 12),   /* debajo de las metas, si las hay */ { size: 13, color: '#c4ec7c', bg: '#0a2342dd', pad: 4 });
     V.text(Math.round(this.distM) + ' / ' + this.metaM + ' m (' + pct + ' %) · ' + kmh + ' km/h · 🍃 ' + this.hojas, 12, Math.max((View.hudB || 50) + 42, (View.top || 0) + 36), { size: 13, color: '#fff', bg: '#0a2342cc', pad: 4 });
     /* Botón de cambio instantáneo entre 1.ª y 3.ª persona */
