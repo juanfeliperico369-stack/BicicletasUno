@@ -1,7 +1,7 @@
 {
- "version": "2.0.1",
- "hash": "16c65e5b",
- "cache": "juega-encicla-v2.0.1-16c65e5b",
+ "version": "3.0.0",
+ "hash": "12444c5e",
+ "cache": "juega-encicla-v3.0.0-12444c5e",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -62,11 +62,25 @@
   "97-motor30.js",
   "98n-abierto.js",
   "98o-arreglos.js",
-  "99-boot.js"
+  "98p-efectos.js",
+  "98q-manejo.js",
+  "98r-hud.js",
+  "98s-lectura.js",
+  "98t-rostros.js",
+  "98u-caras.js",
+  "98v-claves.js",
+  "98w-guatape.js",
+  "98x-red.js",
+  "98y-tamano.js",
+  "99-boot.js",
+  "99a-fluidez.js",
+  "99b-actividades.js",
+  "99c-trucos.js",
+  "99d-mundo3d.js"
  ],
  "bytes": {
-  "single": 5159012,
-  "web": 5160036,
-  "js": 4977189
+  "single": 5377962,
+  "web": 5378986,
+  "js": 5188285
  }
 }

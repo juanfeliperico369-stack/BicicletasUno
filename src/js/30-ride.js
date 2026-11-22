@@ -97,23 +97,15 @@ class Ride {
     if (dir.m > 0) {
       // giro con peso: la velocidad de giro deseada sigue al joystick, limitada por la velocidad (a toda marcha se abre la curva) y con inercia
       const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - P.v / S.max, 0, 1)) * (rain ? .85 : 1);
-      P.w += (clamp(da * 6.5, -wm, wm) - P.w) * kw;
+      P.w += (clamp(da * 6.5 - P.w * .25, -wm, wm) - P.w) * kw;   // v2.1: con amortiguación (Motor City 4.5): a toda marcha no zigzaguea
       // arranque gradual hasta la velocidad pedida; si el joystick apunta lejos del rumbo, se frena para girar
       const tv = S.max * mult * dir.m * (.3 + .7 * Math.max(0, Math.cos(da)));
       if (tv > P.v) P.v = Math.min(tv, P.v + Math.min(S.acc, (tv - P.v) * 2) * dt);
       else P.v = Math.max(tv, P.v - Math.min(S.brk * (rain ? .7 : 1), (P.v - tv) * 3.5 + 6) * dt);
     } else { P.w *= 1 - kw; P.v = Math.max(0, P.v - (S.coast * (rain ? .6 : 1) + P.v * .35) * dt); }   // al soltar: rueda y se detiene sola
     P.a += P.w * dt;
-    const st = P.v * dt, nx = P.x + Math.cos(P.a) * st, ny = P.y + Math.sin(P.a) * st;
-    if (!this.blocked(nx, ny, S.r)) { P.x = nx; P.y = ny; }
-    else if (st > 0) {
-      let moved = false; // asistencia de esquinas: prueba ángulos cercanos
-      for (const da of [.35, -.35, .7, -.7, 1.1, -1.1]) {
-        const ax = P.x + Math.cos(P.a + da) * st, ay = P.y + Math.sin(P.a + da) * st;
-        if (!this.blocked(ax, ay, S.r)) { P.x = ax; P.y = ay; P.a += da * Math.min(1, dt * 7.5); P.v *= Math.exp(-3.2 * dt); P.w *= .5; moved = true; break; }
-      }
-      if (!moved) { const rz = Math.exp(-3.2 * dt); if (!this.blocked(nx, P.y, S.r)) { P.x = nx; P.v *= rz; } else if (!this.blocked(P.x, ny, S.r)) { P.y = ny; P.v *= rz; } else { P.v *= Math.exp(-40 * dt); P.w = 0; } }
-    }
+    const st = P.v * dt;
+    this.mover(Math.cos(P.a) * st, Math.sin(P.a) * st, S, dt);   // v2.1 · choque que desliza (Motor City 4.5): ver mover()
     P.x = clamp(P.x, 4, MW * TS - 4); P.y = clamp(P.y, 4, MH * TS - 4);
     // bajada fuerte a toda velocidad: hay que soltar un poco o la bici se desboca
     if (P.veh === 'bike' && sl < -.07 && P.v > S.max * 1.12 && P.stun <= 0) {
@@ -154,6 +146,31 @@ class Ride {
     this.camara(dt); this.shake = Math.max(0, this.shake - dt);
     // GPS
     this.gpsT -= dt; if (this.gpsT <= 0) { this.gpsT = .35; this.calcGps(); }
+  }
+  /* v2.1 · CHOQUE QUE DESLIZA (portado de Motor City 4.5, js/32-fisica.js `_mover`, a las casillas de 16 px de este mapa).
+     Antes la bici se trababa contra los ejes del mapa: si el paso estaba bloqueado probaba ángulos fijos y luego solo X o solo Y.
+     Ahora la normal de la pared se estima tanteando 8 puntos alrededor del punto bloqueado; la bici DESLIZA a lo largo de la pared,
+     pierde velocidad según el ángulo del golpe (impacto²: rasante casi nada, de frente casi toda) y el rumbo se alinea con la pared.
+     Deja en this.golpe el último contacto { imp, nx, ny, x, y, v, t } para los efectos y el sonido (98p-manejo.js). */
+  mover(dx, dy, S, dt) {
+    const P = this.p, L = Math.hypot(dx, dy); if (L < 1e-6) return 0;
+    const px = P.x + dx, py = P.y + dy; if (!this.blocked(px, py, S.r)) { P.x = px; P.y = py; return 0; }
+    const rr = S.r + 1.2, ux = dx / L, uy = dy / L; let bx = 0, by = 0;
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); if (this.blocked(px + cx * rr, py + cy * rr, .6)) { bx += cx; by += cy; } }
+    const bl = Math.hypot(bx, by), nx = bl > .01 ? -bx / bl : -ux, ny = bl > .01 ? -by / bl : -uy, dot = ux * nx + uy * ny, imp = clamp(-dot, 0, 1);
+    let tx = ux - dot * nx, ty = uy - dot * ny; const tl = Math.hypot(tx, ty); let movio = false, alinea = false;
+    if (tl > .05) { tx /= tl; ty /= tl; const s = L * tl; if (!this.blocked(P.x + tx * s, P.y + ty * s, S.r)) { P.x += tx * s; P.y += ty * s; movio = alinea = true; } }
+    if (!movio) for (const da of [.35, -.35, .7, -.7]) {   // esquinas: un ángulo cercano libre (lo de antes, como respaldo)
+      const ax = P.x + Math.cos(P.a + da) * L, ay = P.y + Math.sin(P.a + da) * L; if (!this.blocked(ax, ay, S.r)) { P.x = ax; P.y = ay; tx = Math.cos(P.a + da); ty = Math.sin(P.a + da); movio = alinea = true; break; }
+    }
+    if (!movio) { if (Math.abs(dx) > L * .25 && !this.blocked(px, P.y, S.r)) { P.x = px; movio = true; } else if (Math.abs(dy) > L * .25 && !this.blocked(P.x, py, S.r)) { P.y = py; movio = true; } }   // por un eje, solo si de verdad avanza
+    /* el golpe (primer cuadro del contacto) quita según impacto²; mientras sigue pegada, solo un roce suave por segundo
+       (todo público: rozar la pared no castiga, pero tampoco rinde más que tomar bien la curva) */
+    const t = this.mode.t || 0, nuevo = !(this.golpe && t - this.golpe.t < .1);
+    this.golpe = { imp, nx, ny, x: P.x - nx * (S.r + 1), y: P.y - ny * (S.r + 1), v: P.v, t, movio, nuevo };
+    if (movio) { if (nuevo) P.v *= 1 - Math.min(.9, imp * imp * .6); P.v *= Math.exp(-dt * (.4 + 3 * imp * imp)); if (alinea) P.a += angDiff(P.a, Math.atan2(ty, tx)) * Math.min(1, dt * 7) * (1 - imp * .6); P.w *= .6; }
+    else { P.v *= Math.exp(-40 * dt); P.w = 0; if (!this.blocked(P.x + nx * .3, P.y + ny * .3, S.r)) { P.x += nx * .3; P.y += ny * .3; } }
+    return imp;
   }
   /* el próximo giro de la ruta GPS: {k: -1 izquierda, 1 derecha, 'llega' cerca del destino, m: metros}, o null si sigue derecho */
   giro() {
@@ -387,7 +404,7 @@ class Ride {
   /* ---- capa nítida: etiquetas, flecha, minimapa, joystick ---- */
   hud(V, opts = {}) {
     const c = V.ctx, s = V.s, ox = this.cxf, oy = this.cyf, P = this.p;
-    { const w = Math.round(Math.min(84, V.w * .21)); this.mmRect = opts.noMini ? null : { x: V.w - w - 10, y: (View.hudB || 50) + 8, w, h: Math.round(w * 1.55) }; }
+    { const w = Math.round(Math.min(84, V.w * .21) * (JE.tam ? JE.tam.k() : 1)); this.mmRect = opts.noMini ? null : { x: V.w - w - 10, y: (View.hudB || 50) + 8, w, h: Math.round(w * 1.55) }; }
     const sx = x => (x - ox) * s, sy = y => (y - oy) * s, W = (x, y) => this.w2s(x, y);   // W: con el giro de la cámara (sx/sy solo valen sin giro)
     const used = this.lblR = [], top = View.top || 60, mm = this.mmRect, bot = V.h - 70 - (this.mode.coachB || 0);
     const room = (x, y, w, h) => { if (y - h < top || y > bot || x - w / 2 < 4 || x + w / 2 > V.w - 4) return false; if (mm && x + w / 2 > mm.x - 8 && y - h < mm.y + mm.h + 20) return false; for (const r of used) if (Math.abs(r.x - x) < (r.w + w) / 2 + 3 && Math.abs(r.y - y) < (r.h + h) / 2 + 2) return false; used.push({ x, y, w, h }); return true; };
@@ -398,7 +415,7 @@ class Ride {
     lab.sort((a, b) => a.d - b.d);
     for (const l of lab.slice(0, 10)) { const sz = l.st ? 11 : 12, w = l.t.length * sz * .52 + 8; if (!room(l.x, l.y, w, sz + 6)) continue; V.text(l.t, l.x, l.y, l.st ? { size: sz, align: 'center', bg: '#0a2342dd', color: '#c4ec7c', pad: 3 } : { size: sz, align: 'center', stroke: '#0a2342', sw: 4, color: '#fff' }); }
     for (const o of this.opps) { const q = W(o.x, o.y), x = q.x, y = q.y - 14; if (x > 0 && x < V.w && y > 0 && y < V.h && room(x, y, o.name.length * 6 + 6, 16)) V.text(o.name, x, y, { size: 11, align: 'center', color: '#fff', bg: o.shirt || PAL.cor, pad: 2 }); }
-    if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .38); c.rotate(-.08); const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
+    if (this.stamp) { const k = this.stamp, a = Math.min(1, k.t * 3, (1.8 - k.t) * 8 + .2); c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(V.w / 2, V.h * .3); c.rotate(-.08); { const sk = .82 * (JE.tam ? JE.tam.k() : 1); c.scale(sk, sk); }   /* v2.1: el sello, más pequeño y más arriba (no tapa el juego) */ const w = Math.min(V.w - 40, 330); c.fillStyle = '#0008'; c.fillRect(-w / 2 + 6, -38, w, 82); c.fillStyle = k.bg || PAL.amb; c.fillRect(-w / 2, -44, w, 82); c.strokeStyle = PAL.az; c.lineWidth = 4; c.strokeRect(-w / 2 + 2, -42, w - 4, 78); V.text(k.title, 0, -8, { size: 30, align: 'center', color: PAL.az }); V.text(k.sub || '', 0, 20, { size: 15, align: 'center', color: PAL.az, body: true }); c.restore(); }
     this.hudLife(V, sx, sy, W);
     // subida / bajada: aviso sobre el ciclista
     const pct = Math.round(this.sl * 100); if (Math.abs(pct) >= 3 && !this.big) { const up = pct > 0, eb = up && this.ebike && P.veh === 'bike'; V.text((up ? '▲ SUBIDA ' : '▼ BAJADA ') + Math.abs(pct) + ' %' + (eb ? ' ⚡' : ''), W(P.x, P.y).x, W(P.x, P.y).y - 34, { size: 12, align: 'center', color: up ? '#0a2342' : '#fff', bg: up ? '#f4efe1' : (this.over > 1 ? '#c0392b' : '#e0533f'), pad: 3, border: '#0a2342' }); }
@@ -421,7 +438,7 @@ class Ride {
     // minimapa
     if (!opts.noMini) {
       // radar: ventana del mapa alrededor del jugador (el valle completo se ve tocándolo)
-      const w = Math.round(Math.min(84, V.w * .21)), h = Math.round(w * 1.55), x = V.w - w - 10, y = (View.hudB || 50) + 8, WT = 160 * MS, HT = Math.round(WT * h / w), MK = this.map.miniK;
+      const w = Math.round(Math.min(84, V.w * .21) * (JE.tam ? JE.tam.k() : 1)), h = Math.round(w * 1.55), x = V.w - w - 10, y = (View.hudB || 50) + 8, WT = 160 * MS, HT = Math.round(WT * h / w), MK = this.map.miniK;
       const t0x = clamp(P.x / TS - WT / 2, 0, MW - WT), t0y = clamp(P.y / TS - HT / 2, 0, MH - HT), k = w / (WT * TS), ox0 = t0x * TS, oy0 = t0y * TS;
       this.mmRect = { x, y, w, h };
       c.fillStyle = '#0a2342'; c.fillRect(x - 3, y - 3, w + 6, h + 6); c.imageSmoothingEnabled = false; c.drawImage(this.map.mini, t0x / MK, t0y / MK, WT / MK, HT / MK, x, y, w, h);

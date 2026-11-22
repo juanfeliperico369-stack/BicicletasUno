@@ -1,5 +1,9 @@
 # Tareas de cada IA · Juega EnCicla
 
+> **Ronda 3.0 (22‑nov‑2026): tres IA trabajan a la vez.** Cada una publica su documento con su marca en el título (`docs/INVESTIGACION-Y-PLAN-3.0-<marca>.md`). El de Claude ya está, con lo hecho en la v3.0.0 y el plan; las zonas de cada IA están en `coord/agentes/` y los avisos en `coord/buzon/`.
+
+> **v2.1.0 (21‑nov‑2026, Claude) · LEE PRIMERO `docs/REVOLUCION-2.1.md`.** La revolución con Motor City 4.5 está hecha: manejo que desliza y se desatasca con asistencia, HUD según el contexto, cuatro tamaños e iconos vectoriales, lectura cenital, efectos para todo público, rostros, árboles con lógica, registro de claves del guardado, la **Ruta a Guatapé en bici** (C‑E40) y la **red completa de El Metro** (15 alimentadores y líneas futuras). Abajo, lo hecho va tachado; lo que queda está en el § 6 del documento.
+
 > **Motor City 4.5 (21‑nov‑2026) · LEE PRIMERO `docs/INFORME-MOTOR-CITY-4.5.md`.** El autor decidió que este juego **sigue con su propio motor**: no se migra a Motor City (si abajo dice «Migrar a `motor-city/`», queda anulado). El motor 4.5 viaja en `motor-city/` como referencia y caja de herramientas; el informe dice qué cambió Claude, qué mejoró, qué falta auditar, qué te toca (manejo y controles, modelos, rostros, árboles con lógica, Guatapé, la forma cenital, efectos para todo público, interfaz) y **cómo usar el motor sin dejar el tuyo**.
 
 
@@ -38,14 +42,14 @@
    - `MC.Vistas` ya trae los árboles de pie, el asfalto gastado, los andenes de baldosa y los techos con textura;
    - usa `MC.estilo = 'realista'`, con la piel EnCicla encima (`MC.arte`).
 3. ~~**El test de WebRTC**~~ (hecho por Claude en la 4.5: espera a que lleguen los estados) «el invitado 2 ve al anfitrión y al invitado 1» (`tests/run.js:446`) espera una ventana fija de 900 ms. Espera a recibir un estado nuevo de cada participante (número de secuencia o ACK) antes de comprobar. Lo señalaron Gemini y Codex.
-4. `MC.Manejo` (perfil bici) y `MC.UI` (tema `encicla`) con `verificar`, más el joystick visible y los botones de acción (`ui.joystick`, `ui.accion`).
+4. ~~`MC.Manejo` (perfil bici) y `MC.UI` (tema `encicla`) con `verificar`~~ (hecho en la 2.1 sin meter el motor: el manejo 4.5 en `30-ride.js` y `98q-manejo.js`, y el HUD según el contexto en `98r-hud.js`; el joystick visible ya estaba).
 5. **Lugares jugables:** estaciones EnCicla y talleres de bici.
 6. **Mi casa** con soporte para la bici.
 7. **Capa de movilidad** (`urbe.capa('transporte')` y `ruido`). **Conciencia:** por qué la bici baja el ruido.
 8. **Tutoriales siempre opcionales:** un botón, nunca una ventana que salga sola.
 9. **Publicar** en `gh-pages` conservando `/metro/`, con APK de `versionCode` > 20003. Nunca subas llaves.
 
-10. **(2.10) Registro de claves del guardado:** traer `Save.CLAVES` y `Save.revisarClaves()` de la rama `revolucion-v2` (commit 82b242d), con su prueba. Cada clave nueva del guardado se declara con su tipo y su dueño, y la prueba falla si aparece una clave sin registrar. Antes, registra las claves de hoy (corre el juego y mira `Object.keys(Save.data)`).
+10. ~~**(2.10) Registro de claves del guardado:**~~ (hecho en la 2.1: `src/js/98v-claves.js` y su prueba al final de `tests/run.js`) traer `Save.CLAVES` y `Save.revisarClaves()` de la rama `revolucion-v2` (commit 82b242d), con su prueba. Cada clave nueva del guardado se declara con su tipo y su dueño, y la prueba falla si aparece una clave sin registrar. Antes, registra las claves de hoy (corre el juego y mira `Object.keys(Save.data)`).
    - El alto contraste y el metro sin casas debajo de esa rama ya están en `src/js/96-accesible.js`.
 11. **(2.10) Modern Web Guidance:** antes de tocar la interfaz (`src/js/60-ui.js`, `src/style.css`), busca la guía (`npx -y modern-web-guidance@latest search "…"`). Corre también `legacy-scan src/js --json` y aplica solo lo verificado, respetando la política de navegadores del motor.
 

@@ -116,6 +116,7 @@ const MapView = JE.mapView = {
     }
     for (const L of M.mp || []) { line(L.pts, Math.max(2, 7 * z), '#0a2342'); line(L.pts, Math.max(1.2, 4.5 * z), L.col); if (zr > .34) for (const st of L.st) { const sx = X(st.px), sy = Y(st.py); if (sx < 0 || sy < 0 || sx > V.w || sy > V.h) continue; c.fillStyle = L.col; c.fillRect(sx - 3, sy - 3, 6, 6); } }
     for (const L of [M.lineA, M.lineB]) { line(L.pts, Math.max(2.5, 9 * z), '#0a2342'); line(L.pts, Math.max(1.5, 6 * z), L === M.lineA ? '#1C5C9C' : '#E38835'); if (zr > .1) for (const s of L.st) { const p = M.at(L, s.s), sx = X(p.x), sy = Y(p.y); if (sx < 0 || sy < 0 || sx > V.w || sy > V.h) continue; c.fillStyle = '#fff'; c.beginPath(); c.arc(sx, sy, 3.2, 0, TAU); c.fill(); c.strokeStyle = '#0a2342'; c.lineWidth = 1.5; c.stroke(); if (z > .3) V.text('Ⓜ ' + s.name, sx, sy - 7, { size: 10, align: 'center', color: '#fff', stroke: '#0a2342', sw: 3, body: true }); } }
+    if (this.extra) try { this.extra(V, c, X, Y, z, zr, vis, line); } catch (e) { JE.errors.push('mapa extra: ' + e.message); }   // v2.1: alimentadores y líneas futuras (98x-red.js)
     // ruta al destino
     const T = R.way || R.target; if (!this.route || this.routeFor !== T) this.calcRoute();
     if (this.route.length > 2) { c.strokeStyle = '#ff2fb3'; c.lineWidth = 4; c.lineJoin = c.lineCap = 'round'; c.setLineDash([8, 6]); c.beginPath(); c.moveTo(X(R.p.x), Y(R.p.y)); for (let i = 0; i < this.route.length; i += 2) c.lineTo(X(this.route[i]), Y(this.route[i + 1])); c.stroke(); c.setLineDash([]); }
