@@ -93,7 +93,7 @@ class Cuerpo {
     else this.v += clamp(objetivo - this.v, -V.freno * dt, empuje * dt);
     if (!V.electrico && V.clase === 'rueda' && !this.enAire && this.pend < -.03 && acel <= 0) this.v += -this.pend * 9.8 * .55 * dt;   // la bajada empuja
     /* giro: más ágil quieto que rápido; inercia corta */
-    const tg = lerp(V.giro[0], V.giro[1], clamp(Math.abs(this.v) / Math.max(1, vmax), 0, 1)) * giro * (V.clase === 'pie' ? 0 : 1) * (this.v < 0 ? -1 : 1);
+    const tg = lerp(V.giro[0], V.giro[1], clamp(Math.abs(this.v) / Math.max(1, vmax), 0, 1)) * giro * (V.clase === 'pie' ? 0 : 1) * (this.v < 0 ? -1 : 1) * (this.ia ? 1 : MC.opciones.giro || 1);
     this.giroV = lerp(this.giroV, tg * (E.derrape && Math.abs(this.v) > 6 ? 1.45 : 1), Math.min(1, dt * 10)); if (V.clase !== 'pie' || !E.dir) this.a += this.giroV * dt * (V.clase === 'pie' ? 1 : Math.min(1, .25 + Math.abs(this.v) / 2.5));
     if (V.clase === 'pie' && !E.dir) this.a += giro * V.giro[0] * dt;
     /* vuelo */
@@ -155,7 +155,7 @@ class Cuerpo {
     const V = this.veh, M = this.mundo, S = Vehiculos.arcade(V), A = this._arc || (this._arc = { w: 0 }), pie = V.clase === 'pie', motor = V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto';
     const lluvia = (E.lluvia || (E.clima && E.clima.lluvia) || 0) > .35, deriva = !!E.derrape && motor && Math.abs(this.v) > 7, turbo = !!E.turbo && !pie;
     let max = this.vmax() * suelo * loma * (turbo ? 1.25 : 1); if (pie && !this.corriendo && ((E.dir && E.dir.m > .85) || (E.acel || 0) > .85)) max = Math.max(max, V.vcorre * .62);   /* a pie, el joystick a fondo ya trota (4.7: también en las vistas de volante) */
-    const kw = 1 - Math.exp(-dt / S.tw), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - Math.abs(this.v) / Math.max(1, max), 0, 1)) * (lluvia ? .85 : 1) * (deriva ? 1.6 : 1);
+    const kw = 1 - Math.exp(-dt / S.tw), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - Math.abs(this.v) / Math.max(1, max), 0, 1)) * (lluvia ? .85 : 1) * (deriva ? 1.6 : 1) * (this.ia ? 1 : MC.opciones.giro || 1);   /* 4.8 · ⚙️ Flexibilidad: giro suave, normal o rápido */
     let tv = 0, frena = false, suelta = false;
     if (this.enAire) { /* en el aire no se acelera ni se gira */ }
     else if (E.dir && E.dir.m > .08) {

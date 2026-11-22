@@ -50,7 +50,7 @@ class Mundo {
       if (typeof obtenerSector !== 'function') throw new Error('Falta proveedor de sectores MC4');
       for (const [nombre, spec] of Object.entries(meta.rasters)) {
         if (!meta.capas[nombre]) throw new Error('Sector raster sin capa MC4: ' + nombre);
-        m._rasters[nombre] = new MC.RasterMC4(spec, indice => obtenerSector(nombre, indice));
+        m._rasters[nombre] = new MC.RasterMC4(spec, indice => obtenerSector(nombre, indice), { maxSectores: Math.max(16, Math.min(512, Math.floor(4e6 / (spec.lado * spec.lado)))) });   /* 4.8: hasta ~4 MB residentes; con 16 sectores el LRU se vaciaba en ciclo (4 000 descompresiones por segundo manejando) */
       }
     }
     m.W = meta.W; m.H = meta.H; m.tile = meta.tile; m.ancho = meta.W * meta.tile; m.alto = meta.H * meta.tile;

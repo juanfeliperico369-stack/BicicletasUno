@@ -119,7 +119,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const lat = M.cfgCiudad ? (M.cfgCiudad.lat ?? M.metrosAGeo(C.x, C.y).lat) : (planeta.enGlobo(id, C.x, C.y).lat);
   G.clima = new MC.ClimaGlobal({ lat: Math.abs(lat) > 1 ? lat : 6.2, alt: M.cota(C.x, C.y) }); C.clima = G.clima; if (G.climaForzado) G.clima.forzar(G.climaForzado);
   const dpr0 = Math.min(2, devicePixelRatio || 1);
-  G.vistas = new MC.Vistas(M); G.camara = new MC.Camara({ zoom: G.zoom || Math.max(8, Math.min(15, Math.min(innerWidth, innerHeight) / 50)) * dpr0, mundo: M }); G.camara.limites.zoom = [2.4 * dpr0, 20 * dpr0];
+  G.vistas = new MC.Vistas(M); G.flex = MC.Flex.aplicar(leerG().flex, { vistas: G.vistas });   /* 4.8 · ⚙️ Flexibilidad */ G.camara = new MC.Camara({ zoom: G.zoom || Math.max(8, Math.min(15, Math.min(innerWidth, innerHeight) / 50)) * dpr0, mundo: M }); G.camara.limites.zoom = [2.4 * dpr0, 20 * dpr0];
   G.camara.x = C.x; G.camara.y = C.y;
   G.trafico = new MC.Trafico(M, { n: M.esCiudad ? 16 : 7, peatones: 0, red: 'rueda', radio: 460 });
   G.pobl = M.esCiudad ? new MC.Poblacion(M, { n: 30, centro: { x: C.x, y: C.y }, radio: 900, semilla: 17 }) : null;
@@ -218,7 +218,7 @@ function paso(dt, dtVisual) {
   else if (G.controlExterno && dt > 0) G.controlExterno(dt, ent);   /* 4.6: un modo maneja otra cosa (el tren de 🎮 Modos) */
   else if (dt > 0) {
     const gl = G.vistas.actual.control === 'volante', via = V.clase !== 'pie' ? M.viaCercana(C.x, C.y, 12) : null;
-    const e = MC.Manejo.aplicar(ent, C, { camara: G.camara, esquema: 'joystick', vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null, acelFijo: !!G.acelFijo && V.clase !== 'pie' });   /* 4.6.1: ⏫ acelerador fijo */
+    const e = MC.Manejo.aplicar(ent, C, { camara: G.camara, esquema: MC.Flex.esquema('joystick'), vista: MC.Flex.vista(gl ? 'volante' : 'mundo'), rumboVia: via ? via.ang : null, acelFijo: !!G.acelFijo && V.clase !== 'pie' });   /* 4.6.1: ⏫ acelerador fijo */
     const freno = G.ctl.botones.has('freno') || ent.pulsos.has('Space');
     /* 4.5 · freno de mano: con velocidad y girando, derrapa (sigue girando, se cruza la cola, deja marcas y humo); quieto o derecho, frena */
     if (freno && V.clase !== 'pie') { const gira = (e.dir && Math.abs(angDif(C.a, Math.atan2(e.dir.y, e.dir.x))) > .25) || Math.abs(e.giro || 0) > .25; if (gira && Math.abs(C.v) > 7 && enCarro) { e.derrape = true; e.acel = Math.min(e.acel || 0, .3); } else { e.dir = null; e.acel = -1; } }
@@ -266,7 +266,7 @@ function paso(dt, dtVisual) {
   /* artefactos: recargas y la lente espectral (T01, estilo térmico del motor por 8 s) */
   for (const k in G.recarga) G.recarga[k] = Math.max(0, G.recarga[k] - dt);
   if (G.lenteT > 0) { G.lenteT -= dt; if (G.lenteT <= 0) { MC.estilo = G.estiloAntes || 'realista'; G.ui.aviso('👁️ Lente espectral apagada', 1200, 'lente'); } }
-  if (!G.viaje && !G.dron) G.camara.actualizar(dtVisual || dt, { x: C.x, y: C.y, z: C.alturaSuelo, a: C.a, v: C.v, zCuerpo: C.z, zPaso: C.zPaso, mundo: M });
+  if (!G.viaje && !G.dron) G.camara.actualizar(dtVisual || dt, { x: C.x, y: C.y, z: C.alturaSuelo, a: C.a, v: C.v, zCuerpo: C.z, zPaso: C.zPaso, mundo: M, ojo: C.veh.clase === 'auto' ? 1.15 : C.veh.clase === 'pesado' ? 2.3 : undefined });   /* 4.8: en primera persona, los ojos de quien maneja */
   Subt.paso(dtVisual || dt);
 }
 

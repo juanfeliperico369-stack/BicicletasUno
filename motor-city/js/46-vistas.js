@@ -69,7 +69,9 @@ class Vistas {
         if (this.usaRaster()) { if (!this.raster) this.raster = new Raster(this.mundo); if (!this._rb || this._rb.width !== rw || this._rb.height !== rh) this._rb = lienzo(rw, rh); this.raster.dibujar(this._rb.getContext('2d'), rw, rh, E); dst.drawImage(this._rb, 0, 0, w, h); }
         else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
         /* 4.5: los efectos (choques, derrapes, explosiones, restos) encima de la 3D, con la misma proyección */
-        if (MC.Efectos && this.gl && this.gl.mvp && !this.usaRaster()) { try { MC.Efectos.dibujar(dst, (x, y, z) => this.gl.aPantalla(x, y, z, w, h), E); } catch (e) { MC.falla('efectos', e); } }
+        /* 4.8: también con el respaldo por software (Raster.aPantalla) */
+        const proy = this.usaRaster() ? (this.raster && this.raster._P ? (x, y, z) => this.raster.aPantalla(x, y, z, w, h) : null) : (this.gl && this.gl.mvp ? (x, y, z) => this.gl.aPantalla(x, y, z, w, h) : null);
+        if (MC.Efectos && proy) { try { MC.Efectos.dibujar(dst, proy, E); } catch (e) { MC.falla('efectos', e); } }
         this._clima2D(dst, w, h, E, true);
       }
     } catch (e) { MC.falla('vista ' + v.id, e); }

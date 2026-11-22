@@ -80,16 +80,22 @@ const Modos = {
   _pistaLista(p, cerrada, extremo, tipo, desnivel, antes) {
     const C = G.cuerpo, vueltas = cerrada && p.L < 2200 ? 2 : 1, q0 = p.punto(0);
     if (extremo) { if (C.veh.id !== 'mtb') C.setVeh('mtb'); } else if (C.veh.clase === 'pie' || C.veh.clase === 'rueda') { C.setVeh(G.veh); C.estacionado = null; }
-    Object.assign(C, { x: q0.x, y: q0.y, a: q0.a, v: 0 }); C.rumboRodado = q0.a; G.camara.x = q0.x; G.camara.y = q0.y;
+    const d0 = Math.hypot(q0.x - C.x, q0.y - C.y);   /* 4.8 (ChatGPT TC-P1-08): lejos de la salida, el jugador elige ir manejando o saltar a la parrilla */
     const nombres = extremo ? ['Lucía «la Flecha»', 'el Mono Rendón'] : ['Lucía «la Flecha»', 'el Mono Rendón', 'Kira Salazar'], R = [];
     nombres.forEach((nombre, k) => { const off = (k + 1) * 7, q = p.punto(cerrada ? -off : 0), lado = (k % 2 ? 1 : -1) * 2.2, Cb = new MC.Cuerpo(G.M, { x: q.x - Math.sin(q.a) * lado - (cerrada ? 0 : Math.cos(q.a) * off), y: q.y + Math.cos(q.a) * lado - (cerrada ? 0 : Math.sin(q.a) * off), a: q.a, veh: extremo ? 'mtb' : ['tc_noir', 'tc_arrow', 'tc_mercury'][k] || 'carro' }); Cb.ia = true; R.push({ nombre, color: ['#2f80ed', '#27ae60', '#f2c94c'][k], cuerpo: Cb, s: cerrada ? -off : 0, ruta: null, fin: null, habil: .9 + k * .05 }); });
     this.m = { id: extremo ? 'extremo' : 'carrera', extremo, p, vueltas, total: vueltas * p.L, rivales: R, yo: { s: 0, fin: null }, t: -3.5, puntos: 0, aire: 0, enAire: false, antes: extremo ? antes : null, tipo, desnivel };
     if (extremo && BOT.saltar) BOT.saltar.hidden = false;
+    const c = this.m; if (d0 > 30) { c.ir = true; G.objetivo = { x: q0.x, y: q0.y, texto: '🏁 Salida' };
+      G.ui.dialogo('🏁 La salida está a ' + (d0 >= 1000 ? (d0 / 1000).toFixed(1) + ' km' : Math.round(d0) + ' m'), 'Ve manejando (la flecha te lleva y la cuenta empieza al llegar) o salta directo a la parrilla.', ['🚗 Ir manejando', '⚡ Llevarme ya']).then(i => { if (i === 1 && this.m === c && c.ir) this.alaSalida(c); }); } else this.alaSalida(c);
     G.ui.aviso((extremo ? '🚵 ' : '🏁 ') + tipo + ' · ' + (p.L / 1000).toFixed(1) + ' km' + (vueltas > 1 ? ' · ' + vueltas + ' vueltas' : '') + (desnivel ? ' · ' + desnivel + ' m de bajada' : ''), 2600, 'modos'); return true;
   },
+  /* a la parrilla: al aceptar «Llevarme ya» o al llegar manejando a menos de 14 m de la salida */
+  alaSalida(c) { const C = G.cuerpo, q = c.p.punto(0); c.ir = false; c.t = -3.5; c._n = null; G.objetivo = null; for (const d of document.querySelectorAll('.mcui .dialogo')) if (d.textContent.includes('La salida está')) d.remove();
+    C.x = q.x; C.y = q.y; C.a = q.a; C.v = 0; C.rumboRodado = q.a; G.camara.x = q.x; G.camara.y = q.y; },
   extremoVias(x0, y0, R, signo) { let mejor = null; for (const v of G.M.vias()) { if (v.k > 8) continue; for (let i = 0; i < v.p.length; i += 8) { const x = v.p[i], y = v.p[i + 1]; if (Math.hypot(x - x0, y - y0) > R) continue; const z = G.M.cota(x, y) * signo; if (!mejor || z > mejor.zz) mejor = { x, y, z: z * signo, zz: z }; } } return mejor; },
   pasoCarrera(dt) {
-    const c = this.m, C = G.cuerpo; c.t += dt; if (c.t < 0) { const n = Math.ceil(-c.t); if (n !== c._n) { c._n = n; G.ui.aviso(n <= 3 ? String(n) : '…', 700, 'cuenta'); } C.v = 0; return; } else if (!c._ya) { c._ya = true; G.ui.aviso('¡YA!', 900, 'cuenta'); }
+    const c = this.m, C = G.cuerpo; if (c.ir) { const q = c.p.punto(0); if (Math.hypot(q.x - C.x, q.y - C.y) < 14) this.alaSalida(c); else return; }
+    c.t += dt; if (c.t < 0) { const n = Math.ceil(-c.t); if (n !== c._n) { c._n = n; G.ui.aviso(n <= 3 ? String(n) : '…', 700, 'cuenta'); } C.v = 0; return; } else if (!c._ya) { c._ya = true; G.ui.aviso('¡YA!', 900, 'cuenta'); }
     const pr = c.p.proyectar(C.x, C.y, c.yo.s % c.p.L), base = Math.floor(Math.max(0, c.yo.s) / c.p.L) * c.p.L; let s = base + pr.s; if (c.p.cerrada && s < c.yo.s - c.p.L * .5) s += c.p.L; if (s > c.yo.s && s - c.yo.s < 60) c.yo.s = s;
     if (pr.d > 110) return this.terminar('Te saliste de la pista: la carrera se acabó');
     for (const r of c.rivales) { if (r.fin != null) continue; if (!r.ruta || r.ruta._i > r.ruta.length - 30) { r.ruta = c.p.plana(r.s, 400); r.ruta._i = null; }
@@ -130,7 +136,7 @@ const Modos = {
   /* ---------------- 🚲 EnCicla (de Juega EnCicla) ---------------- */
   bicis(s) { const B = this._bicis || (this._bicis = new Map()); if (!B.has(s.id || s.nombre)) B.set(s.id || s.nombre, Math.floor(MC.h2(Math.round(s.x), Math.round(s.y), 7) * 13)); return B.get(s.id || s.nombre); },
   armarEnCicla(desde) {
-    const C = G.cuerpo, S = (G.M.transporte && G.M.transporte.encicla) || []; if (!Array.isArray(S) || S.length < 2) return false; let o = desde;   /* 4.7 (ChatGPT TC-P1-05): sin estaciones, no se rompe */ if (!o) { let md = 1e9; for (const s of S) { const d = Math.hypot(s.x - C.x, s.y - C.y); if (d < md) { md = d; o = s; } } } if (!o) return false;
+    const C = G.cuerpo, S = (G.M.transporte && G.M.transporte.encicla) || []; if (!Array.isArray(S) || S.length < 2) return false; if (desde && (!Number.isFinite(desde.x) || !Number.isFinite(desde.y) || !S.includes(desde))) return false; let o = desde;   /* 4.8: la guardia de ChatGPT (antes en 61-chatgpt-guardia-encicla.js), integrada */   /* 4.7 (ChatGPT TC-P1-05): sin estaciones, no se rompe */ if (!o) { let md = 1e9; for (const s of S) { const d = Math.hypot(s.x - C.x, s.y - C.y); if (d < md) { md = d; o = s; } } } if (!o) return false;
     const cands = S.filter(s => s !== o).map(s => ({ s, d: Math.hypot(s.x - o.x, s.y - o.y) })).filter(q => q.d > 300 && q.d < 1300).sort((a, b) => this.bicis(a.s) - this.bicis(b.s) || a.d - b.d); const dest = (cands[0] || {}).s; if (!dest) return false;
     const ant = this.m && this.m.id === 'encicla' ? this.m : null, dist = Math.hypot(dest.x - o.x, dest.y - o.y);
     this.m = { id: 'encicla', o, d: dest, fase: desde ? 1 : 0, t: 0, limite: Math.round(dist / 5 + 40), racha: 0, fuera: 0, puntos: ant ? ant.puntos : 0, vueltas: ant ? ant.vueltas : 0, rojos: ant ? ant.rojos : 0, pasados: new Map(), antes: ant ? ant.antes : C.veh.id, esp: 0 };
@@ -171,7 +177,10 @@ const Modos = {
   manejarTren(dt, ent) {
     const m = this.m, L = m.L, C = G.cuerpo, B = G.ctl.botones, st = ent.stick || { x: 0, y: 0, m: 0 };
     /* 4.7 (hallazgo de Gemini): el joystick empuja hacia donde va el tren en la pantalla (antes solo leía arriba/abajo: en líneas horizontales no arrancaba) */
-    let thr = 0; if (st.m > .15) { const yaw = (G.camara && G.camara.yaw) || 0, c = Math.cos(yaw), sn = Math.sin(yaw), wx = st.x * c + st.y * sn, wy = -st.x * sn + st.y * c, ad = C.a; thr = clamp((wx * Math.cos(ad) + wy * Math.sin(ad)) / Math.max(.2, Math.hypot(wx, wy)) * st.m * 1.4, -1, 1); if (G.vistas && G.vistas.actual.control === 'volante') thr = clamp(-st.y * 1.4, -1, 1); } if (B.has('turbo') || ent.turbo) thr = 1;
+    let thr = 0; if (st.m > .15) { const yaw = (G.camara && G.camara.yaw) || 0, c = Math.cos(yaw), sn = Math.sin(yaw), wx = st.x * c + st.y * sn, wy = -st.x * sn + st.y * c, ad = C.a; thr = clamp((wx * Math.cos(ad) + wy * Math.sin(ad)) / Math.max(.2, Math.hypot(wx, wy)) * st.m * 1.4, -1, 1); if (G.vistas && G.vistas.actual.control === 'volante') thr = clamp(-st.y * 1.4, -1, 1); }
+    /* 4.8 (auditoría de ChatGPT, input real): con teclado o mando es palanca (↑ acelera, ↓ frena) en cualquier cámara; en la pantalla también, si ⚙️ Flexibilidad lo pide */
+    if (ent.teclado || (G.flex && G.flex.tren === 'palanca')) thr = clamp(ent.teclado ? ent.acel : -st.y * 1.4, -1, 1); else if (!st.m && ent.acel) thr = ent.acel;
+    if (B.has('turbo') || ent.turbo) thr = 1;
     /* 4.6.1 · ⏫ acelerador fijo también en el tren: prendido acelera solo; al apagarlo frena suave hasta parar (para llegar al andén) */
     if (G.acelFijo) { m._parar = false; thr = 1; } else if (m._fijo) m._parar = true; m._fijo = !!G.acelFijo; if (m._parar) { if (thr > .05 || m.v < .3) m._parar = false; else thr = -.6; }
     if (B.has('freno') || (ent.pulsos && ent.pulsos.has('Space'))) thr = -1;
@@ -241,12 +250,13 @@ const Modos = {
   paso(dt) { const m = this.m; if (!m || !(dt > 0)) return; if (G.busq.nivel > 0) G.busq.limpiar();
     if (m.id === 'carrera' || m.id === 'extremo') this.pasoCarrera(dt); else if (m.id === 'mandados') this.pasoMandado(dt); else if (m.id === 'encicla') this.pasoEnCicla(dt); else if (m.id === 'trucos') this.pasoTrucos(dt);
     if (this.m && this.m.vis) G.E.vehiculos = (G.E.vehiculos || []).concat([this.m.vis]); },
-  entrada(e) { const m = this.m; if (!m) return; if ((m.id === 'carrera' || m.id === 'extremo') && m.t < 0) { e.dir = null; e.acel = 0; e.giro = 0; } if (m.id === 'extremo' || m.id === 'trucos') { e.salto = e.salto || G.ctl.botones.has('saltar'); if (m.id === 'extremo') e.turbo = false; } },
+  entrada(e) { const m = this.m; if (!m) return; if ((m.id === 'carrera' || m.id === 'extremo') && m.t < 0 && !m.ir) { e.dir = null; e.acel = 0; e.giro = 0; } if (m.id === 'extremo' || m.id === 'trucos') { e.salto = e.salto || G.ctl.botones.has('saltar'); if (m.id === 'extremo') e.turbo = false; } },
   trafico() { const m = this.m; if (!m || !m.rivales) return []; return m.rivales.map(r => ({ id: r.nombre, tipo: m.extremo ? 'bici' : 'carro', clase: 'auto', x: r.cuerpo.x, y: r.cuerpo.y, a: r.cuerpo.a, v: r.cuerpo.v, color: r.color, largo: m.extremo ? 1.8 : 4.4, ancho: m.extremo ? .6 : 1.8 })); },
   obstaculos() { const m = this.m; if (!m || !m.rivales) return []; return m.rivales.map(r => ({ x: r.cuerpo.x, y: r.cuerpo.y, r: m.extremo ? .5 : 1.2 })); },
   hud() {
     const m = this.m, f = (k, t) => { const el = G.ui.ficha(k, t); el.hidden = !t; }; if (BOT.modos) BOT.modos.hidden = !(this.disponible() || m); if (!m) return;
-    if (m.id === 'carrera' || m.id === 'extremo') { const pos = 1 + m.rivales.filter(r => (r.fin != null && m.yo.fin == null) || r.s > m.yo.s).length; f('m1', '🏁 ' + pos + '.º de ' + (m.rivales.length + 1) + (m.vueltas > 1 ? ' · vuelta ' + Math.min(m.vueltas, 1 + Math.floor(Math.max(0, m.yo.s) / m.p.L)) + '/' + m.vueltas : '')); f('m2', '⏱ ' + fmtT(m.t)); f('m3', m.extremo ? '🦘 ' + Math.round(m.puntos) + ' pts' : ''); G.objetivo = m.p.punto(m.yo.s + 60); G.objetivo.texto = ''; }
+    if ((m.id === 'carrera' || m.id === 'extremo') && m.ir) { const q = m.p.punto(0); f('m1', '🏁 Ve a la salida · ' + Math.round(Math.hypot(q.x - G.cuerpo.x, q.y - G.cuerpo.y)) + ' m'); f('m2', ''); f('m3', ''); G.objetivo = { x: q.x, y: q.y, texto: '🏁 Salida' }; }
+    else if (m.id === 'carrera' || m.id === 'extremo') { const pos = 1 + m.rivales.filter(r => (r.fin != null && m.yo.fin == null) || r.s > m.yo.s).length; f('m1', '🏁 ' + pos + '.º de ' + (m.rivales.length + 1) + (m.vueltas > 1 ? ' · vuelta ' + Math.min(m.vueltas, 1 + Math.floor(Math.max(0, m.yo.s) / m.p.L)) + '/' + m.vueltas : '')); f('m2', '⏱ ' + fmtT(m.t)); f('m3', m.extremo ? '🦘 ' + Math.round(m.puntos) + ' pts' : ''); G.objetivo = m.p.punto(m.yo.s + 60); G.objetivo.texto = ''; }
     else if (m.id === 'mandados') { f('m1', '📦 ' + (m.n + 1) + '/3 · ' + Math.round(m.paquete * 100) + ' %'); f('m2', m.fase ? '⏱ ' + fmtT(m.limite - m.t) : '📍 recoger'); f('m3', '💵 ' + plata(m.ganado)); }
     else if (m.id === 'encicla') { f('m1', '🚲 ' + (m.vueltas + 1) + '/3 · ' + Math.round(m.puntos) + ' pts'); f('m2', m.fase ? '⏱ ' + fmtT(m.limite - m.t) + ' · ×' + (1 + Math.min(2, Math.floor(m.racha / 8) * .5)) : '📍 toma una cicla'); f('m3', m.rojos ? '🚦 ' + m.rojos : ''); }
     else if (m.id === 'trucos') { f('m1', '🛹 ' + Math.round(m.puntos) + ' pts'); f('m2', '⏱ ' + fmtT(m.t) + (m.combo ? ' · combo ×' + m.mult.toFixed(1) : '')); f('m3', m.racha ? '🔥 ' + m.racha : ''); G.objetivo = Math.hypot(m.c.x - G.cuerpo.x, m.c.y - G.cuerpo.y) > m.R ? { x: m.c.x, y: m.c.y, texto: 'zona de trucos' } : null; }
@@ -267,7 +277,7 @@ G.Modos = Modos;
    Se ubican por celdas de 1,2 km alrededor del jugador con datos reales: avenidas (🏁), lomas (🚵), lugares (📦), plazas (🛹),
    ciclorrutas (🛴), estaciones EnCicla (🚲) y de metro, tranvía y Metroplús (🚇). Se calculan de a poco (dos celdas por cuadro).
    ===================================================================== */
-const ACT = { carrera: ['🏁', '#ffcc00', 'Carrera'], extremo: ['🚵', '#7cd67c', 'Bajada extrema'], mandados: ['📦', '#ffb066', 'Mandados'], encicla: ['🚲', '#3fae5a', 'EnCicla: rebalanceo'], tren: ['🚇', '#4fb3ff', 'Manejar el tren'], trucos: ['🛹', '#ff6ad5', 'Zona de trucos'], run: ['🛴', '#00e0c6', 'Run en la ciclovía'] };
+const ACT = { carrera: ['🏁', '#ffcc00', 'Carrera'], extremo: ['🚵', '#7cd67c', 'Bajada extrema'], mandados: ['📦', '#ffb066', 'Mandados'], encicla: ['🚲', '#3fae5a', 'EnCicla: rebalanceo'], tren: ['🚇', '#4fb3ff', 'Manejar el tren'], trucos: ['🛹', '#ff6ad5', 'Zona de trucos'], run: ['🛴', '#00e0c6', 'Run en la ciclovía'], mirador: ['🌄', '#ffd59e', 'Mirador'] };   /* 4.8: miradores (plan de Gemini: el mundo vivo también se contempla) */
 const Actividades = {
   L: 1200, celdas: new Map(), cerca: null, _visto: new Set(), _lista: [], _t: 0,
   celda(cx, cy) {
@@ -277,7 +287,8 @@ const Actividades = {
       const px = x0 + L * (.2 + .6 * h(1)), py = y0 + L * (.2 + .6 * h(2));
       if (h(3) < .7) { const q = M.viaCercana(px, py, 500, v => v.k === V.AVENIDA || v.k === V.AUTOPISTA || v.k === V.CARRERA); if (q && en(q.x, q.y)) out.push({ t: 'carrera', x: q.x, y: q.y }); }
       { let zmax = -1e9, zmin = 1e9, best = null; for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) { const x = x0 + L * (i + .5) / 4, y = y0 + L * (j + .5) / 4, z = M.cota(x, y); if (z > zmax) { zmax = z; best = { x, y }; } if (z < zmin) zmin = z; }
-        if (zmax - zmin > 80 && h(7) < .35 && best) { const q = M.viaCercana(best.x, best.y, 220); if (q && en(q.x, q.y)) out.push({ t: 'extremo', x: q.x, y: q.y }); } }
+        if (zmax - zmin > 80 && h(7) < .35 && best) { const q = M.viaCercana(best.x, best.y, 220); if (q && en(q.x, q.y)) out.push({ t: 'extremo', x: q.x, y: q.y }); }
+        if (zmax - zmin > 40 && h(8) < .3 && best) { const q = M.viaCercana(best.x, best.y, 160); if (q && en(q.x, q.y)) { let b = ''; try { b = M.barrio(q.x, q.y); } catch (e) { /* sin barrios */ } out.push({ t: 'mirador', x: q.x, y: q.y, nombre: b || M.calle(q.x, q.y) || '' }); } } }
       if (h(4) < .6) { const mx = x0 + L * (.2 + .6 * h(5)), my = y0 + L * (.2 + .6 * h(6)), Lg = M.lugarCercano(mx, my, 500), q = Lg ? M.viaCercana(Lg.x, Lg.y, 150, v => v.k >= 1 && v.k <= 4) : M.viaCercana(mx, my, 300, v => v.k === V.CALLE || v.k === V.CARRERA); if (q && en(q.x, q.y)) out.push({ t: 'mandados', x: q.x, y: q.y, nombre: Lg ? Lg.nombre : M.calle(q.x, q.y) }); }   /* el despacho: un lugar con nombre o, si no hay, una calle del barrio */
       { let pl = null; for (let j = 0; j < 6 && !pl; j++) for (let i = 0; i < 6 && !pl; i++) { const x = x0 + L * (i + .5) / 6, y = y0 + L * (j + .5) / 6; if (M.suelo(x, y) === MC.TT.PLAZA) pl = { x, y }; } if (pl) out.push({ t: 'trucos', x: pl.x, y: pl.y }); }
       { const q = M.viaCercana(x0 + L / 2, y0 + L / 2, 620, v => v.k === V.CICLO); if (q && en(q.x, q.y)) out.push({ t: 'run', x: q.x, y: q.y }); }
@@ -295,15 +306,25 @@ const Actividades = {
   hud() {
     const C = G.cuerpo; if (!G.M || !G.M.esCiudad || !C) { this.cerca = null; if (BOT.jugarAqui) BOT.jugarAqui.hidden = true; return; }
     const L = this.actualizar(); let cerca = null, bd = 1e9; const libre = Modos.disponible() && !Modos.m;
-    if (libre) for (const a of L) { const d = Math.hypot(a.x - C.x, a.y - C.y), r = a.t === 'tren' ? 45 : a.t === 'trucos' ? 30 : 18; if (d < r && d < bd) { bd = d; cerca = a; } }
-    this.cerca = cerca; if (BOT.jugarAqui) { BOT.jugarAqui.hidden = !cerca; if (cerca) { const T = ACT[cerca.t]; BOT.jugarAqui.innerHTML = T[0] + '<small>▶ Jugar</small>'; BOT.jugarAqui.title = T[2]; } }
+    if (libre) for (const a of L) { const d = Math.hypot(a.x - C.x, a.y - C.y), r = a.t === 'tren' ? 45 : a.t === 'trucos' || a.t === 'mirador' ? 30 : 18; if (d < r && d < bd) { bd = d; cerca = a; } }
+    this.cerca = cerca; if (BOT.jugarAqui) { BOT.jugarAqui.hidden = !cerca; if (cerca) { const T = ACT[cerca.t]; BOT.jugarAqui.innerHTML = T[0] + '<small>' + (cerca.t === 'mirador' ? '▶ Mirar' : '▶ Jugar') + '</small>'; BOT.jugarAqui.title = T[2]; } }
     if (cerca) { const k = cerca.t + ':' + Math.round(cerca.x) + ',' + Math.round(cerca.y); if (!this._visto.has(k)) { this._visto.add(k); const T = ACT[cerca.t]; G.ui.aviso(T[0] + ' ' + T[2] + (cerca.nombre ? ' · ' + cerca.nombre : '') + ' · toca ▶ Jugar', 2600, 'actividad'); } }
   },
   jugar() {
     const a = this.cerca; if (!a) return; const C = G.cuerpo;
+    if (a.t === 'mirador') return this.mirar(a);
     if (a.t === 'run') { if (C.veh.clase !== 'pie' && !C.veh.run) return G.ui.aviso('🛴 Run es a pie o en bici, patinete, skate o patines: bájate (🚪) o cambia de vehículo', 2600, 'run'); if (G.Extras && G.Extras.entrarRun) return G.Extras.entrarRun(); return; }
     if (a.t === 'tren') { const Ls = G.transporte.lineas.filter(L => L.clase !== 'cable' && L.est.some(e => e.nombre === a.nombre)); if (Ls.length === 1) { Modos.armarTren(Ls[0]); MC.emit('modo:inicio', { id: 'tren', ok: true, desde: 'mundo' }); return; } return Modos.empezar('tren'); }
     Modos.empezar(a.t, { centro: { x: a.x, y: a.y } });
+  },
+  /* 🌄 mirador: la cámara de cine orbita 7 s sobre el valle, dice el barrio y cuenta los miradores descubiertos */
+  mirar(a) {
+    const k = G.id + ':' + Math.round(a.x) + ',' + Math.round(a.y), S = leerG(), vistos = S.miradores || [], nuevo = !vistos.includes(k), ant = this._mirAnt || G.vistaId;
+    if (nuevo) { escribirG({ miradores: vistos.concat(k).slice(-500) }); G.dinero += 50; }
+    G.cuerpo.v = 0; this._mirAnt = ant; G.vistaId = 'cine'; G.vistas.usar('cine', G.E);
+    G.ui.aviso('🌄 Mirador' + (a.nombre ? ' · ' + a.nombre : '') + ' · ' + Math.round(G.M.cota(a.x, a.y)) + ' m' + (nuevo ? ' · ¡nuevo! ' + (vistos.length + 1) + ' descubiertos · 💵 +' + plata(50) : ' · ya lo conocías'), 3600, 'mirador');
+    clearTimeout(this._mir); this._mir = setTimeout(() => { const v = this._mirAnt; this._mirAnt = null; if (G.vistaId === 'cine') { G.vistaId = camarasAqui().includes(v) ? v : 'cenital'; G.vistas.usar(G.vistaId, G.E); } }, 7000);
+    MC.emit('modo:resultado', { id: 'mirador', nuevo, total: vistos.length + (nuevo ? 1 : 0) });
   },
   capas(g, pr, d) {
     const C = G.cuerpo; if (!C || Modos.m) return; const t = G.t;

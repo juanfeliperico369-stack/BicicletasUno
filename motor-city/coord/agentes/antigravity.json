@@ -1,51 +1,44 @@
 {
+  "schema_version": 1,
   "agente": "antigravity",
-  "rol": "Implementación de pool sin basura (js/88-vida.js) y escalador EMA (js/05-gpu.js + js/46-vistas.js) solicitados en 4.2.0, QA móvil, revisión multi-IA y catálogo sala limpia",
-  "rama": "ia/antigravity/motorcity-4.2",
-  "base": "7580543",
-  "version_motor": "4.2.0",
-  "actualizado": "2026-11-21T10:35:00Z",
-  "estado": "entregado",
-  "zonas_reclamadas_autorizadas_por_claude": [
-    "js/88-vida.js",
-    "js/05-gpu.js (solo class ResDinamica)",
-    "js/46-vistas.js (solo consumo de res.escalaPaso y E.factorNiebla)",
-    "pruebas/vida-y-resdinamica.mjs",
-    "reportes/2026-11-21-gemini-clasicos-4.1.md",
-    "reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md",
-    "reportes/2026-11-21-gemini-4.2-pool-escalador-y-pr10.md",
-    "reportes/img/clasicos-4.1/",
-    "reportes/img/verificacion-4.2/",
-    "coord/agentes/antigravity.json",
-    "coord/buzon/20261121-0530-antigravity-clasicos-4.1.md",
-    "coord/buzon/20261121-1035-antigravity-4.2-pool-escalador.md"
-  ],
-  "zonas_no_tocadas": [
-    "js/13-planeta.js (PR #10 ChatGPT)",
-    "js/45-gl.js",
-    "js/47-clasicos.js",
-    "js/56-ui.js",
-    "juegos/getaway/*.js",
-    "herramientas/"
-  ],
-  "tareas_completadas": [
-    "Fases 1-4 (integradas en 4.2.0 main): G-H20..24, arte pintado en portada Turno Cero, 56 paradas canonicas, mc-clasico.js sobre MC4 real y laboratorio",
-    "Fase 5 (incluida en esta PR 4.2 porque quedo post-merge de PR #8): G-H25 (Arcade/Vuelo + bug hor..H), G-H26 (sigilo Thief + bug movil correr 1.53 m/s), G-H28 (mundo abierto primero Turno Cero/El Metro/EnCicla, 18 WebP) y G-H27 (catalogo sala limpia de 14 motores clasicos)",
-    "Fase 6 (pedido directo de Claude en coord/buzon/20261121-1800-claude-4.2.md): 1) js/88-vida.js actualizado a pool circular sin basura (Burnout 3: 20.000 emisiones en 36.03 ms con exactamente 260 objetos creados, 0 shift/splice); 2) js/05-gpu.js + js/46-vistas.js actualizados con MC.ResDinamica EMA con histeresis, cuantizacion escalaPaso con enfriamiento y factorNiebla acoplado (Shadow of the Colossus: 0 cambios en 300 cuadros estables); 3) pruebas/vida-y-resdinamica.mjs (7/7 verde); 4) verificacion visual + RAM post-GC de 4.2.0 (MD 51.5 -> NY 197.3 -> GU 8.4 -> MD 51.9 MB: fuga multi-ciudad 100% eliminada, menu pausa aun cortado a -224 px); 5) revision tecnica de PR #10 (CONFLICTING contra 4.2.0)"
-  ],
-  "pendientes_siguiente_ia": [
-    "Claude (URGENTE 4.2.1): 1) corregir recorte superior del menu de pausa (-224 px en 412x860, js/56-ui.js); 2) pintar fondo hor..H en MC.Arcade (js/47-clasicos.js:152) + bajar lighter nocturno; 3) conectar boton movil ⚡ a e.correr cuando V.clase==='pie' (juegos/getaway/20-juego.js:200) y ajustar umbrales en 55-clasicos.js; 4) margen derecho para rotulo de 56-abierto.js",
-    "ChatGPT / Codex (PR #10): rebasar ia/chatgpt/planeta-cache-410-20261121 sobre main 4.2.0 conservando la evacuacion de ciudad previa en 20-juego.js:112-114 (que libero 188.9 MB post-GC)",
-    "Codex / Claude (G-H28 juegos hermanos): alinear MetroZero (1 toque a Ciudad Libre + 15 estaciones libres + 3 404 favicon) y BicicletasUno (1 toque al mapa sin bloquear con BIENVENIDA 1/4 ni Crea tu personaje)",
-    "Codex (4.1/4.2): C-M37 (PVS Quake Manhattan), C-M38 (portales Build), C-M39 (COLORMAP Doom), C-M40 (direccionales The Getaway), C-A18 (capas Arcade por bioma)",
-    "Autor / QA fisico: llenar tabla § 1.4 de reportes/2026-11-21-gemini-clasicos-4.1.md en celular real con GPU",
-    "OBLIGATORIO para la siguiente IA: dejar entrada en CONTEXTO-RELEVO.md seccion 8, ficha en coord/agentes/ y mensaje en coord/buzon/"
-  ],
-  "pruebas": {
-    "construir": "OK (motor.js + getaway.html + mandados.html + motor-city.html)",
-    "vida_y_resdinamica": "7/7 verde (20.000 particulas 0 GC en 36.03 ms; 0 cambios en zona muerta)",
-    "motor_navegador": "153/153 verde (109.1 s, 0 errores consola)",
-    "paquete_capas_browser": "verde (412x860, 3 ciudades offline, 0 errores)",
-    "cm34_node_y_clasico": "sectores-cm34 5/5 + paquete-capas-cm34 OK + getaway-contenido OK + prueba-clasico 6/6"
+  "marca": "Gemini",
+  "rama": "ia/gemini/4.7-evolucion-arte-render",
+  "base": "c3fc286",
+  "version_motor": "4.6.1",
+  "actualizado": "2026-11-22T14:16:00Z",
+  "estado": "en_curso",
+  "rol": "Plan maestro comparativo (docs/PLAN-EVOLUCION-GEMINI.md), auditoría móvil 4.6.1 vertical/horizontal, mejora de render 3D/2D/pixel sin chocar con Claude, arreglos críticos de Raster 3D y Primera Persona, y módulo aditivo de mundo vivo RPG/Skate-Parkour/UnoCero",
+  "trabajo_4_7": {
+    "documento": "docs/PLAN-EVOLUCION-GEMINI.md",
+    "zonas_reclamadas": [
+      "docs/PLAN-EVOLUCION-GEMINI.md",
+      "js/45-gl.js",
+      "js/45-gl3d.js",
+      "js/44-raster.js",
+      "js/47-clasicos.js",
+      "js/41-vista2d.js",
+      "juegos/getaway/62-mundo-vivo.js",
+      "pruebas/evolucion-4.7-gemini.mjs",
+      "reportes/2026-11-22-gemini-evolucion-4.7.md",
+      "reportes/img/evolucion-4.7/",
+      "arte/gemini/evolucion-4.7/",
+      "coord/agentes/antigravity.json",
+      "coord/buzon/20261122-*-antigravity-*.md"
+    ],
+    "zonas_respetadas_no_toco": [
+      "juegos/getaway/60-modos.js (Claude)",
+      "juegos/getaway/20-juego.js (Claude)",
+      "juegos/getaway/90-inicio.js (Claude)",
+      "juegos/getaway/40-dibujo.js (Claude)",
+      "juegos/getaway/50-extras.js (Claude)",
+      "juegos/getaway/30-historia.js (Codex)",
+      "js/32-fisica.js (Claude)",
+      "js/37-manejo.js (Claude)",
+      "js/46-vistas.js (Claude)",
+      "js/34-camara.js (Claude)",
+      "js/50-run.js (Claude)",
+      "js/70-interfaz.js (Codex)",
+      "pruebas/prueba.mjs y pruebas/modos.mjs (Claude)"
+    ]
   }
 }

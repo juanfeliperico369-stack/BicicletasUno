@@ -38,9 +38,10 @@ const Run = {
     V.esquina = (g, s) => {
       for (const c of seguir.rec.cruces) {
         const sg = ps + (seguir.base + c.s - seguir.s) / ESC; if (sg < s + 18 || sg > s + 420 || usados.has(c.nodo)) continue;
-        const izq = c.opciones.filter(o => o.giro < -.6), der = c.opciones.filter(o => o.giro > .6); if (!izq.length || !der.length) continue;
+        /* 4.8 (ChatGPT TC-P0-03): solo se ofrece doblar hacia otra ciclorruta, nunca hacia la calle */
+        const izq = c.opciones.filter(o => o.k === VIA.CICLO && o.giro < -.6), der = c.opciones.filter(o => o.k === VIA.CICLO && o.giro > .6); if (!izq.length || !der.length) continue;
         usados.add(c.nodo); const z = g.zt[g.zt.length - 1].z, n = RS.ZONES.length, L = izq[0], R2 = der[der.length - 1];
-        return { s: sg, z, L: { z: (z + 1) % n, n: L.k === VIA.CICLO ? 1 : 2 }, R: { z: (z + 2) % n, n: R2.k === VIA.CICLO ? 1 : 2 }, done: 0, ai: null, real: { izq: L.nombre || 'calle', der: R2.nombre || 'calle', nodo: c.nodo } };
+        return { s: sg, z, L: { z: (z + 1) % n, n: 1 }, R: { z: (z + 2) % n, n: 1 }, done: 0, ai: null, real: { izq: L.nombre || 'calle', der: R2.nombre || 'calle', nodo: c.nodo } };
       }
       return null;
     };

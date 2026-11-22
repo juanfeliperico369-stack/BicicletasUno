@@ -2,6 +2,17 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 22-nov-2026 · v3.1.0 · Unión, fluidez y ⚙️ Flexibilidad (Claude)
+- **Unión:** la 3.0.0 de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`) y la auditoría de GPT‑6 (`openai-gpt6/encicla-auditoria-20261122`), sin conflictos.
+- **Pendiente 3 de GPT‑6:** el bucle de 60-ui avanza en subpasos de 50 ms (antes, un solo paso de hasta 200 ms).
+- **⚙️ Flexibilidad** (Más → ⚙️ Flexibilidad y la pausa → Controles):
+  - nuevos: 🎯 giro (suave, normal, rápido), 🚲 velocidad de la cicla (×0,8 a ×1,5) y ⏫ pedaleo fijo al empezar;
+  - ya estaban: lado y tamaño del joystick, tipo de control y vibración.
+  Solo cambian lo de quien juega: el bot y las pruebas siguen iguales.
+- **Motor:** `motor-city/` 4.8.0 como referencia (`docs/INFORME-MOTOR-CITY-4.6.md`, apartado 4.8).
+- **Probado:** `node tools/build.js` y `node tests/run.js`: todas las pruebas pasaron.
+- **Falta:** portar el 🚀 Ir del mapa y la pantalla en mitades del motor si el autor lo pide.
+
 ## 22-nov-2026 · v3.0.0 · Ronda 3.0 de Claude: arreglar lo roto, todo liberado, módulos en el valle y un solo mundo 3D
 Pedido del autor a tres IA a la vez (cada una con su documento): revisar, compararlo con los mejores juegos, investigar y planear; arreglar los modos rotos, lentos o engorrosos; liberar todo; llevar cada módulo al mundo abierto; carrera sin fin en ciclovías con giros, angostos y trucos; un solo mundo 3D. Documento: **`docs/INVESTIGACION-Y-PLAN-3.0-Claude.md`**.
 1. **Auditoría medida** (`tests/auditoria-modos.js`, CPU 4×): la bici iba a 14 cuadros por segundo con picos de 165 ms y perdía hasta el 30 % del tiempo por el tope de 50 ms del paso.

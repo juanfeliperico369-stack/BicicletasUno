@@ -44,3 +44,17 @@ El autor: «el problema es el arranque: si se suelta el joystick se deja de acel
   - el ritmo arcade de velocidades;
   - que un carro quieto se lleve lo liviano (canecas, conos) a cualquier velocidad.
 - Este repositorio solo recibió la copia del motor; el juego no cambió.
+
+## Motor City 4.8.0 «Flexibilidad» (22‑nov‑2026, Claude)
+- **Qué trae el motor nuevo (en `motor-city/`):**
+  - ⚙️ `MC.Flex` (`js/37-flexibilidad.js`): control, giro, velocidad de los vehículos, distancia de cámara, acelerador fijo, tren con palanca, mano zurda, tamaño de la interfaz, calidad fija, vibración y pantalla en mitades;
+  - la pantalla en mitades de `MC.Controles` (arriba la cámara, abajo manejar; el joystick no se suelta al mover la cámara);
+  - el mapa grande con 🚀 Ir y paso al 🌍 planeta;
+  - el caché de sectores de suelo de 400 (p95 de 166 a 33 ms con CPU 4×);
+  - el Raster 3D por software con tráfico y `aPantalla`;
+  - primera persona a la altura de los ojos, luz hemisférica y 🌄 miradores.
+- **Para portar (manera A, leer y portar):**
+  - la idea de las mitades: el joystick solo en el cuarto inferior de su mano y la mitad de arriba para la cámara;
+  - el 🚀 Ir del mapa;
+  - el arreglo del caché, si este juego descomprime sectores por demanda.
+- En este repositorio, el juego subió a 3.1.0 con su propia ⚙️ Flexibilidad (Más → ⚙️ Flexibilidad: giro, velocidad de la cicla, pedaleo fijo al empezar, lado y tamaño del joystick, vibración).

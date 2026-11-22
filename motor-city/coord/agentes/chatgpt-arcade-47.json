@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-arcade-47",
+  "marca": "ChatGPT",
+  "rama": "ia/chatgpt/4.7-auditoria-arcade-20261122",
+  "rol": "Investigacion comparativa y auditoria independiente de jugabilidad/Run/3D; QA no intrusivo para Motor City y Turno Cero",
+  "fase_actual": "4.7 auditoria y contrato de paridad de actividades publicadas para integracion",
+  "estado": "correccion_funcional_aislada_y_pruebas_en_verificacion",
+  "ultima_actualizacion_utc": "2026-11-22",
+  "zonas_reclamadas": [
+    "docs/PLAN-EVOLUCION-CHATGPT.md",
+    "pruebas/chatgpt-auditoria-contratos.mjs",
+    "pruebas/chatgpt-input-real.mjs",
+    "coord/agentes/chatgpt-arcade-47.json",
+    "coord/buzon/20261122-chatgpt-47-auditoria-arcade.md",
+    "coord/buzon/20261122-chatgpt-47-entrega.md",
+    "juegos/getaway/61-chatgpt-guardia-encicla.js"
+  ],
+  "no_toco": [
+    "js/ del motor: trabajo 4.7 de Claude",
+    "juegos/getaway/60-modos.js y otros modulos centrales del juego: trabajo 4.7 de Claude",
+    "motor propio y src de MetroZero, BicicletasUno y RunRunZero",
+    "ramas ajenas"
+  ],
+  "entregas": {
+    "documento": "docs/PLAN-EVOLUCION-CHATGPT.md",
+    "auditoria_estatica": "pruebas/chatgpt-auditoria-contratos.mjs",
+    "e2e_sin_teletransporte": "pruebas/chatgpt-input-real.mjs",
+    "correccion_jugable": "juegos/getaway/61-chatgpt-guardia-encicla.js"
+  },
+  "hallazgos_para_integracion": [
+    "TC-P0-01 E2E existente teletransporta y no acredita conduccion",
+    "TC-P0-02 y 03 Run solo filtra entrada, no ruta ni giros",
+    "TC-P0-04 falta paridad espacial entre selector y mundo abierto",
+    "TC-P1-06 balance rail lento",
+    "TC-P1-13 posible mutacion de cuerpo antes de WebGL",
+    "TC-P1-05 guardia EnCicla ahora aplicada como extension 61 en rama ChatGPT; probar y migrar al modulo 60 si Claude lo prefiere"
+  ],
+  "verificacion": "lectura de código + Chromium E2E diagnóstico propio ejecutado en GitHub Actions run 45034216286; falta experiencia de juego completa y Android/iOS físico",
+  "relevo": "Revisar este documento, ramas y buzones; ejecutar y reparar tests en dispositivos; marcar cambios aplicados con commit. Cada IA debe dejar su propio documento y su propio buzon sin borrar aportes previos.",
+  "controles_confirmados": [
+    "TC-OK-04 Metro teclado: Controles.leer mapea ArrowDown/S a ent.stick.y; confirmado en GitHub Actions"
+  ]
+}
