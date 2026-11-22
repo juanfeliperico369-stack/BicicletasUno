@@ -1,12 +1,12 @@
 {
-  "version": "4.6.0",
-  "fecha": "2026-11-21",
+  "version": "4.6.1",
+  "fecha": "2026-11-22",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 4.6.0 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "MetroZero: motor-city/ 4.6.0 como referencia; el juego sigue con su Motor del Valle, ahora con el manejo de EnCicla (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "RunRunZero: motor-city/ 4.6.0 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
+    "BicicletasUno: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "MetroZero: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (su 3.1.0 «Fluido», de su propia sesión, ya trae el manejo de EnCicla) (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "RunRunZero: motor-city/ 4.6.1 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
   ],
-  "estado": "4.6.0: manejo de EnCicla en el motor (arranca rápido, gira cerrado, sin derrapes por nada, subpasos al ritmo del reloj), mapa grande como el de EnCicla (no congela, acerca y aleja, brújula, destino), horizontal, y un solo juego de prueba: Turno Cero con los modos Carreras, Extremo, Mandados, EnCicla y manejar el Metro; El Metro con el mismo manejo"
+  "estado": "4.6.1: ⏫ acelerador fijo (un toque y el carro acelera solo, el joystick solo da la dirección; otro toque y frena hasta parar), en el motor (MC.Manejo, ui.alternar) y en Turno Cero. 4.6.0: manejo y mapa de EnCicla, horizontal y un solo juego de prueba (Turno Cero con 🎮 Modos)"
 }

@@ -45,7 +45,7 @@ const UI = {
 #${id} .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--a);opacity:.85;box-shadow:0 2px 10px #0006;will-change:transform}
 #${id} .joy small{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;font-weight:800;text-shadow:0 1px 4px #000c}
 #${id} .acciones{position:absolute;right:12px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
-#${id} .acciones button{width:66px;height:66px;border-radius:50%;font-size:26px;background:var(--f);border:2px solid var(--b)}#${id} .acciones button.on{background:var(--a);color:#000}
+#${id} .acciones button{width:66px;height:66px;border-radius:50%;font-size:26px;background:var(--f);border:2px solid var(--b)}#${id} .acciones button.on{background:var(--a);color:#000}#${id} .acciones button.alt{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}#${id} .acciones button.alt small{font:800 9px/1 system-ui;letter-spacing:.02em;margin-top:2px;opacity:.85}@media (max-width:560px){#${id}.con-alt .vel{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 82px)}}#${id} .acciones button.prendido{background:#2ee6a6;color:#05261b;border-color:#fff;box-shadow:0 0 0 3px #2ee6a655,0 0 18px #2ee6a6aa}
 #${id} canvas.mini{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 86px)}
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
@@ -93,6 +93,12 @@ const UI = {
         if (!ui._acc) ui._acc = div('acciones p'); const b = document.createElement('button'); b.innerHTML = icono; b.setAttribute('aria-label', texto || aid); b.title = texto; ui._acc.appendChild(b);
         const on = e => { e.preventDefault(); e.stopPropagation(); b.classList.add('on'); if (ctl) ctl.boton(aid, true); if (al && !mantener) al(e); }, off = e => { b.classList.remove('on'); if (ctl) ctl.boton(aid, false); if (al && mantener && e && e.type === 'pointerup') al(e); };
         b.addEventListener('pointerdown', on); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, off); return b; },
+      /* 4.6.1 · botón que se prende y se apaga (el acelerador fijo): un toque lo prende, otro lo apaga; se ve prendido (aria-pressed) */
+      alternar({ id: aid, icono = '', texto = '', al, activo = false }) {
+        if (!ui._acc) ui._acc = div('acciones p'); const b = document.createElement('button'); b.className = 'alt'; b.innerHTML = icono + '<small>' + (texto.split(':')[0] || '') + '</small>'; b.setAttribute('aria-label', texto || aid); b.title = texto; ui._acc.insertBefore(b, ui._acc.firstChild);
+        const o = { b, activo: !!activo, poner(v, callado) { o.activo = !!v; b.setAttribute('aria-pressed', o.activo ? 'true' : 'false'); b.classList.toggle('prendido', o.activo); if (al && !callado) al(o.activo); } };
+        b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); o.poner(!o.activo); }); b.addEventListener('click', e => { if (e.detail === 0) o.poner(!o.activo); });   /* el clic del teclado o de un lector de pantalla también */
+        o.poner(o.activo, true); (ui._alt || (ui._alt = {}))[aid] = o; capa.classList.add('con-alt'); return o; },   /* con-alt: en vertical, la velocidad sube sobre la fila de botones (3 botones ya llegan al centro) */
       quitar() { capa.remove(); css.remove(); }
     };
     return ui;

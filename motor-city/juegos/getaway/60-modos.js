@@ -156,7 +156,10 @@ const Modos = {
     G.ui.aviso((L.clase === 'metro' ? '🚇 ' : L.clase === 'tranvia' ? '🚋 ' : '🚌 ') + L.nombre + ' hacia ' + L.est[dir > 0 ? L.est.length - 1 : 0].nombre + ' · ⚡ acelera, 🛑 frena, para dentro del andén', 3600, 'modos');
   },
   manejarTren(dt, ent) {
-    const m = this.m, L = m.L, C = G.cuerpo, B = G.ctl.botones; let thr = clamp(-(ent.stick.y || 0) * (ent.stick.m || 0), -1, 1); if (B.has('turbo') || ent.turbo) thr = 1; if (B.has('freno') || (ent.pulsos && ent.pulsos.has('Space'))) thr = -1;
+    const m = this.m, L = m.L, C = G.cuerpo, B = G.ctl.botones; let thr = clamp(-(ent.stick.y || 0) * (ent.stick.m || 0), -1, 1); if (B.has('turbo') || ent.turbo) thr = 1;
+    /* 4.6.1 · ⏫ acelerador fijo también en el tren: prendido acelera solo; al apagarlo frena suave hasta parar (para llegar al andén) */
+    if (G.acelFijo) { m._parar = false; thr = 1; } else if (m._fijo) m._parar = true; m._fijo = !!G.acelFijo; if (m._parar) { if (thr > .05 || m.v < .3) m._parar = false; else thr = -.6; }
+    if (B.has('freno') || (ent.pulsos && ent.pulsos.has('Space'))) thr = -1;
     m.t += dt; if (m.puertas > 0) { m.puertas -= dt; m.v = 0; if (m.puertas <= 0) G.ui.aviso('🚪 Cierren puertas · siguiente: ' + (L.est[m.sig] ? L.est[m.sig].nombre : 'fin de línea'), 1800, 'puertas'); }
     else { if (thr > .05) m.v += 1.15 * thr * dt; else if (thr < -.05) m.v = Math.max(0, m.v + 1.5 * thr * dt); else m.v = Math.max(0, m.v - .1 * dt); if (m.v > m.vmax) { m.v -= 2.2 * dt; if ((m._lim = (m._lim || 0) - dt) <= 0) { m._lim = 3; G.ui.aviso('⚠️ Velocidad máxima de la línea: ' + Math.round(m.vmax * 3.6) + ' km/h', 1500, 'lim'); } } }
     m.s = clamp(m.s + m.v * dt * m.dir, 0, L.T.largo);

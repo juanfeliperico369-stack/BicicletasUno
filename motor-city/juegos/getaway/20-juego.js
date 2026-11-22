@@ -217,7 +217,7 @@ function paso(dt, dtVisual) {
   else if (G.controlExterno && dt > 0) G.controlExterno(dt, ent);   /* 4.6: un modo maneja otra cosa (el tren de 🎮 Modos) */
   else if (dt > 0) {
     const gl = G.vistas.actual.control === 'volante', via = V.clase !== 'pie' ? M.viaCercana(C.x, C.y, 12) : null;
-    const e = MC.Manejo.aplicar(ent, C, { camara: G.camara, esquema: 'joystick', vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null });
+    const e = MC.Manejo.aplicar(ent, C, { camara: G.camara, esquema: 'joystick', vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null, acelFijo: !!G.acelFijo && V.clase !== 'pie' });   /* 4.6.1: ⏫ acelerador fijo */
     const freno = G.ctl.botones.has('freno') || ent.pulsos.has('Space');
     /* 4.5 · freno de mano: con velocidad y girando, derrapa (sigue girando, se cruza la cola, deja marcas y humo); quieto o derecho, frena */
     if (freno && V.clase !== 'pie') { const gira = (e.dir && Math.abs(angDif(C.a, Math.atan2(e.dir.y, e.dir.x))) > .25) || Math.abs(e.giro || 0) > .25; if (gira && Math.abs(C.v) > 7 && enCarro) { e.derrape = true; e.acel = Math.min(e.acel || 0, .3); } else { e.dir = null; e.acel = -1; } }

@@ -1,4 +1,4 @@
-/* Motor City 4.6.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.6.1 · 2026-11-22 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.6.0',
+  version: '4.6.1',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -3950,7 +3950,7 @@ class Cuerpo {
     /* velocidad: directo a la pedida (como EnCicla); frenar es fuerte; soltar, rueda */
     const acc = S.acc * (turbo ? 1.4 : 1) * (pie ? 1 : clamp(suelo * 1.4, .5, 1)), brk = S.brk * (lluvia ? .7 : 1);
     if (this.enAire) { /* nada */ }
-    else if (frena) this.v = Math.max(0, this.v - brk * dt);
+    else if (frena) this.v = Math.max(0, this.v - brk * (E.frenoK || 1) * dt);   /* frenoK: el acelerador fijo, al apagarse, frena suave (4.6.1) */
     else if (suelta) { const c = (S.coast + Math.abs(this.v) * S.arrastre) * (lluvia ? .6 : 1) * dt; this.v = Math.abs(this.v) <= c ? 0 : this.v - Math.sign(this.v) * c; }
     else if (tv >= 0 && this.v >= 0) { if (tv > this.v) this.v = Math.min(tv, this.v + Math.min(acc, (tv - this.v) * 2 + .5) * dt); else this.v = Math.max(tv, this.v - Math.min(brk, (this.v - tv) * 3.5 + 6) * dt); }
     else if (tv < 0 && this.v <= .3) this.v = Math.max(tv, this.v - acc * .6 * dt);
@@ -4793,6 +4793,18 @@ const Manejo = {
       let giro = esq === 'inclinacion' ? Manejo.inclinacion() : (sx || ent.giro || 0);
       out.giro = Manejo.giroPorVelocidad(clamp(giro, -1, 1), C.v, vmax, P);
       out.acel = -sy || ent.acel || 0; if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
+    }
+    /* 4.6.1 · ACELERADOR FIJO (pedido del autor: «el problema es el arranque: si se suelta el joystick se deja de acelerar; pon un
+       botón que, prendido, acelere siempre, y para detenerse simplemente se apaga»). Prendido: acelera a fondo y el joystick solo da la
+       dirección (sin joystick, sigue derecho y el imán de calle lo alinea con la vía). Apagado: frena suave hasta parar, salvo que
+       se toque el joystick o el acelerador. El 🛑 sigue mandando mientras se oprime. A pie no hace nada. */
+    if (V.clase !== 'pie') {
+      const fijo = !!op.acelFijo;
+      if (fijo) { C._pararFijo = false; if (out.dir) out.dir.m = 1; else if (volante) out.acel = out.acel < -.3 ? out.acel : 1; else { out.acel = 1; out.giro = out.giro || 0; } }
+      else if (C._fijo) C._pararFijo = true;
+      C._fijo = fijo;
+      if (!fijo && C._pararFijo) { if ((out.dir && out.dir.m > .08) || out.acel > .05 || Math.abs(C.v) < .4) C._pararFijo = false; else { out.acel = -1; out.frenoK = .55; out.dir = null; } }
+      out.acelFijo = fijo;
     }
     /* frenar antes de la curva: mira la vía de adelante (si el juego la da) y no deja pasar de la velocidad segura */
     if (A.frenoCurvas && op.curvaAdelante != null && V.clase !== 'pie') { const vs = Manejo.vSegura(op.curvaAdelante, op.mu || .8); if (C.v > vs && out.acel > 0) out.acel = C.v > vs * 1.08 ? -.6 : 0; }
@@ -7725,7 +7737,7 @@ const UI = {
 #${id} .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--a);opacity:.85;box-shadow:0 2px 10px #0006;will-change:transform}
 #${id} .joy small{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;font-weight:800;text-shadow:0 1px 4px #000c}
 #${id} .acciones{position:absolute;right:12px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
-#${id} .acciones button{width:66px;height:66px;border-radius:50%;font-size:26px;background:var(--f);border:2px solid var(--b)}#${id} .acciones button.on{background:var(--a);color:#000}
+#${id} .acciones button{width:66px;height:66px;border-radius:50%;font-size:26px;background:var(--f);border:2px solid var(--b)}#${id} .acciones button.on{background:var(--a);color:#000}#${id} .acciones button.alt{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}#${id} .acciones button.alt small{font:800 9px/1 system-ui;letter-spacing:.02em;margin-top:2px;opacity:.85}@media (max-width:560px){#${id}.con-alt .vel{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 82px)}}#${id} .acciones button.prendido{background:#2ee6a6;color:#05261b;border-color:#fff;box-shadow:0 0 0 3px #2ee6a655,0 0 18px #2ee6a6aa}
 #${id} canvas.mini{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 86px)}
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
@@ -7773,6 +7785,12 @@ const UI = {
         if (!ui._acc) ui._acc = div('acciones p'); const b = document.createElement('button'); b.innerHTML = icono; b.setAttribute('aria-label', texto || aid); b.title = texto; ui._acc.appendChild(b);
         const on = e => { e.preventDefault(); e.stopPropagation(); b.classList.add('on'); if (ctl) ctl.boton(aid, true); if (al && !mantener) al(e); }, off = e => { b.classList.remove('on'); if (ctl) ctl.boton(aid, false); if (al && mantener && e && e.type === 'pointerup') al(e); };
         b.addEventListener('pointerdown', on); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, off); return b; },
+      /* 4.6.1 · botón que se prende y se apaga (el acelerador fijo): un toque lo prende, otro lo apaga; se ve prendido (aria-pressed) */
+      alternar({ id: aid, icono = '', texto = '', al, activo = false }) {
+        if (!ui._acc) ui._acc = div('acciones p'); const b = document.createElement('button'); b.className = 'alt'; b.innerHTML = icono + '<small>' + (texto.split(':')[0] || '') + '</small>'; b.setAttribute('aria-label', texto || aid); b.title = texto; ui._acc.insertBefore(b, ui._acc.firstChild);
+        const o = { b, activo: !!activo, poner(v, callado) { o.activo = !!v; b.setAttribute('aria-pressed', o.activo ? 'true' : 'false'); b.classList.toggle('prendido', o.activo); if (al && !callado) al(o.activo); } };
+        b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); o.poner(!o.activo); }); b.addEventListener('click', e => { if (e.detail === 0) o.poner(!o.activo); });   /* el clic del teclado o de un lector de pantalla también */
+        o.poner(o.activo, true); (ui._alt || (ui._alt = {}))[aid] = o; capa.classList.add('con-alt'); return o; },   /* con-alt: en vertical, la velocidad sube sobre la fila de botones (3 botones ya llegan al centro) */
       quitar() { capa.remove(); css.remove(); }
     };
     return ui;

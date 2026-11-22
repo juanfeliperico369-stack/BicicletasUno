@@ -170,7 +170,7 @@ class Cuerpo {
     /* velocidad: directo a la pedida (como EnCicla); frenar es fuerte; soltar, rueda */
     const acc = S.acc * (turbo ? 1.4 : 1) * (pie ? 1 : clamp(suelo * 1.4, .5, 1)), brk = S.brk * (lluvia ? .7 : 1);
     if (this.enAire) { /* nada */ }
-    else if (frena) this.v = Math.max(0, this.v - brk * dt);
+    else if (frena) this.v = Math.max(0, this.v - brk * (E.frenoK || 1) * dt);   /* frenoK: el acelerador fijo, al apagarse, frena suave (4.6.1) */
     else if (suelta) { const c = (S.coast + Math.abs(this.v) * S.arrastre) * (lluvia ? .6 : 1) * dt; this.v = Math.abs(this.v) <= c ? 0 : this.v - Math.sign(this.v) * c; }
     else if (tv >= 0 && this.v >= 0) { if (tv > this.v) this.v = Math.min(tv, this.v + Math.min(acc, (tv - this.v) * 2 + .5) * dt); else this.v = Math.max(tv, this.v - Math.min(brk, (this.v - tv) * 3.5 + 6) * dt); }
     else if (tv < 0 && this.v <= .3) this.v = Math.max(tv, this.v - acc * .6 * dt);

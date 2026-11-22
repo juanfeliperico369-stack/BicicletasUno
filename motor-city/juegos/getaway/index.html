@@ -126,7 +126,8 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
  #artefactos{left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);flex-direction:row;gap:6px}
  #artefactos button{width:44px;height:44px;font-size:18px}
  #subt{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 84px);width:min(520px,56vw);font-size:14px}
- .mcui .izq{max-width:min(300px,36vw)!important}
+ .mcui .izq{max-width:min(300px,calc(25vw - 16px))!important}
+ .mcui .izq .aviso{width:min(340px,38vw);max-width:none!important}
 }
 </style>
 </head>
@@ -155,7 +156,7 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
     <div id="capitulos" hidden></div>
     <div id="ciudades" class="bts" hidden></div>
     <details id="comoSe"><summary>❓ Cómo se juega (opcional)</summary><ul>
-      <li><b>Manejar:</b> arrastra abajo a la izquierda (o flechas / WASD). ⚡ turbo y 🛑 freno, abajo a la derecha (Shift y espacio).</li>
+      <li><b>Manejar:</b> arrastra abajo a la izquierda (o flechas / WASD). ⚡ turbo y 🛑 freno, abajo a la derecha (Shift y espacio). <b>⏫ Acelerar</b> (tecla V): un toque y el carro acelera solo, el joystick solo da la dirección; otro toque y frena hasta parar.</li>
       <li><b>Sirenas 🚨:</b> de 0 a 5. Suben con lo que haces y si te ven; bajan cuando nadie te ve. Desde 3 hay púas y retenes; en 5, helicóptero.</li>
       <li><b>Perderlos:</b> rompe la línea de visión, escóndete (🅿️), pinta el carro en un taller 🔧, súbete al metro en Medellín 🚇, toma una EnCicla 🚲 o tírate al embalse en lancha 🚤 en Guatapé.</li>
       <li><b>La Cámara de Rutas y Argo:</b> sus camionetas embisten y disparan. Embístelas de lado o dispara 🔫 a los carros (munición limitada).</li>

@@ -77,6 +77,9 @@
 | 4.2 · la historia se encuentra | `56-abierto.js`, `50-extras.js` | <ul><li>📖 en la calle y en el minimapa donde empieza el próximo capítulo o donde quedó la historia; al pasar cerca solo avisa, se juega si uno quiere.</li><li>La carrera callejera tiene la meta adelante y el rival sale en el carril de al lado.</li><li>Ganchos `EXTRAS.capas` y `EXTRAS.mapa`.</li></ul> |
 | Artefactos (ficción de juego) | `juegos/getaway/20-juego.js` | T02 Dron Cuervo, T05 Cebo acústico, T08 Pulso de interferencia, T01 Lente espectral (estilo térmico del motor), T03 Rastreador, T06 Acceso, T11 Cámara, T09 Custodia y T04 VELA |
 
+## 3a. ⏫ Acelerador fijo (4.6.1)
+Un toque en ⏫ (o la tecla V) y el carro acelera solo: el joystick solo da la dirección. Otro toque y frena hasta parar. 🛑 sigue frenando mientras se oprime (y, girando, derrapa). Sirve en carro, moto, bici y manejando el tren de 🎮 Modos; a pie se esconde.
+
 ## 3b. 🎮 Modos (4.6): el único juego de prueba trae todo
 Pedido del autor: «la idea era tener solo un juego de prueba: entrega los cuatro en Turno Cero y rescata lo de EnCicla y El Metro». En el mundo abierto de cualquier ciudad (botón 🎮, ⏸ Menú o la portada, «Modos de juego»), sin policía mientras dura el modo (`juegos/getaway/60-modos.js`):
 | Modo | De dónde viene | Qué se juega |

@@ -9,7 +9,7 @@
 3. El deslizamiento de la 4.5: las llantas siempre «se quedaban atrás» de la trompa, aun sin freno de mano.
 4. La cámara miraba muy adelante (hasta 1,1·v) y seguía despacio.
 
-**El modelo de EnCicla (`BicicletasUno/src/js/30-ride.js`), ahora en el motor (`js/32-fisica.js` · `_arcade`) y en El Metro (`src/js/36-libre.js` · `driveArcade`):**
+**El modelo de EnCicla (`BicicletasUno/src/js/30-ride.js`), ahora en el motor (`js/32-fisica.js` · `_arcade`); El Metro lo tiene desde su 3.1.0 «Fluido», hecha por su propia sesión:**
 | Pieza | Fórmula |
 |---|---|
 | Giro | `w ← w + (clamp(6,5·Δ, ±wm) − w)·(1 − e^(−dt/tw))`, con `wm = w1 + (w0 − w1)·(1 − v/vmáx)`; en los de motor, casi nada quieto (`×min(1, 0,3 + v/4)`). |
@@ -21,7 +21,7 @@
 | Reloj | Subpasos de 25 ms (hasta 8): a 15 cuadros por segundo se recorre lo mismo que a 60. Búsqueda, persecución y objetos, igual. |
 | Cámara | Adelanto `0,45·v` con tope de 1/6 de la vista y resortes más firmes. |
 
-**Números por tipo** (`Vehiculos.ARCADE`; El Metro usa los mismos en `Libre.ARC`): `acc = max(accMín, accK·vmáx)`, `brk = max(brkMín, brkK·vmáx)`, `coast = coastK·vmáx`.
+**Números por tipo** (`Vehiculos.ARCADE`): `acc = max(accMín, accK·vmáx)`, `brk = max(brkMín, brkK·vmáx)`, `coast = coastK·vmáx`.
 | Tipo | accK | brkK | coastK | arrastre | w0 | w1 | tw | accMín | brkMín |
 |---|---|---|---|---|---|---|---|---|---|
 | a pie | 3,5 | 6,5 | 4 | 0,35 | 7,5 | 6 | 0,05 | 6 | 10 |
@@ -30,7 +30,9 @@
 | carro | 0,34 | 0,85 | 0,14 | 0,1 | 3,4 | 1,75 | 0,11 | 7,5 | 18 |
 | pesado | 0,32 | 0,9 | 0,3 | 0,1 | 2,4 | 1,2 | 0,2 | 3,5 | 10 |
 
-**Medido** (`node pruebas/prueba.mjs` § 26): carro de 0 al 90 % en 2,7 s; radio de 4,8 m a 20 m/s sin derrapar; con freno de mano derrapa y se endereza en 0,1 s al soltar; a 15 y a 60 cuadros por segundo recorre lo mismo (17,1 y 17,2 m). En El Metro, el taxi: de 0 al 90 % en 2,7 s (antes más de 10), giro de 16 m a 72 km/h, frena de 72 km/h en 1 s.
+**Medido** (`node pruebas/prueba.mjs` § 26): carro de 0 al 90 % en 2,7 s; radio de 4,8 m a 20 m/s sin derrapar; con freno de mano derrapa y se endereza en 0,1 s al soltar; a 15 y a 60 cuadros por segundo recorre lo mismo (17,1 y 17,2 m). Una versión de prueba en El Metro (retirada para no pisar la 3.1.0 de su sesión) daba con estos números: taxi de 0 al 90 % en 2,7 s (antes más de 10) y giro de 16 m a 72 km/h.
+
+**4.6.1 · ⏫ Acelerador fijo** (pedido del autor: «si se suelta el joystick se deja de acelerar; quiero un botón que acelere sin parar y que para detenerse simplemente se desactive»): `MC.Manejo.aplicar(…, { acelFijo: true })` pone el empuje a fondo y deja al joystick solo la dirección; sin joystick, `acel = 1` y el vehículo sigue derecho. Al apagarlo, `acel = −1` con `frenoK = 0,55` (de 90 km/h para en unos 2 s) hasta que se toque el joystick o se detenga. Prueba § 27.
 
 El modelo de llantas de la 4.5 (`ManejoCarro`, `js/36-taller.js`) no se borró: queda para quien elija `MC.opciones.manejo = 'simulacion'`. Lo que sigue de este documento (§ 1 a 5) es la investigación y el trabajo de la 4.5: los choques que deslizan, desatascar, las cosas que se rompen, los efectos y el sigilo siguen igual.
 

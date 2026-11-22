@@ -11,6 +11,8 @@ function iniciarInterfaz() {
   G.ctl = new MC.Controles(G.cv, { alGesto: q => { if (q.tipo !== 'toque' && G.camara) G.camara.gesto(q); }, alTecla: tecla });
   ui.joystick(G.ctl, { texto: 'Arrastra para manejar' });
   { const izq = ui.capa.querySelector('.izq'), vj = $('#viaje'); if (izq && vj) izq.insertBefore(vj, izq.querySelector('.aviso')); }   /* el letrero de la vía va en la columna de la izquierda, nunca sobre la calle */
+  /* 4.6.1 · ⏫ acelerador fijo: un toque y el carro acelera solo (el joystick solo da la dirección); otro toque y frena hasta parar */
+  G.botAcel = ui.alternar({ id: 'acelerador', icono: '⏫', texto: 'Acelerar: prendido acelera solo, el joystick solo da la dirección; apagado, frena hasta parar (tecla V)', al: v => ponerAcelerador(v) });
   ui.accion({ id: 'freno', icono: '🛑', texto: 'Freno', mantener: true, ctl: G.ctl });
   ui.accion({ id: 'turbo', icono: '⚡', texto: 'Turbo', mantener: true, ctl: G.ctl });
   const b = (k, icono, texto, al) => (BOT[k] = ui.boton({ id: k, icono, texto, al }));
@@ -63,6 +65,7 @@ function menuHistoria() {
 /* 4.6 · el mapa grande del motor (js/70-mapa.js, como el de EnCicla): pausa el juego, acerca y aleja sin congelar, 🧭 brújula, tocar = destino */
 function abrirMapaTC() { const ui = G.ui; if (!ui || !G.M) return; if (ui._mapa) return ui._mapa.cerrar(); let antes = false;
   ui.abrirMapa(G.vistas, G.M, () => mapaPts, () => (G.cuerpo ? { x: G.cuerpo.x, y: G.cuerpo.y, a: G.cuerpo.a } : null), { destino: G.destinoLibre, pausa: v => { if (v) { antes = G.pausa; G.pausa = true; } else G.pausa = antes; }, alDestino: p => { G.destinoLibre = p; } }); }
+function ponerAcelerador(v, callado) { G.acelFijo = !!v; if (G.botAcel && G.botAcel.activo !== G.acelFijo) G.botAcel.poner(G.acelFijo, true); if (callado) return; if (G.ui) G.ui.aviso(G.acelFijo ? '⏫ Acelerando solo: el joystick solo da la dirección · 🛑 frena · toca ⏫ otra vez para parar' : '⏹ Acelerador apagado: frenando hasta parar', 2200, 'acel'); escribirG({ acelFijoVisto: true }); }
 function tecla(k) {
   if (!G.M || G.pausa) return; const A = Artefactos;
   if (k === 'Digit1') A.dron(); else if (k === 'Digit2') A.cebo(); else if (k === 'Digit3') A.pulso(); else if (k === 'Digit4') A.lente(); else if (k === 'KeyF') A.disparar();
@@ -70,6 +73,7 @@ function tecla(k) {
   else if (k === 'KeyR' && BOT.run && !BOT.run.hidden) Extras.entrarRun();
   else if (k === 'KeyH' && G.modo === 'libre') menuHistoria();
   else if (k === 'KeyE') { for (const q of ['reducir', 'foto', 'taller', 'metro', 'lancha', 'tierra', 'robar', 'montar', 'encicla']) if (BOT[q] && !BOT[q].hidden) { BOT[q].onclick({ stopPropagation() {} }); break; } }
+  else if (k === 'KeyV') { if (G.cuerpo.veh.clase !== 'pie' || G.controlExterno) ponerAcelerador(!G.acelFijo); }
   else if (k === 'KeyX') { if (G.cuerpo.veh.clase !== 'pie') G.cuerpo.bajarse('jugador'); }
 }
 
