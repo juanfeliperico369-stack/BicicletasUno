@@ -530,6 +530,31 @@ console.log('25) Manejo 4.5: desliza contra la pared, pierde velocidad según el
   const S = M.sitios(); let enCancha = 0, revisadas = 0; for (const c of S.C.slice(0, 400)) { const R = Math.hypot(c.largo, c.ancho) / 2; for (const t of MC.Arboleda.en(M, c.x - R, c.y - R, c.x + R, c.y + R)) { const dx = t.x - c.x, dy = t.y - c.y, u = dx * Math.cos(c.ang) + dy * Math.sin(c.ang), v = -dx * Math.sin(c.ang) + dy * Math.cos(c.ang); if (Math.abs(u) < c.largo / 2 && Math.abs(v) < c.ancho / 2) enCancha++; } revisadas++; }
   ok(rasante && rasante.avance > 8 && rasante.v > 6 && frente && frente.v < 6 && desatasca && desatasca.des && desatasca.avance > .5 && rompe && rompe.roto && rompe.quedaV > 5 && rompe.noEstorba && enCancha === 0 && revisadas > 50, 'manejo 4.5: rasante desliza y conserva velocidad; de frente frena; se desatasca; tumba la caneca y sigue; cero árboles en ' + revisadas + ' canchas', { rasante, frente, desatasca, rompe, enCancha }); }
 
+console.log('26) Manejo 4.6 (el de EnCicla): arranca rápido, gira cerrado, no derrapa sin freno de mano, se endereza rápido y va al ritmo del reloj');
+{ /* en una recta larga de Medellín, sin nada adelante: se mide como en un banco de pruebas */
+  const via = M.vias().filter(v => v.k <= 2 && v.p.length >= 4).map(v => { const L = Math.hypot(v.p[v.p.length - 2] - v.p[0], v.p[v.p.length - 1] - v.p[1]); return { v, L }; }).sort((a, b) => b.L - a.L)[0].v;
+  const x0 = via.p[0], y0 = via.p[1], a0 = Math.atan2(via.p[3] - via.p[1], via.p[2] - via.p[0]);
+  const nuevo = () => { const C = new MC.Cuerpo(M, { x: x0, y: y0, a: a0, veh: 'carro' }); C.puede = () => true; return C; };
+  /* arranque: 0 → 90 % de la máxima */
+  let C = nuevo(), t90 = 0; for (let t = 0; t < 10; t += 1 / 60) { C.actualizar(1 / 60, { acel: 1 }); if (C.v >= C.vmax() * .9) { t90 = t; break; } }
+  /* giro a fondo a 20 m/s: radio y deslizamiento sin freno de mano */
+  C = nuevo(); C.v = 20; let desl = 0; const a1 = C.a; let tg = 0; for (let t = 0; t < 1.5; t += 1 / 60) { C.actualizar(1 / 60, { acel: .8, giro: 1 }); desl = Math.max(desl, C.deslizamiento || 0); if (!tg && Math.abs(MC.angDif(a1, C.a)) > Math.PI / 2) tg = t; }
+  const radio = tg ? C.v * tg / (Math.PI / 2) : 99;
+  /* freno de mano: derrapa y, al soltarlo, se endereza en menos de medio segundo */
+  C = nuevo(); C.v = 18; for (let t = 0; t < .8; t += 1 / 60) C.actualizar(1 / 60, { acel: .3, giro: 1, derrape: true }); const conFreno = C.deslizamiento; let tRec = 0; for (let t = 0; t < 2; t += 1 / 60) { C.actualizar(1 / 60, { acel: .8 }); if ((C.deslizamiento || 0) < .05) { tRec = t; break; } }
+  /* el reloj: 2 s a 15 cuadros por segundo recorren lo mismo que a 60 */
+  const recorre = h => { const Q = nuevo(); for (let t = 0; t < 2 - 1e-9; t += h) Q.actualizar(h, { acel: 1 }); return Math.hypot(Q.x - x0, Q.y - y0); }, d60 = recorre(1 / 60), d15 = recorre(1 / 15);
+  ok(t90 > 0 && t90 < 4.5 && radio < 20 && desl < .05 && conFreno > .2 && tRec > 0 && tRec < .6 && Math.abs(d15 - d60) / d60 < .06, 'manejo 4.6: 0→90 % en ' + t90.toFixed(1) + ' s, radio ' + radio.toFixed(1) + ' m a 20 m/s sin derrapar, freno de mano derrapa y se endereza en ' + tRec.toFixed(2) + ' s, 15 y 60 cuadros recorren lo mismo', { t90: +t90.toFixed(2), radio: +radio.toFixed(1), desl: +desl.toFixed(3), conFreno: +conFreno.toFixed(2), tRec: +tRec.toFixed(2), d60: +d60.toFixed(1), d15: +d15.toFixed(1) }); }
+
+console.log('27) Acelerador fijo 4.6.1: prendido acelera solo y el joystick solo da la dirección; apagado, frena hasta parar');
+{ const via = M.vias().filter(v => v.k <= 2 && v.p.length >= 4).map(v => ({ v, L: Math.hypot(v.p[v.p.length - 2] - v.p[0], v.p[v.p.length - 1] - v.p[1]) })).sort((a, b) => b.L - a.L)[0].v;
+  const a0 = Math.atan2(via.p[3] - via.p[1], via.p[2] - via.p[0]), C = new MC.Cuerpo(M, { x: via.p[0], y: via.p[1], a: a0, veh: 'carro' }); C.puede = () => true;
+  const quieto = { stick: { x: 0, y: 0, m: 0 } }, paso = (ent, fijo, t) => { for (let k = 0; k < t * 60; k++) C.actualizar(1 / 60, MC.Manejo.aplicar(ent, C, { esquema: 'joystick', vista: 'mundo', acelFijo: fijo })); };
+  paso(quieto, true, 4); const v4 = C.v, recto = Math.abs(MC.angDif(a0, C.a));
+  const izq = a0 - Math.PI / 2, poco = { stick: { x: Math.cos(izq) * .35, y: Math.sin(izq) * .35, m: .35 } }; paso(poco, true, 1.2); const giro = Math.abs(MC.angDif(a0, C.a)), vGiro = C.v;
+  paso(quieto, true, 1.5); const vAntes = C.v; let tPara = 0; for (let t = 0; t < 8; t += 1 / 60) { C.actualizar(1 / 60, MC.Manejo.aplicar(quieto, C, { esquema: 'joystick', vista: 'mundo', acelFijo: false })); if (Math.abs(C.v) < .3) { tPara = t; break; } }
+  ok(v4 > C.vmax() * .85 && recto < .05 && giro > 1 && vGiro > 8 && vAntes > 15 && tPara > .8 && tPara < 6, 'acelerador fijo: sin tocar el joystick llega a ' + v4.toFixed(1) + ' m/s derecho; con el joystick a un 35 % gira ' + giro.toFixed(2) + ' rad sin soltar el acelerador (' + vGiro.toFixed(1) + ' m/s); apagado, para en ' + tPara.toFixed(1) + ' s', { v4: +v4.toFixed(1), recto: +recto.toFixed(3), giro: +giro.toFixed(2), vGiro: +vGiro.toFixed(1), vAntes: +vAntes.toFixed(1), tPara: +tPara.toFixed(2) }); }
+
 console.log('23) COLORMAP 4.4 (Doom): paleta de 256, tabla RGB15 y 32 niveles de luz por búsqueda en tabla');
 { const w = 64, h = 32, data = new Uint8ClampedArray(w * h * 4); for (let i = 0; i < w * h; i++) { data[i * 4] = 200; data[i * 4 + 1] = 120; data[i * 4 + 2] = 60; data[i * 4 + 3] = 255; }
   const img = { data, width: w, height: h }, T = MC.Colormap.tablas(); MC.Colormap.aplicar(img, { cx: 0, cy: 16, base: 0, caida: 30 / (w * w) });

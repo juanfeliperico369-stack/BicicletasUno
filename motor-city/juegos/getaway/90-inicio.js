@@ -11,10 +11,12 @@ function iniciarInterfaz() {
   G.ctl = new MC.Controles(G.cv, { alGesto: q => { if (q.tipo !== 'toque' && G.camara) G.camara.gesto(q); }, alTecla: tecla });
   ui.joystick(G.ctl, { texto: 'Arrastra para manejar' });
   { const izq = ui.capa.querySelector('.izq'), vj = $('#viaje'); if (izq && vj) izq.insertBefore(vj, izq.querySelector('.aviso')); }   /* el letrero de la vía va en la columna de la izquierda, nunca sobre la calle */
+  /* 4.6.1 · ⏫ acelerador fijo: un toque y el carro acelera solo (el joystick solo da la dirección); otro toque y frena hasta parar */
+  G.botAcel = ui.alternar({ id: 'acelerador', icono: '⏫', texto: 'Acelerar: prendido acelera solo, el joystick solo da la dirección; apagado, frena hasta parar (tecla V)', al: v => ponerAcelerador(v) });
   ui.accion({ id: 'freno', icono: '🛑', texto: 'Freno', mantener: true, ctl: G.ctl });
   ui.accion({ id: 'turbo', icono: '⚡', texto: 'Turbo', mantener: true, ctl: G.ctl });
   const b = (k, icono, texto, al) => (BOT[k] = ui.boton({ id: k, icono, texto, al }));
-  b('menu', '⏸', 'Menú', menu); b('mapa', '🗺️', 'Mapa', () => ui.abrirMapa(G.vistas, G.M, mapaPts, { x: G.cuerpo.x, y: G.cuerpo.y, a: G.cuerpo.a })); b('globo', '🌍', 'Planeta', () => Globo.abrir()); b('camara', '🎥', 'Cámara', siguienteCamara);
+  b('menu', '⏸', 'Menú', menu); b('mapa', '🗺️', 'Mapa', abrirMapaTC); b('globo', '🌍', 'Planeta', () => Globo.abrir()); b('camara', '🎥', 'Cámara', siguienteCamara);
   b('taller', '🔧', 'Taller', menuTaller); b('metro', '🚇', 'Metro', menuTransporte); b('encicla', '🚲', 'EnCicla', () => { G.cuerpo.setVeh('bici'); G.ui.aviso('🚲 EnCicla: por la ciclorruta no te sigue nadie en carro', 2200); });
   b('lancha', '🚤', 'Lancha', () => { if (G.cuerpo.embarcar('lancha')) { G.ui.aviso('🚤 Al embalse: la policía se queda en la orilla', 2200); if (G.busq.nivel && !G.busq.visto) G.busq.esconder('embalse'); } });
   b('tierra', '🏝️', 'Tierra', () => { if (G.cuerpo.desembarcar()) G.ui.aviso('🏝️ En tierra: consigue un carro', 1800); });
@@ -34,10 +36,11 @@ function iniciarInterfaz() {
 const CAMARAS = ['cenital', 'ciudad3d', 'tercera', 'maqueta', 'arcade', 'vuelo'];   /* 4.1: 🏁 arcade (OutRun) y ⛰️ vuelo (Voxel Space de Comanche) */
 function siguienteCamara() { const i = CAMARAS.indexOf(G.vistaId); G.vistaId = CAMARAS[(i + 1) % CAMARAS.length]; const v = G.vistas.usar(G.vistaId, G.E); G.ui.aviso(v.icon + ' ' + v.n, 1400, 'vista'); escribirG({ vista: G.vistaId }); }
 function menu() {
-  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia !== false ? 'sí (esquiva paredes)' : 'no (experto)') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
+  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'modos', texto: '🎮 Modos de juego (carreras, extremo, mandados, EnCicla, metro)' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia ? 'sí (esquiva paredes)' : 'no') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
   if (G.hist) it.push({ id: 'reintentar', texto: '↩ Volver al último punto' }); it.push({ id: 'historia', texto: '📖 Historia (opcional)' }, { id: 'libre', texto: '🌎 Mundo abierto aquí' }, { id: 'portada', texto: '🏠 Portada' });
   G.ui.menu('Turno Cero · ' + planeta.def(G.id).nombre, it, async k => {
-    if (k === 'asis') { G.asistencia = G.asistencia === false; escribirG({ asistencia: G.asistencia }); G.ui.aviso(G.asistencia ? '🛞 Asistencia: el carro esquiva las paredes que vienen' : '🛞 Sin asistencia: todo depende de ti', 2200, 'asis'); return menu(); }
+    if (k === 'asis') { G.asistencia = !G.asistencia; escribirG({ asistencia: G.asistencia }); G.ui.aviso(G.asistencia ? '🛞 Asistencia: el carro esquiva las paredes que vienen' : '🛞 Sin asistencia: todo depende de ti', 2200, 'asis'); return menu(); }
+    if (k === 'modos') return Modos.menu();
     if (k === 'sigcam') { G.sigiloCenital(leerG().sigiloCenital === false); return menu(); }
     if (k === 'cam') siguienteCamara(); else if (k === 'retro') { G.retro = !G.retro; escribirG({ retro: G.retro }); G.vistas.pixel = G.retro; G.vistas.colormap = G.retro; G.ui.aviso(G.retro ? '🕹️ Retro 1993: pocos píxeles, 256 colores y la luz que se apaga con la distancia' : '🕹️ Retro apagado', 2600, 'retro'); } else if (k === 'cine') { G.cine = !G.cine; escribirG({ cine: G.cine }); document.body.classList.toggle('cine', G.cine); G.ui.aviso(G.cine ? '🎬 Modo cine: sin flecha ni minimapa; las direccionales del carro marcan la próxima esquina' : '🎬 Modo cine apagado', 3000, 'cine'); } else if (k === 'sonido') { if (Snd.on) Snd.apagar(); else Snd.prender(); escribirG({ sonido: Snd.on }); } else if (k === 'suave') escribirG({ suave: !S.suave });
     else if (k === 'acces') Extras.opcionesMenu();
@@ -59,6 +62,10 @@ function menuHistoria() {
     else if (/^cap\d+$/.test(k)) { const i = +k.slice(3); G.municion = i >= 3 ? 24 : 0; await Historia.empezar(i); }
   });
 }
+/* 4.6 · el mapa grande del motor (js/70-mapa.js, como el de EnCicla): pausa el juego, acerca y aleja sin congelar, 🧭 brújula, tocar = destino */
+function abrirMapaTC() { const ui = G.ui; if (!ui || !G.M) return; if (ui._mapa) return ui._mapa.cerrar(); let antes = false;
+  ui.abrirMapa(G.vistas, G.M, () => mapaPts, () => (G.cuerpo ? { x: G.cuerpo.x, y: G.cuerpo.y, a: G.cuerpo.a } : null), { destino: G.destinoLibre, pausa: v => { if (v) { antes = G.pausa; G.pausa = true; } else G.pausa = antes; }, alDestino: p => { G.destinoLibre = p; } }); }
+function ponerAcelerador(v, callado) { G.acelFijo = !!v; if (G.botAcel && G.botAcel.activo !== G.acelFijo) G.botAcel.poner(G.acelFijo, true); if (callado) return; if (G.ui) G.ui.aviso(G.acelFijo ? '⏫ Acelerando solo: el joystick solo da la dirección · 🛑 frena · toca ⏫ otra vez para parar' : '⏹ Acelerador apagado: frenando hasta parar', 2200, 'acel'); escribirG({ acelFijoVisto: true }); }
 function tecla(k) {
   if (!G.M || G.pausa) return; const A = Artefactos;
   if (k === 'Digit1') A.dron(); else if (k === 'Digit2') A.cebo(); else if (k === 'Digit3') A.pulso(); else if (k === 'Digit4') A.lente(); else if (k === 'KeyF') A.disparar();
@@ -66,6 +73,7 @@ function tecla(k) {
   else if (k === 'KeyR' && BOT.run && !BOT.run.hidden) Extras.entrarRun();
   else if (k === 'KeyH' && G.modo === 'libre') menuHistoria();
   else if (k === 'KeyE') { for (const q of ['reducir', 'foto', 'taller', 'metro', 'lancha', 'tierra', 'robar', 'montar', 'encicla']) if (BOT[q] && !BOT[q].hidden) { BOT[q].onclick({ stopPropagation() {} }); break; } }
+  else if (k === 'KeyV') { if (G.cuerpo.veh.clase !== 'pie' || G.controlExterno) ponerAcelerador(!G.acelFijo); }
   else if (k === 'KeyX') { if (G.cuerpo.veh.clase !== 'pie') G.cuerpo.bajarse('jugador'); }
 }
 
@@ -82,13 +90,15 @@ function tecla(k) {
   if (LA) $('#sAbierto').textContent = 'Donde quedaste: ' + planeta.def(LA.id).nombre + ' · la historia es opcional';
   const abierto = () => arrancar(() => LA ? (Object.assign(G, { dinero: LA.dinero ?? G.dinero, veh: LA.veh || G.veh, tengo: LA.tengo || G.tengo }), Libre.empezar(LA.id, { x: LA.x, y: LA.y, a: LA.a }, { rapido: true })) : Libre.empezar('medellin', null, { rapido: true }));
   $('#bAbierto').onclick = abierto; G.abrirMundo = abierto;
+  /* 4.6 · 🎮 los modos (Carreras, Extremo, Mandados, EnCicla y el Metro) en el mismo juego: abre el mundo y luego el menú de modos */
+  $('#bModos').onclick = async () => { await abierto(); const esperar = () => (G.M && !G.transicion && G.cuerpo ? Modos.menu() : setTimeout(esperar, 300)); setTimeout(esperar, 400); };
   $('#cDirecto').checked = !!S.directo; $('#cDirecto').onchange = e => escribirG({ directo: e.target.checked });
   if (S.directo && S.edad18 && !/[?&]portada/.test(location.search)) setTimeout(abierto, 60);
-  for (const id of ['bAbierto', 'bHistoria', 'bSeguir', 'bLibre']) $('#' + id).addEventListener('click', () => escribirG({ edad18: true }), { capture: true });
+  for (const id of ['bAbierto', 'bModos', 'bHistoria', 'bSeguir', 'bLibre']) $('#' + id).addEventListener('click', () => escribirG({ edad18: true }), { capture: true });
   $('#bLibre').onclick = () => { const box = $('#ciudades'); box.hidden = !box.hidden; if (box.innerHTML) return; const L = S.libre;
     box.innerHTML = (L ? '<button data-c="aqui">📍 <span>Donde quedé<small>' + (planeta.def(L.id) || {}).nombre + '</small></span></button>' : '') + planeta.anillo.filter(d => d.tipo === 'ciudad').map(d => '<button class="b2" data-c="' + d.id + '">🏙️ <span>' + d.nombre + '<small>' + (d.id === 'nueva_york' ? 'Manhattan real: 6 m por casilla' : d.id === 'medellin' ? 'El valle entero: metro, cables, Metroplús y EnCicla' : 'El pueblo, el embalse y la Piedra') + '</small></span></button>').join('');
     box.onclick = e => { const x = e.target.closest('button'); if (!x) return; const c = x.dataset.c; arrancar(() => c === 'aqui' ? (Object.assign(G, { dinero: L.dinero ?? G.dinero, veh: L.veh || G.veh, tengo: L.tengo || G.tengo }), Libre.empezar(L.id, { x: L.x, y: L.y, a: L.a })) : Libre.empezar(c)); }; };
   const hechos = S.capitulos || 0; if (hechos > 0) { const box = $('#capitulos'); box.hidden = false; box.innerHTML = TC.HISTORIA.slice(0, Math.min(TC.HISTORIA.length, hechos + 1)).map((H, i) => '<button class="b2" data-i="' + i + '" style="min-height:44px;border-radius:6px;border:1px solid var(--linea);background:#121214;color:var(--tinta);font:700 14px system-ui;text-align:left;padding:0 14px">Acto ' + H.acto + ' · ' + H.titulo + '</button>').join(''); box.onclick = e => { const x = e.target.closest('button'); if (x) arrancar(async () => { G.municion = +x.dataset.i >= 3 ? 24 : 0; await Historia.empezar(+x.dataset.i); }); }; }
-  Object.assign(G, { Artefactos, Historia, Contratos, Libre, planeta, Globo, entrarMundo, menuTransporte, estacionCerca, Snd, Extras, menuHistoria });   /* para las pruebas */
+  Object.assign(G, { Modos, abrirMapaTC, Artefactos, Historia, Contratos, Libre, planeta, Globo, entrarMundo, menuTransporte, estacionCerca, Snd, Extras, menuHistoria });   /* para las pruebas */
   window.TURNO_LISTO = true;
 })();

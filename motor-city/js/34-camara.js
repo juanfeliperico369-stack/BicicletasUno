@@ -47,11 +47,13 @@ class Camara {
     if (this.pitchObj != null) { this.pitch = resorte(this.pitch, this.pitchObj, this._vp, .2, dt); if (Math.abs(this.pitch - this.pitchObj) < 1e-3) { this.pitch = this.pitchObj; this.pitchObj = null; this._vp.v = 0; } }
     if (this.modo === 'sigue' && o) {
       /* mira hacia adelante según la velocidad, con zona muerta (lo pequeño no mueve la cámara: menos mareo) */
-      this.adelanto = lerp(this.adelanto, clamp(o.v || 0, -4, 25) * .9, Math.min(1, dt * 1.5));
+      /* 4.6 · como EnCicla: anticipa poco (a lo sumo 1/6 de lo que se ve) y responde rápido (antes 0,9 s de velocidad con lerp lento: se sentía arrastrada) */
+      const tope = this.pantalla ? Math.min(this.pantalla[0], this.pantalla[1]) / Math.max(.05, this.zoom) / 6 : 18;
+      this.adelanto = lerp(this.adelanto, clamp((o.v || 0) * .45, -3, tope), Math.min(1, dt * 4));
       const tx = o.x + Math.cos(o.a) * this.adelanto, ty = o.y + Math.sin(o.a) * this.adelanto, zm = this.zonaMuerta / Math.max(.05, this.zoom);
       if (this._fx == null || Math.hypot(tx - this._fx, ty - this._fy) > 400) { this._fx = tx; this._fy = ty; this.x = tx; this.y = ty; }
       const ddx = tx - this._fx, ddy = ty - this._fy, dd = Math.hypot(ddx, ddy); if (dd > zm) { this._fx += ddx * (1 - zm / dd); this._fy += ddy * (1 - zm / dd); }
-      this.x = resorte(this.x, this._fx, this._vx, .2, dt); this.y = resorte(this.y, this._fy, this._vy2, .2, dt);
+      this.x = resorte(this.x, this._fx, this._vx, .12, dt); this.y = resorte(this.y, this._fy, this._vy2, .12, dt);
     }
     /* 3D en perspectiva: ojo detrás del rumbo (y lo que el jugador mire con el dedo) */
     if (o && this.d.fijo) this._aereo(dt, o);

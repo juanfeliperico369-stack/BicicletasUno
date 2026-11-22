@@ -109,7 +109,7 @@ function capas(g, es2D) {
   g.restore();
   /* la flecha al objetivo: pin si se ve, flecha en el borde si no */
   for (const f of EXTRAS.capas) f(g, pr, d, t);
-  const O = G.objetivo; if (O && !G.dron && !G.cine) { const sp = pr(O.x, O.y, 0);   /* en 🎬 modo cine no hay flecha: guían las direccionales (57-cine.js) */ if (sp) { const Z = G.ui.zonaLibre(), d2 = G.W / innerWidth; MC.UI.indicador(g, G.W, G.H, sp[0], sp[1], { texto: Math.round(Math.hypot(O.x - G.cuerpo.x, O.y - G.cuerpo.y)) + ' m', escala: d, t, rect: [Z.x0 * d2 + 20 * d, Z.y0 * d2 + 10 * d, Z.x1 * d2 - 20 * d, Z.y1 * d2] }); } }
+  const O = G.objetivo || G.destinoLibre; if (O && !G.dron && !G.cine) { const sp = pr(O.x, O.y, 0);   /* en 🎬 modo cine no hay flecha: guían las direccionales (57-cine.js) */ if (sp) { const Z = G.ui.zonaLibre(), d2 = G.W / innerWidth; MC.UI.indicador(g, G.W, G.H, sp[0], sp[1], { texto: Math.round(Math.hypot(O.x - G.cuerpo.x, O.y - G.cuerpo.y)) + ' m', escala: d, t, rect: [Z.x0 * d2 + 20 * d, Z.y0 * d2 + 10 * d, Z.x1 * d2 - 20 * d, Z.y1 * d2] }); } }
 }
 
 /* ---------- HUD ---------- */
@@ -127,6 +127,7 @@ function hud() {
   const O = G.objetivo, dist = O ? Math.round(Math.hypot(O.x - C.x, O.y - C.y)) : null;
   if (G.hist && Historia.p) { const p = Historia.p; U.mision('<b>' + suave(p.texto) + '</b><br>' + (dist != null ? '<b>' + (dist > 1500 ? (dist / 1000).toFixed(1) + ' km' : dist + ' m') + '</b>' : '') + (G.reloj_mision != null ? ' · ⏱ ' + Math.ceil(G.reloj_mision) + ' s' : '') + (p.tipo === 'destruir' ? ' · 💥 ' + Historia.est.fuera + '/' + p.n : '') + (O && O.texto ? ' · ' + O.texto : '')); }
   else if (G.contrato) U.mision('<b>📞 ' + G.contrato.c.n + '</b><br>' + (dist != null ? '<b>' + dist + ' m</b> · ' + (O.texto || '') : '💥 ' + G.contrato.fuera + '/' + (G.contrato.c.banda || 1)));
+  else if (G.destinoLibre) { const D = G.destinoLibre, dd = Math.hypot(D.x - C.x, D.y - C.y); if (dd < 22) { G.destinoLibre = null; G.ui.aviso('📍 Llegaste' + (D.nombre ? ' a ' + D.nombre : ''), 2000, 'destino'); } U.mision('<b>📍 ' + (D.nombre || 'Tu destino') + '</b><br><b>' + (dd > 1500 ? (dd / 1000).toFixed(1) + ' km' : Math.round(dd) + ' m') + '</b> · en el 🗺️ mapa lo cambias'); }   /* 4.6: el destino que marcaste en el mapa */
   else U.mision('');
   /* el letrero de la carretera */
   const vj = $('#viaje'); if (!G.viaje) { if (tramo) { const c = M.carretera, falta = Math.max(0, c.largo - C.y); vj.hidden = false; vj.innerHTML = '➡ ' + planeta.vecino(G.id, 1).nombre + ' · ' + (falta / 1000).toFixed(1) + ' km<small>⬅ ' + planeta.vecino(G.id, -1).nombre + ' · ' + (C.y / 1000).toFixed(1) + ' km · ' + MC.Planeta.BIOMAS[c.bioma(C.y)].n + '</small>'; } else { const Q = planeta.puertas(G.id, M), q = [Q.siguiente, Q.anterior].find(z => Math.hypot(z.x - C.x, z.y - C.y) < 700); vj.hidden = !q; if (q) vj.innerHTML = (q === Q.siguiente ? '➡ ' + planeta.vecino(G.id, 1).nombre : '⬅ ' + planeta.vecino(G.id, -1).nombre) + '<small>Salida por ' + (q.nombre || 'la autopista') + ' · ' + Math.round(Math.hypot(q.x - C.x, q.y - C.y)) + ' m</small>'; } }
@@ -135,12 +136,15 @@ function hud() {
   vis('taller', !!tallerCerca()); vis('metro', !!estacionCerca() && Math.abs(C.v) < 6); vis('encicla', V.clase === 'pie' && !!enciclaCerca());
   const agua = V.clase !== 'agua' && !!MC.Terreno.aguaHonda(M, C.x, C.y, 30, .8); vis('lancha', agua && Math.abs(C.v) < 5); vis('tierra', V.clase === 'agua' && !!MC.Terreno.tierraFirme(M, C.x, C.y, 16));
   vis('bajar', V.clase !== 'pie' && V.clase !== 'agua' && Math.abs(C.v) < 3); vis('robar', V.clase === 'pie' && !!carroCerca()); vis('montar', !!C.puedeMontar(4)); vis('foto', !!G.puedeFoto); vis('reducir', !!G.puedeReducir);
+  /* 4.6.1 · ⏫ acelerador fijo: se ve en carro, moto o bici (y manejando el tren); a pie se esconde y se apaga. La primera vez, un aviso */
+  { const puede = (V.clase !== 'pie' && !G.viaje && !G.dron) || !!G.controlExterno; if (G.botAcel) { G.botAcel.b.hidden = !puede; G.ui.capa.classList.toggle('con-alt', puede); if (!puede && G.acelFijo) ponerAcelerador(false, true); }
+    if (puede && !G.controlExterno && !G._acelAviso && !leerG().acelFijoVisto) { G._acelAviso = true; G.ui.aviso('⏫ Nuevo: toca ⏫ y el carro acelera solo; el joystick solo da la dirección. Tócalo otra vez para parar', 4200, 'acelNuevo'); } }
   vis('rapido', tramo && B.nivel === 0 && !banda); if (BOT.rapido) BOT.rapido.classList.toggle('on', G.rapido); if (!tramo || B.nivel || banda) G.rapido = false;
   vis('contratos', G.modo === 'libre' && !tramo); for (const f of EXTRAS.hud) f();
   /* artefactos: listo o cuánto falta */
   const AR = $('#artefactos'); if (AR) { const pon = (k, txt, ok) => { const b = AR.querySelector('[data-k="' + k + '"]'); if (b) { b.querySelector('small').textContent = txt; b.classList.toggle('off', !ok); } }; pon('dron', G.dron ? Math.ceil(G.dron.bat) + 's' : G.recarga.dron ? Math.ceil(G.recarga.dron) + 's' : 'T02', !G.recarga.dron); pon('cebo', '×' + G.cebos, G.cebos > 0); pon('pulso', G.recarga.pulso ? Math.ceil(G.recarga.pulso) + 's' : 'T08', !G.recarga.pulso); pon('lente', G.lenteT > 0 ? Math.ceil(G.lenteT) + 's' : G.recarga.lente ? Math.ceil(G.recarga.lente) + 's' : 'T01', !G.recarga.lente); pon('disparar', '×' + G.municion, G.municion > 0); AR.querySelector('[data-k="disparar"]').hidden = !G.municion; }
   /* minimapa: objetivo, escondites y talleres si te buscan, el Contador marcado, rivales vistos */
-  const pts = []; if (O) pts.push({ x: O.x, y: O.y, color: '#dba65f' }); for (const f of EXTRAS.mapa) f(pts);
+  const pts = []; if (O) pts.push({ x: O.x, y: O.y, color: '#dba65f' }); if (G.destinoLibre && G.destinoLibre !== O) pts.push({ x: G.destinoLibre.x, y: G.destinoLibre.y, color: '#ffc23a' }); for (const f of EXTRAS.mapa) f(pts);
   if (B.nivel) for (const s of sitiosEspeciales()) pts.push({ x: s.x, y: s.y, color: s.taller ? '#4b9aab' : '#7fc8a9' });
   for (const r of B.rivales) if (!r.roto && (r.marcado > G.t || r.ve)) pts.push({ x: r.cuerpo.x, y: r.cuerpo.y, color: r.bando === 'banda' ? '#c25542' : '#476e8a' });
   U.pintarMinimapa(C.x, C.y, G.camara.yaw, pts); mapaPts = pts;

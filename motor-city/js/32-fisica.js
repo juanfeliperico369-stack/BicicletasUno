@@ -59,8 +59,17 @@ class Cuerpo {
   }
   /* por qué no pasó (para que el juego lo diga una vez: «🌊 el agua está muy honda») */
   _bloquea(motivo) { this.bloqueo = motivo || 'algo'; this.tBloqueo = 1.2; return false; }
+  /* 4.6 · la física va al ritmo del reloj aunque el celular dé pocos cuadros: pasos de a lo sumo 1/40 s.
+     (Antes se cortaba el tiempo de cada cuadro —a 0,1 s aquí y a 0,05 s en el modelo del taller—: con 15 cuadros por segundo el
+     juego andaba en cámara lenta, y eso se sentía «pesado».) */
   actualizar(dt, E = {}) {
-    const V = this.veh, M = this.mundo; this.eventos.length = 0; dt = Math.min(dt, .1); this._dt = dt;
+    dt = Math.min(dt || 0, .2); if (dt <= .026) return this._paso(dt, E);
+    const n = Math.min(8, Math.ceil(dt / .025)), h = dt / n, ev = new Set();
+    for (let i = 0; i < n; i++) { this._paso(h, i ? Object.assign({}, E, { salto: false }) : E); for (const e of this.eventos) ev.add(e); }
+    this.eventos.length = 0; for (const e of ev) this.eventos.push(e); return this;
+  }
+  _paso(dt, E = {}) {
+    const V = this.veh, M = this.mundo; this.eventos.length = 0; this._dt = dt;
     this.corriendo = !!E.correr && V.id === 'pie';
     /* rumbo deseado (joystick que apunta en el mundo) o giro (volante) */
     let acel = E.acel || 0, giro = E.giro || 0;
@@ -75,6 +84,8 @@ class Cuerpo {
     /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
     const Tp = this.paso || (V.clase === 'aire' && this.z > 3) ? { f: 1 } : Terreno.paso(this, this.x, this.y); this.nadando = !!Tp.nada; this.vadeando = !!Tp.vadea;
     const suelo = this.paso ? 1 : Math.max(.12, Tp.ok === false ? .15 : Tp.f), loma = V.electrico ? clamp(1 - this.pend * .4, .85, 1.15) : Vehiculos.loma(V, this.pend);
+    /* 4.6 · manejo arcade (el de Juega EnCicla, llevado a todos los vehículos): a pie, bicis, motos, carros y pesados */
+    if (V.clase !== 'aire' && V.clase !== 'agua' && !this.nadando && !(MC.opciones && MC.opciones.manejo === 'simulacion')) return this._arcade(dt, E, suelo, loma);
     const vmax = this.vmax() * suelo * loma * (E.turbo ? 1.25 : 1), objetivo = acel >= 0 ? vmax * acel : -vmax * .35 * -acel;
     const empuje = acel > 0 ? V.acc * (E.turbo ? 1.4 : 1) : V.freno;
     if (this.enAire && V.clase !== 'aire') { /* en el aire no se acelera */ }
@@ -131,6 +142,77 @@ class Cuerpo {
      tableros con su rampa). El cuerpo se apoya en la más alta que le quede a la altura de un escalón; lo que queda
      entre los pies y la cabeza es pared; lo que queda arriba de la cabeza se pasa por debajo. Si el apoyo desaparece,
      cae con gravedad (y aterriza en lo que haya abajo). Las barandas no dejan caer del tablero. */
+  /* 4.6 · MANEJO ARCADE, tomado de Juega EnCicla (src/js/30-ride.js), que es el que se siente fluido, y llevado a todos los vehículos:
+     - el giro sigue al joystick: la velocidad de giro deseada es 6,5 × el ángulo que falta, con tope (alto quieto, menor a toda
+       marcha) y una inercia corta (tw, décimas de segundo);
+     - el arranque va directo a la velocidad pedida (min(acc, 2 × lo que falta)), y si el joystick apunta lejos del rumbo baja la
+       velocidad para poder girar (·(0,3 + 0,7·cos Δ)); el freno es fuerte; al soltar, rueda y se detiene solo;
+     - el carro va por donde apunta (no derrapa por nada); solo con el freno de mano (E.derrape) la cola se cruza, y al soltarlo se
+       endereza rápido;
+     - en una pared prueba primero ángulos cercanos (±0,35, ±0,7, ±1,1 rad: la «asistencia de esquinas» de EnCicla) y resbala;
+       si no hay salida, se detiene. Lo menor del andén se tumba (MC.Rotos) y el desatascador sigue de respaldo. */
+  _arcade(dt, E, suelo, loma) {
+    const V = this.veh, M = this.mundo, S = Vehiculos.arcade(V), A = this._arc || (this._arc = { w: 0 }), pie = V.clase === 'pie', motor = V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto';
+    const lluvia = (E.lluvia || (E.clima && E.clima.lluvia) || 0) > .35, deriva = !!E.derrape && motor && Math.abs(this.v) > 7, turbo = !!E.turbo && !pie;
+    let max = this.vmax() * suelo * loma * (turbo ? 1.25 : 1); if (pie && E.dir && E.dir.m > .9 && !this.corriendo) max = Math.max(max, V.vcorre * .62);   /* a pie, el joystick a fondo ya trota */
+    const kw = 1 - Math.exp(-dt / S.tw), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - Math.abs(this.v) / Math.max(1, max), 0, 1)) * (lluvia ? .85 : 1) * (deriva ? 1.6 : 1);
+    let tv = 0, frena = false, suelta = false;
+    if (this.enAire) { /* en el aire no se acelera ni se gira */ }
+    else if (E.dir && E.dir.m > .08) {
+      const ta = Math.atan2(E.dir.y, E.dir.x), da = angDif(this.a, ta);
+      if (motor && Math.abs(da) > 2.4 && this.v < 2) {   /* el joystick apunta atrás y casi quieto: reversa girando al revés (tres puntos) */
+        const db = angDif(this.a + Math.PI, ta); A.w += (clamp(-db * 4, -wm, wm) - A.w) * kw; tv = -Math.min(8, max * .32) * E.dir.m;
+      } else { A.w += (clamp(da * 6.5, -wm, wm) - A.w) * kw; tv = max * E.dir.m * (.3 + .7 * Math.max(0, Math.cos(da))); }
+    } else if (E.acel || E.giro) {   /* volante y pedales (y la IA): el giro manda la velocidad de giro, el acelerador la velocidad */
+      const g = clamp(E.giro || 0, -1, 1), ac = clamp(E.acel || 0, -1, 1); A.w += (g * wm * (this.v < -.3 ? -1 : 1) - A.w) * kw;
+      if (ac > 0) tv = max * ac; else if (ac < 0) { if (this.v > .5) frena = true; else tv = -Math.min(8, max * .32) * -ac; } else suelta = true;
+    } else { A.w *= 1 - kw; suelta = true; }
+    /* velocidad: directo a la pedida (como EnCicla); frenar es fuerte; soltar, rueda */
+    const acc = S.acc * (turbo ? 1.4 : 1) * (pie ? 1 : clamp(suelo * 1.4, .5, 1)), brk = S.brk * (lluvia ? .7 : 1);
+    if (this.enAire) { /* nada */ }
+    else if (frena) this.v = Math.max(0, this.v - brk * (E.frenoK || 1) * dt);   /* frenoK: el acelerador fijo, al apagarse, frena suave (4.6.1) */
+    else if (suelta) { const c = (S.coast + Math.abs(this.v) * S.arrastre) * (lluvia ? .6 : 1) * dt; this.v = Math.abs(this.v) <= c ? 0 : this.v - Math.sign(this.v) * c; }
+    else if (tv >= 0 && this.v >= 0) { if (tv > this.v) this.v = Math.min(tv, this.v + Math.min(acc, (tv - this.v) * 2 + .5) * dt); else this.v = Math.max(tv, this.v - Math.min(brk, (this.v - tv) * 3.5 + 6) * dt); }
+    else if (tv < 0 && this.v <= .3) this.v = Math.max(tv, this.v - acc * .6 * dt);
+    else this.v -= Math.sign(this.v) * Math.min(Math.abs(this.v), brk * dt);
+    if (V.clase === 'rueda' && !V.electrico && !this.enAire && this.pend < -.03 && suelta) this.v += -this.pend * 9.8 * .55 * dt;   /* la bajada empuja la bici */
+    if (deriva) this.v *= 1 - .22 * dt;
+    /* el giro: un carro casi quieto gira poco (no da vueltas en el puesto); a pie y en bici, normal */
+    if (!this.enAire) this.a += A.w * dt * (motor ? Math.min(1, .3 + Math.abs(this.v) / 4) : 1);
+    this.giroV = A.w;
+    /* por dónde rueda: igual a la trompa, salvo con el freno de mano (la cola se cruza) o en nieve y hielo (algo suelto) */
+    const rp = this.rumboRodado ?? this.a, sueltoP = motor && (this.tt === TT.NIEVE || (lluvia && (this.tt === TT.GRASS || this.tt === TT.LAND)));
+    const k = deriva ? 3 : sueltoP ? 6 : 40; this.rumboRodado = motor ? rp + angDif(rp, this.a) * (1 - Math.exp(-dt * k)) : this.a;
+    this.deslizamiento = motor ? Math.abs(angDif(this.rumboRodado, this.a)) : 0; if (this.deslizamiento > .2 && Math.abs(this.v) > 6 && !this.enAire) this.eventos.push('derrape');
+    if (Math.abs(this.rumboRodado - this.a) > Math.PI * 4) this.rumboRodado = this.a;
+    /* salto (coyote y memoria del botón) y caída */
+    if (!this.enAire) this.coyote = .12; else this.coyote = Math.max(0, (this.coyote || 0) - dt);
+    if (E.salto) this.bufSalto = .14; else this.bufSalto = Math.max(0, (this.bufSalto || 0) - dt);
+    if (this.bufSalto > 0 && V.salto && (!this.enAire || (this.coyote > 0 && this.vz <= 0))) { this.vz = Math.sqrt(2 * GRAV * .6 * V.salto); this.enAire = true; this.coyote = 0; this.bufSalto = 0; this.eventos.push('salto'); MC.emit('salto', this); }
+    if (this.enAire) { this.z += this.vz * dt; this.vz -= GRAV * dt; if (this.z <= 0) { this.z = 0; this.enAire = false; this.eventos.push(this.vz < -6 ? 'aterrizaFuerte' : 'aterriza'); this.vz = 0; } }
+    this.inclinacion = motor ? Math.atan(clamp(this.pend, -.65, .65)) : 0;
+    /* moverse: si choca, la asistencia de esquinas de EnCicla */
+    const x0m = this.x, y0m = this.y, st = this.v * dt, dir = this.rumboRodado ?? this.a;
+    if (Math.abs(st) > 1e-6) {
+      const nx = this.x + Math.cos(dir) * st, ny = this.y + Math.sin(dir) * st;
+      if (this.puede(nx, ny)) { this.x = nx; this.y = ny; }
+      else {
+        const v0 = Math.abs(this.v); let movio = 0; const orden = A.w >= 0 ? [.35, -.35, .7, -.7, 1.1, -1.1] : [-.35, .35, -.7, .7, -1.1, 1.1];
+        for (const da of orden) { const ax = this.x + Math.cos(dir + da) * st, ay = this.y + Math.sin(dir + da) * st; if (this.puede(ax, ay, true)) { this.x = ax; this.y = ay; this.a += da * Math.min(1, dt * 7.5); this.rumboRodado = this.a; this.v *= Math.exp(-(Math.abs(da) > .5 ? 3.2 : 1.6) * dt); A.w *= .5; movio = Math.abs(da); break; } }
+        if (!movio) { const rz = Math.exp(-3.2 * dt); if (this.puede(nx, this.y, true)) { this.x = nx; this.v *= rz; movio = 1.2; } else if (this.puede(this.x, ny, true)) { this.y = ny; this.v *= rz; movio = 1.2; } }
+        const impacto = movio ? (movio > .5 ? v0 * Math.sin(Math.min(1.4, movio)) : 0) : v0;
+        if (!movio) { this.v *= motor ? -.12 : 0; A.w = 0; }
+        if (impacto > 3 && !(this.choque > .15)) { this.eventos.push('choque'); this.choque = .4; this.impacto = impacto; this.normalChoque = [-Math.cos(dir), -Math.sin(dir)]; MC.emit('choque', this); }
+      }
+    }
+    this.choque = Math.max(0, (this.choque || 0) - dt);
+    this._despues(E, x0m, y0m, dt); this._niveles(dt);
+    this.fase += Math.abs(this.v) * dt * (pie ? (this.corriendo ? 2.4 : 3.2) : V.cuerpo === 'pedalea' ? 1.6 : 1.2);
+    this.estado = Personaje.estadoPara(V, Math.abs(this.v), this.enAire); this.buceando = false; this.aire = Math.min(1, this.aire + dt / 4);
+    const quiere = (E.dir && E.dir.m > .3) || (E.acel || 0) > .3; if (this.bloqueoAgua && quiere && !pie) this.empujaAgua += dt; else this.empujaAgua = Math.max(0, this.empujaAgua - dt * 2);
+    this.bloqueoAgua = false; if (this.bajarseEnAgua && this.empujaAgua > .6) { this.empujaAgua = 0; this.bajarse('agua'); }
+    return this;
+  }
   /* 4.5 · moverse con choques: en vez de trabarse contra los ejes del mapa, desliza a lo largo de la pared (su normal se estima
      tanteando alrededor del punto bloqueado), pierde velocidad según el ángulo del golpe (rasante: casi nada; de frente: casi toda)
      y el carro se alinea con la pared, como en los juegos de carreras arcade */
