@@ -20,19 +20,33 @@ class Controles {
   _abajo(e) {
     const r = this.el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; this.dedos.set(e.pointerId, { x, y, x0: x, y0: y });
     try { this.el.setPointerCapture(e.pointerId); } catch (er) { /* sin captura */ }
+    /* 4.8 · PANTALLA EN MITADES (pedido del autor): la mitad de arriba es siempre de la cámara (arrastrar gira e inclina, pellizcar
+       acerca o aleja, doble toque endereza) y abajo se maneja (joystick a un lado, botones al otro). El dedo del joystick no se suelta
+       aunque otro dedo mueva la cámara. */
+    if (this.mitades()) {
+      const cam = [...this.dedos.keys()].filter(id => id !== this.stick.id);
+      if (cam.length >= 2) { this._gesto0(); return; }
+      const lado = MC.opciones.zurdo ? x > r.width * .5 : x < r.width * .5;
+      if (y >= r.height * .5 && lado && this.stick.id === null && !this.op.sinStick) { Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true }); return; }
+      const ahora = (typeof performance !== 'undefined' ? performance.now() : Date.now()), doble = this._ultToque && ahora - this._ultToque.t < 320 && Math.hypot(x - this._ultToque.x, y - this._ultToque.y) < 40;
+      this.gesto = { tipo: 'mirar', x, y, id: e.pointerId, fijo: true, doble }; return;
+    }
     if (this.dedos.size === 2) { this._gesto0(); if (this.stick.id !== null) this._soltarStick(); return; }
-    if (x < r.width * .55 && this.stick.id === null && !this.op.sinStick) Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true });
+    if ((MC.opciones.zurdo ? x > r.width * .45 : x < r.width * .55) && this.stick.id === null && !this.op.sinStick)   /* 4.8 · ✋ zurdo: el joystick en la mitad derecha */ Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true });
     else this.gesto = { tipo: 'mirar', x, y };
   }
   _mueve(e) {
     const d = this.dedos.get(e.pointerId); if (!d) return; const r = this.el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, ddx = x - d.x, ddy = y - d.y; d.x = x; d.y = y;
-    if (this.dedos.size >= 2 && this.gesto && this.gesto.tipo === 'dos') { this._gesto(); return; }
+    if (this.dedos.size >= 2 && this.gesto && this.gesto.tipo === 'dos' && e.pointerId !== this.stick.id) { this._gesto(); return; }
     if (e.pointerId === this.stick.id) { const R = 52, dx = x - this.stick.ox, dy = y - this.stick.oy, L = Math.hypot(dx, dy); if (L > R) { this.stick.ox += dx * (1 - R / L); this.stick.oy += dy * (1 - R / L); } this.stick.px = x; this.stick.py = y; const ex = (x - this.stick.ox) / R, ey = (y - this.stick.oy) / R; this.stick.x = ex; this.stick.y = ey; this.stick.m = Math.min(1, Math.hypot(ex, ey)); return; }
-    if (this.gesto && this.gesto.tipo === 'mirar') this.alGesto({ tipo: 'mirar', dx: ddx, dy: ddy });
+    if (this.gesto && this.gesto.tipo === 'mirar' && (this.gesto.id == null || this.gesto.id === e.pointerId)) this.alGesto({ tipo: 'mirar', dx: ddx, dy: ddy, fijo: !!this.gesto.fijo });
   }
-  _arriba(e) { if (!this.dedos.has(e.pointerId)) return; const d = this.dedos.get(e.pointerId); this.dedos.delete(e.pointerId); if (e.pointerId === this.stick.id) this._soltarStick(); if (this.dedos.size < 2 && this.gesto && this.gesto.tipo === 'dos') this.gesto = null; if (!this.dedos.size) { if (this.gesto && this.gesto.tipo === 'mirar' && Math.hypot(d.x - d.x0, d.y - d.y0) < 8) this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); this.gesto = null; } }
+  /* ¿pantalla en mitades? (el juego la pide con op.mitades; ⚙️ Flexibilidad puede volver a la clásica) */
+  mitades() { return !!this.op.mitades && MC.opciones.pantalla !== 'clasica'; }
+  _arriba(e) { if (!this.dedos.has(e.pointerId)) return; const d = this.dedos.get(e.pointerId); this.dedos.delete(e.pointerId); if (e.pointerId === this.stick.id) this._soltarStick(); if ([...this.dedos.keys()].filter(id => id !== this.stick.id).length < 2 && this.gesto && this.gesto.tipo === 'dos') this.gesto = null;
+    if (this.gesto && this.gesto.id === e.pointerId) { const quieto = Math.hypot(d.x - d.x0, d.y - d.y0) < 8; if (quieto) { if (this.gesto.doble) { this.alGesto({ tipo: 'recentrar' }); this._ultToque = null; } else { this._ultToque = { x: d.x, y: d.y, t: typeof performance !== 'undefined' ? performance.now() : Date.now() }; this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); } } this.gesto = null; return; } if (!this.dedos.size) { if (this.gesto && this.gesto.tipo === 'mirar' && Math.hypot(d.x - d.x0, d.y - d.y0) < 8) this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); this.gesto = null; } }
   _soltarStick() { Object.assign(this.stick, { id: null, activo: false, x: 0, y: 0, m: 0 }); }
-  _par() { const [a, b] = [...this.dedos.values()]; return { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) }; }
+  _par() { const [a, b] = [...this.dedos].filter(([id]) => id !== this.stick.id).map(q => q[1]); return { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) }; }
   _gesto0() { this.gesto = Object.assign({ tipo: 'dos' }, this._par()); }
   _gesto() { const p = this._par(), g = this.gesto; this.alGesto({ tipo: 'zoom', k: p.d / (g.d || p.d) }); this.alGesto({ tipo: 'girar', da: angDif(g.ang, p.ang) }); this.alGesto({ tipo: 'inclinar', dy: p.cy - g.cy }); Object.assign(g, p); }
   boton(id, on) { if (on) { this.botones.add(id); this.pulsos.add('btn:' + id); } else this.botones.delete(id); }

@@ -137,7 +137,7 @@ function hud() {
   const agua = V.clase !== 'agua' && !!MC.Terreno.aguaHonda(M, C.x, C.y, 30, .8); vis('lancha', agua && Math.abs(C.v) < 5); vis('tierra', V.clase === 'agua' && !!MC.Terreno.tierraFirme(M, C.x, C.y, 16));
   vis('bajar', V.clase !== 'pie' && V.clase !== 'agua' && Math.abs(C.v) < 3); vis('robar', V.clase === 'pie' && !!carroCerca()); vis('montar', !!C.puedeMontar(4)); vis('foto', !!G.puedeFoto); vis('reducir', !!G.puedeReducir);
   /* 4.6.1 · ⏫ acelerador fijo: se ve en carro, moto o bici (y manejando el tren); a pie se esconde y se apaga. La primera vez, un aviso */
-  { const puede = (V.clase !== 'pie' && !G.viaje && !G.dron) || !!G.controlExterno; if (G.botAcel) { G.botAcel.b.hidden = !puede; G.ui.capa.classList.toggle('con-alt', puede); if (!puede && G.acelFijo) ponerAcelerador(false, true); }
+  { const puede = (V.clase !== 'pie' && !G.viaje && !G.dron) || !!G.controlExterno; if (G.botAcel) { G.botAcel.b.hidden = !puede; G.ui.capa.classList.toggle('con-alt', puede); if (!puede && G.acelFijo) ponerAcelerador(false, true); if (puede && !G._puedeAcel && G.flex && G.flex.acelFijo && !G.controlExterno) ponerAcelerador(true, true); G._puedeAcel = puede; }   /* 4.8 · ⚙️ «acelerador fijo al subir» */
     if (puede && !G.controlExterno && !G._acelAviso && !leerG().acelFijoVisto) { G._acelAviso = true; G.ui.aviso('⏫ Nuevo: toca ⏫ y el carro acelera solo; el joystick solo da la dirección. Tócalo otra vez para parar', 4200, 'acelNuevo'); } }
   vis('rapido', tramo && B.nivel === 0 && !banda); if (BOT.rapido) BOT.rapido.classList.toggle('on', G.rapido); if (!tramo || B.nivel || banda) G.rapido = false;
   vis('contratos', G.modo === 'libre' && !tramo); for (const f of EXTRAS.hud) f();

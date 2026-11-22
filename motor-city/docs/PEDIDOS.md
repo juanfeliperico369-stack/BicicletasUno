@@ -262,3 +262,23 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Arte y gráficos más realistas | En curso | Gemini (iluminación, primera persona, raster) y Codex (arte). Rellenar manzanas espera el visto bueno del autor (plan § 9). |
 | Revisar lo que reportan las otras IA | ✅ | Buzón y ramas leídos; hallazgos de Gemini resueltos; entrega de Codex unida |
 
+## 20. «Retoma el trabajo de Gemini y ChatGPT, termina de unir lo que falta en el motor, el juego de prueba, EnCicla y El Metro, optimízalos y añade a todo Flexibilidad» (4.8)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Unir las ramas de Gemini, ChatGPT y Codex en el motor | ✅ | Merges en `claude/motor-city-engine-xu7p4y` |
+| Cerrar los hallazgos de ChatGPT | ✅ 11/11 | `pruebas/chatgpt-auditoria-contratos.mjs` y `pruebas/chatgpt-input-real.mjs` |
+| Hacer lo que Gemini dejó planeado (render y mundo vivo) | ✅ render y miradores · ⏳ subtramas | `js/44-raster.js`, `js/45-gl.js`, `js/34-camara.js`, `60-modos.js` (🌄). Las subtramas RPG siguen en su plan |
+| Unir EnCicla (3.0.0 + GPT-6) | ✅ 3.1.0 | `BicicletasUno`, `tests/run.js` en verde |
+| Unir El Metro (3.2.0 + Antigravity + Codex + GPT-6) | ✅ 3.3.0 | `MetroZero`, `tools/test.mjs 100`: 0 errores |
+| Optimizar | ✅ medido | Caché de sectores (p95 de 166 a 33 ms con CPU 4×); minimapa sin solapes |
+| Flexibilidad en todo | ✅ | Motor (`MC.Flex`) y Turno Cero; EnCicla (Más → ⚙️ Flexibilidad); El Metro (Ajustes → ⚙️ Flexibilidad) |
+
+## 21. «Añade a Turno Cero los servicios de rescate y teletransportarse en el mapa con Ir; divide la pantalla en mitades (arriba siempre la cámara); unifica los mapas» (4.8)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Servicios de rescate | ✅ | 🆘 en el HUD y en ⏸ Menú: `juegos/getaway/63-rescate.js` |
+| Teletransportarse con «Ir» al poner el punto | ✅ | 🚀 Ir en el mapa (`js/70-mapa.js`, `op.alIr`) |
+| Pantalla en mitades: arriba siempre mover y acercar la cámara | ✅ | `js/33-controles.js` (mitades), `js/34-camara.js` (encuadre fijo, doble toque endereza) |
+| Unificar los mapas | ✅ | Minimapa, 🗺️ y 🌍 en un solo mapa (`op.planeta`), 🗺️ de vuelta desde el planeta |
+| Prueba | ✅ | `pruebas/rescate-mapa.mjs` |
+

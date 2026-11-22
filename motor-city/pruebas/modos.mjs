@@ -16,9 +16,9 @@ await p.waitForSelector('.mcui .menu', { timeout: 20000 }); const menuAbre = awa
 await p.evaluate(() => { for (const m of document.querySelectorAll('.mcui .menu, .mcui .dialogo')) m.remove(); window._res = []; MC.on('modo:resultado', r => window._res.push(r)); });
 const cerrar = () => p.evaluate(() => { for (const m of document.querySelectorAll('.mcui .dialogo, .mcui .menu')) m.remove(); TURNO.pausa = false; });
 const R = { menuAbre };
-/* carreras y extremo: se corre la pista poniendo al jugador adelante; los rivales deben avanzar solos */
+/* carreras y extremo: «⚡ Llevarme ya» si la salida queda lejos; se corre la pista poniendo al jugador adelante; los rivales deben avanzar solos */
 for (const id of ['carrera', 'extremo']) {
-  R[id] = await p.evaluate(async id => { const G = TURNO, M = G.Modos, espera = ms => new Promise(q => setTimeout(q, ms)); const ok = M.empezar(id); if (!ok) return { ok }; const c = M.m, ini = c.rivales.map(r => [r.cuerpo.x, r.cuerpo.y]); await espera(7000); const avanzan = c.rivales.filter((r, i) => r.s > 3 || Math.hypot(r.cuerpo.x - ini[i][0], r.cuerpo.y - ini[i][1]) > 4).length;
+  R[id] = await p.evaluate(async id => { const G = TURNO, M = G.Modos, espera = ms => new Promise(q => setTimeout(q, ms)); const ok = M.empezar(id); if (!ok) return { ok }; const ll = [...document.querySelectorAll('.mcui .dialogo button')].find(b => b.textContent.includes('Llevarme')); if (ll) ll.click(); await espera(60); const c = M.m, ini = c.rivales.map(r => [r.cuerpo.x, r.cuerpo.y]); await espera(7000); const avanzan = c.rivales.filter((r, i) => r.s > 3 || Math.hypot(r.cuerpo.x - ini[i][0], r.cuerpo.y - ini[i][1]) > 4).length;
     for (let k = 0; k < 900 && M.m === c; k++) { const q = c.p.punto(c.yo.s + 22); Object.assign(G.cuerpo, { x: q.x, y: q.y, a: q.a }); if (id === 'extremo' && k % 40 === 5) G.cuerpo.z = (G.cuerpo.alturaSuelo || 0) + 2; await espera(25); }
     await espera(300); const r = window._res.find(x => x.id === id); return { ok, largo: Math.round(c.p.L), rivales: c.rivales.length, avanzan, fin: r && +r.t.toFixed(1), pos: r && r.pos, dialogo: !!document.querySelector('.mcui .dialogo') }; }, id);
   await cerrar();

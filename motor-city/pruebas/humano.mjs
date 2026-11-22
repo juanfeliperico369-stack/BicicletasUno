@@ -31,11 +31,13 @@ const metro = await p.evaluate(() => { const m = TURNO.Modos.m; const r = { para
 metro.seg = Math.round((Date.now() - t0) / 1000); if (prendido) await boton.tap();
 /* 🏁 una carrera manejada con el joystick siguiendo la pista */
 await p.evaluate(() => { for (const m of document.querySelectorAll('.mcui .dialogo')) m.remove(); TURNO.Modos.empezar('carrera'); });
+/* 4.8: si la salida queda lejos, la persona toca «⚡ Llevarme ya» */
+const llevar = await p.$('.mcui .dialogo button:has-text("Llevarme")'); if (llevar) await llevar.click();
 await p.waitForTimeout(4200);
-const carrera = await p.evaluate(async () => { const G = TURNO, c = G.Modos.m, espera = ms => new Promise(q => setTimeout(q, ms)); if (!c || !c.p) return { ok: false }; const s0 = c.yo.s; let fuera = 0, vmax = 0; const pre = { t: +c.t.toFixed(1), pausa: G.pausa, fijo: !!G.acelFijo, ext: !!G.controlExterno, veh: G.cuerpo.veh.id, pararFijo: !!G.cuerpo._pararFijo };
+const carrera = await p.evaluate(async () => { const G = TURNO, c = G.Modos.m, espera = ms => new Promise(q => setTimeout(q, ms)); if (!c || !c.p) return { ok: false }; const s0 = c.yo.s; let fuera = 0, vmax = 0;
   for (let k = 0; k < 100 && G.Modos.m === c; k++) { const q = c.p.punto(c.yo.s + 12), C = G.cuerpo, dx = q.x - C.x, dy = q.y - C.y, L = Math.hypot(dx, dy) || 1, yaw = G.camara.yaw || 0, cs = Math.cos(yaw), sn = Math.sin(yaw), wx = dx / L, wy = dy / L;
     Object.assign(G.ctl.stick, { activo: true, x: wx * cs - wy * sn, y: wx * sn + wy * cs, m: 1 }); await espera(200);  vmax = Math.max(vmax, Math.abs(C.v)); if (c.p.proyectar(C.x, C.y, c.yo.s % c.p.L).d > 40) fuera++; }
-  Object.assign(G.ctl.stick, { activo: false, x: 0, y: 0, m: 0 }); const r = { ok: true, avance: Math.round(c.yo.s - s0), vmax: +vmax.toFixed(1), fuera, sigue: G.Modos.m === c, pre, post: { pausa: G.pausa, fijo: !!G.acelFijo, pararFijo: !!G.cuerpo._pararFijo, leer: JSON.stringify(G.ctl.leer().stick) } }; if (G.Modos.m) G.Modos.terminar(null); return r; });
+  Object.assign(G.ctl.stick, { activo: false, x: 0, y: 0, m: 0 }); const r = { ok: true, avance: Math.round(c.yo.s - s0), vmax: +vmax.toFixed(1), fuera, sigue: G.Modos.m === c }; if (G.Modos.m) G.Modos.terminar(null); return r; });
 errs.push(...await p.evaluate(() => MC.errores.map(e => String(e.msg || e)))); await b.close();
 const ok = metro.paradas >= 1 && carrera.ok && carrera.avance > 150 && carrera.vmax > 12 && carrera.fuera < 20 && !errs.length;
 console.log((ok ? '✓' : '✗') + ' pruebas humanas (solo entradas): 🚇 con ⏫ para en la estación en ' + metro.seg + ' s; 🏁 con el joystick avanza ' + carrera.avance + ' m a ' + carrera.vmax + ' m/s · ' + JSON.stringify({ metro, carrera, tren }) + (errs.length ? ' · errores: ' + errs.slice(0, 3).join(' | ') : ''));
