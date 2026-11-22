@@ -1,12 +1,12 @@
 {
-  "version": "4.6.1",
+  "version": "4.7.0",
   "fecha": "2026-11-22",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "MetroZero: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (su 3.1.0 «Fluido», de su propia sesión, ya trae el manejo de EnCicla) (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "RunRunZero: motor-city/ 4.6.1 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
+    "BicicletasUno: motor-city/ 4.7.0 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "MetroZero: motor-city/ 4.7.0 como referencia; el juego sigue con su Motor del Valle (su 3.1.0 «Fluido», de su propia sesión, ya trae el manejo de EnCicla) (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "RunRunZero: motor-city/ 4.7.0 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
   ],
-  "estado": "4.6.1: ⏫ acelerador fijo (un toque y el carro acelera solo, el joystick solo da la dirección; otro toque y frena hasta parar), en el motor (MC.Manejo, ui.alternar) y en Turno Cero. 4.6.0: manejo y mapa de EnCicla, horizontal y un solo juego de prueba (Turno Cero con 🎮 Modos)"
+  "estado": "4.7.0: plan de evolución con investigación (docs/PLAN-EVOLUCION-CLAUDE.md, más los de Gemini y Codex); ritmo arcade (a pie, bicis, tren), todo liberado desde el inicio, actividades de cada modo en el mundo abierto (🏁 🚵 📦 🚲 🚇 🛹 🛴), 🛹 zona de trucos y parkour, cámaras por contexto, cenital de verdad que se aleja con la velocidad, volante que avanza de lado. 4.6.1: ⏫ acelerador fijo"
 }

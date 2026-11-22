@@ -73,7 +73,25 @@ const UI = {
       mision(texto) { mision.hidden = !texto; const [t, ...d] = String(texto || '').split('<br>'); mision.innerHTML = '<div class="t">' + t + '</div>' + (d.length ? '<div class="d">' + d.join(' ') + '</div>' : ''); },   // título en una línea; el detalle, en dos como mucho (nunca medio renglón cortado)
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
       dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
-      menu(titulo, items, al) { const m = div('menu p'); m.innerHTML = '<b style="padding:4px">' + titulo + '</b>'; for (const it of items) { const b = document.createElement('button'); b.innerHTML = it.texto; b.onclick = () => { m.remove(); al(it.id); }; m.appendChild(b); } const cerrar = () => m.remove(); setTimeout(() => document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', k); } }), 0); return m; },
+      menu(titulo, items, al) {
+        if (ui._menu) ui._menu.cerrar();
+        const anterior = document.activeElement, m = div('menu p'), encabezado = document.createElement('b');
+        m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', titulo);
+        encabezado.style.padding = '4px'; encabezado.textContent = titulo; m.appendChild(encabezado);
+        const escapar = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cerrar(); } };
+        const cerrar = () => {
+          document.removeEventListener('keydown', escapar, true);
+          m.remove(); ui._menu = null;
+          if (anterior?.isConnected) anterior.focus({ preventScroll: true });
+        };
+        ui._menu = { cerrar };
+        for (const it of items) {
+          const b = document.createElement('button'); b.innerHTML = it.texto;
+          b.onclick = () => { cerrar(); al(it.id); }; m.appendChild(b);
+        }
+        document.addEventListener('keydown', escapar, true);
+        m.querySelector('button')?.focus({ preventScroll: true }); return m;
+      },
       /* minimapa redondo con las losas del motor, girado con la cámara */
       minimapa(vistas, al) { const c = document.createElement('canvas'); c.className = 'mini p'; c.width = c.height = 240; c.setAttribute('role', 'button'); c.setAttribute('aria-label', 'Abrir el mapa'); c.style.cursor = 'pointer'; c.addEventListener('click', e => { e.stopPropagation(); const f = al || ui._alMini; if (f) f(); }); capa.appendChild(c); ui._mini = { c, vistas }; if (al) ui._alMini = al; return c; },   // 4.6: tocar el minimapa (la brújula) abre el mapa grande
       pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } g.restore(); const th = -yaw, cs = Math.cos(th), sn = Math.sin(th);   /* 4.6: los puntos lejanos quedan en el borde (no se pierden) y la N marca el norte */
@@ -99,7 +117,7 @@ const UI = {
         const o = { b, activo: !!activo, poner(v, callado) { o.activo = !!v; b.setAttribute('aria-pressed', o.activo ? 'true' : 'false'); b.classList.toggle('prendido', o.activo); if (al && !callado) al(o.activo); } };
         b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); o.poner(!o.activo); }); b.addEventListener('click', e => { if (e.detail === 0) o.poner(!o.activo); });   /* el clic del teclado o de un lector de pantalla también */
         o.poner(o.activo, true); (ui._alt || (ui._alt = {}))[aid] = o; capa.classList.add('con-alt'); return o; },   /* con-alt: en vertical, la velocidad sube sobre la fila de botones (3 botones ya llegan al centro) */
-      quitar() { capa.remove(); css.remove(); }
+      quitar() { ui._menu?.cerrar(); capa.remove(); css.remove(); }
     };
     return ui;
   }

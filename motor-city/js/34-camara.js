@@ -15,8 +15,8 @@ const CAM_PERFIL = {
   aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
   /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
-  cenital: { fijo: true, pitch: 1.08, pitchCerca: .74, fov: .62, dist: 0, alto: 0 },
-  oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0 },
+  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75 },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua */
+  oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0, alejaVel: .35 },
   maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 }
 };
 class Camara {
@@ -97,7 +97,7 @@ class Camara {
     const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
     const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
-    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * .2 + this._per * .22);
+    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
     const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
     const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
     let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);

@@ -1,4 +1,4 @@
-/* Motor City 4.6.1 · 2026-11-22 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.7.0 · 2026-11-22 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.6.1',
+  version: '4.7.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -3705,20 +3705,20 @@ const VEH_SUELO_CARRO = [.32, .12, .45, 0, 1, 1, .45, .55, 0, 0, .55, 1, 0, .25,
 const VEH_SUELO_MOTO = [.45, .2, .6, 0, 1, 1, .55, .85, 0, 0, .7, 1, .3, .35, 1, .9, .3, .35, .25, .28];
 const VEH_LISTA = [
   /* a pie y micromovilidad (Juega EnCicla, Run Scooter y Gemini) */
-  { id: 'pie', n: 'A pie', icon: '🚶', clase: 'pie', cuerpo: 'pie', vmax: 1.6, vcorre: 4.6, acc: 3, freno: 8, giro: [6, 5], largo: .5, ancho: .5, masa: 70, suelo: VEH_SUELO_PIE, loma: [1.1, .6, 1.15], salto: 1, run: 1 },
-  { id: 'bici', n: 'Bici EnCicla', icon: '🚲', clase: 'rueda', cuerpo: 'pedalea', vmax: 7.5, acc: 1.6, freno: 4.5, giro: [3.2, 1.4], largo: 1.8, ancho: .6, masa: 95, suelo: VEH_SUELO_RUEDA, loma: [2.2, .5, 1.32], timbre: 1, salto: 1, run: 1, color: '#7ab800', manubrio: [.42, 1.0] },
+  { id: 'pie', n: 'A pie', icon: '🚶', clase: 'pie', cuerpo: 'pie', vmax: 2.2, vcorre: 6.4, acc: 3, freno: 8, giro: [6, 5], largo: .5, ancho: .5, masa: 70, suelo: VEH_SUELO_PIE, loma: [1.1, .6, 1.15], salto: 1, run: 1 },
+  { id: 'bici', n: 'Bici EnCicla', icon: '🚲', clase: 'rueda', cuerpo: 'pedalea', vmax: 9, acc: 1.6, freno: 4.5, giro: [3.2, 1.4], largo: 1.8, ancho: .6, masa: 95, suelo: VEH_SUELO_RUEDA, loma: [2.2, .5, 1.32], timbre: 1, salto: 1, run: 1, color: '#7ab800', manubrio: [.42, 1.0] },
   { id: 'bici_propia', n: 'Bici propia', icon: '🚴', de: 'bici', color: '#29b6f6' },
-  { id: 'ebike', n: 'Bici eléctrica', icon: '⚡', de: 'bici', vmax: 8.3, acc: 2.2, electrico: 1, loma: [.4, .85, 1.15], color: '#2fa8dc' },
-  { id: 'bmx', n: 'BMX', icon: '🚲', de: 'bici', vmax: 7, acc: 2, giro: [4, 1.8], salto: 1.6, trucos: 1, color: '#e53935', futuro: 1 },
-  { id: 'mtb', n: 'Bici de montaña', icon: '🚵', de: 'bici', vmax: 8, suelo: [.85, .7, .5, .5, .95, .95, .75, 1.05, 0, 0, .85, .95, .75, 0, .9, .9, .55], color: '#43a047', futuro: 1 },
+  { id: 'ebike', n: 'Bici eléctrica', icon: '⚡', de: 'bici', vmax: 10.5, acc: 2.2, electrico: 1, loma: [.4, .85, 1.15], color: '#2fa8dc' },
+  { id: 'bmx', n: 'BMX', icon: '🚲', de: 'bici', vmax: 8.5, acc: 2, giro: [4, 1.8], salto: 1.6, trucos: 1, color: '#e53935', futuro: 1 },
+  { id: 'mtb', n: 'Bici de montaña', icon: '🚵', de: 'bici', vmax: 10.5, suelo: [.85, .7, .5, .5, .95, .95, .75, 1.05, 0, 0, .85, .95, .75, 0, .9, .9, .55], color: '#43a047', futuro: 1 },
   { id: 'ruta', n: 'Bici de ruta', icon: '🚴', de: 'bici', vmax: 11, acc: 1.8, giro: [2.6, 1.1], color: '#fdd835', futuro: 1 },
-  { id: 'patinete', n: 'Patinete clásico', icon: '🛴', clase: 'rueda', cuerpo: 'impulsa', vmax: 5.5, acc: 1.4, freno: 3.5, giro: [3.5, 1.6], largo: 1.1, ancho: .45, masa: 78, suelo: VEH_SUELO_RUEDA, loma: [2.6, .45, 1.4], run: 1, color: '#c9d1db', manubrio: [.38, 1.0] },
+  { id: 'patinete', n: 'Patinete clásico', icon: '🛴', clase: 'rueda', cuerpo: 'impulsa', vmax: 6.5, acc: 1.4, freno: 3.5, giro: [3.5, 1.6], largo: 1.1, ancho: .45, masa: 78, suelo: VEH_SUELO_RUEDA, loma: [2.6, .45, 1.4], run: 1, color: '#c9d1db', manubrio: [.38, 1.0] },
   { id: 'scooter', n: 'Scooter eléctrico', icon: '🛵', de: 'patinete', cuerpo: 'tabla', vmax: 7, acc: 2.4, electrico: 1, loma: [.5, .8, 1.15], color: '#29b6f6' },
   { id: 'monopatin', n: 'Monopatín eléctrico', icon: '🔋', de: 'patinete', cuerpo: 'tabla', vmax: 7.5, acc: 2.6, electrico: 1, loma: [.5, .8, 1.15], suelo: [.3, .1, .2, .2, 1, 1, .7, 1.15, 0, 0, .85, 1, .75, 0, .95, .9, .2], color: '#1f242e' },
   { id: 'monociclo', n: 'Monociclo eléctrico', icon: '🛞', de: 'patinete', cuerpo: 'tabla', vmax: 6.5, acc: 2, electrico: 1, giro: [4.5, 2], largo: .5, color: '#7e57c2' },
-  { id: 'skate', n: 'Skate', icon: '🛹', clase: 'rueda', cuerpo: 'impulsa', vmax: 5.5, acc: 1.3, freno: 2.5, giro: [4.2, 1.8], largo: .82, ancho: .22, masa: 72, suelo: [.1, .05, .2, .2, 1, 1, .8, 1.1, 0, 0, .95, 1, .8, 0, .9, .9, .1], loma: [3, .4, 1.5], salto: 1.3, trucos: 1, run: 1, color: '#d9a066' },
+  { id: 'skate', n: 'Skate', icon: '🛹', clase: 'rueda', cuerpo: 'impulsa', vmax: 7, acc: 1.3, freno: 2.5, giro: [4.2, 1.8], largo: .82, ancho: .22, masa: 72, suelo: [.1, .05, .2, .2, 1, 1, .8, 1.1, 0, 0, .95, 1, .8, 0, .9, .9, .1], loma: [3, .4, 1.5], salto: 1.3, trucos: 1, run: 1, color: '#d9a066' },
   { id: 'longboard', n: 'Longboard', icon: '🛹', de: 'skate', vmax: 7, giro: [3, 1.2], largo: 1.05, loma: [3.4, .4, 1.7], color: '#8d6e63' },
-  { id: 'patines', n: 'Patines en línea', icon: '🛼', clase: 'rueda', cuerpo: 'patina', vmax: 6, acc: 1.6, freno: 3, giro: [4, 1.9], largo: .4, ancho: .4, masa: 70, suelo: VEH_SUELO_RUEDA, loma: [2.6, .45, 1.4], salto: 1.1, run: 1, color: '#ff5a36' },
+  { id: 'patines', n: 'Patines en línea', icon: '🛼', clase: 'rueda', cuerpo: 'patina', vmax: 7.5, acc: 1.6, freno: 3, giro: [4, 1.9], largo: .4, ancho: .4, masa: 70, suelo: VEH_SUELO_RUEDA, loma: [2.6, .45, 1.4], salto: 1.1, run: 1, color: '#ff5a36' },
   { id: 'quad', n: 'Patines quad', icon: '🛼', de: 'patines', vmax: 5.5, giro: [4.5, 2.1], color: '#f06292' },
   { id: 'triciclo', n: 'Triciclo de carga', icon: '🚲', de: 'bici', vmax: 5.5, acc: 1, giro: [2.2, 1], largo: 2.4, ancho: 1.1, masa: 160, carga: 1, color: '#ffb300' },
   { id: 'jetpack', n: 'Jetpack', icon: '🚀', clase: 'aire', cuerpo: 'pie', vmax: 14, acc: 5, freno: 5, giro: [3, 2], largo: .6, ancho: .6, masa: 90, suelo: VEH_SUELO_PIE, loma: [0, 1, 1], vuela: 1, techo: 60, run: 1, futuro: 1, color: '#ff7043' },
@@ -3934,7 +3934,7 @@ class Cuerpo {
   _arcade(dt, E, suelo, loma) {
     const V = this.veh, M = this.mundo, S = Vehiculos.arcade(V), A = this._arc || (this._arc = { w: 0 }), pie = V.clase === 'pie', motor = V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto';
     const lluvia = (E.lluvia || (E.clima && E.clima.lluvia) || 0) > .35, deriva = !!E.derrape && motor && Math.abs(this.v) > 7, turbo = !!E.turbo && !pie;
-    let max = this.vmax() * suelo * loma * (turbo ? 1.25 : 1); if (pie && E.dir && E.dir.m > .9 && !this.corriendo) max = Math.max(max, V.vcorre * .62);   /* a pie, el joystick a fondo ya trota */
+    let max = this.vmax() * suelo * loma * (turbo ? 1.25 : 1); if (pie && !this.corriendo && ((E.dir && E.dir.m > .85) || (E.acel || 0) > .85)) max = Math.max(max, V.vcorre * .62);   /* a pie, el joystick a fondo ya trota (4.7: también en las vistas de volante) */
     const kw = 1 - Math.exp(-dt / S.tw), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - Math.abs(this.v) / Math.max(1, max), 0, 1)) * (lluvia ? .85 : 1) * (deriva ? 1.6 : 1);
     let tv = 0, frena = false, suelta = false;
     if (this.enAire) { /* en el aire no se acelera ni se gira */ }
@@ -3947,6 +3947,7 @@ class Cuerpo {
       const g = clamp(E.giro || 0, -1, 1), ac = clamp(E.acel || 0, -1, 1); A.w += (g * wm * (this.v < -.3 ? -1 : 1) - A.w) * kw;
       if (ac > 0) tv = max * ac; else if (ac < 0) { if (this.v > .5) frena = true; else tv = -Math.min(8, max * .32) * -ac; } else suelta = true;
     } else { A.w *= 1 - kw; suelta = true; }
+    this._vPedida = tv;   /* 4.7: lo que se pide (para empujar lo liviano aunque esté quieto contra ello) */
     /* velocidad: directo a la pedida (como EnCicla); frenar es fuerte; soltar, rueda */
     const acc = S.acc * (turbo ? 1.4 : 1) * (pie ? 1 : clamp(suelo * 1.4, .5, 1)), brk = S.brk * (lluvia ? .7 : 1);
     if (this.enAire) { /* nada */ }
@@ -4334,6 +4335,9 @@ const Rotos = {
   puede(o, C) {
     const lim = o && ROMPE_V[o.t], cl = C.veh.clase; if (lim == null || cl === 'pie' || cl === 'rueda' || cl === 'agua') return false;
     if (cl === 'moto' && !ROMPE_MOTO.has(o.t)) return false;
+    /* 4.7: el carro (o el camión) se lleva por delante lo liviano a cualquier velocidad, como en GTA; antes, parado frente a una caneca no
+       podía pasar (necesitaba 2,5 m/s y no los alcanzaba porque la caneca lo frenaba). Lo anclado (hidrante, banca, paradero, poste) sigue pidiendo velocidad. */
+    if ((cl === 'auto' || cl === 'pesado') && ROMPE_MOTO.has(o.t)) return Math.abs(C.v) >= .3 || Math.abs(C._vPedida || 0) > .3;
     return Math.abs(C.v) >= lim * (cl === 'pesado' ? .55 : 1);
   },
   romper(M, o, C) {
@@ -4428,8 +4432,8 @@ const CAM_PERFIL = {
   aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
   /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
-  cenital: { fijo: true, pitch: 1.08, pitchCerca: .74, fov: .62, dist: 0, alto: 0 },
-  oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0 },
+  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75 },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua */
+  oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0, alejaVel: .35 },
   maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 }
 };
 class Camara {
@@ -4510,7 +4514,7 @@ class Camara {
     const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
     const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
-    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * .2 + this._per * .22);
+    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
     const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
     const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
     let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);
@@ -4792,7 +4796,10 @@ const Manejo = {
     } else {
       let giro = esq === 'inclinacion' ? Manejo.inclinacion() : (sx || ent.giro || 0);
       out.giro = Manejo.giroPorVelocidad(clamp(giro, -1, 1), C.v, vmax, P);
-      out.acel = -sy || ent.acel || 0; if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
+      out.acel = -sy || ent.acel || 0;
+      /* 4.7: como en los juegos de carreras para celular, el joystick sostenido hacia un lado también avanza (solo hacia atrás frena) */
+      if (m > .3 && sy < .3 && out.acel < m * .8 && V.clase !== 'pie') out.acel = Math.max(out.acel, m * .8);
+      if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
     }
     /* 4.6.1 · ACELERADOR FIJO (pedido del autor: «el problema es el arranque: si se suelta el joystick se deja de acelerar; pon un
        botón que, prendido, acelere siempre, y para detenerse simplemente se apaga»). Prendido: acelera a fondo y el joystick solo da la
@@ -6640,7 +6647,8 @@ class Vistas {
   gl3d() { return this.motor3d !== '2d' && this.motor3d !== 'raster' && this.hayGL() && !this.usaRaster(); }
   efectiva() { const v = this.actual; return v.respaldo && !this.gl3d() ? (v._r2d ||= Object.assign({}, v, { tipo: '2d', modo: v.respaldo })) : v; }
   /* metros → pantalla con la vista que esté (2D, pixel o 3D): para la flecha al objetivo, globos y etiquetas */
-  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual; if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, z, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
+  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual; if (v.tipo === 'gl' && this.usaRaster() && this.raster && typeof this.raster.aPantalla === 'function') return this.raster.aPantalla(x, y, z, this._W || 1, this._H || 1);   /* 4.7: con el respaldo por software (Gemini, js/44-raster.js) */
+    if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, z, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
   dibujar(g, W, H, E, dt = 1 / 60) {
     const t0 = MC.ahora(), v = this._ef = this.efectiva(), px = this.pixel; this._W = W; this._H = H; if (E.camara) { E.camara.pantalla = [W, H]; if (this.actual.perfil && E.camara.perfil !== this.actual.perfil) E.camara.usarPerfil(this.actual.perfil); } E.losas = this.losas; E.losasLejos = this.losasLejos; E.calidad = this.calidad;
     let dst = g, w = W, h = H;
@@ -7395,7 +7403,7 @@ Object.assign(MC, { Direccion, Hogar });
 /* =====================================================================
    F4 · RUN EN LA CICLOVÍA · «si vas por una ciclovía y tocas Run, todo cambia al estilo Run Scooter»
    - El corredor es Run Scooter casi idéntico (run/run-scooter.js, importado de RunRunZero), sobre el
-     camino REAL desde donde vas: la ciclorruta y, en cada cruce, la que continúa (si se acaba, la calle).
+     camino REAL desde donde vas: la ciclorruta y, en cada cruce, solo las salidas que son ciclorruta (4.7: si se acaba, termina la carrera; nunca sigue por la calle).
    - Las lomas son el relieve real del camino y las curvas, su curvatura real; las esquinas salen en los
      cruces reales con calles a los dos lados: si doblas allá, doblas en el mundo abierto.
    - Puedes parar (freno), caminar o correr (a pie) y cambiar de vehículo; las metas y los retos siguen.
@@ -7413,10 +7421,13 @@ const Run = {
   entrar(op) {
     const RS = MC.RunScooter, M = op.mundo, C = op.cuerpo, P0 = Run.puede(M, C); if (!P0.ok) throw new Error(P0.razon);
     const red = M.red('rueda'), cic = red.cercana(C.x, C.y, 12, e => e.k === VIA.CICLO);
+    const antes = { x: C.x, y: C.y, a: C.a }, deshacer = () => Object.assign(C, antes);   /* 4.7 (ChatGPT, entrega punto 7): si algo falla al entrar, el personaje vuelve a donde estaba */
     if (cic) { const a = cic.arista.t.rumbo(cic.s); C.x = cic.x; C.y = cic.y; C.a = Math.cos(angDif(C.a, a)) >= 0 ? a : a + Math.PI; }
-    const seguir = new SeguirRuta(M, C, { red: 'rueda', atras: 120, adelante: 700 }), ESC = this.ESC, z0 = M.cota(C.x, C.y), cv = op.lienzo, capa = op.capa;
+    /* 4.7 (auditoría de ChatGPT TC-P0-02/03 y el autor: «Run solo aplica en ciclovías»): el camino y las salidas de cada cruce se filtran a VIA.CICLO */
+    const esCiclo = e => !!e && e.k === VIA.CICLO; let seguir0; try { seguir0 = new SeguirRuta(M, C, { red: 'rueda', atras: 120, adelante: 700, filtro: esCiclo }); } catch (e) { deshacer(); throw new Error('Aquí la ciclorruta no sigue: busca otra 🛴'); }
+    const seguir = seguir0, ESC = this.ESC, z0 = M.cota(C.x, C.y), cv = op.lienzo, capa = op.capa;
     capa.hidden = false; const dpr = Math.min(1.5, window.devicePixelRatio || 1); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr);
-    if (!Run._gl) { if (!RS.R.init(cv)) throw new Error('Run necesita WebGL'); RS.RN.init(); try { RS.R.texture(RS.makeAtlas()); } catch (e) { MC.falla('Run: atlas', e); } Run._gl = true; }
+    if (!Run._gl) { if (!RS.R.init(cv)) { deshacer(); capa.hidden = true; throw new Error('Run necesita WebGL'); } RS.RN.init(); try { RS.R.texture(RS.makeAtlas()); } catch (e) { MC.falla('Run: atlas', e); } Run._gl = true; }
     RS.R.resize && RS.R.resize(1);
     const A = op.aspecto, cos = { helmet: A.cCasco || '#ffffff', he: false, shirt: A.cCamisa, pants: A.cPantalon, se: false, paint: C.veh.color || '#7ab800', pe: false, pet: 'm0', skin: A.cPiel, hair: ['corto', 'coleta', 'afro', 'corto', 'moño'][(A.peinado | 0) % 5], hc: A.cPelo };
     let vid = RUN_VEH[C.veh.id] || 'bike'; RS.RN.setPlayer(cos, vid);
@@ -7468,7 +7479,8 @@ const Run = {
     this._aviso('🛴 RUN · ' + (seguir.via && seguir.via.nombre || 'ciclorruta'), 2200);
     const cuadro = ts => {
       raf = requestAnimationFrame(cuadro); const dt = Math.min(.1, (ts - last) / 1000); last = ts; op.reloj.avanzar(dt); op.clima.actualizar(op.reloj, dt); V.lluvia = op.clima.lluvia > .15 ? clamp(op.clima.lluvia, 0, 1) : 0;
-      if (g.p.alive) { acc += dt; let n = 0; while (acc >= RS.DT && n < 14) { RS.step(g, RS.DT, cola.shift() || null); acc -= RS.DT; n++; const ds = (g.p.s - ps) * ESC; ps = g.p.s; if (ds > 0) { seguir.avanzar(ds); metros += ds; } } if (n >= 14) acc = 0; }
+      if (g.p.alive) { acc += dt; let n = 0; while (acc >= RS.DT && n < 14) { RS.step(g, RS.DT, cola.shift() || null); acc -= RS.DT; n++; const ds = (g.p.s - ps) * ESC; ps = g.p.s; if (ds > 0) { seguir.avanzar(ds); metros += ds; } } if (n >= 14) acc = 0;
+        if (seguir.alFin < 3 && g.p.alive) { g.p.alive = false; g.p.deadT = 0; g.cause = '🏁 Se acabó la ciclorruta (' + Math.round(metros) + ' m)'; this._aviso('🏁 Fin de la ciclorruta: Run termina aquí', 2200); } }   /* 4.7: al acabarse la ciclovía, termina (no sigue por la calle) */
       else { RS.step(g, dt, null); if (g.p.deadT > 1.1 && $h('rFin').hidden) { $h('rFin').hidden = false; $h('rFinT').innerHTML = '¡Uy! ' + (g.cause || 'Te caíste') + '<br><small>' + Math.round(metros) + ' m reales · ' + g.score + ' puntos</small>'; } }
       /* curvas fuertes del camino real (que no son una esquina elegida): la cámara gira como en una esquina */
       const k = seguir.trazo.curva(seguir.s + 6, 6); if (Math.abs(k) > .07 && seguir.s - ultGiro > 25) { ultGiro = seguir.s; RS.RN.events(g, { k: 'turn', a: { dir: Math.sign(k), z: 0, n: 2 } }); }
@@ -7765,7 +7777,25 @@ const UI = {
       mision(texto) { mision.hidden = !texto; const [t, ...d] = String(texto || '').split('<br>'); mision.innerHTML = '<div class="t">' + t + '</div>' + (d.length ? '<div class="d">' + d.join(' ') + '</div>' : ''); },   // título en una línea; el detalle, en dos como mucho (nunca medio renglón cortado)
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
       dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
-      menu(titulo, items, al) { const m = div('menu p'); m.innerHTML = '<b style="padding:4px">' + titulo + '</b>'; for (const it of items) { const b = document.createElement('button'); b.innerHTML = it.texto; b.onclick = () => { m.remove(); al(it.id); }; m.appendChild(b); } const cerrar = () => m.remove(); setTimeout(() => document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', k); } }), 0); return m; },
+      menu(titulo, items, al) {
+        if (ui._menu) ui._menu.cerrar();
+        const anterior = document.activeElement, m = div('menu p'), encabezado = document.createElement('b');
+        m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', titulo);
+        encabezado.style.padding = '4px'; encabezado.textContent = titulo; m.appendChild(encabezado);
+        const escapar = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cerrar(); } };
+        const cerrar = () => {
+          document.removeEventListener('keydown', escapar, true);
+          m.remove(); ui._menu = null;
+          if (anterior?.isConnected) anterior.focus({ preventScroll: true });
+        };
+        ui._menu = { cerrar };
+        for (const it of items) {
+          const b = document.createElement('button'); b.innerHTML = it.texto;
+          b.onclick = () => { cerrar(); al(it.id); }; m.appendChild(b);
+        }
+        document.addEventListener('keydown', escapar, true);
+        m.querySelector('button')?.focus({ preventScroll: true }); return m;
+      },
       /* minimapa redondo con las losas del motor, girado con la cámara */
       minimapa(vistas, al) { const c = document.createElement('canvas'); c.className = 'mini p'; c.width = c.height = 240; c.setAttribute('role', 'button'); c.setAttribute('aria-label', 'Abrir el mapa'); c.style.cursor = 'pointer'; c.addEventListener('click', e => { e.stopPropagation(); const f = al || ui._alMini; if (f) f(); }); capa.appendChild(c); ui._mini = { c, vistas }; if (al) ui._alMini = al; return c; },   // 4.6: tocar el minimapa (la brújula) abre el mapa grande
       pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } g.restore(); const th = -yaw, cs = Math.cos(th), sn = Math.sin(th);   /* 4.6: los puntos lejanos quedan en el borde (no se pierden) y la N marca el norte */
@@ -7791,7 +7821,7 @@ const UI = {
         const o = { b, activo: !!activo, poner(v, callado) { o.activo = !!v; b.setAttribute('aria-pressed', o.activo ? 'true' : 'false'); b.classList.toggle('prendido', o.activo); if (al && !callado) al(o.activo); } };
         b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); o.poner(!o.activo); }); b.addEventListener('click', e => { if (e.detail === 0) o.poner(!o.activo); });   /* el clic del teclado o de un lector de pantalla también */
         o.poner(o.activo, true); (ui._alt || (ui._alt = {}))[aid] = o; capa.classList.add('con-alt'); return o; },   /* con-alt: en vertical, la velocidad sube sobre la fila de botones (3 botones ya llegan al centro) */
-      quitar() { capa.remove(); css.remove(); }
+      quitar() { ui._menu?.cerrar(); capa.remove(); css.remove(); }
     };
     return ui;
   }

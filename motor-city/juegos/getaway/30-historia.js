@@ -15,7 +15,7 @@ const Historia = {
     if (i === 0) { G.cebos = 2; G.reloj.min = H.hora * 60; G.climaForzado = H.clima; if (G.clima) G.clima.forzar(H.clima); }
     if (op.donde) await entrarMundo(op.donde.mundo, { x: op.donde.x, y: op.donde.y, a: op.donde.a, heat: 0 });
     else if (G.id !== H.mundo) await entrarMundo(H.mundo, { lugar: H.inicio, heat: 0 });
-    if (i === 0) { await tarjeta('Acto ' + H.acto + ' · Capítulo ' + H.cap, H.titulo, TC.QUIEN.mara.n); if (H.intro && !op.sinIntro) await escena(H.intro); }
+    if (i === 0) { await tarjeta('Acto ' + H.acto + ' · Capítulo ' + H.cap, H.titulo, TC.QUIEN.mara.n, H.acto); if (H.intro && !op.sinIntro) await escena(H.intro); }
     if ((G.narrativaEpoch || 0) !== token || G.modo !== 'historia') return;
     this.empezarPaso(i);
   },
@@ -149,7 +149,7 @@ const Historia = {
 };
 function sumarEvidencia(n) { G.evidencia += n; G.ui.aviso('🧳 Prueba guardada en la Caja de custodia · ' + G.evidencia, 2000, 'ev'); }
 /* tarjeta de capítulo (pantalla negra con el título) */
-async function tarjeta(p, h, s) { const tr = $('#transicion'); $('#trP').textContent = p; $('#trH').textContent = h; $('#trS').textContent = s || ''; tr.classList.add('on'); G.pausa = true; await espera(1900); tr.classList.remove('on'); G.pausa = false; await espera(300); }
+async function tarjeta(p, h, s, acto) { const tr = $('#transicion'); if (acto) tr.dataset.acto = acto; $('#trP').textContent = p; $('#trH').textContent = h; $('#trS').textContent = s || ''; tr.classList.add('on'); G.pausa = true; await espera(1900); tr.classList.remove('on'); G.pausa = false; await espera(300); delete tr.dataset.acto; }
 
 /* ---------- Calle libre: contratos en cualquier ciudad del planeta ---------- */
 const Contratos = {

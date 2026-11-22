@@ -32,3 +32,15 @@ Medido en el motor (`node motor-city/pruebas/prueba.mjs` § 26): de 0 al 90 % en
 
 ## 6. 4.6.1 · ⏫ Acelerador fijo (22‑nov‑2026)
 El autor: «el problema es el arranque: si se suelta el joystick se deja de acelerar; coloca un botón que, presionado, siempre esté acelerando sin parar, y para detenerse simplemente se desactiva». En el motor (`motor-city/js/37-manejo.js`): `MC.Manejo.aplicar(controles.leer(), cuerpo, { …, acelFijo: true })` pone el empuje a fondo y deja al joystick solo la dirección; al pasar a `false`, frena suave hasta parar (salvo que se toque el joystick). El botón: `ui.alternar({ id: 'acelerador', icono: '⏫', texto: 'Acelerar', al: v => … })` (`motor-city/js/70-interfaz.js`). En Turno Cero está junto a 🛑 y ⚡ (tecla V). **Si tu juego tiene su propio manejo**, la idea cabe en pocas líneas: con el botón prendido, la velocidad objetivo es la máxima y el joystick solo gira; al apagarlo, frenar hasta 0 mientras no se toque el joystick.
+
+## 7. 4.7.0 · Plan de evolución y Turno Cero con los modos en el mundo abierto (22‑nov‑2026)
+- El autor pidió a tres IA a la vez revisar el juego de prueba contra las mejores referencias e investigar; cada una escribió su plan:
+  - Claude: `motor-city/docs/PLAN-EVOLUCION-CLAUDE.md`;
+  - ChatGPT: `docs/PLAN-EVOLUCION-CHATGPT.md`, en su rama del motor;
+  - Gemini: `docs/PLAN-EVOLUCION-GEMINI.md`, en su rama.
+- Lo útil para tu juego: § 4 (controles, mundos grandes con pocos recursos, render y optimización con fuentes) y § 7 (Run solo por ciclorruta: en `motor-city/js/50-run.js` el camino y los cruces se filtran a `VIA.CICLO`).
+- El motor nuevo trae:
+  - `G.Actividades`, marcas de actividades en el mundo abierto (`motor-city/juegos/getaway/60-modos.js`), un patrón reutilizable;
+  - el ritmo arcade de velocidades;
+  - que un carro quieto se lleve lo liviano (canecas, conos) a cualquier velocidad.
+- Este repositorio solo recibió la copia del motor; el juego no cambió.

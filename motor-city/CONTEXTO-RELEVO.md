@@ -28,13 +28,13 @@
 
 ---
 
-## 0. Entregables de la 4.6.1 (HTML, APK y enlaces)
+## 0. Entregables de la 4.7.0 (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 4.6.1** (18+), el juego de prueba con todo (⏫ acelerador fijo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.6.1/MotorCity-getaway.apk> |
+| **Turno Cero 4.7.0** (18+), el juego de prueba con todo: modos en el mundo abierto, todo liberado | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.7.0/MotorCity-getaway.apk> |
 | Juega EnCicla | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v2.0.1/JuegaEnCicla-v2.0.1-debug.apk> |
 | El Metro (3.1.0 «Fluido», de la sesión de El Metro) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 29) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
@@ -617,4 +617,25 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 - **Qué hice:** `acelFijo` en `MC.Manejo.aplicar`, `frenoK` en la física, `ui.alternar` en la interfaz, y ⏫ en Turno Cero (también en el tren de 🎮 Modos), con el HUD ajustado en vertical y en horizontal.
 - **Cómo se prueba:** `node pruebas/prueba.mjs` § 27 y `node pruebas/modos.mjs`.
 - **Para los juegos hermanos:** está en `motor-city/js/37-manejo.js`; adoptarlo es pasar `acelFijo` al armar la entrada y poner un botón (ver `docs/INFORME-MOTOR-CITY-4.6.md`).
+
+
+### Codex · 22-nov-2026 · arte y menú sobre 4.6.1
+
+Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas por HTTP. Ver CONTEXTO-CODEX-TURNO-CERO.md para plan, investigación y pendientes. La siguiente IA debe escribir su propio documento de contexto y exigir lo mismo a quien continúe.
+
+### Claude · 22‑nov‑2026 · 4.7.0 (con Gemini y Codex en paralelo)
+- **Qué pidió el autor:**
+  - revisar el juego contra las referencias y los mejores juegos, investigar y hacer un plan verosímil con la marca de la IA;
+  - arreglar los modos;
+  - todo liberado y cada modo en el mundo abierto;
+  - Run en ciclovías;
+  - luego arte y cámaras.
+- **Qué hice:**
+  - `docs/PLAN-EVOLUCION-CLAUDE.md`;
+  - el ritmo arcade, todo liberado, `G.Actividades`, 🛹 trucos, 🛴 en el menú 🎮, cámaras por contexto, la cenital de verdad que se aleja con la velocidad y el volante que avanza de lado;
+  - los hallazgos de Gemini en mis zonas.
+- **Coordinación:** respetar `coord/agentes/*.json → trabajo_4_7`:
+  - Gemini: render y `62-mundo-vivo.js`;
+  - Codex: `70-interfaz.js`, `30-historia.js` y el arte.
+- **Siguiente (4.8):** las P1 del plan § 10.
 
