@@ -58,7 +58,9 @@ Object.assign(MC, { Taller, ManejoCarro });
 /* el cuerpo del jugador usa el manejo de carro cuando su vehículo lo pide (sin tocar la física base) */
 Cuerpo.prototype._actualizarBase = Cuerpo.prototype.actualizar;
 Cuerpo.prototype.actualizar = function (dt, E = {}) {
-  const V = this.veh; if (V.dinamica !== 'carro') { this._carro = null; return this._actualizarBase(dt, E); }
+  /* 4.6: los vehículos del taller también van con el manejo arcade (el de EnCicla). El modelo de bicicleta con agarre (pesado, al estilo
+     de GTA IV) queda solo si se pide: MC.opciones.manejo = 'simulacion' */
+  const V = this.veh; if (V.dinamica !== 'carro' || !(MC.opciones && MC.opciones.manejo === 'simulacion')) { this._carro = null; return this._actualizarBase(dt, E); }
   dt = Math.min(dt, .05); this.eventos.length = 0; if (!this._carro || this._carro.v !== V) { this._carro = new ManejoCarro(V); this._carro.vx = this.v; }
   /* 4.5: si el juego cambió la velocidad desde afuera (teletransporte, salida de un cinemático), el modelo la toma */
   if (Math.abs(this.v - this._carro.vx) > 1.5) { this._carro.vx = this.v; this._carro.vy = 0; this._carro.r = 0; }

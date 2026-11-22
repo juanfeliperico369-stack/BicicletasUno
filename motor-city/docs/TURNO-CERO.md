@@ -77,6 +77,21 @@
 | 4.2 · la historia se encuentra | `56-abierto.js`, `50-extras.js` | <ul><li>📖 en la calle y en el minimapa donde empieza el próximo capítulo o donde quedó la historia; al pasar cerca solo avisa, se juega si uno quiere.</li><li>La carrera callejera tiene la meta adelante y el rival sale en el carril de al lado.</li><li>Ganchos `EXTRAS.capas` y `EXTRAS.mapa`.</li></ul> |
 | Artefactos (ficción de juego) | `juegos/getaway/20-juego.js` | T02 Dron Cuervo, T05 Cebo acústico, T08 Pulso de interferencia, T01 Lente espectral (estilo térmico del motor), T03 Rastreador, T06 Acceso, T11 Cámara, T09 Custodia y T04 VELA |
 
+## 3a. ⏫ Acelerador fijo (4.6.1)
+Un toque en ⏫ (o la tecla V) y el carro acelera solo: el joystick solo da la dirección. Otro toque y frena hasta parar. 🛑 sigue frenando mientras se oprime (y, girando, derrapa). Sirve en carro, moto, bici y manejando el tren de 🎮 Modos; a pie se esconde.
+
+## 3b. 🎮 Modos (4.6): el único juego de prueba trae todo
+Pedido del autor: «la idea era tener solo un juego de prueba: entrega los cuatro en Turno Cero y rescata lo de EnCicla y El Metro». En el mundo abierto de cualquier ciudad (botón 🎮, ⏸ Menú o la portada, «Modos de juego»), sin policía mientras dura el modo (`juegos/getaway/60-modos.js`):
+| Modo | De dónde viene | Qué se juega |
+|---|---|---|
+| 🏁 Carreras | Motor City · Carreras (4.5) | Circuito o sprint por las calles de aquí (rutas A* del motor), 3 rivales con `MC.Manejo.pilotar` que se adaptan al ritmo, cuenta regresiva, posición, vueltas, premio y récord por ciudad. |
+| 🚵 Extremo | Extremo (4.5) | Bici de montaña desde lo más alto de las vías cercanas hasta lo más bajo (1 a 4 km); 🦘 saltar y derrapar suman puntos; dos rivales. |
+| 📦 Mandados | Mandados (demo del motor) | Tres entregas encadenadas: parar para recoger, llevar con reloj; los golpes dañan el paquete y bajan el pago. |
+| 🚲 EnCicla | Juega EnCicla | Tomar la cicla en una estación y llevarla a la que tiene menos (rebalanceo, tres vueltas); la racha por la ciclorruta multiplica hasta ×3 y volarse un semáforo en rojo (las luces de `MC.Trafico`) resta 50. |
+| 🚇 Metro, tranvía y Metroplús | El Metro | Manejas el tren por su línea real (`MC.Transporte`): ⚡ acelera, 🛑 frena; parar dentro del andén da puntos por precisión, abren las puertas y suben y bajan pasajeros; pasarse de la estación resta. |
+| 🧪 Laboratorio | El motor | Estilo gráfico, hora, clima y cualquier vehículo, para probarlo todo. |
+Prueba: `node pruebas/modos.mjs` juega los cinco de punta a punta en Medellín y abre el mapa.
+
 ## 4. Las 13 referencias del autor y lo que se tomó (técnica, nunca arte)
 | Referencia | Lo que se tomó |
 |---|---|

@@ -68,7 +68,21 @@ const Vehiculos = {
   de(juego, filtro) { return [...this.lista.values()].filter(v => (v.juegos.includes('*') || v.juegos.includes(juego)) && (!filtro || filtro(v))); },
   /* cuánto rinde en una casilla (0 = no entra) y en una pendiente */
   suelo(v, tt) { return (v.suelo || VEH_SUELO_RUEDA)[tt] ?? 0; },
-  loma(v, p) { const [k, a, b] = v.loma || [1, .6, 1.2]; return clamp(1 - k * p, a, b); }
+  loma(v, p) { const [k, a, b] = v.loma || [1, .6, 1.2]; return clamp(1 - k * p, a, b); },
+  /* 4.6 · las cifras del manejo arcade (el de Juega EnCicla) por clase de vehículo. acc, brk y coast son proporciones de la velocidad
+     máxima por segundo, como en EnCicla (la bici: acc 0,5·max, brk 1,2·max, coast 0,67·max; w0 5 y w1 2,7 rad/s; tw 0,09 s).
+     Un vehículo puede traer las suyas en v.arcade = { acc, brk, coast, arrastre, w0, w1, tw } (en m/s² y rad/s). */
+  ARCADE: {
+    pie: { accK: 3.5, brkK: 6.5, coastK: 4, arrastre: .35, w0: 7.5, w1: 6, tw: .05, accMin: 6, brkMin: 10 },
+    rueda: { accK: .5, brkK: 1.2, coastK: .67, arrastre: .35, w0: 5, w1: 2.7, tw: .09, accMin: 2.5, brkMin: 6 },
+    moto: { accK: .42, brkK: .9, coastK: .18, arrastre: .12, w0: 4.2, w1: 2.3, tw: .08, accMin: 7, brkMin: 14 },
+    auto: { accK: .34, brkK: .85, coastK: .14, arrastre: .1, w0: 3.4, w1: 1.75, tw: .11, accMin: 7.5, brkMin: 18 },
+    pesado: { accK: .32, brkK: .9, coastK: .3, arrastre: .1, w0: 2.4, w1: 1.2, tw: .2, accMin: 3.5, brkMin: 10 }
+  },
+  arcade(v) {
+    if (v._arcade) return v._arcade; const B = Vehiculos.ARCADE[v.clase] || Vehiculos.ARCADE.auto, mx = Math.max(1, v.vmax || 10), o = v.arcade || {};
+    return (v._arcade = { acc: o.acc ?? Math.max(B.accMin, B.accK * mx), brk: o.brk ?? Math.max(B.brkMin, B.brkK * mx), coast: o.coast ?? B.coastK * mx, arrastre: o.arrastre ?? B.arrastre, w0: o.w0 ?? B.w0, w1: o.w1 ?? B.w1, tw: o.tw ?? B.tw });
+  }
 };
 for (const d of VEH_LISTA) Vehiculos.registrar(d);
 MC.Vehiculos = Vehiculos;

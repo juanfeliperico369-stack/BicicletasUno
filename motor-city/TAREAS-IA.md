@@ -1,5 +1,7 @@
 # Tareas de cada IA · Motor City 4.0
 
+> **4.5 (21‑nov‑2026), decisión del autor:** EnCicla, El Metro y Run Scooter **siguen con su propio motor**. Reciben Motor City en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.5.md` de cada repositorio. Las tareas de «migrar a motor-city» quedan anuladas. Lo de este motor: `CONTEXTO-RELEVO.md` § 0 y § 5.
+
 > **Si te dijeron «mira el repositorio y haz tu parte», empieza aquí.**
 > 1. Busca abajo **quién eres** y haz **solo tu parte**, en el orden indicado.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.

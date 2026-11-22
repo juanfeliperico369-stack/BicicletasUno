@@ -48,6 +48,18 @@ const Manejo = {
       out.giro = Manejo.giroPorVelocidad(clamp(giro, -1, 1), C.v, vmax, P);
       out.acel = -sy || ent.acel || 0; if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
     }
+    /* 4.6.1 · ACELERADOR FIJO (pedido del autor: «el problema es el arranque: si se suelta el joystick se deja de acelerar; pon un
+       botón que, prendido, acelere siempre, y para detenerse simplemente se apaga»). Prendido: acelera a fondo y el joystick solo da la
+       dirección (sin joystick, sigue derecho y el imán de calle lo alinea con la vía). Apagado: frena suave hasta parar, salvo que
+       se toque el joystick o el acelerador. El 🛑 sigue mandando mientras se oprime. A pie no hace nada. */
+    if (V.clase !== 'pie') {
+      const fijo = !!op.acelFijo;
+      if (fijo) { C._pararFijo = false; if (out.dir) out.dir.m = 1; else if (volante) out.acel = out.acel < -.3 ? out.acel : 1; else { out.acel = 1; out.giro = out.giro || 0; } }
+      else if (C._fijo) C._pararFijo = true;
+      C._fijo = fijo;
+      if (!fijo && C._pararFijo) { if ((out.dir && out.dir.m > .08) || out.acel > .05 || Math.abs(C.v) < .4) C._pararFijo = false; else { out.acel = -1; out.frenoK = .55; out.dir = null; } }
+      out.acelFijo = fijo;
+    }
     /* frenar antes de la curva: mira la vía de adelante (si el juego la da) y no deja pasar de la velocidad segura */
     if (A.frenoCurvas && op.curvaAdelante != null && V.clase !== 'pie') { const vs = Manejo.vSegura(op.curvaAdelante, op.mu || .8); if (C.v > vs && out.acel > 0) out.acel = C.v > vs * 1.08 ? -.6 : 0; }
     /* imán de calle: si ya casi va derecho por la vía, la alinea suave (no lucha contra el jugador) */

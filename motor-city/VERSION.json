@@ -1,12 +1,12 @@
 {
-  "version": "4.5.0",
-  "fecha": "2026-11-21",
+  "version": "4.6.1",
+  "fecha": "2026-11-22",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 4.5.0 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.5.md)",
-    "MetroZero: motor-city/ 4.5.0 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.5.md)",
-    "RunRunZero: motor-city/ 4.5.0 como referencia (docs/INFORME-MOTOR-CITY-4.5.md)"
+    "BicicletasUno: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "MetroZero: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (su 3.1.0 «Fluido», de su propia sesión, ya trae el manejo de EnCicla) (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "RunRunZero: motor-city/ 4.6.1 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
   ],
-  "estado": "4.5.0: PVS de Quake horneado (Manhattan y Guatapé), 42 modelos 3D pulidos con caras, techos a cuatro aguas y terrazas, sin conexión (sw.js) y GLB comprimidos, manejo que no se traba (desliza, se desatasca, asistencia, derrape, pisa andén/arena/nieve, moto por escalas), cosas que se rompen, efectos de choques, derrapes y explosiones, rostros detallados, árboles con lógica, sigilo a la manera de Hunter Assassin, y los juegos nuevos Motor City (carreras) y Extremo"
+  "estado": "4.6.1: ⏫ acelerador fijo (un toque y el carro acelera solo, el joystick solo da la dirección; otro toque y frena hasta parar), en el motor (MC.Manejo, ui.alternar) y en Turno Cero. 4.6.0: manejo y mapa de EnCicla, horizontal y un solo juego de prueba (Turno Cero con 🎮 Modos)"
 }
