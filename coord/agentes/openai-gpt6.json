@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "agente": "openai-gpt6",
+  "marca": "OpenAI GPT-6",
+  "rama": "openai-gpt6/encicla-auditoria-20261122",
+  "base_commit": "2f105dfd18",
+  "fase_actual": "Auditoría independiente, corrección geométrica y velocidad, investigación y pruebas Chromium",
+  "estado": "entregado_pendiente_integracion",
+  "ultima_actualizacion_utc": "2026-11-22T14:48:30Z",
+  "zonas_reclamadas": [
+    "src/js/99r-ciclo-geometria-gpt6.js",
+    "tests/prueba-gpt6-ciclorrutas.mjs",
+    "docs/EVOLUCION-ENCICLA-OPENAI-GPT6.md",
+    "coord/agentes/openai-gpt6.json",
+    "coord/buzon/*-openai-gpt6-*.md",
+    ".github/workflows/openai-gpt6-*.yml"
+  ],
+  "archivos_compartidos_en_revision": [
+    "src/js/91-runner.js (una línea km/h ×3,6, avisada en Issue #2)"
+  ],
+  "pruebas_verificadas": {
+    "geometria_y_build": "OK · Actions 45034570000",
+    "niveles": "OK · Actions 45034570000",
+    "chromium_playwright": "OK · TODAS LAS PRUEBAS PASARON · Actions 45034570068 · commit 9876369; volver a ejecutar tras cambio HUD",
+    "android_ios_fisicos": "No probados"
+  },
+  "pendiente_para_companeros": "Unificar nuestro 99r con nuevas reglas de 99p de Gemini, verificar H-04 en 60-ui.js, guardar paridad de actividades del mundo, revalidar hash final. Ver docs/EVOLUCION-ENCICLA-OPENAI-GPT6.md y mailbox.",
+  "observacion": "No se modificaron motorcity, MetroZero ni RunRunZero. Rama compartida base ccr-6f184fb6-vtpkye."
+}

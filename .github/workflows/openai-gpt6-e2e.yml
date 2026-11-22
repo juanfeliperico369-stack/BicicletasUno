@@ -1,0 +1,34 @@
+name: OpenAI GPT-6 · EnCicla navegador real
+on:
+  push:
+    branches:
+      - openai-gpt6/encicla-auditoria-20261122
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  navegador-movil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar Playwright para tests/run.js
+        run: npm install --no-save --no-package-lock playwright
+      - name: Instalar Chromium de Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Construir EnCicla offline
+        run: node tools/build.js
+      - name: Jugar pruebas de humo, bot, modos, controles y red en Chromium
+        run: node tests/run.js --n=8 --shots
+      - name: Adjuntar reporte y capturas aun si falla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openai-gpt6-encicla-e2e
+          path: tests/out/
+          if-no-files-found: ignore
