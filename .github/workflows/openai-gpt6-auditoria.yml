@@ -1,0 +1,29 @@
+name: OpenAI GPT-6 · EnCicla regresión
+on:
+  push:
+    branches:
+      - openai-gpt6/encicla-auditoria-20261122
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  geometria-y-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar acceso situado y geometría de ciclorrutas
+        run: node tests/prueba-gpt6-ciclorrutas.mjs
+      - name: Construir HTML sin internet de EnCicla
+        run: node tools/build.js
+      - name: Verificar que el HTML incluye el parche
+        run: |
+          test -s dist/juega-encicla.html
+          grep -q 'cicloGeoGPT6' dist/juega-encicla.html
+      - name: Prueba de conexión entre niveles de puente y superficie
+        run: node tests/prueba-niveles.mjs
