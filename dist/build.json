@@ -1,7 +1,7 @@
 {
  "version": "3.1.0",
- "hash": "1e7c6d27",
- "cache": "juega-encicla-v3.1.0-1e7c6d27",
+ "hash": "9415a90e",
+ "cache": "juega-encicla-v3.1.0-9415a90e",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -77,11 +77,14 @@
   "99b-actividades.js",
   "99c-trucos.js",
   "99d-mundo3d.js",
+  "99e-pulido.js",
+  "99f-mundo3d-transporte.js",
+  "99g-freerun.js",
   "99r-ciclo-geometria-gpt6.js"
  ],
  "bytes": {
-  "single": 5384479,
-  "web": 5385503,
-  "js": 5194802
+  "single": 5434125,
+  "web": 5435149,
+  "js": 5244448
  }
 }

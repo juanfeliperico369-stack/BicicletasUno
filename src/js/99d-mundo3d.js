@@ -14,6 +14,7 @@
    ===================================================================== */
 const Mundo3D = JE.mundo3d = {
   modo: null, gl: null, cv: null, tex: new Map(), mallas: new Map(), yaw: 0, H: 1.6, ALT: 120,   /* px de alto por unidad de z de los lotes (una casa ~6 m, 4 pisos ~16 m) */
+  ZA: 30 * PXM,   /* 3.2 · px de alto por unidad de z de lo que va en alto (76-altura.js): el viaducto del metro (z ,4) queda a 12 m y un puente de z ,2 a 6 m */
   activo(R) { return !!(this.modo && R && R.mode && R.mode.ride === R && !R.mode.sub && !(typeof panoOn === 'function' && panoOn(R)) && !R.big && this.ok()); },
   ok() { if (this._ok != null) return this._ok; try { const c = document.createElement('canvas'), g = c.getContext('webgl', { antialias: true }); this._ok = !!g; } catch (e) { this._ok = false; } return this._ok; },
   ciclo() { const M = ['tercera', 'primera', null], i = M.indexOf(this.modo); this.poner(M[(i + 1) % M.length]); },
@@ -29,8 +30,12 @@ const Mundo3D = JE.mundo3d = {
     const gl = this.gl = cv.getContext('webgl', { antialias: true, alpha: false }); if (!gl) return false;
     const vs = `attribute vec3 p;attribute vec3 n;attribute vec3 c;attribute vec2 u;uniform mat4 M;uniform vec3 L;varying vec3 vc;varying vec2 vu;varying float vf;varying float vl;
       void main(){vec4 q=M*vec4(p,1.);gl_Position=q;vc=c;vu=u;vf=clamp((q.w-140.)/560.,0.,1.);vl=.62+.38*max(dot(n,L),0.)+.0*n.y;}`;
+    /* 3.2 · las fachadas con ventanas: los muros de los edificios llevan en u la distancia a lo largo del muro (+10) y en v la
+       altura (px); cada piso de 3 m tiene su fila de ventanas, y de noche algunas se prenden */
     const fs = `precision mediump float;varying vec3 vc;varying vec2 vu;varying float vf;varying float vl;uniform sampler2D T;uniform float usaT;uniform vec3 F;uniform float noche;
-      void main(){vec3 k=usaT>.5?texture2D(T,vu).rgb:vc;k*=vl*(1.-noche*.55);gl_FragColor=vec4(mix(k,F,vf),1.);}`;
+      void main(){vec3 k=usaT>.5?texture2D(T,vu).rgb:vc;float luz=0.;
+        if(usaT<.5&&vu.x>=10.){vec2 w=vec2((vu.x-10.)/4.2,vu.y/4.8);vec2 f=fract(w);if(vu.y>1.2&&f.x>.22&&f.x<.74&&f.y>.32&&f.y<.78){float h=fract(sin(dot(floor(w),vec2(12.9898,78.233)))*43758.5453);k=mix(k*.55,vec3(.3,.4,.5),.5);luz=step(.5,h)*noche;}}
+        k*=vl*(1.-noche*.55);k=mix(k,vec3(1.,.85,.5),luz*.85);gl_FragColor=vec4(mix(k,F,vf),1.);}`;
     const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
     const pr = this.pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
     this.loc = { p: gl.getAttribLocation(pr, 'p'), n: gl.getAttribLocation(pr, 'n'), c: gl.getAttribLocation(pr, 'c'), u: gl.getAttribLocation(pr, 'u'), M: gl.getUniformLocation(pr, 'M'), L: gl.getUniformLocation(pr, 'L'), T: gl.getUniformLocation(pr, 'T'), usaT: gl.getUniformLocation(pr, 'usaT'), F: gl.getUniformLocation(pr, 'F'), noche: gl.getUniformLocation(pr, 'noche') };
@@ -51,10 +56,10 @@ const Mundo3D = JE.mundo3d = {
     this.prisma(o, P, z0, z0 + h, col, col);
   },
   /* prisma con base poligonal convexa P (sentido cualquiera): muros con su normal y techo */
-  prisma(o, P, z0, z1, muro, techo, muro2) {
+  prisma(o, P, z0, z1, muro, techo, muro2, vent) {
     const n = P.length; let area = 0; for (let i = 0; i < n; i++) { const [x0, y0] = P[i], [x1, y1] = P[(i + 1) % n]; area += x0 * y1 - x1 * y0; } const sg = area > 0 ? 1 : -1;
     for (let i = 0; i < n; i++) { const [x0, y0] = P[i], [x1, y1] = P[(i + 1) % n], dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = dy / l * sg, ny = -dx / l * sg, col = muro2 && Math.abs(nx) > Math.abs(ny) ? muro2 : muro;
-      const v = (x, y, z) => o.push(x, z, y, nx, 0, ny, col[0], col[1], col[2], 0, 0);
+      const v = (x, y, z) => o.push(x, z, y, nx, 0, ny, col[0], col[1], col[2], vent ? 10 + Math.hypot(x - x0, y - y0) : 0, vent ? z : 0);
       if (sg > 0) { v(x0, y0, z0); v(x1, y1, z1); v(x1, y1, z0); v(x0, y0, z0); v(x0, y0, z1); v(x1, y1, z1); } else { v(x0, y0, z0); v(x1, y1, z0); v(x1, y1, z1); v(x0, y0, z0); v(x1, y1, z1); v(x0, y0, z1); } }
     for (let i = 1; i < n - 1; i++) { const t = [P[0], P[i], P[i + 1]]; if (sg < 0) t.reverse(); for (const [x, y] of t) o.push(x, z1, y, 0, 1, 0, techo[0], techo[1], techo[2], 0, 0); }
   },
@@ -62,11 +67,12 @@ const Mundo3D = JE.mundo3d = {
   malla(cx, cy) {
     const k = cx + ',' + cy; let m = this.mallas.get(k); if (m) return m; const M = JE.map, S = CH * TS, o = [], A = this.ALT;
     for (const b of M.lotes(cx, cy).ed) { const p = b.pts; if (!p || p.length < 8) continue; const P = [[p[0], p[1]], [p[2], p[3]], [p[4], p[5]], [p[6], p[7]]], h = Math.max(4, (b.z || .08) * A);
-      this.prisma(o, P, 0, h, this.rgb(b.wa), this.rgb(b.roof), this.rgb(b.wb)); }
+      this.prisma(o, P, 0, h, this.rgb(b.wa), this.rgb(b.roof), this.rgb(b.wb), true); }
     const x0 = cx * CH, y0 = cy * CH;   /* árboles: la regla de las copas del pasto de la cenital (75-graficos.js) */
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) { if (M.get(x, y) !== TT.GRASS || h2(x, y, 5) >= .3 || (M.lid && M.lid.has(M.idx(x, y)))) continue;
       const X = x * TS + TS * (.3 + h2(x, y, 7) * .4), Y = y * TS + TS * (.3 + h2(x, y, 8) * .4), r = (.36 + (h2(x, y, 5) < .1 ? .14 : 0)) * TS, kk = h2(x, y, 6), col = this.rgb(kk < .05 ? '#f2c230' : kk < .09 ? '#e88ab8' : '#3f8a3f');
       this.caja(o, X, Y, 0, 1.4, 1.4, r * .9, 0, [.42, .3, .2]); const hex = []; for (let i = 0; i < 6; i++) hex.push([X + Math.cos(i * TAU / 6) * r, Y + Math.sin(i * TAU / 6) * r]); this.prisma(o, hex, r * .8, r * 2.1, col.map(v => v * .82), col); }
+    if (this.extraMalla) try { this.extraMalla(o, cx, cy); } catch (e) { JE.errors.push('3d malla: ' + e.message); }   /* 3.2: el viaducto, los puentes y las estaciones (99f) */
     const piso = [], q = (x, y, u, v) => piso.push(x, 0, y, 0, 1, 0, 1, 1, 1, u, v), X0 = cx * S, Y0 = cy * S; q(X0, Y0, 0, 0); q(X0, Y0 + S, 0, 1); q(X0 + S, Y0 + S, 1, 1); q(X0, Y0, 0, 0); q(X0 + S, Y0 + S, 1, 1); q(X0 + S, Y0, 1, 0);
     m = { cosas: o.length ? this.subir(o) : null, piso: this.subir(piso) }; this.mallas.set(k, m);
     if (this.mallas.size > 60) { const [kk, mm] = this.mallas.entries().next().value; this.mallas.delete(kk); for (const x of [mm.cosas, mm.piso]) if (x) this.gl.deleteBuffer(x.b); }
@@ -110,14 +116,16 @@ const Mundo3D = JE.mundo3d = {
     for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { const cx = ccx + dx, cy = ccy + dy; if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue; const mx = (cx + .5) * S - P.x, my = (cy + .5) * S - P.y; if (mx * fx + my * fy < -S * 1.1) continue; lista.push([mx * mx + my * my, cx, cy]); }
     lista.sort((a, b) => a[0] - b[0]);
     for (const [, cx, cy] of lista) { const m = this.malla(cx, cy), T = this.textura(cx, cy); if (T) this.pintar(m.piso, T); if (m.cosas) this.pintar(m.cosas); }
+    if (this.extraFijo) try { this.extraFijo(R); } catch (e) { JE.errors.push('3d fijo: ' + e.message); }   /* 3.2: los cables con sus torres y estaciones (99f) */
     /* lo que se mueve: carros, gente y el ciclista */
-    const o = []; for (const c of R.cars || []) { if (Math.abs(c.x - P.x) > 700 || Math.abs(c.y - P.y) > 700) continue; const col = this.rgb(c.col || '#c43a26'), Lg = c.kind === 'bus' ? 19 : c.kind === 'bici' ? 3 : 7, Wd = c.kind === 'bus' ? 4 : c.kind === 'bici' ? 1 : 3.1, h = c.kind === 'bus' ? 5 : c.kind === 'bici' ? 2.7 : 2.4, z0 = c.arriba ? (c.z || 0) * 1 : 0;
+    const o = []; for (const c of R.cars || []) { if (Math.abs(c.x - P.x) > 700 || Math.abs(c.y - P.y) > 700) continue; const col = this.rgb(c.col || '#c43a26'), Lg = c.kind === 'bus' ? 19 : c.kind === 'bici' ? 3 : 7, Wd = c.kind === 'bus' ? 4 : c.kind === 'bici' ? 1 : 3.1, h = c.kind === 'bus' ? 5 : c.kind === 'bici' ? 2.7 : 2.4, z0 = c.arriba ? (c.z || 0) * this.ZA : 0;
       this.caja(o, c.x, c.y, c.ang, Lg, Wd, h * .55, z0, col); this.caja(o, c.x - Math.cos(c.ang) * Lg * .08, c.y - Math.sin(c.ang) * Lg * .08, c.ang, Lg * .58, Wd * .9, h * .42, z0 + h * .55, col.map(v => v * .55)); }
     for (const q of R.peds || []) { if (Math.abs(q.x - P.x) > 400 || Math.abs(q.y - P.y) > 400) continue; this.caja(o, q.x, q.y, 0, .9, .9, 2.8, 0, this.rgb(q.col)); }
-    const me = Art.me(), v = P.veh, alto = (P.lvl > 0 ? (P.z || 0) : 0) * 1, ca = P.a;
+    const me = Art.me(), v = P.veh, alto = (P.lvl > 0 ? (P.z || 0) : 0) * this.ZA, ca = P.a;
     if (v === 'truck') { this.caja(o, P.x, P.y, ca, 12, 4, 4.5, alto, this.rgb('#9bd341')); this.caja(o, P.x + Math.cos(ca) * 4.6, P.y + Math.sin(ca) * 4.6, ca, 3, 3.8, 3, alto + 4.5, this.rgb('#e9eef3')); }
     else { if (v !== 'walk') { this.caja(o, P.x, P.y, ca, 3, .35, 1.6, alto, [.1, .1, .12]); this.caja(o, P.x, P.y, ca, 2.4, .3, .5, alto + 1.4, this.rgb(PAL.vd)); }
       const z1 = alto + (v === 'walk' ? 0 : 1.6); this.caja(o, P.x, P.y, ca, .9, .9, 1.5, z1, this.rgb(me.pants || '#2a3b5c')); this.caja(o, P.x, P.y, ca, 1.1, 1.3, 1.6, z1 + 1.5, this.rgb(me.shirt || PAL.vd)); this.caja(o, P.x, P.y, ca, .8, .8, .8, z1 + 3.1, this.rgb(me.cap || '#ffffff')); }
+    if (this.extraMovil) try { this.extraMovil(o, R); } catch (e) { JE.errors.push('3d móvil: ' + e.message); }   /* 3.2: trenes, tranvía, Metroplús y cabinas (99f) */
     if (o.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.din); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(o), gl.DYNAMIC_DRAW); this.pintar({ b: this.din, n: o.length / 11 }); }
   }
 };

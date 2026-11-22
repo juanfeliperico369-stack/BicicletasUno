@@ -138,7 +138,7 @@ Cam.lugar = function () {
 const _start88 = Game.start;
 Game.start = function () {
   const r = _start88.apply(this, arguments); Cam.bind(); View.rotOn = false; View.rot = 0; View.zf = Cam.d3() ? Cam.cfg().z || 1 : 1; View.apply();
-  const S = Save.data.settings; if (!JE.headless && Cam.d3() && !(S.seen && S.seen.cam) && this.mode && this.mode.ride) { (S.seen || (S.seen = {})).cam = 1; Save.save(); setTimeout(() => JE.ui && JE.ui.toast('🎥 Nuevo: pellizca para acercar o alejar, gira con dos dedos y súbelos para inclinar la cámara. 📷 mira la ciudad a voluntad.'), 2500); }
+  const S = Save.data.settings; if (!JE.headless && Cam.d3() && !(S.seen && S.seen.cam) && this.mode && this.mode.ride) setTimeout(() => { const G = this.mode; if (!JE.ui || !G || !G.ride || G.sub || View.kind !== 'map' || S.seen && S.seen.cam || JE.mundo3d && JE.mundo3d.modo) return; (S.seen || (S.seen = {})).cam = 1; Save.save(); JE.ui.toast('🎥 Nuevo: pellizca para acercar o alejar, gira con dos dedos y súbelos para inclinar la cámara. 📷 mira la ciudad a voluntad.'); }, 2500);   /* 3.2: solo en la ciudad, nunca encima de un minijuego */
   return r;
 };
 const _stop88 = Game.stop;
