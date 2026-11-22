@@ -58,6 +58,8 @@ Las pruebas nuevas están en `tests/revolucion-encicla.js` (sección V5) y la ba
 
 **Cifras actuales** (después del arreglo, CPU 4×): la bici a ~25 cuadros por segundo con mediana de 26 ms; el camión de Balance a ~27; la Ruta a Guatapé a ~38; la carrera de la ciclorruta y Run 3D a ~60. Sin errores de consola en ninguno.
 
+**Medición de la 3.2** (`node tests/auditoria-modos.js --cpu=4 --seg=4`, otra corrida): la Bodega suma 83 puntos en 4 s (antes, 0) y Run 3D 40 (antes, 0); el freerun, la carrera de la ciclorruta y Run 3D van a 60 cuadros por segundo; el camión a 40, Guatapé a 36 y el modo libre entre 27 y 31. La bici, que se mide primero y en frío (dibujando los trozos de la salida), da entre 17 y 29 cuadros por segundo según la corrida: por eso sigue en el § 6 dibujar los trozos en un *worker*. La prueba de rendimiento de la batería no cambió: mediana de 33,3 ms y p95 de 49,9 ms. Monitoreo y el Turno en equipo esperan tus órdenes: sin ellas no hay acción, como debe ser. Cero errores de consola.
+
 ## 2. Qué hacen los mejores y qué le sirve a EnCicla
 La regla para cada referencia: **qué hace mejor que nadie → si cabe en un juego familiar de bicis públicas del Valle de Aburrá, cómo → si no cabe, por qué.**
 
