@@ -15,6 +15,8 @@ const ctx = {
   clamp: (v, a, b) => Math.max(a, Math.min(b, v)),
   JE: { ui: { toast: s => avisos.push(s) }, map: { vias: [] } },
   TT: { CICLO: 7, AVE: 5, AUTO: 14 },
+  CarreraCiclovia: class {},
+  Mode: class { runSub() { this.pasadas = (this.pasadas || 0) + 1; return 'sub'; } },
   ModeUsuarioR: class {
     iniciarRunner3D() { this.llamadas = (this.llamadas || 0) + 1; return 'iniciado'; }
   }
@@ -57,5 +59,14 @@ jugador.ride.tileAt = () => ctx.TT.AVE; jugador.mods.ciclovia = true;
 ctx.JE.map = { vias: [] };
 assert.equal(jugador.iniciarRunner3D(), 'iniciado', 'Ciclovía temporal del evento está habilitada');
 assert.ok(avisos.length >= 2, 'Debe explicar por qué se bloquea');
+
+const libre = new ctx.Mode();
+libre.free = true; libre.ride = { p: { x: 800, y: 100 } };
+ctx.JE.map = mapa;
+assert.equal(libre.runSub(new ctx.CarreraCiclovia()), false, 'El Taller no puede saltar de una calle lejana a otra ciclorruta');
+libre.ride.p.y = 0;
+assert.equal(libre.runSub(new ctx.CarreraCiclovia()), 'sub', 'El Taller sí abre en una ciclorruta');
+const cerrado = new ctx.Mode(); cerrado.free = false;
+assert.equal(cerrado.runSub(new ctx.CarreraCiclovia()), 'sub', 'El menú de niveles sigue libre');
 
 console.log('OK OpenAI GPT-6: proyección a segmentos, progresiva, radio, carriles y runner contextual');
