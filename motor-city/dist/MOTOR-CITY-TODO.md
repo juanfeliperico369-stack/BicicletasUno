@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 4.8.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.9.0 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -67,7 +67,7 @@ Lee este documento, CONTEXTO-RELEVO.md, TAREAS-IA.md y coord/. Al terminar tu tu
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 22‑nov‑2026, Claude (motor **4.8.0** «Flexibilidad»). Lo entregado y los enlaces están en el § 0.
+**Última actualización:** 22‑nov‑2026, Claude (motor **4.9.0** «Realismo»). Lo entregado y los enlaces están en el § 0.
 
 > **El autor confirmó que Codex, ChatGPT y Antigravity ya no siguen. Claude asumió todo lo que quedaba.** La tabla del § 5 dice qué se hizo y qué queda, y por qué.
 **Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
@@ -83,14 +83,14 @@ Lee este documento, CONTEXTO-RELEVO.md, TAREAS-IA.md y coord/. Al terminar tu tu
 
 ---
 
-## 0. Entregables de la 4.8.0 «Flexibilidad» (HTML, APK y enlaces)
+## 0. Entregables de la 4.9.0 «Realismo» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 4.8.0** (18+), el juego de prueba con todo: ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.8.0/MotorCity-getaway.apk> |
-| Juega EnCicla 3.1.0 (⚙️ Flexibilidad en Más) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | release `v3.1.0` de BicicletasUno (`android.yml`) |
+| **Turno Cero 4.9.0** (18+), el juego de prueba con todo: 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.9.0/MotorCity-getaway.apk> |
+| Juega EnCicla 3.1.0 (⚙️ Flexibilidad en Más) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.1.0/JuegaEnCicla-v3.1.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
 | El Metro 3.3.0 (⚙️ Flexibilidad en Ajustes) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 31) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
@@ -724,6 +724,25 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - `pruebas/modos.mjs` falló una vez y pasó al repetirla: vigilar si es intermitente;
   - con 400 sectores, el caché de suelo usa hasta unos 4 MB.
 
+### Claude · 22‑nov‑2026 · motor 4.9.0 «Realismo»
+- **Pedido:** «los gráficos aún son básicos». El autor aprobó incrustar three.js: «haz todo lo que propones y sigue mejorando».
+- **Hecho:**
+  - three.js 0.170 (MIT) dentro de `motor.js`, sin internet;
+  - `MC.VistaTres` (`js/45-tres.js`) sobre las mismas mallas: sol con sombras, luz física, cielo, exposición neutra, ventanas de noche, grano en muros y suelo;
+  - ⚙️ Gráficos;
+  - `docs/PLAN-REALISMO.md`, con lo que sigue en datos y dibujo.
+- **Probado:** `pruebas/tres.mjs` y la batería completa del motor.
+- **Falta (por orden):**
+  - catastro en todas las comunas;
+  - techos de OpenStreetMap;
+  - relieve, que exige decidir la licencia;
+  - atlas de fachadas pintado;
+  - mallas pre-cocinadas por sector;
+  - plano histórico de Medellín.
+- **Riesgos:**
+  - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
+  - en gama baja, el modo automático usa el clásico.
+
 
 # MOTOR CITY · Documento único
 
@@ -1336,6 +1355,8 @@ No hace falta conectar ninguna aplicación.
 
 # ANEXO 0. Tareas de cada IA (`TAREAS-IA.md`)
 
+
+> **4.9 (22‑nov‑2026), decisión del autor: todos los pedidos que eran de Gemini y de ChatGPT pasan a ChatGPT** (imágenes en ChatGPT; código y commits en Codex). Gemini queda en pausa. **La lista vigente, en orden, con sus contratos técnicos: `docs/PEDIDOS-CHATGPT-4.9.md`.** Lo de abajo queda como historial.
 
 > **4.5 (21‑nov‑2026), decisión del autor:** EnCicla, El Metro y Run Scooter **siguen con su propio motor**. Reciben Motor City en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.5.md` de cada repositorio. Las tareas de «migrar a motor-city» quedan anuladas. Lo de este motor: `CONTEXTO-RELEVO.md` § 0 y § 5.
 
@@ -2116,6 +2137,16 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Pantalla en mitades: arriba siempre mover y acercar la cámara | ✅ | `js/33-controles.js` (mitades), `js/34-camara.js` (encuadre fijo, doble toque endereza) |
 | Unificar los mapas | ✅ | Minimapa, 🗺️ y 🌍 en un solo mapa (`op.planeta`), 🗺️ de vuelta desde el planeta |
 | Prueba | ✅ | `pruebas/rescate-mapa.mjs` |
+
+### 22. «Los gráficos aún son básicos: incrusta three.js, haz todo lo que propones y sigue mejorando» (4.9)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Incrustar three.js (sin internet) | ✅ | `js/vendor/`, `herramientas/construir.mjs` |
+| Sol con sombras, luz física, cielo y noche | ✅ | `js/45-tres.js` (`MC.VistaTres`) |
+| Suelo, muros y ladrillo con más vida | ✅ procedural | Grano y juntas en los sombreadores |
+| Relieve, casas y edificios «como son» | 📋 plan con decisiones de licencia | `docs/PLAN-REALISMO.md` § 3 A |
+| Elegir gráficos según el celular | ✅ | ⚙️ Flexibilidad → 🖼️ Gráficos |
+| Prueba | ✅ | `pruebas/tres.mjs` |
 
 
 
@@ -4261,6 +4292,25 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 22-nov-2026 · 4.9.0 «Realismo» · three.js incrustado y el 3D realista
+- **El autor:**
+  - «Nuestro motor no logra mapear todo tal cual: los relieves, las casas y los edificios no son como son, y los gráficos aún son básicos. ¿Qué debemos hacer?».
+  - Luego aprobó incrustar three.js: «haz todo eso que propones y sigue mejorando».
+  - Sobre las imágenes: las fotos de la ciudad son solo para mirar y adaptar; no se montan en el motor.
+- **three.js 0.170 (MIT) dentro de `dist/motor.js`:**
+  - la construcción convierte su módulo en el objeto `THREE`, sin internet;
+  - la licencia va en `js/vendor/LICENSE-three.txt` y en la cabecera;
+  - `motor.js` pasa de 1,0 a 1,7 MB.
+- **`MC.VistaTres` (`js/45-tres.js`):** dibuja las mismas regiones y mallas que `VistaGL` (que arma los datos y sigue de respaldo).
+  - Luz: materiales físicos y sol con sombras de verdad (mapa que sigue a la cámara, alineado a sus texeles); luz de cielo hemisférica casi neutra (el azul lo pone el domo); reflejos solo en los objetos; exposición «Khronos PBR Neutral»; niebla del clima.
+  - De noche: las ventanas encendidas brillan con luz cálida, y lo que el clásico aclaraba (carros, letreros) recibe un leve brillo propio.
+  - Grano procedural en los muros, con las juntas del ladrillo, y en el suelo, con grano fino y manchas.
+- **⚙️ Gráficos:** automático (realista salvo en GPU de gama baja), realista o clásico, con cambio en caliente (`MC.Vistas.reiniciarGL`).
+- **Lección:** en three.js 0.163 y posteriores, `scene.environment` usa `scene.environmentIntensity` y no el `envMapIntensity` del material: teñía de azul todo lo que mira hacia arriba. Se encontró midiendo píxeles con las luces apagadas una por una.
+- **Plan de datos para que la ciudad sea «como es»:** `docs/PLAN-REALISMO.md` (catastro en todas las comunas, techos de OpenStreetMap, relieve según la licencia, planos históricos, atlas de fachadas, mallas pre-cocinadas, «modo nube»).
+- **Prueba nueva:** `pruebas/tres.mjs`.
 
 
 ### 22-nov-2026 · 4.8.0 · Flexibilidad, lo que dejaron Gemini y ChatGPT, y optimización

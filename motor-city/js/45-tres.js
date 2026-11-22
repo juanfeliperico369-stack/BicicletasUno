@@ -1,0 +1,161 @@
+/* =====================================================================
+   VISTA TRES (4.9) · el 3D realista con three.js (MIT, © three.js authors), sobre las mismas mallas del motor
+   Pedido del autor: «los gráficos aún son básicos… haz la incrustación [de three.js] y todo lo demás».
+   La geometría ya era rica (ventanas con marco, balcones, puertas, cornisas, techos a dos y cuatro aguas, tanques,
+   árboles por especie, vehículos y modelos GLB); lo que la hacía ver básica era la luz. Aquí cambia la luz:
+   - materiales físicos (MeshStandardMaterial) con el color de siempre, en espacio lineal y salida sRGB;
+   - el SOL con sombras de verdad: un mapa de sombras que sigue a la cámara (los edificios sombrean la calle y a otros);
+   - luz del cielo hemisférica (cielo arriba, rebote del suelo abajo) y reflejos suaves de un cielo pre-filtrado (PMREM);
+   - exposición fílmica ACES, niebla del clima y un domo de cielo con el degradé de MC.Cielo;
+   - de noche, las ventanas encendidas brillan (el canal aE de las mallas) y el resto se apaga con el sol;
+   - grano procedural en los muros: las fachadas de ladrillo llevan sus juntas (sin texturas descargadas).
+   Lo que no cambia: las regiones de 160 m, el relieve, las losas del suelo, el PVS, el recorte por cono y por niebla, y
+   todas las mallas (VistaGL arma los datos; esta clase solo los dibuja). Sin WebGL2, o si algo falla, MC.Vistas vuelve
+   al VistaGL de siempre; ⚙️ Flexibilidad → Gráficos deja elegir los clásicos en celulares modestos.
+   ===================================================================== */
+const LIN = (() => { const t = new Float32Array(256); for (let i = 0; i < 256; i++) t[i] = Math.pow(i / 255, 2.2); return t; })();
+const linC = c => LIN[Math.max(0, Math.min(255, Math.round(c * 255)))];
+class VistaTres extends VistaGL {
+  static puede() {
+    if (VistaTres._puede != null) return VistaTres._puede;
+    try { VistaTres._puede = typeof THREE !== 'undefined' && typeof document !== 'undefined' && !!document.createElement('canvas').getContext('webgl2'); } catch (e) { VistaTres._puede = false; }
+    return VistaTres._puede;
+  }
+  constructor(mundo, losas) {
+    super(mundo, losas); this.tres = true;
+    const T = THREE; this.cv = document.createElement('canvas'); this.cv.width = this.cv.height = 4;
+    try { this.r = new T.WebGLRenderer({ canvas: this.cv, antialias: true, alpha: false, powerPreference: 'high-performance' }); } catch (e) { MC.falla('three', e); this.ok = false; return; }
+    const r = this.r; this.gl = r.getContext(); this.ok = true;
+    r.setPixelRatio(1); r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.NeutralToneMapping || T.ACESFilmicToneMapping;   /* «Khronos PBR Neutral»: respeta los colores de la paleta */ r.toneMappingExposure = 1.0;
+    r.shadowMap.enabled = true; r.shadowMap.type = T.PCFSoftShadowMap;
+    this.escena = new T.Scene(); this.cam = new T.PerspectiveCamera(60, 1, .3, 9000);
+    this.escena.fog = new T.Fog(0xc8d2dc, 300, 1500);
+    this.hemi = new T.HemisphereLight(0xcfe0ff, 0x6e5f4c, 1.0);
+    this.sol = new T.DirectionalLight(0xfff0dc, 3); this.sol.castShadow = true;
+    const sh = this.sol.shadow; sh.mapSize.set(2048, 2048); sh.bias = -.0004; sh.normalBias = .5; sh.camera.near = 1; sh.camera.far = 1600;
+    this.escena.add(this.hemi, this.sol, this.sol.target);
+    /* el material de todas las mallas: color por vértice, luz física, ventanas que brillan de noche y grano en los muros */
+    this.uNoche = { value: 0 };
+    const mat = this.matCosas = new T.MeshStandardMaterial({ vertexColors: true, roughness: .86, metalness: .02, envMapIntensity: .18 });
+    mat.onBeforeCompile = s => {
+      s.uniforms.uNoche = this.uNoche;
+      s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nattribute float aE;\nvarying float vE;\nvarying vec3 vMundo;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvE = aE;\nvMundo = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      s.fragmentShader = s.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uNoche;\nvarying float vE;\nvarying vec3 vMundo;\nfloat hashM(vec3 p){ return fract(sin(dot(floor(p), vec3(12.9898, 78.233, 37.719))) * 43758.5453); }')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          {   /* grano del material y juntas del ladrillo en los muros (normal casi horizontal) */
+            vec3 nW = normalize(cross(dFdx(vMundo), dFdy(vMundo)));
+            float muro = 1.0 - smoothstep(.35, .6, abs(nW.y));
+            float g = .94 + .06 * hashM(vMundo * 6.0);
+            float ladr = step(.08, diffuseColor.r - diffuseColor.g) * step(diffuseColor.b, diffuseColor.g);
+            float junta = muro * ladr * (1.0 - smoothstep(.0, .06, fract(vMundo.y * 4.0))) * .22;
+            diffuseColor.rgb *= mix(1.0, g, muro) * (1.0 - junta);
+          }`)
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n/* aE = 1: ventana encendida (luz cálida); aE parcial: lo que el clásico aclara de noche (carros, letreros) */\ntotalEmissiveRadiance += uNoche * (step(.9, vE) * vec3(1.0, .74, .38) * 2.2 + (1.0 - step(.9, vE)) * vE * diffuseColor.rgb * .5);');
+    };
+    /* el suelo: la losa del motor con grano fino (asfalto, andén) y manchas grandes, como en la calle de verdad */
+    this._granoSuelo = sh => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vMundoS;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvMundoS = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vMundoS;\nfloat hashS(vec2 p){ return fract(sin(dot(floor(p), vec2(127.1, 311.7))) * 43758.5453); }\nfloat ruidoS(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hashS(i), hashS(i + vec2(1, 0)), f.x), mix(hashS(i + vec2(0, 1)), hashS(i + 1.0), f.x), f.y); }')
+        .replace('#include <map_fragment>', '#include <map_fragment>\n{ vec2 q = vMundoS.xz; float fino = .9 + .1 * hashS(q * 9.0), mancha = .9 + .14 * ruidoS(q * .07) + .05 * ruidoS(q * .6); diffuseColor.rgb *= fino * mancha; }');
+    };
+    this.matLejos = new T.MeshLambertMaterial({ vertexColors: true });
+    /* el domo del cielo (degradé de MC.Cielo, sin niebla) */
+    const dg = new T.SphereGeometry(7000, 24, 12); dg.setAttribute('color', new T.BufferAttribute(new Float32Array(dg.attributes.position.count * 3), 3));
+    this.domo = new T.Mesh(dg, new T.MeshBasicMaterial({ vertexColors: true, side: T.BackSide, fog: false, depthWrite: false })); this.domo.renderOrder = -1; this.domo.frustumCulled = false; this.escena.add(this.domo);
+    this.pmrem = new T.PMREMGenerator(r); this._envClave = '';
+    this.dyn = null; this._dynCap = 0; this.lejosG = null; this.mvp = null;
+  }
+  /* ---------- datos de VistaGL, sin GL crudo ---------- */
+  _vbo(arr) { return { d: arr, n: arr.length }; }
+  _textura(L) { if (!L) return null; const T = THREE, t = new T.CanvasTexture(L); t.colorSpace = T.SRGBColorSpace; t.anisotropy = Math.min(8, this.r.capabilities.getMaxAnisotropy()); t.wrapS = t.wrapT = T.ClampToEdgeWrapping; return t; }
+  _geo10(arr) {
+    const T = THREE, f = arr instanceof Float32Array ? arr : new Float32Array(arr);
+    for (let i = 6; i < f.length; i += 10) { f[i] = linC(f[i]); f[i + 1] = linC(f[i + 1]); f[i + 2] = linC(f[i + 2]); }
+    const ib = new T.InterleavedBuffer(f, 10), g = new T.BufferGeometry();
+    g.setAttribute('position', new T.InterleavedBufferAttribute(ib, 3, 0)); g.setAttribute('normal', new T.InterleavedBufferAttribute(ib, 3, 3));
+    g.setAttribute('color', new T.InterleavedBufferAttribute(ib, 3, 6)); g.setAttribute('aE', new T.InterleavedBufferAttribute(ib, 1, 9));
+    g.computeBoundingSphere(); return g;
+  }
+  _region(gx, gy, detalle) {
+    const T = THREE, d = super._region(gx, gy, detalle), grupo = new T.Group();
+    { const f = new Float32Array(d.suelo.d), ib = new T.InterleavedBuffer(f, 8), g = new T.BufferGeometry();
+      g.setAttribute('position', new T.InterleavedBufferAttribute(ib, 3, 0)); g.setAttribute('normal', new T.InterleavedBufferAttribute(ib, 3, 3)); g.setAttribute('uv', new T.InterleavedBufferAttribute(ib, 2, 6)); g.computeBoundingSphere();
+      const mt = new T.MeshStandardMaterial({ map: d.tex, color: d.tex ? 0xffffff : 0x5e8c4a, roughness: 1, metalness: 0 }); mt.onBeforeCompile = this._granoSuelo; mt.customProgramCacheKey = () => 'sueloMC';
+      const m = new T.Mesh(g, mt); m.receiveShadow = true; grupo.add(m); }
+    if (d.cosas) { const m = new T.Mesh(this._geo10(d.cosas.d), this.matCosas); m.castShadow = m.receiveShadow = detalle >= 1; grupo.add(m); }
+    this.escena.add(grupo); return { gx, gy, grupo, tex: d.tex, detalle };
+  }
+  _borrar(r) { if (!r || !r.grupo) return; this.escena.remove(r.grupo); r.grupo.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material !== this.matCosas) o.material.dispose(); }); if (r.tex) r.tex.dispose(); }
+  liberar() { for (const r of this.regiones.values()) this._borrar(r); this.regiones.clear(); if (this.lejosG) { this.escena.remove(this.lejosG); this.lejosG.traverse(o => o.geometry && o.geometry.dispose()); this.lejosG = null; } this.lejos = null; }
+  _lejosATres() { const T = THREE, G = new T.Group(); for (const B of this.lejos || []) { const m = new T.Mesh(this._geo10(B.d), this.matLejos); m.receiveShadow = false; m.userData = { cx: B.cx, cy: B.cy }; G.add(m); } this.lejosG = G; this.escena.add(G); }
+  /* ---------- el cielo: domo, luces y reflejos según MC.Cielo ---------- */
+  _cielo(S, fog, L) {
+    const T = THREE, top = S.top, hor = S.hor, P = this.domo.geometry.attributes.position, Cc = this.domo.geometry.attributes.color, clave = [top, hor, fog].flat().map(v => Math.round(v * 40)).join(',');
+    if (clave !== this._domoClave) { this._domoClave = clave;
+      for (let i = 0; i < P.count; i++) { const t = P.getY(i) / 7000, k = t < 0 ? 0 : Math.pow(Math.min(1, t * 1.6), .65), a = t < -.02 ? fog : t < .04 ? [0, 1, 2].map(j => fog[j] + (hor[j] - fog[j]) * (t + .02) / .06) : [0, 1, 2].map(j => hor[j] + (top[j] - hor[j]) * k); Cc.setXYZ(i, linC(a[0]), linC(a[1]), linC(a[2])); }
+      Cc.needsUpdate = true;
+      this.escena.fog.color.setRGB(fog[0], fog[1], fog[2], T.SRGBColorSpace); this.r.setClearColor(this.escena.fog.color, 1);
+    }
+    /* reflejos: un cielo pre-filtrado, rehecho solo cuando el cielo cambia de verdad (día, tarde, noche) */
+    const ce = Math.round((S.noche || 0) * 6) + ':' + Math.round(top[2] * 6);
+    if (ce !== this._envClave && !MC.opciones.tresSinEnv) { this._envClave = ce; const esc = new T.Scene(); esc.add(new T.Mesh(this.domo.geometry, this.domo.material)); const viejo = this._envRT; this._envRT = this.pmrem.fromScene(esc, .04, 1, 20000); this.matCosas.envMap = this._envRT.texture; this.matCosas.needsUpdate = true; if (viejo) viejo.dispose(); }   /* el reflejo va por material (con scene.environment, three usa environmentIntensity y el suelo se teñía del azul del cielo) */
+  }
+  dibujar(W, H, E, op = {}) {
+    if (!this.ok) return null; const T = THREE, C = E.camara, M = this.mundo, cal = E.calidad ?? 1, r = this.r;
+    if (this.cv.width !== W || this.cv.height !== H) r.setSize(W, H, false);
+    const ox = Math.round(C.ojo[0] / 2000) * 2000, oy = Math.round(C.ojo[1] / 2000) * 2000;
+    if (!this.O || Math.abs(this.O[0] - ox) > 2500 || Math.abs(this.O[1] - oy) > 2500) { this.liberar(); this.O = [ox, oy, M.cota(ox, oy)]; }
+    if (!this.lejos) { this._lejos(); this._lejosATres(); }
+    /* las regiones a la vista (mismo plan que VistaGL: detalle por distancia y presupuesto de tiempo para construir) */
+    const aerea = C.d && C.d.fijo, Da = aerea ? (C.distAerea || 60) : 0, fN = clamp(E.factorNiebla ?? 1, .5, 1);
+    this._sinCabeza = C.perfil === 'primera';
+    const R = this.R, radio = aerea ? clamp(Da * 2.3 + 50, 140, 640) : (380 + 520 * cal) * fN, cx = aerea ? C.blanco[0] : C.ojo[0], cy = aerea ? C.blanco[1] : C.ojo[1], quiero = new Map();
+    for (let gy = Math.floor((cy - radio) / R); gy <= Math.floor((cy + radio) / R); gy++) for (let gx = Math.floor((cx - radio) / R); gx <= Math.floor((cx + radio) / R); gx++) { const d = Math.hypot((gx + .5) * R - cx, (gy + .5) * R - cy); if (d > radio + R) continue; quiero.set(gx + ',' + gy, d < 100 && cal > .7 ? 4 : d < 170 && cal > .5 ? 3 : d < 300 ? 2 : d < 600 ? 1 : 0); }
+    for (const [k, rg] of this.regiones) if (!quiero.has(k)) { this._borrar(rg); this.regiones.delete(k); }
+    const t0 = MC.ahora(), faltan = [...quiero].filter(([k, d]) => { const rg = this.regiones.get(k); return !rg || rg.detalle < d; }).sort((a, b) => { const [ax, ay] = a[0].split(',').map(Number), [bx, by] = b[0].split(',').map(Number); return Math.hypot((ax + .5) * R - cx, (ay + .5) * R - cy) - Math.hypot((bx + .5) * R - cx, (by + .5) * R - cy); });
+    for (const [k, d] of faltan) { if (MC.ahora() - t0 > (op.presupuesto || 8) && this.regiones.size) break; const [gx, gy] = k.split(',').map(Number), viejo = this.regiones.get(k); if (viejo) this._borrar(viejo); const nr = this._region(gx, gy, d); this.regiones.set(k, nr); }
+    this.pendientes = faltan.length;
+    /* cámara */
+    const O = this.O, e = [C.ojo[0] - O[0], C.ojo[2] - O[2], C.ojo[1] - O[1]], b = [C.blanco[0] - O[0], C.blanco[2] - O[2], C.blanco[1] - O[1]], cam = this.cam;
+    cam.fov = (C.fov || 1) * 180 / Math.PI; cam.aspect = W / H; cam.near = .3; cam.far = 9000; cam.position.set(e[0], e[1], e[2]); cam.up.set(0, 1, 0); cam.lookAt(b[0], b[1], b[2]); cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+    this.domo.position.copy(cam.position);
+    /* sol, cielo, niebla y noche (los mismos números que VistaGL) */
+    const S = E.cielo, sol = S.sol, luz = sol.alt > -.05 ? [sol.x, Math.max(.15, sol.z), sol.y] : [.3, .8, .2], ll = Math.hypot(...luz), L = luz.map(v => v / ll), niebla = E.clima ? E.clima.niebla : 0, lluvia = E.clima ? E.clima.lluvia : 0;
+    const fog = S.bruma, fr = aerea ? [Da * (1.55 - niebla * .5), Da * (2.25 - niebla * .6) + 40] : [radio * (.45 - niebla * .35), radio * (1.05 - niebla * .5) + 1500 * fN * fN * (1 - niebla) * (1 - lluvia * .5)];
+    this.escena.fog.near = fr[0]; this.escena.fog.far = fr[1]; this._cielo(S, fog, L);
+    const noche = S.noche || 0, dia = clamp(S.luzSol ?? .6, 0, 1), bajo = clamp(1 - L[1] * 1.8, 0, 1);
+    this.uNoche.value = noche;
+    this.hemi.intensity = .2 + 1.35 * clamp(S.ambiente ?? .8, 0, 1.2) + .35 * dia * (1 - L[1]);   /* con el sol bajo (mañana y tarde) el cielo rellena más */ r.toneMappingExposure = 1.12 + .25 * noche;   /* la luz del cielo rellena las sombras (en la calle nunca son negras) */   /* de noche: luz de luna y de la ciudad, sin quedar a oscuras */ this.hemi.color.setRGB(.93 + S.top[0] * .07, .94 + S.top[1] * .06, .95 + S.top[2] * .05, T.SRGBColorSpace);   /* luz de cielo casi neutra: el azul ya lo pone el domo */ this.hemi.groundColor.setRGB(.55, .5, .43, T.SRGBColorSpace);   /* cielo poco saturado: las sombras no se vuelven azules */
+    this.sol.intensity = 2.4 * dia * (1 - lluvia * .45) * (1 - niebla * .5); this.sol.color.setRGB(1, .97 - .28 * bajo, .9 - .5 * bajo, T.SRGBColorSpace);
+    /* sombras: una caja que sigue a lo que se mira, alineada a la rejilla de texeles (no tiemblan al moverse) */
+    const conSombra = cal > .42 && dia > .12 && sol.alt > .03; this.sol.castShadow = conSombra;
+    if (conSombra) { const s = aerea ? clamp(Da * 1.3, 120, 420) : clamp(70 + 90 * cal, 90, 170), tam = cal > .74 ? 2048 : 1024, sc = this.sol.shadow.camera, paso = 2 * s / tam;
+      if (this.sol.shadow.mapSize.x !== tam) { this.sol.shadow.mapSize.set(tam, tam); if (this.sol.shadow.map) { this.sol.shadow.map.dispose(); this.sol.shadow.map = null; } }
+      sc.left = -s; sc.right = s; sc.top = s; sc.bottom = -s; sc.updateProjectionMatrix();
+      const tx = Math.round((aerea ? b[0] : (e[0] + b[0]) / 2) / paso) * paso, ty = Math.round(b[1] / paso) * paso, tz = Math.round((aerea ? b[2] : (e[2] + b[2]) / 2) / paso) * paso;
+      this.sol.target.position.set(tx, ty, tz); this.sol.position.set(tx + L[0] * 800, ty + L[1] * 800, tz + L[2] * 800); this.sol.target.updateMatrixWorld(); }
+    /* recorte por niebla, PVS y cono (como VistaGL) */
+    const fx = C.blanco[0] - C.ojo[0], fy = C.blanco[1] - C.ojo[1], fl = Math.hypot(fx, fy), rad = R * .75 + 30, finNiebla = fr[1] + rad, medio = Math.atan(Math.tan((C.fov || 1) / 2) * W / H) + .15, conCono = !aerea && fl > 1e-3;
+    const pvs = !aerea && M.pvs && C.ojo[2] - M.cota(C.ojo[0], C.ojo[1]) < M.pvs.he ? M.pvs.desde(C.ojo[0], C.ojo[1]) : null; let porPVS = 0, dib = 0;
+    for (const rg of this.regiones.values()) { const rx = (rg.gx + .5) * R - C.ojo[0], ry = (rg.gy + .5) * R - C.ojo[1], d = Math.hypot(rx, ry); let ve = d - rad <= finNiebla;
+      if (ve && pvs && !pvs.ve((rg.gx + .5) * R, (rg.gy + .5) * R)) { ve = false; porPVS++; }
+      if (ve && conCono && d > rad) { const f = (rx * fx + ry * fy) / fl, l = (-rx * fy + ry * fx) / fl; if (Math.abs(Math.atan2(l, f)) - Math.asin(Math.min(1, rad / d)) > medio) ve = false; }
+      rg.grupo.visible = ve; if (ve) dib++; }
+    if (this.lejosG) for (const m of this.lejosG.children) m.visible = Math.hypot(m.userData.cx - cx, m.userData.cy - cy) >= radio - 1100;
+    this.recorte = { regiones: this.regiones.size, dibujadas: dib, porPVS, pvs: !!pvs };
+    /* lo que se mueve: una malla por cuadro, reusando el búfer */
+    const D = this._dinamico(E); this._ponerDinamico(D);
+    r.render(this.escena, cam);
+    const mvp = new T.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); this.mvp = Float32Array.from(mvp.elements);
+    return this.cv;
+  }
+  _ponerDinamico(D) {
+    const T = THREE, n = D.length;
+    if (!this.dyn || n > this._dynCap) { if (this.dyn) { this.escena.remove(this.dyn); this.dyn.geometry.dispose(); } this._dynCap = Math.max(20000, Math.ceil(n * 1.5 / 10) * 10); const g = this._geo10(new Float32Array(this._dynCap)); this.dyn = new T.Mesh(g, this.matCosas); this.dyn.castShadow = this.dyn.receiveShadow = true; this.dyn.frustumCulled = false; this.escena.add(this.dyn); }
+    const ib = this.dyn.geometry.attributes.position.data, f = ib.array; for (let i = 0; i < n; i++) f[i] = D[i]; for (let i = 6; i < n; i += 10) { f[i] = linC(f[i]); f[i + 1] = linC(f[i + 1]); f[i + 2] = linC(f[i + 2]); }
+    ib.needsUpdate = true; this.dyn.geometry.setDrawRange(0, n / 10); this.dyn.visible = n > 0;
+  }
+}
+VistaTres.propio = true;
+MC.VistaTres = VistaTres; MC.THREE = typeof THREE !== 'undefined' ? THREE : null;

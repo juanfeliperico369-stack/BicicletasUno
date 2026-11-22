@@ -30,7 +30,7 @@ const Rescate = {
     if (G.Modos && G.Modos.m) G.Modos.terminar('🎮 Saliste del modo');
     const C = G.cuerpo, M = G.M, pie = C.veh.clase === 'pie';
     /* la calle más cercana al punto; si no hay calle a 400 m pero el punto es transitable (un parque, una loma), el punto mismo */
-    const q = M.viaCercana(x, y, 400, pie ? null : deCarro) || M.viaCercana(x, y, 400) || (op.calle ? null : this.sitioCerca(x, y, 400)) || M.viaCercana(x, y, 2500) || { x, y, ang: C.a };
+    const q = M.viaCercana(x, y, 400, pie ? null : deCarro) || M.viaCercana(x, y, 400) || (op.calle ? null : this.sitioCerca(x, y, 400)) || M.viaCercana(x, y, 2500) || M.viaCercana(x, y, 6000) || M.viaCercana(x, y, 15000) || { x, y, ang: C.a };   /* el rescate siempre llega a una calle, aunque esté lejos (en el monte) */
     C.x = q.x; C.y = q.y; C.a = q.ang ?? C.a; C.v = 0; C.z = 0; C.rumboRodado = C.a; C.choque = 0; if (C.eventos) C.eventos.length = 0;
     if (G.camara) { G.camara.x = C.x; G.camara.y = C.y; }
     this._at = null; MC.emit('rescate', { tipo: op.tipo || 'ir', x: C.x, y: C.y }); return true;
