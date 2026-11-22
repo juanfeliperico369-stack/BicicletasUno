@@ -518,7 +518,7 @@ const RED_M = {"fuente":"El Metro (MetroZero/src/data/red.js 2026-11 y rutas_cal
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '3.0.0', errors: [], headless: false };
+const JE = window.JE = { version: '3.0.1', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -5688,10 +5688,12 @@ const Game = JE.game = {
   applyView() { const a = this.mode.sub || this.mode, v = a.view || { kind: 'map' }, S = Save.data.settings, k = v.kind + v.dw + v.dh + (S.gfx || '') + (S.vista || ''); if (this._vk !== k) { this._vk = k; View.setMode(v.kind, v.dw, v.dh); } },
   loop(t) {
     if (!this.mode) return;
-    const dt = Math.min(.05, Math.max(0, (t - this.last) / 1000)); this.last = t;
+    /* 3.0.1 (Claude, pendiente 3 de GPT-6): antes el paso se topaba en 50 ms y, a pocos cuadros por segundo, todo iba en cámara lenta.
+       Ahora el tiempo real del cuadro (hasta 200 ms) se reparte en subpasos de 50 ms: va al ritmo del reloj a cualquier FPS. */
+    const real = Math.min(.2, Math.max(0, (t - this.last) / 1000)), n = Math.max(1, Math.ceil(real / .05)), dt = real / n; this.last = t;
     try {
-      if (!this.paused) { this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
-      this.draw(); this.dom(dt);
+      if (!this.paused) { for (let i = 0; i < n && !this.mode.done; i++) this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
+      this.draw(); this.dom(real);
     } catch (e) { JE.errors.push('loop: ' + e.message); console.error(e); }
     if (this.mode.done) return this.finish();
     this.raf = requestAnimationFrame(t2 => this.loop(t2));
@@ -11363,7 +11365,7 @@ class MGRunner3D extends MG {
   hud(V) {
     this.btns = [];
     const pct = Math.min(100, Math.round(this.distM / this.metaM * 100));
-    const kmh = Math.round(this.spd * 2.4);
+    const kmh = Math.round(this.spd * 3.6); // GPT-6: m/s → km/h, coherente con distM += spd * dt
     V.text('🏁 ' + this.corr.name + ' · ' + this.barrio, 12, Math.max((View.hudB || 50) + 18, (View.top || 0) + 12),   /* debajo de las metas, si las hay */ { size: 13, color: '#c4ec7c', bg: '#0a2342dd', pad: 4 });
     V.text(Math.round(this.distM) + ' / ' + this.metaM + ' m (' + pct + ' %) · ' + kmh + ' km/h · 🍃 ' + this.hojas, 12, Math.max((View.hudB || 50) + 42, (View.top || 0) + 36), { size: 13, color: '#fff', bg: '#0a2342cc', pad: 4 });
     /* Botón de cambio instantáneo entre 1.ª y 3.ª persona */
@@ -14351,6 +14353,113 @@ const Mundo3D = JE.mundo3d = {
   Cam.tick = function (R, dt) { const r = _tick.apply(this, arguments); const bar = $('#camBar'); if (bar && !bar.querySelector('#b3D')) { const b = document.createElement('button'); b.id = 'b3D'; b.setAttribute('aria-label', 'Vista 3D: tercera y primera persona'); b.textContent = Mundo3D.modo === 'tercera' ? '🧍' : Mundo3D.modo === 'primera' ? '👁️' : '3D'; b.onclick = e => { e.stopPropagation(); Snd.sfx('tap'); Mundo3D.ciclo(); }; bar.append(b); } return r; };
   const _key = Game.key; Game.key = function (e) { if (e.code === 'KeyY' && this.mode && this.mode.ride && !this.mode.sub) { Mundo3D.ciclo(); return; } return _key.call(this, e); };
   for (const k of ['stop', 'finish']) { const f = Game[k]; Game[k] = function () { if (Mundo3D.cv) Mundo3D.cv.hidden = true; return f.apply(this, arguments); }; }
+})();
+
+/* ---- 99r-ciclo-geometria-gpt6.js ---- */
+/* OpenAI GPT-6 · Geometría de ciclorrutas y acceso situado al runner (22-11-2026).
+ * Parche aditivo: no sustituye el mundo ni los módulos de otras IA.
+ * Sólo consulta la red cuando alguien quiere iniciar una actividad, nunca en cada frame.
+ */
+(function () {
+  'use strict';
+  const umbralMetros = 12;
+
+  const CicloGeo = JE.cicloGeoGPT6 = {
+    /* Distancia real a segmentos y progresiva: la primera coordenada NO basta para hallar la vía próxima. */
+    proyectar(via, pos) {
+      const p = via && via.p;
+      if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y) || !p || p.length < 4 || p.length % 2 !== 0) return null;
+      let recorrido = 0, mejor = null;
+      for (let i = 0; i + 3 < p.length; i += 2) {
+        const x0 = +p[i], y0 = +p[i + 1], x1 = +p[i + 2], y1 = +p[i + 3];
+        if (![x0, y0, x1, y1].every(Number.isFinite)) return null;
+        const dx = x1 - x0, dy = y1 - y0, d2 = dx * dx + dy * dy;
+        if (d2 < 1e-8) continue;
+        const segmento = Math.sqrt(d2), u = clamp(((pos.x - x0) * dx + (pos.y - y0) * dy) / d2, 0, 1);
+        const x = x0 + dx * u, y = y0 + dy * u;
+        const d = Math.hypot(pos.x - x, pos.y - y);
+        if (!mejor || d < mejor.distanciaPx) {
+          mejor = { via, x, y, segmento: i / 2, fraccion: u, distanciaPx: d,
+            distanciaMetros: d * M_PER_PX, inicioMetros: (recorrido + segmento * u) * M_PER_PX,
+            ang: Math.atan2(dy, dx) };
+        }
+        recorrido += segmento;
+      }
+      if (!mejor || recorrido * M_PER_PX < 100) return null;
+      mejor.largoMetros = recorrido * M_PER_PX;
+      return mejor;
+    },
+    cercana(mapa, pos) {
+      let mejor = null;
+      for (const via of (mapa && mapa.vias) || []) {
+        if (Number(via.k) !== 5) continue; // contrato de las ciclorrutas vectoriales
+        const q = this.proyectar(via, pos);
+        if (q && (!mejor || q.distanciaPx < mejor.distanciaPx)) mejor = q;
+      }
+      return mejor;
+    },
+    acceso(mapa, pos, radio = umbralMetros) {
+      const q = this.cercana(mapa, pos);
+      return q && q.distanciaMetros <= radio ? q : null;
+    },
+    /* Las ciclovías dominicales tienen carriles abiertos al público sólo durante el evento. */
+    enCiclovia(mode) {
+      const ride = mode && mode.ride, p = ride && ride.p, tile = ride && ride.tileAt && ride.tileAt();
+      if (!p) return false;
+      return tile === TT.CICLO ||
+        !!(mode.mods && mode.mods.ciclovia && (tile === TT.AVE || tile === TT.AUTO)) ||
+        !!this.acceso(JE.map, p);
+    }
+  };
+
+  if (typeof TramoCiclista !== 'undefined') {
+    const puntoOriginal = TramoCiclista.prototype.punto;
+    TramoCiclista.cercana = function (mapa, pos) {
+      const q = CicloGeo.cercana(mapa, pos);
+      if (!q) return null;
+      const tramo = new TramoCiclista(q.via);
+      tramo.inicioMetros = q.inicioMetros;
+      tramo.entrada = { x: q.x, y: q.y, ang: q.ang, distanciaMetros: q.distanciaMetros };
+      return tramo;
+    };
+    TramoCiclista.prototype.punto = function (s) {
+      const avance = Number.isFinite(s) ? Math.max(0, s) : 0;
+      return puntoOriginal.call(this, avance + (this.inicioMetros || 0));
+    };
+  }
+
+  if (typeof ModeUsuarioR !== 'undefined' && typeof ModeUsuarioR.prototype.iniciarRunner3D === 'function') {
+    const iniciarOriginal = ModeUsuarioR.prototype.iniciarRunner3D;
+    ModeUsuarioR.prototype.iniciarRunner3D = function () {
+      if (this.free && !this.sub && this.ride) {
+        if (!CicloGeo.enCiclovia(this)) {
+          if (JE.ui && JE.ui.toast) JE.ui.toast('🚲 El runner se activa en una ciclorruta o ciclovía. Acércate a una y vuelve a intentarlo.');
+          return false;
+        }
+        if (this.ride.p.veh === 'truck') {
+          if (JE.ui && JE.ui.toast) JE.ui.toast('🚲 Este reto es para bici, patines, skate o a pie. Baja del camión.');
+          return false;
+        }
+      }
+      return iniciarOriginal.apply(this, arguments);
+    };
+  }
+  /* El Taller también puede abrir la Carrera de la ciclorruta. Evita que su atajo
+   * use el fallback geográfico del centro del Valle y teletransporte al jugador.
+   * Los niveles elegidos desde el menú permanecen disponibles sin restricciones.
+   */
+  if (typeof Mode !== 'undefined' && typeof CarreraCiclovia !== 'undefined' && typeof Mode.prototype.runSub === 'function') {
+    const entrarSubOriginal = Mode.prototype.runSub;
+    Mode.prototype.runSub = function (mg, callback) {
+      if (this.free && mg instanceof CarreraCiclovia &&
+        (!this.ride || !CicloGeo.acceso(JE.map, this.ride.p))) {
+        if (JE.ui && JE.ui.toast) JE.ui.toast('🛣️ Para correr esta etapa, primero acércate a una ciclorruta señalizada.');
+        return false;
+      }
+      return entrarSubOriginal.call(this, mg, callback);
+    };
+  }
+
 })();
 
 /* ---- motor-valle/js/valle.js ---- */

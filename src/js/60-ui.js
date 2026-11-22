@@ -368,10 +368,12 @@ const Game = JE.game = {
   applyView() { const a = this.mode.sub || this.mode, v = a.view || { kind: 'map' }, S = Save.data.settings, k = v.kind + v.dw + v.dh + (S.gfx || '') + (S.vista || ''); if (this._vk !== k) { this._vk = k; View.setMode(v.kind, v.dw, v.dh); } },
   loop(t) {
     if (!this.mode) return;
-    const dt = Math.min(.05, Math.max(0, (t - this.last) / 1000)); this.last = t;
+    /* 3.0.1 (Claude, pendiente 3 de GPT-6): antes el paso se topaba en 50 ms y, a pocos cuadros por segundo, todo iba en cámara lenta.
+       Ahora el tiempo real del cuadro (hasta 200 ms) se reparte en subpasos de 50 ms: va al ritmo del reloj a cualquier FPS. */
+    const real = Math.min(.2, Math.max(0, (t - this.last) / 1000)), n = Math.max(1, Math.ceil(real / .05)), dt = real / n; this.last = t;
     try {
-      if (!this.paused) { this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
-      this.draw(); this.dom(dt);
+      if (!this.paused) { for (let i = 0; i < n && !this.mode.done; i++) this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
+      this.draw(); this.dom(real);
     } catch (e) { JE.errors.push('loop: ' + e.message); console.error(e); }
     if (this.mode.done) return this.finish();
     this.raf = requestAnimationFrame(t2 => this.loop(t2));
