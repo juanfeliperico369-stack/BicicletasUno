@@ -440,3 +440,13 @@ body.libre21 #coach.mini{font-size:calc(13px*var(--u))!important;padding:calc(7p
 #charla img{width:calc(52px*var(--u));height:calc(52px*var(--u))}
 #charla b{font-size:calc(15px*var(--u))}#charla small{font-size:calc(11.5px*var(--u))}#charla p{font-size:calc(13.5px*var(--u))}
 #parada21 p{font-size:calc(14px*var(--u))}#parada21 .pr-q img{width:calc(56px*var(--u));height:calc(56px*var(--u))}
+/* ronda 3.0 · ⏫ acelerador fijo en la barra de la izquierda */
+#camBar #bCrucero{font-size:calc(18px*var(--u));background:#0a2342d0}
+#camBar #bCrucero.on{background:var(--vd);color:var(--az);border-color:#fff;box-shadow:0 0 0 3px #9bd34166}
+/* ronda 3.0 · el mundo 3D único (99d-mundo3d.js): el lienzo WebGL va debajo del lienzo 2D, que queda transparente para el HUD */
+#gl3d{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+#gl3d[hidden]{display:none}
+#camBar #b3D{font:900 calc(13px*var(--u)) var(--fb)}
+#camBar #b3D.on{background:var(--vd);color:var(--az);border-color:#fff;font-size:calc(18px*var(--u))}
+/* los consejos de las carreras en pseudo‑3D van abajo, sobre los botones (no tapan la vía) */
+body.mg3d21 #coach{top:auto!important;bottom:calc(var(--sab) + 112px)!important}

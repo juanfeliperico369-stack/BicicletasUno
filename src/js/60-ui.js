@@ -284,7 +284,7 @@ const UI = JE.ui = {
   avatar() {
     const P = Save.data.profile;
     const S = Save.data, req = (key, i) => (COSMETIC_REQ[key] || {})[i], price = (key, i) => (SHOP[key] || {})[i];
-    const locked = (key, i) => { const r = req(key, i), p = price(key, i); return (r && !S.logros.includes(r[0])) || (p && !S.owned.includes(key + i)); };
+    const locked = (key, i) => { if (JE.debugUnlock) return false; const r = req(key, i), p = price(key, i); return (r && !S.logros.includes(r[0])) || (p && !S.owned.includes(key + i)); };   /* ronda 3.0: «todo liberado» abre también la tienda */
     const sw = (arr, key) => `<div class="swatches">${arr.map((c, i) => { const r = req(key, i), p = price(key, i), lk = locked(key, i), em = key === 'bell'; return `<button data-k="${key}" data-i="${i}" class="${(P[key] | 0) === i ? 'on' : ''} ${lk ? (p ? 'buy' : 'lock') : ''} ${em ? 'em' : ''}" style="background:${em ? '#143a6b' : c}" aria-label="${esc((r || p || [0, key + ' ' + (i + 1)])[1])}">${em ? c : ''}${lk ? (p ? '<small>🍃' + p[0] + '</small>' : '🔒') : r ? '★' : ''}</button>`; }).join('')}</div>`;
     this.modal(`<h2>Mi ciclista</h2><canvas id="avPrev" width="80" height="50"></canvas><p class="pag">Nombre</p><input class="txtin" id="avName" maxlength="16" value="${esc(P.name)}">
       <p class="pag">Piel</p>${sw(SKINS, 'skin')}<p class="pag">Camiseta</p>${sw(SHIRTS, 'shirt')}<p class="pag">Casco</p>${sw(HELMETS, 'helmet')}

@@ -4,8 +4,8 @@
   "rama": "ccr-6f184fb6-vtpkye",
   "base_commit": "59437d7",
   "fase_actual": "3.0 · auditoría y arreglo de modos, todo liberado, investigación de referencias, módulos en el mundo abierto, carrera sin fin en ciclovías y mundo 3D único",
-  "estado": "en_progreso",
-  "ultima_actualizacion_utc": "2026-11-22T00:30:00Z",
+  "estado": "entregado (3.0.0); sigo con el § 6 del documento",
+  "ultima_actualizacion_utc": "2026-11-22T16:00:00Z",
   "zonas_reclamadas": [
     "src/js/98p-efectos.js",
     "src/js/98q-manejo.js",
@@ -41,8 +41,9 @@
     "arte/*"
   ],
   "pruebas_verificadas": {
-    "build": "OK v2.1.0",
-    "bateria": "node tests/run.js en verde (V, V2, V3 y claves del guardado)"
+    "build": "OK v3.0.0",
+    "bateria": "node tests/run.js en verde (V4 nueva)",
+    "auditoria": "node tests/auditoria-modos.js --cpu=4"
   },
   "pendiente_para_compañera": "Lee coord/buzon/20261122-0030-claude-plan-3.0.md. Si vas a tocar un archivo de src/js que no sea aditivo, avisa en el buzón antes; yo pongo mis arreglos en 99a–99m."
 }
