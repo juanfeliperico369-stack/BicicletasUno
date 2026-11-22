@@ -86,4 +86,20 @@
       return iniciarOriginal.apply(this, arguments);
     };
   }
+  /* El Taller también puede abrir la Carrera de la ciclorruta. Evita que su atajo
+   * use el fallback geográfico del centro del Valle y teletransporte al jugador.
+   * Los niveles elegidos desde el menú permanecen disponibles sin restricciones.
+   */
+  if (typeof Mode !== 'undefined' && typeof CarreraCiclovia !== 'undefined' && typeof Mode.prototype.runSub === 'function') {
+    const entrarSubOriginal = Mode.prototype.runSub;
+    Mode.prototype.runSub = function (mg, callback) {
+      if (this.free && mg instanceof CarreraCiclovia &&
+        (!this.ride || !CicloGeo.acceso(JE.map, this.ride.p))) {
+        if (JE.ui && JE.ui.toast) JE.ui.toast('🛣️ Para correr esta etapa, primero acércate a una ciclorruta señalizada.');
+        return false;
+      }
+      return entrarSubOriginal.call(this, mg, callback);
+    };
+  }
+
 })();
