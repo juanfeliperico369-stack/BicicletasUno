@@ -2,17 +2,47 @@
   "schema_version": 1,
   "agente": "claude",
   "rama": "ccr-6f184fb6-vtpkye",
-  "base_commit": "d12360e",
-  "fase_actual": "v2.1.0 · revolución con Motor City 4.5, Ruta a Guatapé y red completa de El Metro",
-  "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-21T23:30:00Z",
+  "base_commit": "59437d7",
+  "fase_actual": "3.0 · auditoría y arreglo de modos, todo liberado, investigación de referencias, módulos en el mundo abierto, carrera sin fin en ciclovías y mundo 3D único",
+  "estado": "en_progreso",
+  "ultima_actualizacion_utc": "2026-11-22T00:30:00Z",
   "zonas_reclamadas": [
-    "src/js/98p-efectos.js", "src/js/98q-manejo.js", "src/js/98r-hud.js", "src/js/98s-lectura.js", "src/js/98t-rostros.js",
-    "src/js/98u-caras.js", "src/js/98v-claves.js", "src/js/98w-guatape.js", "src/js/98x-red.js", "src/js/98y-tamano.js",
-    "tools/red_metro.js", "src/data/red_metro.json", "tests/revolucion-encicla.js", "docs/REVOLUCION-2.1.md"
+    "src/js/98p-efectos.js",
+    "src/js/98q-manejo.js",
+    "src/js/98r-hud.js",
+    "src/js/98s-lectura.js",
+    "src/js/98t-rostros.js",
+    "src/js/98u-caras.js",
+    "src/js/98v-claves.js",
+    "src/js/98w-guatape.js",
+    "src/js/98x-red.js",
+    "src/js/98y-tamano.js",
+    "tools/red_metro.js",
+    "src/data/red_metro.json",
+    "tests/revolucion-encicla.js",
+    "docs/REVOLUCION-2.1.md",
+    "src/js/99a-*.js .. src/js/99m-*.js (arreglos de modos, liberar, actividades, carrera, mundo 3D)",
+    "tests/auditoria-modos.js",
+    "docs/INVESTIGACION-Y-PLAN-3.0-Claude.md"
   ],
-  "archivos_compartidos_tocados": ["src/js/30-ride.js (Ride.mover y giro amortiguado)", "src/js/60-ui.js (Game.barra, tamaños)", "src/js/75-graficos.js (árboles)", "src/js/78-ciudad-viva.js (MapView.extra)", "src/style.css", "tools/build.js (RED_M)", "tests/run.js"],
-  "zonas_libres_para_ia_companera": ["src/js/98z-*.js", "src/js/99a-*.js .. src/js/99y-*.js", "contenido/datos-*.json", "arte/*"],
-  "pruebas_verificadas": { "build": "OK v2.1.0", "bateria": "node tests/run.js en verde (V, V2, V3 y claves del guardado)" },
-  "pendiente_para_compañera": "docs/REVOLUCION-2.1.md § 6: probar en un celular real, decidir la incoherencia de oficios mentores/trama, publicar en gh-pages conservando /metro/."
+  "archivos_compartidos_tocados": [
+    "src/js/30-ride.js (Ride.mover y giro amortiguado)",
+    "src/js/60-ui.js (Game.barra, tamaños)",
+    "src/js/75-graficos.js (árboles)",
+    "src/js/78-ciudad-viva.js (MapView.extra)",
+    "src/style.css",
+    "tools/build.js (RED_M)",
+    "tests/run.js"
+  ],
+  "zonas_libres_para_ia_companera": [
+    "src/js/99n-*.js .. src/js/99y-*.js",
+    "docs/*-<tu-marca>.md",
+    "contenido/datos-*.json",
+    "arte/*"
+  ],
+  "pruebas_verificadas": {
+    "build": "OK v2.1.0",
+    "bateria": "node tests/run.js en verde (V, V2, V3 y claves del guardado)"
+  },
+  "pendiente_para_compañera": "Lee coord/buzon/20261122-0030-claude-plan-3.0.md. Si vas a tocar un archivo de src/js que no sea aditivo, avisa en el buzón antes; yo pongo mis arreglos en 99a–99m."
 }

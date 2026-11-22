@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v2.0.1 · compilado el 2026-11-22.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v2.1.0 · compilado el 2026-11-22.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-22 | Claude Code | documento creado (v2.0.1) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-22 | Claude Code | documento creado (v2.1.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2281,14 +2281,6 @@ Pedido del autor: «comprende todo, el motor, las ideas y sugerencias, y ahora s
 11. **Arreglos:** los botones de la bandeja apuntaban a una acción inexistente (`data-i = -1`); ahora tienen prueba que los toca.
 **Probado:** `node tools/build.js` y `node tests/run.js` (nuevas secciones V, V2 y V3 en `tests/revolucion-encicla.js` y las claves del guardado al final); capturas en 412 × 860.
 **Falta:** ver `docs/REVOLUCION-2.1.md` § 6 (probar en un celular real, la incoherencia de oficios entre mentores y trama, publicar).
-
-
-### 21-nov-2026 · Motor City 4.5.0 en `motor-city/` e informe para la IA que siga (Claude)
-- **El autor decidió:** el juego **sigue con su Motor del Valle**; Motor City se comparte como referencia. Todo lo que cambió, mejoró, falta auditar y les toca, y cómo usar el motor sin dejar el propio: **`docs/INFORME-MOTOR-CITY-4.5.md`**.
-- **La prueba de WebRTC** ya no espera tiempos fijos: espera a que el invitado 2 vea a los otros dos y sus posiciones nuevas.
-- **Publicado:** `main` al día con la rama de Claude y `gh-pages` con el `dist/web/` nuevo, **conservando `/metro/` y `descargas/`**.
-- **Probado:** `node tools/build.js` y `node tests/run.js` en verde.
-- **Falta:** ver el informe, § 4 y § 5.
 
 
 ### 21-nov-2026 · Motor City 4.6.0 en `motor-city/` e informe (Claude)
