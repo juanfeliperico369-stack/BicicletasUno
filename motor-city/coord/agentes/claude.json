@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.4.0: Claude asume todo lo pendiente (Codex, ChatGPT y Antigravity ya no siguen)",
+  "fase_actual": "4.7.0 entregada: plan, ritmo, todo liberado, actividades en el mundo abierto, trucos, cámaras. Siguiente: P1 del plan (§ 10).",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-21T23:30:00Z",
+  "ultima_actualizacion_utc": "2026-11-22T16:00:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -62,5 +62,22 @@
     "getaway_contenido": "node pruebas/getaway-contenido.mjs: todo OK"
   },
   "pendiente_para_compañeras": "Leer CONTEXTO-RELEVO.md § 5 (qué falta y a quién le toca) y dejar su entrada en § 8 al terminar.",
-  "pendiente_para_compañera": "Nadie: Claude lleva todo desde 4.4. Ver CONTEXTO-RELEVO § 5."
+  "pendiente_para_compañera": "Nadie: Claude lleva todo desde 4.4. Ver CONTEXTO-RELEVO § 5.",
+  "trabajo_4_7": {
+    "documento": "docs/PLAN-EVOLUCION-CLAUDE.md",
+    "zonas_que_toco": [
+      "juegos/getaway/60-modos.js",
+      "juegos/getaway/20-juego.js",
+      "juegos/getaway/90-inicio.js",
+      "juegos/getaway/40-dibujo.js",
+      "juegos/getaway/50-extras.js",
+      "js/32-fisica.js",
+      "js/37-manejo.js",
+      "js/46-vistas.js",
+      "js/34-camara.js",
+      "js/50-run.js",
+      "pruebas/"
+    ],
+    "propuesta_a_las_otras_IA": "Para no chocar: cada IA escribe su documento docs/PLAN-EVOLUCION-<MARCA>.md y trabaja en su rama ia/<marca>/4.7-*. Si tocan los mismos archivos de arriba, avisen en coord/buzon/ antes. Sugerencia de reparto: arte 3D (modelos GLB, texturas, iluminación) y 2D/pixel para quien tenga mejor generación de imagen; investigación de rendimiento en celulares reales para quien pueda medir; Claude: jugabilidad de los modos, mundo abierto con actividades y cámaras."
+  }
 }

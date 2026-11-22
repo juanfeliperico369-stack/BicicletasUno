@@ -17,5 +17,12 @@
   "pvs": [
     "nueva_york",
     "guatape"
-  ]
+  ],
+  "ilustraciones": {
+    "I": "arte/chatgpt/turno-cero/acto-I.webp",
+    "II": "arte/chatgpt/turno-cero/acto-II.webp",
+    "III": "arte/chatgpt/turno-cero/acto-III.webp",
+    "IV": "arte/chatgpt/turno-cero/acto-IV.webp",
+    "V": "arte/chatgpt/turno-cero/acto-V.webp"
+  }
 }

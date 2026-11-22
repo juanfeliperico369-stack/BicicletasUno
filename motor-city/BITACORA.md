@@ -1,6 +1,50 @@
 # Bitácora de Motor City
 
-## 22-nov-2026 · 4.6.1 · ⏫ Acelerador fijo
+## 22-nov-2026 · Ilustraciones de actos y accesibilidad del menú
+- Cinco imágenes originales WebP aparecen en las transiciones de Turno Cero.
+- MC.UI limpia el manejador Escape, cierra el menú anterior y devuelve el foco.
+- Pruebas de modos admiten HTTP local. Ver CONTEXTO-CODEX-TURNO-CERO.md para resultados y pendientes.
+
+
+## 22-nov-2026 · 4.7.0 · Plan de evolución, ritmo arcade, todo liberado y los modos en el mundo abierto
+- **El autor** (a tres IA a la vez):
+  - revisar el juego contra los mejores e investigar jugabilidad, controles, mundos grandes con pocos recursos, render y optimización;
+  - un plan verosímil en un documento con la marca de cada IA;
+  - arreglar los modos (lentos, engorrosos, «no se mueven»);
+  - todo liberado; cada modo presente en el mundo abierto con la misma experiencia;
+  - Run solo en ciclovías;
+  - luego arte, cámaras y un solo mundo 3D.
+- **Documento:** `docs/PLAN-EVOLUCION-CLAUDE.md`. Contiene:
+  - una auditoría con «dedo» real en 6 cámaras × 5 vehículos;
+  - la comparación con las ~40 referencias (técnica, no arte);
+  - la investigación transversal, con fuentes;
+  - ideas por género bajo el marco de la «doble vida» de Mara;
+  - el mundo vivo (RPG y «MMO sin servidor»), Run, cámaras y arte;
+  - la hoja de ruta 4.8–5.0 repartida entre Claude, Gemini y Codex;
+  - las ideas que no tienen cabida.
+- **Ritmo arcade** (a pie ≈ 43 % de la bici, como en EnCicla):
+  - a pie camina a 2,2, trota a 4 y corre a 6,4 m/s;
+  - bici: 9; e‑bike y MTB: 10,5; skate: 7; patines: 7,5;
+  - se trota con el joystick a fondo en cualquier vista.
+- **Modos más cortos y vivos:**
+  - EnCicla y Mandados: 0,3 a 1,3 km;
+  - Extremo: hasta 2,6 km;
+  - tren: 2,4 m/s² al acelerar y 3,2 al frenar, ×3 lejos de la estación, sin espera inicial; el joystick empuja hacia donde va.
+- **Todo liberado:** los 5 capítulos y todos los vehículos desde la primera partida.
+- **Actividades en el mundo abierto** (`G.Actividades`):
+  - marcas por celdas de 1,2 km con datos reales: 🏁 avenidas, 🚵 lomas, 📦 lugares, 🛹 plazas, 🛴 ciclorrutas, 🚲 EnCicla y 🚇 estaciones;
+  - se ven en la calle, el minimapa y el mapa;
+  - ▶ Jugar arranca el mismo modo ahí.
+- **🛹 Zona de trucos y parkour:** saltos, giros en el aire con el joystick, caer derecho y combos ×5. **🛴 Run** también en el menú 🎮.
+- **Cámaras:**
+  - por contexto: Arcade solo en carretera y carreras, Vuelo solo volando; primera persona y dron en el selector;
+  - la cenital de verdad (79° y 66°) se aleja con la velocidad, como GTA 2;
+  - en las vistas de volante, el joystick de lado avanza.
+- **Hallazgos de Gemini en las zonas de Claude:** resueltos (metro, cenital, volante, cámaras, Run, puente del raster).
+- **Coordinación:** `coord/buzon/2026-11-22-claude-4.7-en-curso.md` y `20261122-1500-claude-4.7-respuesta.md`. Unida la entrega de Codex (`c3fc286`).
+- **Pruebas:** 146 Node y `pruebas/modos.mjs` (cinco modos, ⏫, mapa y vuelta al carro).
+
+
 - **El autor:** «el joystick está bien, pero el problema es el arranque: si se suelta el joystick se deja de acelerar; coloca un botón que, presionado, siempre esté acelerando sin parar, y para detenerse simplemente se desactiva».
 - **Motor:** `MC.Manejo.aplicar(…, { acelFijo })` (`js/37-manejo.js`): prendido, acelera a fondo y el joystick solo da la dirección (sin joystick sigue derecho y el imán de calle lo alinea); apagado, frena suave hasta parar (`frenoK` 0,55 en `js/32-fisica.js`), salvo que se toque el joystick. El 🛑 manda mientras se oprime (y con giro, derrapa). `ui.alternar` (`js/70-interfaz.js`): botón que se prende y se apaga, verde y brillante cuando está prendido.
 - **Turno Cero:** ⏫ junto a 🛑 y ⚡ (tecla V), visible en carro, moto, bici y manejando el tren de 🎮 Modos; a pie se esconde y se apaga; un aviso la primera vez. En vertical la velocidad sube sobre la fila de botones; en horizontal la columna izquierda ya no invade la zona libre.

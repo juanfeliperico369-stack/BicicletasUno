@@ -46,7 +46,10 @@ const Manejo = {
     } else {
       let giro = esq === 'inclinacion' ? Manejo.inclinacion() : (sx || ent.giro || 0);
       out.giro = Manejo.giroPorVelocidad(clamp(giro, -1, 1), C.v, vmax, P);
-      out.acel = -sy || ent.acel || 0; if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
+      out.acel = -sy || ent.acel || 0;
+      /* 4.7: como en los juegos de carreras para celular, el joystick sostenido hacia un lado también avanza (solo hacia atrás frena) */
+      if (m > .3 && sy < .3 && out.acel < m * .8 && V.clase !== 'pie') out.acel = Math.max(out.acel, m * .8);
+      if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
     }
     /* 4.6.1 · ACELERADOR FIJO (pedido del autor: «el problema es el arranque: si se suelta el joystick se deja de acelerar; pon un
        botón que, prendido, acelere siempre, y para detenerse simplemente se apaga»). Prendido: acelera a fondo y el joystick solo da la

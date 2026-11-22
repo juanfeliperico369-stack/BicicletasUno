@@ -129,6 +129,13 @@ body:has(.mcui > .menu) #artefactos{visibility:hidden;}
  .mcui .izq{max-width:min(300px,calc(25vw - 16px))!important}
  .mcui .izq .aviso{width:min(340px,38vw);max-width:none!important}
 }
+#transicion[data-acto]{background:linear-gradient(0deg,#081316e0,#07101566),var(--acto) center/cover;text-shadow:0 2px 10px #000}
+#transicion[data-acto] small{color:#f2e6d0}
+#transicion[data-acto="I"]{--acto:url("{{ilustracion:I}}")}
+#transicion[data-acto="II"]{--acto:url("{{ilustracion:II}}")}
+#transicion[data-acto="III"]{--acto:url("{{ilustracion:III}}")}
+#transicion[data-acto="IV"]{--acto:url("{{ilustracion:IV}}")}
+#transicion[data-acto="V"]{--acto:url("{{ilustracion:V}}")}
 </style>
 </head>
 <body>

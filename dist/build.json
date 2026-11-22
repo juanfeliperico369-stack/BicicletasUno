@@ -1,7 +1,7 @@
 {
- "version": "3.0.0",
- "hash": "64f4405b",
- "cache": "juega-encicla-v3.0.0-64f4405b",
+ "version": "3.1.0",
+ "hash": "1e7c6d27",
+ "cache": "juega-encicla-v3.1.0-1e7c6d27",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -80,8 +80,8 @@
   "99r-ciclo-geometria-gpt6.js"
  ],
  "bytes": {
-  "single": 5382826,
-  "web": 5383850,
-  "js": 5193149
+  "single": 5384479,
+  "web": 5385503,
+  "js": 5194802
  }
 }

@@ -73,7 +73,7 @@ async function mundoListo(id) {
 const G = window.TURNO = {
   modo: 'historia', id: null, M: null, cuerpo: null, camara: null, vistas: null, E: null, trafico: null, pobl: null, transporte: null, busq: null, objetos: null,
   reloj: new MC.Reloj({ vel: .25 }), clima: null, ui: null, ctl: null, cv: null, g: null, W: 0, H: 0,
-  dinero: 380, rep: { taller: 0, vecindarios: 0, garantias: 0, coro: 0, northquay: 0 }, flags: {}, veh: 'tc_vega', tengo: ['tc_vega'],
+  dinero: 380, rep: { taller: 0, vecindarios: 0, garantias: 0, coro: 0, northquay: 0 }, flags: {}, veh: 'tc_vega', tengo: TC.VEHICULOS.map(v => v.id),   /* 4.7: todos los vehículos desde el principio */
   carro: 1, vida: 1, nitro: .6, danoZonas: { f: 0, b: 0, l: 0, r: 0 }, piezasFisicas: null, piezasSueltas: {}, pausa: false, transicion: false, vistaId: 'cenital', zoom: null, km: 0, destrozados: 0, civiles: 0, disparosRecibidos: 0,
   hist: null, objetivo: null, contrato: null, evidencia: 0, municion: 0, dron: null, lenteT: 0, recarga: { dron: 0, pulso: 0, lente: 0 }, cebos: 2, rastreado: null, guardias: [], modelos3d: [], caidos: [], humo: [], lugaresCache: {}, viaje: null, rapido: false, errores: MC.errores, listo: false, t: 0
 };
@@ -106,6 +106,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const v0 = G.cuerpo ? G.cuerpo.v : 0, heat0 = G.busq ? G.busq.heat : 0, desde = G.id;
   const M = await mundoListo(id);
   if (G.vistas) G.vistas.liberar();
+  G.tengo = [...new Set([...(G.tengo || []), ...TC.VEHICULOS.map(v => v.id)])];   /* 4.7: todo liberado aunque venga de un guardado viejo */
   G.id = id; G.M = M; planeta.fijar(id); G._esp = null; G.sectores = id === 'nueva_york' ? new MC.Sectores1km(M, { lado: 1000, radio: 1, maxRegiones: 36 }) : null; G._sectoresT = 0;
   let L = spawn.x != null ? spawn : spawn.lugar ? resolver(spawn.lugar) : null;
   if (!L && desde) L = planeta.llegada(id, desde);

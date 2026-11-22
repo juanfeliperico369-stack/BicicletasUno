@@ -249,3 +249,16 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Que al desactivarlo se detenga | ✅ | Frena suave hasta parar (`frenoK` 0,55), salvo que se toque el joystick. |
 | Adaptarlo bien | ✅ | Vertical (la velocidad sube sobre los botones) y horizontal; también en el tren de 🎮 Modos; a pie se esconde; aviso la primera vez. Pruebas § 27 y `pruebas/modos.mjs`. |
 
+## 19. «Revisa el juego contra los mejores, investiga, haz un plan; arregla los modos; todo liberado; cada modo en el mundo abierto; Run en ciclovías; luego arte y cámaras» (4.7, con Gemini y Codex en paralelo)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Documento con la marca de la IA | ✅ | `docs/PLAN-EVOLUCION-CLAUDE.md` (Gemini: `docs/PLAN-EVOLUCION-GEMINI.md`; Codex: `CONTEXTO-CODEX-TURNO-CERO.md`) |
+| Comparar con las referencias e investigar | ✅ | Plan § 3–4, con fuentes; límites declarados (no se pudieron jugar ni ver los videos) |
+| Arreglar los modos (lentos, engorrosos) | ✅ | Plan § 2: ritmo, tren, volante, cenital |
+| Todo liberado desde el principio | ✅ | Capítulos y vehículos |
+| Cada modo presente en el mundo abierto | ✅ | `G.Actividades` en `juegos/getaway/60-modos.js` |
+| Run solo en ciclovías, con giros, anchos, obstáculos, trucos y parkour | Parcial | Ya: ciclorruta real, curvas, cruces y la marca 🛴. Falta el ancho por tipo de vía y las zonas de trucos dentro del corredor (plan § 7). |
+| Cámaras coherentes; un solo mundo 3D; 2D y pixel donde convienen | Parcial | Cámaras por contexto, cenital de verdad y zoom por velocidad (4.7). La lateral 2D en el tren y los enfrentamientos va en el plan § 8. |
+| Arte y gráficos más realistas | En curso | Gemini (iluminación, primera persona, raster) y Codex (arte). Rellenar manzanas espera el visto bueno del autor (plan § 9). |
+| Revisar lo que reportan las otras IA | ✅ | Buzón y ramas leídos; hallazgos de Gemini resueltos; entrega de Codex unida |
+

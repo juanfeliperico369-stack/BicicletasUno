@@ -128,6 +128,7 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'fijo') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
+    h += `<div class="opt"><span>⚙️ Flexibilidad<br><small class="m">Giro, velocidad, lado y tamaño del joystick, pedaleo fijo y vibración</small></span><button class="btn sm" data-act="flex">Ajustar</button></div>`;   // 3.1
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="personajes">👥 Personajes</button><button class="btn" data-act="ranking">🏆 Ranking</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
@@ -136,7 +137,7 @@ const UI = JE.ui = {
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
     $$('[data-ctrl]', el).forEach(b => b.onclick = () => { S.ctrl = b.dataset.ctrl; Save.save(); this.renderMas(); Snd.sfx('tap'); });
-    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), personajes: () => this.personajes(), ranking: () => this.ranking(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), personajes: () => this.personajes(), ranking: () => this.ranking(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits(), flex: () => this.controles(false) })[b.dataset.act]());
   },
   /* ---------- briefing ---------- */
   brief(roleId, turno, o = {}) {
@@ -368,10 +369,12 @@ const Game = JE.game = {
   applyView() { const a = this.mode.sub || this.mode, v = a.view || { kind: 'map' }, S = Save.data.settings, k = v.kind + v.dw + v.dh + (S.gfx || '') + (S.vista || ''); if (this._vk !== k) { this._vk = k; View.setMode(v.kind, v.dw, v.dh); } },
   loop(t) {
     if (!this.mode) return;
-    const dt = Math.min(.05, Math.max(0, (t - this.last) / 1000)); this.last = t;
+    /* 3.0.1 (Claude, pendiente 3 de GPT-6): antes el paso se topaba en 50 ms y, a pocos cuadros por segundo, todo iba en cámara lenta.
+       Ahora el tiempo real del cuadro (hasta 200 ms) se reparte en subpasos de 50 ms: va al ritmo del reloj a cualquier FPS. */
+    const real = Math.min(.2, Math.max(0, (t - this.last) / 1000)), n = Math.max(1, Math.ceil(real / .05)), dt = real / n; this.last = t;
     try {
-      if (!this.paused) { this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
-      this.draw(); this.dom(dt);
+      if (!this.paused) { for (let i = 0; i < n && !this.mode.done; i++) this.mode.update(dt); Snd.setMood(this.moodOf(this.mode)); }
+      this.draw(); this.dom(real);
     } catch (e) { JE.errors.push('loop: ' + e.message); console.error(e); }
     if (this.mode.done) return this.finish();
     this.raf = requestAnimationFrame(t2 => this.loop(t2));

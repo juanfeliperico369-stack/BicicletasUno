@@ -154,7 +154,7 @@ class Cuerpo {
   _arcade(dt, E, suelo, loma) {
     const V = this.veh, M = this.mundo, S = Vehiculos.arcade(V), A = this._arc || (this._arc = { w: 0 }), pie = V.clase === 'pie', motor = V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto';
     const lluvia = (E.lluvia || (E.clima && E.clima.lluvia) || 0) > .35, deriva = !!E.derrape && motor && Math.abs(this.v) > 7, turbo = !!E.turbo && !pie;
-    let max = this.vmax() * suelo * loma * (turbo ? 1.25 : 1); if (pie && E.dir && E.dir.m > .9 && !this.corriendo) max = Math.max(max, V.vcorre * .62);   /* a pie, el joystick a fondo ya trota */
+    let max = this.vmax() * suelo * loma * (turbo ? 1.25 : 1); if (pie && !this.corriendo && ((E.dir && E.dir.m > .85) || (E.acel || 0) > .85)) max = Math.max(max, V.vcorre * .62);   /* a pie, el joystick a fondo ya trota (4.7: también en las vistas de volante) */
     const kw = 1 - Math.exp(-dt / S.tw), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - Math.abs(this.v) / Math.max(1, max), 0, 1)) * (lluvia ? .85 : 1) * (deriva ? 1.6 : 1);
     let tv = 0, frena = false, suelta = false;
     if (this.enAire) { /* en el aire no se acelera ni se gira */ }
@@ -167,6 +167,7 @@ class Cuerpo {
       const g = clamp(E.giro || 0, -1, 1), ac = clamp(E.acel || 0, -1, 1); A.w += (g * wm * (this.v < -.3 ? -1 : 1) - A.w) * kw;
       if (ac > 0) tv = max * ac; else if (ac < 0) { if (this.v > .5) frena = true; else tv = -Math.min(8, max * .32) * -ac; } else suelta = true;
     } else { A.w *= 1 - kw; suelta = true; }
+    this._vPedida = tv;   /* 4.7: lo que se pide (para empujar lo liviano aunque esté quieto contra ello) */
     /* velocidad: directo a la pedida (como EnCicla); frenar es fuerte; soltar, rueda */
     const acc = S.acc * (turbo ? 1.4 : 1) * (pie ? 1 : clamp(suelo * 1.4, .5, 1)), brk = S.brk * (lluvia ? .7 : 1);
     if (this.enAire) { /* nada */ }
