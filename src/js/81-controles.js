@@ -65,13 +65,16 @@ UI.controles = function (inGame) {
     ${Ctrl.pad() || k === 'inclinar' ? `<p class="pag">Lado</p>${seg('cside', Ctrl.side(), [['izq', '◀ Izquierda'], ['der', 'Derecha ▶']])}` : ''}
     ${Ctrl.pad() ? `<p class="pag">Tamaño</p>${seg('csize', S.csize == null ? 1 : S.csize, [[0, 'Pequeño'], [1, 'Normal'], [2, 'Grande']])}` : ''}
     ${k === 'inclinar' ? '<div class="col" style="margin:8px 0"><button class="btn sm" id="cCal">🎯 Recalibrar</button></div>' : ''}
+    <p class="pag">🎯 Giro</p>${seg('giro', S.giro || 1, [[.75, 'Suave'], [1, 'Normal'], [1.3, 'Rápido']])}
+    <p class="pag">🚲 Velocidad</p>${seg('velo', S.velo || 1, [[.8, '×0,8'], [1, '×1'], [1.25, '×1,25'], [1.5, '×1,5']])}
+    <p class="pag">⏫ Pedaleo fijo al empezar</p>${seg('crucero', S.crucero ? 1 : 0, [[0, 'No'], [1, 'Sí']])}
     <p class="pag">Vibración</p>${seg('vib', S.vib ? 1 : 0, [[1, 'Sí'], [0, 'No']])}
     <p class="m" style="font-size:12.5px;margin-top:10px">En computador: flechas o WASD para moverte y espacio para el timbre.</p>
     <div class="col"><button class="btn pri" id="mClose">${inGame ? '▶ Volver al juego' : 'Listo'}</button></div>`, () => {
     $$('[data-c]').forEach(b => b.onclick = async () => {
       const key = b.dataset.c, v = b.dataset.v;
       if (key === 'ctrl' && v === 'inclinar') { const ok = await Tilt.ask(); if (!ok) { Snd.sfx('bad'); return this.toast('Este celular no deja usar el sensor de movimiento'); } Tilt.y0 = null; }
-      S[key] = key === 'csize' ? +v : key === 'vib' ? v === '1' : v; Save.save(); Snd.sfx('tap'); this.controles(inGame);
+      S[key] = key === 'csize' || key === 'giro' || key === 'velo' ? +v : key === 'vib' || key === 'crucero' ? v === '1' : v;   // 3.1 · ⚙️ Flexibilidad Save.save(); Snd.sfx('tap'); this.controles(inGame);
     });
     const cal = $('#cCal'); if (cal) cal.onclick = () => { Tilt.calib(); Snd.sfx('ok'); this.toast('Listo: esta es tu posición neutra'); };
     if (inGame) $('#mClose').onclick = () => { this.closeModal(); Game.resume(); };

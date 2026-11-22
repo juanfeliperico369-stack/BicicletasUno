@@ -92,11 +92,13 @@ class Ride {
     // relieve real: en subida se pedalea más lento y en bajada se va más rápido (el camión lo siente menos; la bici eléctrica no sufre en subida)
     const sl = this.sl = this.map.slope(P.x, P.y, P.a), eb = P.veh === 'bike' && !!(M.ebike || this.ebike);
     if (M.speedMul) mult *= M.speedMul(this);
+    const FX = Save.data && Save.data.settings, yo = typeof Manejo === 'undefined' || Manejo.humano(this);   // 3.1 · ⚙️ Flexibilidad: velocidad y giro de quien juega (el bot y las pruebas no cambian)
+    if (FX && yo) mult *= FX.velo || 1;
     mult *= (eb || VD.asist) && sl > 0 ? 1 : clamp(1 - VD.loma[0] * sl, VD.loma[1], VD.loma[2]);
     const kw = 1 - Math.exp(-dt / S.tw);
     if (dir.m > 0) {
       // giro con peso: la velocidad de giro deseada sigue al joystick, limitada por la velocidad (a toda marcha se abre la curva) y con inercia
-      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - P.v / S.max, 0, 1)) * (rain ? .85 : 1);
+      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - P.v / S.max, 0, 1)) * (rain ? .85 : 1) * (FX && yo ? FX.giro || 1 : 1);
       P.w += (clamp(da * 6.5 - P.w * .25, -wm, wm) - P.w) * kw;   // v2.1: con amortiguación (Motor City 4.5): a toda marcha no zigzaguea
       // arranque gradual hasta la velocidad pedida; si el joystick apunta lejos del rumbo, se frena para girar
       const tv = S.max * mult * dir.m * (.3 + .7 * Math.max(0, Math.cos(da)));

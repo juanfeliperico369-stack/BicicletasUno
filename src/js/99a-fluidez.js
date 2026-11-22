@@ -67,6 +67,8 @@ const Crucero = JE.crucero = {
     if (bar && !bar.querySelector('#bCrucero')) { const b = document.createElement('button'); b.id = 'bCrucero'; b.setAttribute('aria-label', 'Acelerador fijo'); b.setAttribute('aria-pressed', 'false'); b.textContent = '⏫'; b.onclick = e => { e.stopPropagation(); Snd.sfx('tap'); Crucero.poner(!Crucero.on); }; bar.append(b); }   /* al final: los de siempre se ubican por posición */
     Fluidez.previo(R); return r;
   };
+  /* 3.1 · ⚙️ Flexibilidad: «pedaleo fijo al empezar» prende ⏫ en cada recorrido de quien juega */
+  const _st = Game.start; Game.start = function () { const r = _st.apply(this, arguments); try { if (Save.data.settings.crucero && !JE.headless && this.mode && this.mode.ride) Crucero.poner(true); } catch (e) { } return r; };
   const _key = Game.key; Game.key = function (e) { if (e.code === 'KeyQ' && this.mode && this.mode.ride && !this.mode.sub) { Crucero.poner(!Crucero.on); return; } return _key.call(this, e); };
   for (const k of ['stop', 'finish']) { const f = Game[k]; Game[k] = function () { if (Crucero.on) { Crucero.on = false; const b = $('#bCrucero'); if (b) b.classList.remove('on'); } return f.apply(this, arguments); }; }
   /* ---- 4) todo liberado (para probarlo todo antes de pulir la trama) ---- */

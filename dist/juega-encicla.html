@@ -518,7 +518,7 @@ const RED_M = {"fuente":"El Metro (MetroZero/src/data/red.js 2026-11 y rutas_cal
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '3.0.1', errors: [], headless: false };
+const JE = window.JE = { version: '3.1.0', errors: [], headless: false };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -2260,11 +2260,13 @@ class Ride {
     // relieve real: en subida se pedalea más lento y en bajada se va más rápido (el camión lo siente menos; la bici eléctrica no sufre en subida)
     const sl = this.sl = this.map.slope(P.x, P.y, P.a), eb = P.veh === 'bike' && !!(M.ebike || this.ebike);
     if (M.speedMul) mult *= M.speedMul(this);
+    const FX = Save.data && Save.data.settings, yo = typeof Manejo === 'undefined' || Manejo.humano(this);   // 3.1 · ⚙️ Flexibilidad: velocidad y giro de quien juega (el bot y las pruebas no cambian)
+    if (FX && yo) mult *= FX.velo || 1;
     mult *= (eb || VD.asist) && sl > 0 ? 1 : clamp(1 - VD.loma[0] * sl, VD.loma[1], VD.loma[2]);
     const kw = 1 - Math.exp(-dt / S.tw);
     if (dir.m > 0) {
       // giro con peso: la velocidad de giro deseada sigue al joystick, limitada por la velocidad (a toda marcha se abre la curva) y con inercia
-      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - P.v / S.max, 0, 1)) * (rain ? .85 : 1);
+      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta), wm = (S.w1 + (S.w0 - S.w1) * clamp(1 - P.v / S.max, 0, 1)) * (rain ? .85 : 1) * (FX && yo ? FX.giro || 1 : 1);
       P.w += (clamp(da * 6.5 - P.w * .25, -wm, wm) - P.w) * kw;   // v2.1: con amortiguación (Motor City 4.5): a toda marcha no zigzaguea
       // arranque gradual hasta la velocidad pedida; si el joystick apunta lejos del rumbo, se frena para girar
       const tv = S.max * mult * dir.m * (.3 + .7 * Math.max(0, Math.cos(da)));
@@ -5448,6 +5450,7 @@ const UI = JE.ui = {
     h += `<div class="opt"><span>Vibración</span><button class="sw ${S.vib ? 'on' : ''}" data-sw="vib" aria-label="Vibración"></button></div>`;
     h += `<div class="opt"><span>Ritmo del juego<br><small class="m">Tranquilo: más tiempo (niños y abuelos)</small></span><div class="seg">${['tranquilo', 'normal', 'arcade'].map(p => `<button data-pace="${p}" class="${S.pace === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
     h += `<div class="opt"><span>Controles<br><small class="m">Flechas: botones fijos, ideal para abuelos</small></span><div class="seg">${['flotante', 'fijo', 'flechas'].map(p => `<button data-ctrl="${p}" class="${(S.ctrl || 'fijo') === p ? 'on' : ''}">${p}</button>`).join('')}</div></div>`;
+    h += `<div class="opt"><span>⚙️ Flexibilidad<br><small class="m">Giro, velocidad, lado y tamaño del joystick, pedaleo fijo y vibración</small></span><button class="btn sm" data-act="flex">Ajustar</button></div>`;   // 3.1
     h += `<div class="opt"><span>Zoom del mapa</span><div class="seg">${[-1, 0, 1].map(z => `<button data-zoom="${z}" class="${(S.zoom | 0) === z ? 'on' : ''}">${z < 0 ? 'lejos' : z > 0 ? 'cerca' : 'normal'}</button>`).join('')}</div></div>`;
     h += `<div class="col" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"><button class="btn pri" data-act="intro">¿Qué es EnCicla?</button><button class="btn amb" data-act="apoya">Apoya la bici pública</button><button class="btn" data-act="historia">📖 La historia</button><button class="btn" data-act="personajes">👥 Personajes</button><button class="btn" data-act="ranking">🏆 Ranking</button><button class="btn" data-act="avatar">Mi ciclista y tienda</button><button class="btn" data-act="multi">Jugar con amigos</button><button class="btn" data-act="howto">Cómo jugar</button><button class="btn" data-act="bot">Diagnóstico (bot de pruebas)</button><button class="btn gh" data-act="cred">Créditos y aviso</button></div>`;
     h += `<div class="squig"></div><div class="paper"><div class="t">¿Sabías que?</div><p style="margin:6px 0 0">${esc(TIPS[Math.floor(Date.now() / 86400000) % TIPS.length])}</p></div>`;
@@ -5456,7 +5459,7 @@ const UI = JE.ui = {
     $$('[data-pace]', el).forEach(b => b.onclick = () => { S.pace = b.dataset.pace; Save.save(); this.renderMas(); });
     $$('[data-zoom]', el).forEach(b => b.onclick = () => { S.zoom = +b.dataset.zoom; Save.save(); this.renderMas(); });
     $$('[data-ctrl]', el).forEach(b => b.onclick = () => { S.ctrl = b.dataset.ctrl; Save.save(); this.renderMas(); Snd.sfx('tap'); });
-    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), personajes: () => this.personajes(), ranking: () => this.ranking(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits() })[b.dataset.act]());
+    $$('[data-act]', el).forEach(b => b.onclick = () => ({ intro: () => this.intro(), apoya: () => this.apoya(), avatar: () => this.avatar(), historia: () => this.historia(), personajes: () => this.personajes(), ranking: () => this.ranking(), multi: () => this.multi(), howto: () => this.howto(), bot: () => this.diag(), cred: () => this.credits(), flex: () => this.controles(false) })[b.dataset.act]());
   },
   /* ---------- briefing ---------- */
   brief(roleId, turno, o = {}) {
@@ -9969,13 +9972,16 @@ UI.controles = function (inGame) {
     ${Ctrl.pad() || k === 'inclinar' ? `<p class="pag">Lado</p>${seg('cside', Ctrl.side(), [['izq', '◀ Izquierda'], ['der', 'Derecha ▶']])}` : ''}
     ${Ctrl.pad() ? `<p class="pag">Tamaño</p>${seg('csize', S.csize == null ? 1 : S.csize, [[0, 'Pequeño'], [1, 'Normal'], [2, 'Grande']])}` : ''}
     ${k === 'inclinar' ? '<div class="col" style="margin:8px 0"><button class="btn sm" id="cCal">🎯 Recalibrar</button></div>' : ''}
+    <p class="pag">🎯 Giro</p>${seg('giro', S.giro || 1, [[.75, 'Suave'], [1, 'Normal'], [1.3, 'Rápido']])}
+    <p class="pag">🚲 Velocidad</p>${seg('velo', S.velo || 1, [[.8, '×0,8'], [1, '×1'], [1.25, '×1,25'], [1.5, '×1,5']])}
+    <p class="pag">⏫ Pedaleo fijo al empezar</p>${seg('crucero', S.crucero ? 1 : 0, [[0, 'No'], [1, 'Sí']])}
     <p class="pag">Vibración</p>${seg('vib', S.vib ? 1 : 0, [[1, 'Sí'], [0, 'No']])}
     <p class="m" style="font-size:12.5px;margin-top:10px">En computador: flechas o WASD para moverte y espacio para el timbre.</p>
     <div class="col"><button class="btn pri" id="mClose">${inGame ? '▶ Volver al juego' : 'Listo'}</button></div>`, () => {
     $$('[data-c]').forEach(b => b.onclick = async () => {
       const key = b.dataset.c, v = b.dataset.v;
       if (key === 'ctrl' && v === 'inclinar') { const ok = await Tilt.ask(); if (!ok) { Snd.sfx('bad'); return this.toast('Este celular no deja usar el sensor de movimiento'); } Tilt.y0 = null; }
-      S[key] = key === 'csize' ? +v : key === 'vib' ? v === '1' : v; Save.save(); Snd.sfx('tap'); this.controles(inGame);
+      S[key] = key === 'csize' || key === 'giro' || key === 'velo' ? +v : key === 'vib' || key === 'crucero' ? v === '1' : v;   // 3.1 · ⚙️ Flexibilidad Save.save(); Snd.sfx('tap'); this.controles(inGame);
     });
     const cal = $('#cCal'); if (cal) cal.onclick = () => { Tilt.calib(); Snd.sfx('ok'); this.toast('Listo: esta es tu posición neutra'); };
     if (inGame) $('#mClose').onclick = () => { this.closeModal(); Game.resume(); };
@@ -14023,6 +14029,8 @@ const Crucero = JE.crucero = {
     if (bar && !bar.querySelector('#bCrucero')) { const b = document.createElement('button'); b.id = 'bCrucero'; b.setAttribute('aria-label', 'Acelerador fijo'); b.setAttribute('aria-pressed', 'false'); b.textContent = '⏫'; b.onclick = e => { e.stopPropagation(); Snd.sfx('tap'); Crucero.poner(!Crucero.on); }; bar.append(b); }   /* al final: los de siempre se ubican por posición */
     Fluidez.previo(R); return r;
   };
+  /* 3.1 · ⚙️ Flexibilidad: «pedaleo fijo al empezar» prende ⏫ en cada recorrido de quien juega */
+  const _st = Game.start; Game.start = function () { const r = _st.apply(this, arguments); try { if (Save.data.settings.crucero && !JE.headless && this.mode && this.mode.ride) Crucero.poner(true); } catch (e) { } return r; };
   const _key = Game.key; Game.key = function (e) { if (e.code === 'KeyQ' && this.mode && this.mode.ride && !this.mode.sub) { Crucero.poner(!Crucero.on); return; } return _key.call(this, e); };
   for (const k of ['stop', 'finish']) { const f = Game[k]; Game[k] = function () { if (Crucero.on) { Crucero.on = false; const b = $('#bCrucero'); if (b) b.classList.remove('on'); } return f.apply(this, arguments); }; }
   /* ---- 4) todo liberado (para probarlo todo antes de pulir la trama) ---- */
