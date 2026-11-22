@@ -28,8 +28,8 @@ const Mundo3D = JE.mundo3d = {
   iniciar() {
     if (this.gl) return true; const cv = this.cv = document.createElement('canvas'); cv.id = 'gl3d'; cv.setAttribute('aria-hidden', 'true'); $('#sGame').insertBefore(cv, $('#cv'));
     const gl = this.gl = cv.getContext('webgl', { antialias: true, alpha: false }); if (!gl) return false;
-    const vs = `attribute vec3 p;attribute vec3 n;attribute vec3 c;attribute vec2 u;uniform mat4 M;uniform vec3 L;varying vec3 vc;varying vec2 vu;varying float vf;varying float vl;
-      void main(){vec4 q=M*vec4(p,1.);gl_Position=q;vc=c;vu=u;vf=clamp((q.w-140.)/560.,0.,1.);vl=.62+.38*max(dot(n,L),0.)+.0*n.y;}`;
+    const vs = `attribute vec3 p;attribute vec3 n;attribute vec3 c;attribute vec2 u;uniform mat4 M;uniform vec3 L;uniform float nk;varying vec3 vc;varying vec2 vu;varying float vf;varying float vl;
+      void main(){vec4 q=M*vec4(p,1.);gl_Position=q;vc=c;vu=u;vf=clamp((q.w-140.*nk)/(560.*nk),0.,1.);vl=.62+.38*max(dot(n,L),0.)+.0*n.y;}`;
     /* 3.2 · las fachadas con ventanas: los muros de los edificios llevan en u la distancia a lo largo del muro (+10) y en v la
        altura (px); cada piso de 3 m tiene su fila de ventanas, y de noche algunas se prenden */
     const fs = `precision mediump float;varying vec3 vc;varying vec2 vu;varying float vf;varying float vl;uniform sampler2D T;uniform float usaT;uniform vec3 F;uniform float noche;
@@ -38,7 +38,7 @@ const Mundo3D = JE.mundo3d = {
         k*=vl*(1.-noche*.55);k=mix(k,vec3(1.,.85,.5),luz*.85);gl_FragColor=vec4(mix(k,F,vf),1.);}`;
     const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
     const pr = this.pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
-    this.loc = { p: gl.getAttribLocation(pr, 'p'), n: gl.getAttribLocation(pr, 'n'), c: gl.getAttribLocation(pr, 'c'), u: gl.getAttribLocation(pr, 'u'), M: gl.getUniformLocation(pr, 'M'), L: gl.getUniformLocation(pr, 'L'), T: gl.getUniformLocation(pr, 'T'), usaT: gl.getUniformLocation(pr, 'usaT'), F: gl.getUniformLocation(pr, 'F'), noche: gl.getUniformLocation(pr, 'noche') };
+    this.loc = { p: gl.getAttribLocation(pr, 'p'), n: gl.getAttribLocation(pr, 'n'), c: gl.getAttribLocation(pr, 'c'), u: gl.getAttribLocation(pr, 'u'), M: gl.getUniformLocation(pr, 'M'), L: gl.getUniformLocation(pr, 'L'), T: gl.getUniformLocation(pr, 'T'), usaT: gl.getUniformLocation(pr, 'usaT'), F: gl.getUniformLocation(pr, 'F'), noche: gl.getUniformLocation(pr, 'noche'), nk: gl.getUniformLocation(pr, 'nk') };
     gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); this.din = gl.createBuffer(); return true;
   },
   /* una malla: arreglo plano de [x, h, y, nx, ny, nz, r, g, b, u, v] */
@@ -82,7 +82,7 @@ const Mundo3D = JE.mundo3d = {
     const k = cx + ',' + cy; let t = this.tex.get(k); if (t) { this.tex.delete(k); this.tex.set(k, t); return t; } const M = JE.map; if (!M.hasG(cx, cy) && this._nuevas-- <= 0) return null;   /* a lo sumo 1 trozo nuevo por cuadro (sin tirones) */
     const gl = this.gl, src = M.chunkG(cx, cy); t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, src);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    this.tex.set(k, t); if (this.tex.size > 30) { const [kk, tt] = this.tex.entries().next().value; this.tex.delete(kk); gl.deleteTexture(tt); } return t;
+    this.tex.set(k, t); if (this.tex.size > 40) { const [kk, tt] = this.tex.entries().next().value; this.tex.delete(kk); gl.deleteTexture(tt); } return t;
   },
   /* ---------- la cámara ---------- */
   camara(R, W, Hh) {
@@ -108,11 +108,11 @@ const Mundo3D = JE.mundo3d = {
     this.camara(R, W, Hh); const L = this.loc, min = R.min || (R.mode && R.mode.clock) || 600, cie = Art.sky(min), F = this.rgb(cie[1]), noche = Art.night(min);
     gl.clearColor(...this.rgb(cie[0]).map(v => v * .5 + F[0] * 0), 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     /* el cielo: degradado del color de arriba al del horizonte (dos triángulos que tapan la pantalla, sin profundidad) */
-    gl.uniformMatrix4fv(L.M, false, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); gl.uniform3fv(L.F, F); gl.uniform1f(L.noche, 0); gl.uniform3fv(L.L, [0, 1, 0]); gl.disable(gl.DEPTH_TEST);
+    gl.uniformMatrix4fv(L.M, false, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); gl.uniform3fv(L.F, F); gl.uniform1f(L.noche, 0); gl.uniform1f(L.nk, 1); gl.uniform3fv(L.L, [0, 1, 0]); gl.disable(gl.DEPTH_TEST);
     const top = this.rgb(cie[0]), cielo = []; const sv = (x, y, c) => cielo.push(x, y, .999, 0, 1, 0, c[0], c[1], c[2], 0, 0); sv(-1, -1, F); sv(1, -1, F); sv(1, 1, top); sv(-1, -1, F); sv(1, 1, top); sv(-1, 1, top);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.din); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cielo), gl.DYNAMIC_DRAW); this.pintar({ b: this.din, n: 6 }); gl.enable(gl.DEPTH_TEST);
-    gl.uniformMatrix4fv(L.M, false, this.vp); gl.uniform3fv(L.F, F); gl.uniform1f(L.noche, noche); gl.uniform3fv(L.L, [-.45, .75, -.5]);
-    const S = CH * TS, P = R.p, rad = 2, ccx = Math.floor(P.x / S), ccy = Math.floor(P.y / S), fx = Math.cos(this.yaw), fy = Math.sin(this.yaw), lista = [];
+    gl.uniformMatrix4fv(L.M, false, this.vp); gl.uniform3fv(L.F, F); gl.uniform1f(L.noche, noche); gl.uniform3fv(L.L, [-.45, .75, -.5]); gl.uniform1f(L.nk, this.mirador ? 2.6 : 1);   /* 3.2: desde un mirador la niebla se aleja */
+    const S = CH * TS, P = R.p, rad = this.mirador ? 3 : 2, ccx = Math.floor(P.x / S), ccy = Math.floor(P.y / S), fx = Math.cos(this.yaw), fy = Math.sin(this.yaw), lista = [];
     for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { const cx = ccx + dx, cy = ccy + dy; if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue; const mx = (cx + .5) * S - P.x, my = (cy + .5) * S - P.y; if (mx * fx + my * fy < -S * 1.1) continue; lista.push([mx * mx + my * my, cx, cy]); }
     lista.sort((a, b) => a[0] - b[0]);
     for (const [, cx, cy] of lista) { const m = this.malla(cx, cy), T = this.textura(cx, cy); if (T) this.pintar(m.piso, T); if (m.cosas) this.pintar(m.cosas); }

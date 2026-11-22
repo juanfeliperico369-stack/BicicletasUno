@@ -19,6 +19,7 @@
          cuadro y las hojas se perdían (★ 0 con 6 hojas): ahí también van al puntaje del minijuego */
       const P = this.p, s0 = P ? P.score : 0, r = _upd.call(this, dt);
       if (P && typeof ModeSub !== 'undefined' && P instanceof ModeSub && P.score > s0) this.score += P.score - s0;
+      if (JE.map && JE.map.barrioAt && this.posMapa) { const q = this.posMapa(); this.barrio = JE.map.barrioAt(q.px, q.py) || 'Medellín'; }   /* el barrio con px del mundo (antes se le pasaban casillas) */
       return r;
     };
     const _bot = MGRunner3D.prototype.bot;

@@ -234,6 +234,7 @@ if (JE.modos && JE.modos.registrar) JE.modos.registrar({ id: 'freerun', name: 'F
       this.runSub(new MGFreerun(this, { nivel }), mg => {
         this.score += Math.round(mg.score); this.ride.stamp = { t: 2.5, title: mg.llego ? '¡AL MIRADOR!' : '¡BUEN FREERUN!', sub: 'Comuna 13 · ⭐ ' + mg.estrellas + ' · ' + mg.trucos + ' trucos', bg: mg.llego ? PAL.vd : PAL.cie };
         if (JE.ui) JE.ui.toast('🧗 Freerun: +' + Math.round(mg.score) + ' · ¿Sabías que? Las escaleras eléctricas de la Comuna 13 (2011) suman 384 m en seis tramos.');
+        if (JE.diario) JE.diario.anotar('Freerun en la Comuna 13: ⭐ ' + mg.estrellas + ' · ' + mg.trucos + ' trucos' + (mg.llego ? ' · llegaste al mirador' : ''), '🧗');
       });
     };
     const _act = ModeUsuarioR.prototype.actions;
