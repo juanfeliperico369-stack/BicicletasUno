@@ -91,3 +91,9 @@ python tools/generar-arte-lateral-gpt6.py
 - Ensayo: `https://github.com/juanfeliperico369-stack/BicicletasUno/tree/gh-pages-ensayo`
 - Coordinación: `https://github.com/juanfeliperico369-stack/BicicletasUno/issues/2`
 - No modificar de manera automática los repositorios de Motor City, MetroZero o RunRunZero.
+
+
+## 9. Regresión detectada y corregida durante la verificación
+La primera batería Chromium sobre el commit `f9ddf0edc` encontró una sola aserción fallida de V7: la inclinación visual de la bicicleta en una curva rápida llegó a **0,13 rad**, por debajo del umbral 0,2 rad. La nueva prueba V8 y el constructor por fases sí pasaron; allí el coste inicial de pedir un chunk fue 0,7 ms y el p95 **por etapa** fue 0,3 ms, con máximo 10,3 ms (estas cifras **no son** el p95 de cuadros con CPU×4).
+
+**Corrección:** `src/js/99d-mundo3d.js` aplica un realce visual controlado de 1,8× al ángulo físico `atan(v·ω/g)`, lo limita a ±0,65 rad y aumenta la adaptación temporal de 8 a 12 s⁻¹. **No cambia dirección, velocidad, choques ni físicas**: solo la legibilidad del ladeo en el render. La revalidación en CI debe realizarse sobre el commit posterior a esta corrección; no se debe ocultar el fallo original.
