@@ -44,6 +44,8 @@ jobs:
         run: node tests/prueba-gpt6-ciclorrutas.mjs
       - name: Batería completa (bot, interfaz, rendimiento y lo que ve el jugador)
         run: node tests/run.js
+      - name: Recorrido frío de 2 km · CPU ×4 · p95 y peor cuadro (GPT-6)
+        run: node tests/benchmark-2km-gpt6.mjs --cpu=4 --km=2 --step=12 --assert
       - name: Guardar las capturas y reportes
         if: always()
         uses: actions/upload-artifact@v4
