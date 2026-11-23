@@ -366,9 +366,11 @@ body.big .turnos button{font-size:18px}
 .tlVeh .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:14px}
 .tlVeh canvas{width:96px;height:54px;background:#eef3e6;border-radius:8px}
 
-/* alto contraste (Más > Alto contraste): textos y bordes marcados y el mapa del juego con más contraste */
-body.contraste #cv{filter:contrast(1.25) saturate(1.15)}
-body.contraste .chip,body.contraste .btn,body.contraste .sw,body.contraste .seg button,body.contraste .paper,body.contraste #toast{outline:3px solid #000;outline-offset:0}
+/* alto contraste (Más > Alto contraste): textos y bordes marcados (blanco sobre oscuro, negro sobre claro) sin tapar :focus-visible */
+body.contraste #cv{filter:contrast(1.22) saturate(1.12)}
+body.contraste .chip,body.contraste .btn,body.contraste .sw,body.contraste .seg button{outline:2px solid #fff;outline-offset:0}
+body.contraste .btn.pri,body.contraste .btn.amb,body.contraste .paper,body.contraste #toast{outline:3px solid #000;outline-offset:0}
+body.contraste button:focus-visible,body.contraste input:focus-visible{outline:3px solid #fff200!important;outline-offset:3px}
 body.contraste .m,body.contraste small,body.contraste .pag{color:inherit!important;opacity:1!important}
 body.contraste #toast{background:#fff200;color:#000;font-weight:800}
 body.contraste #modal{background:#000000e6}
@@ -383,8 +385,8 @@ body.contraste .paper{background:#fff;color:#000}
 #actBar.dock .abtn.mas.on{background:var(--vd);color:var(--az);border-color:#fff}
 #actBar.dock .abtn.nuevo{animation:pulso21 .6s ease-out 2}
 @keyframes pulso21{0%{transform:scale(1)}40%{transform:scale(1.14);box-shadow:0 0 0 8px #9bd34166,3px 3px 0 #0008}100%{transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){#actBar.dock .abtn.nuevo{animation:none}}
-@media (max-height:720px){#actBar.dock .abtn{width:56px;height:56px}#actBar.dock .abtn img{width:24px;height:24px}#actBar.dock .abtn.mas{width:40px;height:40px;font-size:19px}}
+@media (prefers-reduced-motion:reduce){#actBar.dock .abtn.nuevo,.confetti i,.logro.nuevo{animation:none!important}}
+@media (max-height:720px){#actBar.dock .abtn{width:56px;height:56px}#actBar.dock .abtn img{width:24px;height:24px}#actBar.dock .abtn.mas{width:44px;height:44px;font-size:19px}}
 #actMas{position:absolute;display:flex;flex-direction:column;gap:8px;z-index:4;max-height:60vh;overflow:auto}
 #actMas[hidden]{display:none}
 #actMas button{display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 16px 8px 8px;border-radius:24px;border:2px solid #fff;background:#0a2342f2;color:#fff;font:800 14px/1.1 var(--fb);box-shadow:3px 3px 0 #0008;text-align:left;white-space:nowrap}
@@ -416,13 +418,14 @@ body.contraste #parada21{background:#000;outline:3px solid #fff}
 body.gua21 #coach{top:auto!important;bottom:calc(var(--sab) + 104px)!important}
 /* v2.1 · cuatro tamaños (--u: 0,8 · 0,9 · 1 · 1,18, en 98y-tamano.js) y los iconos vectoriales de las acciones */
 :root{--u:.9}
+html,body,#app{height:100dvh}
 #hud{gap:calc(6px*var(--u));padding-top:calc(var(--sat) + 6px*var(--u))}
 #hud .chip{font-size:calc(14px*var(--u));padding:calc(3px*var(--u)) calc(10px*var(--u))}
 #hud .ttl{font-size:calc(17px*var(--u));padding:calc(4px*var(--u)) calc(10px*var(--u))}
-#bPause{width:calc(44px*var(--u));height:calc(38px*var(--u));font-size:calc(16px*var(--u))}
+#bPause{min-width:44px;min-height:44px;width:calc(44px*var(--u));height:calc(44px*var(--u));font-size:calc(16px*var(--u))}
 #goalsMini div{font-size:calc(12px*var(--u))}#goalsMini.mini div{font-size:calc(11.5px*var(--u))}
 #camBar{gap:calc(8px*var(--u))}
-#camBar button{width:calc(42px*var(--u));height:calc(42px*var(--u));font-size:calc(19px*var(--u))}
+#camBar button{min-width:44px;min-height:44px;width:calc(44px*var(--u));height:calc(44px*var(--u));font-size:calc(18px*var(--u))}
 #actBar.dock{gap:calc(8px*var(--u))}
 #actBar.dock .abtn{width:calc(60px*var(--u));height:calc(60px*var(--u));font-size:calc(10.5px*var(--u));gap:1px}
 #actBar.dock .abtn img{width:calc(26px*var(--u));height:calc(26px*var(--u))}
@@ -431,7 +434,7 @@ body.gua21 #coach{top:auto!important;bottom:calc(var(--sab) + 104px)!important}
 .abtn .ico21,#actMas .ico21{width:calc(26px*var(--u));height:calc(26px*var(--u));fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 #actBar.dock .abtn.ctx .ico21{stroke:var(--vd1)}
 #actBar.dock .abtn span{line-height:1.05;margin-top:2px}
-@media (max-height:720px){#actBar.dock .abtn{width:calc(52px*var(--u));height:calc(52px*var(--u))}#actBar.dock .abtn img,.abtn .ico21{width:calc(22px*var(--u));height:calc(22px*var(--u))}#actBar.dock .abtn.mas{width:calc(40px*var(--u));height:calc(40px*var(--u))}}
+@media (max-height:720px){#actBar.dock .abtn{width:calc(52px*var(--u));height:calc(52px*var(--u))}#actBar.dock .abtn img,.abtn .ico21{width:calc(22px*var(--u));height:calc(22px*var(--u))}#actBar.dock .abtn.mas{width:calc(44px*var(--u));height:calc(44px*var(--u))}}
 #actMas button{min-height:calc(44px*var(--u));font-size:calc(13.5px*var(--u));padding:calc(6px*var(--u)) calc(14px*var(--u)) calc(6px*var(--u)) calc(8px*var(--u))}
 #toast{font-size:calc(14px*var(--u))!important;padding:calc(7px*var(--u)) calc(13px*var(--u))!important;max-width:min(calc(380px*var(--u)),86%)!important;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 #coach{font-size:calc(14px*var(--u))!important;padding:calc(8px*var(--u)) calc(14px*var(--u))!important;max-width:min(calc(400px*var(--u)),84%)!important}
@@ -440,3 +443,37 @@ body.libre21 #coach.mini{font-size:calc(13px*var(--u))!important;padding:calc(7p
 #charla img{width:calc(52px*var(--u));height:calc(52px*var(--u))}
 #charla b{font-size:calc(15px*var(--u))}#charla small{font-size:calc(11.5px*var(--u))}#charla p{font-size:calc(13.5px*var(--u))}
 #parada21 p{font-size:calc(14px*var(--u))}#parada21 .pr-q img{width:calc(56px*var(--u));height:calc(56px*var(--u))}
+/* v2.2 · Ronda 3.0 (Gemini/Antigravity): horizontal 860x412 limpio, selector de cámaras 3D/2D/Pixel, ⏫ crucero y tarjetas RPG */
+#camBar button{text-shadow:0 0 4px rgba(255,255,255,.45)}
+#camBar button svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+#camBar button.acelOn{background:var(--vd);color:var(--az);border-color:#fff;box-shadow:0 0 0 3px #9bd34166,2px 2px 0 #0008}
+#goalsMini .more{background:#0a2342cc;color:#c4ec7c;opacity:1;padding:2px 6px;border-radius:8px;width:fit-content}
+#camPop{position:absolute;left:calc(60px + var(--sal));top:50%;transform:translateY(-50%);background:#0a2342f4;border:2px solid var(--vd);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:6px;z-index:20;box-shadow:0 12px 28px #000b;min-width:190px;max-height:76vh;overflow:auto}
+#camPop[hidden]{display:none}
+#camPop .cp-h{font:800 11px/1 var(--fb);text-transform:uppercase;letter-spacing:.08em;color:var(--vd1);padding:2px 4px}
+#camPop button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:6px 10px;border-radius:10px;background:#ffffff12;color:#fff;font:700 13px/1.15 var(--fb);text-align:left}
+#camPop button.on{background:var(--vd);color:var(--az)}
+#camPop .cp-sep{height:1px;background:#ffffff24;margin:2px 0}
+.rpg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:8px 0}
+.rpg-card{background:#ffffff10;border:2px solid var(--az3);border-radius:12px;padding:8px 10px}
+.rpg-card b{display:block;font-size:14px;color:var(--vd1)}
+.rpg-bar{height:7px;background:#00000044;border-radius:99px;overflow:hidden;margin:5px 0 3px}
+.rpg-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--vd2),var(--vd));border-radius:99px}
+.act-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.act-card{background:#ffffff10;border:2px solid var(--az3);border-radius:12px;padding:9px 10px;text-align:left;display:flex;flex-direction:column;gap:3px;min-height:66px}
+.act-card b{font-size:14px;color:#fff}.act-card small{font-size:11.5px;color:var(--bl2);line-height:1.25}
+.act-card:active{transform:scale(.97)}
+@media (orientation:landscape) and (max-height:500px){
+  .cbody{padding-top:8px;gap:2px}
+  .cbody .mega{font-size:clamp(38px,10vh,66px)}.cbody .mega.b2{font-size:clamp(32px,9vh,54px)}
+  #coverArt{width:min(38vw,240px);margin:4px auto}
+  .cbtns{flex-direction:row;flex-wrap:wrap;justify-content:center;width:min(96vw,640px);margin:6px 0;gap:8px}
+  .cbtns .btn{min-height:44px;font-size:16px;padding:6px 14px}
+  #hud{padding:4px 8px;gap:4px}
+  #hud .ttl{font-size:14px;padding:2px 8px}#hud .chip{font-size:12px;padding:2px 7px}
+  #goalsMini{top:46px;max-width:34%}#goalsMini div{font-size:10.5px;padding:2px 6px}
+  body.ctrlR #actBar{bottom:calc(var(--sab) + 12px);right:calc(168px + var(--sar));flex-direction:row}
+  #actBar.dock{bottom:calc(var(--sab) + 12px);flex-direction:row;align-items:flex-end}
+  #actBar.dock .abtn{width:48px;height:48px;font-size:9.5px}#actBar.dock .abtn.mas{width:44px;height:44px}
+  #camPop{left:calc(8px + var(--sal));top:calc(var(--hudB,46px) + 52px);transform:none;max-height:65vh;flex-direction:row;flex-wrap:wrap;max-width:420px}
+}

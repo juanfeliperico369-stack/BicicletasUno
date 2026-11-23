@@ -1,41 +1,33 @@
 {
   "schema_version": 1,
-  "agente": "antigravity-gemini",
-  "rama": "antigravity/fases-1-2-3-motor-city",
-  "base_commit": "4691679",
-  "fase_actual": "Fase 1 — Auditoría base, bugs, optimización y mejoras de jugabilidad/narrativa",
+  "agente": "antigravity",
+  "marca": "Gemini (Antigravity)",
+  "rama": "antigravity/evolucion-encicla-v22",
+  "base_commit": "bedf4eb",
+  "fase_actual": "ronda-3.0-auditoria-arreglos-mundo-3d-y-evolucion",
   "estado": "en_progreso",
-  "ultima_actualizacion_utc": "2026-11-20T20:58:00Z",
+  "ultima_actualizacion_utc": "2026-11-22T14:20:00Z",
   "zonas_reclamadas": [
-    "docs/COORDINACION-IA.md",
+    "src/js/99n-*.js .. src/js/99y-*.js",
+    "tests/auditoria-antigravity.js",
+    "docs/EVOLUCION-Y-AUDITORIA-JUEGA-ENCICLA-GEMINI-ANTIGRAVITY.md",
     "coord/agentes/antigravity.json",
-    "coord/buzon/*-antigravity-*.md",
-    "src/js/98a-flujo-diario.js",
-    "src/js/98b-motor-city-puente.js",
-    "src/js/98c-guatape-hogar-urbe.js",
-    "contenido/guion/trama_valle.json",
-    "docs/REPORTE-FASES-1-2-3-ENCICLA.md"
+    "coord/buzon/*-antigravity-*.md"
   ],
-  "archivos_compartidos_en_revision": [
-    "src/js/00-core.js",
-    "src/js/93-trama.js",
-    "src/js/96-accesible.js",
-    "src/js/97-motor30.js",
-    "src/style.css",
-    "tools/build.js",
-    "tests/run.js"
+  "archivos_compartidos_a_tocar_quirurgicamente": [
+    "src/js/92-vehiculos.js (arreglo Snd.vehSfx y Art.vehSide)",
+    "src/js/92-ciclovia.js (optimizacion 15x, WASD/swipe, anchos y giros)",
+    "src/js/75-graficos.js (salto para todos los vehiculos en panoramica + mejoras visuales)",
+    "src/index.html (lang es-CO, viewport accesible, ARIA)",
+    "src/style.css (alto contraste WCAG, targets >=44px, landscape 860x412, prefers-reduced-motion)",
+    "contenido/guion/trama_valle.json (unificacion 100% con CAST de 66-historia.js)",
+    "docs/BITACORA.md"
   ],
-  "zonas_libres_para_ia_companera": [
-    "src/js/98n-*.js .. src/js/98z-*.js",
-    "landing/*",
-    "contenido/datos-*.json",
-    "arte/*",
-    "coord/agentes/<tu-id>.json",
-    "coord/buzon/<fecha>-<tu-id>-*.md"
+  "zonas_respetadas_de_companeras": [
+    "src/js/98n-*.js .. src/js/98y-*.js (Claude v2.1.0)",
+    "src/js/99a-*.js .. src/js/99m-*.js (Claude ronda 3.0)",
+    "tests/auditoria-modos.js (Claude)",
+    "docs/INVESTIGACION-Y-PLAN-3.0-Claude.md (Claude)"
   ],
-  "pruebas_verificadas": {
-    "build_base": "OK v2.0.1 (5032 KB)",
-    "prueba_niveles": "OK"
-  },
-  "nota": "Trabajando desde la base más reciente (origin/claude/motor-city-engine-xu7p4y @ 4691679). Si llegas en paralelo, crea tu ficha en coord/agentes/<tu-id>.json y comenta en el Issue [COORDINACIÓN IA]."
+  "notas": "Sincronizado con ccr-6f184fb6-vtpkye (2f105df, v2.1.0 + Motor City 4.6.1). Todos los modulos nuevos van en 99n–99y (se ejecutan despues de 98v-claves.js y 99a–99m) para cero conflictos y compatibilidad total con Save.registrar y tests/run.js."
 }

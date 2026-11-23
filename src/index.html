@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8">
+<html lang="es-CO"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a2342"><meta name="color-scheme" content="dark">
 <title>Juega EnCicla</title>
-<meta name="description" content="Juega EnCicla: videojuego arcade offline sobre el sistema de bicicletas públicas del Valle de Aburrá. Del usuario al supervisor: 11 oficios del sistema, mundo libre y multijugador.">
+<meta name="description" content="Juega EnCicla: videojuego arcade offline sobre el sistema de bicicletas públicas del Valle de Aburrá. Del usuario al supervisor: 12 oficios del sistema, mundo libre y multijugador.">
 <meta name="application-name" content="Juega EnCicla"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EnCicla"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <!--HEAD-->
@@ -43,13 +43,13 @@
   <canvas id="cv"></canvas>
   <div id="hud"><button id="bPause" aria-label="Pausa">❚❚</button><span class="ttl" id="hudTtl"></span><span class="chip" id="hudClock"></span><span class="chip" id="hudScore"></span><span id="hudChips" class="row" style="gap:6px"></span></div>
   <div id="goalsMini"></div>
-  <div id="coach"></div>
+  <div id="coach" role="status" aria-live="polite"></div>
   <div id="actBar"></div>
  </section>
 
  <section id="sResult" class="scr"><div class="scroll"><div class="wrap" id="resBody"></div></div></section>
- <div id="toast"></div>
- <div id="modal" hidden><div class="mbox" id="mBody"></div></div>
+ <div id="toast" role="status" aria-live="polite"></div>
+ <div id="modal" role="dialog" aria-modal="true" hidden><div class="mbox" id="mBody"></div></div>
  <input type="file" id="fileIn" accept=".json,application/json" hidden>
 </div>
 <script>/*JS*/</script>

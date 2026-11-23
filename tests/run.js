@@ -466,7 +466,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     await g2.waitForFunction(() => { const O = JE.game.mode.opps || []; return O.some(o => o.name === 'Anfitriona') && O.some(o => o.name === 'Invitado1'); }, null, { timeout: 20000 }).catch(() => { });
     await g1.evaluate(() => { JE.game.mode.ride.p.x += 40; }); await host.evaluate(() => { JE.game.mode.ride.p.y += 30; });
     const h = await host.evaluate(() => ({ seed: JE.game.meta.seed, x: Math.round(JE.game.mode.ride.p.x), y: Math.round(JE.game.mode.ride.p.y) })), a1 = await g1.evaluate(() => ({ x: Math.round(JE.game.mode.ride.p.x), y: Math.round(JE.game.mode.ride.p.y) }));
-    await g2.waitForFunction(([h, a1]) => { const O = JE.game.mode.opps || [], oh = O.find(o => o.name === 'Anfitriona'), o1 = O.find(o => o.name === 'Invitado1'); return oh && o1 && Math.abs(oh.y - h.y) < 25 && Math.abs(o1.x - a1.x) < 25; }, [h, a1], { timeout: 20000 }).catch(() => { });
+    await g2.waitForFunction(([h, a1]) => { const O = JE.game.mode.opps || [], oh = O.find(o => o.name === 'Anfitriona'), o1 = O.find(o => o.name === 'Invitado1'); return oh && o1 && Math.abs(Math.round(oh.y) - h.y) < 25 && Math.abs(Math.round(o1.x) - a1.x) < 25; }, [h, a1], { timeout: 20000 }).catch(() => { });
     const s2 = await g2.evaluate(() => ({ seed: JE.game.meta.seed, opps: JE.game.mode.opps.map(o => ({ name: o.name, x: Math.round(o.x), y: Math.round(o.y) })) }));
     const oh = s2.opps.find(o => o.name === 'Anfitriona'), o1 = s2.opps.find(o => o.name === 'Invitado1');
     ok(s2.seed === h.seed && oh && o1 && Math.abs(oh.y - h.y) < 25 && Math.abs(o1.x - a1.x) < 25, 'el invitado 2 ve al anfitrión y al invitado 1 en tiempo real (reenvío)');
