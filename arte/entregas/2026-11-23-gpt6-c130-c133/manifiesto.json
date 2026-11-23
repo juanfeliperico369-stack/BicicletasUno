@@ -1,0 +1,122 @@
+{
+  "autor": "OpenAI GPT-6 (ChatGPT) · arte procedimental original de prueba",
+  "fecha": "2026-11-23",
+  "ronda": "C-130-C-133",
+  "estado": "prototipo original con vista lateral; sujeto a aprobación artística",
+  "estilo": "16 bits pixel art; sin palabras ni logos",
+  "imagenes": [
+    {
+      "archivo": "c130_comuna13_capa1.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "4ca77103a8175125b383689f70d2e8d933424076781ac84a0e1ac91720e04b7f",
+      "seam": true,
+      "fondo": "escena"
+    },
+    {
+      "archivo": "c130_comuna13_capa2.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "42c9f8b18ba0a2afb27f61ba551f9b2025000b4924f07444805878704e95d662",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c130_comuna13_capa3.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "6089403dd59b799be4a676a44465802cfa93b6c9fa079c1d7c66c61098f3f8fb",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c130_comuna13_capa4.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "5ea5b7fd54b07356f0f8ade5654c8ed5eb1a805786ea5d05048efc16a8f86951",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c131_lineaA_capa1.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "be2865187747dc5512b80599972f9a028288212cdc0d8bae643a49213e6ecb14",
+      "seam": true,
+      "fondo": "escena"
+    },
+    {
+      "archivo": "c131_lineaA_capa2.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "42c9f8b18ba0a2afb27f61ba551f9b2025000b4924f07444805878704e95d662",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c131_lineaA_capa3.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "3baffa3d47357e1711db5e03babe8637de49175d39e6c577ff7db681b4ee48c2",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c131_lineaA_capa4.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "04c347e64d99501716c476c8c2e289172727127944922b3c51b48ffa2b9e3aab",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c132_palmas_capa1.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "f2a8c16ec04773685b6accd3489a858a794ac108165a15fb548cac281804e3c8",
+      "seam": true,
+      "fondo": "escena"
+    },
+    {
+      "archivo": "c132_palmas_capa2.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "c3e1c0d7c5f63f85c4d79c42389929cf9c5bdfb5f99d4170a342e3556eae912b",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c132_palmas_capa3.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "79689750eb4bd3cfe108724d330499f9e9fb90758e81f4e4ecff481f13de2eb5",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c132_palmas_capa4.png",
+      "anchura": 1008,
+      "altura": 432,
+      "sha256": "547dd55a661efe912496d212884467c941858039b50f2f58b356037a25dabe16",
+      "seam": true,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c131_tren_perfil.png",
+      "anchura": 896,
+      "altura": 504,
+      "sha256": "02aa9d33d54aa85439f3f6673a2059c899c18bd6712fc2f4581b97516f19a767",
+      "seam": false,
+      "fondo": "#ff00ff"
+    },
+    {
+      "archivo": "c133_corredor_lado.png",
+      "anchura": 1024,
+      "altura": 1024,
+      "sha256": "b969b29fe30d3319e087a36ea24803946b16f6e584e4bbd1b65ddf958cd5eb8a",
+      "seam": false,
+      "fondo": "#ff00ff"
+    }
+  ],
+  "advertencia": "El arte se incrusta opcionalmente; siempre queda respaldo por código."
+}
