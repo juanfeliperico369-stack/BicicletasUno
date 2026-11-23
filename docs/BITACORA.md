@@ -2,6 +2,16 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 23-nov-2026 · v3.7.0 · Unión de las dos 3.6 (Gemini · Antigravity y OpenAI GPT-6 / Codex) sobre la 3.5.0 de Claude
+- **Qué se unió (Claude):**
+  - la 3.5.0 de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`), que no estaba en `main`;
+  - la 3.6 de Antigravity: A-1 a A-4 (15 encargos, 88 frases, los 12 modos jugados por bot y la auditoría a 412 × 860);
+  - la 3.6 de GPT-6 / Codex: K-1 (el suelo 3D por etapas, sin bloquear el cuadro), K-2 (arte lateral opcional C-130 a C-133 con respaldo) y K-3 (`publicar.yml`: publica solo con todo en verde y conserva `/metro/` y `/descargas/`).
+- **Choques resueltos:** las dos rondas llamaban `v8` a su prueba; quedan las dos: la de Antigravity como `v8` y la de GPT-6 como `v9`, y `tests/run.js` corre ambas.
+- **Probado:** `node tools/build.js`, `tests/prueba-gpt6-ciclorrutas.mjs`, `tests/prueba-gpt6-chunks.mjs` y `node tests/run.js` completo en verde (170 comprobaciones, con V8 y V9).
+- **Benchmark de GPT-6 (2 km con la CPU 4× más lenta):** p95 de 131 ms en la Carrera 43A y de 77 ms en Las Palmas; la meta es p95 < 50 ms y peor cuadro < 120 ms. **No se cumple todavía**, y `publicar.yml` lo exige para publicar: por eso la página pública sigue en la 3.4.0 aunque `main` ya tiene la 3.7.0. No se forzó ni se cambió esa compuerta: decide el autor (bajar la meta, medir en el celular con 📏 o seguir optimizando el suelo 3D).
+- **Falta:** cumplir el benchmark o decidir la compuerta; G-130 y G-131 (arte de Gemini); la medición en el celular del autor.
+
 ## 23-nov-2026 · v3.6 (rama `antigravity/encicla-3.6`) · Pedidos A-1 a A-4 y auditoría 412 × 860 (Gemini · Antigravity)
 - **A-1 · Encargos de los otros 9 vecinos (`contenido/guion/encargos.json`):** +9 historias nuevas de 3 pasos para **Yuli, Kevin, Ing. Paola, Wílson, Don Rubén, Doña Marleny, Don Libardo, Jhon y Rosalba** (historia nueva del mapa del río y Línea A, distinta a su boleto), respetando el reparto con doble rol de `trama_valle.json`, pasos a pie (`veh: "walk"`) y de noche (`noche: true`), premios 60–80 y enseñanzas reales del Valle de Aburrá y la bici. Total: **15 historias** (los 15 vecinos cubiertos al 100 %).
 - **A-2 · 40 frases más de la ciudad (`contenido/guion/frases.json`):** +40 frases en español de Colombia para todo público (**+10 `timbre`**, **+8 `peaton`**, **+6 `semaforo`**, **+6 `truco`**, **+10 `ambiente`** en los 5 lugares reales de `99s-ciudad-responde.js`; máx. 59 caracteres). Total: **88 frases**.
