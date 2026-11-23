@@ -279,9 +279,9 @@ module.exports.v7 = async function (p, ok) {
     out.dicho = Dichos.dicho && Dichos.dicho.t; out.frases = Dichos.frases().length;
     const ctx = { lugar: 'estacion', min: 420, lluvia: false, noche: false, veh: 'bike' }, f = Dichos.elegir('ambiente', ctx); out.especifica = !!(f && f.lugar === 'estacion');
     /* 2) la bici se inclina en las curvas del 3D */
-    if (Mundo3D.ok()) { Mundo3D.poner('tercera'); R.p.v = R.stats_().max * .9; Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600 }); let m = 0; const t0 = performance.now();
+    if (Mundo3D.ok()) { const bloqueoOriginal = R.blocked; R.blocked = () => false; /* aislar el ensayo de ladeo: en esta fase el jugador sigue junto al peatón del timbre y puede chocar */ Mundo3D.poner('tercera'); R.p.v = R.stats_().max * .9; Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600 }); let m = 0; const t0 = performance.now();
       while (performance.now() - t0 < 1400) { const a = R.p.a + 1.4; Input.joy.x = 200 + Math.cos(a) * 46; Input.joy.y = 600 + Math.sin(a) * 46; await espera(50); m = Math.max(m, Math.abs(Mundo3D.lad || 0)); }
-      Input.joy.on = false; out.ladeo = +m.toFixed(2); Mundo3D.poner(null); }
+      Input.joy.on = false; R.blocked = bloqueoOriginal; out.ladeo = +m.toFixed(2); Mundo3D.poner(null); }
     /* 3) 🚀 llegar ya en el mapa grande */
     const L = LM.cerro, x = (L.x + L.w / 2) * TS, y = (L.y + L.h) * TS + 20; R.way = { x, y, label: 'Cerro Nutibara', col: '#ff2fb3' }; JE.mapView.show(R); await espera(400);
     const B = JE.mapView.btns.find(b => b.y === View.h - 140); if (B) B.fn(); await espera(200); out.llegar = { boton: !!B, llego: Math.hypot(R.p.x - x, R.p.y - y) < 2 };
