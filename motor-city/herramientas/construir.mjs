@@ -7,6 +7,7 @@
    Uso: node herramientas/construir.mjs [--ciudad medellin] [--sin-sandbox]
    ===================================================================== */
 import fs from 'node:fs'; import path from 'node:path'; import { execSync } from 'node:child_process'; import crypto from 'node:crypto'; import zlib from 'node:zlib'; import { fileURLToPath } from 'node:url';
+import { preparar as prepararR6b, validar as validarR6b } from './r6b-compacto.mjs';
 /* 4.5 · sin conexión en la página del motor: cada HTML registra sw.js (raíz del repositorio) solo si se sirve por https.
    En un archivo abierto a mano, en la APK o en otra página sin sw.js no pasa nada. rel: ruta desde el HTML hasta la raíz. */
 const conSW = (html, rel) => html.includes('id="mcSW"') ? html : html.replace(/<\/body>(?![\s\S]*<\/body>)/, `<script id="mcSW">if('serviceWorker'in navigator&&location.protocol==='https:'&&/\\/motorcity\\//.test(location.pathname))addEventListener('load',()=>navigator.serviceWorker.register(new URL('${rel}sw.js',location.href)).catch(()=>{}));</script>\n</body>`);
@@ -52,6 +53,9 @@ const datosBiomas = {};
   if (fs.existsSync(mb)) for (const [id, t] of Object.entries(JSON.parse(fs.readFileSync(mb, 'utf8')).texturas || {})) {
     const f = path.join(RAIZ, 'arte/arcade/biomas', path.basename(t.ruta || id + '.webp')); if (fs.existsSync(f)) datosBiomas[id] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64'); } }
 /* 5.2: las frases de la ciudad viva (MC.CiudadViva), desde datos/frases/ciudad.json */
+/* 5.3 · los sitios icónicos de Medellín (fichas de Gemini G5-07 en docs/sitios/sitios.json), compactos: id, nombre, categoría,
+   posición del MC4, alto, planta y colores (MC.Sitios los arma en el 3D realista) */
+let datosSitios = []; { const fs2 = path.join(RAIZ, 'docs/sitios/sitios.json'); if (fs.existsSync(fs2)) { const S = JSON.parse(fs.readFileSync(fs2, 'utf8')); datosSitios = (S.sitios || []).filter(s => s.mc4 && s.dimensiones).map(s => ({ id: s.id, n: s.nombre, cat: s.categoria, x: s.mc4.x, y: s.mc4.y, alto: s.dimensiones.altura_m, planta: s.dimensiones.planta_m, col: s.colores_hex })); } }
 let datosFrases = null; { const fj = path.join(RAIZ, 'datos/frases/ciudad.json'); if (fs.existsSync(fj)) { const F = JSON.parse(fs.readFileSync(fj, 'utf8')); datosFrases = { familia: F.familia || [], adulto: F.adulto || [] }; } }
 const motor = `/* ${VER.nombre} ${VER.version} · ${VER.fecha} · https://github.com/${VER.fuente_de_verdad}
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
@@ -61,6 +65,7 @@ const motor = `/* ${VER.nombre} ${VER.version} · ${VER.fecha} · https://github
 ${threeJS}const MC_FACHADAS_R1 = ${JSON.stringify(datosFachadas)};
 const MC_BIOMAS_V4 = ${JSON.stringify(datosBiomas)};
 const MC_FRASES = ${JSON.stringify(datosFrases)};
+const MC_SITIOS = ${JSON.stringify(datosSitios)};
 ${cuerpo}
 MC.archivos = ${JSON.stringify(lista)};
 root.MC = MC;
@@ -183,7 +188,19 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   let mundosHTML = '';
   if (J.mundos) { const C = {}; for (const m of J.mundos) { const f = path.join(RAIZ, 'datos', m, 'mundo.mc4'); if (!fs.existsSync(f)) { console.warn('⚠ ' + id + ': falta datos/' + m + '/mundo.mc4'); continue; } C[m] = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', m + '.json'), 'utf8')); mundosHTML += J.mundos_capas ? mundoPorCapas(m, fs.readFileSync(f), { rasters: J.mundos_rasters === true }) : `<script type="text/plain" id="mc4-${m}">${fs.readFileSync(f).toString('base64')}</script>\n`;
     /* 4.5 · el PVS horneado del mundo (herramientas/pvs.mjs), si existe y el juego no lo apaga ("pvs": false) o lo limita ("pvs": ["nueva_york"]) */
-    const fp = path.join(RAIZ, 'datos', m, 'pvs.bin'); if (J.pvs !== false && (!Array.isArray(J.pvs) || J.pvs.includes(m)) && fs.existsSync(fp)) mundosHTML += `<script type="text/plain" id="pvs-${m}">${fs.readFileSync(fp).toString('base64')}</script>\n`; }
+    const fp = path.join(RAIZ, 'datos', m, 'pvs.bin'); if (J.pvs !== false && (!Array.isArray(J.pvs) || J.pvs.includes(m)) && fs.existsSync(fp)) mundosHTML += `<script type="text/plain" id="pvs-${m}">${fs.readFileSync(fp).toString('base64')}</script>\n`;
+    /* R6-b opt-in: cajas lejanas por sector, comprimidas, solo para el HTML
+       offline de Turno Cero. No duplicar los 101 MB de los 3 niveles de LOD. */
+    if (Array.isArray(J.r6b_ciudades) && J.r6b_ciudades.includes(m)) {
+      const p = prepararR6b(fs.readFileSync(f), { celda: 80, maxBytes: 2_500_000 });
+      if (p.excluido) console.warn('⚠ R6-b: '+m+' excluido por presupuesto '+p.stats.bytes+' B');
+      else {
+        const datos = validarR6b(p);
+        mundosHTML += '<script type="text/plain" id="mc-r6b-' + m + '">' + JSON.stringify(p).replaceAll('<', '\\u003c') + '</script>\n';
+        console.log('✓ R6-b '+m+': '+datos.sectores+' sectores, '+datos.regiones+' regiones, '+datos.cajas+' cajas, '+datos.bytes+' B comprimidos');
+      }
+    }
+  }
     J._ciudades = C; }
   let mundoJ; const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')); mundoJ = J.mundos ? `var MC_CIUDADES = ${JSON.stringify(J._ciudades)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n` : `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
   /* arte en sprites: "arte": ["gemini"] en juego.json compila arte/<id>/ (atlas WebP + manifiesto + íconos + hitos + paletas) dentro del HTML */

@@ -6,6 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 
 const SHA = x => crypto.createHash('sha256').update(x).digest('hex');
 const limite = (x,a,b) => Math.max(a,Math.min(b,x));
@@ -269,6 +270,7 @@ function exportarHuellas(c,salida,hashOrigen){
   return n;
 }
 
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 if(process.argv.includes('--self-test'))selfTest();
 else if(process.argv.includes('--exportar-huellas')){
   const entrada=arg('--entrada'),salida=arg('--exportar-huellas');
@@ -286,3 +288,6 @@ else{
   const m=escribir(construir(c),salida,SHA(bytes),niveles,celdaLejana);
   console.log(JSON.stringify({ciudad:c.meta.ciudad,sectores:Object.keys(m.sectores).length,triangulos:m.triangulos,bytes:m.bytes_compresos,bytes_por_lod:m.bytes_por_lod,celda_lod2_m:celdaLejana,elapsed_ms:Math.round(performance.now()-t),rss_mb:Math.round(process.memoryUsage().rss/1048576)},null,2));
 }
+
+}
+export { mc4, construir, edificiosDe, esquinas, poligono, altura };

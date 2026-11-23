@@ -148,3 +148,18 @@ Está en `TAREAS-IA.md` § «4.0». En resumen:
 - **🏍️ Las motos y las bicis se inclinan** en las curvas, con el piloto.
 - **🪟 De noche**, con GPU media o alta, detrás de cada ventana encendida se ve un cuarto con su lámpara.
 - **📏 Medir el rendimiento:** ⏸ Menú → 📏, o `?medir` en la dirección. Guía en `docs/MEDIR-EN-EL-CELULAR.md`.
+
+## 5.3 · Sitios icónicos, vuelcos, puentear, química y guía de cine
+- **🏛️ Los sitios icónicos de Medellín en el 3D realista:**
+  - el Coltejer, la Candelaria, la Catedral y el Palacio de la Cultura;
+  - el Planetario, Explora y el Orquideorama;
+  - la Biblioteca España y la Biblioteca EPM;
+  - el estadio, el Parque de las Luces y la Plaza Botero;
+  - el Pueblito Paisa, y más.
+
+  Se ven al pasar y de noche se encienden.
+- **🚗 Vuelcos:** una curva muy cerrada a alta velocidad o un golpe fuerte de costado vuelca el carro. Se apoya en el costado o en el techo, se endereza solo a los 2,7 s y queda abollado.
+- **🔌 Puentear:** después de robar un carro, toca «Puentear» (opcional) y une los cables: si lo logras, nadie reporta el robo.
+- **🧪 Química del mundo:** la lluvia apaga el carro en llamas, los charcos salpican y el viento lleva el humo.
+- **🍃 Modo cine:** sin flecha, las hojas y las palomas vuelan hacia el destino.
+

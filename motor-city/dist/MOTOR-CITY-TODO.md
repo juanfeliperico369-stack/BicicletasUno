@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.2.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.3.0 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -83,15 +83,15 @@ Lee este documento, CONTEXTO-RELEVO.md, TAREAS-IA.md y coord/. Al terminar tu tu
 
 ---
 
-## 0. Entregables de la 5.2.0 «Ciudad viva» (HTML, APK y enlaces)
+## 0. Entregables de la 5.3.0 «Todo lo nuevo, unido» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 5.2.0** (18+), el juego de prueba con todo: 🗣️ ciudad viva (la gente reacciona, habla y llama; 🚑 y 🚒 llegan por la ruta real), 🚦 retos desde cualquier semáforo, 🏍️ motos que se inclinan, 🪟 cuartos falsos de noche, 📏 medir el rendimiento, 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.2.0/MotorCity-getaway.apk> |
-| Juega EnCicla 3.4.0 (unión de las 3.3.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
-| El Metro 3.5.0 (unión de las 3.4.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 33) |
+| **Turno Cero 5.3.0** (18+), el juego de prueba con todo: 🏛️ 30 sitios icónicos en 3D, 🚗 vuelcos, 🔌 puentear, 🧪 química del mundo, 🍃 guía de cine, 🔧 minijuegos, 🗣️ ciudad viva (la gente reacciona, habla y llama; 🚑 y 🚒 llegan por la ruta real), 🚦 retos desde cualquier semáforo, 🏍️ motos que se inclinan, 🪟 cuartos falsos de noche, 📏 medir el rendimiento, 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.3.0/MotorCity-getaway.apk> |
+| Juega EnCicla **3.7.0 en `main`** (unión de las dos 3.6 sobre la 3.5.0); la página sigue en la 3.4.0 hasta que el benchmark de `publicar.yml` cumpla o el autor decida | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
+| El Metro 3.8.0 (unión de las 3.7 de Claude «Épocas» y de Antigravity, más CX‑36 de Codex) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 36) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
 Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
@@ -898,6 +898,96 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Probado:** la batería completa con `ciudad-viva.mjs` (45), `retos-semaforo.mjs`, `medir.mjs` y `dinamica.mjs` (25), más la QA de siempre y `prueba.mjs --navegador`.
 - **Esperan al autor:** la licencia del catastro (R3), el MDT LiDAR CC BY‑SA (R5) y **medir en su celular con 📏** (copiar el resultado y pegarlo en el chat).
 - **Sigue (Claude):** fase 4 (lenguaje de misiones, repeticiones exactas y el bot que gana cada misión); y lo que las otras IA no alcancen, en el orden de «★ Estado 5.2» de los pedidos.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑07 Fichas de los 30 sitios icónicos de Medellín (para C5‑02)
+- **Pedido:** `G5-07` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-07-sitios` sobre `origin/main` `df80193`).
+- **Hecho:**
+  - Catálogo completo en `docs/sitios/`: manifiesto legible por máquina `docs/sitios/sitios.json` + 30 fichas detalladas `docs/sitios/<id>.md` + índice y guía de integración para Codex `docs/sitios/README.md`.
+  - Cobertura de los 20 sitios explícitos del pedido (`coltejer`, `candelaria`, `palacio_cultura`, `plaza_botero`, `edificio_epm`, `alpujarra`, `pueblito_paisa`, `parque_explora`, `orquideorama`, `planetario`, `parque_deseos`, `biblioteca_espana`, `estadio_atanasio`, `catedral_metropolitana`, `museo_antioquia`, `plaza_mayor`, `teatro_pablo_tobon`, `ruta_n`, `parque_lleras`, `plaza_libertad`) + 10 hitos clave reales presentes en `datos/medellin/mundo.mc4` (`teatro_metropolitano`, `pies_descalzos`, `parque_luces`, `edificio_vasquez`, `edificio_carre`, `biblioteca_epm`, `estacion_ferrocarril`, `palacio_nacional`, `casa_memoria`, `mamm`).
+  - Cada ficha trae coordenadas WGS84, proyección verificada en metros de `mundo.mc4` (`x, y, cota_m`), enlace a `hito_mc4`, `osm_id` verificado o consulta Overpass explícita, dimensiones, paleta HEX, 4–5 rasgos reconocibles, receta de modelado y presupuestos LOD0/LOD1 (**23 540 / 6 740 tris totales**).
+  - 30 imágenes de referencia WebP `768×512` sin texto ni logos en `docs/sitios/img/<id>.webp` (`401,6 KB` total): `edificio_epm.webp` generada con **Nano Banana** y las otras 29 como maquetas 3D limpias de estudio (cuota de `gemini-3.1-flash-image` en enfriamiento de ~5 h; desbloquean `C5-02` hoy y pueden refrescarse con Nano Banana luego sin cambiar rutas).
+  - Validador `pruebas/sitios-medellin.mjs` (**671 ok, 0 fallos**) y reporte `reportes/2026-11-23-gemini-g5-07-sitios.md`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** **`+0 KB`**.
+- **Pruebas:** `construir.mjs` (`getaway.html 28734 KB`), `sitios-medellin.mjs` (`671/671`), `dinamica.mjs` (`25/25`), `historieta.mjs` (`gpu: true`, `3,4 ms`), `paralaje-biomas.mjs` (`18/18`), `humano.mjs` (`metro 35 s`, `carrera 431 m`), `prueba.mjs --navegador` (`158/158`, `112,2 s`).
+- **Sigue (Gemini):** `G5-04` (Minijuegos táctiles cortos en `juegos/getaway/64-minijuegos.js`), seguido de `G5-01-b` (Historieta noche/1P/lluvia) y `G5-05` (Guía sin flecha en Modo cine).
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑01‑b Historieta GPU (noche, lluvia y primera persona)
+- **Pedido:** `G5-01-b` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-01-b-historieta` sobre `origin/main` `df80193`).
+- **Hecho:**
+  - Pulido 100 % en GPU en `js/47-historieta.js` (sin volver a CPU en 3D realista, sin tocar `js/45-tres.js` ni subir `op.presupuesto`):
+    1. `r.getDrawingBufferSize(sz)` para `P.rt`, eliminando las franjas negras en L del borde derecho/inferior en `noche` (`pctBordeDerNegro: 0 %`).
+    2. Bandas perceptuales (`bandas: 5`, potencia `0.55`, ganancia acotada `[0.55, 1.45]`): la noche deja de lavarse a tono diurno (`lumMedia 101,0 → 34,3`) y la lluvia gana contraste (`70,8`).
+    3. Zona muerta de cuantización (`8.5e-5`) + `umbralPrimera: [0.012, 0.034]` activos solo en `E.camara.perfil === 'primera'`, eliminando las rayas cebra sobre el asfalto en primera persona mientras mantiene nítido el contorno negro en vista Historieta 55° (`umbralGeo: [0.0032, 0.0115]`).
+  - `pruebas/historieta.mjs` ampliada con aserciones de noche, lluvia y primera persona; reporte `reportes/2026-11-23-gemini-g5-01-b-historieta.md` y 8 capturas WebP antes/después en `reportes/img/gemini-g5-01-b/` (`269,1 KB`).
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** **`+1.0 KB`** (`28 734 → 28 735 KB`).
+- **Pruebas:** `construir.mjs`, `historieta.mjs` (`dia 3,7 ms`, `noche 2,3 ms`, `lluvia 2,8 ms`, `primera 6,0 ms`), `dinamica.mjs` (`25/25`), `humano.mjs` (`35 s` / `430 m`), `prueba.mjs --navegador` (`158/158`, `114,0 s`).
+- **Sigue (Gemini):** `G5-05` (Guía sin flecha en Modo cine) y `G5-08` (Química del mundo).
+- **Instrucción para la IA que siga:** deja siempre tu entrada aquí en `CONTEXTO-RELEVO.md` § 8, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑05 Guía sin flecha en 🎬 Modo cine (Ghost of Tsushima)
+- **Pedido:** `G5-05` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-05-guia-cine`).
+- **Hecho:**
+  - Módulo 100 % aditivo `juegos/getaway/65-guia-cine.js` (`G.GuiaCine`): cuando `G.cine` está encendido (sin minimapa ni flecha) y hay `G.objetivo || G.destinoLibre`, emite hojas reales en `MC.Vida.emitir('hoja')`, hebras curvas de brisa con hojas doradas de guayacán y verdes sobre `EXTRAS.capas`, y bandadas guía de 3 palomas urbanas en `MC.Vida.aves` (`guiaCine: true`) orientadas hacia el destino o suavizadas hacia la próxima esquina de `G.Cine`.
+  - Funciona en carro, moto, bici y a pie, y se ve tanto en 3D realista (`VistaTres`, donde `GuiaCine` avanza y dibuja sus palomas guía sin duplicar en 2D) como en 2D (`Vista2D`). Al apagar 🎬 Modo cine deja de emitir y retira las bandadas guía.
+  - Prueba automatizada `pruebas/guia-cine.mjs` (basada en `requestAnimationFrame`), reporte `reportes/2026-11-23-gemini-g5-05-guia-cine.md` y 3 capturas antes/después WebP (`114.8 KB`) en `reportes/img/gemini-g5-05/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+12.1 KB` (`+12 364 bytes`).
+- **Pruebas:** `construir.mjs` ✓ · `guia-cine.mjs` ✓ (2/2 corridas, `errRumboPaloma 0.001 rad`, `avanzoPaloma 5.37 m`, `miniOculto true`, `pieActivo true`, `apagado true`, `red 0`) · `dinamica.mjs` ✓ (`25/25`) · `historieta.mjs` ✓ (`gpu true`, `hudSolapa 0`) · `humano.mjs` ✓ (`metro 35 s`, `carrera 432 m` a `31.5 m/s`) · `prueba.mjs --navegador` ✓ (`158/158`, `112.1 s`).
+- **Sigue (Gemini):** `G5-08` (Química del mundo en `ia/gemini/g5-08-quimica`), luego `G5-09`, `G5-10`, `G5-11` y `G5-13`.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑08 Química del mundo (Zelda: Breath of the Wild)
+- **Pedido:** `G5-08` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-08-quimica`).
+- **Hecho:**
+  - Módulo aditivo del motor `js/89-quimica-mundo.js` (`MC.QuimicaMundo`): envuelve `MC.Efectos.actualizar` y conecta `MC.Quim`/`MC.C`/`E.clima` con `MC.Efectos` y `MC.Vida` (lluvia apaga `Efectos.fuegos` sin explosión liberando vapor H₂O con `Quim.masaMolar('H2O')` y `C.Lv`; charcos deterministas en vías/plazas/andenes salpican en 2D y 3D proporcional a la velocidad; viento real desvía columnas de humo según altura `z`, más polvo y hojas).
+  - Puente aditivo `juegos/getaway/69-quimica.js`: al recibir `quimica:apaga` sobre el carro en llamas, limpia `G.ardiendo = false` y muestra aviso sin tocar `20-juego.js`.
+  - Arreglo quirúrgico en `js/46-vistas.js:81` (2 líneas): suma `M.cota(x, y)` al proyector `proy` de `MC.Efectos.dibujar` en 3D (convención 5.2), corrigiendo que todos los efectos de `MC.Efectos` quedaban 1.500 m bajo tierra en Medellín.
+  - Prueba automatizada `pruebas/quimica-mundo.mjs` (Node + Chromium `412×860`), reporte `reportes/2026-11-23-gemini-g5-08-quimica.md` y captura WebP (`35.2 KB`) en `reportes/img/gemini-g5-08/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+8.8 KB` (`+9 062 bytes`).
+- **Pruebas:** `construir.mjs` ✓ · `quimica-mundo.mjs` ✓ (`7/7`) · `dinamica.mjs` ✓ (`25/25`) · `historieta.mjs` ✓ (`gpu true`, `5 ms`, `hudSolapa 0`) · `humano.mjs` ✓ (`metro 35 s`, `carrera 431 m` a `31.5 m/s`) · `prueba.mjs --navegador` ✓ (`158/158`, `112.9 s`).
+- **Sigue (Gemini):** `G5-09` (subtramas RPG y crónicas en `juegos/getaway/62-mundo-vivo.js`), `G5-10`, `G5-11` y `G5-13`.
+- **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑04 Minijuegos táctiles cortos (Chinatown Wars)
+- **Pedido:** `G5-04` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-04-minijuegos` sobre `origin/main` `df80193`).
+- **Hecho:**
+  - Módulo 100 % aditivo `juegos/getaway/64-minijuegos.js` (`G.Minijuegos`) sobre `G.ui`, sin editar `60-modos.js`, `37-dinamica.js`, `45-tres.js` ni `25-ia.js`.
+  - 4 minijuegos de 15–18 s con separación limpia por tono: `puentear` (cables por color, 18+) y `chapa` (3 pines con resorte, 18+) para Turno Cero; `llanta` (bomba PSI 50–62, familia/bici) y `cadena` (3 guías del piñón, familia/bici).
+  - Accesible desde `🎮 Modos → 🔧 Minijuegos táctiles` y `G.Minijuegos.abrir(id)`, con `✕ Salir` (`86×48 px`), `Escape`, teclado de respaldo, `touch-action: none`, `pointercancel` seguro, `MC.UI.verificar === []` y sin bloquear jamás `G.pausa`.
+  - Prueba E2E `pruebas/minijuegos.mjs`, reporte `reportes/2026-11-23-gemini-g5-04-minijuegos.md` y 5 capturas WebP en `reportes/img/gemini-g5-04/` (`113,8 KB`).
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** **`+27.8 KB`** (`28 734 → 28 762 KB`).
+- **Pruebas:** `construir.mjs`, `minijuegos.mjs` (`4/4` táctiles en `412×860` y `860×412`), `dinamica.mjs` (`25/25`), `historieta.mjs` (`gpu: true`, `5,2 ms`), `humano.mjs` (`35 s` / `430 m`), `prueba.mjs --navegador` (`158/158`, `112,9 s`).
+- **Sigue (Gemini):** `G5-01-b` (Historieta noche, primera persona y lluvia), `G5-05` (Guía sin flecha en Modo cine) y `G5-08` (Química del mundo).
+- **Instrucción para la IA que siga:** deja siempre tu entrada aquí en `CONTEXTO-RELEVO.md` § 8, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+
+
+### ChatGPT · 23-nov-2026 · Codex R6-b: Worker Blob y LOD2 en el juego
+- **Leído:** pedidos 5.2, relevo y CI verde de main; la generación de R6 ya existía, pero no estaba conectada al render. Los datos de R3 y R5 continúan bloqueados por licencia.
+- **Implementado:** `herramientas/r6b-compacto.mjs` construye cajas LOD2 por regiones 160 m y sectores 1 km, cuantizadas 12,5 cm y comprimidas por sector; `construir.mjs` las incrusta solo en Turno Cero de Guatapé/Medellín si pesan hasta 2,5 MB por ciudad. `js/45-z-r6b.js` crea Web Worker Blob sin internet, cachea seis sectores y aporta una malla de detalle lejano a VistaTres con fallback.
+- **Pruebas:** `pruebas/r6b-datos.mjs` para los dos MC4 reales y `pruebas/r6b-browser.mjs` para Worker offline + fallback + prueba constructiva de región CPU ×4, p95. Nueva GitHub Actions `r6b-qa.yml` y CI general. Confirmar estado final en PR #25 antes de fusionar.
+- **No modificado:** MC4, fuente geográfica, guardados, R1 cercano, posRender, archivos de otros juegos, ramas de Codex y Gemini.
+- **Limitaciones:** LOD2 agrupa edificios, no es idéntico al catastro; no afirma una subida de FPS sin medirla; CPU ×4 aquí solo mide tiempo de construcción. Requiere capturas visuales y benchmark físico.
+- **Informe:** `reportes/2026-11-23-chatgpt-r6b-worker.md`; siguiente agente debe incorporar resultados finales, registrar nueva entrada §8, ficha y buzón, y no borrar otros trabajos.
+
+### ChatGPT · 23-nov-2026 · Relevo de Codex (C5-01: vuelcos de autos y daño)
+- **Leído:** `docs/PEDIDOS-CHATGPT-5.0.md` «Estado 5.2», `CONTEXTO-RELEVO.md`, `CLAUDE.md`, `docs/PLAN-REALISMO.md` y los módulos de física y render del motor. R1 y las auditorías R3/R4/R5/R6 ya están fusionadas y no se rehacen.
+- **Hecho:** módulo `js/38-vuelcos.js`, que prolonga `MC.Dinamica` con vuelcos a partir de aceleración lateral o choque de costado; ralentiza y autoendereza en 2,65 s, lanza eventos `vuelco` y `enderezado`; `js/45-gl.js` inclina el modelo GLB del coche; Turno Cero aplica daño persistente de paneles laterales mediante su sistema existente.
+- **Pruebas:** nuevo `pruebas/vuelcos.mjs` y workflow `.github/workflows/c5-vuelcos-qa.yml`, en revisión CI. No afirmar verde hasta verificarla.
+- **Sin alterar:** mundos MC4, `js/45-tres.js`, datos con licencia pendiente, guardados, R6 precompiler, trabajos de Gemini y motores hermanos. Manejo Arcade y vehículos IA quedan fuera de la mecánica.
+- **Límites:** simulación audiovisual 2D con vuelco visual; no modelo rígido 6DoF. Falta verificar visual 3D y memoria/FPS físico.
+- **Informe y coordinación:** `reportes/2026-11-23-chatgpt-c5-vuelcos.md` y buzón nuevo. **Siguiente Codex/ChatGPT:** R6-b, cargar sectores precocinados sin agregar paquetes pesados al HTML; revisar R4-b solo con fuente autorizada. Registrar siempre nuevo relevo §8 y ficha/buzón.
+
+### Claude · 23‑nov‑2026 · motor 5.3.0 «Todo lo nuevo, unido»
+- **Pedido del autor:** «Retoma, continúa y termina; integra todo lo nuevo, compréndelo y mejóralo; y dame el prompt de relevo para la otra IA».
+- **Unido y mejorado:** las 7 ramas del motor (G5‑07, G5‑01‑b, G5‑05, G5‑08, G5‑04, C5‑01 y R6‑b). Claude:
+  - corrigió los vuelcos (enterrados boca arriba, y manejables volcados);
+  - apagó R6‑b (`?r6b`) con la medición que lo justifica;
+  - metió el minijuego de puentear en el robo de carros.
+- **Nuevo:** `MC.Sitios`, los 30 sitios icónicos en el 3D realista con las fichas de Gemini. El Coltejer y el Planetario faltaban.
+- **Hermanos:**
+  - **EnCicla 3.7.0** en `main`, con `tests/run.js` en verde. La página no se actualiza por la compuerta de rendimiento de GPT‑6, que no se tocó: decide el autor.
+  - **El Metro 3.8.0** publicado con la APK 36.
+- **Probado:** la batería completa del motor (34 pruebas, con `prueba.mjs --navegador`); EnCicla `tests/run.js` (170); El Metro, 100 partidas con 0 errores, más GA‑36 y las cuatro de GPT‑6 Eón.
+- **Esperan al autor:**
+  - la licencia del catastro y el LiDAR CC BY‑SA;
+  - medir con 📏 en el celular;
+  - decidir la compuerta de rendimiento de EnCicla.
+- **El prompt de relevo** está en `docs/PROMPT-RELEVO.md`.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
 # MOTOR CITY · Documento único
@@ -4454,6 +4544,42 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 23-nov-2026 · 5.3.0 «Todo lo nuevo, unido» · las ramas de Gemini y ChatGPT, comprendidas y mejoradas
+- **El autor:** «Retoma, continúa y termina; integra todo lo nuevo, compréndelo y mejóralo; y dame el prompt de relevo para la otra IA».
+- **Unido de Gemini / Antigravity (5 ramas):**
+  - **G5‑07:** fichas de los 30 sitios icónicos de Medellín (`docs/sitios/`, con `sitios.json`, receta de modelado, colores y referencia propia);
+  - **G5‑01‑b:** Historieta de noche, con lluvia y en primera persona (bandas perceptuales, sin rayas en la calzada);
+  - **G5‑05:** 🎬 guía sin flecha en el modo cine (hojas y palomas hacia el destino);
+  - **G5‑08:** química del mundo (la lluvia apaga el fuego, los charcos salpican, el viento lleva el humo). Además, la proyección de `MC.Efectos` suma la cota en 3D, el mismo arreglo de la 5.2 para los globos: en Medellín los choques y el humo tampoco se veían;
+  - **G5‑04:** minijuegos táctiles (puentear, chapa, llanta y cadena).
+- **Unido de ChatGPT / Codex (2 ramas):**
+  - **C5‑01:** vuelcos con auto‑enderezado y abolladuras de costado;
+  - **R6‑b:** Worker con cajas LOD2 por sector.
+- **Mejorado por Claude al unir:**
+  - **Vuelcos:**
+    - el modelo giraba alrededor de la línea del piso y, boca arriba, quedaba enterrado; ahora se apoya en el costado o en el techo;
+    - volcado no se acelera ni se gira.
+  - **R6‑b, apagado por defecto** (se prende con `?r6b`):
+    - no mejoró nada medible, y al llegar cada sector borraba regiones ya armadas: tras 30 s había 65 regiones y 81 pendientes, contra 128 y 0 sin él;
+    - ya no borra lo armado;
+    - solo se incrusta Guatapé, así el HTML no carga 2,3 MB que no se usan.
+  - **El minijuego entra al juego:** tras robar un carro aparece por 6 s «🔌 Puentear», opcional y sin bloquear nada; si se gana, nadie reporta el robo y la búsqueda baja (de 15 a 0 en la prueba).
+- **Nuevo de Claude · los sitios icónicos en el 3D realista** (`js/45-y-sitios.js`, primera versión de C5‑02 con las fichas de Gemini). Cada uno de los 28 sitios con forma tiene la suya:
+  - la aguja del Coltejer con sus ojos;
+  - las torres y la nave de la Candelaria y de la Catedral, con el cimborrio de la Catedral;
+  - las bandas del Palacio de la Cultura;
+  - la cúpula del Planetario y las rocas de la Biblioteca España;
+  - el óvalo del Atanasio con sus torres de luz;
+  - los cubos de Explora y la pirámide invertida de la Biblioteca EPM;
+  - los postes del Parque de las Luces y las esculturas de la Plaza Botero;
+  - las flores del Orquideorama, el Pueblito Paisa y el Monumento a la Raza.
+
+  De noche, sus ventanas brillan. Los sitios que son un edificio reemplazan solo al genérico que cae dentro de su planta; las plazas solo suman. Son 6.698 triángulos en total y no pesan nada (no hay modelos ni texturas). **El Coltejer y el Planetario no aparecían en el 3D**, porque la capa de hitos solo se dibujaba en la panorámica.
+- **Juegos hermanos:**
+  - **EnCicla 3.7.0:** la 3.5.0 de la otra sesión de Claude más las dos 3.6, de Antigravity y de GPT‑6. `tests/run.js` está en verde (170). La página sigue en la 3.4.0: el `publicar.yml` de GPT‑6 exige un benchmark (p95 < 50 ms con la CPU 4×) que todavía da 131 y 77 ms. No se cambió esa compuerta; decide el autor.
+  - **El Metro 3.8.0:** la 3.6/3.7 «Épocas» de la otra sesión de Claude más la 3.7 de Antigravity y CX‑36 de Codex. 100 partidas con 0 errores; publicado con la APK 36.
+- **Pruebas nuevas en la QA:** `sitios-3d`, `sitios-medellin`, `vuelcos`, `puentear-robo`, `minijuegos`, `guia-cine`, `quimica-mundo`, `r6b-datos` y `r6b-browser`.
 
 ### 23-nov-2026 · 5.2.0 «Ciudad viva» · fase 2 del plan 5.0 y lo de las otras IA, retomado
 - **El autor:** «Haz tu parte; en algún momento ya dejarán de proveer, así que retómalos». Claude hizo la fase 2 y tomó los pedidos de Gemini y ChatGPT que más se notan en el juego.

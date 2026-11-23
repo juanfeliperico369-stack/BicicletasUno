@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "5.2.0 entregada «Ciudad viva»: fase 2 (MC.CiudadViva y despacho en Turno Cero) y lo retomado de las otras IA (G5-03, G5-06, G5-12, C5-01 inclinación, R8 cuartos falsos). Sigue: fase 4 (lenguaje de misiones y repeticiones) y lo que las otras IA no alcancen.",
+  "fase_actual": "5.3.0 entregada «Todo lo nuevo, unido»: 7 ramas del motor unidas y mejoradas; MC.Sitios (30 sitios en 3D); EnCicla 3.7.0 (main) y El Metro 3.8.0 (publicado). Sigue: fase 4 (lenguaje de misiones y repeticiones) y lo que las otras IA no alcancen.",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-23T10:00:00Z",
+  "ultima_actualizacion_utc": "2026-11-23T17:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -32,7 +32,10 @@
     "juegos/getaway/66-ciudad-viva.js",
     "juegos/getaway/67-retos-semaforo.js",
     "juegos/getaway/68-medir.js",
-    "js/45-tres.js (R8)"
+    "js/45-tres.js (R8)",
+    "js/45-y-sitios.js",
+    "pruebas/sitios-3d.mjs",
+    "pruebas/puentear-robo.mjs"
   ],
   "no_toco": [
     "src/ de BicicletasUno, MetroZero y RunRunZero (zonas de Antigravity y Codex)",

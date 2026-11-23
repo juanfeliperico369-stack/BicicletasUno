@@ -176,6 +176,7 @@ Cuerpo.prototype._real = function (dt, E, suelo, loma) {
   const turbo = !!E.turbo, vlim = this.vmax() * suelo * (turbo ? 1.25 : 1);
   if (E.asistencia === true) this._asistencia(E, E.giro || 0, E.acel || 0, dt);
   const U = Dinamica.mando(this, D, H, E, mu * H.mu * Dinamica.agarreJuego, vlim); if (this._asis && E.asistencia === true && Math.abs(U.delta) < .2) U.delta = clamp(U.delta + this._asis * .12, -H.dirMax, H.dirMax);
+  if (this._vuelco && this._vuelco.t >= 0) { U.thr = 0; U.rev = 0; U.delta = 0; U.mano = false; U.freno = .35; }   /* 5.3: volcado no se maneja (las ruedas no tocan el piso); se arrastra hasta parar */
   D.carga = Math.max(U.thr, U.rev); D.U = U; D.A = null;
   this._vPedida = U.thr > 0 ? vlim * U.thr : U.rev > 0 ? -8 * U.rev : 0;
   /* las lomas pesan, pero el carro sube (como en los juegos de mundo abierto: la pendiente cuenta al 60 %) */

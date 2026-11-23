@@ -78,7 +78,9 @@ class Vistas {
         else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
         /* 4.5: los efectos (choques, derrapes, explosiones, restos) encima de la 3D, con la misma proyección */
         /* 4.8: también con el respaldo por software (Raster.aPantalla) */
-        const proy = this.usaRaster() ? (this.raster && this.raster._P ? (x, y, z) => this.raster.aPantalla(x, y, z, w, h) : null) : (this.gl && this.gl.mvp ? (x, y, z) => this.gl.aPantalla(x, y, z, w, h) : null);
+        /* 5.2 (G5-08): Efectos usa z sobre el suelo (igual que Vistas.aPantalla); sumar M.cota(x, y) en 3D */
+        const cotaEf = this.mundo && typeof this.mundo.cota === 'function' ? (x, y) => this.mundo.cota(x, y) : () => 0;
+        const proy = this.usaRaster() ? (this.raster && this.raster._P ? (x, y, z = 0) => this.raster.aPantalla(x, y, z + cotaEf(x, y), w, h) : null) : (this.gl && this.gl.mvp ? (x, y, z = 0) => this.gl.aPantalla(x, y, z + cotaEf(x, y), w, h) : null);
         if (MC.Efectos && proy) { try { MC.Efectos.dibujar(dst, proy, E); } catch (e) { MC.falla('efectos', e); } }
         this._clima2D(dst, w, h, E, true);
       }

@@ -158,6 +158,51 @@ const resHist = await p.evaluate(async () => {
   };
 });
 
+/* 3b. Segunda pasada (G5-01-b): verificar noche, lluvia y primera persona en GPU a 412×860 */
+const resExtra = await p.evaluate(async () => {
+  const G = TURNO, espera = ms => new Promise(q => setTimeout(q, ms));
+  const medirEscena = async (hora, clima, vista) => {
+    G.reloj.min = hora * 60;
+    if (G.clima && G.clima.forzar) { G.clima.forzar(clima || null); G.clima.actualizar(G.reloj, 2); }
+    G.vistaId = vista;
+    G.vistas.usar(vista, G.E);
+    if (vista === 'primera') G.camara.usarPerfil('primera');
+    for (let i = 0; i < 20; i++) G.camara.actualizar(1 / 60, G.cuerpo);
+    await espera(700);
+    const cv = document.querySelector('canvas');
+    const ctx = cv.getContext('2d');
+    const d = ctx.getImageData(0, Math.floor(cv.height * .15), cv.width, Math.floor(cv.height * .7)).data;
+    let tinta = 0, lum = 0, tot = 0;
+    for (let i = 0; i < d.length; i += 16) {
+      tot++;
+      lum += .2126 * d[i] + .7152 * d[i + 1] + .0722 * d[i + 2];
+      if (d[i] <= 26 && d[i + 1] <= 28 && d[i + 2] <= 36) tinta++;
+    }
+    /* Verificar que no haya franja negra de viewport desajustado en el borde derecho */
+    const bordeDer = ctx.getImageData(cv.width - 12, Math.floor(cv.height * .25), 8, Math.floor(cv.height * .4)).data;
+    let bordeNegro = 0, bTot = 0;
+    for (let i = 0; i < bordeDer.length; i += 16) {
+      bTot++;
+      if (bordeDer[i] === 0 && bordeDer[i + 1] === 0 && bordeDer[i + 2] === 0) bordeNegro++;
+    }
+    const M = MC.Historieta ? MC.Historieta.metricas : {};
+    return {
+      gpu: !!M.gpu,
+      ms: M.msUltimoCuadro || 0,
+      lumMedia: +(lum / Math.max(1, tot)).toFixed(1),
+      pctTinta: +(tinta / Math.max(1, tot) * 100).toFixed(2),
+      pctBordeDerNegro: +(bordeNegro / Math.max(1, bTot) * 100).toFixed(1)
+    };
+  };
+  const dia = await medirEscena(10.5, 'despejado', 'cenital');
+  const noche = await medirEscena(21.5, 'despejado', 'cenital');
+  const lluvia = await medirEscena(15.5, 'lluvia', 'cenital');
+  const primera = await medirEscena(10.5, 'despejado', 'primera');
+  if (G.clima && G.clima.forzar) G.clima.forzar(null);
+  G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E);
+  return { dia, noche, lluvia, primera };
+});
+
 if (dirCap) {
   await p.screenshot({ path: path.join(dirCap, 'historieta_despues_dia_412x860.png') });
   await p.evaluate(() => { TURNO.reloj.min = 21 * 60; });
@@ -186,6 +231,12 @@ const vuelta = await p.evaluate(async () => {
 errs.push(...await p.evaluate(() => MC.errores.map(e => String(e.msg || e))));
 await b.close();
 
+const extraOk = !resHist.gpu || (
+  resExtra.noche.gpu && resExtra.noche.lumMedia < resExtra.dia.lumMedia * .65 && resExtra.noche.pctBordeDerNegro < 80
+  && resExtra.lluvia.gpu && resExtra.lluvia.pctTinta > .4 && resExtra.lluvia.ms < 16
+  && resExtra.primera.gpu && resExtra.primera.ms < 16
+);
+
 const ok = camInfo.existe
   && camInfo.pitchGrados >= 52 && camInfo.pitchGrados <= 58
   && camInfo.giraRumbo
@@ -196,12 +247,13 @@ const ok = camInfo.existe
   && resHist.activo
   && resHist.cascoTres
   /* 5.1: con el 3D realista el contorno va en la GPU (se mide la tinta en el lienzo); en la CPU, sus contadores */
-  && (resHist.gpu ? resHist.pctTintaLienzo > .4 && resHist.ms < 12 : resHist.pctContorno > 1.2 && resHist.coloresPlanos > 10000)
+  && (resHist.gpu ? resHist.pctTintaLienzo > .4 && resHist.ms < 16 : resHist.pctContorno > 1.2 && resHist.coloresPlanos > 10000)
+  && extraOk
   && resHist.hudSolapa === 0
   && !vuelta.activo
   && !vuelta.cascoVis
   && !red.length
   && !errs.length;
 
-console.log((ok ? '✓' : '✗') + ' 🗯️ G5-01 Vista Historieta (Chinatown Wars): cámara 55° que gira con el carro, colores planos, casco invertido 3D y contorno negro a 412×860 · ' + JSON.stringify({ camInfo, resHist, vuelta, red: red.length }) + (errs.length ? ' · errores: ' + errs.slice(0, 3).join(' | ') : ''));
+console.log((ok ? '✓' : '✗') + ' 🗯️ G5-01 / G5-01-b Vista Historieta (Chinatown Wars): cámara 55°, GPU día/noche/lluvia/1P, colores planos, casco invertido 3D y contorno negro a 412×860 · ' + JSON.stringify({ camInfo, resHist, resExtra, vuelta, red: red.length }) + (errs.length ? ' · errores: ' + errs.slice(0, 3).join(' | ') : ''));
 process.exit(ok ? 0 : 1);

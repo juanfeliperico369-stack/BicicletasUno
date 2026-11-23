@@ -230,6 +230,17 @@ function paso(dt, dtVisual) {
     /* daño por golpes: lo que se perdió de velocidad de un cuadro a otro */
     const dv = v0 - Math.abs(C.v);
     if (enCarro && (C.eventos.includes('choque') || dv > 5.5) && dv > 3) { const k = dv * .011 / (VEH(G.veh).salud || 1), antes = G.carro; G.carro = Math.max(0, G.carro - k); if (antes > 0 && G.carro <= 0) carroArde(); abollar(sv0 >= 0 ? 'f' : 'b', dv); G.camara.sacudir(Math.min(.3, dv * .02)); Snd.golpe(dv / 18); if (MC.Vida) MC.Vida.emitir('chispa', C.x + Math.cos(C.a) * 2, C.y + Math.sin(C.a) * 2, 8); if (/persona/.test(C.bloqueo || '')) atropello(null); if (G.carro <= 0) G.ui.aviso('🔥 El carro no da más: bájate 🚪 y consigue otro 🚗', 4000, 'carro'); }
+    /* C5-01: un vuelco lateral de vehículo en manejo real dobla también los
+       paneles de costado ya soportados por el modelo 3D (D.l / D.r). La vida
+       del carro conserva el sistema existente de daño y reparación. */
+    if (enCarro && C.eventos.includes('vuelco')) {
+      const lado = C._vuelco && C._vuelco.signo < 0 ? 'l' : 'r';
+      const fuerza = Math.max(8, Math.min(30, C._vuelcoGolpe || 8));
+      abollar(lado, fuerza);
+      abollar(lado === 'l' ? 'r' : 'l', fuerza * .35);
+      G.carro = Math.max(0, G.carro - Math.min(.18, fuerza * .004) / (VEH(G.veh).salud || 1));
+      G.ui.aviso('🚗 Vuelco: el vehículo se endereza solo', 2600, 'carro');
+    }
     G.km += Math.hypot(C.x - x0, C.y - y0) / 1000;
     /* el mundo vivo alrededor */
     E.trafico = G.trafico.paso(dt, C.x, C.y, G.reloj.seg, G.vistas.calidad);

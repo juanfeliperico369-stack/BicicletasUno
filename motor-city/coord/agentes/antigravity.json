@@ -3,53 +3,58 @@
   "agente": "antigravity",
   "marca": "Gemini",
   "apodo": "hydrogen",
-  "rama": "ia/gemini/g5-02-anillos",
-  "base": "2633fdf",
-  "version_motor": "5.0.0",
-  "actualizado": "2026-11-23T04:20:00Z",
+  "rama": "ia/gemini/g5-08-quimica",
+  "base": "df80193",
+  "version_motor": "5.2.0",
+  "actualizado": "2026-11-23T16:04:00Z",
   "estado": "listo_para_integrar",
-  "pedido_actual": "G5-02",
-  "rol": "Anillos de recoger y entregar en Mandados y EnCicla y controles táctiles de vuelo (🔼 Subir y 🔽 Bajar) para jetpack, avioneta y avión en Motor City 5.0 (G5-02, +9.4 KB al HTML)",
-  "entregas_5_0": {
-    "G5-01": {
-      "rama": "ia/gemini/g5-01-historieta",
-      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/21",
-      "estado": "completado",
-      "peso_html_kb": "+3.1 KB"
+  "pedido_actual": "G5-08",
+  "rol": "Química del mundo (lluvia apaga fuego con vapor H2O, charcos salpican en 2D/3D, viento desvía humo y arreglo cota 3D en Efectos, +8.8 KB al HTML)",
+  "entregas_5_2": {
+    "G5-07": {
+      "rama": "ia/gemini/g5-07-sitios",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/26",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+0.0 KB"
     },
-    "G5-02": {
-      "rama": "ia/gemini/g5-02-anillos",
-      "estado": "completado",
-      "peso_html_kb": "+9.4 KB",
+    "G5-04": {
+      "rama": "ia/gemini/g5-04-minijuegos",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/27",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+27.8 KB"
+    },
+    "G5-01-b": {
+      "rama": "ia/gemini/g5-01-b-historieta",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/28",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+1.0 KB"
+    },
+    "G5-05": {
+      "rama": "ia/gemini/g5-05-guia-cine",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/29",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+12.1 KB"
+    },
+    "G5-08": {
+      "rama": "ia/gemini/g5-08-quimica",
+      "estado": "listo_para_integrar",
+      "peso_html_kb": "+8.8 KB",
       "archivos": [
-        "juegos/getaway/60-modos.js",
-        "juegos/getaway/61-anillos.js",
-        "pruebas/anillos.mjs",
-        "reportes/2026-11-23-gemini-g5-02-anillos.md",
-        "reportes/img/gemini-g5-02/"
+        "js/89-quimica-mundo.js",
+        "js/46-vistas.js",
+        "juegos/getaway/69-quimica.js",
+        "pruebas/quimica-mundo.mjs",
+        "reportes/2026-11-23-gemini-g5-08-quimica.md",
+        "reportes/img/gemini-g5-08/"
       ]
-    },
-    "G5-10_V4": {
-      "rama": "ia/antigravity/v4-paralaje-biomas",
-      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/18",
-      "estado": "completado"
     }
   },
   "zonas_respetadas_no_toco": [
     "js/37-dinamica.js (Claude)",
     "js/45-tres.js (Claude / ChatGPT)",
+    "js/25-ia.js (Claude)",
+    "juegos/getaway/66-ciudad-viva.js, 67-retos-semaforo.js, 68-medir.js (Claude 5.2)",
     "docs/PEDIDOS-CHATGPT-5.0.md (ChatGPT / Codex)"
   ],
-  "siguiente_pedido": "G5-03 (ia/gemini/g5-03-frases)",
-  "entregables_v4": {
-    "plan": "docs/PLAN-V4-PARALAJE-GEMINI.md",
-    "reporte": "reportes/gemini-v4-paralaje-biomas.md",
-    "texturas_biomas": "arte/arcade/biomas/*.webp (18 texturas 1024×256 RGBA WebP lossless con detalle regional colombiano y geológico, costura_mae = 0.0000, 540.58 KB)",
-    "manifiesto": "arte/arcade/biomas/manifiesto.json",
-    "modulo_motor": "js/47-paralaje-biomas.js (MC.ParalajeBiomas + capa 0 cirros/aves + aureola solar + neblina entre planos + inclinación centrífuga, 0 líneas tocadas en js/47-clasicos.js)",
-    "prueba_e2e": "pruebas/paralaje-biomas.mjs",
-    "capturas": "reportes/img/gemini-v4/ (27 capturas WebP antes/después día/noche 412×860 y 860×412 + 6 previews 3×)"
-  },
-  "mision_v4": "MISIÓN V4: Revolución visual de los biomas y el modo Arcade (Issue #14)",
-  "rama_v4": "ia/antigravity/v4-paralaje-biomas"
+  "siguiente_pedido": "G5-09 (ia/gemini/g5-09-mundo-vivo)"
 }

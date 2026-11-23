@@ -111,3 +111,16 @@ El autor: «el problema es el arranque: si se suelta el joystick se deja de acel
   - El manejo real ya arranca con el joystick de lado (casi quieto, las fuerzas de lado de las llantas entran de a poco).
 - **Para portar a este juego (familia, sin violencia):** `MC.CiudadViva` con `tono: 'familia'` sin emitir disparos ni atropellos (solo choque, derrape, bocina y sirena); la inclinación de la bici en las curvas (`Cuerpo._ladear`, lo calcula la física); la página de medición como idea para el celular del autor.
 - Este juego no cambió por la 5.2 del motor (su propia versión se cuenta en su bitácora).
+
+## Motor City 5.3.0 «Todo lo nuevo, unido» (23‑nov‑2026, Claude)
+- **Se unió:**
+  - de Gemini: G5‑07 (fichas de 30 sitios icónicos), G5‑01‑b (Historieta de noche, con lluvia y en primera persona), G5‑05 (guía sin flecha en el modo cine), G5‑08 (química del mundo) y G5‑04 (minijuegos táctiles);
+  - de ChatGPT: C5‑01 (vuelcos) y R6‑b (Worker con LOD2).
+- **Mejorado por Claude:**
+  - el carro volcado se apoya bien y no se maneja;
+  - R6‑b va apagado (`?r6b`) hasta medirlo en un celular;
+  - el minijuego de puentear sale tras robar un carro;
+  - los 30 sitios icónicos de Medellín están en el 3D realista (`MC.Sitios`).
+- **Arreglo que sirve a todos:** `MC.Efectos` (humo, chispas y marcas) también suma la cota en 3D, como `Vistas.aPantalla` en la 5.2.
+- **Para portar a este juego (familia):** los minijuegos de llanta y cadena para la bici (`juegos/getaway/64-minijuegos.js`, tono familia); la química de la lluvia (charcos que salpican); los sitios icónicos, si tu juego usa el mapa de Medellín en 3D.
+- Este juego tiene su propia versión; el detalle está en su bitácora.

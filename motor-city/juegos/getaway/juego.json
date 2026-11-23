@@ -24,5 +24,8 @@
     "III": "arte/chatgpt/turno-cero/acto-III.webp",
     "IV": "arte/chatgpt/turno-cero/acto-IV.webp",
     "V": "arte/chatgpt/turno-cero/acto-V.webp"
-  }
+  },
+  "r6b_ciudades": [
+    "guatape"
+  ]
 }

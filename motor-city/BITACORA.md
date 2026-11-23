@@ -1,5 +1,41 @@
 # Bitácora de Motor City
 
+## 23-nov-2026 · 5.3.0 «Todo lo nuevo, unido» · las ramas de Gemini y ChatGPT, comprendidas y mejoradas
+- **El autor:** «Retoma, continúa y termina; integra todo lo nuevo, compréndelo y mejóralo; y dame el prompt de relevo para la otra IA».
+- **Unido de Gemini / Antigravity (5 ramas):**
+  - **G5‑07:** fichas de los 30 sitios icónicos de Medellín (`docs/sitios/`, con `sitios.json`, receta de modelado, colores y referencia propia);
+  - **G5‑01‑b:** Historieta de noche, con lluvia y en primera persona (bandas perceptuales, sin rayas en la calzada);
+  - **G5‑05:** 🎬 guía sin flecha en el modo cine (hojas y palomas hacia el destino);
+  - **G5‑08:** química del mundo (la lluvia apaga el fuego, los charcos salpican, el viento lleva el humo). Además, la proyección de `MC.Efectos` suma la cota en 3D, el mismo arreglo de la 5.2 para los globos: en Medellín los choques y el humo tampoco se veían;
+  - **G5‑04:** minijuegos táctiles (puentear, chapa, llanta y cadena).
+- **Unido de ChatGPT / Codex (2 ramas):**
+  - **C5‑01:** vuelcos con auto‑enderezado y abolladuras de costado;
+  - **R6‑b:** Worker con cajas LOD2 por sector.
+- **Mejorado por Claude al unir:**
+  - **Vuelcos:**
+    - el modelo giraba alrededor de la línea del piso y, boca arriba, quedaba enterrado; ahora se apoya en el costado o en el techo;
+    - volcado no se acelera ni se gira.
+  - **R6‑b, apagado por defecto** (se prende con `?r6b`):
+    - no mejoró nada medible, y al llegar cada sector borraba regiones ya armadas: tras 30 s había 65 regiones y 81 pendientes, contra 128 y 0 sin él;
+    - ya no borra lo armado;
+    - solo se incrusta Guatapé, así el HTML no carga 2,3 MB que no se usan.
+  - **El minijuego entra al juego:** tras robar un carro aparece por 6 s «🔌 Puentear», opcional y sin bloquear nada; si se gana, nadie reporta el robo y la búsqueda baja (de 15 a 0 en la prueba).
+- **Nuevo de Claude · los sitios icónicos en el 3D realista** (`js/45-y-sitios.js`, primera versión de C5‑02 con las fichas de Gemini). Cada uno de los 28 sitios con forma tiene la suya:
+  - la aguja del Coltejer con sus ojos;
+  - las torres y la nave de la Candelaria y de la Catedral, con el cimborrio de la Catedral;
+  - las bandas del Palacio de la Cultura;
+  - la cúpula del Planetario y las rocas de la Biblioteca España;
+  - el óvalo del Atanasio con sus torres de luz;
+  - los cubos de Explora y la pirámide invertida de la Biblioteca EPM;
+  - los postes del Parque de las Luces y las esculturas de la Plaza Botero;
+  - las flores del Orquideorama, el Pueblito Paisa y el Monumento a la Raza.
+
+  De noche, sus ventanas brillan. Los sitios que son un edificio reemplazan solo al genérico que cae dentro de su planta; las plazas solo suman. Son 6.698 triángulos en total y no pesan nada (no hay modelos ni texturas). **El Coltejer y el Planetario no aparecían en el 3D**, porque la capa de hitos solo se dibujaba en la panorámica.
+- **Juegos hermanos:**
+  - **EnCicla 3.7.0:** la 3.5.0 de la otra sesión de Claude más las dos 3.6, de Antigravity y de GPT‑6. `tests/run.js` está en verde (170). La página sigue en la 3.4.0: el `publicar.yml` de GPT‑6 exige un benchmark (p95 < 50 ms con la CPU 4×) que todavía da 131 y 77 ms. No se cambió esa compuerta; decide el autor.
+  - **El Metro 3.8.0:** la 3.6/3.7 «Épocas» de la otra sesión de Claude más la 3.7 de Antigravity y CX‑36 de Codex. 100 partidas con 0 errores; publicado con la APK 36.
+- **Pruebas nuevas en la QA:** `sitios-3d`, `sitios-medellin`, `vuelcos`, `puentear-robo`, `minijuegos`, `guia-cine`, `quimica-mundo`, `r6b-datos` y `r6b-browser`.
+
 ## 23-nov-2026 · 5.2.0 «Ciudad viva» · fase 2 del plan 5.0 y lo de las otras IA, retomado
 - **El autor:** «Haz tu parte; en algún momento ya dejarán de proveer, así que retómalos». Claude hizo la fase 2 y tomó los pedidos de Gemini y ChatGPT que más se notan en el juego.
 - **Fase 2 · la ciudad viva** (`js/26-vida-ciudad.js`, `MC.CiudadViva`; idea de los «escenarios» de los mundos abiertos y de las reglas de respuesta de los diálogos de Valve, en sala limpia):

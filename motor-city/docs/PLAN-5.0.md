@@ -85,12 +85,12 @@ El PS2 tenía 32 MB de memoria y un procesador de 300 MHz; el Nintendo DS de Chi
 
 | Fase | Qué | Quién |
 |---|---|---|
-| **1 · Que se sienta** | ✅ Dinámica real y sonido por rpm. ✅ 5.2: motos y bicis que se inclinan con el piloto (C5‑01, Claude). Falta: vuelcos y deformación | Claude; vuelcos, ChatGPT (C5‑01) |
+| **1 · Que se sienta** | ✅ Dinámica real y sonido por rpm; ✅ motos y bicis que se inclinan (Claude, 5.2); ✅ vuelcos con auto‑enderezado (ChatGPT, 5.3; Claude los corrigió). Falta: deformación fuerte | Claude y ChatGPT |
 | **2 · Ciudad viva** | ✅ 5.2 (`MC.CiudadViva`): eventos que la gente oye y a los que reacciona (mira, huye, llama, ayuda); escenas en las bancas y paraderos reales; frases con condiciones (G5‑03, las escribió Claude); en Turno Cero, el testigo sube la búsqueda y llegan la ambulancia o los bomberos por la ruta real. Falta: escenas en tiendas, densidad por comuna y hora, y multitudes | Claude (hecho); ChatGPT (multitudes, C5‑06) |
-| **3 · Mundo grande sin tirones** | Hilos aparte (Web Workers desde el mismo HTML, sin internet), mallas pre-cocinadas por sector (R6) y presupuesto de memoria por celular | ChatGPT (R6 y C5‑04) |
+| **3 · Mundo grande sin tirones** | R6‑b (ChatGPT, 5.3): Worker con cajas LOD2, **apagado** (`?r6b`) porque no mejoró y rearmaba regiones. Falta: medir en el celular real y, si sirve, LOD sin juntar edificios (1:1) y normales en el Worker | ChatGPT (R6 y C5‑04) |
 | **4 · Contenido en serie** | Lenguaje de misiones con hilos, fallas y reintentos; modo creador para poner retos en el mapa y compartirlos por enlace o QR; repeticiones exactas y un bot que gana cada misión | Claude (lenguaje y repeticiones); Gemini (interfaz del creador); ChatGPT (misiones en serie) |
-| **5 · Estilo Chinatown Wars** | Vista «Historieta» (cámara inclinada que gira con el carro y contorno negro) y minijuegos táctiles | Gemini |
-| **Barrio a nivel GTA** | Escoger un barrio (el Centro o Laureles) y llevarlo al máximo: unos 30 sitios icónicos modelados, gente con escenas, cinco misiones pulidas. Después se copia el método al resto de la ciudad | Todos: ChatGPT modela, Gemini prepara las fichas de referencia, Claude integra |
+| **5 · Estilo Chinatown Wars** | ✅ Historieta (Gemini, 5.0–5.3) y ✅ minijuegos táctiles (Gemini, 5.3), con el de puentear dentro del robo de carros (Claude) | Gemini |
+| **Barrio a nivel GTA** | ✅ 5.3: fichas de 30 sitios (Gemini, G5‑07) y su primera versión en el 3D realista (Claude, `MC.Sitios`). Falta: modelos más finos (C5‑02 de ChatGPT), gente con escenas en cada sitio y cinco misiones pulidas en el Centro | Todos |
 
 ## 5. Reglas (las de siempre)
 - Un solo HTML sin internet ni librerías nuevas; three.js ya está aprobado.

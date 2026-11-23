@@ -1,12 +1,12 @@
 {
-  "version": "5.2.0",
+  "version": "5.3.0",
   "fecha": "2026-11-23",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 5.2.0 como referencia; el juego va en 3.4.0",
-    "MetroZero: motor-city/ 5.2.0 como referencia; el juego va en 3.5.0",
-    "RunRunZero: motor-city/ 5.2.0 como referencia; APK que gira"
+    "BicicletasUno: motor-city/ 5.3.0 como referencia; el juego va en 3.7.0 (unión de las dos 3.6, de Antigravity y de GPT-6, sobre la 3.5.0 de Claude)",
+    "MetroZero: motor-city/ 5.3.0 como referencia; el juego va en 3.8.0 (unión de las 3.7 de Claude y de Antigravity, más Codex)",
+    "RunRunZero: motor-city/ 5.3.0 como referencia; APK que gira"
   ],
-  "estado": "5.2.0 «Ciudad viva»: fase 2 del plan 5.0. La gente oye, ve y reacciona (mira, huye, llama, ayuda) a choques, derrapes, atropellos, disparos, explosiones y sirenas; hay gente sentada en las bancas y esperando en los paraderos reales; la gente habla con frases que eligen las reglas de respuesta; en Turno Cero el testigo que llama sube la búsqueda y trae la ambulancia o los bomberos por la ruta real. Claude retomó lo de las otras IA: G5-03 (las frases), C5-01 (motos y bicis que se inclinan), R8 (cuartos falsos detrás de las ventanas de noche), G5-06 (retos desde cualquier semáforo) y G5-12 (📏 medir el rendimiento en el celular). Arreglos: la proyección 3D suma la cota (globos, flecha y destellos en las lomas) y el carro ya arranca con el joystick de lado. Antes, 5.1.0 «Todo junto»."
+  "estado": "5.3.0 «Todo lo nuevo, unido»: se unieron 7 ramas (Gemini: G5-07 fichas de 30 sitios, G5-01-b Historieta de noche, lluvia y 1.ª persona, G5-05 guía sin flecha en cine, G5-08 química del mundo, G5-04 minijuegos; ChatGPT: C5-01 vuelcos y R6-b Worker con LOD2). Claude las mejoró: el carro volcado se apoya bien y no se maneja; R6-b queda apagado (?r6b) porque rearmaba la ciudad sin mejorar nada; el minijuego de puentear entra al juego tras robar un carro; y con las fichas de Gemini, los 30 sitios icónicos de Medellín aparecen en el 3D realista (el Coltejer y el Planetario faltaban). EnCicla 3.7.0 y El Metro 3.8.0 (las versiones paralelas de cada uno, unidas). Antes, 5.2.0 «Ciudad viva»."
 }

@@ -94,6 +94,15 @@ if (!process.argv.includes('--sin-navegador')) {
     const o = M.buscar('parque berrio') || M.buscar('coltejer'), q = M.viaCercana(o.x, o.y, 150); Object.assign(C, { x: q.x, y: q.y, a: q.ang, v: 0 }); G.reloj.min = 11 * 60; G.reloj.vel = 0;
     MC.opciones.graficos = 'realistas'; G.vistas.motor3d = 'gl'; G.vistas.reiniciarGL(); G.vistaId = 'ciudad3d'; G.vistas.usar('ciudad3d', G.E); G.camara.zoom = 22;
     await espera(2500); const e0 = G.Viva._esc[0]; if (e0) { const qv = M.viaCercana(e0.x, e0.y, 30); if (qv) Object.assign(C, { x: qv.x, y: qv.y, a: qv.ang, v: 0 }); } await espera(1500);
+    /* Un cambio a VistaTres puede tardar varios cuadros en inicializar su
+       matriz de proyección bajo Chromium/SwiftShader. Exigir que esté lista,
+       con espera limitada, sin relajar la comprobación de visibilidad. */
+    for (let i = 0; i < 24; i++) {
+      const carPr = G.vistas.aPantalla(G.E, C.x, C.y, 0);
+      if (carPr && Number.isFinite(carPr[0]) && Number.isFinite(carPr[1]) &&
+          carPr[0] > 0 && carPr[0] < G.W && carPr[1] > 0 && carPr[1] < G.H) break;
+      await espera(250);
+    }
     const esc = G.Viva._esc.length, sentados = G.Viva._esc.filter(p => p.pose === 'sentado').length, pr = (x, y, z) => G.vistas.aPantalla(G.E, x, y, z), enPantalla = s => s && s[0] > 0 && s[0] < G.W && s[1] > 0 && s[1] < G.H;
     /* la proyección: el carro cae en la pantalla (en una loma) */
     const car = G.vistas.aPantalla(G.E, C.x, C.y, 0), cota = M.cota(C.x, C.y);

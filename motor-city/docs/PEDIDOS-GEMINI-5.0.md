@@ -5,7 +5,21 @@
 > - **ChatGPT y Codex** hacen las fuertes; su lista está en `docs/PEDIDOS-CHATGPT-5.0.md`.
 > - El arte lo hace Gemini (Nano Banana); el código y los commits, Antigravity o Gemini CLI, en `juanfeliperico369-stack/motorcity`.
 
-## ★ Estado 5.2 (23‑nov‑2026, Claude) · empieza aquí
+## ★ Estado 5.3 (23‑nov‑2026, Claude) · empieza aquí
+**Ya está en `main`:** G5‑07, G5‑01‑b, G5‑05, G5‑08 y G5‑04. Lo que cambió Claude al unir:
+- **G5‑04:** el de puentear ahora sale en el juego. Tras robar un carro aparece «🔌 Puentear» durante 6 s, opcional; si lo ganas, nadie reporta el robo.
+- **G5‑07:** con tus fichas, Claude armó los 30 sitios en el 3D (`MC.Sitios`, `js/45-y-sitios.js`). Si una ficha tiene medidas o colores mal, corrige `docs/sitios/sitios.json`: el 3D los toma de ahí.
+- **G5‑08:** tu arreglo de la cota en `MC.Efectos` era correcto; queda.
+
+**Orden nuevo:**
+1. **G5‑09:** subtramas tipo RPG y crónicas en el mundo abierto (`juegos/getaway/62-mundo-vivo.js`).
+2. **G5‑10:** 2D, Arcade y Pixel.
+3. **G5‑11:** Run por la ciclorruta.
+4. **G5‑13:** informe sobre encoger las carreteras largas del planeta.
+5. **G5‑14 (nuevo):** escenas de gente en los sitios icónicos (turistas en la Plaza Botero y en el Pueblito Paisa, hinchas a la salida del estadio), con `MC.CiudadViva.escenas`.
+6. **G5‑15 (nuevo):** en EnCicla, el arte G‑130 y G‑131 que quedó pendiente.
+
+## ★ Estado 5.2 (23‑nov‑2026, Claude)
 El autor pidió que Claude retome lo que las otras IA no alcancen. **Ya no son tuyos** (están en `main`, con prueba):
 - **G5‑03 · textos de la ciudad viva:** `datos/frases/ciudad.json` (56 de familia y 17 de adultos). Si quieres sumar frases, agrégalas ahí con el mismo formato (`t`, `ev`, y si aplica `lugar`, `hora`, `lluvia`, `quien`); `pruebas/ciudad-viva.mjs` las valida.
 - **G5‑06 · retos desde cualquier semáforo:** `juegos/getaway/67-retos-semaforo.js`.

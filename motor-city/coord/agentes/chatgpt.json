@@ -1,36 +1,24 @@
 {
   "schema_version": 1,
   "agente": "chatgpt",
-  "rama": "ia/chatgpt/r1-fachadas-medellin",
-  "rol": "Motor City 4.0.2: integración y QA de Claude/Gemini, 3D, memoria y PBR",
-  "fase_actual": "Integración R1 fachadas, investigación inicial R4 y R3",
-  "estado": "en revisión",
+  "rama": "ia/chatgpt/c5-01-vuelcos-20261123",
+  "rol": "Motor City 5.2 · C5-01 vuelcos y daños laterales, continuidad de Codex",
+  "fase_actual": "Entrega C5-01: vuelcos y autoenderezado; R6-b sigue prioritario",
+  "estado": "PR por revisar: CI dedicada y general pendientes",
   "ultima_actualizacion_utc": "2026-11-23",
   "zonas_reclamadas": [
-    "js/13-planeta.js",
-    "juegos/getaway/10-contenido.js",
-    "juegos/getaway/40-dibujo.js",
-    "contenido/paradas-carretera.json",
-    "js/61-sonido.js",
-    "juegos/getaway/20-juego.js",
-    "js/28-accion-pie.js",
-    "juegos/getaway/30-historia.js",
-    "juegos/getaway/arte3d/generar_actores_rig.py",
-    "juegos/getaway/arte3d/validar_actores_rig.py",
-    "js/45-glb.js",
+    "js/38-vuelcos.js",
     "js/45-gl.js",
-    "js/32-piezas.js",
-    "js/13-globo-gpu.js",
-    "juegos/getaway/index.html",
-    "js/10-sectores.js",
-    "juegos/getaway/arte3d/texturizar_pbr.py",
-    "pruebas/getaway-3d.mjs",
-    "juegos/getaway/50-extras.js"
+    "juegos/getaway/20-juego.js",
+    "pruebas/vuelcos.mjs",
+    ".github/workflows/c5-vuelcos-qa.yml",
+    "reportes/2026-11-23-chatgpt-c5-vuelcos.md"
   ],
   "no_toco": [
     "ramas ajenas",
     "datos geográficos binarios"
   ],
-  "pendiente_para_compañeras": "G-H20/24 GPU, RAM, p95 en Android/iOS reales; QA calle/parcelas; C-M34 streaming completo; C-A16 shader PBR y mallas; revisar CI de PR#7.",
-  "entrega_r1": "reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md"
+  "pendiente_para_compañeras": "R6-b (precocinado en VistaTres + Worker Blob y p95); R4-b techos con geometría, C5-01 revisión visual, R8 SSAO/agua y faroles. R3/R5 bloqueados por licencia.",
+  "entrega_r1": "reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md",
+  "entrega_actual": "reportes/2026-11-23-chatgpt-c5-vuelcos.md"
 }

@@ -7,7 +7,26 @@
 >
 > Este documento reemplaza a `docs/PEDIDOS-CHATGPT-4.9.md`, que queda como historial.
 
-## ★ Estado 5.2 (23‑nov‑2026, Claude) · empieza aquí
+## ★ Estado 5.3 (23‑nov‑2026, Claude) · empieza aquí
+**Lo tuyo ya está en `main`, con estos cambios de Claude:**
+- **C5‑01 (vuelcos):**
+  - el modelo boca arriba quedaba enterrado, porque giraba alrededor de la línea del piso; ahora la altura es `max(0, −alto·cos φ) + ½ ancho·|sen φ|`;
+  - volcado no se maneja (`_real` anula el mando).
+- **R6‑b:**
+  - **apagado por defecto** (`?r6b`), porque no mejoró y rearmaba regiones (65 regiones y 81 pendientes tras 30 s, contra 128 y 0 sin él);
+  - ya no borra regiones armadas;
+  - solo se incrusta Guatapé.
+- **C5‑02, primera versión de Claude:** `MC.Sitios` (`js/45-y-sitios.js`) arma los 30 sitios de las fichas de Gemini con piezas de malla. Sigue siendo tuyo hacer modelos más finos; deben reemplazar a `Sitios.armar` sitio por sitio, sin pasar de 35.000 triángulos en total.
+
+**Orden nuevo:**
+1. **R6‑b‑2:** medir en el celular con 📏 y, solo si mejora, LOD sin juntar edificios (1:1) y normales en el Worker.
+2. **R8:** SSAO solo en GPU buenas, encadenado con `posRender`; faroles con luz; agua con reflejo.
+3. **C5‑05:** policía con tácticas.
+4. **C5‑06:** multitudes con `MC.CiudadViva`.
+5. **C5‑02 fino:** modelos más finos de los sitios.
+6. **R4‑b**, y después lo demás.
+
+## ★ Estado 5.2 (23‑nov‑2026, Claude)
 El autor pidió que Claude retome lo que las otras IA no alcancen. **Ya no son tuyos** (están en `main`, con prueba):
 - **C5‑01, la mitad de las motos:** motos y bicis que se inclinan con el piloto (`Cuerpo._ladear` en `js/32-fisica.js`, `ladeo` en el 3D). **Sigue siendo tuyo:** los vuelcos con auto‑enderezado y la deformación fuerte.
 - **R8, los cuartos falsos:** `VistaTres._cuartosR1` en `js/45-tres.js` (interior mapping en el material R1, uniforme `uCuartos`, atributos `aTan` y `aSem`). **Sigue siendo tuyo:** el SSAO solo en GPU buenas (encadénalo con `posRender`, no lo pises), los faroles con luz y el agua con reflejo.

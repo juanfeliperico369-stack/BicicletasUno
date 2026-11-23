@@ -1,0 +1,1955 @@
+{
+  "version": "5.2.0",
+  "autor": "Gemini / Antigravity (G5-07)",
+  "destino": "Codex (C5-02 · ~30 sitios icónicos de Medellín)",
+  "mundo_referencia": "datos/medellin/mundo.mc4",
+  "proyeccion": {
+    "W": 4316,
+    "H": 4921,
+    "tile": 10,
+    "lon0": -75.7,
+    "latN": 6.46,
+    "kx": 11066.099290626562,
+    "ky": 11057.4,
+    "formula": "x = (lon - lon0) * kx * tile; y = (latN - lat) * ky * tile"
+  },
+  "presupuesto_total_comp_kb": 1536,
+  "total_sitios": 30,
+  "sitios": [
+    {
+      "id": "coltejer",
+      "nombre": "Edificio Coltejer",
+      "categoria": "rascacielos",
+      "comuna_barrio": "La Candelaria · Centro (Calle 52 × Carrera 46)",
+      "coordenadas": {
+        "lat": 6.250136,
+        "lon": -75.56606
+      },
+      "mc4": {
+        "x": 14822,
+        "y": 23206,
+        "cota_m": 1497,
+        "hito_mc4": [
+          "coltejer"
+        ],
+        "lugar_mc4": "coltejer",
+        "hitos_detalle": [
+          {
+            "id": "coltejer",
+            "nombre_mc4": "Edificio Coltejer",
+            "clase_mc4": "aguja",
+            "alto_mc4": 150,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/31973359",
+      "osm_consulta": "way[\"name\"~\"Coltejer\"](6.248,-75.568,6.252,-75.564)",
+      "dimensiones": {
+        "altura_m": 175,
+        "pisos_aprox": 36,
+        "planta_m": [
+          52,
+          45
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 780,
+        "lod1": 220
+      },
+      "materiales": [
+        "Concreto prefabricado blanco-marfil en costillas verticales estructurales",
+        "Vidrio ahumado oscuro corrido en franjas horizontales retranqueadas",
+        "Concreto gris cálido en podio comercial escalonado de 3 pisos",
+        "Acero pintado gris grafito en marcos de óculos y antena de remate"
+      ],
+      "colores_hex": {
+        "fachada": "#EAE7DF",
+        "vidrio": "#26343F",
+        "podio": "#B8B3A8",
+        "acento": "#46525C",
+        "luz_noche": "#FFE6A8"
+      },
+      "rasgos": [
+        "Silueta icónica en aguja o lanzadera textil que se estrecha hacia los costados desde el piso 24 hasta la punta.",
+        "Corona triangular afilada de ~25 m con dos grandes óculos circulares acristalados («ojo de la aguja») cerca de la cúspide.",
+        "Ritmo vertical muy marcado de costillas blancas prefabricadas que envuelven las fachadas norte y sur.",
+        "Podio rectangular amplio en la base con marquesina volada hacia la avenida La Playa y la calle Colombia.",
+        "Faro nocturno de referencia desde todo el valle: iluminación vertical cálida en la corona y franjas de oficina."
+      ],
+      "receta_modelado": "Extrudir podio de 52×45×12 m; cuerpo principal retranqueado de 36×22 m hasta z=118 m con ligero estrechamiento lateral; de z=118 a z=175 m converger las caras menores en bisel triangular agudo (corona) con dos rebajes circulares acristalados en las caras principales. Repetir costillas verticales con textura de atlas o geometría ligera en LOD0.",
+      "iluminacion_noche": "Banda cálida en ventanas de pisos 5–32 con variación pseudoaleatoria y brillo suave en los óculos circulares y la arista de la aguja.",
+      "imagen_ref": "docs/sitios/img/coltejer.webp",
+      "ficha_md": "docs/sitios/coltejer.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "candelaria",
+      "nombre": "Basílica de Nuestra Señora de la Candelaria y Parque Berrío",
+      "categoria": "patrimonio-religioso",
+      "comuna_barrio": "La Candelaria · Parque Berrío (Calle 50 × Carrera 49)",
+      "coordenadas": {
+        "lat": 6.249958,
+        "lon": -75.567388
+      },
+      "mc4": {
+        "x": 14675,
+        "y": 23225,
+        "cota_m": 1494,
+        "hito_mc4": [
+          "candelaria"
+        ],
+        "lugar_mc4": "berrio",
+        "hitos_detalle": [
+          {
+            "id": "candelaria",
+            "nombre_mc4": "Iglesia de La Candelaria",
+            "clase_mc4": "iglesia",
+            "alto_mc4": 16,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"amenity\"=\"place_of_worship\"][\"name\"~\"Candelaria\"](6.248,-75.569,6.252,-75.565)",
+      "dimensiones": {
+        "altura_m": 28,
+        "pisos_aprox": 4,
+        "planta_m": [
+          67,
+          50
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 820,
+        "lod1": 240
+      },
+      "materiales": [
+        "Mampostería encalada blanca y crema marfil en fachada neoclásica",
+        "Piedra arenisca ocre claro en pilastras, zócalo y triple portada arqueada",
+        "Teja de barro cocido terracota en nave central y naves laterales a dos aguas",
+        "Cobre envejecido o bronce oscuro en campanas y cruces de cúpulas"
+      ],
+      "colores_hex": {
+        "fachada": "#F2EEE6",
+        "piedra": "#CBBFA8",
+        "techo": "#B45B3A",
+        "acento": "#5C4A3B",
+        "luz_noche": "#FFD68A"
+      },
+      "rasgos": [
+        "Dos torres campanario gemelas simétricas flanqueando la fachada occidental, coronadas por cupulines blancos con linterna.",
+        "Pórtico neoclásico con tres arcos de medio punto, pilastras adosadas y frontón triangular centrado sobre la nave.",
+        "Cubierta larga a dos aguas de teja de barro rojiza muy visible desde el viaducto del Metro en Parque Berrío.",
+        "Atrio elevado con escalinata corta que abre directamente a la plaza peatonal y esculturas del Parque Berrío."
+      ],
+      "receta_modelado": "Nave basilical de 58×28×15 m con cubierta a dos aguas (cumbrera en z=19 m), dos torres cuadradas frontales de 7×7×23 m con cuerpo de campanas abierto y semiesfera blanca hasta z=28 m, más frontón triangular intermedio y atrio escalonado frontal.",
+      "iluminacion_noche": "Reflectores cálidos ascendentes en la fachada blanca y luz tenue ámbar dentro de los arcos del campanario.",
+      "imagen_ref": "docs/sitios/img/candelaria.webp",
+      "ficha_md": "docs/sitios/candelaria.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "palacio_cultura",
+      "nombre": "Palacio de la Cultura Rafael Uribe Uribe",
+      "categoria": "patrimonio-civico",
+      "comuna_barrio": "La Candelaria · Plaza Botero (Carrera 51 × Calle 52)",
+      "coordenadas": {
+        "lat": 6.251705,
+        "lon": -75.56821
+      },
+      "mc4": {
+        "x": 14584,
+        "y": 23032,
+        "cota_m": 1487,
+        "hito_mc4": [
+          "palacio"
+        ],
+        "lugar_mc4": "palacio",
+        "hitos_detalle": [
+          {
+            "id": "palacio",
+            "nombre_mc4": "Palacio de la Cultura Rafael Uribe Uribe",
+            "clase_mc4": "palacio",
+            "alto_mc4": 24,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"name\"~\"Palacio de la Cultura|Rafael Uribe\"](6.250,-75.570,6.253,-75.566)",
+      "dimensiones": {
+        "altura_m": 34,
+        "pisos_aprox": 5,
+        "planta_m": [
+          68,
+          72
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 920,
+        "lod1": 280
+      },
+      "materiales": [
+        "Concreto y revoque alternado en damero blanco marfil y gris carbón (estilo neogótico belga de Agustín Goovaerts)",
+        "Piedra gris labrada en arcos ojivales, cornisas y remates almenados",
+        "Vidrio emplomado oscuro con tracería gótica en ventanales verticales",
+        "Cúpula metálica y de concreto en franjas grises y marfil"
+      ],
+      "colores_hex": {
+        "fachada_clara": "#EFECE4",
+        "fachada_oscura": "#2E3136",
+        "vidrio": "#1E2730",
+        "acento": "#8A8478",
+        "luz_noche": "#FFE09E"
+      },
+      "rasgos": [
+        "Inconfundible patrón ajedrezado en blanco y negro a lo largo de toda la fachada y los torreones esquineros.",
+        "Gran cúpula octogonal central escalonada con tambor fenestrado y linterna que domina la vista sobre Plaza Botero.",
+        "Arcos ojivales góticos repetidos en los cuatro pisos y parapeto superior almenado con pináculos.",
+        "Patio interior central rodeado de galerías y terrazas transitables con mirador al centro histórico."
+      ],
+      "receta_modelado": "Bloque cuadrado con patio central hueco de 64×64×22 m y cuatro torreones esquineros ligeramente salientes (+2 m); en el centro, tambor octogonal (radio 9 m, z=22..28 m) coronado por cúpula ojival y linterna hasta z=34 m. Aplicar textura procedural de damero bicoloreado en muros.",
+      "iluminacion_noche": "Baño de luz cálida resaltando el ajedrezado frontal y la cúpula octogonal como faro de Plaza Botero.",
+      "imagen_ref": "docs/sitios/img/palacio_cultura.webp",
+      "ficha_md": "docs/sitios/palacio_cultura.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "plaza_botero",
+      "nombre": "Plaza Botero",
+      "categoria": "plaza-parque",
+      "comuna_barrio": "La Candelaria · Entre Museo de Antioquia y Palacio de la Cultura",
+      "coordenadas": {
+        "lat": 6.251829,
+        "lon": -75.568199
+      },
+      "mc4": {
+        "x": 14585,
+        "y": 23018,
+        "cota_m": 1487,
+        "hito_mc4": [
+          "botero"
+        ],
+        "lugar_mc4": "botero",
+        "hitos_detalle": [
+          {
+            "id": "botero",
+            "nombre_mc4": "Plaza Botero",
+            "clase_mc4": "botero",
+            "alto_mc4": 0,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/130423476",
+      "osm_consulta": "way[\"name\"~\"Plaza Botero\"](6.250,-75.570,6.254,-75.566)",
+      "dimensiones": {
+        "altura_m": 12,
+        "pisos_aprox": 0,
+        "planta_m": [
+          110,
+          70
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 880,
+        "lod1": 240
+      },
+      "materiales": [
+        "Adoquín y losas de granito gris cálido y terracota clara en el pavimento geométrico",
+        "Bronce patinado negro-verdoso en las 23 esculturas monumentales de Fernando Botero",
+        "Piedra gris pulida en pedestales prismáticos bajos y bancas perimetrales",
+        "Palmas reales tropicales de tronco gris liso y follaje verde profundo"
+      ],
+      "colores_hex": {
+        "pavimento": "#C9C2B6",
+        "bronce": "#2F3530",
+        "pedestal": "#8E8B84",
+        "follaje": "#3B6E3E",
+        "luz_noche": "#FFD98E"
+      },
+      "rasgos": [
+        "Explanada peatonal abierta de ~7 000 m² que articula el Museo de Antioquia (oeste) y el Palacio de la Cultura (este).",
+        "Grilla curada de 23 esculturas voluminosas de bronce oscuro sobre pedestales de piedra (1,2–1,5 m de alto).",
+        "Alineación simétrica de palmas reales altas (10–12 m) y jardineras geométricas que enmarcan las visuales.",
+        "Reja perimetral baja en los bordes hacia Carabobo y pasos peatonales directos al viaducto del Metro."
+      ],
+      "receta_modelado": "Plataforma pavimentada a ras de cota con patrón de bandas de granito; distribuir 12–16 volúmenes escultóricos simplificados (combinación de esferas y ovoides en bronce oscuro sobre prismas de 1,4 m) + 14 palmas reales ligeras en los bordes laterales.",
+      "iluminacion_noche": "Luminarias peatonales cálidas y focos rasantes sobre las esculturas de bronce.",
+      "imagen_ref": "docs/sitios/img/plaza_botero.webp",
+      "ficha_md": "docs/sitios/plaza_botero.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "edificio_epm",
+      "nombre": "Edificio Inteligente de EPM",
+      "categoria": "institucional-moderno",
+      "comuna_barrio": "La Alpujarra · Carrera 58 # 42-125 (junto al río Medellín)",
+      "coordenadas": {
+        "lat": 6.245284,
+        "lon": -75.577855
+      },
+      "mc4": {
+        "x": 13517,
+        "y": 23742,
+        "cota_m": 1480,
+        "hito_mc4": [
+          "epm"
+        ],
+        "lugar_mc4": "epm",
+        "hitos_detalle": [
+          {
+            "id": "epm",
+            "nombre_mc4": "Edificio EPM",
+            "clase_mc4": "vidrio",
+            "alto_mc4": 85,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"name\"~\"Edificio.*EPM|Empresas Públicas\"](6.243,-75.580,6.247,-75.575)",
+      "dimensiones": {
+        "altura_m": 56,
+        "pisos_aprox": 14,
+        "planta_m": [
+          100,
+          134
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 760,
+        "lod1": 220
+      },
+      "materiales": [
+        "Losas y parasoles horizontales de concreto prefabricado gris plateado",
+        "Fachada continua de vidrio reflectante azul-petróleo verdoso",
+        "Jardines colgantes y terrazas verdes escalonadas con vegetación tropical",
+        "Espejo de agua perimetral reflectante con puentes de acceso peatonales"
+      ],
+      "colores_hex": {
+        "fachada": "#D4D8DC",
+        "vidrio": "#1D4952",
+        "vegetacion": "#3E7A38",
+        "agua": "#386A7A",
+        "luz_noche": "#BFE6FF"
+      },
+      "rasgos": [
+        "Volumetría horizontal escalonada en terrazas que se abren hacia el oriente y el Parque de los Pies Descalzos.",
+        "Franjas muy nítidas alternando antepechos/parasoles blanco-plata y bandas corridas de vidrio azul verdoso.",
+        "Terrazas ajardinadas con vegetación densa integradas en varios niveles del edificio.",
+        "Foso de agua (espejo perimetral) que rodea la planta baja y refleja el edificio sobre el costado del río."
+      ],
+      "receta_modelado": "Espejo de agua basal de 102×136×0,4 m; sobre él, 3 cuerpos escalonados en L/U (z=0..18 m, z=18..36 m, z=36..56 m) con voladizos de losa claros cada 4 m, franjas de vidrio azul-petróleo retranqueadas 0,8 m y franjas verdes de terraza en los descansos. Nota: en MC4 el hito genérico tiene alto=85 m; usar la altura real escalonada (~56 m) para mantener fidelidad.",
+      "iluminacion_noche": "Bandas interiores blanco-frías y reflejo celeste suave sobre el espejo de agua basal.",
+      "imagen_ref": "docs/sitios/img/edificio_epm.webp",
+      "ficha_md": "docs/sitios/edificio_epm.md",
+      "fuente_imagen": "nano-banana"
+    },
+    {
+      "id": "alpujarra",
+      "nombre": "Centro Administrativo La Alpujarra",
+      "categoria": "institucional-moderno",
+      "comuna_barrio": "La Alpujarra · Calle 44 × Carrera 52–55",
+      "coordenadas": {
+        "lat": 6.244657,
+        "lon": -75.573731
+      },
+      "mc4": {
+        "x": 13973,
+        "y": 23811,
+        "cota_m": 1478,
+        "hito_mc4": [
+          "alcaldia",
+          "gobernacion",
+          "concejo",
+          "justicia"
+        ],
+        "lugar_mc4": "alpujarra",
+        "hitos_detalle": [
+          {
+            "id": "alcaldia",
+            "nombre_mc4": "Alcaldía de Medellín",
+            "clase_mc4": "alpujarra",
+            "alto_mc4": 48,
+            "poligonos": 1
+          },
+          {
+            "id": "gobernacion",
+            "nombre_mc4": "Gobernación de Antioquia",
+            "clase_mc4": "alpujarra",
+            "alto_mc4": 48,
+            "poligonos": 1
+          },
+          {
+            "id": "concejo",
+            "nombre_mc4": "Concejo de Medellín",
+            "clase_mc4": "moderno",
+            "alto_mc4": 18,
+            "poligonos": 1
+          },
+          {
+            "id": "justicia",
+            "nombre_mc4": "Palacio de Justicia",
+            "clase_mc4": "alpujarra",
+            "alto_mc4": 36,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/32470917",
+      "osm_consulta": "way[\"name\"~\"Alcaldía de Medellín|Gobernación de Antioquia|Alpujarra\"](6.242,-75.576,6.246,-75.571)",
+      "dimensiones": {
+        "altura_m": 48,
+        "pisos_aprox": 13,
+        "planta_m": [
+          180,
+          145
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 940,
+        "lod1": 280
+      },
+      "materiales": [
+        "Concreto arquitectónico a la vista color arena-ocre cálido en volúmenes brutalistas",
+        "Vidrio ahumado bronce oscuro profundamente retranqueado tras quiebrasoles",
+        "Piedra y losas prefabricadas gris cálido en la gran plazoleta cívica",
+        "Concreto y bronce oscuro en el Monumento a la Raza (Rodrigo Arenas Betancur)"
+      ],
+      "colores_hex": {
+        "fachada": "#C7B89E",
+        "vidrio": "#2B2B2E",
+        "plaza": "#B9B3A8",
+        "monumento": "#4B443E",
+        "luz_noche": "#FFE2A8"
+      },
+      "rasgos": [
+        "Dos grandes bloques institucionales gemelos y escalonados (Alcaldía al norte y Gobernación al sur) de ~48 m con quiebrasoles profundos.",
+        "Amplia plazoleta cívica central presidida por el Monumento a la Raza, de gran silueta curva ascendente en concreto y bronce.",
+        "Volúmenes complementarios del Concejo (bajo y horizontal) y el Palacio de Justicia en los bordes del conjunto.",
+        "Articulación directa con la avenida San Juan (calle 44) y la Antigua Estación del Ferrocarril."
+      ],
+      "receta_modelado": "Reemplazar los 4 hitos MC4 (alcaldia, gobernacion, concejo, justicia) con el conjunto unificado: dos torres escalonadas en concreto beige de 48 m con bandas horizontales de sombra profunda, plataforma cívica unificada y arco escultural inclinado de 24 m de alto en el centro de la plazoleta.",
+      "iluminacion_noche": "Iluminación monumental dirigida al Monumento a la Raza y bandas de oficina cálidas en Alcaldía y Gobernación.",
+      "imagen_ref": "docs/sitios/img/alpujarra.webp",
+      "ficha_md": "docs/sitios/alpujarra.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "pueblito_paisa",
+      "nombre": "Pueblito Paisa · Cerro Nutibara",
+      "categoria": "patrimonio-mirador",
+      "comuna_barrio": "Belén · Cima del Cerro Nutibara (cota ~1 547 m)",
+      "coordenadas": {
+        "lat": 6.23615,
+        "lon": -75.57988
+      },
+      "mc4": {
+        "x": 13293,
+        "y": 24752,
+        "cota_m": 1547,
+        "hito_mc4": [],
+        "lugar_mc4": "cerro",
+        "hitos_detalle": []
+      },
+      "osm_id": "way/765380123",
+      "osm_consulta": "way[\"name\"~\"Pueblito Paisa\"](6.234,-75.582,6.238,-75.578)",
+      "dimensiones": {
+        "altura_m": 14,
+        "pisos_aprox": 2,
+        "planta_m": [
+          70,
+          55
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 840,
+        "lod1": 240
+      },
+      "materiales": [
+        "Muros de bahareque/tapia pintados en blanco cal impecable",
+        "Carpintería tradicional antioqueña en madera pintada de colores vivos (azul cobalto, rojo carmín, verde esmeralda, amarillo)",
+        "Cubiertas inclinadas de teja de barro cocido terracota con amplios aleros",
+        "Empedrado rústico gris en la placita central con fuente de piedra"
+      ],
+      "colores_hex": {
+        "fachada": "#F6F4EE",
+        "techo": "#B75534",
+        "carpinteria_azul": "#245896",
+        "carpinteria_rojo": "#B6342F",
+        "luz_noche": "#FFD68A"
+      },
+      "rasgos": [
+        "Réplica de pueblo tradicional antioqueño coronando la cumbre del Cerro Nutibara con vista 360° al valle.",
+        "Capilla blanca con espadaña/torre central única y tejado a dos aguas cerrando la cabecera de la plaza.",
+        "Casas perimetrales de 1 y 2 pisos con balcones corridos, zócalos y puertas de colores primarios muy vivos.",
+        "Fuente circular de piedra en el centro de la plaza empedrada y mirador arbolado en todo el perímetro."
+      ],
+      "receta_modelado": "Plataforma mirador nivelada sobre la cumbre (cota 1547 m) con plaza empedrada de 34×26 m y fuente central; en un extremo la capilla blanca de 12×20×9 m con torre frontal hasta z=14 m; en los otros tres lados, hileras de casas blancas de 5–7 m con tejados de barro en voladizo y acentos de color en puertas/ventanas.",
+      "iluminacion_noche": "Faroles coloniales cálidos alrededor de la placita y luz suave en la torre blanca de la capilla, visible desde el fondo del valle.",
+      "imagen_ref": "docs/sitios/img/pueblito_paisa.webp",
+      "ficha_md": "docs/sitios/pueblito_paisa.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "parque_explora",
+      "nombre": "Parque Explora",
+      "categoria": "museo-ciencia",
+      "comuna_barrio": "Aranjuez · Carrera 52 # 73-75 (frente a estación Universidad)",
+      "coordenadas": {
+        "lat": 6.270883,
+        "lon": -75.565711
+      },
+      "mc4": {
+        "x": 14861,
+        "y": 20911,
+        "cota_m": 1461,
+        "hito_mc4": [
+          "explora"
+        ],
+        "lugar_mc4": "explora",
+        "hitos_detalle": [
+          {
+            "id": "explora",
+            "nombre_mc4": "Parque Explora",
+            "clase_mc4": "cubos",
+            "alto_mc4": 16,
+            "poligonos": 7
+          }
+        ]
+      },
+      "osm_id": "way/141166140",
+      "osm_consulta": "way[\"name\"~\"Parque Explora\"](6.269,-75.568,6.273,-75.564)",
+      "dimensiones": {
+        "altura_m": 16,
+        "pisos_aprox": 3,
+        "planta_m": [
+          83,
+          256
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 760,
+        "lod1": 220
+      },
+      "materiales": [
+        "Paneles metálicos y revestimiento rojo bermellón intenso en las cuatro cajas en voladizo",
+        "Estructura metálica gris acero y pórticos vistos que elevan las cajas",
+        "Vidrio claro en basamento del acuario y galerías longitudinales",
+        "Concreto gris lavado en plazoleta pública y paseo de dinosaurios/experimentos"
+      ],
+      "colores_hex": {
+        "cubos_rojos": "#C9302C",
+        "estructura": "#4C5258",
+        "basamento": "#B8B6B0",
+        "vidrio": "#456D7A",
+        "luz_noche": "#FFE4A8"
+      },
+      "rasgos": [
+        "Cuatro grandes cajas prismáticas de color rojo vibrante suspendidas y ligeramente desplazadas en hilera norte-sur.",
+        "Base parcialmente abierta y acristalada que crea sombra pública bajo los volúmenes elevados.",
+        "Larga fachada paralela a la carrera Carabobo y al viaducto del Metro entre estación Universidad y el Jardín Botánico.",
+        "Plazoleta abierta al costado occidental con módulos interactivos y pasarelas de acceso."
+      ],
+      "receta_modelado": "Basamento longitudinal de 240×38×5 m en concreto y vidrio oscuro; encima, 4 grandes prismas rojos de ~32×34×11 m ligeramente rotados o escalonados en planta (z=5..16 m) con ranuras acristaladas estrechas y columnas metálicas visibles en los voladizos.",
+      "iluminacion_noche": "Contraluz cálida bajo los voladizos de las cajas rojas y transparencia iluminada en el basamento del acuario.",
+      "imagen_ref": "docs/sitios/img/parque_explora.webp",
+      "ficha_md": "docs/sitios/parque_explora.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "orquideorama",
+      "nombre": "Orquideorama del Jardín Botánico",
+      "categoria": "pabellon-botanico",
+      "comuna_barrio": "Aranjuez · Jardín Botánico Joaquín Antonio Uribe (Calle 73 # 51D-14)",
+      "coordenadas": {
+        "lat": 6.27065,
+        "lon": -75.56372
+      },
+      "mc4": {
+        "x": 15081,
+        "y": 20937,
+        "cota_m": 1471,
+        "hito_mc4": [],
+        "lugar_mc4": "botanico",
+        "hitos_detalle": []
+      },
+      "osm_id": "way/174369253",
+      "osm_consulta": "way[\"name\"~\"Orquideorama\"](6.269,-75.566,6.272,-75.562)",
+      "dimensiones": {
+        "altura_m": 16,
+        "pisos_aprox": 1,
+        "planta_m": [
+          75,
+          56
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 880,
+        "lod1": 240
+      },
+      "materiales": [
+        "Listones de madera de pino pátula color miel-dorado en la celosía hexagonal de la cubierta",
+        "Columnas huecas de acero pintado gris oscuro y malla metálica en los «árboles-flor»",
+        "Policarbonato traslúcido en la capa superior de protección contra lluvia",
+        "Pavimento de piedra y jardines densos con estanques y orquídeas en el suelo"
+      ],
+      "colores_hex": {
+        "madera": "#C89B5B",
+        "acero": "#4E5459",
+        "vegetacion": "#367439",
+        "pavimento": "#BFB8AA",
+        "luz_noche": "#FFE09A"
+      },
+      "rasgos": [
+        "Malla modular de ~10–14 «árboles-flor» hexagonales de 14–16 m de altura que conforman un dosel orgánico continuo.",
+        "Cada módulo combina un tronco calado hexagonal hueco y seis pétalos triangulares de listones de madera cálida.",
+        "Espacio completamente abierto en sus bordes sin muros cerrados, fundido con los senderos del Jardín Botánico.",
+        "Patrón de luz filtrada en panal muy reconocible tanto desde arriba (vista Historieta/2D) como desde el nivel peatonal."
+      ],
+      "receta_modelado": "Instanciar 10 módulos «flor-árbol» en teselación hexagonal sobre planta de 75×56 m: cada módulo es un tronco prismático hexagonal estrecho (r=1,6 m, z=0..11 m) que se abre en copa hexagonal acampanada (r=9 m, z=11..15 m) con textura calada de listones dorados de madera y base ajardinada.",
+      "iluminacion_noche": "Luz cálida ámbar que baña desde abajo las copas de madera dorada, creando una linterna orgánica entre los árboles.",
+      "imagen_ref": "docs/sitios/img/orquideorama.webp",
+      "ficha_md": "docs/sitios/orquideorama.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "planetario",
+      "nombre": "Planetario de Medellín Jesús Emilio Ramírez",
+      "categoria": "museo-ciencia",
+      "comuna_barrio": "Aranjuez · Carrera 52 # 71-117 (Parque de los Deseos)",
+      "coordenadas": {
+        "lat": 6.268998,
+        "lon": -75.566116
+      },
+      "mc4": {
+        "x": 14816,
+        "y": 21120,
+        "cota_m": 1466,
+        "hito_mc4": [
+          "planetario"
+        ],
+        "lugar_mc4": "planetario",
+        "hitos_detalle": [
+          {
+            "id": "planetario",
+            "nombre_mc4": "Planetario de Medellín",
+            "clase_mc4": "cupula",
+            "alto_mc4": 10,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/93329440",
+      "osm_consulta": "way[\"name\"~\"Planetario de Medellín\"](6.267,-75.568,6.271,-75.564)",
+      "dimensiones": {
+        "altura_m": 16,
+        "pisos_aprox": 3,
+        "planta_m": [
+          28,
+          59
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 640,
+        "lod1": 180
+      },
+      "materiales": [
+        "Paneles metálicos triangulados blanco-plateado en la cúpula geodésica del domo",
+        "Ladrillo a la vista cálido y concreto gris en el bloque prismático de acceso y salas",
+        "Vidrio azul-gris en vestíbulo frontal orientado al Parque de los Deseos",
+        "Acero pintado grafito en pérgolas y escaleras exteriores"
+      ],
+      "colores_hex": {
+        "cupula": "#E6E9EC",
+        "ladrillo": "#A95940",
+        "concreto": "#B2B0AA",
+        "vidrio": "#2E4A5C",
+        "luz_noche": "#B8DCFF"
+      },
+      "rasgos": [
+        "Cúpula semiesférica blanca-plateada de ~15 m de diámetro emergiendo claramente sobre el volumen principal.",
+        "Bloque rectangular moderno en ladrillo y concreto con terraza panorámica mirando hacia la explanada del Parque de los Deseos.",
+        "Acceso frontal acristalado con marquesina limpia frente a los espejos de agua de la plaza.",
+        "Escala contenida pero silueta geométrica (esfera + prisma) inmediata de identificar desde la calle 73."
+      ],
+      "receta_modelado": "Prisma base de 28×52×9 m en concreto y paños de ladrillo cálido; sobre el tercio norte, tambor corto y semiesfera geodésica (radio 8 m, tope en z=16,5 m) en blanco-plateado con sombreado facetado suave.",
+      "iluminacion_noche": "Proyección o baño azul-celeste suave sobre el domo blanco y vestíbulo cálido encendido.",
+      "imagen_ref": "docs/sitios/img/planetario.webp",
+      "ficha_md": "docs/sitios/planetario.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "parque_deseos",
+      "nombre": "Parque de los Deseos y Casa de la Música",
+      "categoria": "plaza-parque",
+      "comuna_barrio": "Aranjuez · Calle 71 × Carrera 52 (zona Norte Cultural)",
+      "coordenadas": {
+        "lat": 6.26836,
+        "lon": -75.56585
+      },
+      "mc4": {
+        "x": 14845,
+        "y": 21190,
+        "cota_m": 1469,
+        "hito_mc4": [],
+        "lugar_mc4": "planetario",
+        "hitos_detalle": []
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"name\"~\"Parque de los Deseos|Casa de la Música\"](6.267,-75.568,6.270,-75.564)",
+      "dimensiones": {
+        "altura_m": 12,
+        "pisos_aprox": 2,
+        "planta_m": [
+          110,
+          95
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 760,
+        "lod1": 220
+      },
+      "materiales": [
+        "Arena compactada y losas de concreto gris cálido en la gran explanada abierta",
+        "Concreto ocre y celosía de ladrillo/madera en la Casa de la Música (costado sur)",
+        "Agua somera en espejo reflectante y fuentes interactivas",
+        "Acero pintado blanco y piedra en reloj solar, teléfonos parabólicos y pantalla de cine al aire libre"
+      ],
+      "colores_hex": {
+        "explanada": "#D3C9B8",
+        "casa_musica": "#B9784E",
+        "agua": "#4A7F94",
+        "acero": "#E2E4E6",
+        "luz_noche": "#FFE3A3"
+      },
+      "rasgos": [
+        "Gran plaza despejada sin obstrucciones diseñada para cine al aire libre, astronomía y encuentros comunitarios.",
+        "Casa de la Música al costado sur: volumen horizontal sobrio con pérgola y terraza escalonada.",
+        "Elementos interactivos icónicos: espejo de agua, reloj solar vertical, parabólicas acústicas y bosquecillo lateral de árboles.",
+        "Pared blanca de proyección y gradería suave integrada a la plaza frente al Planetario."
+      ],
+      "receta_modelado": "Explanada rectangular de 110×95 m en tono arena-gris; al sur, bloque de la Casa de la Música de 48×22×11 m con terraza escalonada; en la plaza, rectángulo de espejo de agua, dos parabólicas enfrentadas, reloj solar vertical (6 m) y franja de árboles al borde oriental.",
+      "iluminacion_noche": "Luminarias perimetrales suaves, espejo de agua con reflejos y luz cálida en la Casa de la Música.",
+      "imagen_ref": "docs/sitios/img/parque_deseos.webp",
+      "ficha_md": "docs/sitios/parque_deseos.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "biblioteca_espana",
+      "nombre": "Parque Biblioteca España",
+      "categoria": "equipamiento-cultural",
+      "comuna_barrio": "Popular (Comuna 1) · Santo Domingo Savio (cota ~1 827 m, junto al Metrocable)",
+      "coordenadas": {
+        "lat": 6.294721,
+        "lon": -75.544104
+      },
+      "mc4": {
+        "x": 17252,
+        "y": 18276,
+        "cota_m": 1827,
+        "hito_mc4": [
+          "bibespana"
+        ],
+        "lugar_mc4": "santo_domingo",
+        "hitos_detalle": [
+          {
+            "id": "bibespana",
+            "nombre_mc4": "Parque Biblioteca España",
+            "clase_mc4": "rocas",
+            "alto_mc4": 20,
+            "poligonos": 3
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"name\"~\"Biblioteca España\"](6.293,-75.546,6.296,-75.542)",
+      "dimensiones": {
+        "altura_m": 26,
+        "pisos_aprox": 5,
+        "planta_m": [
+          53,
+          70
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 720,
+        "lod1": 200
+      },
+      "materiales": [
+        "Revestimiento oscuro en pizarra negra-grafito / paneles metálicos oscuros facetados",
+        "Concreto gris oscuro en plataforma-mirador escalonada anclada a la ladera",
+        "Vidrio con marcos negros en ventanas cuadradas y rasgaduras asimétricas",
+        "Barandas metálicas en la terraza panorámica que domina todo el Valle de Aburrá"
+      ],
+      "colores_hex": {
+        "rocas": "#2C3036",
+        "aristas": "#464C54",
+        "plataforma": "#8E8C88",
+        "vidrio": "#1D2933",
+        "luz_noche": "#FFD678"
+      },
+      "rasgos": [
+        "Tres grandes volúmenes monolíticos oscuros y facetados inspirados en rocas de la montaña antioqueña.",
+        "Posados en lo alto de la ladera nororiental (Santo Domingo Savio, cota ~1 827 m), visibles desde kilómetros de distancia en el valle.",
+        "Plataforma-balcón continua en la base que une los tres bloques y sirve de mirador urbano junto al Metrocable línea K.",
+        "Aberturas acristaladas geométricas dispersas que de noche brillan como faroles sobre el cerro."
+      ],
+      "receta_modelado": "Plataforma mirador de 53×70×4 m anclada a la pendiente (con faldón profundo de 12 m hacia la ladera occidental para nunca flotar); encima, 3 prismas irregulares biselados/inclinados en color pizarra oscura (#2C3036) de alturas 26 m, 22 m y 19 m, reemplazando las 3 huellas de hito `bibespana`.",
+      "iluminacion_noche": "Ventanas cuadradas cálidas brillando intensamente sobre las tres siluetas oscuras en lo alto de la montaña.",
+      "imagen_ref": "docs/sitios/img/biblioteca_espana.webp",
+      "ficha_md": "docs/sitios/biblioteca_espana.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "estadio_atanasio",
+      "nombre": "Estadio Atanasio Girardot",
+      "categoria": "deportivo",
+      "comuna_barrio": "Laureles–Estadio · Carrera 74 × Calle 48",
+      "coordenadas": {
+        "lat": 6.256797,
+        "lon": -75.590146
+      },
+      "mc4": {
+        "x": 12157,
+        "y": 22469,
+        "cota_m": 1484,
+        "hito_mc4": [
+          "estadio"
+        ],
+        "lugar_mc4": "estadio",
+        "hitos_detalle": [
+          {
+            "id": "estadio",
+            "nombre_mc4": "Estadio Atanasio Girardot",
+            "clase_mc4": "estadio",
+            "alto_mc4": 22,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"leisure\"=\"stadium\"][\"name\"~\"Atanasio Girardot\"](6.254,-75.593,6.259,-75.588)",
+      "dimensiones": {
+        "altura_m": 44,
+        "pisos_aprox": 5,
+        "planta_m": [
+          197,
+          213
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 980,
+        "lod1": 300
+      },
+      "materiales": [
+        "Concreto arquitectónico blanco-gris en tribunas, anillos exteriores y cubierta occidental",
+        "Césped verde intenso en la cancha reglamentaria rodeada de pista atlética terracota",
+        "Graderías con sillería tricolor (azul, verde, rojo/blanco) en el cuenco interior",
+        "Acero blanco en las cuatro grandes torres inclinadas de reflectores esquineros"
+      ],
+      "colores_hex": {
+        "estructura": "#D9D8D3",
+        "cesped": "#2F8A3B",
+        "pista": "#B85A3F",
+        "tribunas": "#3C5F8A",
+        "luz_noche": "#F5FAFF"
+      },
+      "rasgos": [
+        "Gran cuenco ovalado de 197×213 m abierto al cielo, con cubierta volada característicamente concentrada en la tribuna occidental.",
+        "Cuatro torres metálicas inclinadas de iluminación de ~44 m coronadas por parrillas rectangulares de reflectores.",
+        "Cancha verde nítida con marcación blanca y pista atlética ocre-terracota perfectamente visibles desde vistas altas y vuelo.",
+        "Fachada exterior rítmica de costillas estructurales y rampas helicoidales que rodean la Unidad Deportiva."
+      ],
+      "receta_modelado": "Óvalo exterior de 190×208 m en anillo inclinado (z=0..22 m) con piso interior verde (cancha 105×68 m) y borde terracota de pista; añadir visera curva de cubierta sobre el costado occidental (z=24..27 m) y 4 torres inclinadas metálicas hasta z=44 m con cabezales de reflectores.",
+      "iluminacion_noche": "Parrillas blancas brillantes en las 4 torres y resplandor claro que ilumina el óvalo verde desde arriba.",
+      "imagen_ref": "docs/sitios/img/estadio_atanasio.webp",
+      "ficha_md": "docs/sitios/estadio_atanasio.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "catedral_metropolitana",
+      "nombre": "Catedral Basílica Metropolitana de Medellín",
+      "categoria": "patrimonio-religioso",
+      "comuna_barrio": "La Candelaria · Parque de Bolívar (Carrera 48 × Calle 56)",
+      "coordenadas": {
+        "lat": 6.25403,
+        "lon": -75.563926
+      },
+      "mc4": {
+        "x": 15058,
+        "y": 22775,
+        "cota_m": 1495,
+        "hito_mc4": [
+          "catedral"
+        ],
+        "lugar_mc4": "bolivar",
+        "hitos_detalle": [
+          {
+            "id": "catedral",
+            "nombre_mc4": "Basílica Metropolitana",
+            "clase_mc4": "basilica",
+            "alto_mc4": 30,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/366050226",
+      "osm_consulta": "way[\"name\"~\"Catedral.*Metropolitana\"](6.252,-75.566,6.256,-75.562)",
+      "dimensiones": {
+        "altura_m": 52,
+        "pisos_aprox": 8,
+        "planta_m": [
+          101,
+          113
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 960,
+        "lod1": 280
+      },
+      "materiales": [
+        "Ladrillo macizo cocido (1,12 millones de piezas) en tonos terracota-ocre cálido",
+        "Teja de barro y lámina oscura en cubiertas inclinadas de la cruz latina",
+        "Piedra y ladrillo moldeado en arquivoltas del triple portal románico y rosetón central",
+        "Bronce oscuro en puertas monumentales y cruces de las torres"
+      ],
+      "colores_hex": {
+        "ladrillo": "#A85438",
+        "ladrillo_claro": "#C4734F",
+        "techo": "#6B3D2E",
+        "acento": "#3E2E28",
+        "luz_noche": "#FFD68C"
+      },
+      "rasgos": [
+        "La mayor construcción del mundo en ladrillo cocido macizo, de estilo neorrománico monumental frente al Parque de Bolívar.",
+        "Dos imponentes torres cuadradas gemelas de ~52 m en la fachada sur, rematadas con cuerpos octogonales y chapiteles cortos.",
+        "Gran planta de cruz latina con cimborrio/cúpula baja en el crucero, rosetón circular central y triple portada arqueada.",
+        "Color terracota uniforme muy cálido que contrasta con el verde denso de los árboles del Parque de Bolívar."
+      ],
+      "receta_modelado": "Cruz latina en ladrillo terracota: nave principal de 82×32×26 m, transepto de 54×24×24 m con tambor octogonal central (z=32 m) y ábside semicircular al norte; en el frente sur, dos torres gemelas de 12×12×52 m con arcos de medio punto y frontón con rosetón.",
+      "iluminacion_noche": "Bañadores cálidos dorados sobre las dos torres de ladrillo y la fachada principal hacia el Parque de Bolívar.",
+      "imagen_ref": "docs/sitios/img/catedral_metropolitana.webp",
+      "ficha_md": "docs/sitios/catedral_metropolitana.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "museo_antioquia",
+      "nombre": "Museo de Antioquia",
+      "categoria": "museo-patrimonio",
+      "comuna_barrio": "La Candelaria · Plaza Botero (Carrera 52 × Calle 52)",
+      "coordenadas": {
+        "lat": 6.252403,
+        "lon": -75.569144
+      },
+      "mc4": {
+        "x": 14481,
+        "y": 22955,
+        "cota_m": 1481,
+        "hito_mc4": [
+          "museo"
+        ],
+        "lugar_mc4": "museo",
+        "hitos_detalle": [
+          {
+            "id": "museo",
+            "nombre_mc4": "Museo de Antioquia",
+            "clase_mc4": "republicano",
+            "alto_mc4": 20,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"name\"~\"Museo de Antioquia\"](6.251,-75.571,6.254,-75.567)",
+      "dimensiones": {
+        "altura_m": 20,
+        "pisos_aprox": 4,
+        "planta_m": [
+          90,
+          101
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 780,
+        "lod1": 220
+      },
+      "materiales": [
+        "Revoque y concreto labrado en tono crema-arena cálido de estética Art Déco (antiguo Palacio Municipal)",
+        "Piedra gris claro en zócalo, columnas estriadas y escalinata monumental",
+        "Carpintería metálica bronce oscuro en ventanales verticales y portales",
+        "Teja y cubiertas planas con lucernarios en los patios interiores"
+      ],
+      "colores_hex": {
+        "fachada": "#DED4C0",
+        "zocalo": "#9E9689",
+        "vidrio": "#2B3136",
+        "acento": "#6E6254",
+        "luz_noche": "#FFE2A6"
+      },
+      "rasgos": [
+        "Gran bloque palaciego Art Déco de geometría simétrica y sobria que cierra el costado occidental de Plaza Botero.",
+        "Fachada principal con pilastras verticales continuas, cornisas escalonadas y pórtico central jerarquizado.",
+        "Dos patios interiores ajardinados que perforan la manzana y se aprecian desde vistas elevadas.",
+        "Basamento elevado con acceso frontal directo a las esculturas de bronce de la plaza."
+      ],
+      "receta_modelado": "Manzana rectangular de 88×96×19 m con dos patios interiores huecos, fachada oriental Art Déco con cuerpo central saliente escalonado (+2 m) y pilastras verticales en relieve suave; remate perimetral con cornisa escalonada.",
+      "iluminacion_noche": "Luz cálida en el pórtico principal y en la hilera regular de ventanales verticales sobre Plaza Botero.",
+      "imagen_ref": "docs/sitios/img/museo_antioquia.webp",
+      "ficha_md": "docs/sitios/museo_antioquia.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "plaza_mayor",
+      "nombre": "Plaza Mayor Medellín (Centro de Convenciones)",
+      "categoria": "equipamiento-civico",
+      "comuna_barrio": "La Alpujarra · Calle 41 # 55-80 (junto a Pies Descalzos y Teatro Metropolitano)",
+      "coordenadas": {
+        "lat": 6.24322,
+        "lon": -75.57618
+      },
+      "mc4": {
+        "x": 13702,
+        "y": 23970,
+        "cota_m": 1476,
+        "hito_mc4": [],
+        "lugar_mc4": "alpujarra",
+        "hitos_detalle": []
+      },
+      "osm_id": "way/786282461",
+      "osm_consulta": "way[\"name\"~\"Plaza Mayor|Caja de Madera\"](6.241,-75.578,6.245,-75.574)",
+      "dimensiones": {
+        "altura_m": 18,
+        "pisos_aprox": 3,
+        "planta_m": [
+          140,
+          115
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 760,
+        "lod1": 220
+      },
+      "materiales": [
+        "Celosía exterior de listones de madera cálida en la icónica «Caja de Madera»",
+        "Vidrio claro y estructura metálica blanca-gris en el vestíbulo y pabellones de exposiciones",
+        "Concreto arquitectónico gris claro en plazas escalonadas y cubierta curva del Palacio de Exposiciones",
+        "Acero gris en marquesinas y puente peatonal de conexión"
+      ],
+      "colores_hex": {
+        "madera": "#B87A44",
+        "concreto": "#C9C7C1",
+        "vidrio": "#385869",
+        "techo": "#8C9296",
+        "luz_noche": "#FFDF9E"
+      },
+      "rasgos": [
+        "La «Caja de Madera»: gran volumen prismático elevado y revestido en listones cálidos de madera sobre base acristalada.",
+        "Gran plazoleta pública escalonada que conecta el Centro de Convenciones con el Parque de los Pies Descalzos.",
+        "Pabellones amplios de exposición de gran luz con cubiertas metálicas onduladas/planas adyacentes.",
+        "Transparencia peatonal en planta baja que deja ver el interior iluminado en eventos nocturnos."
+      ],
+      "receta_modelado": "Base de plazoleta de 140×115 m; volumen protagonista «Caja de Madera» de 62×38×17 m (primer piso acristalado z=0..5 m, cuerpo superior revestido en madera listonada cálida z=5..17 m) + pabellón ferial contiguo de 72×52×12 m con cubierta gris clara.",
+      "iluminacion_noche": "Resplandor dorado cálido filtrándose por la celosía de madera y reflejándose en la plazoleta.",
+      "imagen_ref": "docs/sitios/img/plaza_mayor.webp",
+      "ficha_md": "docs/sitios/plaza_mayor.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "teatro_pablo_tobon",
+      "nombre": "Teatro Pablo Tobón Uribe",
+      "categoria": "equipamiento-cultural",
+      "comuna_barrio": "La Candelaria · Avenida La Playa (Carrera 40 # 51-24)",
+      "coordenadas": {
+        "lat": 6.247459,
+        "lon": -75.559109
+      },
+      "mc4": {
+        "x": 15591,
+        "y": 23502,
+        "cota_m": 1511,
+        "hito_mc4": [
+          "pablotobon"
+        ],
+        "lugar_mc4": "playa",
+        "hitos_detalle": [
+          {
+            "id": "pablotobon",
+            "nombre_mc4": "Teatro Pablo Tobón Uribe",
+            "clase_mc4": "republicano",
+            "alto_mc4": 14,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/109028606",
+      "osm_consulta": "way[\"name\"~\"Teatro Pablo Tobón\"](6.246,-75.561,6.249,-75.557)",
+      "dimensiones": {
+        "altura_m": 16,
+        "pisos_aprox": 4,
+        "planta_m": [
+          65,
+          48
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 660,
+        "lod1": 190
+      },
+      "materiales": [
+        "Ladrillo a la vista cálido y piedra crema en fachada moderna de mediados del siglo XX",
+        "Concreto pintado marfil en marquesina volada y celosías geométricas frontales",
+        "Vidrio claro en vestíbulo curvo/recto de doble altura hacia la plazoleta de La Playa",
+        "Metal oscuro en carpintería y caja escénica posterior"
+      ],
+      "colores_hex": {
+        "ladrillo": "#B36446",
+        "concreto": "#E3DDD2",
+        "vidrio": "#2E4352",
+        "acento": "#4A4643",
+        "luz_noche": "#FFE099"
+      },
+      "rasgos": [
+        "Fachada modernista icónica de la avenida La Playa con amplia marquesina volada y vestíbulo acristalado.",
+        "Plazoleta frontal abierta con escalinata ancha donde se reúne la vida cultural y bohemia del centro.",
+        "Caja escénica más alta (16 m) en la parte posterior del auditorio, contrastando con el frente más bajo (11 m).",
+        "Combinación sobria de ladrillo cálido, paños crema y celosía geométrica de concreto."
+      ],
+      "receta_modelado": "Plazoleta delantera con escalinata; bloque de vestíbulo y sala de 42×36×11 m con marquesina frontal volada de 4 m y paño acristalado, rematado atrás por la torre escénica prismática de 22×28×16 m en ladrillo y concreto marfil.",
+      "iluminacion_noche": "Marquesina frontal cálidamente iluminada y vestíbulo transparente con brillo dorado hacia La Playa.",
+      "imagen_ref": "docs/sitios/img/teatro_pablo_tobon.webp",
+      "ficha_md": "docs/sitios/teatro_pablo_tobon.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "ruta_n",
+      "nombre": "Complejo Ruta N",
+      "categoria": "innovacion-moderno",
+      "comuna_barrio": "Aranjuez · Calle 67 # 52-20 (Carabobo Norte)",
+      "coordenadas": {
+        "lat": 6.26515,
+        "lon": -75.56681
+      },
+      "mc4": {
+        "x": 14739,
+        "y": 21545,
+        "cota_m": 1468,
+        "hito_mc4": [],
+        "lugar_mc4": "planetario",
+        "hitos_detalle": []
+      },
+      "osm_id": "way/572983883",
+      "osm_consulta": "way[\"name\"~\"Ruta N\"](6.263,-75.569,6.267,-75.565)",
+      "dimensiones": {
+        "altura_m": 28,
+        "pisos_aprox": 7,
+        "planta_m": [
+          130,
+          65
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 780,
+        "lod1": 220
+      },
+      "materiales": [
+        "Fachada acristalada de alto desempeño en tonos verde-azulado y aluminio plateado",
+        "Jardines verticales vivos (muros verdes) y terrazas ajardinadas bioclimáticas",
+        "Parasoles metálicos verticales en naranja-terracota suave y aluminio gris",
+        "Concreto arquitectónico claro en la plaza escalonada interior y puentes entre torres"
+      ],
+      "colores_hex": {
+        "vidrio": "#356470",
+        "aluminio": "#CFD5D9",
+        "muro_verde": "#45823B",
+        "acento": "#D97B38",
+        "luz_noche": "#CCF0FF"
+      },
+      "rasgos": [
+        "Tres torres corporativas contemporáneas de 6–7 pisos conectadas por pasarelas aéreas y un gran patio bioclimático central.",
+        "Muros verdes verticales y terrazas plantadas que suavizan el vidrio y el aluminio.",
+        "Volumen en voladizo y quiebrasoles rítmicos orientados a lo largo de la calle 67 (Barranquilla) y Carabobo.",
+        "Cubiertas ajardinadas con claraboyas y paneles solares visibles desde altura."
+      ],
+      "receta_modelado": "Zócalo abierto de 130×65×4 m con patio escalonado; sobre él, 3 bloques rectangulares escalonados de 24–28 m en vidrio verde-azulado y marcos de aluminio claro, unidos por dos puentes acristalados en el piso 4 y paños de jardín vertical verde en sus testeros.",
+      "iluminacion_noche": "Oficinas blanco-neutro luminosas y puentes conectores encendidos sobre el patio central.",
+      "imagen_ref": "docs/sitios/img/ruta_n.webp",
+      "ficha_md": "docs/sitios/ruta_n.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "parque_lleras",
+      "nombre": "Parque Lleras",
+      "categoria": "plaza-parque",
+      "comuna_barrio": "El Poblado · Carrera 38 × Calle 9 (cota ~1 550 m)",
+      "coordenadas": {
+        "lat": 6.20878,
+        "lon": -75.56774
+      },
+      "mc4": {
+        "x": 14636,
+        "y": 27778,
+        "cota_m": 1550,
+        "hito_mc4": [],
+        "lugar_mc4": "lleras",
+        "hitos_detalle": []
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"leisure\"=\"park\"][\"name\"~\"Parque Lleras\"](6.207,-75.570,6.210,-75.566)",
+      "dimensiones": {
+        "altura_m": 14,
+        "pisos_aprox": 0,
+        "planta_m": [
+          85,
+          75
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 760,
+        "lod1": 210
+      },
+      "materiales": [
+        "Adoquín de ladrillo cocido y concreto gris en senderos diagonales escalonados",
+        "Arboleda tropical muy frondosa (guayacanes, mangos, palmas y ficus) cubriendo casi todo el parque",
+        "Piedra gris y bronce en el busto/pedestal central y graderías de la pendiente",
+        "Borde urbano de casas-terraza bajas (2–3 pisos) con toldos y balcones de madera"
+      ],
+      "colores_hex": {
+        "follaje": "#2F6E36",
+        "adoquin": "#A8624B",
+        "piedra": "#9C9890",
+        "terrazas": "#D9CFC0",
+        "luz_noche": "#FFCC78"
+      },
+      "rasgos": [
+        "Parque de manzana inclinada (pendiente oriente-occidente típica de El Poblado) con terrazas y escalinatas en ladrillo.",
+        "Denso dosel de árboles tropicales que genera una bóveda verde en medio de las calles comerciales de la Zona Rosa.",
+        "Plazoleta central circular con monumento/fuente y senderos en cruz que bajan hacia la carrera 40.",
+        "Ambiente nocturno cálido con guirnaldas de luz y terrazas iluminadas en el perímetro."
+      ],
+      "receta_modelado": "Plataforma ligeramente inclinada de 85×75 m con cuadrantes verdes, senderos en cruz de adoquín terracota, plazoleta central circular con pedestal de 4 m y 16–20 copas de árboles tropicales escalonadas (altura 8–14 m) + faroles bajos perimetrales.",
+      "iluminacion_noche": "Puntos cálidos ámbar entre las copas de los árboles y faroles bajos sobre los senderos en adoquín.",
+      "imagen_ref": "docs/sitios/img/parque_lleras.webp",
+      "ficha_md": "docs/sitios/parque_lleras.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "plaza_libertad",
+      "nombre": "Plaza de la Libertad",
+      "categoria": "institucional-moderno",
+      "comuna_barrio": "La Alpujarra · Carrera 55 × Calle 42 (frente a La Alpujarra)",
+      "coordenadas": {
+        "lat": 6.24421,
+        "lon": -75.57545
+      },
+      "mc4": {
+        "x": 13783,
+        "y": 23861,
+        "cota_m": 1472,
+        "hito_mc4": [],
+        "lugar_mc4": "alpujarra",
+        "hitos_detalle": []
+      },
+      "osm_id": "way/218895104",
+      "osm_consulta": "way[\"name\"~\"Plaza de la Libertad\"](6.243,-75.577,6.246,-75.574)",
+      "dimensiones": {
+        "altura_m": 54,
+        "pisos_aprox": 15,
+        "planta_m": [
+          125,
+          90
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 780,
+        "lod1": 220
+      },
+      "materiales": [
+        "Paneles metálicos y cortasol gris-plata y azul pizarra en las tres torres escalonadas",
+        "Vidrio reflectante gris-azulado en muros cortina de doble piel",
+        "Granito gris y franjas de madera/piedra clara en la gran plaza diagonal",
+        "Acentos geométricos en acero blanco en marquesinas y taludes ajardinados"
+      ],
+      "colores_hex": {
+        "torres": "#C3C9CE",
+        "vidrio": "#2E495A",
+        "plaza": "#B8B4AC",
+        "verde": "#4C8244",
+        "luz_noche": "#D6ECFF"
+      },
+      "rasgos": [
+        "Tres torres modernas esbeltas y asimétricas (entre 40 y 54 m) dispuestas en diagonal alrededor de una gran plaza abierta.",
+        "Revestimiento contemporáneo de lamas metálicas y muros cortina azul-gris que contrasta con el concreto ocre de La Alpujarra.",
+        "Gran plaza cívica peatonal con senderos en abanico, espejos de agua y taludes verdes que unen Alpujarra con Plaza Mayor.",
+        "Silueta escalonada muy limpia que completa el skyline institucional del centro cívico."
+      ],
+      "receta_modelado": "Plataforma cívica de 125×90 m con senderos diagonales; tres torres prismáticas limpias de planta rectangular (42 m, 48 m y 54 m) con revestimiento alternado de vidrio azulado y franjas de lamas metálicas gris-plata, más dos cuerpos bajos comerciales de 9 m.",
+      "iluminacion_noche": "Bandas verticales frías en las esquinas de las torres y luminarias modernas en el pavimento diagonal.",
+      "imagen_ref": "docs/sitios/img/plaza_libertad.webp",
+      "ficha_md": "docs/sitios/plaza_libertad.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "teatro_metropolitano",
+      "nombre": "Teatro Metropolitano José Gutiérrez Gómez",
+      "categoria": "equipamiento-cultural",
+      "comuna_barrio": "La Alpujarra · Calle 41 # 57-30 (junto a Pies Descalzos)",
+      "coordenadas": {
+        "lat": 6.243179,
+        "lon": -75.577582
+      },
+      "mc4": {
+        "x": 13547,
+        "y": 23975,
+        "cota_m": 1477,
+        "hito_mc4": [
+          "teatro"
+        ],
+        "lugar_mc4": "alpujarra",
+        "hitos_detalle": [
+          {
+            "id": "teatro",
+            "nombre_mc4": "Teatro Metropolitano",
+            "clase_mc4": "ladrillo",
+            "alto_mc4": 24,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/32473064",
+      "osm_consulta": "way[\"name\"~\"Teatro Metropolitano\"](6.242,-75.579,6.245,-75.576)",
+      "dimensiones": {
+        "altura_m": 24,
+        "pisos_aprox": 4,
+        "planta_m": [
+          92,
+          68
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 720,
+        "lod1": 210
+      },
+      "materiales": [
+        "Ladrillo a la vista rojo-terracota característico de la arquitectura antioqueña contemporánea",
+        "Concreto arquitectónico gris claro en vigas, aleros y escalinatas de acceso",
+        "Vidrio ahumado en vestíbulo panorámico orientado hacia la plazoleta norte",
+        "Cubierta inclinada escalonada en lámina gris oscura sobre la sala sinfónica"
+      ],
+      "colores_hex": {
+        "ladrillo": "#A94F38",
+        "concreto": "#C4C0B8",
+        "techo": "#5B5E62",
+        "vidrio": "#293740",
+        "luz_noche": "#FFE09A"
+      },
+      "rasgos": [
+        "Volumen rotundo en ladrillo rojo a la vista con cubierta inclinada en cuña que sigue la pendiente acústica de la gran sala.",
+        "Alta torre de tramoya (caja escénica) de ~24 m elevándose con claridad sobre el cuerpo principal.",
+        "Plazoleta peatonal amplia con escalinatas y rampas que enlazan con Plaza Mayor y el Edificio EPM.",
+        "Pórtico frontal sombreado por profundos voladizos de ladrillo y concreto."
+      ],
+      "receta_modelado": "Reemplazar el hito `teatro`: cuerpo de vestíbulo y sala de 64×46 m cuya cubierta sube en rampa desde z=10 m (frente) hasta z=18 m, seguido por la caja escénica prismática de 26×32×24 m en ladrillo terracota con remates de concreto gris.",
+      "iluminacion_noche": "Vestíbulo acristalado cálido y reflectores suaves bañando los grandes paños de ladrillo rojo.",
+      "imagen_ref": "docs/sitios/img/teatro_metropolitano.webp",
+      "ficha_md": "docs/sitios/teatro_metropolitano.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "pies_descalzos",
+      "nombre": "Parque de los Pies Descalzos",
+      "categoria": "plaza-parque",
+      "comuna_barrio": "La Alpujarra · Carrera 58 × Calle 42 (frente al Edificio EPM)",
+      "coordenadas": {
+        "lat": 6.244676,
+        "lon": -75.576876
+      },
+      "mc4": {
+        "x": 13625,
+        "y": 23809,
+        "cota_m": 1476,
+        "hito_mc4": [
+          "pies"
+        ],
+        "lugar_mc4": "pies",
+        "hitos_detalle": [
+          {
+            "id": "pies",
+            "nombre_mc4": "Parque de los Pies Descalzos",
+            "clase_mc4": "pies",
+            "alto_mc4": 0,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/32473520",
+      "osm_consulta": "way[\"name\"~\"Pies Descalzos\"](6.243,-75.578,6.246,-75.575)",
+      "dimensiones": {
+        "altura_m": 10,
+        "pisos_aprox": 0,
+        "planta_m": [
+          130,
+          120
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 760,
+        "lod1": 210
+      },
+      "materiales": [
+        "Arena blanca fina en el gran patio zen rectangular para caminar descalzo",
+        "Bosque de bambú verde intenso en franja lineal de sombra",
+        "Espejos de agua y fuentes de chorros verticales con bordes de piedra gris",
+        "Piedra gris y senderos de adoquín intercalados con jardines bajos"
+      ],
+      "colores_hex": {
+        "arena": "#ECE4D3",
+        "agua": "#3B7C96",
+        "bambu": "#3D7E3B",
+        "piedra": "#A4A29C",
+        "luz_noche": "#B8ECFF"
+      },
+      "rasgos": [
+        "Gran rectángulo luminoso de arena blanca clara rodeado de bancas de piedra para recorrido sensorial.",
+        "Bosque compacto de guaduas/bambúes verdes (8–10 m de alto) en uno de los cuadrantes.",
+        "Pozos y fuentes interactivas de agua azul-turquesa con chorros verticales donde juega la gente.",
+        "Articulación peatonal directa entre el Edificio Inteligente de EPM y el Museo del Agua."
+      ],
+      "receta_modelado": "Reemplazar el área de hito `pies`: plataforma de piedra gris de 130×120 m dividida en 4 zonas nítidas: gran caja de arena blanca (#ECE4D3), estanque azul con chorros, bosquecillo denso de tallos de bambú verde (8–10 m) y senderos de piedra.",
+      "iluminacion_noche": "Focos subacuáticos turquesa en las fuentes y luz cálida entre las cañas de bambú.",
+      "imagen_ref": "docs/sitios/img/pies_descalzos.webp",
+      "ficha_md": "docs/sitios/pies_descalzos.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "parque_luces",
+      "nombre": "Parque de las Luces · Plaza Cisneros",
+      "categoria": "plaza-parque",
+      "comuna_barrio": "La Candelaria · Calle 44 × Carrera 52 (entre Biblioteca EPM y edificios Vásquez/Carré)",
+      "coordenadas": {
+        "lat": 6.246047,
+        "lon": -75.572301
+      },
+      "mc4": {
+        "x": 14131,
+        "y": 23658,
+        "cota_m": 1473,
+        "hito_mc4": [
+          "luces"
+        ],
+        "lugar_mc4": "luces",
+        "hitos_detalle": [
+          {
+            "id": "luces",
+            "nombre_mc4": "Parque de las Luces",
+            "clase_mc4": "luces",
+            "alto_mc4": 0,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/32474547",
+      "osm_consulta": "way[\"name\"~\"Plaza Cisneros|Parque de las Luces\"](6.245,-75.574,6.247,-75.571)",
+      "dimensiones": {
+        "altura_m": 24,
+        "pisos_aprox": 0,
+        "planta_m": [
+          160,
+          120
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 840,
+        "lod1": 240
+      },
+      "materiales": [
+        "300 postes luminosos esbeltos de acero y fibra traslúcida blanca de hasta 24 m de altura",
+        "Pavimento continuo de piedra y concreto gris oscuro que hace resaltar la luz",
+        "Franjas lineales de bambú verde y canales de agua someros",
+        "Bancas largas de concreto prefabricado claro"
+      ],
+      "colores_hex": {
+        "postes": "#EAEFF2",
+        "pavimento": "#7E8082",
+        "bambu": "#3C753A",
+        "agua": "#38687A",
+        "luz_noche": "#FFF4C8"
+      },
+      "rasgos": [
+        "«Bosque artificial» inconfundible de 300 postes verticales iluminados (18 a 24 m) dispuestos en grilla rítmica.",
+        "De noche transforma toda la manzana en una constelación vertical de luz blanca-cálida visible desde lejos.",
+        "Intercalado con islas de bambú y canales someros frente a los edificios republicanos Vásquez y Carré y la Biblioteca EPM.",
+        "Espacio completamente permeable para cruzar a pie o en bici entre San Juan y Carabobo."
+      ],
+      "receta_modelado": "Reemplazar hito `luces`: explanada de concreto gris de 160×120 m con 2 franjas de bambú y canales de agua; instanciar una matriz limpia de 60–90 postes esbeltos representativos (en LOD0 con `InstancedMesh`, alturas variadas 16–24 m) con puntera emisiva encendida al caer la tarde.",
+      "iluminacion_noche": "Emisión protagonista en toda la mitad superior de los postes verticales, con brillo blanco-dorado suave.",
+      "imagen_ref": "docs/sitios/img/parque_luces.webp",
+      "ficha_md": "docs/sitios/parque_luces.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "edificio_vasquez",
+      "nombre": "Edificio Vásquez",
+      "categoria": "patrimonio-republicano",
+      "comuna_barrio": "La Candelaria · Plaza Cisneros (Carrera 52 × Calle 44)",
+      "coordenadas": {
+        "lat": 6.245556,
+        "lon": -75.571517
+      },
+      "mc4": {
+        "x": 14218,
+        "y": 23712,
+        "cota_m": 1475,
+        "hito_mc4": [
+          "vasquez"
+        ],
+        "lugar_mc4": "luces",
+        "hitos_detalle": [
+          {
+            "id": "vasquez",
+            "nombre_mc4": "Edificio Vásquez",
+            "clase_mc4": "republicano",
+            "alto_mc4": 16,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/32474590",
+      "osm_consulta": "way[\"name\"~\"Edificio Vásquez\"](6.244,-75.573,6.247,-75.570)",
+      "dimensiones": {
+        "altura_m": 16,
+        "pisos_aprox": 3,
+        "planta_m": [
+          46,
+          45
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 680,
+        "lod1": 190
+      },
+      "materiales": [
+        "Ladrillo a la vista rojo-terracota de aparejo republicano francés (diseño de Charles Émile Carré)",
+        "Molduras, cornisas, arcos y pilastras en estuco crema marfil",
+        "Carpintería de madera pintada verde oscuro / café en balcones y portones",
+        "Cubierta inclinada de teja de barro con claraboya sobre el patio interior"
+      ],
+      "colores_hex": {
+        "ladrillo": "#A94D38",
+        "estuco": "#EDE6D6",
+        "carpinteria": "#3D4D3E",
+        "techo": "#8F462F",
+        "luz_noche": "#FFD98E"
+      },
+      "rasgos": [
+        "Bloque esquinero republicano de finales del siglo XIX con fachada bicoloreada en ladrillo rojo y molduras crema.",
+        "Tres pisos de arcos repetidos con balcones metálicos delicados y cornisas horizontales muy marcadas.",
+        "Esquina en chaflán jerarquizada con frontón y remate decorativo frente al Parque de las Luces.",
+        "Forma pareja patrimonial inseparable con el vecino Edificio Carré al otro lado de la calle."
+      ],
+      "receta_modelado": "Bloque cuadrado de 45×45×15 m con patio interior central y chaflán en la esquina noroccidental; fachada en ladrillo terracota con 3 cornisas corridas crema, zócalo de arcos en primer piso y cubierta de teja a cuatro aguas.",
+      "iluminacion_noche": "Baño arquitectónico cálido en los arcos del primer piso y balcones del segundo nivel.",
+      "imagen_ref": "docs/sitios/img/edificio_vasquez.webp",
+      "ficha_md": "docs/sitios/edificio_vasquez.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "edificio_carre",
+      "nombre": "Edificio Carré",
+      "categoria": "patrimonio-republicano",
+      "comuna_barrio": "La Candelaria · Plaza Cisneros (Carrera 52 × Calle 45)",
+      "coordenadas": {
+        "lat": 6.245966,
+        "lon": -75.571389
+      },
+      "mc4": {
+        "x": 14232,
+        "y": 23667,
+        "cota_m": 1475,
+        "hito_mc4": [
+          "carre"
+        ],
+        "lugar_mc4": "luces",
+        "hitos_detalle": [
+          {
+            "id": "carre",
+            "nombre_mc4": "Edificio Carré",
+            "clase_mc4": "republicano",
+            "alto_mc4": 16,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/32474597",
+      "osm_consulta": "way[\"name\"~\"Edificio Carré\"](6.245,-75.573,6.247,-75.570)",
+      "dimensiones": {
+        "altura_m": 16,
+        "pisos_aprox": 3,
+        "planta_m": [
+          43,
+          42
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 680,
+        "lod1": 190
+      },
+      "materiales": [
+        "Ladrillo cocido terracota y paños ocre-ladrillo de arquitectura republicana francesa",
+        "Cornisas, dovelas y marcos de ventanas en estuco marfil claro",
+        "Barandillas de hierro forjado negro en balcones corridos",
+        "Cubierta de mansarda gris pizarra / teja de barro con remates en esquinas"
+      ],
+      "colores_hex": {
+        "ladrillo": "#B3553D",
+        "estuco": "#EFE8D8",
+        "hierro": "#2E3134",
+        "techo": "#645A54",
+        "luz_noche": "#FFDA90"
+      },
+      "rasgos": [
+        "Gemelo estilístico del Edificio Vásquez, obra de Charles Émile Carré (1895) en el costado oriental de Plaza Cisneros.",
+        "Ritmo estricto de arcos rebajados y de medio punto enmarcados por pilastras de ladrillo y bandas claras.",
+        "Tejado con ligero aire de mansarda y buhardillas discretas rematando la cornisa superior.",
+        "Gran presencia urbana al reflejar la luz nocturna de los 300 postes del Parque de las Luces."
+      ],
+      "receta_modelado": "Bloque cuadrado de 43×42×15,5 m con patio interior central, fachada en ladrillo cálido con molduras crema por piso, arcos en planta baja y cubierta perimetral tipo mansarda inclinada gris-terracota.",
+      "iluminacion_noche": "Iluminación cálida de fachada resaltando las pilastras y el diálogo arquitectónico con el Edificio Vásquez.",
+      "imagen_ref": "docs/sitios/img/edificio_carre.webp",
+      "ficha_md": "docs/sitios/edificio_carre.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "biblioteca_epm",
+      "nombre": "Biblioteca EPM",
+      "categoria": "equipamiento-cultural",
+      "comuna_barrio": "La Candelaria · Costado occidental de Plaza Cisneros (Carrera 54 # 44-48)",
+      "coordenadas": {
+        "lat": 6.246407,
+        "lon": -75.573133
+      },
+      "mc4": {
+        "x": 14039,
+        "y": 23618,
+        "cota_m": 1473,
+        "hito_mc4": [
+          "bibepm"
+        ],
+        "lugar_mc4": "luces",
+        "hitos_detalle": [
+          {
+            "id": "bibepm",
+            "nombre_mc4": "Biblioteca EPM",
+            "clase_mc4": "ladrillo",
+            "alto_mc4": 22,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/32474558",
+      "osm_consulta": "way[\"name\"~\"Biblioteca EPM\"](6.245,-75.575,6.248,-75.571)",
+      "dimensiones": {
+        "altura_m": 22,
+        "pisos_aprox": 4,
+        "planta_m": [
+          62,
+          90
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 660,
+        "lod1": 190
+      },
+      "materiales": [
+        "Piedra gris-arena y concreto arquitectónico en el gran volumen piramidal truncado invertido",
+        "Ladrillo y placas oscuras en el núcleo vertical posterior",
+        "Vidrio ahumado en rasgaduras verticales y en la fachada acristalada que mira a Plaza Cisneros",
+        "Acero pintado gris en pérgolas y escalinata de acceso"
+      ],
+      "colores_hex": {
+        "piedra": "#B5ADA0",
+        "oscuro": "#4A4947",
+        "vidrio": "#283F4C",
+        "acento": "#8A8175",
+        "luz_noche": "#FFE3A8"
+      },
+      "rasgos": [
+        "Inconfundible volumen en pirámide truncada invertida (más ancho arriba que en la base) que parece abrirse sobre Plaza Cisneros.",
+        "Cara inclinada masiva en tono piedra gris-arena que genera un gran alero natural de sombra hacia la plaza.",
+        "Volumen posterior ortogonal que alberga salas de lectura y auditorio con lucernarios superiores.",
+        "Contrapunto contemporáneo directo frente al bosque de postes de luz y los edificios republicanos de ladrillo."
+      ],
+      "receta_modelado": "Reemplazar hito `bibepm`: prisma de base más estrecha (46×72 m en z=0) cuyas caras oriente y norte se inclinan hacia afuera hasta alcanzar 60×84 m en z=22 m (pirámide invertida truncada) en tono piedra cálida con franja acristalada retranqueada en la planta baja.",
+      "iluminacion_noche": "Resplandor cálido en la galería baja bajo el voladizo inclinado y en las rasgaduras verticales.",
+      "imagen_ref": "docs/sitios/img/biblioteca_epm.webp",
+      "ficha_md": "docs/sitios/biblioteca_epm.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "estacion_ferrocarril",
+      "nombre": "Antigua Estación del Ferrocarril de Antioquia",
+      "categoria": "patrimonio-republicano",
+      "comuna_barrio": "La Alpujarra · Avenida San Juan (Calle 44 # 52-51)",
+      "coordenadas": {
+        "lat": 6.244712,
+        "lon": -75.572092
+      },
+      "mc4": {
+        "x": 14154,
+        "y": 23805,
+        "cota_m": 1475,
+        "hito_mc4": [
+          "ferrocarril"
+        ],
+        "lugar_mc4": "alpujarra",
+        "hitos_detalle": [
+          {
+            "id": "ferrocarril",
+            "nombre_mc4": "Estación del Ferrocarril de Antioquia",
+            "clase_mc4": "republicano",
+            "alto_mc4": 12,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "node/14261984136",
+      "osm_consulta": "way[\"name\"~\"Ferrocarril de Antioquia|Estación Medellín\"](6.243,-75.574,6.246,-75.570)",
+      "dimensiones": {
+        "altura_m": 14,
+        "pisos_aprox": 2,
+        "planta_m": [
+          96,
+          83
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 760,
+        "lod1": 220
+      },
+      "materiales": [
+        "Mampostería revocada en tono ocre-dorado cálido y crema marfil en cornisas y pilastras",
+        "Cubiertas inclinadas a varias aguas de teja de barro terracota",
+        "Carpintería tradicional en madera café oscuro y vidrio con arcos",
+        "Hierro forjado oscuro en faroles y barandas de los pabellones laterales"
+      ],
+      "colores_hex": {
+        "fachada": "#E0C798",
+        "molduras": "#F4EFE4",
+        "techo": "#AE4F33",
+        "madera": "#4E3828",
+        "luz_noche": "#FFD68A"
+      },
+      "rasgos": [
+        "Composición palaciega simétrica en U / H con cuerpo central más alto coronado por frontón y reloj clásico.",
+        "Dos alas laterales alargadas de 2 pisos con galería porticada de arcos y remate de pabellones esquineros.",
+        "Color ocre-crema muy cálido bajo tejados rojos de barro que contrasta con el concreto de La Alpujarra.",
+        "Patio interior ajardinado y antigua marquesina de andenes en la parte posterior."
+      ],
+      "receta_modelado": "Reemplazar hito `ferrocarril`: bloque principal alargado de 86×24×10 m en tono ocre-crema con dos alas perpendiculares hacia el sur formando patio, cuerpo central elevado a z=14 m con frontón triangular y disco de reloj, y cubiertas de teja terracota a dos aguas.",
+      "iluminacion_noche": "Baño cálido sobre las arcadas frontales y esfera iluminada del reloj central.",
+      "imagen_ref": "docs/sitios/img/estacion_ferrocarril.webp",
+      "ficha_md": "docs/sitios/estacion_ferrocarril.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "palacio_nacional",
+      "nombre": "Palacio Nacional",
+      "categoria": "patrimonio-civico",
+      "comuna_barrio": "La Candelaria · Carrera 52 (Carabobo) × Calle 48",
+      "coordenadas": {
+        "lat": 6.24901,
+        "lon": -75.570401
+      },
+      "mc4": {
+        "x": 14342,
+        "y": 23330,
+        "cota_m": 1484,
+        "hito_mc4": [
+          "nacional"
+        ],
+        "lugar_mc4": "berrio",
+        "hitos_detalle": [
+          {
+            "id": "nacional",
+            "nombre_mc4": "Palacio Nacional",
+            "clase_mc4": "republicano",
+            "alto_mc4": 24,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": "way/31973366",
+      "osm_consulta": "way[\"name\"~\"Palacio Nacional\"](6.248,-75.572,6.250,-75.569)",
+      "dimensiones": {
+        "altura_m": 24,
+        "pisos_aprox": 5,
+        "planta_m": [
+          62,
+          90
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 840,
+        "lod1": 240
+      },
+      "materiales": [
+        "Concreto y revoque labrado en crema marfil y ocre rosado suave (obra de Agustín Goovaerts)",
+        "Arcadas neorrománicas y balcones con balaustradas prefabricadas",
+        "Carpintería metálica gris-verde en altos ventanales agrupados en tríforas",
+        "Gran cubierta acristalada interior sobre el patio comercial y cultural"
+      ],
+      "colores_hex": {
+        "fachada": "#E6DAC4",
+        "acento_ocre": "#C9A882",
+        "vidrio": "#2E4048",
+        "techo": "#8F897E",
+        "luz_noche": "#FFE09E"
+      },
+      "rasgos": [
+        "Imponente edificio patrimonial neorrománico de 5 pisos sobre el paseo peatonal de Carabobo.",
+        "Esquinas redondeadas/ochavadas monumentales coronadas por frontones escalonados y cúpulas bajas.",
+        "Fachada profundamente modelada por pilastras, arcos de medio punto apilados y cornisas muy salientes.",
+        "Gran nave interior luminosa (hoy galería comercial y de arte) visible por su cubierta de vidrio."
+      ],
+      "receta_modelado": "Reemplazar hito `nacional`: manzana rectangular de 60×88×22 m con patio cubierto por lucernario a dos aguas; fachadas crema-ocre con fuertes bandas horizontales, remates de esquina elevados a z=25 m y ritmo denso de ventanales arqueados.",
+      "iluminacion_noche": "Luminosidad cálida saliendo de las galerías superiores y el lucernario central sobre Carabobo.",
+      "imagen_ref": "docs/sitios/img/palacio_nacional.webp",
+      "ficha_md": "docs/sitios/palacio_nacional.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "casa_memoria",
+      "nombre": "Museo Casa de la Memoria",
+      "categoria": "museo-contemporaneo",
+      "comuna_barrio": "La Candelaria · Parque Bicentenario (Calle 51 # 36-66)",
+      "coordenadas": {
+        "lat": 6.245899,
+        "lon": -75.556501
+      },
+      "mc4": {
+        "x": 15880,
+        "y": 23674,
+        "cota_m": 1517,
+        "hito_mc4": [
+          "memoria"
+        ],
+        "lugar_mc4": "playa",
+        "hitos_detalle": [
+          {
+            "id": "memoria",
+            "nombre_mc4": "Museo Casa de la Memoria",
+            "clase_mc4": "moderno",
+            "alto_mc4": 12,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"name\"~\"Casa de la Memoria\"](6.244,-75.558,6.247,-75.555)",
+      "dimensiones": {
+        "altura_m": 12,
+        "pisos_aprox": 2,
+        "planta_m": [
+          49,
+          60
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 620,
+        "lod1": 180
+      },
+      "materiales": [
+        "Concreto arquitectónico gris claro moldeado en placas lisas y muros inclinados",
+        "Lámina metálica gris-zinc en la envolvente superior continua tipo túnel",
+        "Vidrio claro en los dos grandes portales abiertos (acceso y salida al espejo de agua)",
+        "Espejo de agua somero y prados del Parque Bicentenario rodeando el volumen"
+      ],
+      "colores_hex": {
+        "concreto": "#C4C2BC",
+        "zinc": "#6D7278",
+        "vidrio": "#2E4552",
+        "agua": "#437082",
+        "luz_noche": "#FFE4AE"
+      },
+      "rasgos": [
+        "Volumen escultórico monolítico en forma de túnel trapezoidal biselado que emerge suavemente del terreno del Parque Bicentenario.",
+        "Dos grandes bocas abiertas en sus extremos que enmarcan el paisaje y dejan entrar la luz natural.",
+        "Espejo de agua tranquilo adyacente y plazoleta conmemorativa arbolada junto a la quebrada Santa Elena.",
+        "Estética minimalista y serena sin ornamentos, muy fácil de leer por su silueta geométrica pura."
+      ],
+      "receta_modelado": "Reemplazar hito `memoria`: volumen alargado de 46×24×11 m con sección transversal trapezoidal biselada (techo y muros continuos en concreto/zinc gris) ligeramente enterrado en talud verde, con extremos rebajados acristalados y espejo de agua frontal de 36×10 m.",
+      "iluminacion_noche": "Luz interior cálida emergiendo suavemente desde las dos bocas del túnel y reflejándose en el espejo de agua.",
+      "imagen_ref": "docs/sitios/img/casa_memoria.webp",
+      "ficha_md": "docs/sitios/casa_memoria.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    },
+    {
+      "id": "mamm",
+      "nombre": "Museo de Arte Moderno de Medellín — MAMM",
+      "categoria": "museo-contemporaneo",
+      "comuna_barrio": "El Poblado · Ciudad del Río (Carrera 44 # 19A-100)",
+      "coordenadas": {
+        "lat": 6.223673,
+        "lon": -75.574045
+      },
+      "mc4": {
+        "x": 13938,
+        "y": 26132,
+        "cota_m": 1488,
+        "hito_mc4": [
+          "mamm"
+        ],
+        "lugar_mc4": "ciudad_rio",
+        "hitos_detalle": [
+          {
+            "id": "mamm",
+            "nombre_mc4": "Museo de Arte Moderno de Medellín",
+            "clase_mc4": "ladrillo",
+            "alto_mc4": 18,
+            "poligonos": 1
+          }
+        ]
+      },
+      "osm_id": null,
+      "osm_consulta": "way[\"name\"~\"Museo de Arte Moderno|MAMM\"](6.222,-75.576,6.225,-75.572)",
+      "dimensiones": {
+        "altura_m": 22,
+        "pisos_aprox": 5,
+        "planta_m": [
+          94,
+          59
+        ]
+      },
+      "presupuesto_tris": {
+        "lod0": 820,
+        "lod1": 230
+      },
+      "materiales": [
+        "Concreto arquitectónico gris claro y malla metálica microperforada en las cajas apiladas de la ampliación",
+        "Ladrillo industrial histórico y cerchas metálicas de los antiguos Talleres Robledo (ala norte)",
+        "Vidrio claro en vestíbulos y terrazas públicas escalonadas",
+        "Adoquín y madera en la gran plazoleta-teatro al aire libre de Ciudad del Río"
+      ],
+      "colores_hex": {
+        "concreto": "#C7C5BF",
+        "malla": "#8F9398",
+        "ladrillo": "#9E4F3A",
+        "vidrio": "#304856",
+        "luz_noche": "#FFE09A"
+      },
+      "rasgos": [
+        "Contraste emblemático entre la nave industrial histórica de ladrillo (Talleres Robledo, cubierta a dos aguas) y la ampliación moderna.",
+        "Ampliación compuesta por cajas de concreto apiladas y desplazadas en voladizo (inspiradas en la arquitectura escalonada de las laderas).",
+        "Terrazas públicas exteriores conectadas por escaleras abiertas que miran al Parque Lineal de Ciudad del Río.",
+        "Gran pared blanca exterior sobre la plazoleta para cine al aire libre nocturno."
+      ],
+      "receta_modelado": "Reemplazar hito `mamm`: combinar dos cuerpos adosados sobre plazoleta de 94×59 m: (1) nave industrial histórica de ladrillo rojo de 42×24×10 m con cubierta a dos aguas y monitor de luz; (2) torre de ampliación contemporánea de 46×28×22 m hecha de 4 cajas de concreto gris apiladas con voladizos desplazados de 3–5 m y terrazas escalonadas.",
+      "iluminacion_noche": "Resplandor cálido en las terrazas escalonadas y tras la malla metálica de las cajas en voladizo.",
+      "imagen_ref": "docs/sitios/img/mamm.webp",
+      "ficha_md": "docs/sitios/mamm.md",
+      "fuente_imagen": "maqueta-3d-estudio"
+    }
+  ]
+}
