@@ -303,3 +303,78 @@ module.exports.v7 = async function (p, ok) {
   ok(/Estudiante/.test(r.reparto) && /anfitrión/.test(r.reparto), '👥 reparto con doble rol (Santi: ' + r.reparto + ')');
   ok(r.medir.cenital && r.medir.equipo && r.medir.sinError, '📏 medir este celular da su informe ' + JSON.stringify(r.medir));
 };
+
+/* ronda 3.6 (Gemini · Antigravity): A-1 (15 encargos), A-2 (88 frases) y A-3 (los 12 modos de Gemini jugados por bot hasta el final) */
+module.exports.v8 = async function (p, ok) {
+  console.log('V8) ronda 3.6 · 12 modos de Gemini con bot hasta el final, 15 encargos y 88 frases');
+  const r = await p.evaluate(async () => {
+    const espera = ms => new Promise(s => setTimeout(s, ms));
+    const MODOS = [
+      ['copa', 'Copa del Valle'], ['domicilio', 'Domicilio Sostenible'], ['monitoreo911', 'Monitoreo 911'],
+      ['planeador', 'El Planeador'], ['metro2d', 'Metro 2D Lateral'], ['palmas', 'Bajada por Las Palmas'],
+      ['traffix', 'Semaforero'], ['despacho', 'Despacho'], ['maquinista', 'Maquinista'],
+      ['circuito', 'Circuito LED'], ['moravia', 'Laberinto de Moravia'], ['roguelite', 'Turno Roguelite']
+    ];
+    const resultados = [];
+    for (const [id, nom] of MODOS) {
+      JE.game.stop && JE.game.stop();
+      const e0 = (JE.errors || []).length;
+      try {
+        JE.game.start(id, 1, { seed: 7, nov: NOVEDADES[0] });
+        await espera(60);
+        const G = JE.game.mode;
+        if (!G) { resultados.push({ id, nom, done: false, score: 0, pasos: 0, err: ['no arrancó'] }); continue; }
+        JE.game.paused = true;
+        let pasos = 0;
+        for (; pasos < 6000 && !G.done; pasos++) {
+          if (pasos % 2 === 0) {
+            try {
+              const a = G.sub || G;
+              if (a !== G && a.bot) a.bot(1 / 15);
+              else if (G.bot) G.bot(1 / 15);
+            } catch (e) { JE.errors.push(id + ' bot: ' + e.message); }
+          }
+          G.update(1 / 30);
+        }
+        const score = Math.round(G.score);
+        const done = !!G.done;
+        const err = (JE.errors || []).slice(e0);
+        JE.game.paused = false;
+        JE.game.stop();
+        resultados.push({ id, nom, done, score, pasos, err });
+      } catch (e) {
+        JE.game.paused = false;
+        try { JE.game.stop(); } catch (e2) { }
+        resultados.push({ id, nom, done: false, score: 0, pasos: 0, err: [e.message] });
+      }
+    }
+    /* A-1: los 15 vecinos tienen encargo de 3 pasos con destinos válidos */
+    const encs = Encargos.lista();
+    const vecinos = Trama.personajes().map(q => q.id);
+    const faltanVec = vecinos.filter(id => !encs.some(e => e.quien === id));
+    const badRef = [];
+    for (const e of encs) {
+      if (!Array.isArray(e.pasos) || e.pasos.length !== 3) badRef.push(e.id + ':pasos');
+      for (const st of e.pasos || []) if (!Encargos.lugar(st.a)) badRef.push(e.id + ':' + st.a);
+    }
+    /* A-2: 88+ frases con la distribución pedida */
+    const fr = Dichos.frases(), cnt = {};
+    for (const f of fr) for (const ev of f.ev || []) cnt[ev] = (cnt[ev] || 0) + 1;
+    UI.go('sHome');
+    return {
+      resultados,
+      enc: { n: encs.length, faltanVec, badRef },
+      fr: { n: fr.length, cnt }
+    };
+  });
+  for (const m of r.resultados) {
+    ok(m.done && m.score > 0 && !m.err.length,
+      'bot ' + m.nom + ' (' + m.id + '): termina=' + m.done + ' · ' + m.score + ' pts · ' + m.pasos + ' pasos' + (m.err.length ? ' · err: ' + m.err.join('; ') : ''));
+  }
+  ok(r.enc.n >= 15 && !r.enc.faltanVec.length && !r.enc.badRef.length,
+    '💬 A-1 encargos: ' + r.enc.n + ' historias (los 15 vecinos cubiertos, todos los destinos válidos)' + (r.enc.faltanVec.length || r.enc.badRef.length ? ' · ' + JSON.stringify(r.enc) : ''));
+  const c = r.fr.cnt || {};
+  ok(r.fr.n >= 88 && (c.timbre | 0) >= 17 && (c.peaton | 0) >= 13 && (c.semaforo | 0) >= 9 && (c.truco | 0) >= 10 && (c.ambiente | 0) >= 34,
+    '🗣️ A-2 frases ciudad: ' + r.fr.n + ' frases ' + JSON.stringify(c));
+};
+

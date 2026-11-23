@@ -2,55 +2,35 @@
   "schema_version": 1,
   "agente": "antigravity",
   "marca": "Gemini (Antigravity)",
-  "rama": "antigravity/evolucion-encicla-v22",
-  "base_commit": "09c8a2f",
+  "rama": "antigravity/encicla-3.6",
+  "base_commit": "55bf5d7",
   "base_unificada": [
-    "origin/ccr-6f184fb6-vtpkye @ 019bd05 (EnCicla v3.2.0: 99a-99h + 99r GPT-6 + Flexibilidad)",
-    "origin/main @ 8d14bad (Motor City 4.9.0 Realismo)"
+    "origin/ccr-6f184fb6-vtpkye @ 55bf5d7 (EnCicla v3.5.0, tag v3.5.0)",
+    "origin/main @ 308d34b (Motor City 5.2.0 «Ciudad viva»)"
   ],
-  "fase_actual": "entrega-v3.3-evolucion-unificada",
+  "fase_actual": "entrega-3.6-a1-a4",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-23T02:20:00Z",
+  "ultima_actualizacion_utc": "2026-11-23T16:05:00Z",
   "zonas_reclamadas": [
     "src/js/99n-controles-liberado.js",
     "src/js/99o-mundo3d-camaras.js",
     "src/js/99p-ciclovia-skate-runner.js",
     "src/js/99q-mundo-vivo-rpg.js",
-    "tests/auditoria-antigravity.js",
-    "docs/EVOLUCION-Y-AUDITORIA-JUEGA-ENCICLA-GEMINI-ANTIGRAVITY.md",
+    "contenido/guion/encargos.json (adición de los 9 vecinos faltantes: A-1)",
+    "contenido/guion/frases.json (adición de +40 frases: A-2)",
+    "tests/revolucion-encicla.js (sección V8: A-3)",
+    "tests/run.js (llamada a V8: A-3)",
+    "docs/AUDITORIA-CAPTURAS-Y-MAS-3.6-GEMINI-ANTIGRAVITY.md",
     "coord/agentes/antigravity.json",
     "coord/buzon/*-antigravity-*.md"
   ],
-  "archivos_compartidos_arreglados": [
-    "src/js/92-vehiculos.js (Snd.vehSfx reparado + Art.vehSideRider 7 vehículos)",
-    "src/js/75-graficos.js (salto en Panorámica 2D para los 7 vehículos no-camión)",
-    "src/js/92-ciclovia.js (optimización 15x por caché Z + controles + bot)",
-    "contenido/guion/trama_valle.json (unificación 100 % de los 9 mentores con CAST)",
-    "src/index.html (lang es-CO, viewport accesible, ARIA)",
-    "src/style.css (WCAG 2.2 AA, paisaje 860x412, body.pixel3d #gl3d, Hub Valle Vivo)",
-    "tests/run.js (línea 469: redondeo Math.round coherente en prueba WebRTC)",
-    "docs/BITACORA.md"
-  ],
-  "modos_nuevos_registrados": [
-    "copa (Copa del Valle · Super Arcade Racing)",
-    "domicilio (Domicilio Sostenible · Crazy Taxi / Parcel Corps)",
-    "monitoreo911 (Monitoreo 911 · 911 Operator / CityRT)",
-    "planeador (El Planeador · Cities: Skylines / Townscaper)",
-    "metro2d (Metro 2D Lateral · Tiny Rails)",
-    "palmas (Bajada Las Palmas · Alto's Odyssey + Ley 1811)",
-    "roguelite (Turno Roguelite · Soul Knight)",
-    "traffix (Semaforero · Traffix)",
-    "despacho (Despacho · Package Inc.)",
-    "maquinista (Maquinista Línea A · Railways)",
-    "circuito (Circuito LED · Infinity Loop)",
-    "moravia (Laberinto de Moravia)"
-  ],
-  "zonas_respetadas_de_companeras": [
-    "src/js/98n-*.js .. 98y-*.js (Claude v2.1.0)",
-    "src/js/99a-*.js .. 99h-*.js (Claude v3.0-v3.2)",
-    "src/js/99r-ciclo-geometria-gpt6.js (OpenAI GPT-6)",
-    "tests/auditoria-modos.js (Claude)",
-    "tests/prueba-gpt6-ciclorrutas.mjs (OpenAI GPT-6)"
-  ],
-  "notas": "Armonización completa sin colisiones: JE.acelFijo conectado a #bCrucero (99a), JE.vistas unificado con WebGL JE.mundo3d (99d/99f) + cabina 1P + Pixel World sobre WebGL + Maqueta 2:1, JE.skate.enCiclovia delegando en JE.cicloGeoGPT6 (99r), y JE.rpg usando JE.diario (99h) registrando solo la clave rpg en Save.registrar."
+  "entregas_3_6": {
+    "A-1": "9 encargos nuevos de 3 pasos (Yuli, Kevin, Paola, Wílson, Rubén, Marleny, Libardo, Jhon, Rosalba) -> 15/15 vecinos cubiertos",
+    "A-2": "+40 frases ciudad (10 timbre, 8 peaton, 6 semaforo, 6 truco, 10 ambiente) -> 88 frases válidas",
+    "A-3": "Sección V8 en tests/revolucion-encicla.js + tests/run.js: bot hasta el final en los 12 modos de Gemini (done, score > 0, 0 errores) + validación A-1/A-2",
+    "A-4": "Auditoría visual 412x860 (21 capturas + 6 verificaciones), arreglos en 99n-99q y propuesta de agrupación de Más (33 opciones -> 6 secciones <details> sin quitar nada)",
+    "G-130_G-131": "Bloqueado por cuota del servidor gemini-3.1-flash-image (retry after ~3h47m); sin sustitutos por código (regla AUDITORIA-C99.md)"
+  },
+  "claves_guardado_nuevas": [],
+  "notas": "Cero claves nuevas en Save.data (32/32 registradas). Arreglados los 4 enlaces de metas en 99n (Despacho, Maquinista, Circuito, Moravia), solape de Roguelite, etiquetas de Monitoreo 911, suelo/río de Metro 2D, desborde de Cámaras 3D en Más (99o) y scroll anidado en Hub Encargos (99q)."
 }

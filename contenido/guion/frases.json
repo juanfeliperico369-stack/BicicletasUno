@@ -53,6 +53,51 @@
     { "t": "Qué bueno ver tanta gente en bici.", "ev": ["ambiente"] },
     { "t": "En bici uno llega más tranquilo.", "ev": ["ambiente"] },
     { "t": "Ojo con los huecos de esta cuadra.", "ev": ["ambiente"], "lugar": "calle" },
-    { "t": "Por aquí cerquita queda una estación de EnCicla.", "ev": ["ambiente"], "lugar": "calle" }
+    { "t": "Por aquí cerquita queda una estación de EnCicla.", "ev": ["ambiente"], "lugar": "calle" },
+
+    { "t": "¡Gracias por avisar con tiempo, parce!", "ev": ["timbre"] },
+    { "t": "Un toquecito de timbre vale oro.", "ev": ["timbre"] },
+    { "t": "Hágale tranquilo, ahí le dejo el paso.", "ev": ["timbre"] },
+    { "t": "Qué bonito cuando saludan con el timbre.", "ev": ["timbre"], "hora": [300, 690] },
+    { "t": "Con lluvia se oye clarito el timbre, gracias.", "ev": ["timbre"], "lluvia": true },
+    { "t": "Ya le abro campo en la entrada de la estación.", "ev": ["timbre"], "lugar": "estacion" },
+    { "t": "Buena esa: avisar antes de pasar la fila.", "ev": ["timbre"], "lugar": "paradero" },
+    { "t": "El timbre avisa sin asustar, ¡así se rueda!", "ev": ["timbre"], "lugar": "ciclorruta" },
+    { "t": "Gracias, mijo; por aquí paseamos con niños.", "ev": ["timbre"], "lugar": "parque" },
+    { "t": "Timbre y casco: usted sí da ejemplo.", "ev": ["timbre"], "lugar": "calle" },
+
+    { "t": "Despacito, mijo, que compartimos el camino.", "ev": ["peaton"] },
+    { "t": "Si baja un poquito el ritmo, cabemos todos.", "ev": ["peaton"] },
+    { "t": "Un metro de distancia nos cuida a los dos.", "ev": ["peaton"] },
+    { "t": "En la estación siempre sale gente con afán.", "ev": ["peaton"], "lugar": "estacion" },
+    { "t": "Ojo en el paradero, que uno baja mirando el bus.", "ev": ["peaton"], "lugar": "paradero" },
+    { "t": "Mejor bájese un tricito en el andén, vecino.", "ev": ["peaton"], "lugar": "calle" },
+    { "t": "Con piso liso toca darle más espacio al peatón.", "ev": ["peaton"], "lluvia": true },
+    { "t": "De noche casi no se ve la bici, despacito.", "ev": ["peaton"], "noche": true },
+
+    { "t": "El rojo es un respiro pa' todos en el cruce.", "ev": ["semaforo"] },
+    { "t": "Con calma, parce: en verde pasamos seguros.", "ev": ["semaforo"] },
+    { "t": "Si la bici para en rojo, los carros la respetan.", "ev": ["semaforo"] },
+    { "t": "Espere el cambio de luz, que la esquina cruza.", "ev": ["semaforo"], "lugar": "calle" },
+    { "t": "Con aguacero, pasarse en rojo es doble riesgo.", "ev": ["semaforo"], "lluvia": true },
+    { "t": "De noche parar en rojo salva vidas, ojo pues.", "ev": ["semaforo"], "noche": true },
+
+    { "t": "¡Qué equilibrio tan berraco, parce!", "ev": ["truco"] },
+    { "t": "¡Qué elegancia de salto en la plaza!", "ev": ["truco"], "lugar": "parque" },
+    { "t": "Eso sí es dominio de la bici, ¡bravo!", "ev": ["truco"] },
+    { "t": "Truquitos en la plaza y calma en la vía: ¡así es!", "ev": ["truco"], "lugar": "parque" },
+    { "t": "¡Hasta las palomas aplaudieron ese giro!", "ev": ["truco"], "hora": [360, 1080] },
+    { "t": "¡Qué estilo, y sin soltar el casco!", "ev": ["truco"] },
+
+    { "t": "Revisar frenos antes de salir toma diez segundos.", "ev": ["ambiente"], "lugar": "estacion" },
+    { "t": "El sillín a la cadera cuida bien la rodilla.", "ev": ["ambiente"], "lugar": "estacion" },
+    { "t": "Metro más bici: la pareja perfecta del valle.", "ev": ["ambiente"], "lugar": "paradero" },
+    { "t": "Por la mañana el aire del río se siente fresquito.", "ev": ["ambiente"], "lugar": "ciclorruta", "hora": [300, 600] },
+    { "t": "Sacar la mano al girar ayuda a todo el mundo.", "ev": ["ambiente"], "lugar": "ciclorruta" },
+    { "t": "¡Qué bacano ver el valle lleno de bicicletas!", "ev": ["ambiente"], "lugar": "parque" },
+    { "t": "A esta hora las montañas se pintan de dorado.", "ev": ["ambiente"], "lugar": "parque", "hora": [960, 1110], "lluvia": false },
+    { "t": "Una gotica de aceite en la cadena hace maravillas.", "ev": ["ambiente"], "lugar": "calle" },
+    { "t": "Después del aguacero, Medellín huele a tierra limpia.", "ev": ["ambiente"], "lluvia": true },
+    { "t": "Con luz blanca adelante y roja atrás se rueda feliz.", "ev": ["ambiente"], "noche": true }
   ]
 }

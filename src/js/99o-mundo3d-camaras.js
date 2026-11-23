@@ -189,6 +189,7 @@
     const row = camRow.closest('.opt'), cur = Vistas.actual(), px = Vistas.esPixel();
     const d = document.createElement('div');
     d.className = 'opt';
+    d.style.cssText = 'flex-direction:column;align-items:stretch;gap:8px';
     d.innerHTML = `<span>Cámaras del mundo 3D y estilo<br><small class="m">Mismo valle real en Cenital, Oblicua, 3.ª/1.ª Persona, Panorámica 2D, Maqueta 2:1 y Pixel World</small></span>` +
       `<div class="seg wrap">${VISTAS.map(v => `<button data-v3m="${v.id}" class="${cur === v.id ? 'on' : ''}">${v.ic} ${v.n}</button>`).join('')}` +
       `<button data-vpxm="1" class="${px ? 'on' : ''}">👾 Pixel World</button></div>`;

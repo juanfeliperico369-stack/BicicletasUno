@@ -278,7 +278,7 @@
             acts.filter(a => a.cat === cat).map(a => `<button class="act-card" data-ha="${a.id}"><b>${a.ic} ${esc(a.n)}</b><small>${esc(a.desc)}</small></button>`).join('') + `</div>`;
         }
       } else if (tab === 'arcos') {
-        body += `<p class="m" style="margin:0 0 8px">Encargos encadenados (3 pasos) con los mentores de EnCicla y El Metro. Cada paso sube tu reputación en la comuna.</p><div class="col" style="gap:8px;max-height:50vh;overflow:auto">` +
+        body += `<p class="m" style="margin:0 0 8px">Encargos encadenados (3 pasos) con los mentores de EnCicla y El Metro. Cada paso sube tu reputación en la comuna.</p><div class="col" style="gap:8px">` +
           ARCOS.map(a => {
             const pIdx = E.arcos[a.id] | 0, fin = pIdx >= a.pasos.length, paso = a.pasos[Math.min(pIdx, a.pasos.length - 1)];
             return `<div class="rpg-card"><b>${a.ic} ${esc(a.quien)} · ${Math.min(pIdx, a.pasos.length)}/${a.pasos.length}</b><small class="m">${fin ? '✅ Arco completado · puedes repetir el último reto' : 'Siguiente: ' + esc(paso.t) + ' — ' + esc(paso.desc)}</small><div class="row" style="margin-top:6px"><button class="btn sm ${fin ? '' : 'pri'}" data-arco="${a.id}">${fin ? '↻ Repetir' : '▶ Aceptar encargo'}</button></div></div>`;

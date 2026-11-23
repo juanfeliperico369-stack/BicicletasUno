@@ -568,7 +568,7 @@
       this.perdidos = 0;
       this.sel = 0;
       this.incs = [];
-      this.units = UNID_911.map((u, i) => Object.assign({}, u, { x: .35 + i * .1, y: .52, busy: null, tx: .5, ty: .5 }));
+      this.units = UNID_911.map((u, i) => Object.assign({}, u, { x: .35 + i * .1, y: .61, busy: null, tx: .5, ty: .5 }));
       this.spawnT = .3;
       this.spawnInc();
       this.spawnInc();
@@ -627,7 +627,7 @@
       for (const s of SECT_911) {
         const sx = W * s.x, sy = top + mh * s.y;
         c.fillStyle = '#123159'; c.beginPath(); c.arc(sx, sy, 14, 0, TAU); c.fill();
-        V.text(s.n, sx, sy + 20, { size: 10, align: 'center', color: '#9cc0e6' });
+        V.text(s.n, sx, sy + 29, { size: 10, align: 'center', color: '#9cc0e6' });
       }
       for (const u of this.units) {
         const ux = W * u.x, uy = top + mh * u.y;
@@ -865,6 +865,11 @@
       }
       c.lineTo(W, H * .72); c.lineTo(0, H * .72); c.closePath(); c.fill();
       const vy = Math.round(H * .68);
+      /* Valle inferior: orilla verde, ciclorruta #4a9a2c y río Medellín bajo el viaducto */
+      c.fillStyle = '#1e3a4c'; c.fillRect(0, vy, W, H - vy);
+      c.fillStyle = '#2d5a3c'; c.fillRect(0, vy + 18, W, 22);
+      c.fillStyle = '#4a9a2c'; c.fillRect(0, vy + 36, W, 12);
+      c.fillStyle = '#2b6cb0'; c.fillRect(0, vy + 48, W, H - (vy + 48));
       c.fillStyle = '#475569'; c.fillRect(0, vy, W, 18);
       c.fillStyle = '#334155';
       for (let x = -(off * 2 % 70); x < W + 70; x += 70) c.fillRect(x, vy + 18, 14, H - vy);
@@ -909,7 +914,7 @@
     }
     bot() {
       const falta = this.distEst - this.pos;
-      this.th = falta < 55 ? -1 : 1;
+      this.th = (falta < 50 && (this.spd > 3.5 || falta < 20)) ? -1 : 1;
     }
   }
   JE.MGMetro2D = MGMetro2D;

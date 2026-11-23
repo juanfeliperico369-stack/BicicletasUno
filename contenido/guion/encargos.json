@@ -52,5 +52,86 @@
       { "a": "p:wilson", "corto": "El lector de la estación", "pide": "«Wílson, el técnico de los tótems, anda por aquí: dígale que el lector de esta estación no está leyendo la Cívica».", "luego": "" }
     ],
     "final": "Así es el balance: unos llevan bicis, otros recados, y el sistema sigue andando."
+  },
+  {
+    "id": "yuli-repuesto", "quien": "yuli", "titulo": "La llave de torque de Yuli", "premio": 65,
+    "pasos": [
+      { "a": "lm:depot", "corto": "El kit en Casa EnCicla", "pide": "En la bodega nos falta una llave de torque para ajustar los frenos del turno. ¿Me la traes de Casa EnCicla, en Belén?", "luego": "🧰 En Casa EnCicla te entregan el estuche calibrado: «Apretar un freno al toque justo evita dañar la guaya»." },
+      { "a": "p:jairo", "corto": "Calibra con Don Jairo", "pide": "«Antes de subir, pásate donde Don Jairo en Ciudad del Río para revisar que marque 50 PSI y el torque exacto».", "luego": "Don Jairo prueba la llave: «Quedó como relojito. Con las llantas bien infladas se pedalea suave y se pincha menos»." },
+      { "a": "p:yuli", "corto": "De vuelta a la bodega", "pide": "Llévale el kit calibrado a Yuli en la bodega de Caribe.", "luego": "" }
+    ],
+    "final": "Con herramienta exacta y manos cuidadas, cada bici vuelve a rodar segura."
+  },
+  {
+    "id": "kevin-laureles", "quien": "kevin", "titulo": "Las glorietas de Kevin", "premio": 60,
+    "pasos": [
+      { "a": "lm:laureles", "corto": "La tula en Primer Parque", "pide": "Ando abriendo estaciones por la 80 y se me quedó una tula de llaves en el Primer Parque de Laureles. ¿Me la recoges?", "luego": "🌳 En Laureles recuerdas la regla de oro de sus calles circulares: en la glorieta, quien ya va adentro tiene la vía." },
+      { "a": "lm:unidadbelen", "corto": "Relevo en Belén", "pide": "«Llévasela ahora al punto de la Unidad Deportiva de Belén: señaliza con la mano al girar, que por ahí entrenan muchos niños».", "luego": "🚴 El equipo de apoyo recibe las llaves y deja listas las bicis para la salida de entrenamiento." },
+      { "a": "p:kevin", "corto": "El parte para Kevin", "pide": "Regresa donde Kevin en Laureles para confirmarle que la ruta quedó abierta.", "luego": "" }
+    ],
+    "final": "Así sí, parce: abrir a tiempo y girar señalizando con la mano nos cuida a todos."
+  },
+  {
+    "id": "paola-sensores", "quien": "paola", "titulo": "Las luces de la ingeniera Paola", "premio": 75,
+    "pasos": [
+      { "a": "lm:explora", "corto": "Sensores en Explora", "pide": "Necesito probar un módulo LED que avisa cuándo una bici queda bien anclada. Pasa por el Parque Explora y recoge la tarjeta.", "luego": "🔬 En los cubos rojos del Parque Explora te entregan la placa: «Luz verde es anclaje seguro; ámbar, revisar el seguro»." },
+      { "a": "p:cata", "corto": "Revisión con Cata", "pide": "«Llévale los datos a Cata en la sala de control de La Alpujarra para que confirme la señal en el mapa».", "luego": "Cata mira las pantallas: «¡Llegó limpiecito! Ya vemos en tiempo real cuántas bicis quedan libres en el norte»." },
+      { "a": "lm:parquenorte", "corto": "Prueba nocturna en Parque Norte", "noche": true, "pide": "«Solo falta probar los LEDs de noche: pásate por el Parque Norte después de las 6:30 p. m., con tus luces encendidas».", "luego": "" }
+    ],
+    "final": "Brillaron de lejos: ver y dejarse ver de noche es la primera regla del ciclista."
+  },
+  {
+    "id": "wilson-sur", "quien": "wilson", "titulo": "La ruta del sur de Wílson", "premio": 80,
+    "pasos": [
+      { "a": "lm:otraparte", "corto": "Parada en Otraparte", "pide": "Hoy me tocó revisar tótems por todo el sur. ¿Me llevas un rollo de cintas reflectivas hasta la Casa Museo Otraparte, en Envigado?", "luego": "🏡 En la casa de Fernando González te cuentan que el filósofo caminaba el valle pensando despacio, igual que quien viaja en bici." },
+      { "a": "lm:sabaneta", "corto": "El tótem de Sabaneta", "pide": "«Sigue al Parque de Sabaneta, el municipio más pequeño de Colombia en extensión, y verifica la estación de la plaza».", "luego": "🟢 El tótem de Sabaneta lee la Cívica al instante y deja ocho bicis listas para rodar." },
+      { "a": "lm:ditaires", "corto": "Respiro en Ditaires", "pide": "«Termina pasando por el Parque Ditaires, en Itagüí, para avisar que el camión de Balance ya viene en camino».", "luego": "" }
+    ],
+    "final": "El Valle de Aburrá son diez municipios unidos por el mismo río y la misma ciclorruta."
+  },
+  {
+    "id": "ruben-historia", "quien": "ruben", "titulo": "Los quince años de Don Rubén", "premio": 75,
+    "pasos": [
+      { "a": "lm:catedral", "corto": "A pie por la Catedral", "veh": "walk", "pide": "Estoy preparando una charla sobre los quince años de EnCicla. Bájate de la bici y camina hasta la Catedral Metropolitana por unas postales.", "luego": "🏛️ La Catedral del Parque Bolívar es una de las iglesias de ladrillo más grandes del mundo; caminar el centro deja ver cada detalle." },
+      { "a": "lm:coltejer", "corto": "Bajo la aguja del Coltejer", "pide": "«Ahora vuelve a tu bici y pasa por el Edificio Coltejer: su punta de aguja recuerda la historia textil de Medellín».", "luego": "🧵 Frente al Coltejer un ciclista veterano firma el cuaderno de aniversario: «Desde 2011 no cambio mi bici por nada»." },
+      { "a": "p:ruben", "corto": "El cuaderno para Don Rubén", "pide": "Tráeme el cuaderno al Parque Berrío para guardarlo en la memoria de las 133 estaciones.", "luego": "" }
+    ],
+    "final": "Quince años de pedal limpio se construyen entre todos: usuarios, vecinos y equipo."
+  },
+  {
+    "id": "marleny-jardin", "quien": "marleny", "titulo": "El cidrón de Doña Marleny", "premio": 65,
+    "pasos": [
+      { "a": "lm:moravia", "corto": "Hierbas de la huerta de Moravia", "pide": "Mijo, se me acabó el cidrón fresco pa' las aromáticas. ¿Me hace el mandado a la huerta comunitaria de Moravia?", "luego": "🌿 Donde antes hubo un botadero, hoy la comunidad cultiva flores y aromáticas que perfuman toda la ladera." },
+      { "a": "lm:memoria", "corto": "Un ramo en la Casa de la Memoria", "veh": "walk", "pide": "«De bajada, bájese de la bici y lleve a pie un ramito al Parque Bicentenario, frente al Museo Casa de la Memoria».", "luego": "🕊️ En el parque agradecen el gesto: caminar despacio por la plazoleta respeta a quienes descansan y conversan." },
+      { "a": "p:marleny", "corto": "El cidrón a San Javier", "pide": "Tráigame el resto del cidrón a la estación San Javier antes de que se enfríe el agua.", "luego": "" }
+    ],
+    "final": "¡Qué aroma tan rico! Un tinto y una bici siempre saben mejor cuando se comparten."
+  },
+  {
+    "id": "libardo-campus", "quien": "libardo", "titulo": "El relevo de las cinco con Don Libardo", "premio": 70,
+    "pasos": [
+      { "a": "lm:unal", "corto": "Aviso en la Nacional", "pide": "A las cinco sale media estación buscando bici. ¿Puede pasar por la Universidad Nacional y contar cuántas bicis libres hay en el campus?", "luego": "🎓 Al pie del Cerro El Volador los estudiantes ya hacen fila ordenada y revisan frenos y timbre antes de salir." },
+      { "a": "p:santi", "corto": "Coordina con Santi", "pide": "«Avísele a Santi en la estación Universidad que abra la ventanilla extra y tenga cascos y sillines listos».", "luego": "Santi levanta el pulgar: «¡De una, Don Libardo! Ajustar el sillín a la altura de la cadera cuida las rodillas»." },
+      { "a": "p:libardo", "corto": "Reporte a Don Libardo", "pide": "Vuelve a la estación Universidad para darle el reporte final a Don Libardo.", "luego": "" }
+    ],
+    "final": "Tren que llega y bici que sale: así se mueve una ciudad inteligente y amable."
+  },
+  {
+    "id": "jhon-bielas", "quien": "jhon", "titulo": "Rieles y bielas con Jhon", "premio": 70,
+    "pasos": [
+      { "a": "lm:mamm", "corto": "El plano en Ciudad del Río", "pide": "En el taller de Industriales estoy comparando engranajes de tren con piñones de bici. ¿Pasas por el MAMM y miras la antigua estructura de acero?", "luego": "⚙️ El MAMM ocupa una antigua siderúrgica: el mismo oficio metalmecánico dio vida a rieles y marcos de bicicleta." },
+      { "a": "lm:teatro", "corto": "Sonido en el Teatro", "pide": "«Ahora pasa por el Teatro Metropolitano: una cadena bien aceitada suena tan limpia como un violín de la Filarmónica».", "luego": "🎻 Frente al Teatro recuerdas que lubricar la cadena sin exceso evita mugre y hace durar el doble los piñones." },
+      { "a": "p:jhon", "corto": "De regreso al taller", "pide": "Vuelve donde Jhon en Industriales para mostrarle tus notas del recorrido.", "luego": "" }
+    ],
+    "final": "¡Bacano, parce! Rieles arriba y bielas abajo: todo mejora cuando se cuida con cariño."
+  },
+  {
+    "id": "rosalba-rio", "quien": "rosalba", "titulo": "El mapa del río de Rosalba", "premio": 80,
+    "pasos": [
+      { "a": "lm:fabricato", "corto": "La vía férrea en Bello", "pide": "Estoy preparando una clase para los nuevos conductores sobre cómo la Línea A sigue el río Medellín. ¿Bajas hasta Fabricato, en Bello, y ves cómo se unen la ciclorruta y el viaducto?", "luego": "🏭 En Bello, cuna textil del valle, el viaducto del Metro y la ciclorruta avanzan paralelos mirando el Cerro Quitasol." },
+      { "a": "lm:palacio", "corto": "El cruce del Palacio", "pide": "«Ahora pasa frente al Palacio de la Cultura, en el centro: mira cuánta gente cambia del tren a la bici en un minuto».", "luego": "♟️ Ante la fachada a cuadros del Palacio comprendes por qué combinar metro y bici ahorra tiempo y deja el aire más limpio." },
+      { "a": "p:rosalba", "corto": "Regresa con Rosalba", "pide": "Vuelve a San Antonio y cuéntale a Rosalba qué descubriste siguiendo el río.", "luego": "" }
+    ],
+    "final": "Usted tiene buen ojo, mija: cuidar el río y el aire es el mejor viaje de todo el valle."
   }
 ]

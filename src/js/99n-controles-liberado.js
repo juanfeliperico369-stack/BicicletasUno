@@ -207,8 +207,8 @@
           this.clock = [7 * 60, 12 * 60, 17 * 60][turno - 1] || 420;
           this.sub = new MGRutas(this, { dur: cfg[0] });
           this.view = this.sub.view;
-          this.goal('Guía ' + cfg[1] + ' entregas a su estación', true, () => (this.sub.okN | 0) >= cfg[1], () => (this.sub.okN | 0) + '/' + cfg[1]);
-          this.goal('Buena precisión en desvíos', false, () => (this.sub.badN | 0) <= 2, () => (this.sub.badN | 0) + ' fallos');
+          this.goal('Guía ' + cfg[1] + ' entregas a su estación', true, () => (this.sub.ok | 0) >= cfg[1], () => (this.sub.ok | 0) + '/' + cfg[1]);
+          this.goal('Buena precisión en desvíos', false, () => (this.sub.wrong | 0) <= 2, () => (this.sub.wrong | 0) + ' fallos');
         }
       }
       JE.modos.registrar({ id: 'despacho', name: 'Despacho del Valle', cls: ModoDespacho, emoji: '🚚', icon: 'balance',
@@ -223,8 +223,8 @@
           this.clock = [6 * 60 + 30, 12 * 60 + 30, 18 * 60 + 15][turno - 1] || 390;
           this.sub = new MGRutas(this, { theme: 'metro', dur: cfg[0] });
           this.view = this.sub.view;
-          this.goal('Despacha ' + cfg[1] + ' trenes a su estación', true, () => (this.sub.okN | 0) >= cfg[1], () => (this.sub.okN | 0) + '/' + cfg[1]);
-          this.goal('Operación segura sin desvíos errados', false, () => (this.sub.badN | 0) <= 1, () => (this.sub.badN | 0) + ' fallos');
+          this.goal('Despacha ' + cfg[1] + ' trenes a su estación', true, () => (this.sub.ok | 0) >= cfg[1], () => (this.sub.ok | 0) + '/' + cfg[1]);
+          this.goal('Operación segura sin desvíos errados', false, () => (this.sub.wrong | 0) <= 1, () => (this.sub.wrong | 0) + ' fallos');
         }
       }
       JE.modos.registrar({ id: 'maquinista', name: 'Maquinista Línea A', cls: ModoMaquinista, emoji: '🚇', icon: 'supervisor',
@@ -240,7 +240,8 @@
           this.clock = 600;
           this.sub = new MGLoop(this, { n });
           this.view = this.sub.view;
-          this.goal('Cierra el circuito de anclajes LED', true, () => !!this.sub.solved, () => this.sub.solved ? 'listo' : 'conectando');
+          const okLoop = () => !!(this.sub.done || (typeof this.sub.solved === 'function' ? this.sub.solved() : this.sub.solved));
+          this.goal('Cierra el circuito de anclajes LED', true, okLoop, () => okLoop() ? 'listo' : 'conectando');
           this.goal('Puzle limpio en pocos toques', false, () => (this.sub.moves | 0) <= n * n * 2, () => (this.sub.moves | 0) + ' giros');
         }
       }
@@ -257,8 +258,9 @@
           this.clock = 960;
           this.sub = new MGLaberinto(this, { n });
           this.view = this.sub.view;
-          this.goal('Cruza los jardines hasta la salida', true, () => !!this.sub.solved, () => this.sub.solved ? '¡listo!' : 'en ruta');
-          this.goal('Recoge flores del camino', false, () => (this.sub.got | 0) >= 2, () => (this.sub.got | 0) + ' flores');
+          const okLab = () => this.sub.bx === this.sub.gx && this.sub.by === this.sub.gy;
+          this.goal('Cruza los jardines hasta la salida', true, okLab, () => okLab() ? '¡listo!' : 'en ruta');
+          this.goal('Llega a la flor en pocas movidas', false, () => (this.sub.moves | 0) <= n * 3, () => (this.sub.moves | 0) + ' movidas');
         }
       }
       JE.modos.registrar({ id: 'moravia', name: 'Laberinto de Moravia', cls: ModoMoravia, emoji: '🌼', icon: 'limpieza',
@@ -344,7 +346,7 @@
         this.btns = [];
         if (this.child) {
           if (this.child.hud) this.child.hud(V);
-          V.text('🎲 ROGUELITE · Ronda ' + this.ronda + '/' + this.total + ' · ' + this.tit + (this.escudos ? ' · 🛡️' + this.escudos : ''), V.w / 2, Math.max((View.hudB || 50) + 52, 128), { size: 11.5, align: 'center', color: '#ffc93c', bg: '#0a2342ee', pad: 4 });
+          V.text('🎲 ROGUELITE · Ronda ' + this.ronda + '/' + this.total + ' · ' + this.tit + (this.escudos ? ' · 🛡️' + this.escudos : ''), V.w / 2, V.h - 22, { size: 11.5, align: 'center', color: '#ffc93c', bg: '#0a2342ee', pad: 5, border: '#9bd341' });
           return;
         }
         const c = V.ctx;
