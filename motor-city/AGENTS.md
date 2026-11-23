@@ -1,5 +1,7 @@
 # Instrucciones para agentes (Codex, Gemini, Claude, Cursor…)
 
+
+> **4.9 · ChatGPT y Codex:** desde la 4.9 tienen todos los pedidos (también los que eran de Gemini). Empiecen por **`docs/PEDIDOS-CHATGPT-4.9.md`**.
 > **Primero lee `CONTEXTO-RELEVO.md`:** el relevo entre IAs (plan, lo hecho, lo que falta y el protocolo `coord/`). Al terminar tu turno, **deja tu entrada en su § 8** y tu ficha en `coord/agentes/`. Pídele lo mismo a la IA que siga.
 
 

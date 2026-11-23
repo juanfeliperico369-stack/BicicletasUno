@@ -29,7 +29,7 @@ try {
         brokenLinks: links.filter(a => !a.getAttribute('href')).length
       };
     });
-    if (errores.length || v.overflow || !v.actionVisible || v.actionText !== 'Jugar Mandados' ||
+    if (errores.length || v.overflow || !v.actionVisible || !/^Jugar Turno Cero/.test(v.actionText) ||
         !v.skipLink || v.brokenLinks || v.background !== 'rgb(29, 82, 74)' || v.text !== 'rgb(255, 255, 255)')
       throw new Error(`Portada ${w}×${h}: ${JSON.stringify({ ...v, errores })}`);
     if (w === 412 || w === 1440) {

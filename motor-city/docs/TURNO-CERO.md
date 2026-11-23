@@ -117,3 +117,25 @@ Está en `TAREAS-IA.md` § «4.0». En resumen:
   - Los esqueletos ya se reproducen.
 - **ChatGPT:** las texturas de los modelos y la portada.
 - **Gemini:** medir en un celular real, verificar los lugares y revisar el lenguaje.
+
+## 4.8 · Cómo se juega ahora (Flexibilidad, rescate, un solo mapa y pantalla en mitades)
+- **Pantalla en mitades:**
+  - **abajo se maneja:** el joystick sale en el cuarto de abajo de tu mano (izquierda, o derecha si eres zurdo) y los botones van del otro lado;
+  - **arriba es siempre la cámara:** arrastra para girarla e inclinarla y pellizca para acercar o alejar. El encuadre se queda donde lo dejes y el doble toque arriba lo endereza;
+  - el dedo del joystick no se suelta aunque otro dedo mueva la cámara.
+- **🗺️ Un solo mapa:** el minimapa, el botón 🗺️ y la tecla M abren el mismo.
+  - Toca un punto y aparece **🚀 Ir**: te deja en la calle más cercana a ese punto o, si no hay calle a 400 m, en el sitio transitable más cercano.
+  - **🌍** (o alejar más allá de la ciudad) pasa al planeta, y **🗺️** en el planeta vuelve al mapa.
+- **🆘 Rescate:** está en el HUD y en ⏸ Menú.
+  - Servicios: salir a la calle, 🔧 grúa y mecánico, 🚕 taxi, 🚇 estación más cercana, 🚑 ambulancia, 🏠 volver a donde empezaste y 🗺️ elegir un punto.
+  - Si llevas 3,5 s empujando sin moverte, o vas en carro lejos de toda calle, el botón se enciende y te lo ofrece.
+  - Con la policía encima, o dentro de un capítulo, no hay saltos.
+- **⚙️ Flexibilidad** (⏸ Menú): control, giro, velocidad de los vehículos, distancia de la cámara, acelerador fijo al subir, tren con palanca, mano, tamaño de la interfaz, calidad, vibración y pantalla (en mitades o clásica).
+- **🌄 Miradores:** en las lomas, ▶ Mirar pone la cámara de cine sobre el valle y cuenta los miradores que descubres.
+- **🖼️ Gráficos (4.9)** en ⚙️ Flexibilidad:
+  - **automáticos:** realistas si el aparato da la talla;
+  - **realistas:** three.js, con sol y sombras de verdad, luz física, cielo y ventanas encendidas de noche;
+  - **clásicos:** más livianos.
+
+  Se cambia en caliente.
+

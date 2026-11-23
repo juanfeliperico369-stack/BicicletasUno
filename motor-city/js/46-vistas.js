@@ -32,7 +32,12 @@ class Vistas {
   liberar() { if (this.gl) { try { this.gl.liberar(); const x = this.gl.gl && this.gl.gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { /* ya estaba suelto */ } this.gl = null; } this.glIntentado = true; this.losas = this.losasLejos = null; this._buf = null; }
   /* ¿la 3D la dibuja el raster por software? 'auto': si no hay WebGL o si el WebGL es por software */
   usaRaster() { if (this.motor3d === 'raster') return true; if (this.motor3d === 'gl') return !this.hayGL(); return GPU.perfil().nivel === 'software' || !this.hayGL(); }
-  hayGL() { if (!this.glIntentado) { this.glIntentado = true; try { this.gl = new VistaGL(this.mundo, this.losas); if (!this.gl.ok) this.gl = null; } catch (e) { this.gl = null; MC.falla('WebGL', e); } } return !!this.gl; }
+  /* 4.9: el 3D realista (three.js, MC.VistaTres) si hay WebGL2 y ⚙️ Gráficos no pide los clásicos; si no, o si falla, el VistaGL de siempre */
+  hayGL() { if (!this.glIntentado) { this.glIntentado = true; const gr = MC.opciones.graficos, quiere = gr === 'realistas' || (gr !== 'clasicos' && GPU.perfil().nivel !== 'baja'), Tres = quiere && MC.VistaTres && MC.VistaTres.puede() ? MC.VistaTres : null;
+      if (Tres) { try { this.gl = new Tres(this.mundo, this.losas); if (!this.gl.ok) this.gl = null; } catch (e) { this.gl = null; MC.falla('three', e); } }
+      if (!this.gl) { try { this.gl = new VistaGL(this.mundo, this.losas); if (!this.gl.ok) this.gl = null; } catch (e) { this.gl = null; MC.falla('WebGL', e); } } } return !!this.gl; }
+  reiniciarGL() { if (this.gl) { try { this.gl.liberar(); const x = this.gl.gl && this.gl.gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { /* ya estaba suelto */ } this.gl = null; } this.glIntentado = false; }
+  realista() { return !!(this.gl && this.gl.tres); }
   /* cambia de vista (por id) con transición; la cámara toma el perfil de la nueva */
   usar(id, E) {
     let v = VISTAS.find(q => q.id === id) || VISTAS[0];

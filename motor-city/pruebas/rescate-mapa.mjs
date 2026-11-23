@@ -51,9 +51,9 @@ await p.evaluate(() => TURNO.ui._mapa && TURNO.ui._mapa.cerrar()); await p.waitF
 R.planeta = { globo, vuelveMapa, botonSuelto: await p.evaluate(() => !!(window.BOT_GLOBO_OCULTO = document.querySelector('.mcui button[aria-label="Planeta"]')) && document.querySelector('.mcui button[aria-label="Planeta"]').hidden) };
 /* ---- 🆘 rescate ---- */
 const toca = async txt => { await p.click('.mcui button[aria-label="Rescate"]'); await p.waitForTimeout(200); await p.locator('.mcui .menu button', { hasText: txt }).first().click(); await p.waitForTimeout(400); };
-await p.evaluate(() => { const C = TURNO.cuerpo, M = TURNO.M; let mejor = null; for (let i = 0; i < 400 && !mejor; i++) { const x = C.x + (Math.random() - .5) * 1600, y = C.y + (Math.random() - .5) * 1600; if (!M.viaCercana(x, y, 60) && M.dentro(x, y)) mejor = { x, y }; } if (mejor) { C.x = mejor.x; C.y = mejor.y; C.v = 0; } window._fuera = !!mejor; });
+await p.evaluate(() => { const C = TURNO.cuerpo, M = TURNO.M, rnd = MC.mulberry32(20261122); let mejor = null; for (let i = 0; i < 400 && !mejor; i++) { const x = C.x + (rnd() - .5) * 1600, y = C.y + (rnd() - .5) * 1600;   /* semilla fija: el mismo lugar en cada corrida */ if (!M.viaCercana(x, y, 60) && M.dentro(x, y)) mejor = { x, y }; } if (mejor) { C.x = mejor.x; C.y = mejor.y; C.v = 0; } window._fuera = !!mejor; });
 await toca('Salir a la calle');
-const calle = await p.evaluate(() => ({ fuera: window._fuera, enCalle: !!TURNO.M.viaCercana(TURNO.cuerpo.x, TURNO.cuerpo.y, 15) }));
+const calle = await p.evaluate(() => { const C = TURNO.cuerpo, q = TURNO.M.viaCercana(C.x, C.y, 60); return { fuera: window._fuera, enCalle: !!TURNO.M.viaCercana(C.x, C.y, 15), dist: q ? +Math.hypot(q.x - C.x, q.y - C.y).toFixed(1) : null }; });
 await p.evaluate(() => { TURNO.carro = .3; }); await toca('Grúa'); const grua = await p.evaluate(() => TURNO.carro);
 await toca('taxi'); const taxi = await p.evaluate(() => TURNO.cuerpo.veh.id);
 await p.evaluate(() => { TURNO.vida = .4; }); await toca('Ambulancia'); const amb = await p.evaluate(() => TURNO.vida);

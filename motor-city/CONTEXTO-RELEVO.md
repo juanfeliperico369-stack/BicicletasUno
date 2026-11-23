@@ -12,7 +12,7 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 22‑nov‑2026, Claude (motor **4.8.0** «Flexibilidad»). Lo entregado y los enlaces están en el § 0.
+**Última actualización:** 22‑nov‑2026, Claude (motor **4.9.0** «Realismo»). Lo entregado y los enlaces están en el § 0.
 
 > **El autor confirmó que Codex, ChatGPT y Antigravity ya no siguen. Claude asumió todo lo que quedaba.** La tabla del § 5 dice qué se hizo y qué queda, y por qué.
 **Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
@@ -28,14 +28,14 @@
 
 ---
 
-## 0. Entregables de la 4.8.0 «Flexibilidad» (HTML, APK y enlaces)
+## 0. Entregables de la 4.9.0 «Realismo» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 4.8.0** (18+), el juego de prueba con todo: ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.8.0/MotorCity-getaway.apk> |
-| Juega EnCicla 3.1.0 (⚙️ Flexibilidad en Más) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | release `v3.1.0` de BicicletasUno (`android.yml`) |
+| **Turno Cero 4.9.0** (18+), el juego de prueba con todo: 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.9.0/MotorCity-getaway.apk> |
+| Juega EnCicla 3.1.0 (⚙️ Flexibilidad en Más) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.1.0/JuegaEnCicla-v3.1.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
 | El Metro 3.3.0 (⚙️ Flexibilidad en Ajustes) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 31) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
@@ -668,4 +668,23 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
 - **Riesgo:**
   - `pruebas/modos.mjs` falló una vez y pasó al repetirla: vigilar si es intermitente;
   - con 400 sectores, el caché de suelo usa hasta unos 4 MB.
+
+### Claude · 22‑nov‑2026 · motor 4.9.0 «Realismo»
+- **Pedido:** «los gráficos aún son básicos». El autor aprobó incrustar three.js: «haz todo lo que propones y sigue mejorando».
+- **Hecho:**
+  - three.js 0.170 (MIT) dentro de `motor.js`, sin internet;
+  - `MC.VistaTres` (`js/45-tres.js`) sobre las mismas mallas: sol con sombras, luz física, cielo, exposición neutra, ventanas de noche, grano en muros y suelo;
+  - ⚙️ Gráficos;
+  - `docs/PLAN-REALISMO.md`, con lo que sigue en datos y dibujo.
+- **Probado:** `pruebas/tres.mjs` y la batería completa del motor.
+- **Falta (por orden):**
+  - catastro en todas las comunas;
+  - techos de OpenStreetMap;
+  - relieve, que exige decidir la licencia;
+  - atlas de fachadas pintado;
+  - mallas pre-cocinadas por sector;
+  - plano histórico de Medellín.
+- **Riesgos:**
+  - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
+  - en gama baja, el modo automático usa el clásico.
 
