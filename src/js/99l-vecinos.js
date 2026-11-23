@@ -79,6 +79,6 @@ LOGROS.push({ id: 'vallevecino', name: 'El valle es mi barrio', desc: 'Termina t
   if (typeof Hoy !== 'undefined') Hoy.fuentes.push((M, add) => {
     const E = Encargos.activo(), st = Encargos.paso(E);
     if (E && st) { const L = Encargos.lugar(st.a); if (L) add('historia', '💬', E.titulo + ': ' + st.corto, L.x, L.y, { prio: -1, fn: () => Encargos.marcar(M, true) }); return; }
-    for (const e of Encargos.lista()) { if (Encargos.d().hechos.includes(e.id)) continue; const p = Encargos.pers(e.quien); if (p) add('historia', '❗', p.name + ' te necesita: ' + e.titulo, p.x, p.y + 8 * WK); }
+    for (const e of Encargos.lista()) { if (Encargos.d().hechos.includes(e.id)) continue; const p = Encargos.pers(e.quien); if (p) add('historia', '❗', p.name + ' te necesita: ' + e.titulo, p.x, p.y + 8 * WK, { aqui: () => Encargos.empezar(M, e) }); }
   });
 })();

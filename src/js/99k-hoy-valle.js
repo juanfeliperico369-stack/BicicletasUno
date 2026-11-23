@@ -57,7 +57,7 @@ const Hoy = JE.hoy = {
   ir(M, c) {
     if (!M || !M.ride || !c) return; Snd.sfx('star');
     if (c.fn) { c.fn(); return; }
-    if (c.aqui && c.km < .05) { c.aqui(); return; }   /* lo tienes al lado: se abre de una vez */
+    if (c.km < .05) { if (c.aqui) c.aqui(); else if (JE.ui) JE.ui.toast('📍 Aquí mismo: ' + c.titulo); return; }   /* lo tienes al lado: se hace de una vez (sin destino que «llegue» al instante) */
     const R = M.ride, o = JE.map.nearestOpen(Math.floor(c.x / TS), Math.floor(c.y / TS), vehVia(R.p.veh)); if (!o) return;
     R.way = { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, label: c.titulo.slice(0, 44), col: '#ff2fb3' }; R.gpsT = 0; if (R.calcGps) try { R.calcGps(); } catch (e) { }
     if (JE.ui) JE.ui.toast('📍 ' + c.titulo + ' · a ' + this.km(c) + (c.pista ? ' · ' + c.pista : ''));

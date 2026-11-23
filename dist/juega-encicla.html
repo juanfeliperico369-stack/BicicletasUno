@@ -15196,7 +15196,7 @@ const Hoy = JE.hoy = {
   ir(M, c) {
     if (!M || !M.ride || !c) return; Snd.sfx('star');
     if (c.fn) { c.fn(); return; }
-    if (c.aqui && c.km < .05) { c.aqui(); return; }   /* lo tienes al lado: se abre de una vez */
+    if (c.km < .05) { if (c.aqui) c.aqui(); else if (JE.ui) JE.ui.toast('📍 Aquí mismo: ' + c.titulo); return; }   /* lo tienes al lado: se hace de una vez (sin destino que «llegue» al instante) */
     const R = M.ride, o = JE.map.nearestOpen(Math.floor(c.x / TS), Math.floor(c.y / TS), vehVia(R.p.veh)); if (!o) return;
     R.way = { x: o.x * TS + TS / 2, y: o.y * TS + TS / 2, label: c.titulo.slice(0, 44), col: '#ff2fb3' }; R.gpsT = 0; if (R.calcGps) try { R.calcGps(); } catch (e) { }
     if (JE.ui) JE.ui.toast('📍 ' + c.titulo + ' · a ' + this.km(c) + (c.pista ? ' · ' + c.pista : ''));
@@ -15307,7 +15307,7 @@ LOGROS.push({ id: 'vallevecino', name: 'El valle es mi barrio', desc: 'Termina t
   if (typeof Hoy !== 'undefined') Hoy.fuentes.push((M, add) => {
     const E = Encargos.activo(), st = Encargos.paso(E);
     if (E && st) { const L = Encargos.lugar(st.a); if (L) add('historia', '💬', E.titulo + ': ' + st.corto, L.x, L.y, { prio: -1, fn: () => Encargos.marcar(M, true) }); return; }
-    for (const e of Encargos.lista()) { if (Encargos.d().hechos.includes(e.id)) continue; const p = Encargos.pers(e.quien); if (p) add('historia', '❗', p.name + ' te necesita: ' + e.titulo, p.x, p.y + 8 * WK); }
+    for (const e of Encargos.lista()) { if (Encargos.d().hechos.includes(e.id)) continue; const p = Encargos.pers(e.quien); if (p) add('historia', '❗', p.name + ' te necesita: ' + e.titulo, p.x, p.y + 8 * WK, { aqui: () => Encargos.empezar(M, e) }); }
   });
 })();
 
