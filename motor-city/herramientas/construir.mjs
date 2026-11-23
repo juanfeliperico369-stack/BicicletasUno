@@ -18,12 +18,22 @@ fs.mkdirSync(DIST, { recursive: true });
 /* ---------- el motor ---------- */
 const dirJS = path.join(RAIZ, 'js'), lista = fs.readdirSync(dirJS).filter(f => /^\d\d-.*\.js$/.test(f)).sort();   // solo los fragmentos numerados (valle.js es el lector 1.x de compatibilidad)
 const cuerpo = lista.map(f => `/* ---- js/${f} ---- */\n` + fs.readFileSync(path.join(dirJS, f), 'utf8')).join('\n');
+/* 4.9 · three.js (MIT, © three.js authors) incrustado para el render realista (MC.VistaTres): su módulo ES se vuelve una función que
+   devuelve el objeto THREE, sin internet ni import. La licencia va en js/vendor/LICENSE-three.txt y en la cabecera del archivo. */
+const THREE_ARCH = path.join(dirJS, 'vendor', 'three-0.170.0.module.min.js');
+let threeJS = '';
+if (fs.existsSync(THREE_ARCH)) {
+  const src = fs.readFileSync(THREE_ARCH, 'utf8'), i = src.lastIndexOf('export{');
+  if (i < 0) { console.error('three.js sin export final'); process.exit(1); }
+  const pares = src.slice(i + 7, src.lastIndexOf('}')).split(',').map(t => t.trim().split(/\s+as\s+/)).map(([a, b]) => JSON.stringify(b || a) + ':' + a);
+  threeJS = `/* ---- js/vendor/three-0.170.0 (MIT) ---- */\nconst THREE = (function () {\n${src.slice(0, i)}\nreturn {${pares.join(',')}};\n})();\n`;
+}
 const motor = `/* ${VER.nombre} ${VER.version} · ${VER.fecha} · https://github.com/${VER.fuente_de_verdad}
-   Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
+   Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
 'use strict';
-${cuerpo}
+${threeJS}${cuerpo}
 MC.archivos = ${JSON.stringify(lista)};
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;

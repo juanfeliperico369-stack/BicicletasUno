@@ -282,3 +282,13 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Unificar los mapas | ✅ | Minimapa, 🗺️ y 🌍 en un solo mapa (`op.planeta`), 🗺️ de vuelta desde el planeta |
 | Prueba | ✅ | `pruebas/rescate-mapa.mjs` |
 
+## 22. «Los gráficos aún son básicos: incrusta three.js, haz todo lo que propones y sigue mejorando» (4.9)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Incrustar three.js (sin internet) | ✅ | `js/vendor/`, `herramientas/construir.mjs` |
+| Sol con sombras, luz física, cielo y noche | ✅ | `js/45-tres.js` (`MC.VistaTres`) |
+| Suelo, muros y ladrillo con más vida | ✅ procedural | Grano y juntas en los sombreadores |
+| Relieve, casas y edificios «como son» | 📋 plan con decisiones de licencia | `docs/PLAN-REALISMO.md` § 3 A |
+| Elegir gráficos según el celular | ✅ | ⚙️ Flexibilidad → 🖼️ Gráficos |
+| Prueba | ✅ | `pruebas/tres.mjs` |
+

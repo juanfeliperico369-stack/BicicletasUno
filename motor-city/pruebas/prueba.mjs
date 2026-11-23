@@ -596,14 +596,14 @@ if (process.argv.includes('--navegador')) {
     ok(ras.poligonos > 200 && !errs.length, 'GPU virtual: la 3D por software (MC.Raster) dibuja la ciudad sin WebGL', ras);
     const glSombra = await p.evaluate(async () => {
       const V = MCS.vistas;
-      V.motor3d = 'gl';
+      V.motor3d = 'gl'; MC.opciones.graficos = 'clasicos'; V.reiniciarGL();   /* 4.9: esta prueba es del VistaGL clásico (el realista tiene la suya: pruebas/tres.mjs) */
       window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Digit2'}));
       await new Promise(r => setTimeout(r, 1300));
       const activo = V.hayGL(), R = V.gl, estado = {
         disponible: activo, programa: !!R?.pSh, malla: R?._sombrasCache?.n ?? null,
         dibujando: V.efectiva().tipo === 'gl', sinErroresGL: activo ? R.gl.getError() === 0 : null
       };
-      V.motor3d = 'auto';
+      V.motor3d = 'auto'; MC.opciones.graficos = 'auto'; V.reiniciarGL();
       return estado;
     });
     ok(!glSombra.disponible || (glSombra.programa && glSombra.dibujando && glSombra.sinErroresGL && !errs.length),

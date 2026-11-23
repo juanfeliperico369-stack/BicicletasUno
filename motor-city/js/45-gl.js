@@ -111,6 +111,7 @@ const VC = 'attribute vec2 aP;attribute vec3 aC;varying vec3 vC;void main(){vC=a
 class VistaGL {
   constructor(mundo, losas) {
     this.mundo = mundo; this.losas = losas; this.cv = lienzo(4, 4); this.ok = false; this.regiones = new Map(); this.O = null; this.R = 160; this.cola = [];
+    if (new.target && new.target.propio) return;   /* 4.9: VistaTres trae su propio WebGL (three.js) */
     try { this.gl = this.cv && this.cv.getContext && (this.cv.getContext('webgl', { antialias: true, alpha: false }) || this.cv.getContext('experimental-webgl')); } catch (e) { this.gl = null; }
     if (!this.gl) return; const gl = this.gl;
     const prog = (v, f) => { const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; }; const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}, a = {}; const nu = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), na = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES); for (let i = 0; i < nu; i++) { const n = gl.getActiveUniform(p, i).name; u[n] = gl.getUniformLocation(p, n); } for (let i = 0; i < na; i++) { const n = gl.getActiveAttrib(p, i).name; a[n] = gl.getAttribLocation(p, n); } return { p, u, a }; };
@@ -132,18 +133,24 @@ class VistaGL {
     }
     this.lejos = B;
   }
+  _edificio(m, P, O, zb, e, st, detalle, Z) { m.edificio3d(P, O, zb, e, st, detalle, Z); }
+  _textura(L) {
+    const gl = this.gl, tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    if (L) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, L); else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([94, 140, 74]));
+    const pot = L && (L.width & (L.width - 1)) === 0; if (pot) gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, pot ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    if (pot && this.aniso) gl.texParameterf(gl.TEXTURE_2D, this.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(this.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return tex;
+  }
   /* una región de 160 m: suelo con textura de la losa y las cosas con volumen */
   _region(gx, gy, detalle) {
     const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = detalle >= 3 ? 16 : 8, st = R / n, suelo = [];   /* 4.5: el relieve cercano con malla de 10 m (lomas y taludes más fieles) */
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const P = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([u, v]) => { const x = x0 + u * st, y = y0 + v * st, nn = M.normal(x, y, 10); return [x - O[0], M.cota(x, y) - O[2], y - O[1], nn[0], nn[1], nn[2], u / n, v / n]; }); for (const q of [P[0], P[2], P[1], P[0], P[3], P[2]]) suelo.push(...q); }
     /* texturas de lado potencia de 2 (512, 256 o 128 px por losa de 160 m) para tener mipmaps y filtro anisótropo: el piso se ve nítido a lo lejos */
-    const res = (detalle > 3 ? 1024 : detalle > 2 ? 512 : detalle > 1 ? 256 : 128) / R, L = this.losas.losa(gx, gy, res, false, 3), tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
-    if (L) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, L); else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([94, 140, 74]));
-    const pot = L && (L.width & (L.width - 1)) === 0; if (pot) gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, pot ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    if (pot && this.aniso) gl.texParameterf(gl.TEXTURE_2D, this.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(this.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const res = (detalle > 3 ? 1024 : detalle > 2 ? 512 : detalle > 1 ? 256 : 128) / R, L = this.losas.losa(gx, gy, res, false, 3);
+    const tex = this._textura(L);   /* 4.9: la subida de la textura es un método (VistaTres la hace con three.js) */
     const m = new Malla(), minH = detalle >= 2 ? 0 : detalle === 1 ? 10 : 24;
-    for (const e of M.edificiosEn(x0, y0, x0 + R, y0 + R)) { if (e.x < x0 || e.x >= x0 + R || e.y < y0 || e.y >= y0 + R || e.h < minH) continue; const st2 = estiloEdificio(M, e), P = Mundo.esquinas(e); let zb = 1e9; for (let i = 0; i < P.length; i += 2) zb = Math.min(zb, M.cota(P[i], P[i + 1])); zb -= O[2] + .3; m.edificio3d(P, O, zb, e, st2, detalle, M.estilo(e.x, e.y)); }   /* 3.0: con fachada (js/45b-mundo3d.js) */
+    for (const e of M.edificiosEn(x0, y0, x0 + R, y0 + R)) { if (e.x < x0 || e.x >= x0 + R || e.y < y0 || e.y >= y0 + R || e.h < minH) continue; const st2 = estiloEdificio(M, e), P = Mundo.esquinas(e); let zb = 1e9; for (let i = 0; i < P.length; i += 2) zb = Math.min(zb, M.cota(P[i], P[i + 1])); zb -= O[2] + .3; this._edificio(m, P, O, zb, e, st2, detalle, M.estilo(e.x, e.y)); }   /* 3.0: con fachada (js/45b-mundo3d.js) */
     for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0, cuatro: q.techo === 'dos' || q.techo === 'cuatro' ? { alto: Math.min(7, Math.max(2, h0 * .28)), cumbrera: osc3(te, .85) } : null }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
     for (const P of M.pasosEn(x0, y0, x0 + R, y0 + R)) { if (P.nivel <= 0) continue; const T = P.trazo || (P.trazo = new Trazo(P.p)), vi = P.tipo === 'viaducto', rampa = vi ? 0 : Math.min(P.largo * .4, P.peatonal ? 9 : 22), h = s => P.nivel * NIVEL_M * (vi ? 1 : suave(Math.min(s, P.largo - s) / rampa)), paso = 6;
       for (let s = 0; s < P.largo; s += paso) { const a = T.at(s), b = T.at(Math.min(P.largo, s + paso)); if (a.x < x0 || a.x >= x0 + R || a.y < y0 || a.y >= y0 + R) continue; const ha = M.cota(a.x, a.y) + h(s) - O[2], hb = M.cota(b.x, b.y) + h(Math.min(P.largo, s + paso)) - O[2], w = P.ancho / 2, nx = -Math.sin(a.a) * w, ny = Math.cos(a.a) * w, A = [a.x - O[0], a.y - O[1]], Bq = [b.x - O[0], b.y - O[1]], c = hex3(vi ? '#c9cfd8' : P.peatonal ? '#d8cfbd' : '#6a6f79'); m.quad([A[0] + nx, ha, A[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [Bq[0] - nx, hb, Bq[1] - ny], [A[0] - nx, ha, A[1] - ny], c); m.quad([A[0] - nx, ha - 1, A[1] - ny], [A[0] - nx, ha, A[1] - ny], [Bq[0] - nx, hb, Bq[1] - ny], [Bq[0] - nx, hb - 1, Bq[1] - ny], hex3('#8e8a80')); m.quad([A[0] + nx, ha - 1, A[1] + ny], [Bq[0] + nx, hb - 1, Bq[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [A[0] + nx, ha, A[1] + ny], hex3('#8e8a80'));
