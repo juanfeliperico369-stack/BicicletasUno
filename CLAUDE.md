@@ -17,3 +17,12 @@
   - al publicar en `gh-pages`, conserva `/metro/`;
   - no publiques en `main` ni en `gh-pages` si `node tests/run.js` no está en verde (también lo corre `.github/workflows/pruebas.yml` en cada push);
   - nunca subas llaves.
+
+
+## Publicación protegida 3.6 (OpenAI GPT-6 / Codex)
+- `.github/workflows/publicar.yml` ejecuta build, unitarias K-1 y geometría, y `node tests/run.js` en Chromium; **si alguna falla, no publica**.
+- En ramas de trabajo de la ronda 3.6, el destino es `gh-pages-ensayo`; **solo un push a `main`** dispara la salida a `gh-pages`.
+- La página de El Metro (`/metro/`), `/descargas/` y `CNAME` son compartidos: se excluyen del rsync y se comprueba por hash que los dos directorios siguen intactos.
+- Para inspeccionar: Actions → «Publicar EnCicla con pruebas» → job `comprobar`, después `publicar`. Nunca forzar una publicación en rojo.
+- Los 14 recursos C‑130 a C‑133 se guardan en `arte/entregas/2026-11-23-gpt6-c130-c133/` con manifiesto. `node tools/capas.js` verifica empaquetado; el HTML funciona aunque falten y usa el dibujo anterior.
+- Antes de fusionar `openai-gpt6/encicla-3.6-chatgpt-codex`: leer `docs/ENTREGA-ENCICLA-3.6-GPT6.md`, ejecutar benchmark CPU×4 y revisar las capturas laterales de 412×860.
