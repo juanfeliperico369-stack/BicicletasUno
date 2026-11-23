@@ -62,7 +62,7 @@ LOGROS.push({ id: 'vallevecino', name: 'El valle es mi barrio', desc: 'Termina t
   ModeUsuarioR.prototype.actions = function () {
     const a = _act.call(this); if (!this.free || this.sub || this.sitting || !this.ride || this.mirador) return a;
     const p = typeof Trama !== 'undefined' && Trama.cerca(this), E = p && Encargos.de(p.id), D = Encargos.d();
-    if (E && (!D.activo || D.activo === E.id) && !(D.activo === E.id && (D.paso[E.id] | 0) > 0)) a.push({ id: 'encargo', icon: 'estrella', label: '💬 Encargo', fn: () => Encargos.empezar(this, E) });
+    if (E && !D.activo) a.push({ id: 'encargo', icon: 'estrella', label: '💬 Encargo', fn: () => Encargos.empezar(this, E) });
     return a;
   };
   if (typeof HUD21 !== 'undefined' && !HUD21.CTX.includes('encargo')) HUD21.CTX.splice(0, 0, 'encargo');
@@ -73,7 +73,7 @@ LOGROS.push({ id: 'vallevecino', name: 'El valle es mi barrio', desc: 'Termina t
   const _hl = Ride.prototype.hudLife;
   Ride.prototype.hudLife = function (V, sx, sy, W) {
     _hl.call(this, V, sx, sy, W); if (!this.mode || !this.mode.free || typeof Trama === 'undefined' || !W) return; const P = this.p, D = Encargos.d();
-    for (const p of Trama.personajes()) { const d = dist(P.x, P.y, p.x, p.y); if (d > 220 * WK) continue; const E = Encargos.de(p.id); if (!E || D.activo && D.activo !== E.id) continue; const q = W(p.x, p.y); if (q.x < -40 || q.x > V.w + 40 || q.y < 60 || q.y > V.h - 40) continue; V.text(D.activo === E.id ? '💬' : '❗', q.x + 16, q.y - 18, { size: 14, align: 'center', bg: '#ffb300', color: '#0a2342', pad: 2 }); }
+    for (const p of Trama.personajes()) { const d = dist(P.x, P.y, p.x, p.y); if (d > 220 * WK) continue; const E = Encargos.de(p.id); if (!E || D.activo && D.activo !== E.id) continue; const q = W(p.x, p.y); if (q.x < -40 || q.x > V.w + 40 || q.y < 60 || q.y > V.h - 40) continue; V.text(D.activo === E.id ? '💬' : '❗', q.x + 15, q.y - 2, { size: 13, align: 'center', bg: '#ffb300', color: '#0a2342', pad: 2 }); }   /* junto al cuerpo: el nombre va encima */
   };
   /* en «Hoy en el valle»: el paso activo primero; si no, el vecino que te necesita más cerca */
   if (typeof Hoy !== 'undefined') Hoy.fuentes.push((M, add) => {
