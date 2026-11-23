@@ -214,3 +214,54 @@ module.exports.v5 = async function (p, ok) {
   ok(!r.t3d || (r.t3d.piezas > 50 && r.t3d.cables > 0 && r.t3d.sinError), 'mundo 3D: viaducto, estaciones, puentes y metrocables ' + JSON.stringify(r.t3d || 'sin WebGL'));
   ok(r.diario >= 2 && r.modal === 4, '📔 el diario anota solo y muestra las 4 habilidades (' + r.diario + ' notas)');
 };
+
+/* ronda 3.3 (Claude): perdón en los saltos, primer minuto, Hoy en el valle, modo prueba, encargos de los vecinos, Controles que
+   guardan y, en cada modo, que lo que ve el jugador (★ en pantalla y resultado) coincide con lo que se guarda */
+module.exports.v6 = async function (p, ok) {
+  console.log('V6) ronda 3.3 · perdón, primer minuto, Hoy en el valle, modo prueba, vecinos, Controles y lo que ve el jugador');
+  const r = await p.evaluate(async () => {
+    const out = {}, espera = ms => new Promise(s => setTimeout(s, ms)), _now = Cal.now; Cal.now = () => new Date(2026, 10, 18, 12, 0);
+    /* 1) el perdón: el salto tocado justo antes de caer sale al tocar el piso */
+    JE.game.stop && JE.game.stop(); JE.game.start('run3d', 1, { seed: 9, nov: NOVEDADES[0] }); await espera(150); JE.game.paused = true; let S = JE.game.mode.sub, k = 0;
+    S.jump(); while (!(S.vz < 0 && S.z < .3) && k++ < 200) S.update(1 / 60); S.jump(); for (let i = 0; i < 30; i++) S.update(1 / 60); out.perdon = [S.perdon | 0]; JE.game.paused = false; JE.game.stop();
+    JE.game.start('ciclovia', 1, { seed: 1, nov: NOVEDADES[0] }); await espera(150); JE.game.paused = true; S = JE.game.mode.sub; k = 0;
+    S.saltar(); while (!(S.vertical < 0 && S.altura < .2 && S.altura > 0) && k++ < 300) S.update(1 / 60); S.saltar(); for (let i = 0; i < 30; i++) S.update(1 / 60); out.perdon.push(S.perdon | 0); JE.game.paused = false; JE.game.stop();
+    JE.game.start('freerun', 1, { seed: 3, nov: NOVEDADES[0] }); await espera(150); JE.game.paused = true; S = JE.game.mode.sub; for (let i = 0; i < 60; i++) S.update(1 / 60); k = 0;
+    S.saltar(); while (!(S.vy < 0 && S.y - (S.alto(S.x) || 0) < .5) && k++ < 300) S.update(1 / 60); S.saltar(); for (let i = 0; i < 30; i++) S.update(1 / 60); out.perdon.push(S.perdon | 0); JE.game.paused = false; JE.game.stop();
+    /* 2) primer minuto: la salida del valle se dibuja en el menú */
+    UI.go('sHome'); JE.map.chunks2.clear(); JE.precalentar.salida(); await espera(2500); const h = homeStation(), SS = CH * TS; out.precalentar = { hechos: JE.precalentar.hechos, salida: JE.map.hasG(Math.floor(h.x / SS), Math.floor((h.y + 10 * WK) / SS)) };
+    /* 3) Hoy en el valle, 4) los vecinos y 5) el modo prueba */
+    Save.data.settings.prueba = true; JE.game.start('usuario', 1, { seed: 5, nov: NOVEDADES[0], free: true, bici: 'propia' }); await espera(500); Cal.now = _now; const M = JE.game.mode, R = M.ride;
+    const L = JE.hoy.elegir(M); out.hoy = { n: L.length, tipos: L.map(c => c.tipo).join(','), boton: !!document.querySelector('#bHoy') };
+    const lejos = JE.hoy.cand(M).find(c => !c.fn && !c.aqui && c.km > .5); if (lejos) { JE.hoy.ir(M, lejos); out.hoy.destino = !!R.way; }
+    JE.hoy.mostrar(M); out.hoy.tarjeta = !!document.querySelector('#hoy21:not([hidden]) .hoyI'); JE.hoy.cerrar();
+    const lleva = async (x, y) => { R.p.x = x; R.p.y = y; R.p.v = 0; R.cam.x = x; R.cam.y = y; await espera(200); };
+    const sa = Encargos.pers('santi'); await lleva(sa.x, sa.y); const ac = M.actions().find(a => a.id === 'encargo'); out.vecinos = { historias: Encargos.lista().length, accion: !!ac };
+    if (ac) { ac.fn(); await espera(100); for (let i = 0; i < 4 && Encargos.d().activo; i++) { const mk = M.encMarca; if (!mk) break; await lleva(mk.x + 220, mk.y + 220); await lleva(mk.x, mk.y); } }
+    out.vecinos.termino = Encargos.d().hechos.includes('santi-parcial');
+    JE.game.stop(); const pt = JE.prueba.d().partidas.slice(-1)[0]; out.prueba = { fin: pt && pt.fin, m: pt && pt.m, cuadros: pt && pt.cuadros > 0, sinNombre: !JSON.stringify(JE.prueba.d()).includes(Save.data.profile.name || '\u0000') };
+    /* 6) Controles guarda (en la 3.1.0 un comentario a mitad de línea apagaba Save.save) */
+    UI.controles(false); await espera(100); const bg = document.querySelector('[data-c="giro"][data-v="1.3"]'); if (bg) bg.click(); await espera(100);
+    out.controles = { boton: !!bg, guardado: Save.data.settings.giro === 1.3 && JSON.parse(localStorage.getItem('juegaencicla.v1') || '{}').settings.giro === 1.3 }; Save.data.settings.giro = 1; Save.save(); UI.closeModal();
+    /* 7) lo que ve el jugador: en cada modo, el número de la pantalla de resultados es el del resultado, y la ★ del final también */
+    const ids = Object.keys(MODE_CLASS).filter(id => !['equipo', 'libre'].includes(id)), modos = [];
+    for (const id of ids) {
+      try {
+        JE.game.start(id, 1, { seed: 7, nov: NOVEDADES[0], players: [{ name: 'A' }, { name: 'B' }] }); await espera(60); const G = JE.game.mode; if (!G) { modos.push({ id, error: 'no arrancó' }); continue; } JE.game.paused = true; const e0 = (JE.errors || []).length;
+        for (let i = 0; i < 2400 && !G.done; i++) { if (i % 3 === 0) try { const a = G.sub || G; if (a !== G && a.bot) a.bot(0); else if (G.bot) G.bot(0); } catch (e) { } G.update(1 / 30); }
+        const hud = !G.sub && G.info ? G.info().score : null, esperado = Math.max(0, Math.round(G.score)); JE.game.paused = false; JE.game.finish(); await espera(80);
+        const b = document.querySelector('#resBody .stat b'), visto = b ? +b.textContent.replace(/\D/g, '') : null;
+        modos.push({ id, esperado, visto, hud, ok: visto === esperado && (hud == null || hud < 0 || hud === esperado), errores: (JE.errors || []).length - e0 });
+      } catch (e) { modos.push({ id, error: e.message }); try { JE.game.stop(); } catch (e2) { } }
+    }
+    out.modos = modos; Save.data.settings.prueba = false; Save.save(); UI.go('sHome'); return out;
+  });
+  ok(r.perdon.join() === '1,1,1', 'perdón en los saltos: el toque justo antes de caer salta al tocar el piso en Run 3D, la ciclorruta y el freerun (' + r.perdon.join() + ')');
+  ok(r.precalentar.salida, 'primer minuto: la salida del valle queda dibujada desde el menú ' + JSON.stringify(r.precalentar));
+  ok(r.hoy.n === 3 && r.hoy.boton && r.hoy.tarjeta && r.hoy.destino !== false, '🧭 Hoy en el valle: tres sugerencias, la tarjeta, el botón y el destino ' + JSON.stringify(r.hoy));
+  ok(r.vecinos.historias >= 6 && r.vecinos.accion && r.vecinos.termino, '💬 encargos de los vecinos: Santi se empieza junto a él y se termina paso a paso ' + JSON.stringify(r.vecinos));
+  ok(r.prueba.fin === 'salió' && r.prueba.m === 'usuario' && r.prueba.cuadros && r.prueba.sinNombre, '🧪 modo prueba: la partida queda anotada, sin nombres ' + JSON.stringify(r.prueba));
+  ok(r.controles.boton && r.controles.guardado, 'Controles guarda lo que tocas (el error que traía la 3.1.0) ' + JSON.stringify(r.controles));
+  const mal = r.modos.filter(m => !m.ok || m.errores);
+  ok(r.modos.length >= 15 && !mal.length, 'lo que ve el jugador: en ' + r.modos.length + ' modos, el resultado en pantalla y la ★ coinciden con lo guardado' + (mal.length ? ' · fallan: ' + JSON.stringify(mal) : ''));
+};

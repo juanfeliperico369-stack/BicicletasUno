@@ -1,0 +1,54 @@
+# Red de seguridad (ronda 3.3, Claude): la batería completa de Juega EnCicla en un Chromium real.
+# Corre en cada push a main y a las ramas de trabajo de las IA, en cada pull request a main y a mano.
+# Regla del proyecto (CLAUDE.md): no se publica en main ni en gh-pages si esto no está en verde.
+name: Pruebas de EnCicla
+
+on:
+  push:
+    branches:
+      - main
+      - 'ccr-*'
+      - 'claude/**'
+      - 'codex/**'
+      - 'openai-gpt6/**'
+      - 'antigravity/**'
+      - 'gemini/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Playwright y Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Compilar (un solo HTML)
+        run: node tools/build.js
+      - name: Prueba rápida de ciclorrutas (GPT-6)
+        run: node tests/prueba-gpt6-ciclorrutas.mjs
+      - name: Batería completa (bot, interfaz, rendimiento y lo que ve el jugador)
+        run: node tests/run.js
+      - name: Guardar las capturas y reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pruebas-encicla
+          path: tests/out/
+          if-no-files-found: ignore
+          retention-days: 7

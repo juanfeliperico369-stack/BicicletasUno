@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "ccr-6f184fb6-vtpkye",
   "base_commit": "59437d7",
-  "fase_actual": "3.2 · «Retoma, continúa y termina»: modos a medias pulidos, transporte en el mundo 3D, freerun de la Comuna 13 con gestos, radares, habilidades, diario y miradores",
-  "estado": "entregado (3.2.0); lo que falta está en el § 6 del documento",
-  "ultima_actualizacion_utc": "2026-11-22T21:30:00Z",
+  "fase_actual": "3.3 · lo que propuse para mejorar el juego: perdón en los saltos, primer minuto fluido, Hoy en el valle, encargos de los vecinos, modo prueba y red de seguridad (CI y pruebas de lo que ve el jugador)",
+  "estado": "entregado (3.3.0); lo que falta está en el § 6 del documento",
+  "ultima_actualizacion_utc": "2026-11-23T03:30:00Z",
   "zonas_reclamadas": [
     "src/js/98p-efectos.js",
     "src/js/98q-manejo.js",
@@ -34,7 +34,10 @@
     "tools/build.js (RED_M)",
     "tests/run.js",
     "src/js/88-camara.js (el aviso de la cámara solo en la ciudad)",
-    "src/js/81-controles.js (arreglo: Save.save comentado por la unión de la 3.1.0)"
+    "src/js/81-controles.js (arreglo: Save.save comentado por la unión de la 3.1.0)",
+    "CLAUDE.md (regla: no publicar si las pruebas no están en verde)",
+    ".github/workflows/pruebas.yml (nuevo)",
+    "contenido/guion/encargos.json (nuevo: historias de los vecinos)"
   ],
   "zonas_libres_para_ia_companera": [
     "src/js/99n-*.js .. src/js/99y-*.js",

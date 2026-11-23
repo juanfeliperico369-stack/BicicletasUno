@@ -1,0 +1,56 @@
+[
+  {
+    "id": "santi-parcial", "quien": "santi", "titulo": "El parcial de Santi", "premio": 60,
+    "pasos": [
+      { "a": "lm:eafit", "corto": "Los apuntes en EAFIT", "pide": "¡Parce, auxilio! Dejé los apuntes de cálculo en la biblioteca de EAFIT y el parcial es hoy. ¿Me los traes?", "luego": "📚 Los apuntes estaban en la mesa del fondo, con un sticker de EnCicla." },
+      { "a": "lm:udea", "corto": "Llévaselos a la UdeA", "pide": "Santi te escribe: «Estoy en la Ciudad Universitaria de la UdeA. ¡Pedalea, que ya casi empieza!»", "luego": "Santi alcanzó a repasar diez minutos antes del parcial." },
+      { "a": "lm:pies", "corto": "El helado en Pies Descalzos", "pide": "«¡Me fue bien! Te invito a un helado en el Parque de los Pies Descalzos».", "luego": "" }
+    ],
+    "final": "Gracias, parce: EnCicla y tú me salvaron el semestre."
+  },
+  {
+    "id": "luz-orquidea", "quien": "luz", "titulo": "La orquídea de Doña Luz", "premio": 70,
+    "pasos": [
+      { "a": "lm:botanico", "corto": "El casco al Botánico", "pide": "Corazón, una usuaria dejó el casco en mi estación. Trabaja en el Jardín Botánico: ¿se lo lleva?", "luego": "🌸 La usuaria te da las gracias… y una orquídea para Doña Luz." },
+      { "a": "p:luz", "corto": "La orquídea, a pie", "veh": "walk", "pide": "La orquídea es delicada: llévasela a Doña Luz a pie (toca «Bajarse» y camina).", "luego": "Doña Luz sonríe: «La voy a poner al lado del tótem, para que alegre la estación»." },
+      { "a": "p:marleny", "corto": "Un esqueje para Doña Marleny", "pide": "«Llévele un esqueje a Doña Marleny, la de las aromáticas de San Javier: a ella le encantan las matas».", "luego": "" }
+    ],
+    "final": "Así se teje el valle: de estación en estación, de mano en mano."
+  },
+  {
+    "id": "cata-fotos", "quien": "cata", "titulo": "Las fotos de Cata", "premio": 80,
+    "pasos": [
+      { "a": "lm:cerro", "corto": "El valle desde el Nutibara", "pide": "Me falta una foto del valle desde arriba. ¿Subes al Cerro Nutibara y me cuentas cómo se ve?", "luego": "🔭 Desde el Pueblito Paisa se ve el río partiendo el valle en dos." },
+      { "a": "lm:comuna13", "corto": "Los murales de la Comuna 13", "pide": "«Ahora las escaleras eléctricas de la Comuna 13: quiero los murales».", "luego": "🎨 Los murales cuentan la historia del barrio con colores." },
+      { "a": "lm:luces", "corto": "El Parque de las Luces, de noche", "noche": true, "pide": "«La última es de noche: el Parque de las Luces cuando se prenden los postes».", "luego": "" }
+    ],
+    "final": "Mi exposición se va a llamar «El valle en bici». ¡Tú sales en ella!"
+  },
+  {
+    "id": "efrain-memoria", "quien": "efrain", "titulo": "La memoria del tren", "premio": 70,
+    "pasos": [
+      { "a": "p:libardo", "corto": "Las fotos a Don Libardo", "pide": "Tengo unas fotos viejas del tren de Antioquia. ¿Se las lleva a Don Libardo, el jefe de la estación Universidad?", "luego": "Don Libardo las mira despacio: «Esto hay que mostrárselo a los muchachos»." },
+      { "a": "p:jhon", "corto": "Muéstraselas a Jhon", "pide": "«Búsqueme a Jhon, el aprendiz del taller de Industriales: él tiene que ver estas máquinas».", "luego": "Jhon no lo puede creer: «¡Una locomotora de vapor! Las voy a pegar en el taller»." },
+      { "a": "p:efrain", "corto": "Cuéntale a Don Efraín", "pide": "Vuelve donde Don Efraín y cuéntale lo que pasó con sus fotos.", "luego": "" }
+    ],
+    "final": "La memoria también viaja en bicicleta, mijo."
+  },
+  {
+    "id": "wilmar-aromatica", "quien": "wilmar", "titulo": "Una aromática para el cable", "premio": 70,
+    "pasos": [
+      { "a": "p:marleny", "corto": "La aromática de Doña Marleny", "pide": "Desde la cabina veo todo el valle, pero no alcanzo a bajar por una aromática. ¿Me trae una de Doña Marleny, en San Javier?", "luego": "Doña Marleny te sirve la aromática en un termo: «Pa'l muchacho del cable»." },
+      { "a": "p:wilmar", "corto": "El termo para Wílmar", "pide": "Llévale el termo a Wílmar, en el Metrocable de Acevedo.", "luego": "«¡Todavía está caliente! Gracias, parcero»." },
+      { "a": "lm:volador", "corto": "Míralo pasar desde El Volador", "pide": "«Suba al Cerro El Volador y mire hacia el nororiente: desde allá se ven pasar las cabinas».", "luego": "" }
+    ],
+    "final": "Desde arriba, el valle entero cabe en una mirada."
+  },
+  {
+    "id": "jairo-ruta", "quien": "jairo", "titulo": "El radio de Don Jairo", "premio": 70,
+    "pasos": [
+      { "a": "p:paola", "corto": "Avísale a la ingeniera Paola", "pide": "Se me dañó el radio del camión. Avísele a la ingeniera Paola, en La Alpujarra, que voy con retraso.", "luego": "La ingeniera Paola mira las pantallas: «Dígale que primero la estación de Moravia: está vacía»." },
+      { "a": "lm:moravia", "corto": "Espera el camión en Moravia", "pide": "Ve a Moravia y espera el camión en la estación.", "luego": "Don Jairo llega pitando: «¡Gracias! Bajemos estas bicis»." },
+      { "a": "p:wilson", "corto": "El lector de la estación", "pide": "«Wílson, el técnico de los tótems, anda por aquí: dígale que el lector de esta estación no está leyendo la Cívica».", "luego": "" }
+    ],
+    "final": "Así es el balance: unos llevan bicis, otros recados, y el sistema sigue andando."
+  }
+]
