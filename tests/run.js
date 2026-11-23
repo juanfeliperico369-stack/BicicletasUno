@@ -429,7 +429,6 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   console.log('4) Rendimiento (CPU 4x más lenta, como celular modesto)');
   await require('./regresion-encicla')(p, ok);   /* los arreglos que Codex describió (Claude, 21-nov-2026) */
   await require('./revolucion-encicla')(p, ok);  /* v2.1: lo de Motor City 4.5 adaptado (manejo, HUD, lectura, efectos, rostros, claves, Guatapé) */
-  await require('./revolucion-encicla').v3(p, ok);   /* v2.1: Ruta a Guatapé, la red de El Metro y los cuatro tamaños */
   const cdp = await ctx.newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   const perf = {};
   for (const role of ['usuario', 'anfitrion', 'monitoreo']) {
@@ -438,6 +437,10 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   }
   ok(+perf.usuario.med < 40, 'mapa fluido en CPU lenta (mediana < 40 ms)');
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  /* v2.1 y ronda 3.0: van después de medir el rendimiento (visitan muchos lugares y el 3D llena el caché de trozos; la medición queda como fue diseñada) */
+  await require('./revolucion-encicla').v3(p, ok);   /* v2.1: Ruta a Guatapé, la red de El Metro y los cuatro tamaños */
+  await require('./revolucion-encicla').v4(p, ok);   /* ronda 3.0: fluidez, acelerador fijo, todo liberado, oficios en el valle, trucos, carrera y mundo 3D */
+  await require('./revolucion-encicla').v5(p, ok);   /* ronda 3.2: modos pulidos, transporte 3D, freerun con gestos, radares, habilidades, diario y miradores */
   ok(!errs.length, 'sin errores de consola al final ' + errs.slice(0, 3).join(' | '));
   /* v2.1 · registro de claves del guardado (TAREAS-IA 10): después de jugar todo, cada clave de Save.data está registrada con su tipo */
   const claves = await p.evaluate(() => ({ mal: Save.revisarClaves(), n: Object.keys(Save.data).length, reg: Object.keys(Save.CLAVES).length }));

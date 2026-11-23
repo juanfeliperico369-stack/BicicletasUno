@@ -37,7 +37,7 @@ const UI = {
 #${id} .mision{max-width:min(320px,70vw);padding:8px 12px;border-radius:var(--r);background:var(--f);border-left:4px solid var(--a)}
 #${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
-#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none;pointer-events:auto}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaB{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px}#${id} .mapaB button{width:48px;height:48px;border-radius:50%;border:2px solid #0006;background:#fffffff0;color:#111;font:800 22px/1 system-ui;box-shadow:0 2px 8px #0008;cursor:pointer}#${id} .mapaB button.x{order:-1;background:#111;color:#fff;border-color:#fff8}@media (max-height:420px){#${id} .mapaB{gap:6px}#${id} .mapaB button{width:44px;height:44px;font-size:20px}}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
+#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none;pointer-events:auto}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaB{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px}#${id} .mapaB button{width:48px;height:48px;border-radius:50%;border:2px solid #0006;background:#fffffff0;color:#111;font:800 22px/1 system-ui;box-shadow:0 2px 8px #0008;cursor:pointer}#${id} .mapaB button.ir{width:auto;min-width:76px;border-radius:24px;padding:0 12px;background:#ffc23a;font-size:18px}#${id} .mapaB button.ir[hidden]{display:none}#${id} .mapaB button.x{order:-1;background:#111;color:#fff;border-color:#fff8}@media (max-height:420px){#${id} .mapaB{gap:6px}#${id} .mapaB button{width:44px;height:44px;font-size:20px}}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
 #${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.75}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
 @media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:66px}#${id} .ficha{max-width:23vw}#${id} .mision .d{-webkit-line-clamp:1}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
@@ -47,6 +47,10 @@ const UI = {
 #${id} .acciones{position:absolute;right:12px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
 #${id} .acciones button{width:66px;height:66px;border-radius:50%;font-size:26px;background:var(--f);border:2px solid var(--b)}#${id} .acciones button.on{background:var(--a);color:#000}#${id} .acciones button.alt{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}#${id} .acciones button.alt small{font:800 9px/1 system-ui;letter-spacing:.02em;margin-top:2px;opacity:.85}@media (max-width:560px){#${id}.con-alt .vel{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 82px)}}#${id} .acciones button.prendido{background:#2ee6a6;color:#05261b;border-color:#fff;box-shadow:0 0 0 3px #2ee6a655,0 0 18px #2ee6a6aa}
 #${id} canvas.mini{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 86px)}
+/* 4.8 · ⚙️ Flexibilidad: tamaño (--mc-ui) y mano zurda */
+#${id} .acciones{transform:scale(var(--mc-ui,1));transform-origin:100% 100%}#${id} canvas.mini{margin-bottom:calc((var(--mc-ui,1) - 1) * 80px)}#${id} .izq{transform:scale(var(--mc-ui,1));transform-origin:0 0}
+.mc-zurdo #${id} .acciones{right:auto;left:12px;flex-direction:row-reverse;transform-origin:0 100%}.mc-zurdo #${id} canvas.mini{bottom:max(12px,env(safe-area-inset-bottom));margin-bottom:0}
+@media (orientation:landscape) and (max-height:560px){#${id} canvas.mini,.mc-zurdo #${id} canvas.mini{top:max(10px,env(safe-area-inset-top));bottom:auto;margin-bottom:0;right:calc(clamp(48px,calc(20vw - 10px),66px) * 2 + 30px);width:104px;height:104px}}   /* 4.8: en horizontal el minimapa va arriba, junto a los botones (antes tapaba la última fila) */
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
     const div = (cls, padre = capa) => { const d = document.createElement('div'); d.className = cls; padre.appendChild(d); return d; };
@@ -73,7 +77,25 @@ const UI = {
       mision(texto) { mision.hidden = !texto; const [t, ...d] = String(texto || '').split('<br>'); mision.innerHTML = '<div class="t">' + t + '</div>' + (d.length ? '<div class="d">' + d.join(' ') + '</div>' : ''); },   // título en una línea; el detalle, en dos como mucho (nunca medio renglón cortado)
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
       dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
-      menu(titulo, items, al) { const m = div('menu p'); m.innerHTML = '<b style="padding:4px">' + titulo + '</b>'; for (const it of items) { const b = document.createElement('button'); b.innerHTML = it.texto; b.onclick = () => { m.remove(); al(it.id); }; m.appendChild(b); } const cerrar = () => m.remove(); setTimeout(() => document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', k); } }), 0); return m; },
+      menu(titulo, items, al) {
+        if (ui._menu) ui._menu.cerrar();
+        const anterior = document.activeElement, m = div('menu p'), encabezado = document.createElement('b');
+        m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', titulo);
+        encabezado.style.padding = '4px'; encabezado.textContent = titulo; m.appendChild(encabezado);
+        const escapar = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cerrar(); } };
+        const cerrar = () => {
+          document.removeEventListener('keydown', escapar, true);
+          m.remove(); ui._menu = null;
+          if (anterior?.isConnected) anterior.focus({ preventScroll: true });
+        };
+        ui._menu = { cerrar };
+        for (const it of items) {
+          const b = document.createElement('button'); b.innerHTML = it.texto;
+          b.onclick = () => { cerrar(); al(it.id); }; m.appendChild(b);
+        }
+        document.addEventListener('keydown', escapar, true);
+        m.querySelector('button')?.focus({ preventScroll: true }); return m;
+      },
       /* minimapa redondo con las losas del motor, girado con la cámara */
       minimapa(vistas, al) { const c = document.createElement('canvas'); c.className = 'mini p'; c.width = c.height = 240; c.setAttribute('role', 'button'); c.setAttribute('aria-label', 'Abrir el mapa'); c.style.cursor = 'pointer'; c.addEventListener('click', e => { e.stopPropagation(); const f = al || ui._alMini; if (f) f(); }); capa.appendChild(c); ui._mini = { c, vistas }; if (al) ui._alMini = al; return c; },   // 4.6: tocar el minimapa (la brújula) abre el mapa grande
       pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } g.restore(); const th = -yaw, cs = Math.cos(th), sn = Math.sin(th);   /* 4.6: los puntos lejanos quedan en el borde (no se pierden) y la N marca el norte */
@@ -86,8 +108,9 @@ const UI = {
       /* joystick visible: donde se pone el dedo aparece la base y la perilla; quieto, una guía abajo a la izquierda */
       joystick(ctl, op = {}) { const j = div('joy'), k = document.createElement('i'), t = document.createElement('small'); j.appendChild(k); j.appendChild(t); t.textContent = op.texto ?? 'Arrastra para moverte'; ui._joy = { j, k, t, ctl, usado: false, t0: Date.now() }; return j; },
       pintarJoystick() { const J = ui._joy; if (!J) return; const S = J.ctl.stick, r = J.ctl.el.getBoundingClientRect();
-        if (S.activo) { J.usado = true; J.j.style.opacity = 1; J.j.style.transform = 'translate(' + (r.left + S.ox) + 'px,' + (r.top + S.oy) + 'px)'; const dx = clamp(S.px - S.ox, -52, 52), dy = clamp(S.py - S.oy, -52, 52); J.k.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; J.t.hidden = true; }
-        else { const x = r.left + Math.min(110, r.width * .2), y = r.top + r.height - Math.max(150, r.height * .2); J.j.style.transform = 'translate(' + x + 'px,' + y + 'px)'; J.k.style.transform = 'translate(0,0)'; J.j.style.opacity = J.usado ? .22 : .7; J.t.hidden = J.usado; } },
+        const ku = ' scale(' + (MC.opciones.ui || 1) + ')';   /* 4.8 · 🔠 tamaño de la interfaz */
+        if (S.activo) { J.usado = true; J.j.style.opacity = 1; J.j.style.transform = 'translate(' + (r.left + S.ox) + 'px,' + (r.top + S.oy) + 'px)' + ku; const dx = clamp(S.px - S.ox, -52, 52), dy = clamp(S.py - S.oy, -52, 52); J.k.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; J.t.hidden = true; }
+        else { const x = MC.opciones.zurdo ? r.left + r.width - Math.min(110, r.width * .2) - 170 * (MC.opciones.ui || 1) : r.left + Math.min(110, r.width * .2), y = r.top + r.height - Math.max(150, r.height * .2); J.j.style.transform = 'translate(' + x + 'px,' + y + 'px)' + ku; J.k.style.transform = 'translate(0,0)'; J.j.style.opacity = J.usado ? .22 : .7; J.t.hidden = J.usado; } },
       /* botones de acción grandes abajo a la derecha (donde llega el pulgar); mantener = mientras está oprimido */
       accion({ id: aid, icono = '', texto = '', mantener = false, ctl, al }) {
         if (!ui._acc) ui._acc = div('acciones p'); const b = document.createElement('button'); b.innerHTML = icono; b.setAttribute('aria-label', texto || aid); b.title = texto; ui._acc.appendChild(b);
@@ -99,7 +122,7 @@ const UI = {
         const o = { b, activo: !!activo, poner(v, callado) { o.activo = !!v; b.setAttribute('aria-pressed', o.activo ? 'true' : 'false'); b.classList.toggle('prendido', o.activo); if (al && !callado) al(o.activo); } };
         b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); o.poner(!o.activo); }); b.addEventListener('click', e => { if (e.detail === 0) o.poner(!o.activo); });   /* el clic del teclado o de un lector de pantalla también */
         o.poner(o.activo, true); (ui._alt || (ui._alt = {}))[aid] = o; capa.classList.add('con-alt'); return o; },   /* con-alt: en vertical, la velocidad sube sobre la fila de botones (3 botones ya llegan al centro) */
-      quitar() { capa.remove(); css.remove(); }
+      quitar() { ui._menu?.cerrar(); capa.remove(); css.remove(); }
     };
     return ui;
   }

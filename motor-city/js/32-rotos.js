@@ -18,6 +18,9 @@ const Rotos = {
   puede(o, C) {
     const lim = o && ROMPE_V[o.t], cl = C.veh.clase; if (lim == null || cl === 'pie' || cl === 'rueda' || cl === 'agua') return false;
     if (cl === 'moto' && !ROMPE_MOTO.has(o.t)) return false;
+    /* 4.7: el carro (o el camión) se lleva por delante lo liviano a cualquier velocidad, como en GTA; antes, parado frente a una caneca no
+       podía pasar (necesitaba 2,5 m/s y no los alcanzaba porque la caneca lo frenaba). Lo anclado (hidrante, banca, paradero, poste) sigue pidiendo velocidad. */
+    if ((cl === 'auto' || cl === 'pesado') && ROMPE_MOTO.has(o.t)) return Math.abs(C.v) >= .3 || Math.abs(C._vPedida || 0) > .3;
     return Math.abs(C.v) >= lim * (cl === 'pesado' ? .55 : 1);
   },
   romper(M, o, C) {

@@ -1,6 +1,83 @@
 # Bitácora de Motor City
 
-## 22-nov-2026 · 4.6.1 · ⏫ Acelerador fijo
+## 22-nov-2026 · 4.8.0 · Flexibilidad, lo que dejaron Gemini y ChatGPT, y optimización
+- **El autor:** «Retoma el trabajo de las otras IAs (Gemini y ChatGPT), termina de unir lo que falta en el Motor y el juego de prueba, más EnCicla y El Metro, dedícate a optimizarlos. Añade a todo *Flexibilidad*.»
+- **Unión:** ramas de ChatGPT (`ia/chatgpt/4.7-auditoria-arcade-20261122`), Codex (`ia/codex/reporte-metrozero-20261122`) y Gemini (`ia/gemini/4.7-evolucion-arte-render`, solo coordinación) en el motor. EnCicla: la 3.0.0 de su otra sesión y la auditoría de GPT-6. El Metro: la 3.2.0, Antigravity, Codex y las dos de GPT-6.
+- **⚙️ Flexibilidad (`js/37-flexibilidad.js`, `MC.Flex`):** diez ajustes para cualquier juego del motor:
+  - control (según la cámara, apuntar, volante o un pulgar), giro, velocidad de los vehículos y distancia de la cámara;
+  - acelerador fijo al subir y tren con palanca;
+  - mano zurda, tamaño de la interfaz, calidad fija y vibración en choques.
+  En Turno Cero: ⏸ Menú → ⚙️ Flexibilidad, guardado en `leerG().flex`. Prueba nueva: `pruebas/flexibilidad.mjs`.
+- **Lo de ChatGPT (auditoría 4.7, 11/11 contratos):**
+  - el metro con teclado o mando es palanca (↑ acelera, ↓ frena en cualquier cámara);
+  - Run solo ofrece doblar hacia otra ciclorruta;
+  - la carrera lejos de la salida pregunta «🚗 Ir manejando / ⚡ Llevarme ya» (sin teletransporte sin aviso);
+  - la guardia de EnCicla quedó dentro de `60-modos.js` y se retiró `61-chatgpt-guardia-encicla.js`;
+  - su prueba estática apunta a `pruebas/humano.mjs` (E2E solo con entradas) y su E2E de entradas reales pasa los cuatro escenarios.
+- **Lo de Gemini (su plan de render, que no alcanzó a entregar):**
+  - el Raster 3D por software dibuja el tráfico (`E.trafico`), respeta `_sinJugador` en el tren y tiene `aPantalla` (flechas, conos y efectos también sin WebGL);
+  - la primera persona va a la altura de los ojos de quien maneja (1,15 m en carro, 2,3 m en bus) y solo dibuja el capó;
+  - luz hemisférica, brillo especular Blinn-Phong y contorno, por vértice;
+  - la niebla y la distancia siguen al escalador de resolución (`E.factorNiebla`, que nadie leía);
+  - 🌄 miradores en el mundo abierto: la cámara de cine orbita, se cuentan y dan una propina.
+- **Optimización medida (CPU 4×, manejando con ⏫):**
+  - el caché de sectores de suelo tenía 16 sectores y el mapa grande, armándose en ratos libres, recorría 44 por fila: el LRU se vaciaba en ciclo (34 000 descompresiones en 8 s, 26 % de la CPU);
+  - ahora guarda hasta 400 (unos 4 MB);
+  - p95 del cuadro: cenital de 166 a 33 ms, tercera de 133 a 50 ms y ciudad 3D de 150 a 50 ms.
+- **Interfaz:** en horizontal el minimapa sube junto a los botones (antes tapaba la fila Modos/Cámara); en zurdo los botones van a la izquierda y el minimapa a la esquina libre.
+- **Pedidos nuevos en la misma sesión (Turno Cero):**
+  - 🆘 **Rescate** (`juegos/getaway/63-rescate.js`, como el 🆘 de El Metro): salir a la calle más cercana, 🔧 grúa y mecánico, 🚕 taxi, 🚇 la estación más cercana, 🚑 ambulancia, 🏠 volver a donde empezaste y 🗺️ elegir un punto; un vigía lo ofrece si llevas 3,5 s empujando sin moverte o vas en carro lejos de las calles. Con la policía encima o en un capítulo, no hay saltos.
+  - 🗺️ **Un solo mapa:** el minimapa, 🗺️ y M abren el mismo; al poner un punto aparece **🚀 Ir** (calle más cercana o, si no hay a 400 m, el sitio transitable más cercano al punto); 🌍 y alejar más allá de la ciudad pasan al planeta, y 🗺️ en el planeta vuelve. El botón suelto 🌍 se quitó (la tecla G sigue).
+  - ✂️ **Pantalla en mitades** (motor, `MC.Controles({ mitades: true })`): abajo se maneja (joystick en el cuarto de su mano, botones al otro); arriba es siempre la cámara: arrastrar gira e inclina, pellizcar acerca o aleja, el encuadre se queda y el doble toque lo endereza. El dedo del joystick no se suelta aunque otro mueva la cámara. ⚙️ Flexibilidad permite volver a la clásica.
+  - Prueba nueva: `pruebas/rescate-mapa.mjs`.
+- **Juegos hermanos:** EnCicla 3.1.0 (giro, velocidad de la cicla y pedaleo fijo al empezar, junto a lado, tamaño y vibración) y El Metro 3.3.0 (arcade o realista, mano zurda, joystick, giro, velocidad, acelerador fijo y tamaño de botones), ambos con sus pruebas en verde.
+
+
+## 22-nov-2026 · Ilustraciones de actos y accesibilidad del menú
+- Cinco imágenes originales WebP aparecen en las transiciones de Turno Cero.
+- MC.UI limpia el manejador Escape, cierra el menú anterior y devuelve el foco.
+- Pruebas de modos admiten HTTP local. Ver CONTEXTO-CODEX-TURNO-CERO.md para resultados y pendientes.
+
+
+## 22-nov-2026 · 4.7.0 · Plan de evolución, ritmo arcade, todo liberado y los modos en el mundo abierto
+- **El autor** (a tres IA a la vez):
+  - revisar el juego contra los mejores e investigar jugabilidad, controles, mundos grandes con pocos recursos, render y optimización;
+  - un plan verosímil en un documento con la marca de cada IA;
+  - arreglar los modos (lentos, engorrosos, «no se mueven»);
+  - todo liberado; cada modo presente en el mundo abierto con la misma experiencia;
+  - Run solo en ciclovías;
+  - luego arte, cámaras y un solo mundo 3D.
+- **Documento:** `docs/PLAN-EVOLUCION-CLAUDE.md`. Contiene:
+  - una auditoría con «dedo» real en 6 cámaras × 5 vehículos;
+  - la comparación con las ~40 referencias (técnica, no arte);
+  - la investigación transversal, con fuentes;
+  - ideas por género bajo el marco de la «doble vida» de Mara;
+  - el mundo vivo (RPG y «MMO sin servidor»), Run, cámaras y arte;
+  - la hoja de ruta 4.8–5.0 repartida entre Claude, Gemini y Codex;
+  - las ideas que no tienen cabida.
+- **Ritmo arcade** (a pie ≈ 43 % de la bici, como en EnCicla):
+  - a pie camina a 2,2, trota a 4 y corre a 6,4 m/s;
+  - bici: 9; e‑bike y MTB: 10,5; skate: 7; patines: 7,5;
+  - se trota con el joystick a fondo en cualquier vista.
+- **Modos más cortos y vivos:**
+  - EnCicla y Mandados: 0,3 a 1,3 km;
+  - Extremo: hasta 2,6 km;
+  - tren: 2,4 m/s² al acelerar y 3,2 al frenar, ×3 lejos de la estación, sin espera inicial; el joystick empuja hacia donde va.
+- **Todo liberado:** los 5 capítulos y todos los vehículos desde la primera partida.
+- **Actividades en el mundo abierto** (`G.Actividades`):
+  - marcas por celdas de 1,2 km con datos reales: 🏁 avenidas, 🚵 lomas, 📦 lugares, 🛹 plazas, 🛴 ciclorrutas, 🚲 EnCicla y 🚇 estaciones;
+  - se ven en la calle, el minimapa y el mapa;
+  - ▶ Jugar arranca el mismo modo ahí.
+- **🛹 Zona de trucos y parkour:** saltos, giros en el aire con el joystick, caer derecho y combos ×5. **🛴 Run** también en el menú 🎮.
+- **Cámaras:**
+  - por contexto: Arcade solo en carretera y carreras, Vuelo solo volando; primera persona y dron en el selector;
+  - la cenital de verdad (79° y 66°) se aleja con la velocidad, como GTA 2;
+  - en las vistas de volante, el joystick de lado avanza.
+- **Hallazgos de Gemini en las zonas de Claude:** resueltos (metro, cenital, volante, cámaras, Run, puente del raster).
+- **Coordinación:** `coord/buzon/2026-11-22-claude-4.7-en-curso.md` y `20261122-1500-claude-4.7-respuesta.md`. Unida la entrega de Codex (`c3fc286`).
+- **Pruebas:** 146 Node y `pruebas/modos.mjs` (cinco modos, ⏫, mapa y vuelta al carro).
+
+
 - **El autor:** «el joystick está bien, pero el problema es el arranque: si se suelta el joystick se deja de acelerar; coloca un botón que, presionado, siempre esté acelerando sin parar, y para detenerse simplemente se desactiva».
 - **Motor:** `MC.Manejo.aplicar(…, { acelFijo })` (`js/37-manejo.js`): prendido, acelera a fondo y el joystick solo da la dirección (sin joystick sigue derecho y el imán de calle lo alinea); apagado, frena suave hasta parar (`frenoK` 0,55 en `js/32-fisica.js`), salvo que se toque el joystick. El 🛑 manda mientras se oprime (y con giro, derrapa). `ui.alternar` (`js/70-interfaz.js`): botón que se prende y se apaga, verde y brillante cuando está prendido.
 - **Turno Cero:** ⏫ junto a 🛑 y ⚡ (tecla V), visible en carro, moto, bici y manejando el tren de 🎮 Modos; a pie se esconde y se apaga; un aviso la primera vez. En vertical la velocidad sube sobre la fila de botones; en horizontal la columna izquierda ya no invade la zona libre.

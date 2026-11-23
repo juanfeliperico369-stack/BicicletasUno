@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v2.1.0 · compilado el 2026-11-22.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.2.0 · compilado el 2026-11-22.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v2.1.0)
+## 2.3 Estado actual (v3.2.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-22 | Claude Code | documento creado (v2.1.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-22 | Claude Code | documento creado (v3.2.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2265,6 +2265,45 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 ## BITÁCORA · Juega EnCicla
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
+
+### 22-nov-2026 · v3.2.0 · «Retoma, continúa y termina»: modos pulidos, transporte en 3D, freerun de la Comuna 13 y el valle que recuerda (Claude)
+- **Unión:** la 3.1.0 de la otra sesión de Claude (⚙️ Flexibilidad, Motor City 4.7 y 4.8) y la auditoría de GPT‑6. Arreglado lo que traía la unión: en Controles, tocar una opción **no guardaba** (un comentario a mitad de línea apagaba `Save.save()` en `81-controles.js`).
+- **Modos a medias** (`99e-pulido.js`):
+  - Run 3D del menú: las hojas no sumaban (★ 0); ahora suman y hay una fila de hojas de salida; las teclas funcionan (llegaban como evento);
+  - turnos de varias fases: los puntos del minijuego de una fase se perdían (Bodega: ★ 0 con 83 puntos);
+  - Bodega en vertical: estante bajo el título, la caja que revisas en grande, pasos 1‑2‑3‑4 y piso con demarcación;
+  - el aviso de la cámara ya no tapa los minijuegos (`88-camara.js`) y el barrio del corredor de Run 3D se busca con px del mundo.
+- **Transporte en el mundo 3D** (`99f-mundo3d-transporte.js`): viaducto con columnas en T, estaciones elevadas con su cubierta y su edificio de acceso, puentes, trenes, tranvía, Metroplús y metrocables (torres, estaciones y cabinas). Carros y jugador encima de los puentes. **Ventanas** en las fachadas que de noche se prenden (sombreador). Sombras: las que el arte 2D hornea en el piso.
+- **🧗 Freerun en la Comuna 13** (`99g-freerun.js`): carrera lateral en pixel por escaleras eléctricas, techos y callejones hasta el mirador; en el menú (3 niveles) y en el valle. **Trucos con gesto** (← → ↑ ↓ y círculo) en el freerun y en la carrera de la ciclorruta.
+- **El valle que recuerda** (`99h-valle-vivo.js`): 📸 14 radares de ciclorruta con récord, 🛹 saltos con récord, 💪 habilidades que suben al usarlas (Pedaleo, Resistencia, Equilibrio, Conocer el valle), 📔 diario automático (Más → «Mi diario y habilidades») y 🔭 5 miradores con la cámara 3D girando sobre la ciudad viva. Claves nuevas del guardado, registradas: `habil` (objeto) y `diario` (lista).
+- **Pruebas:** sección V5 de `tests/revolucion-encicla.js` (9 pruebas nuevas) y la auditoría de modos cuenta los puntos de los minijuegos.
+- **Probado:** `node tools/build.js` y `node tests/run.js`: todas las pruebas pasaron; capturas en 412 × 860 del 3D (día y noche), el freerun, la Bodega, el mirador y el diario.
+- **Documento:** `docs/INVESTIGACION-Y-PLAN-3.0-Claude.md`, § 0b. **Falta:** § 6 del documento (cámaras del 3D para Run 3D y la maqueta, trozos en un *worker*, lo 🔜 que queda y probar en un celular real).
+
+### 22-nov-2026 · v3.1.0 · Unión, fluidez y ⚙️ Flexibilidad (Claude)
+- **Unión:** la 3.0.0 de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`) y la auditoría de GPT‑6 (`openai-gpt6/encicla-auditoria-20261122`), sin conflictos.
+- **Pendiente 3 de GPT‑6:** el bucle de 60-ui avanza en subpasos de 50 ms (antes, un solo paso de hasta 200 ms).
+- **⚙️ Flexibilidad** (Más → ⚙️ Flexibilidad y la pausa → Controles):
+  - nuevos: 🎯 giro (suave, normal, rápido), 🚲 velocidad de la cicla (×0,8 a ×1,5) y ⏫ pedaleo fijo al empezar;
+  - ya estaban: lado y tamaño del joystick, tipo de control y vibración.
+  Solo cambian lo de quien juega: el bot y las pruebas siguen iguales.
+- **Motor:** `motor-city/` 4.8.0 como referencia (`docs/INFORME-MOTOR-CITY-4.6.md`, apartado 4.8).
+- **Probado:** `node tools/build.js` y `node tests/run.js`: todas las pruebas pasaron.
+- **Falta:** portar el 🚀 Ir del mapa y la pantalla en mitades del motor si el autor lo pide.
+
+### 22-nov-2026 · v3.0.0 · Ronda 3.0 de Claude: arreglar lo roto, todo liberado, módulos en el valle y un solo mundo 3D
+Pedido del autor a tres IA a la vez (cada una con su documento): revisar, compararlo con los mejores juegos, investigar y planear; arreglar los modos rotos, lentos o engorrosos; liberar todo; llevar cada módulo al mundo abierto; carrera sin fin en ciclovías con giros, angostos y trucos; un solo mundo 3D. Documento: **`docs/INVESTIGACION-Y-PLAN-3.0-Claude.md`**.
+1. **Auditoría medida** (`tests/auditoria-modos.js`, CPU 4×): la bici iba a 14 cuadros por segundo con picos de 165 ms y perdía hasta el 30 % del tiempo por el tope de 50 ms del paso.
+2. **Fluidez** (`99a-fluidez.js`): subpasos de hasta 50 ms (el juego no va en cámara lenta en celulares lentos); trozos de ciudad por adelantado en el tiempo libre.
+3. **⏫ Acelerador fijo** (tecla Q), como el de Motor City 4.6.1.
+4. **Todo liberado** (oficios, turnos y tienda; interruptor 🔓 en Más).
+5. **Carrera de la ciclorruta** a 34–65 km/h (antes 20 km/h al arrancar).
+6. **Los oficios en el valle** (`99b-actividades.js`): en las estaciones y en Casa EnCicla, el mismo módulo del menú y «🚲 Volver al valle».
+7. **Carrera con giros, tramos estrechos y zonas de trucos**; **zonas de trucos y parkour** en 7 plazas (`99c-trucos.js`).
+8. **Un solo mundo 3D** (`99d-mundo3d.js`): tercera y primera persona sobre el mismo mapa (el piso es el arte 2D de los trozos; los edificios, los mismos lotes en volumen; árboles, carros y el ciclista), cámara que no se mete en los edificios y joystick según la cámara. Botón «3D» o tecla Y.
+9. Unido Motor City 4.6.1 (rama de la IA del motor) a esta rama.
+**Probado:** `node tools/build.js` y `node tests/run.js` (sección V4 nueva, todo en verde); capturas en 412 × 860 del 3D, la carrera y los trucos.
+**Falta:** el documento, § 6.
 
 ### 21-nov-2026 · v2.1.0 · La revolución con Motor City 4.5 (Claude)
 Pedido del autor: «comprende todo, el motor, las ideas y sugerencias, y ahora sí revoluciona el videojuego»; luego: «mejora los iconos y la información en pantalla (tapan el juego; el tamaño solo es grande o enorme)» y «usa El Metro para terminar las estaciones del metro, metrocable, tranvía, tren, Metroplús, las líneas alternativas y los alimentadores». El juego sigue con su Motor del Valle; del motor 4.5 se portó lo que sirve (manera A y B del informe). Detalle: **`docs/REVOLUCION-2.1.md`**.

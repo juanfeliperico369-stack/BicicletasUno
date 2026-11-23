@@ -10,15 +10,15 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), r
 const tc = path.join(RAIZ, 'dist/juegos/getaway.html'); if (!fs.existsSync(tc)) { console.log('· falta dist/juegos/getaway.html (node herramientas/construir.mjs)'); process.exit(0); }
 const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 860, height: 412 }, hasTouch: true }), errs = [];
 p.on('pageerror', e => errs.push('pageerror ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('console ' + m.text()); });
-await p.goto(pathToFileURL(tc).href + '?portada'); await p.waitForFunction(() => window.TURNO_LISTO);
+await p.goto((process.env.MC_PRUEBAS_URL ? new URL('dist/juegos/getaway.html', process.env.MC_PRUEBAS_URL).href : pathToFileURL(tc).href) + '?portada'); await p.waitForFunction(() => window.TURNO_LISTO);
 await p.click('#bModos'); await p.waitForFunction(() => TURNO.M && !TURNO.transicion && TURNO.cuerpo, null, { timeout: 120000 });
 await p.waitForSelector('.mcui .menu', { timeout: 20000 }); const menuAbre = await p.evaluate(() => document.querySelector('.mcui .menu').textContent.includes('Modos'));
 await p.evaluate(() => { for (const m of document.querySelectorAll('.mcui .menu, .mcui .dialogo')) m.remove(); window._res = []; MC.on('modo:resultado', r => window._res.push(r)); });
 const cerrar = () => p.evaluate(() => { for (const m of document.querySelectorAll('.mcui .dialogo, .mcui .menu')) m.remove(); TURNO.pausa = false; });
 const R = { menuAbre };
-/* carreras y extremo: se corre la pista poniendo al jugador adelante; los rivales deben avanzar solos */
+/* carreras y extremo: «⚡ Llevarme ya» si la salida queda lejos; se corre la pista poniendo al jugador adelante; los rivales deben avanzar solos */
 for (const id of ['carrera', 'extremo']) {
-  R[id] = await p.evaluate(async id => { const G = TURNO, M = G.Modos, espera = ms => new Promise(q => setTimeout(q, ms)); const ok = M.empezar(id); if (!ok) return { ok }; const c = M.m, ini = c.rivales.map(r => [r.cuerpo.x, r.cuerpo.y]); await espera(7000); const avanzan = c.rivales.filter((r, i) => r.s > 3 || Math.hypot(r.cuerpo.x - ini[i][0], r.cuerpo.y - ini[i][1]) > 4).length;
+  R[id] = await p.evaluate(async id => { const G = TURNO, M = G.Modos, espera = ms => new Promise(q => setTimeout(q, ms)); const ok = M.empezar(id); if (!ok) return { ok }; const ll = [...document.querySelectorAll('.mcui .dialogo button')].find(b => b.textContent.includes('Llevarme')); if (ll) ll.click(); await espera(60); const c = M.m, ini = c.rivales.map(r => [r.cuerpo.x, r.cuerpo.y]); await espera(7000); const avanzan = c.rivales.filter((r, i) => r.s > 3 || Math.hypot(r.cuerpo.x - ini[i][0], r.cuerpo.y - ini[i][1]) > 4).length;
     for (let k = 0; k < 900 && M.m === c; k++) { const q = c.p.punto(c.yo.s + 22); Object.assign(G.cuerpo, { x: q.x, y: q.y, a: q.a }); if (id === 'extremo' && k % 40 === 5) G.cuerpo.z = (G.cuerpo.alturaSuelo || 0) + 2; await espera(25); }
     await espera(300); const r = window._res.find(x => x.id === id); return { ok, largo: Math.round(c.p.L), rivales: c.rivales.length, avanzan, fin: r && +r.t.toFixed(1), pos: r && r.pos, dialogo: !!document.querySelector('.mcui .dialogo') }; }, id);
   await cerrar();
@@ -35,15 +35,15 @@ R.encicla = await p.evaluate(async () => { const G = TURNO, M = G.Modos, espera 
 await cerrar();
 /* el metro: ⚡ hasta cerca de la estación y 🛑 para dentro del andén; dos paradas bastan */
 R.tren = await p.evaluate(async () => { const G = TURNO, M = G.Modos, espera = ms => new Promise(q => setTimeout(q, ms)); const L = G.transporte.lineas.find(L => L.clase === 'metro' && L.est.length >= 5); if (!L) return { ok: false }; M.armarTren(L); const m = M.m;
-  for (let k = 0; k < 2400 && M.m === m && m.paradas < 2; k++) { const E = m.L.est[m.sig]; if (!E) break; let falta = (E.s - m.s) * m.dir; if (falta > 320 && m.puertas <= 0) { m.s = E.s - m.dir * 240; m.v = 12; falta = 240; } const frenar = m.v * m.v / (2 * 1.5) + 6; G.ctl.boton('turbo', m.puertas <= 0 && falta > frenar && m.v < 18); G.ctl.boton('freno', falta <= frenar || m.v >= 18); await espera(30); }
+  for (let k = 0; k < 2400 && M.m === m && m.paradas < 2; k++) { const E = m.L.est[m.sig]; if (!E) break; let falta = (E.s - m.s) * m.dir; if (falta > 320 && m.puertas <= 0) { m.s = E.s - m.dir * 240; m.v = 12; falta = 240; } const frenar = m.v * m.v / (2 * 3.2) + 6; G.ctl.boton('turbo', m.puertas <= 0 && falta > frenar && m.v < 18); G.ctl.boton('freno', falta <= frenar || m.v >= 18); await espera(30); }
   G.ctl.boton('turbo', false); G.ctl.boton('freno', false); const out = { ok: true, linea: L.nombre, paradas: m.paradas, puntos: Math.round(m.puntos), vis: !!(G.E.vehiculos || []).find(v => v.id === 'yo-tren'), sinJugador: !!G.E._sinJugador }; M.terminar('fin de la prueba'); out.libre = !G.controlExterno && !G.E._sinJugador; return out; });
 await cerrar();
 /* 4.6.1 · ⏫ acelerador fijo: se toca el botón (de verdad, en la pantalla) y el carro acelera solo sin joystick; se toca otra vez y para */
-await p.evaluate(() => { const G = TURNO, M = G.M, C = G.cuerpo, v = M.vias().filter(v => v.k <= 2 && v.p.length >= 4).map(v => ({ v, L: Math.hypot(v.p[v.p.length - 2] - v.p[0], v.p[v.p.length - 1] - v.p[1]) })).sort((a, b) => b.L - a.L)[0].v; if (C.veh.clase === 'pie') C.setVeh(G.veh); Object.assign(C, { x: v.p[0], y: v.p[1], a: Math.atan2(v.p[3] - v.p[1], v.p[2] - v.p[0]), v: 0 }); C.rumboRodado = C.a; G.busq.limpiar(); });
+await p.evaluate(() => { const G = TURNO, M = G.M, C = G.cuerpo, v = M.vias().filter(v => v.k <= 2 && v.p.length >= 4).map(v => ({ v, L: Math.hypot(v.p[v.p.length - 2] - v.p[0], v.p[v.p.length - 1] - v.p[1]) })).sort((a, b) => b.L - a.L)[0].v; window._vehTrasModos = C.veh.id; C.setVeh(G.veh); Object.assign(C, { x: v.p[0], y: v.p[1], a: Math.atan2(v.p[3] - v.p[1], v.p[2] - v.p[0]), v: 0 }); C.rumboRodado = C.a; G.busq.limpiar(); });
 await p.waitForTimeout(600); const bAcel = await p.$('.mcui .acciones button.alt'); const visible = !!bAcel && await bAcel.isVisible();
 if (bAcel) await bAcel.tap(); await p.waitForTimeout(3500); const acel = await p.evaluate(() => ({ fijo: !!TURNO.acelFijo, v: +TURNO.cuerpo.v.toFixed(1), prendido: document.querySelector('.mcui .acciones button.alt').getAttribute('aria-pressed') }));
 if (bAcel) await bAcel.tap(); await p.waitForTimeout(4500); const para = await p.evaluate(() => ({ fijo: !!TURNO.acelFijo, v: +Math.abs(TURNO.cuerpo.v).toFixed(2) }));
-R.acelerador = { visible, ...acel, vDespues: para.v, apagado: !para.fijo };
+R.acelerador = { visible, ...acel, vDespues: para.v, apagado: !para.fijo, vehTras: await p.evaluate(() => window._vehTrasModos) };
 /* el mapa grande con el juego corriendo: abre, pausa, acerca, cierra y el juego sigue */
 R.mapa = await p.evaluate(async () => { const G = TURNO, espera = ms => new Promise(q => setTimeout(q, ms)); G.abrirMapaTC(); await espera(400); const abierto = !!G.ui._mapa && G.pausa; for (let i = 0; i < 4; i++) document.querySelector('.mapaB button[aria-label="Acercar"]').click(); await espera(800); G.ui._mapa.cerrar(); await espera(300); return { abierto, cerrado: !G.ui._mapa && !G.pausa }; });
 const res = await p.evaluate(() => window._res.map(r => r.id)); errs.push(...await p.evaluate(() => MC.errores.map(e => String(e.msg || e))));

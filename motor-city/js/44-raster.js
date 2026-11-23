@@ -17,6 +17,7 @@ class Raster {
     const o = C.ojo, b = C.blanco; let fx = b[0] - o[0], fy = b[1] - o[1], fz = b[2] - o[2], l = Math.hypot(fx, fy, fz) || 1; fx /= l; fy /= l; fz /= l;
     let rx = -fy, ry = fx; l = Math.hypot(rx, ry); if (l < 1e-3) { rx = Math.cos(C.yaw || 0); ry = Math.sin(C.yaw || 0); l = 1; } rx /= l; ry /= l;
     const ux = -fz * ry, uy = fz * rx, uz = fx * ry - fy * rx, F = (H / 2) / Math.tan((C.fov || 1) / 2), NEAR = .4;
+    this._P = { o: [o[0], o[1], o[2]], fx, fy, fz, rx, ry, ux, uy, uz, t: Math.tan((C.fov || 1) / 2) };   /* 4.8 (pedido de Gemini): la misma proyección para flechas, conos y efectos */
     const R = (220 + 280 * cal) * (op.lejos || 1), niebla = E.clima ? E.clima.niebla || 0 : 0, lejos = R * (1 - niebla * .65), cerca = lejos * .35;
     const bruma = cielo.bruma, sol = cielo.sol || { x: 0, y: 0, z: 1 }, amb = cielo.ambiente ?? .8, luz = cielo.luzSol ?? .5;
     /* cielo */
@@ -63,14 +64,16 @@ class Raster {
     for (const q of lista) { const st = estiloEdificio(M, q), z0 = this._z(q.x, q.y), Pq = Mundo.esquinas(q); prisma(Pq, z0, z0 + q.h, hex3(st.muro), hex3(st.techo)); if (sv && sv.fuerza > .05) poly(Sombras.poligono(Pq, q.h, sv).map(p => [p[0], p[1], z0 + .25]), 'rgba(18,26,46,' + aS + ')', 1, 2); }
     for (const q of M.sitios().E) { if (!visible(q.x, q.y, 40)) continue; const z0 = this._z(q.x, q.y); for (const Rr of q.R.slice(0, 1)) prisma(Rr, z0, z0 + Math.min(q.h, 60), hex3('#d9d4c9'), hex3('#b5542f')); }
     /* tráfico (cajas) y gente (de perfil, como recortes en la escena) */
-    for (const v of E.vehiculos || []) {
-      if (!visible(v.x, v.y, 8) || v.clase === 'cable') continue; const T = (typeof TRAF_TIPOS !== 'undefined' && TRAF_TIPOS[v.tipo]) || { largo: 4.3, ancho: 1.8 }, Lg = (v.largo || T.largo) / 2, An = (v.ancho || T.ancho) / 2, c = Math.cos(v.a || 0), s = Math.sin(v.a || 0), z0 = this._z(v.x, v.y) + (v.z || 0);
+    /* 4.8 (hallazgo de Gemini): el tráfico de la calle (E.trafico) también; antes solo se veía el transporte público */
+    const caja = v => {
+      if (!visible(v.x, v.y, 8) || v.clase === 'cable') return; const T = (typeof TRAF_TIPOS !== 'undefined' && TRAF_TIPOS[v.tipo]) || { largo: 4.3, ancho: 1.8 }, Lg = (v.largo || T.largo) / 2, An = (v.ancho || T.ancho) / 2, c = Math.cos(v.a || 0), s = Math.sin(v.a || 0), z0 = this._z(v.x, v.y) + (v.z || 0);
       prisma([v.x - c * Lg - s * An, v.y - s * Lg + c * An, v.x + c * Lg - s * An, v.y + s * Lg + c * An, v.x + c * Lg + s * An, v.y + s * Lg - c * An, v.x - c * Lg + s * An, v.y - s * Lg - c * An], z0 + .3, z0 + (v.tipo === 'buseta' || v.tipo === 'camion' || v.clase === 'metro' ? 3 : 1.5), hex3(v.color || '#c33'), hex3(tono(v.color || '#c33', .15)));
-    }
+    };
+    for (const v of E.vehiculos || []) caja(v); for (const v of E.trafico || []) caja(v);
     const figura = (x, y, z, dibuja) => { const c = cam(x, y, z); if (c[2] < NEAR + .2 || c[2] > lejos) return; L.push({ d: c[2] - .01, fn: () => dibuja(W / 2 + c[0] / c[2] * F, H / 2 - c[1] / c[2] * F, F / c[2], c[2]) }); };
     const lado = MC.arte.f('personajeLado'), dirDe = a => (Math.cos(a) * rx + Math.sin(a) * ry) >= 0 ? 1 : -1;
     for (const p of (E.peatones || []).slice(0, Math.round(20 + 60 * cal))) { if (!visible(p.x, p.y, 2)) continue; const A = p.aspecto || (p.aspecto = Personaje.azar(p.semilla || 1)); figura(p.x, p.y, this._z(p.x, p.y), (sx, sy, esc) => { if (esc < 1.2) return; lado(g, Personaje.pose('camina', p.fase || 0, { alto: A.alto }), A, sx, sy, esc, dirDe(p.a || 0)); }); }
-    if (E.jugador && E.jugador.cuerpo && !(C.perfil === 'primera')) {
+    if (E.jugador && E.jugador.cuerpo && !E._sinJugador && !(C.perfil === 'primera')) {   // 4.8: en el tren el jugador es el tren
       const j = E.jugador, Cu = j.cuerpo, A = j.aspecto || Personaje.aspecto(), V = Cu.veh;
       figura(Cu.x, Cu.y, Cu.altura, (sx, sy, esc) => {
         g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(sx, sy + esc * Cu.z, esc * .6, esc * .18, 0, 0, TAU); g.fill();
@@ -90,5 +93,7 @@ class Raster {
     if ((cielo.noche || 0) > .05) { g.fillStyle = 'rgba(10,20,60,' + (cielo.noche * .35).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     return this.n;
   }
+  /* del mundo (z absoluta, como Gl.aPantalla) a la pantalla de W×H; null si queda detrás del ojo */
+  aPantalla(x, y, z, W, H) { const P = this._P; if (!P) return null; const dx = x - P.o[0], dy = y - P.o[1], dz = z - P.o[2], d = dx * P.fx + dy * P.fy + dz * P.fz; if (d <= .4) return null; const F = (H / 2) / P.t; return [W / 2 + (dx * P.rx + dy * P.ry) / d * F, H / 2 - (dx * P.ux + dy * P.uy + dz * P.uz) / d * F]; }
 }
 MC.Raster = Raster;

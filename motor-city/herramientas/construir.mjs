@@ -156,7 +156,12 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   const dirsJ = (J.comparte || []).map(c => path.join(dirJ, c)).concat([jd]);
   const jsJ = dirsJ.flatMap(dd => fs.readdirSync(dd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(dd, f), 'utf8'))).join('\n');
   const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
-  const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor + (J.run && fs.existsSync(path.join(RAIZ, 'run', 'run-scooter.js')) ? '\n' + fs.readFileSync(path.join(RAIZ, 'run', 'run-scooter.js'), 'utf8') : '')).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version)
+  const plantilla = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace(/\{\{ilustracion:([\w-]+)\}\}/g, (_, clave) => {
+    const archivo = J.ilustraciones?.[clave];
+    if (!archivo || !archivo.endsWith('.webp')) throw new Error(id + ': ilustración sin definir: ' + clave);
+    return 'data:image/webp;base64,' + fs.readFileSync(path.join(RAIZ, archivo)).toString('base64');
+  });
+  const out = plantilla.replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor + (J.run && fs.existsSync(path.join(RAIZ, 'run', 'run-scooter.js')) ? '\n' + fs.readFileSync(path.join(RAIZ, 'run', 'run-scooter.js'), 'utf8') : '')).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version)
     .replace('__PORTADA_BG__', () => {
       if (id !== 'getaway') return 'none';
       const portada = path.join(RAIZ, 'arte/gemini/turno-cero/portada-turno-cero.webp');

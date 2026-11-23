@@ -125,3 +125,92 @@ module.exports.v3 = async function (p, ok) {
   ok(g.tam.pequeno > 0 && g.tam.grande > g.tam.pequeno * 1.3 && g.tam.mm[1] > g.tam.mm[0] && g.tam.big, 'cuatro tamaños: el botón mide ' + g.tam.pequeno + ' px en Pequeño y ' + g.tam.grande + ' px en Grande; el minimapa ' + g.tam.mm.join(' → ') + ' px');
   ok(g.tarjeta, 'lo que dice un personaje va a su tarjeta con cara, no al aviso del centro');
 };
+
+/* V4) ronda 3.0: fluidez con subpasos, ⏫ acelerador fijo, todo liberado, oficios en el mundo abierto, zonas de trucos,
+   la carrera por la ciclovía con giros y el mundo 3D único (si hay WebGL) */
+module.exports.v4 = async function (p, ok) {
+  console.log('V4) ronda 3.0 · fluidez, acelerador fijo, todo liberado, oficios en el valle, trucos, carrera con giros y mundo 3D');
+  const r = await p.evaluate(async () => {
+    const out = {}, espera = ms => new Promise(s => setTimeout(s, ms)), _now = Cal.now; Cal.now = () => new Date(2026, 10, 18, 12, 0);
+    JE.game.stop && JE.game.stop(); JE.game.start('usuario', 1, { seed: 4, nov: NOVEDADES[0], free: true, bici: 'encicla' }); await espera(400); Cal.now = _now;
+    const M = JE.game.mode, R = M.ride;
+    /* 1) subpasos: un cuadro lento de 200 ms hace avanzar el juego 200 ms (antes, 50 ms: cámara lenta) */
+    cancelAnimationFrame(JE.game.raf); const t0 = M.t; JE.game.last = 1000; JE.game.loop(1200); cancelAnimationFrame(JE.game.raf); out.subpasos = +(M.t - t0).toFixed(3); JE.game.last = performance.now(); JE.game.raf = requestAnimationFrame(t => JE.game.loop(t));
+    /* 2) acelerador fijo: sin tocar nada, la bici acelera; al soltarlo frena */
+    R.p.v = 0; JE.crucero.poner(true); for (let i = 0; i < 60; i++) M.update(1 / 30); const vOn = R.p.v; JE.crucero.poner(false); for (let i = 0; i < 90; i++) M.update(1 / 30);
+    out.crucero = { acelera: vOn > R.stats_().max * .5, frena: R.p.v < vOn * .2, boton: !!document.querySelector('#bCrucero') };
+    /* 3) todo liberado */
+    out.liberado = ROLES.every(rr => UI.unlocked(rr) && UI.turnoOk(rr, nShifts(rr.id)));
+    /* 4) oficios en el valle: en una estación y en Casa EnCicla, el mismo módulo y el regreso */
+    const s = JE.map.stations[11]; R.p.x = s.x; R.p.y = s.y; R.p.v = 0; await espera(100); out.enEstacion = M.actions().some(a => a.id === 'oficios');
+    const dp = JE.map.depot; R.p.x = dp.x; R.p.y = dp.y; await espera(100); M.actions().find(a => a.id === 'oficios').fn(); await espera(150); out.oficios = document.querySelectorAll('[data-of]').length;
+    document.querySelector('[data-of="bodega"][data-t="1"]').click(); await espera(400); out.mismo = JE.game.mode && JE.game.mode.constructor === MODE_CLASS.bodega && !!JE.game.meta.volver;
+    JE.game.mode.end(); await espera(400); const bv = document.querySelector('#bVolverValle'); if (bv) bv.click(); await espera(500); out.volvio = !!(JE.game.mode && JE.game.mode.free && Math.abs(JE.game.mode.ride.p.x - dp.x) < 2);
+    /* 5) zonas de trucos en el valle */
+    const M2 = JE.game.mode, R2 = M2.ride, z = Trucos.zonas()[0]; R2.p.x = z.x; R2.p.y = z.y; R2.p.v = 0; await espera(80); const tr = M2.actions().find(a => a.id === 'truco'); const s0 = M2.score; if (tr) tr.fn(); out.trucos = { zonas: Trucos.zonas().length, accion: !!tr, puntos: M2.score > s0 };
+    /* 6) la carrera de la ciclorruta: rápida, con giros, tramos estrechos y sin trampas */
+    JE.game.stop(); JE.game.start('ciclovia', 1, { seed: 1, nov: NOVEDADES[0] }); await espera(200); JE.game.paused = true; const C = JE.game.mode, cs = C.sub; let k = 0;
+    while (!cs.done && k < 60 * 200) { if (k % 4 === 0) cs.bot(); C.update(1 / 60); k++; } JE.game.paused = false;
+    out.carrera = { metros: Math.round(cs.metros), seg: Math.round(k / 60), giros: (cs.giros || []).length, bien: cs.giroOk, vidas: cs.vidas, vel: Math.round(cs.rapidez() * 3.6) };
+    /* 7) el mundo 3D único */
+    JE.game.stop(); JE.game.start('usuario', 1, { seed: 5, nov: NOVEDADES[0], free: true }); await espera(300); out.gl = JE.mundo3d.ok();
+    if (out.gl) { const R3 = JE.game.mode.ride; JE.mundo3d.poner('tercera'); await espera(700); const q = R3.w2s(R3.p.x + Math.cos(R3.p.a) * 60, R3.p.y + Math.sin(R3.p.a) * 60), dd = R3.girarDir({ x: 0, y: -1, m: 1 });
+      out.gl3 = { dibuja: !!JE.mundo3d.vp && !(JE.errors || []).some(e => /3d:/.test(e)), proyecta: q.x > 0 && q.x < View.w && q.y > 0 && q.y < View.h, adelante: Math.cos(Math.atan2(dd.y, dd.x) - JE.mundo3d.yaw) > .99, mallas: JE.mundo3d.mallas.size };
+      JE.mundo3d.poner('primera'); await espera(300); out.gl3.primera = !(JE.errors || []).some(e => /3d:/.test(e)); JE.mundo3d.poner(null); }
+    JE.game.stop(); UI.go('sHome'); return out;
+  });
+  ok(r.subpasos > .19 && r.subpasos < .21, 'subpasos: un cuadro lento de 200 ms hace avanzar el juego ' + r.subpasos + ' s (antes 0,05: cámara lenta)');
+  ok(r.crucero.acelera && r.crucero.frena && r.crucero.boton, '⏫ acelerador fijo: va a fondo sin tocar nada y al soltarlo frena ' + JSON.stringify(r.crucero));
+  ok(r.liberado, 'todo liberado desde el principio: los oficios y sus turnos');
+  ok(r.enEstacion && r.oficios >= 7 && r.mismo && r.volvio, 'oficios en el valle: en la estación y en Casa EnCicla (' + r.oficios + ' botones), el mismo módulo del menú y el regreso al mismo punto');
+  ok(r.trucos.zonas >= 5 && r.trucos.accion && r.trucos.puntos, 'zonas de trucos en el valle ' + JSON.stringify(r.trucos));
+  ok(r.carrera.metros >= 700 && r.carrera.giros >= 2 && r.carrera.bien >= 1 && r.carrera.vidas > 0 && r.carrera.vel >= 55, 'carrera de la ciclorruta con giros, tramos estrechos y zonas de trucos ' + JSON.stringify(r.carrera));
+  ok(!r.gl || (r.gl3.dibuja && r.gl3.proyecta && r.gl3.adelante && r.gl3.primera && r.gl3.mallas > 3), 'mundo 3D único: tercera y primera persona sobre el mismo mapa, nombres proyectados y joystick según la cámara ' + JSON.stringify(r.gl3 || 'sin WebGL'));
+};
+
+/* ronda 3.2 (Claude): los modos a medias pulidos, el transporte en el mundo 3D, el freerun de la Comuna 13 con gestos y
+   el valle que recuerda (radares, habilidades, diario y miradores) */
+module.exports.v5 = async function (p, ok) {
+  console.log('V5) ronda 3.2 · Run 3D y turnos con puntos, transporte 3D, freerun y gestos, radares, habilidades, diario y miradores');
+  const r = await p.evaluate(async () => {
+    const out = {}, espera = ms => new Promise(s => setTimeout(s, ms)), _now = Cal.now; Cal.now = () => new Date(2026, 10, 18, 12, 0);
+    /* 1) Run 3D del menú: puntos desde el primer segundo y teclas que funcionan */
+    JE.game.stop && JE.game.stop(); JE.game.start('run3d', 1, { seed: 9, nov: NOVEDADES[0] }); await espera(1500); const R3 = JE.game.mode.sub;
+    out.run3d = { puntos: JE.game.mode.score, hojas: R3.hojas }; const l0 = R3.lane; JE.game.key({ code: 'ArrowRight', repeat: false, preventDefault() { } }); out.run3d.tecla = R3.lane !== l0 || l0 === 1;
+    /* 2) Bodega: los puntos del minijuego de la fase llegan al turno */
+    JE.game.stop(); JE.game.start('bodega', 1, { seed: 9, nov: NOVEDADES[0] }); await espera(300); const B = JE.game.mode; let enJuego = 0;
+    for (let i = 0; i < 60 && B.sub; i++) { B.sub.bot(0); B.update(1 / 30); enJuego = Math.max(enJuego, B.info().score); }
+    out.bodega = { enJuego, alFinal: B.score, errores: (JE.errors || []).filter(e => /loop|bodega/i.test(e)).length };
+    /* 3) el freerun de la Comuna 13: el piloto llega al mirador saltando, deslizándose y con trucos */
+    JE.game.stop(); JE.game.start('freerun', 1, { seed: 3, nov: NOVEDADES[0] }); await espera(200); JE.game.paused = true; const F = JE.game.mode, fs = F.sub; let k = 0;
+    while (!fs.done && k < 60 * 150) { if (k % 3 === 0) fs.bot(); F.update(1 / 60); k++; } JE.game.paused = false;
+    out.freerun = { llego: !!fs.llego, seg: Math.round(k / 60), estrellas: fs.estrellas, trucos: fs.trucos, tropiezos: fs.tropiezos, caidas: fs.caidas, puntos: F.score };
+    /* 4) los gestos */
+    const G = JE.gesto, linea = (dx, dy) => Array.from({ length: 8 }, (_, i) => [200 + dx * i / 7, 500 + dy * i / 7]), circulo = Array.from({ length: 26 }, (_, i) => [200 + Math.cos(i / 25 * 6.6) * 40, 500 + Math.sin(i / 25 * 6.6) * 40]);
+    out.gestos = [G.leer(linea(0, -80)), G.leer(linea(90, 0)), G.leer(linea(-90, 5)), G.leer(linea(0, 70)), G.leer(circulo), G.leer([[200, 500], [203, 502]])].join(',');
+    JE.game.stop(); JE.game.start('ciclovia', 1, { seed: 1, nov: NOVEDADES[0] }); await espera(200); const cs = JE.game.mode.sub, c0 = cs.carril;
+    cs.pointer('down', 0, 0, 150, 500); cs._traz = linea(90, 0).map(([x, y]) => [x - 50, y]); cs.pointer('up', 0, 0, 240, 500); out.gestoCarril = cs.carril === Math.min(1, c0 + 1);
+    /* 5) el valle: la Comuna 13 con su freerun, un radar con récord, el mirador y el diario */
+    JE.game.stop(); JE.game.start('usuario', 1, { seed: 5, nov: NOVEDADES[0], free: true, bici: 'propia' }); await espera(400); Cal.now = _now; const M = JE.game.mode, R = M.ride;
+    const zc = Trucos.zonas().find(z => z.id === 'comuna13'); R.p.x = zc.x; R.p.y = zc.y; R.p.v = 0; await espera(60); const af = M.actions().find(a => a.id === 'freerun'); out.valleFreerun = !!af; if (af) { af.fn(); out.valleFreerun = M.sub instanceof JE.MGFreerun; M.sub.done = true; M.update(1 / 30); }
+    const rd = Radares.lista()[0]; R.p.x = rd.x - Math.cos(rd.a) * 60; R.p.y = rd.y - Math.sin(rd.a) * 60; R.p.a = rd.a; R.p.v = R.stats_().max * .9;
+    Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600, x: 200 + Math.cos(rd.a) * 46, y: 600 + Math.sin(rd.a) * 46 }); await espera(1500); Input.joy.on = false;
+    out.radar = { radares: Radares.lista().length, record: Habil.d().radares[rd.id] | 0, km: +Habil.d().km.toFixed(2) };
+    const mi = Mirador.lista()[0]; R.p.x = mi.x; R.p.y = mi.y; R.p.v = 0; await espera(80); const am = M.actions().find(a => a.id === 'mirador'); out.mirador = { accion: !!am, miradores: Mirador.lista().length };
+    if (am && JE.mundo3d.ok()) { am.fn(); await espera(900); out.mirador.gira = !!JE.mundo3d.mirador && JE.mundo3d.activo(R) && !(JE.errors || []).some(e => /3d/.test(e)); const up = M.actions().find(a => a.id === 'up'); if (up) up.fn(); await espera(100); out.mirador.sale = !JE.mundo3d.mirador && !M.sitting; }
+    /* 6) el transporte en 3D: viaducto, estaciones y cables construidos sin errores */
+    if (JE.mundo3d.ok()) { const st = JE.map.lineA.st.find(s => s.alto), q = JE.map.at(JE.map.lineA, st.s); R.p.x = q.x + 40; R.p.y = q.y; JE.mundo3d.poner('tercera'); await espera(900);
+      out.t3d = { piezas: JE.map.altG.size, cables: (JE.mundo3d._cables || {}).n | 0, sinError: !(JE.errors || []).some(e => /3d/.test(e)) }; JE.mundo3d.poner(null); }
+    out.diario = Diario.lista().length; UI.diario(); out.modal = document.querySelectorAll('#mBody .opt').length; UI.closeModal();
+    JE.game.stop(); UI.go('sHome'); return out;
+  });
+  ok(r.run3d.puntos > 0 && r.run3d.hojas >= 3 && r.run3d.tecla, 'Run 3D: puntos desde el primer segundo (fila de salida) y las teclas funcionan ' + JSON.stringify(r.run3d));
+  ok(r.bodega.enJuego > 0 && r.bodega.alFinal > 0 && !r.bodega.errores, 'turnos: los puntos del minijuego de la fase llegan a la ★ (Bodega) ' + JSON.stringify(r.bodega));
+  ok(r.freerun.llego && r.freerun.estrellas >= 10 && r.freerun.trucos >= 2 && r.freerun.caidas <= 1, 'freerun de la Comuna 13: el piloto llega al mirador ' + JSON.stringify(r.freerun));
+  ok(r.gestos === 'arriba,der,izq,abajo,giro,' && r.gestoCarril, 'gestos: ↑ → ← ↓ y el círculo, y en la ciclorruta deslizar cambia de carril (' + r.gestos + ')');
+  ok(r.valleFreerun, 'en el valle: la Comuna 13 es zona de trucos y abre el freerun');
+  ok(r.radar.radares >= 6 && r.radar.record > 10 && r.radar.km > 0, '📸 radares en las ciclorrutas con récord y 💪 Pedaleo que suma km ' + JSON.stringify(r.radar));
+  ok(r.mirador.accion && r.mirador.miradores >= 4 && (r.mirador.gira === undefined || (r.mirador.gira && r.mirador.sale)), '🔭 miradores: la cámara gira sobre la ciudad y se sale bien ' + JSON.stringify(r.mirador));
+  ok(!r.t3d || (r.t3d.piezas > 50 && r.t3d.cables > 0 && r.t3d.sinError), 'mundo 3D: viaducto, estaciones, puentes y metrocables ' + JSON.stringify(r.t3d || 'sin WebGL'));
+  ok(r.diario >= 2 && r.modal === 4, '📔 el diario anota solo y muestra las 4 habilidades (' + r.diario + ' notas)');
+};

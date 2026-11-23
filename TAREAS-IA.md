@@ -1,5 +1,7 @@
 # Tareas de cada IA · Juega EnCicla
 
+> **Ronda 3.0 (22‑nov‑2026): tres IA trabajan a la vez.** Cada una publica su documento con su marca en el título (`docs/INVESTIGACION-Y-PLAN-3.0-<marca>.md`). El de Claude ya está, con lo hecho en la v3.0.0 y el plan; las zonas de cada IA están en `coord/agentes/` y los avisos en `coord/buzon/`.
+
 > **v2.1.0 (21‑nov‑2026, Claude) · LEE PRIMERO `docs/REVOLUCION-2.1.md`.** La revolución con Motor City 4.5 está hecha: manejo que desliza y se desatasca con asistencia, HUD según el contexto, cuatro tamaños e iconos vectoriales, lectura cenital, efectos para todo público, rostros, árboles con lógica, registro de claves del guardado, la **Ruta a Guatapé en bici** (C‑E40) y la **red completa de El Metro** (15 alimentadores y líneas futuras). Abajo, lo hecho va tachado; lo que queda está en el § 6 del documento.
 
 > **Motor City 4.5 (21‑nov‑2026) · LEE PRIMERO `docs/INFORME-MOTOR-CITY-4.5.md`.** El autor decidió que este juego **sigue con su propio motor**: no se migra a Motor City (si abajo dice «Migrar a `motor-city/`», queda anulado). El motor 4.5 viaja en `motor-city/` como referencia y caja de herramientas; el informe dice qué cambió Claude, qué mejoró, qué falta auditar, qué te toca (manejo y controles, modelos, rostros, árboles con lógica, Guatapé, la forma cenital, efectos para todo público, interfaz) y **cómo usar el motor sin dejar el tuyo**.

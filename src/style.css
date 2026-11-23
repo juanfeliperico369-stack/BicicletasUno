@@ -443,12 +443,22 @@ body.libre21 #coach.mini{font-size:calc(13px*var(--u))!important;padding:calc(7p
 #charla img{width:calc(52px*var(--u));height:calc(52px*var(--u))}
 #charla b{font-size:calc(15px*var(--u))}#charla small{font-size:calc(11.5px*var(--u))}#charla p{font-size:calc(13.5px*var(--u))}
 #parada21 p{font-size:calc(14px*var(--u))}#parada21 .pr-q img{width:calc(56px*var(--u));height:calc(56px*var(--u))}
-/* v2.2 · Ronda 3.0 (Gemini/Antigravity): horizontal 860x412 limpio, selector de cámaras 3D/2D/Pixel, ⏫ crucero y tarjetas RPG */
+/* ronda 3.0 · ⏫ acelerador fijo en la barra de la izquierda */
+#camBar #bCrucero{font-size:calc(18px*var(--u));background:#0a2342d0}
+#camBar #bCrucero.on{background:var(--vd);color:var(--az);border-color:#fff;box-shadow:0 0 0 3px #9bd34166}
+/* ronda 3.0 · el mundo 3D único (99d-mundo3d.js): el lienzo WebGL va debajo del lienzo 2D, que queda transparente para el HUD */
+#gl3d{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+#gl3d[hidden]{display:none}
+body.pixel3d #gl3d{image-rendering:pixelated;image-rendering:crisp-edges}
+#camBar #b3D{font:900 calc(13px*var(--u)) var(--fb)}
+#camBar #b3D.on{background:var(--vd);color:var(--az);border-color:#fff;font-size:calc(18px*var(--u))}
+/* los consejos de las carreras en pseudo‑3D van abajo, sobre los botones (no tapan la vía) */
+body.mg3d21 #coach{top:auto!important;bottom:calc(var(--sab) + 112px)!important}
+/* v3.3 · Ronda 3.0+ (Gemini/Antigravity): horizontal 860x412 limpio, selector de cámaras 3D/2D/Pixel y tarjetas RPG/Actividades */
 #camBar button{text-shadow:0 0 4px rgba(255,255,255,.45)}
 #camBar button svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
-#camBar button.acelOn{background:var(--vd);color:var(--az);border-color:#fff;box-shadow:0 0 0 3px #9bd34166,2px 2px 0 #0008}
 #goalsMini .more{background:#0a2342cc;color:#c4ec7c;opacity:1;padding:2px 6px;border-radius:8px;width:fit-content}
-#camPop{position:absolute;left:calc(60px + var(--sal));top:50%;transform:translateY(-50%);background:#0a2342f4;border:2px solid var(--vd);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:6px;z-index:20;box-shadow:0 12px 28px #000b;min-width:190px;max-height:76vh;overflow:auto}
+#camPop{position:absolute;left:calc(60px + var(--sal));top:50%;transform:translateY(-50%);background:#0a2342f4;border:2px solid var(--vd);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:6px;z-index:20;box-shadow:0 12px 28px #000b;min-width:196px;max-height:76vh;overflow:auto}
 #camPop[hidden]{display:none}
 #camPop .cp-h{font:800 11px/1 var(--fb);text-transform:uppercase;letter-spacing:.08em;color:var(--vd1);padding:2px 4px}
 #camPop button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:6px 10px;border-radius:10px;background:#ffffff12;color:#fff;font:700 13px/1.15 var(--fb);text-align:left}

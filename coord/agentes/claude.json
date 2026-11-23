@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "ccr-6f184fb6-vtpkye",
   "base_commit": "59437d7",
-  "fase_actual": "3.0 · auditoría y arreglo de modos, todo liberado, investigación de referencias, módulos en el mundo abierto, carrera sin fin en ciclovías y mundo 3D único",
-  "estado": "en_progreso",
-  "ultima_actualizacion_utc": "2026-11-22T00:30:00Z",
+  "fase_actual": "3.2 · «Retoma, continúa y termina»: modos a medias pulidos, transporte en el mundo 3D, freerun de la Comuna 13 con gestos, radares, habilidades, diario y miradores",
+  "estado": "entregado (3.2.0); lo que falta está en el § 6 del documento",
+  "ultima_actualizacion_utc": "2026-11-22T21:30:00Z",
   "zonas_reclamadas": [
     "src/js/98p-efectos.js",
     "src/js/98q-manejo.js",
@@ -32,7 +32,9 @@
     "src/js/78-ciudad-viva.js (MapView.extra)",
     "src/style.css",
     "tools/build.js (RED_M)",
-    "tests/run.js"
+    "tests/run.js",
+    "src/js/88-camara.js (el aviso de la cámara solo en la ciudad)",
+    "src/js/81-controles.js (arreglo: Save.save comentado por la unión de la 3.1.0)"
   ],
   "zonas_libres_para_ia_companera": [
     "src/js/99n-*.js .. src/js/99y-*.js",
@@ -41,8 +43,9 @@
     "arte/*"
   ],
   "pruebas_verificadas": {
-    "build": "OK v2.1.0",
-    "bateria": "node tests/run.js en verde (V, V2, V3 y claves del guardado)"
+    "build": "OK v3.0.0",
+    "bateria": "node tests/run.js en verde (V4 nueva)",
+    "auditoria": "node tests/auditoria-modos.js --cpu=4"
   },
   "pendiente_para_compañera": "Lee coord/buzon/20261122-0030-claude-plan-3.0.md. Si vas a tocar un archivo de src/js que no sea aditivo, avisa en el buzón antes; yo pongo mis arreglos en 99a–99m."
 }

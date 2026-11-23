@@ -1,12 +1,12 @@
 {
-  "version": "4.6.1",
+  "version": "4.8.0",
   "fecha": "2026-11-22",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "MetroZero: motor-city/ 4.6.1 como referencia; el juego sigue con su Motor del Valle (su 3.1.0 «Fluido», de su propia sesión, ya trae el manejo de EnCicla) (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "RunRunZero: motor-city/ 4.6.1 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
+    "BicicletasUno: motor-city/ 4.8.0 como referencia; el juego sigue con su Motor del Valle y va en 3.1.0 con su propia ⚙️ Flexibilidad (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "MetroZero: motor-city/ 4.8.0 como referencia; el juego sigue con su Motor del Valle y va en 3.3.0 con su propia ⚙️ Flexibilidad (docs/INFORME-MOTOR-CITY-4.6.md)",
+    "RunRunZero: motor-city/ 4.8.0 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
   ],
-  "estado": "4.6.1: ⏫ acelerador fijo (un toque y el carro acelera solo, el joystick solo da la dirección; otro toque y frena hasta parar), en el motor (MC.Manejo, ui.alternar) y en Turno Cero. 4.6.0: manejo y mapa de EnCicla, horizontal y un solo juego de prueba (Turno Cero con 🎮 Modos)"
+  "estado": "4.8.0 «Flexibilidad»: ⚙️ MC.Flex (control, giro, velocidad de los vehículos, distancia de cámara, acelerador fijo al subir, tren con palanca, mano zurda, tamaño de la interfaz, calidad fija y vibración) con su panel en Turno Cero; unión de lo pendiente de ChatGPT (palanca del tren con teclado, Run que solo dobla hacia otra ciclorruta, salida de la carrera con «Ir manejando / Llevarme ya», guardia de EnCicla integrada y retiro del 61) y de Gemini (tráfico, tren y proyección en el Raster 3D por software, primera persona con los ojos de quien maneja y solo el capó, luz hemisférica con brillo y contorno, niebla y distancia según el escalador, 🌄 miradores en el mundo abierto); optimización: el caché de sectores de suelo pasa de 16 a 400 (antes se vaciaba en ciclo: 4 000 descompresiones por segundo manejando; p95 del cuadro de 166 a 33 ms en cenital con CPU 4×); minimapa arriba en horizontal (ya no tapa la última fila de botones). Juegos hermanos: EnCicla 3.1.0 y El Metro 3.3.0 unidos con sus ramas de Gemini, ChatGPT/GPT-6 y Codex, con Flexibilidad propia."
 }
