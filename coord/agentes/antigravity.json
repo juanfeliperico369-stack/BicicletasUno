@@ -1,41 +1,56 @@
 {
   "schema_version": 1,
-  "agente": "antigravity-gemini",
-  "rama": "antigravity/fases-1-2-3-motor-city",
-  "base_commit": "4691679",
-  "fase_actual": "Fase 1 — Auditoría base, bugs, optimización y mejoras de jugabilidad/narrativa",
-  "estado": "en_progreso",
-  "ultima_actualizacion_utc": "2026-11-20T20:58:00Z",
+  "agente": "antigravity",
+  "marca": "Gemini (Antigravity)",
+  "rama": "antigravity/evolucion-encicla-v22",
+  "base_commit": "09c8a2f",
+  "base_unificada": [
+    "origin/ccr-6f184fb6-vtpkye @ 019bd05 (EnCicla v3.2.0: 99a-99h + 99r GPT-6 + Flexibilidad)",
+    "origin/main @ 8d14bad (Motor City 4.9.0 Realismo)"
+  ],
+  "fase_actual": "entrega-v3.3-evolucion-unificada",
+  "estado": "entregado",
+  "ultima_actualizacion_utc": "2026-11-23T02:20:00Z",
   "zonas_reclamadas": [
-    "docs/COORDINACION-IA.md",
+    "src/js/99n-controles-liberado.js",
+    "src/js/99o-mundo3d-camaras.js",
+    "src/js/99p-ciclovia-skate-runner.js",
+    "src/js/99q-mundo-vivo-rpg.js",
+    "tests/auditoria-antigravity.js",
+    "docs/EVOLUCION-Y-AUDITORIA-JUEGA-ENCICLA-GEMINI-ANTIGRAVITY.md",
     "coord/agentes/antigravity.json",
-    "coord/buzon/*-antigravity-*.md",
-    "src/js/98a-flujo-diario.js",
-    "src/js/98b-motor-city-puente.js",
-    "src/js/98c-guatape-hogar-urbe.js",
-    "contenido/guion/trama_valle.json",
-    "docs/REPORTE-FASES-1-2-3-ENCICLA.md"
+    "coord/buzon/*-antigravity-*.md"
   ],
-  "archivos_compartidos_en_revision": [
-    "src/js/00-core.js",
-    "src/js/93-trama.js",
-    "src/js/96-accesible.js",
-    "src/js/97-motor30.js",
-    "src/style.css",
-    "tools/build.js",
-    "tests/run.js"
+  "archivos_compartidos_arreglados": [
+    "src/js/92-vehiculos.js (Snd.vehSfx reparado + Art.vehSideRider 7 vehículos)",
+    "src/js/75-graficos.js (salto en Panorámica 2D para los 7 vehículos no-camión)",
+    "src/js/92-ciclovia.js (optimización 15x por caché Z + controles + bot)",
+    "contenido/guion/trama_valle.json (unificación 100 % de los 9 mentores con CAST)",
+    "src/index.html (lang es-CO, viewport accesible, ARIA)",
+    "src/style.css (WCAG 2.2 AA, paisaje 860x412, body.pixel3d #gl3d, Hub Valle Vivo)",
+    "tests/run.js (línea 469: redondeo Math.round coherente en prueba WebRTC)",
+    "docs/BITACORA.md"
   ],
-  "zonas_libres_para_ia_companera": [
-    "src/js/98n-*.js .. src/js/98z-*.js",
-    "landing/*",
-    "contenido/datos-*.json",
-    "arte/*",
-    "coord/agentes/<tu-id>.json",
-    "coord/buzon/<fecha>-<tu-id>-*.md"
+  "modos_nuevos_registrados": [
+    "copa (Copa del Valle · Super Arcade Racing)",
+    "domicilio (Domicilio Sostenible · Crazy Taxi / Parcel Corps)",
+    "monitoreo911 (Monitoreo 911 · 911 Operator / CityRT)",
+    "planeador (El Planeador · Cities: Skylines / Townscaper)",
+    "metro2d (Metro 2D Lateral · Tiny Rails)",
+    "palmas (Bajada Las Palmas · Alto's Odyssey + Ley 1811)",
+    "roguelite (Turno Roguelite · Soul Knight)",
+    "traffix (Semaforero · Traffix)",
+    "despacho (Despacho · Package Inc.)",
+    "maquinista (Maquinista Línea A · Railways)",
+    "circuito (Circuito LED · Infinity Loop)",
+    "moravia (Laberinto de Moravia)"
   ],
-  "pruebas_verificadas": {
-    "build_base": "OK v2.0.1 (5032 KB)",
-    "prueba_niveles": "OK"
-  },
-  "nota": "Trabajando desde la base más reciente (origin/claude/motor-city-engine-xu7p4y @ 4691679). Si llegas en paralelo, crea tu ficha en coord/agentes/<tu-id>.json y comenta en el Issue [COORDINACIÓN IA]."
+  "zonas_respetadas_de_companeras": [
+    "src/js/98n-*.js .. 98y-*.js (Claude v2.1.0)",
+    "src/js/99a-*.js .. 99h-*.js (Claude v3.0-v3.2)",
+    "src/js/99r-ciclo-geometria-gpt6.js (OpenAI GPT-6)",
+    "tests/auditoria-modos.js (Claude)",
+    "tests/prueba-gpt6-ciclorrutas.mjs (OpenAI GPT-6)"
+  ],
+  "notas": "Armonización completa sin colisiones: JE.acelFijo conectado a #bCrucero (99a), JE.vistas unificado con WebGL JE.mundo3d (99d/99f) + cabina 1P + Pixel World sobre WebGL + Maqueta 2:1, JE.skate.enCiclovia delegando en JE.cicloGeoGPT6 (99r), y JE.rpg usando JE.diario (99h) registrando solo la clave rpg en Save.registrar."
 }

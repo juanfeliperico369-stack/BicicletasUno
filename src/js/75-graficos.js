@@ -507,12 +507,12 @@ for (const [name, fn] of Object.entries({
 
 /* ---------- vista panorámica de plataformas ---------- */
 Object.assign(Ride.prototype, {
-  jump() { if (!panoOn(this) || (this.z | 0) > 0 || this.p.veh !== 'bike') return; this.vz = 150; this.z = .01; Snd.sfx('tap'); },
+  jump() { if (!panoOn(this) || (this.z | 0) > 0 || this.p.veh === 'truck') return; const v = this.p.veh; this.vz = v === 'skate' ? 175 : v === 'patines' ? 162 : v === 'walk' ? 132 : 155; this.z = .01; if (v === 'skate' && Snd.vehSfx) Snd.vehSfx('skate', 'ollie'); else Snd.sfx('tap'); },
   panoTick(dt) {
     const P = this.p; this.trav = (this.trav || 0) + P.v * dt;
     if (this.z > 0) { this.z += this.vz * dt; this.vz -= 420 * dt; if (this.z <= 0) { this.z = 0; this.vz = 0; } }
     const O = this.obs || (this.obs = []); while (O.length < 4) { const last = O.length ? O[O.length - 1].d : this.trav + 220; O.push({ d: last + 260 + this.rng.f() * 380, k: this.rng.pick(['hueco', 'cono', 'charco', 'hueco']) }); }
-    for (const o of O) if (!o.done && this.trav >= o.d) { o.done = true; if (this.z > 5) { this.mode.score += 2; Snd.note(4); this.float('¡Salto!', PAL.vd1); } else if (P.veh === 'bike') { P.v *= .35; this.shake = .25; Snd.sfx('bad'); this.float({ hueco: '¡Hueco!', cono: '¡Cono!', charco: '¡Charco!' }[o.k], PAL.amb); } }
+    for (const o of O) if (!o.done && this.trav >= o.d) { o.done = true; if (this.z > 5) { this.mode.score += 2; Snd.note(4); this.float(P.veh === 'skate' ? '¡Ollie! +2' : '¡Salto! +2', PAL.vd1); } else if (P.veh !== 'truck' && P.veh !== 'walk') { P.v *= .45; this.shake = .22; Snd.sfx('bad'); this.float({ hueco: '¡Hueco!', cono: '¡Cono!', charco: '¡Charco!' }[o.k], PAL.amb); } }
     while (O.length && O[0].done && O[0].d < this.trav - 200) O.shift();
   },
   renderPano(V, min) {

@@ -58,7 +58,8 @@ const VSURF = {
 for (const v of VEH_CATALOGO) {
   if (VEHICULOS[v.id]) { Object.assign(VEHICULOS[v.id], { sub: v.sub, mL: v.mL, mW: v.mW }); continue; }   // los de siempre: solo su ficha
   const S = VSTATS[v.id], su = VSURF[v.id], d = { n: v.name, corto: v.name.toLowerCase(), icon: v.icon, sub: v.sub, mL: v.mL, mW: v.mW, timbre: 1, bajar: 1, libre: 0,
-    fis: { max: S.max, acc: S.acc, brk: S.brk, coast: S.coast, w0: S.w0, w1: S.w1, tw: S.tw, r: S.r }, loma: [S.up, .5, 1.32], spr: R => Art.vehTop(v.id, R.mode.shirt) };
+    fis: { max: S.max, acc: S.acc, brk: S.brk, coast: S.coast, w0: S.w0, w1: S.w1, tw: S.tw, r: S.r }, loma: [S.up, .5, 1.32], spr: R => Art.vehTop(v.id, R.mode.shirt),
+    lado: (b, x, y, R, me, ph) => Art.vehSideRider(b, x, y, v.id, me, ph) };
   if (su) d.suelo = t => su[t] != null ? su[t] : .75;
   if (v.id === 'ebike' || v.id === 'emonopatin') { d.asist = 1; d.gasto = .35 * S.drain; }
   JE.vehiculos.registrar(v.id, d);
@@ -66,26 +67,30 @@ for (const v of VEH_CATALOGO) {
 /* la lista del selector: el catálogo y lo que se registre después con libre: 1 */
 const vehLista = () => VEH_CATALOGO.concat(JE.vehiculos.libres().filter(v => !VEH_CATALOGO.some(c => c.id === v.id)).map(v => ({ id: v.id, name: v.n, icon: v.icon, sub: v.sub || '', mL: v.mL || '?', mW: v.mW || '?' })));
 
-/* Sonidos propios por vehículo en WebAudio (sin archivos externos) */
+/* Sonidos propios por vehículo en WebAudio (sin archivos externos; usa la firma real de Snd en 00-core.js) */
 Snd.vehSfx = function (veh, kind) {
-  if (!this.on || !this.init()) return;
+  if (JE.headless || !Save.data || !Save.data.settings || !Save.data.settings.sfx) return;
+  this.init(); if (!this.ctx) return;
+  this.resume();
+  const t0 = this.ctx.currentTime;
   if (kind === 'ollie') {
-    this.tone(155, .07, 'triangle', .11, 92);
-    this.noise(.05, .07);
-    setTimeout(() => this.tone(240, .06, 'sine', .08, 130), 65);
+    this.tone(155, .07, { type: 'triangle', v: .11, to: 92 });
+    if (this.hat) this.hat(t0 + .01, .08);
+    this.tone(240, .06, { t: t0 + .065, type: 'sine', v: .08, to: 130 });
     return;
   }
   if (veh === 'ebike' || veh === 'emonopatin') {
-    this.tone(veh === 'ebike' ? 520 : 640, .09, 'sine', .08, veh === 'ebike' ? 880 : 980);
-    setTimeout(() => this.tone(veh === 'ebike' ? 880 : 980, .11, 'triangle', .07, 1180), 55);
+    const f0 = veh === 'ebike' ? 520 : 640, f1 = veh === 'ebike' ? 880 : 980;
+    this.tone(f0, .09, { type: 'sine', v: .08, to: f1 });
+    this.tone(f1, .11, { t: t0 + .055, type: 'triangle', v: .07, to: 1180 });
   } else if (veh === 'scooter') {
-    this.tone(1480, .14, 'sine', .09);
-    setTimeout(() => this.tone(1960, .16, 'sine', .08), 45);
+    this.tone(1480, .14, { type: 'sine', v: .09 });
+    this.tone(1960, .16, { t: t0 + .045, type: 'sine', v: .08 });
   } else if (veh === 'skate') {
     this.vehSfx('skate', 'ollie');
   } else if (veh === 'patines') {
-    this.tone(740, .08, 'triangle', .08, 990);
-    setTimeout(() => this.tone(990, .1, 'sine', .07), 50);
+    this.tone(740, .08, { type: 'triangle', v: .08, to: 990 });
+    this.tone(990, .1, { t: t0 + .05, type: 'sine', v: .07 });
   } else {
     this.sfx('bell');
   }
@@ -200,6 +205,38 @@ Object.assign(Art, {
         prect(b, x + dx - 1, y - 2, 5, 1, '#d8dee8');
         prect(b, x + dx - 1, y - 1, 5, 1, '#ff5a36');
       }
+    }
+  },
+  vehSideRider(b, x, y, veh, me, ph) {
+    const leg = Math.round(Math.sin(ph * 3) * 2), helm = me.cap || HELMETS[Save.data && Save.data.profile ? Save.data.profile.helmet : 1] || '#fff';
+    if (veh === 'ebike') {
+      this.vehSide(b, x, y - 6, 'ebike', { r: 5, face: 1 });
+      prect(b, x - 1 + leg, y - 15, 2, 5, me.pants); prect(b, x - 1 - leg, y - 15, 2, 5, shade(me.pants, -.2));
+      prect(b, x - 2, y - 23, 5, 8, me.vest ? PAL.vd : me.shirt); pline(b, x + 2, y - 21, x + 5, y - 18, me.skin);
+      prect(b, x - 1, y - 28, 5, 5, me.skin); prect(b, x - 2, y - 30, 7, 3, helm); prect(b, x + 3, y - 26, 1, 1, '#141414');
+      return;
+    }
+    if (veh === 'scooter' || veh === 'emonopatin') {
+      this.vehSide(b, x, y, veh);
+      prect(b, x - 2, y - 12, 2, 8, me.pants); prect(b, x + 1, y - 11, 2, 7, shade(me.pants, -.2));
+      prect(b, x - 2, y - 20, 5, 8, me.vest ? PAL.vd : me.shirt); pline(b, x + 2, y - 18, x + 4, y - 16, me.skin);
+      prect(b, x - 1, y - 25, 5, 5, me.skin); prect(b, x - 2, y - 27, 7, 3, helm); prect(b, x + 3, y - 23, 1, 1, '#141414');
+      return;
+    }
+    if (veh === 'skate') {
+      this.vehSide(b, x, y, 'skate');
+      prect(b, x - 3, y - 11, 2, 7, me.pants); prect(b, x + 1, y - 11, 2, 7, shade(me.pants, -.2));
+      prect(b, x - 2, y - 19, 5, 8, me.vest ? PAL.vd : me.shirt);
+      pline(b, x - 2, y - 17, x - 6, y - 14 + Math.round(leg * .5), me.skin); pline(b, x + 3, y - 17, x + 6, y - 15 - Math.round(leg * .5), me.skin);
+      prect(b, x - 1, y - 24, 5, 5, me.skin); prect(b, x - 2, y - 26, 7, 3, helm); prect(b, x + 3, y - 22, 1, 1, '#141414');
+      return;
+    }
+    if (veh === 'patines') {
+      this.vehSide(b, x, y, 'patines');
+      prect(b, x - 2 + leg, y - 12, 2, 7, me.pants); prect(b, x + 1 - leg, y - 12, 2, 7, shade(me.pants, -.2));
+      prect(b, x - 2, y - 20, 5, 8, me.vest ? PAL.vd : me.shirt);
+      pline(b, x - 1, y - 18, x - 4 - leg, y - 14, me.skin); pline(b, x + 2, y - 18, x + 5 + leg, y - 14, me.skin);
+      prect(b, x - 1, y - 25, 5, 5, me.skin); prect(b, x - 2, y - 27, 7, 3, helm); prect(b, x + 3, y - 23, 1, 1, '#141414');
     }
   }
 });
