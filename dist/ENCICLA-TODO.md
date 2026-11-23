@@ -2266,6 +2266,14 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+### 23-nov-2026 · v3.7.0 (sin cambio de versión) · Motor City 5.3.1 en `motor-city/` y skills para todas las IA
+- **Qué cambió:**
+  - la copia del motor pasó a la 5.3.1;
+  - el `.gitignore` ya no deja subir las skills externas;
+  - `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` y `docs/CONTEXTO-MOTOR-CITY.md` piden integrar las skills con `node motor-city/motor.mjs skills --integrar --agente <tu-agente>` (prompt: `motor-city/docs/PROMPT-SKILLS.md`).
+- **El juego no cambió.**
+- **Probado:** `node tests/run.js` en verde.
+
 ### 23-nov-2026 · v3.7.0 · Unión de las dos 3.6 (Gemini · Antigravity y OpenAI GPT-6 / Codex) sobre la 3.5.0 de Claude
 - **Qué se unió (Claude):**
   - la 3.5.0 de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`), que no estaba en `main`;

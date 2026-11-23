@@ -4,7 +4,38 @@
 
 ---
 
-## 0. Desde la 2.10 (Claude, al unir esta entrega)
+## 0. 5.3.1 · Integración automática para todas las IA (Claude, 23‑nov‑2026)
+**Un solo comando**, desde la raíz del repositorio: `node motor.mjs skills --integrar --agente <tu-agente>`.
+- `<tu-agente>` es `claude-code`, `codex`, `antigravity`, `gemini-cli` o `cursor`.
+- En EnCicla, El Metro o Run se usa la copia del motor: `node motor-city/motor.mjs skills --integrar …`.
+- El prompt para pasárselo a otra IA: **`docs/PROMPT-SKILLS.md`**.
+
+| Paso | Qué hace |
+|---|---|
+| 1 | Las skills propias quedan iguales en `.claude/skills/` y en `.agents/skills/` (se suben las dos) |
+| 2 | Completa el `.gitignore` para que las externas no se suban |
+| 3 | Instala las 4 externas (Hallmark, Modern Web Guidance, find-skills y HyperFrames) con su commit revisado, en el repositorio donde se corre |
+| 4 | Verifica. La QA corre `node motor.mjs skills --verificar` |
+
+**Dónde busca cada IA.** Lo comprobé con el instalador oficial en esta máquina y con la documentación de cada una, el 23‑nov‑2026:
+
+| IA | Carpeta del proyecto | Fuente |
+|---|---|---|
+| Claude Code | `.claude/skills/` (y plugins por `.claude/settings.json`) | — |
+| Codex | `.agents/skills/` | [developers.openai.com/codex/skills](https://developers.openai.com/codex/skills) |
+| Gemini CLI | `.gemini/skills/` o su alias `.agents/skills/` | [geminicli.com/docs/cli/skills](https://geminicli.com/docs/cli/skills/) |
+| Antigravity | `.agents/skills/` (antes `.agent/skills/`) | [antigravity.google/docs/skills](https://antigravity.google/docs/skills) |
+| Cursor | `.agents/skills/` (según el instalador) | [vercel-labs/skills](https://github.com/vercel-labs/skills) |
+
+**Lo que se arregló al hacerlo:**
+- Las 10 skills del motor solo estaban en `.claude/skills/`, así que Codex, Gemini CLI y Antigravity no las cargaban solas. Ahora tienen su copia en `.agents/skills/`.
+- En los juegos hermanos, `--instalar` dejaba las externas dentro de `motor-city/`, donde ninguna IA las encuentra. Ahora van a la raíz git de donde se corre.
+- El instalador deja **enlaces** en `.claude/skills/<id>`, y la regla `carpeta/` del `.gitignore` no los ignoraba: un `git add -A` subía 4 enlaces rotos. Ahora van sin barra final, y faltaba `find-skills`.
+- `sincronizar` copiaba a los juegos las externas instaladas en el motor. Ya no.
+
+**Claude Code en la nube:** los plugins de `.claude/settings.json` no se ofrecieron en la sesión. Con `--agente claude-code`, las cuatro externas aparecieron al instante en la lista de skills.
+
+## 0b. Desde la 2.10 (Claude, al unir esta entrega)
 - **Claude Code** activa solo los plugins Hallmark, Modern Web Guidance y HyperFrames por `.claude/settings.json`, que está en los 4 repositorios. Se aceptan una vez al abrir el proyecto.
 - **Codex, Antigravity y Gemini CLI** los instalan con `node motor.mjs skills --instalar --agente codex` (o `antigravity`, `gemini-cli`). La lista está en `skills-externas.json`, con el commit revisado y la licencia de cada uno.
 - **El enlace 1 (`ZSpw3yj9x`) es HyperFrames** (`heygen-com/hyperframes`, Apache‑2.0), con sus skills `website-to-video` y `product-launch-video`. Encargo **C‑A12**: el tráiler de Mandados.

@@ -39,6 +39,8 @@
 | El Metro 3.8.0 (unión de las 3.7 de Claude «Épocas» y de Antigravity, más CX‑36 de Codex) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 36) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
+**5.3.1 (herramientas):** las skills y los plugins de todas las IA se integran con un comando: `node motor.mjs skills --integrar --agente <tu-agente>`. El prompt para compartir es `docs/PROMPT-SKILLS.md`. El juego es el mismo y la APK v5.3.0 sigue vigente.
+
 Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
 **Juegos hermanos:** por decisión del autor siguen con su propio Motor del Valle; reciben el motor en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.6.md` (y el de la 4.5) (qué se cambió, qué mejoró, qué falta auditar, qué les toca y cómo usar el motor sin dejar el suyo).
 
@@ -934,3 +936,19 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - decidir la compuerta de rendimiento de EnCicla.
 - **El prompt de relevo** está en `docs/PROMPT-RELEVO.md`.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Claude · 23‑nov‑2026 · motor 5.3.1 «Skills para todas las IA»
+- **Pedido del autor:** la lista de skills y plugins, cómo integrarlos y un prompt para compartir entre IA que los integre solo.
+- **Hecho:**
+  - `node motor.mjs skills --integrar --agente <tu-agente>` deja las propias en `.claude/skills/` y `.agents/skills/`, completa el `.gitignore`, instala las 4 externas con su commit revisado y lo verifica;
+  - en los juegos hermanos se corre `node motor-city/motor.mjs skills --integrar …` desde la raíz del juego;
+  - `--verificar` corre en la QA.
+- **Arreglado:**
+  - las propias no estaban en `.agents/skills/` (Codex, Antigravity, Gemini CLI y Cursor no las veían);
+  - en los hermanos, las externas caían dentro de `motor-city/`;
+  - el `.gitignore` no ignoraba los enlaces que deja el instalador;
+  - `sincronizar` copiaba las externas instaladas.
+- **Probado:** las cuatro instalaciones reales (Codex + Claude Code en el motor, Claude Code solo, Cursor y la mezcla), `git status` limpio, el conflicto entre carpetas y la batería del motor (158 bien).
+- **El prompt:** `docs/PROMPT-SKILLS.md`.
+- **Riesgo que dejo:** si una IA edita una skill solo en `.agents/skills/`, `--sincronizar` lo detecta como distinta y no pisa nada. Hay que elegir con `--desde`.
+- **Para quien siga:** antes de trabajar, corre el comando con tu agente y deja la línea «4) Verificación» en tu informe.

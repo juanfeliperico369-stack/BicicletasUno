@@ -9,7 +9,7 @@
 
 **Lee primero `docs/DOCUMENTO-UNICO.md`** (todo el contexto, el código a usar y el plan de cada IA). Después, si vas a tocar el motor: `CONTEXTO-IA.md` → `MOTOR.md` → `CONTRIBUIR.md`. Todo junto en un archivo: `node motor.mjs documento` → `dist/MOTOR-CITY-TODO.md`.
 
-Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas Claude:**
+Las skills del proyecto están en `.agents/skills/` (Codex, Antigravity, Gemini CLI y Cursor las cargan solas) y en `.claude/skills/` (Claude Code). **Síguelas aunque no seas Claude:**
 
 | Skill | Para qué |
 |---|---|
@@ -24,5 +24,10 @@ Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas 
 | `motor-city-revision-ia` | Revisión de PRs IA, procedencia de plugins y simulación como hipótesis |
 
 Catálogo de plugins externos verificados y sus comandos de instalación: `docs/SKILLS-Y-PLUGINS.md`.
+
+**Integra las skills con un comando (5.3.1):** `node motor.mjs skills --integrar --agente codex` (o `antigravity`, `gemini-cli`, `cursor`, `claude-code`).
+- Deja las propias en las dos carpetas, completa el `.gitignore`, instala las 4 externas con su commit revisado y lo verifica.
+- Las externas no se suben.
+- Los pasos y las reglas, para pasárselos a otra IA: `docs/PROMPT-SKILLS.md`.
 
 **Comandos:** `node motor.mjs construir` · `node motor.mjs prueba --navegador` (todo en verde) · `node motor.mjs reporte "título" --juego X` (obligatorio si cambias el motor desde otro juego) · `node motor.mjs documento`.

@@ -8,7 +8,7 @@
 
 **Lee primero `CONTEXTO-RELEVO.md`** (el relevo entre IAs: plan, hecho, falta; al terminar, deja tu entrada) y luego **`docs/DOCUMENTO-UNICO.md`** (todo el contexto, el código a usar y el plan de cada IA). Después, si vas a tocar el motor: `CONTEXTO-IA.md` → `MOTOR.md` → `CONTRIBUIR.md`. Todo junto en un archivo: `node motor.mjs documento` → `dist/MOTOR-CITY-TODO.md`.
 
-Las skills del proyecto están en `.claude/skills/`. **Síguelas aunque no seas Claude:**
+Las skills del proyecto están en `.claude/skills/` y su copia en `.agents/skills/`, que Codex, Antigravity, Gemini CLI y Cursor cargan solas. **Síguelas aunque no seas Claude:**
 
 | Skill | Para qué |
 |---|---|
@@ -27,9 +27,11 @@ Catálogo de plugins externos verificados y sus comandos de instalación:
 - `docs/SKILLS-Y-PLUGINS.md`, de Gemini;
 - `skills-externas.json`, la lista que lee `node motor.mjs skills`.
 
-**Skills externas:**
-- Claude Code las recibe como plugins por `.claude/settings.json`.
-- Las demás IA las instalan con `node motor.mjs skills --instalar --agente codex` (o `antigravity`, `gemini-cli`).
+**Skills externas e integración (5.3.1):**
+- Cualquier IA deja todo listo con un comando: `node motor.mjs skills --integrar --agente <tu-agente>` (`claude-code`, `codex`, `antigravity`, `gemini-cli` o `cursor`).
+- El prompt para pasárselo a otra IA está en `docs/PROMPT-SKILLS.md`.
+- Claude Code también las recibe como plugins por `.claude/settings.json`.
+- Una skill propia se edita en `.claude/skills/` y se copia con `node motor.mjs skills --sincronizar`.
 
 **Navegadores:**
 - Baseline ampliamente disponible (incluye ES2023).

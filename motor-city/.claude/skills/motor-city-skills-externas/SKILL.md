@@ -5,12 +5,23 @@ description: Cuándo y cómo usar en Motor City las skills y plugins de terceros
 
 # Skills externas en Motor City
 
-El catálogo está en `skills-externas.json` (repositorio, commit revisado, licencia, para qué sí y para qué no). `node motor.mjs skills` lo muestra.
+El catálogo está en `skills-externas.json` (repositorio, commit revisado, licencia, para qué sí y para qué no). `node motor.mjs skills` muestra todo: las propias, las externas y los plugins (`--json` para otras herramientas).
 
-## Instalarlas
-- **Claude Code:** vienen como plugins en `.claude/settings.json`. Al abrir el proyecto se aceptan una vez: Hallmark, Modern Web Guidance y HyperFrames.
-- **Codex, Antigravity, Gemini CLI y Claude (find-skills):** `node motor.mjs skills --instalar --agente codex`. También sirve con `antigravity`, `gemini-cli` o `claude-code`. Usa el instalador oficial (`npx skills add …`) y deja las skills en `.agents/skills/` o `.claude/skills/`, que **no se suben** (están en `.gitignore`).
-- Necesitan internet y Node 22. Se instalan **en la máquina de la IA**. Nunca van dentro del HTML de un juego.
+## Integrarlas (5.3.1: un solo comando)
+- **Cualquier IA con terminal**, desde la raíz del repositorio: `node motor.mjs skills --integrar --agente <tu-agente>`.
+  - `<tu-agente>` es `claude-code`, `codex`, `antigravity`, `gemini-cli` o `cursor`.
+  - En un juego hermano se usa la copia del motor: `node motor-city/motor.mjs skills --integrar …`.
+- **Qué hace:**
+  1. deja las propias iguales en `.claude/skills/` (Claude Code) y en `.agents/skills/` (Codex, Antigravity, Gemini CLI y Cursor);
+  2. completa el `.gitignore`;
+  3. instala las 4 externas con el instalador oficial (`npx skills add`) y su commit revisado, en el repositorio donde se corre;
+  4. lo verifica.
+- **Claude Code** también las recibe como plugins por `.claude/settings.json`, que se aceptan al abrir el proyecto. En una sesión en la nube no se ofrecen: ahí se usa `--agente claude-code`.
+- **Las externas no se suben** (están en `.gitignore`).
+  - Necesitan internet y Node 22, y se instalan **en la máquina de la IA**.
+  - Nunca van dentro del HTML de un juego.
+- **Una skill propia** se edita en `.claude/skills/<nombre>/` y se copia con `node motor.mjs skills --sincronizar`. La QA corre `node motor.mjs skills --verificar`.
+- **El prompt para pasárselo a otra IA:** `docs/PROMPT-SKILLS.md`.
 
 ## Las skills propias del proyecto que salieron de los mismos videos (entrega de Gemini 2.9.1)
 Úsalas primero, porque no necesitan instalar nada:
@@ -47,3 +58,9 @@ El catálogo completo, con la trazabilidad de los enlaces, está en `docs/SKILLS
 ## Reglas aprendidas
 - `legacy-scan` revisa solo ~20 % de las guías. Verifica cada hallazgo con su `keepWhen` y su `dropWhen` antes de cambiar código.
 - La salida de Hallmark se revisa con `sloplint`. En Motor City aplica a páginas web, no al lienzo del juego.
+- **5.3.1 · El instalador** (`npx skills add`, probado el 23-nov-2026) se comporta así:
+  - con Codex, Antigravity, Gemini CLI o Cursor deja la carpeta en `.agents/skills/<id>` y, si también va Claude Code, un **enlace** en `.claude/skills/<id>`;
+  - con Claude Code solo, deja una copia en `.claude/skills/<id>`;
+  - siempre escribe `skills-lock.json`.
+- **En `.gitignore`, `carpeta/` no ignora un enlace.** Por eso las entradas de las externas van sin barra final. Con la barra, `git add -A` subía los 4 enlaces rotos.
+- **En un juego hermano, el destino es la raíz git de donde se corre.** Antes se instalaba dentro de `motor-city/`, donde ninguna IA las encuentra.

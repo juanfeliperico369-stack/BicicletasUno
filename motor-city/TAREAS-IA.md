@@ -40,9 +40,11 @@
   - **Modern Web Guidance** (Google Chrome), para HTML, CSS y JS moderno;
   - **find-skills** (Vercel), para buscar skills;
   - **HyperFrames**, para videos de lanzamiento.
-- **Cómo se instalan:**
-  - Claude Code las recibe como plugins por `.claude/settings.json`;
-  - las demás IA corren `node motor.mjs skills --instalar --agente codex` (o `antigravity`, `gemini-cli`).
+- **Cómo se instalan (desde la 5.3.1, un solo comando para todas las IA):**
+  - `node motor.mjs skills --integrar --agente <tu-agente>` (`claude-code`, `codex`, `antigravity`, `gemini-cli` o `cursor`);
+  - deja las propias en `.claude/skills/` y `.agents/skills/`, completa el `.gitignore`, instala las externas y lo verifica;
+  - el prompt para pasárselo a otra IA es `docs/PROMPT-SKILLS.md`;
+  - Claude Code también las recibe como plugins por `.claude/settings.json`.
 - **Público simulado:** `node motor.mjs publico`. Una niña, un abuelo, una gamer y un turista juegan solos Mandados, y el informe queda en `dist/publico.md`.
 - **Política de navegadores:** está en `CLAUDE.md`.
 
@@ -178,7 +180,7 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H9** | **Medición en un celular real**, con el autor | En Mandados, ⚙️ Ajustes → 📈 Telemetría. 5 minutos por vista (cenital, maqueta, lateral) y por calidad (baja, media, alta). Anota el modelo del celular, los fps, el p95 y si se calienta. | Una tabla en `reportes/AAAA-MM-DD-gemini-celular.md`. |
 | **G‑H11** (2.10) | **Las 4 paletas colombianas que faltan** (Wikimedia bloqueó la descarga) | Para cada obra de `arte/dominio-publico/candidatas.md` marcada «falta», da el enlace directo a una **miniatura de 250 px** en `upload.wikimedia.org` y confirma que es de dominio público. | Los enlaces en `candidatas.md`. Claude saca las paletas. |
 | **G‑H12** (2.10) | **Corre las herramientas nuevas y reporta** | `node motor.mjs publico` (anota el veredicto de cada perfil), `node motor.mjs skills` y `npx -y modern-web-guidance@latest legacy-scan js --json`. | `reportes/<fecha>-gemini-herramientas.md`, sin cambiar código. Para cada hallazgo de `legacy-scan`: archivo, línea y si aplica según su `keepWhen` y su `dropWhen`. |
-| **G‑H13** (2.10) | **Instala las skills en Antigravity** | `node motor.mjs skills --instalar --agente antigravity` y confirma que aparecen en `.agents/skills/`. Úsalas desde ahí en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
+| **G‑H13** (2.10; 5.3.1) | **Integra las skills en Antigravity** | Sigue `docs/PROMPT-SKILLS.md`: `node motor.mjs skills --integrar --agente antigravity` (debe terminar en «4) Verificación: ✓»). Confirma en la lista de skills de Antigravity que aparecen las 10 propias y las 4 externas. Úsalas en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
 | **G‑H14** (3.0) | **Capturas de las 3 cámaras en un celular real con GPU** (allí sí se ve el 3D) | En Mandados, prueba la cámara de juego de cerca y de lejos, la maqueta y la vista detrás del jugador, de día y de noche. Para cada una, ¿se lee el jugador? ¿Algo lo tapa? ¿Las fachadas se ven? ¿Se nota cuando carga lo lejano? | `reportes/<fecha>-gemini-camaras-3d.md` con fotos y una tabla de foto, hallazgo y gravedad, sin cambiar código. |
 | **G‑H15** (3.0) | **Los colores reales de los zócalos de Guatapé** | De 10 a 15 colores de zócalos y fachadas reales, con su fuente (foto de dominio público o con licencia libre, o una fuente oficial). | `arte/dominio-publico/zocalos-guatape.json`: `[{ "hex", "dónde", "fuente" }]`. Claude los pone en `PAL_ZOCALO`. |
 | **G‑H16** (3.0) | **Fluidez del 3D contra el 2D en tu celular** | ⚙️ Ajustes → 📈 Telemetría. 3 minutos con la cámara de juego (3D) y 3 con «Calidad: baja» (2D). Anota el modelo, la mediana y el percentil 95, y la densidad del lienzo. | Una tabla en tu reporte. |

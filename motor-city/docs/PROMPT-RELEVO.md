@@ -10,7 +10,7 @@ Vas a continuar el proyecto **Motor City**, un motor de juegos en un solo HTML, 
 ## 1. Los cuatro repositorios (rama de trabajo de Claude: `claude/motor-city-engine-xu7p4y`)
 | Repositorio | Qué es | Versión | Compilar | Probar |
 |---|---|---|---|---|
-| `juanfeliperico369-stack/motorcity` | El motor y **Turno Cero** (18+), el juego de prueba con todo | **5.3.0** | `node herramientas/construir.mjs` | `node pruebas/prueba.mjs --navegador` y las de `pruebas/` (la lista está en `.github/workflows/motor-city-qa.yml`) |
+| `juanfeliperico369-stack/motorcity` | El motor y **Turno Cero** (18+), el juego de prueba con todo | **5.3.1** | `node herramientas/construir.mjs` | `node pruebas/prueba.mjs --navegador` y las de `pruebas/` (la lista está en `.github/workflows/motor-city-qa.yml`) |
 | `juanfeliperico369-stack/BicicletasUno` | **Juega EnCicla** (familia) | **3.7.0** en `main` | `node tools/build.js` | `node tests/run.js` |
 | `juanfeliperico369-stack/MetroZero` | **El Metro** (familia) | **3.8.0** | `node tools/build.mjs` | `node tools/test.mjs 100` (0 errores) |
 | `juanfeliperico369-stack/RunRunZero` | **Run Scooter** (familia) | — | `node tools/build.mjs` | `node tools/sim.mjs 100 240` |
@@ -21,7 +21,8 @@ Los juegos hermanos llevan una copia de referencia del motor en `motor-city/` y 
 1. `CONTEXTO-RELEVO.md`, del motor: el § 0 (lo publicado) y las últimas entradas del § 8.
 2. `docs/PLAN-5.0.md` (las fases) y `BITACORA.md` (entradas 5.0 a 5.3).
 3. `docs/PEDIDOS-CHATGPT-5.0.md` y `docs/PEDIDOS-GEMINI-5.0.md`: la sección «★ Estado 5.3» dice qué tiene cada IA.
-4. El `CLAUDE.md`, el `AGENTS.md` o el `GEMINI.md` de cada repositorio que toques, y sus skills en `.claude/skills/`.
+4. El `CLAUDE.md`, el `AGENTS.md` o el `GEMINI.md` de cada repositorio que toques, y sus skills.
+5. **Antes de trabajar, integra las skills** siguiendo `docs/PROMPT-SKILLS.md`: `node motor.mjs skills --integrar --agente <tu-agente>`. Deja la línea «4) Verificación» en tu informe.
 
 ## 3. Qué sigue, por prioridad
 1. **Fase 4 del plan («contenido en serie»):**

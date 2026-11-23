@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.3.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.3.1 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -93,6 +93,8 @@ Lee este documento, CONTEXTO-RELEVO.md, TAREAS-IA.md y coord/. Al terminar tu tu
 | Juega EnCicla **3.7.0 en `main`** (unión de las dos 3.6 sobre la 3.5.0); la página sigue en la 3.4.0 hasta que el benchmark de `publicar.yml` cumpla o el autor decida | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
 | El Metro 3.8.0 (unión de las 3.7 de Claude «Épocas» y de Antigravity, más CX‑36 de Codex) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 36) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
+
+**5.3.1 (herramientas):** las skills y los plugins de todas las IA se integran con un comando: `node motor.mjs skills --integrar --agente <tu-agente>`. El prompt para compartir es `docs/PROMPT-SKILLS.md`. El juego es el mismo y la APK v5.3.0 sigue vigente.
 
 Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
 **Juegos hermanos:** por decisión del autor siguen con su propio Motor del Valle; reciben el motor en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.6.md` (y el de la 4.5) (qué se cambió, qué mejoró, qué falta auditar, qué les toca y cómo usar el motor sin dejar el suyo).
@@ -990,6 +992,22 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **El prompt de relevo** está en `docs/PROMPT-RELEVO.md`.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
+### Claude · 23‑nov‑2026 · motor 5.3.1 «Skills para todas las IA»
+- **Pedido del autor:** la lista de skills y plugins, cómo integrarlos y un prompt para compartir entre IA que los integre solo.
+- **Hecho:**
+  - `node motor.mjs skills --integrar --agente <tu-agente>` deja las propias en `.claude/skills/` y `.agents/skills/`, completa el `.gitignore`, instala las 4 externas con su commit revisado y lo verifica;
+  - en los juegos hermanos se corre `node motor-city/motor.mjs skills --integrar …` desde la raíz del juego;
+  - `--verificar` corre en la QA.
+- **Arreglado:**
+  - las propias no estaban en `.agents/skills/` (Codex, Antigravity, Gemini CLI y Cursor no las veían);
+  - en los hermanos, las externas caían dentro de `motor-city/`;
+  - el `.gitignore` no ignoraba los enlaces que deja el instalador;
+  - `sincronizar` copiaba las externas instaladas.
+- **Probado:** las cuatro instalaciones reales (Codex + Claude Code en el motor, Claude Code solo, Cursor y la mezcla), `git status` limpio, el conflicto entre carpetas y la batería del motor (158 bien).
+- **El prompt:** `docs/PROMPT-SKILLS.md`.
+- **Riesgo que dejo:** si una IA edita una skill solo en `.agents/skills/`, `--sincronizar` lo detecta como distinta y no pisa nada. Hay que elegir con `--desde`.
+- **Para quien siga:** antes de trabajar, corre el comando con tu agente y deja la línea «4) Verificación» en tu informe.
+
 # MOTOR CITY · Documento único
 
 > **Para el autor (OneZero) y para todas las IAs:** Gemini (Antigravity y Nano Banana), ChatGPT (Codex), Claude y las IAs de Juega EnCicla, El Metro y Run Scooter.
@@ -1642,9 +1660,11 @@ No hace falta conectar ninguna aplicación.
   - **Modern Web Guidance** (Google Chrome), para HTML, CSS y JS moderno;
   - **find-skills** (Vercel), para buscar skills;
   - **HyperFrames**, para videos de lanzamiento.
-- **Cómo se instalan:**
-  - Claude Code las recibe como plugins por `.claude/settings.json`;
-  - las demás IA corren `node motor.mjs skills --instalar --agente codex` (o `antigravity`, `gemini-cli`).
+- **Cómo se instalan (desde la 5.3.1, un solo comando para todas las IA):**
+  - `node motor.mjs skills --integrar --agente <tu-agente>` (`claude-code`, `codex`, `antigravity`, `gemini-cli` o `cursor`);
+  - deja las propias en `.claude/skills/` y `.agents/skills/`, completa el `.gitignore`, instala las externas y lo verifica;
+  - el prompt para pasárselo a otra IA es `docs/PROMPT-SKILLS.md`;
+  - Claude Code también las recibe como plugins por `.claude/settings.json`.
 - **Público simulado:** `node motor.mjs publico`. Una niña, un abuelo, una gamer y un turista juegan solos Mandados, y el informe queda en `dist/publico.md`.
 - **Política de navegadores:** está en `CLAUDE.md`.
 
@@ -1780,7 +1800,7 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 | **G‑H9** | **Medición en un celular real**, con el autor | En Mandados, ⚙️ Ajustes → 📈 Telemetría. 5 minutos por vista (cenital, maqueta, lateral) y por calidad (baja, media, alta). Anota el modelo del celular, los fps, el p95 y si se calienta. | Una tabla en `reportes/AAAA-MM-DD-gemini-celular.md`. |
 | **G‑H11** (2.10) | **Las 4 paletas colombianas que faltan** (Wikimedia bloqueó la descarga) | Para cada obra de `arte/dominio-publico/candidatas.md` marcada «falta», da el enlace directo a una **miniatura de 250 px** en `upload.wikimedia.org` y confirma que es de dominio público. | Los enlaces en `candidatas.md`. Claude saca las paletas. |
 | **G‑H12** (2.10) | **Corre las herramientas nuevas y reporta** | `node motor.mjs publico` (anota el veredicto de cada perfil), `node motor.mjs skills` y `npx -y modern-web-guidance@latest legacy-scan js --json`. | `reportes/<fecha>-gemini-herramientas.md`, sin cambiar código. Para cada hallazgo de `legacy-scan`: archivo, línea y si aplica según su `keepWhen` y su `dropWhen`. |
-| **G‑H13** (2.10) | **Instala las skills en Antigravity** | `node motor.mjs skills --instalar --agente antigravity` y confirma que aparecen en `.agents/skills/`. Úsalas desde ahí en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
+| **G‑H13** (2.10; 5.3.1) | **Integra las skills en Antigravity** | Sigue `docs/PROMPT-SKILLS.md`: `node motor.mjs skills --integrar --agente antigravity` (debe terminar en «4) Verificación: ✓»). Confirma en la lista de skills de Antigravity que aparecen las 10 propias y las 4 externas. Úsalas en tus tareas. | Una línea en tu reporte, con lo que se instaló y lo que falló. |
 | **G‑H14** (3.0) | **Capturas de las 3 cámaras en un celular real con GPU** (allí sí se ve el 3D) | En Mandados, prueba la cámara de juego de cerca y de lejos, la maqueta y la vista detrás del jugador, de día y de noche. Para cada una, ¿se lee el jugador? ¿Algo lo tapa? ¿Las fachadas se ven? ¿Se nota cuando carga lo lejano? | `reportes/<fecha>-gemini-camaras-3d.md` con fotos y una tabla de foto, hallazgo y gravedad, sin cambiar código. |
 | **G‑H15** (3.0) | **Los colores reales de los zócalos de Guatapé** | De 10 a 15 colores de zócalos y fachadas reales, con su fuente (foto de dominio público o con licencia libre, o una fuente oficial). | `arte/dominio-publico/zocalos-guatape.json`: `[{ "hex", "dónde", "fuente" }]`. Claude los pone en `PAL_ZOCALO`. |
 | **G‑H16** (3.0) | **Fluidez del 3D contra el 2D en tu celular** | ⚙️ Ajustes → 📈 Telemetría. 3 minutos con la cámara de juego (3D) y 3 con «Calidad: baja» (2D). Anota el modelo, la mediana y el percentil 95, y la densidad del lienzo. | Una tabla en tu reporte. |
@@ -2058,12 +2078,23 @@ description: Cuándo y cómo usar en Motor City las skills y plugins de terceros
 
 ## Skills externas en Motor City
 
-El catálogo está en `skills-externas.json` (repositorio, commit revisado, licencia, para qué sí y para qué no). `node motor.mjs skills` lo muestra.
+El catálogo está en `skills-externas.json` (repositorio, commit revisado, licencia, para qué sí y para qué no). `node motor.mjs skills` muestra todo: las propias, las externas y los plugins (`--json` para otras herramientas).
 
-### Instalarlas
-- **Claude Code:** vienen como plugins en `.claude/settings.json`. Al abrir el proyecto se aceptan una vez: Hallmark, Modern Web Guidance y HyperFrames.
-- **Codex, Antigravity, Gemini CLI y Claude (find-skills):** `node motor.mjs skills --instalar --agente codex`. También sirve con `antigravity`, `gemini-cli` o `claude-code`. Usa el instalador oficial (`npx skills add …`) y deja las skills en `.agents/skills/` o `.claude/skills/`, que **no se suben** (están en `.gitignore`).
-- Necesitan internet y Node 22. Se instalan **en la máquina de la IA**. Nunca van dentro del HTML de un juego.
+### Integrarlas (5.3.1: un solo comando)
+- **Cualquier IA con terminal**, desde la raíz del repositorio: `node motor.mjs skills --integrar --agente <tu-agente>`.
+  - `<tu-agente>` es `claude-code`, `codex`, `antigravity`, `gemini-cli` o `cursor`.
+  - En un juego hermano se usa la copia del motor: `node motor-city/motor.mjs skills --integrar …`.
+- **Qué hace:**
+  1. deja las propias iguales en `.claude/skills/` (Claude Code) y en `.agents/skills/` (Codex, Antigravity, Gemini CLI y Cursor);
+  2. completa el `.gitignore`;
+  3. instala las 4 externas con el instalador oficial (`npx skills add`) y su commit revisado, en el repositorio donde se corre;
+  4. lo verifica.
+- **Claude Code** también las recibe como plugins por `.claude/settings.json`, que se aceptan al abrir el proyecto. En una sesión en la nube no se ofrecen: ahí se usa `--agente claude-code`.
+- **Las externas no se suben** (están en `.gitignore`).
+  - Necesitan internet y Node 22, y se instalan **en la máquina de la IA**.
+  - Nunca van dentro del HTML de un juego.
+- **Una skill propia** se edita en `.claude/skills/<nombre>/` y se copia con `node motor.mjs skills --sincronizar`. La QA corre `node motor.mjs skills --verificar`.
+- **El prompt para pasárselo a otra IA:** `docs/PROMPT-SKILLS.md`.
 
 ### Las skills propias del proyecto que salieron de los mismos videos (entrega de Gemini 2.9.1)
 Úsalas primero, porque no necesitan instalar nada:
@@ -2100,6 +2131,12 @@ El catálogo completo, con la trazabilidad de los enlaces, está en `docs/SKILLS
 ### Reglas aprendidas
 - `legacy-scan` revisa solo ~20 % de las guías. Verifica cada hallazgo con su `keepWhen` y su `dropWhen` antes de cambiar código.
 - La salida de Hallmark se revisa con `sloplint`. En Motor City aplica a páginas web, no al lienzo del juego.
+- **5.3.1 · El instalador** (`npx skills add`, probado el 23-nov-2026) se comporta así:
+  - con Codex, Antigravity, Gemini CLI o Cursor deja la carpeta en `.agents/skills/<id>` y, si también va Claude Code, un **enlace** en `.claude/skills/<id>`;
+  - con Claude Code solo, deja una copia en `.claude/skills/<id>`;
+  - siempre escribe `skills-lock.json`.
+- **En `.gitignore`, `carpeta/` no ignora un enlace.** Por eso las entradas de las externas van sin barra final. Con la barra, `git add -A` subía los 4 enlaces rotos.
+- **En un juego hermano, el destino es la raíz git de donde se corre.** Antes se instalaba dentro de `motor-city/`, donde ninguna IA las encuentra.
 
 
 ---
@@ -4544,6 +4581,36 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 23-nov-2026 · 5.3.1 «Skills para todas las IA» · la lista, un comando que las integra y el prompt para compartir
+- **El autor:** «dame la lista de skills y plugins que tenemos y cómo integrarlos, con un prompt para compartir entre IA y que las integren automáticamente».
+- **La lista:**
+  - **10 propias en el motor:** `motor-city-*`;
+  - **8 en El Metro:** `el-metro-*`, `medellin-fiel`, `coordinacion-multi-ia` y tres copias públicas de Anthropic;
+  - **4 externas con commit revisado:** Hallmark, Modern Web Guidance, find-skills y HyperFrames;
+  - **3 plugins de Claude Code** en `.claude/settings.json`.
+
+  `node motor.mjs skills` la muestra, y con `--json` la entrega en JSON.
+- **Un solo comando:** `node motor.mjs skills --integrar --agente <tu-agente>` (`herramientas/skills-externas.mjs`). Hace cuatro cosas:
+  1. deja las propias iguales en `.claude/skills/` (Claude Code) y en `.agents/skills/` (Codex, Antigravity, Gemini CLI y Cursor). Copia en las dos direcciones y, si una difiere, no pisa nada sin `--desde`;
+  2. completa el `.gitignore`;
+  3. instala las externas con `npx skills add`, en el repositorio donde se corre;
+  4. lo verifica.
+
+  También hay `--sincronizar`, sin internet, y `--verificar`, que ahora corre en la QA.
+- **Cuatro fallas encontradas y arregladas:**
+  - **Las propias solo estaban en `.claude/skills/`:** Codex, Gemini CLI y Antigravity, que buscan en `.agents/skills/`, no las cargaban solas. Lo confirmé con su documentación y con el instalador.
+  - **En los juegos hermanos, `--instalar` dejaba las externas dentro de `motor-city/`**, donde nadie las encuentra.
+  - **El instalador deja enlaces en `.claude/skills/<id>`,** y el `.gitignore` con `carpeta/` no los ignoraba: `git add -A` habría subido 4 enlaces rotos. También faltaba `find-skills`.
+  - **`sincronizar` habría copiado a los juegos las externas** instaladas en el motor.
+- **Probado de verdad:**
+  - las 4 externas instaladas en el motor para Codex y Claude Code: `git status` no las ve;
+  - con Claude Code solo, en un repositorio vacío: también instala y verifica;
+  - el conflicto entre las dos carpetas: sin `--desde`, avisa y no pisa;
+  - esta misma sesión de Claude Code cargó al instante `hallmark`, `modern-web-guidance`, `find-skills` y `hyperframes`;
+  - la batería del motor: 158 bien.
+- **El prompt para compartir entre IA:** `docs/PROMPT-SKILLS.md`. Están al día `docs/SKILLS-Y-PLUGINS.md` (§ 0), la skill `motor-city-skills-externas`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` y `TAREAS-IA.md` (G‑H13).
+- **El juego no cambia:** solo la versión. La APK v5.3.0 sigue vigente.
 
 ### 23-nov-2026 · 5.3.0 «Todo lo nuevo, unido» · las ramas de Gemini y ChatGPT, comprendidas y mejoradas
 - **El autor:** «Retoma, continúa y termina; integra todo lo nuevo, compréndelo y mejóralo; y dame el prompt de relevo para la otra IA».

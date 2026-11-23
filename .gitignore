@@ -27,3 +27,15 @@ motor-valle/geo/cache/
 # salidas de prueba del Motor del Valle
 motor-valle/salida/
 motor-valle/geo/__pycache__/
+# skills externas que instala cada IA (node motor.mjs skills --integrar): no se suben
+.agents/skills/hallmark
+.claude/skills/hallmark
+.agents/skills/modern-web-guidance
+.claude/skills/modern-web-guidance
+.agents/skills/find-skills
+.claude/skills/find-skills
+.agents/skills/hyperframes
+.claude/skills/hyperframes
+skills-lock.json
+.skill-lock.json
+.hallmark/

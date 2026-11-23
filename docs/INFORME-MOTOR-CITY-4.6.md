@@ -124,3 +124,13 @@ El autor: «el problema es el arranque: si se suelta el joystick se deja de acel
 - **Arreglo que sirve a todos:** `MC.Efectos` (humo, chispas y marcas) también suma la cota en 3D, como `Vistas.aPantalla` en la 5.2.
 - **Para portar a este juego (familia):** los minijuegos de llanta y cadena para la bici (`juegos/getaway/64-minijuegos.js`, tono familia); la química de la lluvia (charcos que salpican); los sitios icónicos, si tu juego usa el mapa de Medellín en 3D.
 - Este juego tiene su propia versión; el detalle está en su bitácora.
+
+## Motor City 5.3.1 «Skills para todas las IA» (23‑nov‑2026, Claude)
+- **Un solo comando, desde la raíz de este juego:** `node motor-city/motor.mjs skills --integrar --agente <tu-agente>` (`codex`, `antigravity`, `gemini-cli`, `cursor` o `claude-code`). Hace cuatro cosas:
+  1. copia las skills propias entre `.claude/skills/` y `.agents/skills/`;
+  2. completa el `.gitignore`;
+  3. instala las 4 externas (Hallmark, Modern Web Guidance, find-skills y HyperFrames) con su commit revisado;
+  4. lo verifica.
+- **Arreglo para este repositorio:** antes, `--instalar` las dejaba dentro de `motor-city/`, donde ninguna IA las encuentra. Ahora quedan en la raíz, y el `.gitignore` ya no deja subir los enlaces que crea el instalador.
+- **El prompt para pasárselo a cualquier IA:** `motor-city/docs/PROMPT-SKILLS.md`.
+- **El juego no cambió.**

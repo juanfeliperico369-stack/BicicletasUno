@@ -28,7 +28,7 @@ La fuente de verdad del motor es `juanfeliperico369-stack/motorcity`. Se juega e
 ## Lo nuevo de la 2.10 (todo unido, más liviano y con las skills de los videos)
 - **Skills y plugins:** Hallmark (páginas web), Modern Web Guidance (HTML, CSS y JS moderno), find-skills y HyperFrames (videos).
   - Claude Code los recibe por `.claude/settings.json` en la raíz de este repositorio.
-  - Las demás IA corren `node motor-city/motor.mjs skills --instalar --agente codex`.
+  - Cualquier IA las integra desde la raíz: `node motor-city/motor.mjs skills --integrar --agente <tu-agente>` (5.3.1; pasos y reglas en `motor-city/docs/PROMPT-SKILLS.md`).
   - Cuándo usar cada una: `motor-city/.claude/skills/motor-city-skills-externas/SKILL.md`.
 - **Política de navegadores** (`motor-city/CLAUDE.md`): Baseline ampliamente disponible, y lo más nuevo solo con respaldo de 20 líneas o menos.
 - **Público simulado:** `MC.Publico` y `node motor-city/motor.mjs publico`. Una niña, un abuelo, una gamer y un turista juegan solos y dan su veredicto. Sirve para cualquier juego que exponga un `piloto` como Mandados (`MANDADOS.piloto`).

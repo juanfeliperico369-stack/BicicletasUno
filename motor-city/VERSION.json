@@ -1,12 +1,12 @@
 {
-  "version": "5.3.0",
+  "version": "5.3.1",
   "fecha": "2026-11-23",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 5.3.0 como referencia; el juego va en 3.7.0 (unión de las dos 3.6, de Antigravity y de GPT-6, sobre la 3.5.0 de Claude)",
-    "MetroZero: motor-city/ 5.3.0 como referencia; el juego va en 3.8.0 (unión de las 3.7 de Claude y de Antigravity, más Codex)",
-    "RunRunZero: motor-city/ 5.3.0 como referencia; APK que gira"
+    "BicicletasUno: motor-city/ 5.3.1 como referencia; el juego va en 3.7.0 (unión de las dos 3.6, de Antigravity y de GPT-6, sobre la 3.5.0 de Claude)",
+    "MetroZero: motor-city/ 5.3.1 como referencia; el juego va en 3.8.0 (unión de las 3.7 de Claude y de Antigravity, más Codex)",
+    "RunRunZero: motor-city/ 5.3.1 como referencia; APK que gira"
   ],
-  "estado": "5.3.0 «Todo lo nuevo, unido»: se unieron 7 ramas (Gemini: G5-07 fichas de 30 sitios, G5-01-b Historieta de noche, lluvia y 1.ª persona, G5-05 guía sin flecha en cine, G5-08 química del mundo, G5-04 minijuegos; ChatGPT: C5-01 vuelcos y R6-b Worker con LOD2). Claude las mejoró: el carro volcado se apoya bien y no se maneja; R6-b queda apagado (?r6b) porque rearmaba la ciudad sin mejorar nada; el minijuego de puentear entra al juego tras robar un carro; y con las fichas de Gemini, los 30 sitios icónicos de Medellín aparecen en el 3D realista (el Coltejer y el Planetario faltaban). EnCicla 3.7.0 y El Metro 3.8.0 (las versiones paralelas de cada uno, unidas). Antes, 5.2.0 «Ciudad viva»."
+  "estado": "5.3.1 «Skills para todas las IA»: un solo comando (node motor.mjs skills --integrar --agente <tu-agente>) deja las skills propias en .claude/skills (Claude Code) y en .agents/skills (Codex, Antigravity y Gemini CLI), instala las cuatro externas con su commit revisado en el repositorio donde se corre (en los juegos hermanos caían dentro de motor-city/) y arregla el .gitignore (los enlaces que deja el instalador en .claude/skills no se ignoraban). Prompt para compartir entre IA: docs/PROMPT-SKILLS.md. El juego no cambia. Antes, 5.3.0 «Todo lo nuevo, unido»: se unieron 7 ramas (Gemini: G5-07 fichas de 30 sitios, G5-01-b Historieta de noche, lluvia y 1.ª persona, G5-05 guía sin flecha en cine, G5-08 química del mundo, G5-04 minijuegos; ChatGPT: C5-01 vuelcos y R6-b Worker con LOD2). Claude las mejoró: el carro volcado se apoya bien y no se maneja; R6-b queda apagado (?r6b) porque rearmaba la ciudad sin mejorar nada; el minijuego de puentear entra al juego tras robar un carro; y con las fichas de Gemini, los 30 sitios icónicos de Medellín aparecen en el 3D realista (el Coltejer y el Planetario faltaban). EnCicla 3.7.0 y El Metro 3.8.0 (las versiones paralelas de cada uno, unidas)."
 }

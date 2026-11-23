@@ -1,5 +1,35 @@
 # Bitácora de Motor City
 
+## 23-nov-2026 · 5.3.1 «Skills para todas las IA» · la lista, un comando que las integra y el prompt para compartir
+- **El autor:** «dame la lista de skills y plugins que tenemos y cómo integrarlos, con un prompt para compartir entre IA y que las integren automáticamente».
+- **La lista:**
+  - **10 propias en el motor:** `motor-city-*`;
+  - **8 en El Metro:** `el-metro-*`, `medellin-fiel`, `coordinacion-multi-ia` y tres copias públicas de Anthropic;
+  - **4 externas con commit revisado:** Hallmark, Modern Web Guidance, find-skills y HyperFrames;
+  - **3 plugins de Claude Code** en `.claude/settings.json`.
+
+  `node motor.mjs skills` la muestra, y con `--json` la entrega en JSON.
+- **Un solo comando:** `node motor.mjs skills --integrar --agente <tu-agente>` (`herramientas/skills-externas.mjs`). Hace cuatro cosas:
+  1. deja las propias iguales en `.claude/skills/` (Claude Code) y en `.agents/skills/` (Codex, Antigravity, Gemini CLI y Cursor). Copia en las dos direcciones y, si una difiere, no pisa nada sin `--desde`;
+  2. completa el `.gitignore`;
+  3. instala las externas con `npx skills add`, en el repositorio donde se corre;
+  4. lo verifica.
+
+  También hay `--sincronizar`, sin internet, y `--verificar`, que ahora corre en la QA.
+- **Cuatro fallas encontradas y arregladas:**
+  - **Las propias solo estaban en `.claude/skills/`:** Codex, Gemini CLI y Antigravity, que buscan en `.agents/skills/`, no las cargaban solas. Lo confirmé con su documentación y con el instalador.
+  - **En los juegos hermanos, `--instalar` dejaba las externas dentro de `motor-city/`**, donde nadie las encuentra.
+  - **El instalador deja enlaces en `.claude/skills/<id>`,** y el `.gitignore` con `carpeta/` no los ignoraba: `git add -A` habría subido 4 enlaces rotos. También faltaba `find-skills`.
+  - **`sincronizar` habría copiado a los juegos las externas** instaladas en el motor.
+- **Probado de verdad:**
+  - las 4 externas instaladas en el motor para Codex y Claude Code: `git status` no las ve;
+  - con Claude Code solo, en un repositorio vacío: también instala y verifica;
+  - el conflicto entre las dos carpetas: sin `--desde`, avisa y no pisa;
+  - esta misma sesión de Claude Code cargó al instante `hallmark`, `modern-web-guidance`, `find-skills` y `hyperframes`;
+  - la batería del motor: 158 bien.
+- **El prompt para compartir entre IA:** `docs/PROMPT-SKILLS.md`. Están al día `docs/SKILLS-Y-PLUGINS.md` (§ 0), la skill `motor-city-skills-externas`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` y `TAREAS-IA.md` (G‑H13).
+- **El juego no cambia:** solo la versión. La APK v5.3.0 sigue vigente.
+
 ## 23-nov-2026 · 5.3.0 «Todo lo nuevo, unido» · las ramas de Gemini y ChatGPT, comprendidas y mejoradas
 - **El autor:** «Retoma, continúa y termina; integra todo lo nuevo, compréndelo y mejóralo; y dame el prompt de relevo para la otra IA».
 - **Unido de Gemini / Antigravity (5 ramas):**

@@ -6,17 +6,19 @@ salida/
 __pycache__/
 node_modules/
 .DS_Store
-# skills externas instaladas por cada IA (node motor.mjs skills --instalar): no se suben
-.agents/skills/hallmark/
-.agents/skills/modern-web-guidance/
-.agents/skills/hyperframes/
-.agents/skills/find-skills/
-.claude/skills/hallmark/
-.claude/skills/modern-web-guidance/
-.claude/skills/hyperframes/
+# skills externas que instala cada IA (node motor.mjs skills --integrar): no se suben.
+# Sin barra final: el instalador deja en .claude/skills un enlace, y «carpeta/» no ignora enlaces.
+.agents/skills/hallmark
+.claude/skills/hallmark
+.agents/skills/modern-web-guidance
+.claude/skills/modern-web-guidance
+.agents/skills/find-skills
+.claude/skills/find-skills
+.agents/skills/hyperframes
+.claude/skills/hyperframes
+skills-lock.json
 .skill-lock.json
 .hallmark/
-skills-lock.json
 dist/publico.md
 dist/publico.json
 # salidas de los generadores 3D (se rehacen con python3 juegos/getaway/arte3d/*.py; el juego usa arte/modelos/turno-cero)

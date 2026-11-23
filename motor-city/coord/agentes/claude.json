@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "5.3.0 entregada «Todo lo nuevo, unido»: 7 ramas del motor unidas y mejoradas; MC.Sitios (30 sitios en 3D); EnCicla 3.7.0 (main) y El Metro 3.8.0 (publicado). Sigue: fase 4 (lenguaje de misiones y repeticiones) y lo que las otras IA no alcancen.",
+  "fase_actual": "5.3.1 entregada «Skills para todas las IA»: node motor.mjs skills --integrar --agente <tu-agente> deja las skills propias en .claude/skills y .agents/skills, el .gitignore al día y las 4 externas instaladas con su commit revisado; prompt para compartir: docs/PROMPT-SKILLS.md. Antes: 5.3.0 «Todo lo nuevo, unido». Sigue: fase 4 (lenguaje de misiones y repeticiones) y lo que las otras IA no alcancen.",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-23T17:30:00Z",
+  "ultima_actualizacion_utc": "2026-11-23T17:50:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -35,7 +35,10 @@
     "js/45-tres.js (R8)",
     "js/45-y-sitios.js",
     "pruebas/sitios-3d.mjs",
-    "pruebas/puentear-robo.mjs"
+    "pruebas/puentear-robo.mjs",
+    "herramientas/skills-externas.mjs",
+    ".agents/skills/ (copia de .claude/skills)",
+    "docs/PROMPT-SKILLS.md"
   ],
   "no_toco": [
     "src/ de BicicletasUno, MetroZero y RunRunZero (zonas de Antigravity y Codex)",
