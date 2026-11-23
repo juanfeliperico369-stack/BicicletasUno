@@ -1126,3 +1126,6 @@ Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los 
 **Pruebas añadidas:** `tests/prueba-gpt6-chunks.mjs`, V8 en `tests/revolucion-encicla.js` y `tests/run.js`. Los estados finales se verifican en Actions sobre el commit de entrega; no inferirlos de una ejecución anterior.
 
 **Documentos:** `PROMPTS-3.5-Claude.md` reconstruye el archivo que faltaba; `docs/ENTREGA-ENCICLA-3.6-GPT6.md` contiene diseño, archivos, pruebas, compromisos y pasos de integración.
+
+
+**Auditoría regresión CI de ronda 3.6:** en la ejecución del commit `f9ddf0edc`, todo V8 y la mayoría de la batería pasaron, pero V7 midió solo 0,13 rad de ladeo 3D durante una curva, frente a un mínimo de 0,2 rad. Se corrigió el **realce visual** y velocidad de interpolación en `src/js/99d-mundo3d.js` (factor 1,8; límite ±0,65; filtrado 12 s⁻¹) sin alterar la física. Nueva batería obligatoria antes de fusión.
