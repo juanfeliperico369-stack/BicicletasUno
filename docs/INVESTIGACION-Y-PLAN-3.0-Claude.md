@@ -1,4 +1,4 @@
-# Investigación y plan 3.0 · Claude
+# Investigación y plan 3.0 · Claude (al día con la 3.2.0)
 
 **22‑nov‑2026 · Claude (Claude Code), una de las tres IA a las que el autor les pidió lo mismo a la vez.** Las otras dos publican su propio documento con su marca en el título; leerlos y unir lo que esté en verde es parte del trabajo (`coord/buzon/`). Mi rama: `ccr-6f184fb6-vtpkye`.
 
@@ -22,6 +22,27 @@
 
 Todo está en `tests/revolucion-encicla.js` (sección V4) y la batería completa (`node tests/run.js`) queda en verde. **Lo que no alcancé, en orden, está en el § 6.**
 
+## 0b. Después: «Retoma, continúa y termina» (versión 3.2.0, todo probado)
+Antes de seguir uní lo que publicaron las otras IA: la auditoría de **OpenAI GPT‑6** (la carrera sin fin solo se abre en una ciclorruta y el HUD en km/h) y la **3.1.0 de la otra sesión de Claude** (⚙️ Flexibilidad y Motor City 4.7 y 4.8 en `motor-city/`). Esa unión traía un error: en Controles, tocar una opción **no guardaba** (un comentario a mitad de línea apagaba `Save.save()`); quedó corregido.
+
+| # | Qué | Archivo | Cómo se probó |
+|---|---|---|---|
+| 11 | **Run 3D del menú:** las hojas no sumaban (★ 0 con 6 hojas): el modo copiaba el puntaje del minijuego en cada cuadro. Ahora suman, y la carrera sale con una **fila de hojas** para puntuar desde el primer segundo. Las **teclas** (flechas, W, S, espacio) no hacían nada: llegaban como evento y el corredor esperaba el nombre de la tecla | `99e-pulido.js`, `99g-freerun.js` | 15 puntos y 6 hojas en 1,5 s; la flecha cambia de carril |
+| 12 | **Turnos de varias fases:** el minijuego de una fase (la recepción de la Bodega, por ejemplo) sumaba sus errores pero **no sus puntos**. Ahora sí, y la ★ muestra lo que va mientras juegas | `99e-pulido.js` | La Bodega: ★ 83 durante y después (antes, 0) |
+| 13 | **Bodega en el celular vertical:** el estante quedaba bajo la barra de arriba y medio celular era piso vacío. Ahora el estante va bajo el título, la mesa muestra sus cajas, los pasos 1‑2‑3‑4 se ven y **la caja que revisas sale en grande**, abierta, con lo que trae y sus golpes: se revisa mirando | `99e-pulido.js` | Capturas en 412 × 860 |
+| 14 | El aviso de la cámara (pellizcar y girar) **tapaba el título de los minijuegos**: ahora solo sale en la ciudad 2D | `88-camara.js` | Capturas |
+| 15 | **Transporte en el mundo 3D**, con los mismos datos de la cenital: el **viaducto** del metro (tablero, barandas y columnas en T cada 30 m), las **estaciones elevadas** (andén ancho, cubierta con la franja de la línea y el edificio de acceso), los **puentes** a su altura, los **trenes** (3 vagones de 22 m), el **tranvía**, los buses del **Metroplús** y los **metrocables** (cable doble a 14 m, torres cada 260 m, estaciones y cabinas cada 60 m a 5 m/s). Los carros y tú van **encima** de los puentes (antes quedaban dentro del tablero) | `99f-mundo3d-transporte.js`, `99d-mundo3d.js` | 1.233 piezas en alto, sin errores, en tercera y primera persona |
+| 16 | **Fachadas con ventanas** (una fila por piso de 3 m) que **de noche se prenden** al azar, hechas en el sombreador: no pesan nada. Las **sombras** del 3D son las que el arte 2D ya hornea en el piso, con el mismo sol del noroeste | `99d-mundo3d.js` | Capturas de día y de noche |
+| 17 | **🧗 Freerun en la Comuna 13** (2D de lado, en pixel): escaleras eléctricas (más rápido) y de cemento, techos con huecos, materas, perros dormidos, chazas, muros y cuerdas de ropa, hasta el mirador; murales al fondo. En el menú (tres niveles) y en el valle | `99g-freerun.js` | El piloto llega al mirador sin caídas, con 52 estrellas y 6 trucos |
+| 18 | **Trucos con gesto:** en el aire, deslizar ← → ↑ ↓ o **hacer un círculo** es un truco con nombre (en el freerun y en la carrera de la ciclorruta, donde deslizar también cambia de carril y salta). En el piso del freerun, el gesto se cumple apenas se reconoce, sin esperar a soltar el dedo | `99g-freerun.js` | Los cinco gestos se reconocen y el de la ciclorruta cambia de carril |
+| 19 | **📸 Radares** en las 14 ciclorrutas más largas (a más de 1 km uno de otro), con la velocidad equivalente a la real de tu vehículo y tu récord; **🛹 saltos con récord** en las zonas de trucos | `99h-valle-vivo.js` | Récord de 23 km/h en el primer radar |
+| 20 | **💪 Habilidades que suben al usarlas:** Pedaleo (km), Resistencia (km en subida), Equilibrio (trucos) y Conocer el valle (barrios). Efectos pequeños y dichos: +1,5 % de punta por nivel, −5 % de lo que frena la loma por nivel y +2 puntos por truco por nivel; solo en el valle y solo para quien juega | `99h-valle-vivo.js` | Los km suman; el bot y las pruebas no cambian |
+| 21 | **📔 Tu diario:** lo que haces queda anotado solo (turnos y juegos, récords, barrios nuevos, niveles, miradores). En Más → «📔 Mi diario y habilidades» | `99h-valle-vivo.js` | 7 notas en la prueba y las 4 habilidades en pantalla |
+| 22 | **🔭 Miradores** (Cerro Nutibara, El Volador, Las Tres Cruces, Quitasol y el Alto de San Miguel): te sientas arriba y la cámara 3D gira despacio sobre la ciudad viva, con la niebla más lejos y el dato del lugar; el tiempo pasa más rápido | `99h-valle-vivo.js` | La cámara gira, sin errores, y se sale bien |
+| 23 | La **auditoría de modos** ahora cuenta los puntos del minijuego en curso y marca si hubo acción | `tests/auditoria-modos.js` | — |
+
+Las pruebas nuevas están en `tests/revolucion-encicla.js` (sección V5) y la batería completa queda en verde.
+
 ## 1. Auditoría: qué estaba roto, qué era lento y por qué
 **Cómo se midió.** Chromium con la CPU 4× más lenta (`Emulation.setCPUThrottlingRate`), 412 × 860, tiempo real, una persona simulada con el joystick a fondo sobre una avenida recta.
 
@@ -33,9 +54,11 @@ Todo está en `tests/revolucion-encicla.js` (sección V4) y la batería completa
 | **La carrera de la ciclorruta, eterna** | 20 km/h al arrancar; 4 min para 1,3 km | `rapidez = min(14, 5,5 + m/160)` | `min(18, 9,5 + m/80)` |
 | **Hojas en el carril cerrado** (al agregar los tramos estrechos) | El bot perdía las 3 vidas en 491 m | Lo recogible caía en el carril de conos | Lo recogible pasa al carril abierto |
 | **Botones de la bandeja «⋯ Más» que no hacían nada** (v2.1) | `data-i = -1` | Se buscaba la acción por identidad de objeto | Por `id`, con prueba que los toca |
-| Modos sin errores pero que se sienten «a medias» | Run 3D: 0 puntos en 4 s; Bodega: 0 en 4 s; Turno en equipo y Monitoreo: sin acción sin red o sin órdenes | Arranques con animación o que esperan al jugador | Revisar uno por uno con la plantilla del § 4.1 (§ 6) |
+| Modos sin errores pero que se sienten «a medias» | Run 3D: 0 puntos en 4 s; Bodega: 0 en 4 s; Turno en equipo y Monitoreo: sin acción sin red o sin órdenes | Run 3D y Bodega: **puntos que se perdían** (n.º 11 y 12); Turno en equipo y Monitoreo esperan tus órdenes (y el primero, amigos conectados): así está pensado | ✅ 3.2 (§ 0b) |
 
 **Cifras actuales** (después del arreglo, CPU 4×): la bici a ~25 cuadros por segundo con mediana de 26 ms; el camión de Balance a ~27; la Ruta a Guatapé a ~38; la carrera de la ciclorruta y Run 3D a ~60. Sin errores de consola en ninguno.
+
+**Medición de la 3.2** (`node tests/auditoria-modos.js --cpu=4 --seg=4`, otra corrida): la Bodega suma 83 puntos en 4 s (antes, 0) y Run 3D 40 (antes, 0); el freerun, la carrera de la ciclorruta y Run 3D van a 60 cuadros por segundo; el camión a 40, Guatapé a 36 y el modo libre entre 27 y 31. La bici, que se mide primero y en frío (dibujando los trozos de la salida), da entre 17 y 29 cuadros por segundo según la corrida: por eso sigue en el § 6 dibujar los trozos en un *worker*. La prueba de rendimiento de la batería no cambió: mediana de 33,3 ms y p95 de 49,9 ms. Monitoreo y el Turno en equipo esperan tus órdenes: sin ellas no hay acción, como debe ser. Cero errores de consola.
 
 ## 2. Qué hacen los mejores y qué le sirve a EnCicla
 La regla para cada referencia: **qué hace mejor que nadie → si cabe en un juego familiar de bicis públicas del Valle de Aburrá, cómo → si no cabe, por qué.**
@@ -127,18 +150,18 @@ La regla para cada referencia: **qué hace mejor que nadie → si cabe en un jue
 ### 4.1 Arreglar y pulir lo que ya existe (primero)
 | Idea | Por qué | Estado |
 |---|---|---|
-| Plantilla de prueba por modo: arranca, se mueve en menos de 1 s, se termina, sin errores y a más de 25 cuadros por segundo con CPU 4× | La auditoría mostró modos que «se sienten a medias» sin estar rotos | 🔜 S: extender `tests/auditoria-modos.js` con «se movió» y «terminó» por modo |
-| Run 3D: que arranque en movimiento y sume puntos visibles desde el primer segundo | 0 puntos en 4 s | 🔜 S |
-| Bodega y Turno en equipo: un arranque que no espere | 0 acción en 4 s | 🔜 S |
+| Plantilla de prueba por modo: arranca, se mueve en menos de 1 s, se termina, sin errores y a más de 25 cuadros por segundo con CPU 4× | La auditoría mostró modos que «se sienten a medias» sin estar rotos | ✅ 3.2: `tests/auditoria-modos.js` cuenta los puntos del minijuego y marca la acción |
+| Run 3D: que arranque en movimiento y sume puntos visibles desde el primer segundo | 0 puntos en 4 s | ✅ 3.2 |
+| Bodega y Turno en equipo: un arranque que no espere | 0 acción en 4 s | ✅ 3.2 (Bodega); el Turno en equipo espera a tus amigos |
 | Dibujar los trozos en un *worker* | Los picos de 120 ms que quedan | 🗓️ M |
-| Trucos con gesto (arriba, abajo, círculo) | Skate Space: los jugadores piden trucos manuales | 🔜 M |
+| Trucos con gesto (arriba, abajo, círculo) | Skate Space: los jugadores piden trucos manuales | ✅ 3.2 (freerun y ciclorruta) |
 
 ### 4.2 Diversión (arcade, acción, contra el reloj)
 | Idea | Referencia | Lugar en EnCicla | Estado |
 |---|---|---|---|
 | **Copa del Valle:** circuitos cenitales cortos en calles reales, con rivales y trampas del valle | Super Arcade Racing | En el mundo abierto, con su bandera en el mapa | 🔜 M |
 | **Domicilio contrarreloj** | #DRIVE, PAKO (sin policía) | Desde los restaurantes del mapa | 🔜 M |
-| **Radares de ciclorruta y saltos con récord** | Forza Horizon | Marcados en el valle | 🔜 S |
+| **Radares de ciclorruta y saltos con récord** | Forza Horizon | Marcados en el valle | ✅ 3.2 |
 | **Carrera sin fin con giros, tramos estrechos y zonas de trucos** | Subway Surfers, Alto | Solo en ciclovías | ✅ |
 | **Zonas de trucos y parkour** | Skate Space, Vector | 7 plazas reales | ✅ |
 
@@ -156,16 +179,16 @@ La regla para cada referencia: **qué hace mejor que nadie → si cabe en un jue
 |---|---|---|
 | **Parapente desde San Félix** (Voxel Space de Motor City) | El norte del valle | 🗓️ M |
 | **Bajada lateral por Las Palmas al atardecer** | Panorámica sobre la vía real | 🔜 M |
-| **Mirador:** ver la ciudad viva sin jugar | Cerro Nutibara, Pan de Azúcar | 🔜 S |
+| **Mirador:** ver la ciudad viva sin jugar | Cerro Nutibara, El Volador, Tres Cruces, Quitasol, Alto de San Miguel | ✅ 3.2 |
 | Primera persona en el mundo 3D único | Todo el valle | ✅ |
 
 ### 4.5 Rol y «MMO suave» (subtramas que dan historia propia)
 | Idea | Cómo | Estado |
 |---|---|---|
-| **Habilidades que suben al usarlas:** Pedaleo, Resistencia, Equilibrio, Conocer el valle | GTA San Andreas; se guardan con `Save.registrar` | 🔜 M |
+| **Habilidades que suben al usarlas:** Pedaleo, Resistencia, Equilibrio, Conocer el valle | GTA San Andreas; se guardan con `Save.registrar` | ✅ 3.2 |
 | **Vecinos con encargos encadenados** (los 15 de la trama y los de El Metro): 3 a 5 encargos cada uno, con su final | Contenido en `contenido/guion/*.json` | 🔜 M |
 | **Reputación por barrio** (te saludan, te avisan de atajos) | Sobre lo que ya hay de saludos y charlas | 🗓️ M |
-| **Tu historia en el valle:** un diario automático de lo que hiciste | The Sims, Sky | 🔜 S |
+| **Tu historia en el valle:** un diario automático de lo que hiciste | The Sims, Sky | ✅ 3.2 |
 | **Fantasmas de tus amigos** por código QR, sin servidor | Sky | 🗓️ M |
 
 ### 4.6 Gestión, estrategia y rompecabezas
@@ -185,20 +208,16 @@ La regla para cada referencia: **qué hace mejor que nadie → si cabe en un jue
 - Desbloqueos lentos y la IA que siempre alcanza: el autor pidió todo liberado y el juego justo.
 
 ## 5. Para las otras dos IA (coordinación)
+- **Lo que reportaron y ya está unido (22‑nov, 20:30 UTC):** OpenAI GPT‑6 (`docs/EVOLUCION-ENCICLA-OPENAI-GPT6.md`: la carrera sin fin solo desde una ciclorruta, el km/h del HUD y su CI) y la otra sesión de Claude (EnCicla 3.0.1 y 3.1.0 en `main`, Motor City 4.7 y 4.8 en `motor-city/`). De Gemini no hay rama en este repositorio todavía; en el motor, Claude le respondió en `motor-city/coord/buzon/`.
 - **Mis zonas:** `src/js/99a-*.js` a `99m-*.js`, `tests/auditoria-modos.js` y este documento. Libres: `99n` a `99y` y sus `docs/*-<marca>.md`.
 - **Para no repetir:** de § 4, yo seguiría con lo de § 4.1 (pulir modos), los radares y saltos, el diario y las habilidades. Sugiero que una IA tome **Copa del Valle + Domicilio contrarreloj** y la otra **Planeador + Monitoreo como 911 Operator**. Avisen en `coord/buzon/` antes de empezar.
 - **Cómo probar:** `node tools/build.js && node tests/run.js` (todo en verde) y `node tests/auditoria-modos.js --cpu=4` para medir.
 
-## 6. Lo que falta de esta ronda (en orden)
-1. Pulir los modos que se sienten a medias (§ 4.1) con la plantilla de la auditoría.
-2. En el mundo 3D:
-   - el viaducto y las estaciones elevadas, los trenes, los cables y las fachadas con ventanas (los datos están en `76-altura.js` y `74-sistema.js`);
-   - sombras horneadas;
-   - que Run 3D y la maqueta usen sus cámaras.
-3. Trucos con gesto y más zonas (escaleras de la Comuna 13 con *freerun* lateral).
-4. Dibujar los trozos en un *worker* (los picos que quedan).
-5. Lo del § 4 marcado 🔜, según lo que tomen las otras IA.
-6. Probar en un celular real: el acelerador fijo, la tercera persona y la carrera con giros.
+## 6. Lo que falta (en orden; lo de la 3.0 que quedó hecho está en § 0b)
+1. Que Run 3D y la maqueta usen las cámaras del mundo 3D único (hoy tienen las suyas).
+2. Dibujar los trozos en un *worker* con `OffscreenCanvas` (los picos que quedan al llegar a un trozo nuevo).
+3. Lo del § 4 que sigue en 🔜: Copa del Valle y Domicilio contrarreloj, Monitoreo como 911 Operator, la ley de los 1,5 m en el valle, la bajada lateral por Las Palmas, los vecinos con encargos, alimentadores y Metroplús como Traffix, Conecta la ciclorruta, el rebalanceo como Package Inc y el turno roguelite.
+4. Probar en un celular real: el acelerador fijo, la tercera persona, el mirador, el freerun con gestos y la carrera con giros (aquí solo hay Chromium con la CPU 4× lenta).
 
 ## Fuentes
 - Super Arcade Racing: [Pocket Gamer](https://www.pocketgamer.com/articles/081706/five-reasons-to-play-super-arcade-racing-from-outofthebit-studio/), [The Xbox Hub](https://www.thexboxhub.com/super-arcade-racing-review/), [Bonus Stage](https://www.bonusstage.co.uk/archives/178310).
@@ -207,4 +226,5 @@ La regla para cada referencia: **qué hace mejor que nadie → si cabe en un jue
 - Tiny Rails (Tiny Titan Studios): [Pocket Gamer](https://www.pocketgamer.com/tiny-rails/tiny-rails-is-a-no-fuss-pixellated-train-sim-out-now-on-ios-and-android).
 - Skate Space: [App Store](https://apps.apple.com/us/app/id1466582074), [gamebrain](https://gamebrain.co/game/skate-space).
 - No encontré `cityrt.com` ni un «Train Chu» de Tiny Titan Studios: si el autor confirma qué son, se agregan.
+- Escaleras eléctricas de la Comuna 13 (diciembre de 2011, seis tramos, 384 m): [Alcaldía de Medellín](https://www.medellin.gov.co/es/sala-de-prensa/noticias/las-escaleras-electricas-de-la-comuna-13-de-medellin-recibieron-mantenimiento-integral/), [ABC News / AP](https://abcnews.go.com/blogs/technology/2011/12/infamous-colombian-city-gets-giant-outdoor-escalator); la equivalencia de unos 28 pisos es de la prensa ([Voz de América](https://www.vozdeamerica.com/a/escalera-mecanica-para-pobres-medellin-136263718/107531.html)).
 - Las demás referencias (GTA 1, 2 y San Andreas, Forza Horizon, Alto's Odyssey, Sky, Monument Valley, Townscaper, WorldBox, Vector, Soul Knight, 911 Operator, Idle Supermarket Tycoon, Package Inc, Traffix, Infinity Loop, Grand Mountain Adventure 2, Hunter Assassin y los simuladores de vuelo) se analizaron por su diseño público. De sus juegos solo se toman ideas, nunca su arte.

@@ -44,11 +44,14 @@ const CPU = +(arg('cpu') || 4), SEG = +(arg('seg') || 5), FILE = path.resolve(__
       const espera = ms => new Promise(s => setTimeout(s, ms)), e0 = (JE.errors || []).length;
       try { if (JE.game.mode) JE.game.stop(); JE.game.start(id, 1, { seed: 9, nov: NOVEDADES[0], players: [{ name: 'A' }, { name: 'B' }] }); } catch (e) { return { id, error: 'no arranca: ' + e.message }; }
       await espera(500); const M = JE.game.mode; if (!M) return { id, error: 'sin modo' };
-      const a = M.sub || M, P0 = M.ride ? { x: M.ride.p.x, y: M.ride.p.y } : null, s0 = M.score; let n = 0; const t0 = performance.now(), cuadros = []; let last = t0;
-      while (performance.now() - t0 < SEG * 1000) { await new Promise(r => requestAnimationFrame(r)); const now = performance.now(); cuadros.push(now - last); last = now; n++; try { if (M.bot && n % 6 === 0) M.bot(); else if (a.bot && n % 6 === 0) a.bot(0); } catch (e) { } if (!JE.game.mode) break; }
-      const real = (performance.now() - t0) / 1000; cuadros.sort((x, y) => x - y);
-      const mov = P0 && M.ride ? Math.round(Math.hypot(M.ride.p.x - P0.x, M.ride.p.y - P0.y) * M_PER_PX) : null;
-      return { id, nombre: (ROLE[id] || {}).name, vista: (a.view || {}).kind, fps: Math.round(n / real), mediana: +cuadros[cuadros.length >> 1].toFixed(1), p95: +cuadros[Math.floor(cuadros.length * .95)].toFixed(1), movio: mov, puntos: Math.round((M.score || 0) - (s0 || 0)), errores: (JE.errors || []).length - e0, termino: !!M.done || !JE.game.mode };
+      /* 3.2 · la plantilla por modo: el puntaje cuenta el del minijuego en curso (los turnos de varios minijuegos lo suman al
+         terminar cada uno) y el avance de las carreras sin fin (distM); «accion» dice si en SEG segundos pasó algo */
+      const sub = () => M.sub || M, pts = () => (M.score || 0) + (M.sub && !(M instanceof ModeSub) ? M.sub.score || 0 : 0), a = sub();
+      const P0 = M.ride ? { x: M.ride.p.x, y: M.ride.p.y } : null, s0 = pts(), d0 = a.distM != null ? a.distM : a.metros != null ? a.metros : null; let n = 0; const t0 = performance.now(), cuadros = []; let last = t0;
+      while (performance.now() - t0 < SEG * 1000) { await new Promise(r => requestAnimationFrame(r)); const now = performance.now(); cuadros.push(now - last); last = now; n++; try { const b = sub(); if (n % 6 === 0) { if (b !== M && b.bot) b.bot(0); else if (M.bot) M.bot(0); } } catch (e) { } if (!JE.game.mode) break; }
+      const real = (performance.now() - t0) / 1000; cuadros.sort((x, y) => x - y); const b = sub();
+      const mov = P0 && M.ride ? Math.round(Math.hypot(M.ride.p.x - P0.x, M.ride.p.y - P0.y) * M_PER_PX) : d0 != null ? Math.round((b.distM != null ? b.distM : b.metros) - d0) : null, puntos = Math.round(pts() - s0);
+      return { id, nombre: (ROLE[id] || {}).name, vista: (b.view || {}).kind, fps: Math.round(n / real), mediana: +cuadros[cuadros.length >> 1].toFixed(1), p95: +cuadros[Math.floor(cuadros.length * .95)].toFixed(1), movio: mov, puntos, accion: puntos !== 0 || mov > 3, errores: (JE.errors || []).length - e0, termino: !!M.done || !JE.game.mode };
     }, [id, SEG]);
     out.modos.push(r); console.log('MODO', JSON.stringify(r));
   }

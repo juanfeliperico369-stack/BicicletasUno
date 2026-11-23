@@ -2,6 +2,20 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 22-nov-2026 · v3.2.0 · «Retoma, continúa y termina»: modos pulidos, transporte en 3D, freerun de la Comuna 13 y el valle que recuerda (Claude)
+- **Unión:** la 3.1.0 de la otra sesión de Claude (⚙️ Flexibilidad, Motor City 4.7 y 4.8) y la auditoría de GPT‑6. Arreglado lo que traía la unión: en Controles, tocar una opción **no guardaba** (un comentario a mitad de línea apagaba `Save.save()` en `81-controles.js`).
+- **Modos a medias** (`99e-pulido.js`):
+  - Run 3D del menú: las hojas no sumaban (★ 0); ahora suman y hay una fila de hojas de salida; las teclas funcionan (llegaban como evento);
+  - turnos de varias fases: los puntos del minijuego de una fase se perdían (Bodega: ★ 0 con 83 puntos);
+  - Bodega en vertical: estante bajo el título, la caja que revisas en grande, pasos 1‑2‑3‑4 y piso con demarcación;
+  - el aviso de la cámara ya no tapa los minijuegos (`88-camara.js`) y el barrio del corredor de Run 3D se busca con px del mundo.
+- **Transporte en el mundo 3D** (`99f-mundo3d-transporte.js`): viaducto con columnas en T, estaciones elevadas con su cubierta y su edificio de acceso, puentes, trenes, tranvía, Metroplús y metrocables (torres, estaciones y cabinas). Carros y jugador encima de los puentes. **Ventanas** en las fachadas que de noche se prenden (sombreador). Sombras: las que el arte 2D hornea en el piso.
+- **🧗 Freerun en la Comuna 13** (`99g-freerun.js`): carrera lateral en pixel por escaleras eléctricas, techos y callejones hasta el mirador; en el menú (3 niveles) y en el valle. **Trucos con gesto** (← → ↑ ↓ y círculo) en el freerun y en la carrera de la ciclorruta.
+- **El valle que recuerda** (`99h-valle-vivo.js`): 📸 14 radares de ciclorruta con récord, 🛹 saltos con récord, 💪 habilidades que suben al usarlas (Pedaleo, Resistencia, Equilibrio, Conocer el valle), 📔 diario automático (Más → «Mi diario y habilidades») y 🔭 5 miradores con la cámara 3D girando sobre la ciudad viva. Claves nuevas del guardado, registradas: `habil` (objeto) y `diario` (lista).
+- **Pruebas:** sección V5 de `tests/revolucion-encicla.js` (9 pruebas nuevas) y la auditoría de modos cuenta los puntos de los minijuegos.
+- **Probado:** `node tools/build.js` y `node tests/run.js`: todas las pruebas pasaron; capturas en 412 × 860 del 3D (día y noche), el freerun, la Bodega, el mirador y el diario.
+- **Documento:** `docs/INVESTIGACION-Y-PLAN-3.0-Claude.md`, § 0b. **Falta:** § 6 del documento (cámaras del 3D para Run 3D y la maqueta, trozos en un *worker*, lo 🔜 que queda y probar en un celular real).
+
 ## 22-nov-2026 · v3.1.0 · Unión, fluidez y ⚙️ Flexibilidad (Claude)
 - **Unión:** la 3.0.0 de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`) y la auditoría de GPT‑6 (`openai-gpt6/encicla-auditoria-20261122`), sin conflictos.
 - **Pendiente 3 de GPT‑6:** el bucle de 60-ui avanza en subpasos de 50 ms (antes, un solo paso de hasta 200 ms).

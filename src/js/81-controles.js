@@ -74,7 +74,7 @@ UI.controles = function (inGame) {
     $$('[data-c]').forEach(b => b.onclick = async () => {
       const key = b.dataset.c, v = b.dataset.v;
       if (key === 'ctrl' && v === 'inclinar') { const ok = await Tilt.ask(); if (!ok) { Snd.sfx('bad'); return this.toast('Este celular no deja usar el sensor de movimiento'); } Tilt.y0 = null; }
-      S[key] = key === 'csize' || key === 'giro' || key === 'velo' ? +v : key === 'vib' || key === 'crucero' ? v === '1' : v;   // 3.1 · ⚙️ Flexibilidad Save.save(); Snd.sfx('tap'); this.controles(inGame);
+      S[key] = key === 'csize' || key === 'giro' || key === 'velo' ? +v : key === 'vib' || key === 'crucero' ? v === '1' : v; /* 3.1 · ⚙️ Flexibilidad */ Save.save(); Snd.sfx('tap'); this.controles(inGame);
     });
     const cal = $('#cCal'); if (cal) cal.onclick = () => { Tilt.calib(); Snd.sfx('ok'); this.toast('Listo: esta es tu posición neutra'); };
     if (inGame) $('#mClose').onclick = () => { this.closeModal(); Game.resume(); };
