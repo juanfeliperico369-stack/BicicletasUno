@@ -4,9 +4,9 @@
   "marca": "OpenAI GPT-6",
   "rama": "openai-gpt6/encicla-auditoria-20261122",
   "base_commit": "2f105dfd18",
-  "fase_actual": "Auditoría independiente, corrección geométrica y velocidad, investigación y pruebas Chromium",
+  "fase_actual": "Ronda Claude 3.5: entregas ChatGPT C-130..133 y Codex K-1..3",
   "estado": "entregado_pendiente_integracion",
-  "ultima_actualizacion_utc": "2026-11-22T14:48:30Z",
+  "ultima_actualizacion_utc": "2026-11-23",
   "zonas_reclamadas": [
     "src/js/99r-ciclo-geometria-gpt6.js",
     "tests/prueba-gpt6-ciclorrutas.mjs",
@@ -25,5 +25,30 @@
     "android_ios_fisicos": "No probados"
   },
   "pendiente_para_companeros": "Unificar nuestro 99r con nuevas reglas de 99p de Gemini, verificar H-04 en 60-ui.js, guardar paridad de actividades del mundo, revalidar hash final. Ver docs/EVOLUCION-ENCICLA-OPENAI-GPT6.md y mailbox.",
-  "observacion": "No se modificaron motorcity, MetroZero ni RunRunZero. Rama compartida base ccr-6f184fb6-vtpkye."
+  "observacion": "No se modificaron motorcity, MetroZero ni RunRunZero. Rama compartida base ccr-6f184fb6-vtpkye.",
+  "rama_3_6": "openai-gpt6/encicla-3.6-chatgpt-codex",
+  "estado_3_6": "codigo_y_arte_en_rama_con_ci",
+  "archivos_nuevos_3_6": [
+    "src/js/99w-chunks-progresivos.js",
+    "src/js/99x-capas-laterales.js",
+    "tools/capas.js",
+    "tools/generar-arte-lateral-gpt6.py",
+    "arte/entregas/2026-11-23-gpt6-c130-c133/",
+    "tests/prueba-gpt6-chunks.mjs",
+    ".github/workflows/publicar.yml",
+    ".github/workflows/crear-arte-lateral-gpt6.yml",
+    "docs/ENTREGA-ENCICLA-3.6-GPT6.md",
+    "PROMPTS-3.5-Claude.md"
+  ],
+  "archivos_compartidos_3_6": [
+    "src/js/75-graficos.js",
+    "src/js/99g-freerun.js",
+    "src/js/99p-ciclovia-skate-runner.js",
+    "tools/build.js",
+    "tests/run.js",
+    "tests/revolucion-encicla.js",
+    "CLAUDE.md",
+    "docs/BITACORA.md"
+  ],
+  "nota_3_6": "14 PNG validados como prototipos; meta K-1 de CPU×4 pendiente; main/gh-pages no tocados."
 }
