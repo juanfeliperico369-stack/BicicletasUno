@@ -36,7 +36,8 @@ def guardar(nombre, im, tile=False):
         # El primer y último píxel de cada fila casan exactamente.
         for y in range(im.height):
             im.putpixel((im.width - 1, y), im.getpixel((0, y)))
-    im = im.resize((im.width * ESC, im.height * ESC), Image.Resampling.NEAREST)
+    factor = 4 if nombre == 'c133_corredor_lado.png' else ESC
+    im = im.resize((im.width * factor, im.height * factor), Image.Resampling.NEAREST)
     ruta = OUT / nombre
     im.save(ruta, optimize=True)
     sha = hashlib.sha256(ruta.read_bytes()).hexdigest()
