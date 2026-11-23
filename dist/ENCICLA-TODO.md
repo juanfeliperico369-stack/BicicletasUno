@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.3.0 · compilado el 2026-11-23.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.4.0 · compilado el 2026-11-23.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.3.0)
+## 2.3 Estado actual (v3.4.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-23 | Claude Code | documento creado (v3.3.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-23 | Claude Code | documento creado (v3.4.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2266,6 +2266,16 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+### 23-nov-2026 · v3.4.0 · Unión de las dos 3.3.0 (Claude)
+- **Había dos 3.3.0 a la vez:**
+  - la de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`): perdón en los saltos, primer minuto fluido, 🧭 Hoy en el valle, 💬 encargos de los vecinos y 🧪 modo prueba;
+  - la de Gemini y Antigravity (`antigravity/evolucion-encicla-v22`): 7 modos de evolución, selector de cámaras WebGL y Pixel, arcos RPG y documento maestro.
+- Las dos van juntas en `main` como **3.4.0** (APK con código 30400).
+- El único choque fue el CSS: cada una añadía sus bloques y quedaron los dos.
+- **Pruebas:** `node tests/run.js` completo en verde.
+- **Motor:** `motor-city/` en Motor City 5.1.0.
+
+
 ### 23-nov-2026 · v3.3.0 · «¿Cómo podríamos mejorar el juego?»: lo propuesto, hecho (Claude)
 - **Unión:** Motor City 4.9.0 «Realismo» de `main` (solo en `motor-city/`; el juego no usa sus librerías).
 - **El perdón en los saltos** (`99i-perdon.js`): el toque de «saltar» justo antes de caer se guarda y salta al tocar el piso (Run 3D, ciclorruta y freerun), como en Celeste.
@@ -2277,6 +2287,15 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - Claves nuevas del guardado, registradas: `encargos` (objeto) y `prueba` (objeto). Versión 3.3.0 (APK 30300).
 - **Probado:** `node tools/build.js` y `node tests/run.js`: las 147 pruebas pasaron (sección V6 nueva).
 - **Falta:** probar con personas reales (modo prueba), los encargos de los otros 9 vecinos, publicar desde un flujo con las pruebas en verde, las cámaras del 3D para Run 3D y la maqueta, y los trozos por partes o en un *worker*.
+### 22-nov-2026 · v3.3.0 · Unión multi-IA (v3.2.0 + GPT-6 + MC 4.9.0) + 7 modos evolución, cámaras unificadas con Pixel WebGL y arcos de mentores (Gemini · Antigravity)
+- **Unión completa sin conflictos:** `origin/ccr-6f184fb6-vtpkye` (`v3.2.0`: `99a–99h`, ⚙️ Flexibilidad y `99r` de OpenAI GPT-6) + `origin/main` (Motor City `4.9.0 «Realismo»` en `motor-city/`) + zona aditiva `99n–99q` de Gemini (Antigravity).
+- **Arreglos quirúrgicos pendientes resueltos:** `Snd.vehSfx` reparado y `Art.vehSideRider` para los 7 vehículos (`92-vehiculos.js`); salto habilitado en Panorámica 2D para los 7 vehículos no-camión (`75-graficos.js`); caché Z ~15× más rápida en `CarreraCiclovia.render` (`92-ciclovia.js`); **unificación 100 % de los 9 mentores de `contenido/guion/trama_valle.json` con `CAST`** (pendiente § 6.2 de `REVOLUCION-2.1.md`); WCAG 2.2 AA (`lang="es-CO"`, ARIA, `≥44px`, `100dvh`, `prefers-reduced-motion`, paisaje `860×412`); redondeo coherente en la espera WebRTC (`tests/run.js:469`).
+- **Controles, Infinity Games y Turno Roguelite (`99n-controles-liberado.js`):** puente `JE.acelFijo` → `#bCrucero` (`99a`, sin duplicar botón) con atajos `E`/`Shift` e imán vial suave, giro ágil del camión, `×2 Turbo`, cortesía 0,85 s en Anfitrión/Apoyo, los 16 capítulos de *Un día del valle* probables al toque (conservando `.lock`), **«↻ Reintentar ya» (<1 s)**, los **5 modos estilo Infinity Games** (`traffix`, `despacho`, `maquinista`, `circuito`, `moravia`) y **🎲 Turno Roguelite** (`roguelite`, estilo *Soul Knight*).
+- **Cámaras unificadas + Pixel World sobre WebGL + Maqueta 2:1 (`99o-mundo3d-camaras.js`):** director `JE.vistas` (`#camPop`, icono SVG blanco, teclas `1–6`, `7`/`K`, `V`) armonizado con el WebGL real `JE.mundo3d` (`99d`+`99f`) + respaldo Canvas 2D + **manubrio/canasta EnCicla o cabina en 1.ª persona** sobre `#gl3d` + sol/luna atmosférica + **Pixel World combinable sobre WebGL** (`body.pixel3d`) + **Maqueta 2:1 en vivo** sobre el mapa único.
+- **6 modos bandera solicitados (`99p-ciclovia-skate-runner.js`):** **🏆 Copa del Valle** (*Super Arcade Racing*, 3 circuitos callejeros reales, rivales IA, rebufo y banderas en el valle), **🍔 Domicilio Sostenible** (*Crazy Taxi / Parcel Corps*), **📡 Monitoreo 911** (*911 Operator / CityRT*), **🏙️ El Planeador** (*Cities: Skylines / Townscaper*), **🚇 Metro 2D Lateral** (*Tiny Rails* por la Línea A) y **🌅 Bajada por Las Palmas** (*Alto's Odyssey* + Ley 1811), + 5 skateparks físicos abiertos + respeto de `JE.cicloGeoGPT6` (`99r`).
+- **Mundo abierto RPG armonizado (`99q-mundo-vivo-rpg.js`):** **Hub «🗺️ Valle Vivo»** con **24 actividades** jugables desde Modo Libre con regreso exacto, **reputación por 6 comunas**, **6 arcos encadenados de 3 encargos con mentores `CAST`**, subtramas cercanas, clave única `rpg` registrada en `Save.registrar` y escritura directa en `JE.diario` (`99h`).
+- **Probado:** `node tools/build.js` (`5.483 KB`), `node tests/prueba-gpt6-ciclorrutas.mjs` (`OK`), `node tools/auditoria-mapa.js` (`OK`), `node tests/run.js` (**TODAS LAS PRUEBAS PASARON**, 30/30 claves del guardado, V–V5 y WebRTC en verde) y `node tests/auditoria-antigravity.js` (**100 % EN VERDE**, 12 capturas revisadas en `412×860`, `860×412` y `1280×800`, 0 errores).
+- **Documento:** **`docs/EVOLUCION-Y-AUDITORIA-JUEGA-ENCICLA-GEMINI-ANTIGRAVITY.md`**. **Falta:** § 6 del documento (trozos en *worker* `OffscreenCanvas`, sombreador ligero inspirado en MC 4.9, Parapente San Félix, fantasmas QR y prueba táctil en teléfono físico Android antes de desplegar `gh-pages`).
 
 ### 22-nov-2026 · v3.2.0 · «Retoma, continúa y termina»: modos pulidos, transporte en 3D, freerun de la Comuna 13 y el valle que recuerda (Claude)
 - **Unión:** la 3.1.0 de la otra sesión de Claude (⚙️ Flexibilidad, Motor City 4.7 y 4.8) y la auditoría de GPT‑6. Arreglado lo que traía la unión: en Controles, tocar una opción **no guardaba** (un comentario a mitad de línea apagaba `Save.save()` en `81-controles.js`).

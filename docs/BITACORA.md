@@ -2,6 +2,16 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 23-nov-2026 · v3.4.0 · Unión de las dos 3.3.0 (Claude)
+- **Había dos 3.3.0 a la vez:**
+  - la de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`): perdón en los saltos, primer minuto fluido, 🧭 Hoy en el valle, 💬 encargos de los vecinos y 🧪 modo prueba;
+  - la de Gemini y Antigravity (`antigravity/evolucion-encicla-v22`): 7 modos de evolución, selector de cámaras WebGL y Pixel, arcos RPG y documento maestro.
+- Las dos van juntas en `main` como **3.4.0** (APK con código 30400).
+- El único choque fue el CSS: cada una añadía sus bloques y quedaron los dos.
+- **Pruebas:** `node tests/run.js` completo en verde.
+- **Motor:** `motor-city/` en Motor City 5.1.0.
+
+
 ## 23-nov-2026 · v3.3.0 · «¿Cómo podríamos mejorar el juego?»: lo propuesto, hecho (Claude)
 - **Unión:** Motor City 4.9.0 «Realismo» de `main` (solo en `motor-city/`; el juego no usa sus librerías).
 - **El perdón en los saltos** (`99i-perdon.js`): el toque de «saltar» justo antes de caer se guarda y salta al tocar el piso (Run 3D, ciclorruta y freerun), como en Celeste.
