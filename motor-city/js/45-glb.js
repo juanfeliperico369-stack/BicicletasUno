@@ -129,16 +129,19 @@ Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
     fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
   const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, D = op.dano, ky = op.ky || k;
   /* 4.0.x: de noche cada modelo tiene un mínimo de luz propia (el sombreador solo usa la emisión de noche) y los faros se encienden */
+  const rot = !!(op.cab || op.alab), cp = Math.cos(op.cab || 0), sp = Math.sin(op.cab || 0), cr = Math.cos(op.alab || 0), sr = Math.sin(op.alab || 0);   /* cabeceo (+ trompa arriba) y alabeo (+ lado izquierdo arriba) */
   const e0 = op.e != null ? op.e : Modelos.brillo, osc = Math.min(.8, (op.oscuro || 0) + (D ? Math.max(D.f || 0, D.b || 0, D.l || 0, D.r || 0) * .25 : 0));
   /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
   const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
     const ti = indices ? indices[t] : t, o = ti * 21, fl = T[o + 15], cuerpo = fl === 1, sh = cuerpo && tin && Mo.tono ? Mo.tono[ti] : 1, r0 = cuerpo && tin ? tin[0] * sh : T[o + 12], g0 = cuerpo && tin ? tin[1] * sh : T[o + 13], b0 = cuerpo && tin ? tin[2] * sh : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
-    const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
+    let nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, ny = T[o + 10]; if (rot) { const a1 = nv * cr - ny * sr, b1 = nv * sr + ny * cr; nv = a1; ny = nu * sp + b1 * cp; nu = nu * cp - b1 * sp; }
+    const nx = nu * ca - nv * sa, nz = nu * sa + nv * ca;
     for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
       if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;
         if (pf > 0 && D.f) { u -= pf * D.f * .55; h -= pf * D.f * .18; } if (pb > 0 && D.b) { u += pb * D.b * .55; h -= pb * D.b * .14; }
         if (pl > 0 && D.l) v -= pl * D.l * .6; if (pr > 0 && D.r) v += pr * D.r * .6; }
+      if (rot) { const v1 = v * cr - h * sr, h1 = v * sr + h * cr; v = v1; h = u * sp + h1 * cp; u = u * cp - h1 * sp; }   /* 5.0: la carrocería sobre sus resortes (alabeo y cabeceo de MC.Dinamica) */
       d.push(x + u * ca - v * sa, y + h, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
   }
 };

@@ -8,13 +8,19 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url), { chromium } = require('playwright');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const url = pathToFileURL(path.join(root, 'dist/juegos/getaway.html')).href;
+const url = process.env.MC_PRUEBAS_URL ? new URL('dist/juegos/getaway.html', process.env.MC_PRUEBAS_URL).href
+  : pathToFileURL(path.join(root, 'dist/juegos/getaway.html')).href;
+function comprobarCache(memoria) {
+  assert(memoria.maxSectores >= 16 && memoria.maxSectores <= 512);
+  assert(memoria.residentes <= memoria.maxSectores);
+  assert(memoria.bytesResidentes <= 4_000_000, 'Presupuesto por capa raster de los tres mundos');
+}
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 try {
   const page = await browser.newPage({ viewport: { width: 412, height: 860 }, hasTouch: true });
   const errors = [], red = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('request', r => { if (/^https?:/.test(r.url())) red.push(r.url()); });
+  page.on('request', r => { if (/^https?:/.test(r.url()) && !(r.isNavigationRequest() && r.url() === url)) red.push(r.url()); });
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(() => window.TURNO_LISTO && !!window.TURNO?.planeta, { timeout: 30000 });
   const paquete = await page.evaluate(() => ['guatape', 'medellin', 'nueva_york'].every(id =>
@@ -33,7 +39,7 @@ try {
   }));
   assert(vivo.id === 'guatape' && Number.isFinite(vivo.x) && Number.isFinite(vivo.y) &&
     vivo.paquete && vivo.n > 0 && vivo.raster && !vivo.completa);
-  assert(vivo.memoriaRaster.suelo.residentes <= 16);
+  comprobarCache(vivo.memoriaRaster.suelo);
   console.log('✓ Guatapé: partida real desde portada en HTML offline, capas diferidas', vivo.n);
   for (const id of ['medellin', 'nueva_york']) {
     const dato = await page.evaluate(async id => {
@@ -44,7 +50,8 @@ try {
     }, id);
     assert(dato.w > 0 && dato.h > 0 && dato.raster && dato.sinCapaEntera && dato.paquete &&
       Number.isFinite(dato.suelo) && Number.isFinite(dato.nivel), 'Mundo inválido: ' + id);
-    assert(dato.memoria.suelo.residentes <= 16 && dato.memoria.nivel.residentes <= 16);
+    comprobarCache(dato.memoria.suelo);
+    comprobarCache(dato.memoria.nivel);
     console.log('✓', id, 'cargado desde capas comprimidas offline');
   }
   assert.deepEqual(red, [], 'No debe haber solicitudes a Internet');

@@ -34,7 +34,7 @@ const Snd = {
   doppler(vr) { if (!this.sirena || !this.ac) return; const k = MC.PersecucionAudio.plan({ velocidadRadial: vr }).doppler; this.sirena.o.frequency.setTargetAtTime(760 * k, this.ac.currentTime, .15); },
   /* 4.0.x · motor por capas: un diente de sierra que sube con las rpm (cambios simulados) y un zumbido grave */
   motor(v, enCarro, acel) { const ac = this.ac; if (!ac || !this.on) return; if (!this.mot) { const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), fl = ac.createBiquadFilter(); o.type = 'sawtooth'; o2.type = 'triangle'; fl.type = 'lowpass'; fl.frequency.value = 700; g.gain.value = 0; o.connect(fl); o2.connect(fl); fl.connect(g); g.connect(this.out); o.start(); o2.start(); this.mot = { o, o2, g, fl }; }
-    const P = MC.PersecucionAudio.motor({ velocidad: v, aceleracion: acel, activo: enCarro }), t = ac.currentTime; this.mot.o.frequency.setTargetAtTime(P.agudo, t, .08); this.mot.o2.frequency.setTargetAtTime(P.grave, t, .08); this.mot.fl.frequency.setTargetAtTime(P.corte, t, .1); this.mot.g.gain.setTargetAtTime(P.volumen, t, .15); },
+    const R = G.cuerpo && MC.Dinamica ? MC.Dinamica.sonido(G.cuerpo) : null, P = MC.PersecucionAudio.motor(Object.assign({ velocidad: v, aceleracion: acel, activo: enCarro }, R && MC.Dinamica.activa(G.cuerpo) ? R : {})), t = ac.currentTime;   /* 5.0: con el manejo real, las rpm de verdad y sus cilindros */ this.mot.o.frequency.setTargetAtTime(P.agudo, t, .08); this.mot.o2.frequency.setTargetAtTime(P.grave, t, .08); this.mot.fl.frequency.setTargetAtTime(P.corte, t, .1); this.mot.g.gain.setTargetAtTime(P.volumen, t, .15); },
   apagar() { this.on = false; this.sirenaVol(0); if (this.mot) this.mot.g.gain.value = 0; if (this.ac) this.ac.suspend(); MC.Musica.parar(); }, prender() { this.on = true; if (this.ac) this.ac.resume(); else this.ini(); }
 };
 
@@ -143,7 +143,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
 /* obstáculos para el jugador: tráfico, rivales y gente (a pie o despacio; a velocidad la gente no frena el carro: se la lleva) */
 function obstaculos() {
   const L = [], C = G.cuerpo, rapido = C.veh.clase !== 'pie' && Math.abs(C.v) > 4;
-  for (const v of G.trafico ? G.trafico.agentes : []) { const r = (v.ancho || 1.8) / 2 + .15, l = (v.largo || 4.3) / 3, c = Math.cos(v.a || 0), s = Math.sin(v.a || 0); for (const k of [-1, 0, 1]) L.push({ x: v.x + c * l * k, y: v.y + s * l * k, r, motivo: 'un vehículo' }); }
+  for (const v of G.trafico ? G.trafico.agentes : []) { const r = (v.ancho || 1.8) / 2 + .15, l = (v.largo || 4.3) / 3, c = Math.cos(v.a || 0), s = Math.sin(v.a || 0); for (const k of [-1, 0, 1]) L.push({ x: v.x + c * l * k, y: v.y + s * l * k, r, motivo: 'un vehículo', ag: v }); }
   if (G.busq) for (const o of G.busq.obstaculos()) L.push(o);
   if (!rapido) for (const p of G.E.peatones || []) L.push({ x: p.x, y: p.y, r: .28, motivo: 'una persona' });
   for (const f of EXTRAS.obstaculos) for (const o of f()) L.push(o);

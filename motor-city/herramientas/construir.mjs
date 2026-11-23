@@ -28,12 +28,31 @@ if (fs.existsSync(THREE_ARCH)) {
   const pares = src.slice(i + 7, src.lastIndexOf('}')).split(',').map(t => t.trim().split(/\s+as\s+/)).map(([a, b]) => JSON.stringify(b || a) + ':' + a);
   threeJS = `/* ---- js/vendor/three-0.170.0 (MIT) ---- */\nconst THREE = (function () {\n${src.slice(0, i)}\nreturn {${pares.join(',')}};\n})();\n`;
 }
+/* R1: recursos opcionales incrustados, disponibles también al abrir el HTML sin conexión. */
+const carpetaFachadas = path.join(RAIZ, 'arte/fachadas/medellin');
+let datosFachadas = {};
+const manifiestoFachadas = path.join(carpetaFachadas, 'manifiesto.json');
+if (fs.existsSync(manifiestoFachadas)) {
+  const mf = JSON.parse(fs.readFileSync(manifiestoFachadas, 'utf8'));
+  for (const f of mf.fachadas || []) {
+    /* las copias de juego (albedo 1024, emisión 512: herramientas/fachadas_juego.py) pesan 1,4 MB en vez de 6,7;
+       si faltan, los originales de 2048 */
+    const ligera = (n) => path.join(carpetaFachadas, 'juego', f.id + '_' + n + '.webp');
+    const dia = fs.existsSync(ligera('albedo_1024')) ? ligera('albedo_1024') : path.join(carpetaFachadas, path.basename(f.day));
+    const noche = fs.existsSync(ligera('emision_512')) ? ligera('emision_512') : path.join(carpetaFachadas, path.basename(f.emission));
+    if (!fs.existsSync(dia) || !fs.existsSync(noche)) continue;
+    datosFachadas[f.id] = { columnas: f.modulos_x, pisos: f.pisos_y,
+      dia: 'data:image/webp;base64,' + fs.readFileSync(dia).toString('base64'),
+      noche: 'data:image/webp;base64,' + fs.readFileSync(noche).toString('base64') };
+  }
+}
 const motor = `/* ${VER.nombre} ${VER.version} · ${VER.fecha} · https://github.com/${VER.fuente_de_verdad}
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
 'use strict';
-${threeJS}${cuerpo}
+${threeJS}const MC_FACHADAS_R1 = ${JSON.stringify(datosFachadas)};
+${cuerpo}
 MC.archivos = ${JSON.stringify(lista)};
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;

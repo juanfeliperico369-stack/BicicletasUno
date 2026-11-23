@@ -1,5 +1,41 @@
 # Bitácora de Motor City
 
+## 23-nov-2026 · 5.0.0 «Que se sienta» · el manejo real del carro y el plan para las tres IA
+- **El autor:**
+  - «¿Cómo podemos llegar hasta el nivel del motor de GTA San Andreas o Chinatown Wars?»;
+  - «¿Qué otros motores podríamos copiar?»;
+  - luego: «Sí. Agrega también a Gemini, que ya está disponible, dame los prompts para cada uno, mira lo nuevo de ChatGPT con Codex y retoma lo que quedó».
+- **`MC.Dinamica` (`js/37-dinamica.js`):** el carro con física de verdad.
+  - **Hoja de manejo por vehículo:** masa, batalla, reparto de peso, centro de masa, μ, rigidez de llantas, tracción, kW, N·m, rpm, marchas, frenos, dirección y suspensión. Sale de la ficha del taller.
+  - **Carga que cambia entre ejes** y llantas que se saturan («fórmula mágica»), con círculo de fricción.
+  - Subviraje de fábrica; el freno de mano suelta la cola.
+  - **Marchas automáticas,** corte de rpm y freno de motor.
+  - **Carrocería con resortes** (cabeceo, alabeo, rebote), dibujada en el 3D.
+  - **Choques con impulso:** contra paredes y contra el tráfico, que sale corrido y vuelve a su carril.
+  - **Ayudas para celular:** control de estabilidad con el joystick, la velocidad baja si el dedo apunta de lado, reversa corta si queda trancado y ayuda de esquinas.
+  - El juego da un poco más de agarre y de empuje que un carro de calle (×1,3 y ×1,6), como hacen los juegos de mundo abierto.
+- **Sonido:** el tono del motor sale de las rpm (f = rpm/60 × cilindros/2), en `MC.PersecucionAudio.motor`. El velocímetro de Turno Cero muestra la marcha.
+- **⚙️ Flexibilidad → 🛞 Manejo de los carros:** real (lo de fábrica) o arcade. La IA sigue en arcade.
+- **Prueba nueva `pruebas/dinamica.mjs`:** 19 comprobaciones.
+  - Sedán Vega: de 0 a 100 en 6,6 s; de 100 a 0 en 41,1 m (la fórmula da 41,4).
+  - Curva sostenida a 1,3 g sin trompo; en mojado, la mitad del agarre lateral.
+  - Curva de 90° con el joystick; choque contra un edificio; golpe a un carro del tráfico.
+- La prueba humana (solo entradas) sigue en verde con el manejo real: la carrera avanza 429 m a 30 m/s.
+- **Unión:**
+  - **R1 de ChatGPT/Codex** (fachadas de Medellín) con menos peso: copias de juego de 1024 y 512, 1,4 MB en vez de 6,7 por HTML;
+  - **EnCicla 3.2.0** de la otra sesión de Claude a main y a la web (APK 3.2.0 en `descargas/`).
+- **Plan y pedidos:**
+  - `docs/PLAN-5.0.md` (diagnóstico frente a San Andreas, motores de los que se toman ideas, fases);
+  - `docs/PEDIDOS-CHATGPT-5.0.md` (lo fuerte);
+  - `docs/PEDIDOS-GEMINI-5.0.md` (lo fácil y mediano; Gemini vuelve).
+
+
+## 22-nov-2026 · R1 fachadas de Medellín (rama de revisión)
+- Doce texturas de ChatGPT integradas en VistaTres con emisión nocturna y respaldo procedural.
+- Capturas y pruebas en reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md.
+- R4 y R3 investigados, pendientes de fuentes y regeneración verificadas.
+
+
 ## 22-nov-2026 · 4.9.0 «Realismo» · three.js incrustado y el 3D realista
 - **El autor:**
   - «Nuestro motor no logra mapear todo tal cual: los relieves, las casas y los edificios no son como son, y los gráficos aún son básicos. ¿Qué debemos hacer?».

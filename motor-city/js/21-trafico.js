@@ -50,6 +50,10 @@ class Trafico {
     const grupos = new Map(); for (const g of A) { const k = g.e.i * 2 + (g.dir > 0 ? 1 : 0); (grupos.get(k) || grupos.set(k, []).get(k)).push(g); }
     for (const L of grupos.values()) { L.sort((p, q) => (p.s - q.s) * p.dir); for (let i = 0; i < L.length; i++) L[i].delante = L[i + 1] || null; }
     for (const g of A) {
+      /* 5.0 · golpeado por el jugador (MC.Dinamica): sale corrido y girando, se detiene, y luego vuelve despacio a su carril */
+      if (g.golpe) { const k = g.golpe, sp = Math.hypot(k.vx, k.vy), f = sp > 1e-3 ? Math.max(0, sp - 7 * dt) / sp : 0; g.x += k.vx * dt; g.y += k.vy * dt; g.a += k.r * dt; k.vx *= f; k.vy *= f; k.r *= Math.exp(-2.5 * dt); k.t -= dt; g.v = 0; g.frena = 1;
+        if (k.t <= 0) { const pr = g.e.t.proyectar(g.x, g.y); g.s = clamp(pr.s, 0, g.e.largo); const q = g.e.t.at(g.s, (g.e.ancho / 4 + .3) * g.dir); g.off = { x: g.x - q.x, y: g.y - q.y, a: angDif(q.a + (g.dir > 0 ? 0 : Math.PI), g.a) }; g.golpe = null; }
+        continue; }
       const e = g.e, finS = g.dir > 0 ? e.largo : 0, falta = Math.abs(finS - g.s), nodo = g.dir > 0 ? e.b : e.a;
       let objetivo = g.vmax;
       if (g.delante) { const hueco = Math.abs(g.delante.s - g.s) - (g.largo + g.delante.largo) / 2; objetivo = Math.min(objetivo, Math.max(0, (hueco - 2.5) * 1.2)); }
@@ -63,6 +67,7 @@ class Trafico {
         g.e = o.arista; g.dir = o.adelante ? 1 : -1; g.s = o.adelante ? sobra : o.arista.largo - sobra;
       }
       const q = g.e.t.at(g.s, (g.e.ancho / 4 + .3) * g.dir); g.x = q.x; g.y = q.y; g.a = q.a + (g.dir > 0 ? 0 : Math.PI);
+      if (g.off) { const o = g.off, k = Math.exp(-dt * 1.3); o.x *= k; o.y *= k; o.a *= k; g.x += o.x; g.y += o.y; g.a += o.a; g.v = Math.min(g.v, 3); if (Math.abs(o.x) + Math.abs(o.y) < .05) g.off = null; }
     }
     this._peatones(dt, cx, cy, calidad);
     return A;

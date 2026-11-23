@@ -36,7 +36,7 @@ class Cuerpo {
   vmax() { const V = this.veh, base = V.id === 'pie' ? (this.corriendo ? V.vcorre : V.vmax) : V.vmax; return base * this.escala * (Vehiculos.escala || 1); }
   /* ¿puede este vehículo estar en (x, y)? */
   puede(x, y, sondeo = false) {
-    const V = this.veh; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
+    const V = this.veh; this._obst = null; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
     if (this.paso) return true;
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
@@ -53,7 +53,7 @@ class Cuerpo {
       if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); /* 4.5: lo que se rompe (canecas, conos, bancas, hidrantes, postes, paraderos…) no frena en seco: se lo lleva por delante si va rápido */
         if (o && !sondeo && MC.Rotos && MC.Rotos.puede(o, this)) { MC.Rotos.romper(this.mundo, o, this); return true; }
         if (o && sondeo && MC.Rotos && MC.Rotos.puede(o, this)) return true;
-        if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+        if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return (this._obst = o), this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }
@@ -84,6 +84,8 @@ class Cuerpo {
     /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
     const Tp = this.paso || (V.clase === 'aire' && this.z > 3) ? { f: 1 } : Terreno.paso(this, this.x, this.y); this.nadando = !!Tp.nada; this.vadeando = !!Tp.vadea;
     const suelo = this.paso ? 1 : Math.max(.12, Tp.ok === false ? .15 : Tp.f), loma = V.electrico ? clamp(1 - this.pend * .4, .85, 1.15) : Vehiculos.loma(V, this.pend);
+    /* 5.0 · la dinámica real del carro (MC.Dinamica: peso, suspensión, marchas, derrapes y choques con impulso) si el juego la pide */
+    if (!this.nadando && MC.Dinamica && MC.Dinamica.activa(this)) return this._real(dt, E, suelo, loma);
     /* 4.6 · manejo arcade (el de Juega EnCicla, llevado a todos los vehículos): a pie, bicis, motos, carros y pesados */
     if (V.clase !== 'aire' && V.clase !== 'agua' && !this.nadando && !(MC.opciones && MC.opciones.manejo === 'simulacion')) return this._arcade(dt, E, suelo, loma);
     const vmax = this.vmax() * suelo * loma * (E.turbo ? 1.25 : 1), objetivo = acel >= 0 ? vmax * acel : -vmax * .35 * -acel;

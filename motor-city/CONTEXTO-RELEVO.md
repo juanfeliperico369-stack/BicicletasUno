@@ -28,14 +28,14 @@
 
 ---
 
-## 0. Entregables de la 4.9.0 «Realismo» (HTML, APK y enlaces)
+## 0. Entregables de la 5.0.0 «Que se sienta» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 4.9.0** (18+), el juego de prueba con todo: 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.9.0/MotorCity-getaway.apk> |
-| Juega EnCicla 3.1.0 (⚙️ Flexibilidad en Más) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.1.0/JuegaEnCicla-v3.1.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
+| **Turno Cero 5.0.0** (18+), el juego de prueba con todo: 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.0.0/MotorCity-getaway.apk> |
+| Juega EnCicla 3.2.0 (modos pulidos, transporte en el mundo 3D, freerun de la Comuna 13, el valle que recuerda) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.2.0/JuegaEnCicla-v3.2.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
 | El Metro 3.3.0 (⚙️ Flexibilidad en Ajustes) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 31) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
@@ -688,3 +688,32 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
+
+### Codex · 22-nov-2026 · R1 fachadas de Medellín
+
+Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md para técnica, capturas, pruebas y límites. R4 y R3 fueron investigados y siguen pendientes. La siguiente IA debe escribir su propio documento de contexto y transmitir la misma instrucción a quien continúe.
+
+### Claude · 23‑nov‑2026 · motor 5.0.0 «Que se sienta»
+- **Pedido:** llegar al nivel de San Andreas y Chinatown Wars, sumar a Gemini (vuelve), escribir los prompts de cada IA, revisar lo nuevo de ChatGPT con Codex y retomar lo que quedó.
+- **Hecho:**
+  - **`MC.Dinamica`** (`js/37-dinamica.js`): manejo real del carro con hoja de manejo, ejes con carga, llantas que se saturan, marchas, resortes y choques con impulso.
+  - Ayudas para celular. ⚙️ 🛞 Manejo real (de fábrica en Turno Cero) o arcade.
+  - El tono del motor por rpm y la marcha en el velocímetro.
+  - El tráfico recibe el golpe (`g.golpe`, y luego vuelve a su carril con `g.off`).
+  - El 3D dibuja cabeceo, alabeo y rebote (`Malla.modelo` con `op.cab` y `op.alab`).
+- **Unido:**
+  - **R1 de Codex:** fachadas en `main`, con copias de juego (1024/512) por `herramientas/fachadas_juego.py`; prueba portable `pruebas/r1-fachadas.mjs` en la QA.
+  - **EnCicla 3.2.0** de la otra sesión de Claude: en `main` y en la web, con la APK 3.2.0 en `descargas/`.
+- **Pruebas:** `pruebas/dinamica.mjs` (19) y la batería de Turno Cero con el manejo real (humano, modos, actividades, rescate y flexibilidad).
+- **Plan y pedidos:**
+  - `docs/PLAN-5.0.md`;
+  - ChatGPT (lo fuerte): `docs/PEDIDOS-CHATGPT-5.0.md`;
+  - Gemini (lo fácil y mediano): `docs/PEDIDOS-GEMINI-5.0.md`.
+- **Lecciones:**
+  - con el mismo agarre en los dos ejes, el carro hacía trompo en curva; las llantas de atrás más rígidas dan el subviraje de un carro de calle;
+  - con el joystick hace falta la velocidad pedida del arcade (baja si el dedo apunta de lado) y una reversa corta al quedar trancado;
+  - `_obst` se borra en cada `puede()`: hay que leerlo enseguida.
+- **Sigue (Claude):**
+  - fase 2: eventos y reacciones, escenas de la calle, frases con condiciones y despacho;
+  - fase 4: lenguaje de misiones, repeticiones exactas y bot que las gana.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.

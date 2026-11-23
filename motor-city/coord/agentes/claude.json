@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.7.0 entregada: plan, ritmo, todo liberado, actividades en el mundo abierto, trucos, cámaras. Siguiente: P1 del plan (§ 10).",
+  "fase_actual": "5.0.0 entregada: MC.Dinamica (manejo real), R1 de Codex unido, EnCicla 3.2.0 publicada, plan 5.0 con pedidos para ChatGPT y Gemini. Sigue: fase 2 (ciudad viva) y fase 4 (lenguaje de misiones y repeticiones).",
   "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-22T16:00:00Z",
+  "ultima_actualizacion_utc": "2026-11-23T03:00:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -23,7 +23,10 @@
     "juegos/getaway/56-abierto.js",
     "juegos/getaway/57-cine.js",
     "js/47-colormap.js",
-    "todo lo de las otras IA (4.4)"
+    "todo lo de las otras IA (4.4)",
+    "js/37-dinamica.js",
+    "pruebas/dinamica.mjs",
+    "docs/PLAN-5.0.md"
   ],
   "no_toco": [
     "src/ de BicicletasUno, MetroZero y RunRunZero (zonas de Antigravity y Codex)",

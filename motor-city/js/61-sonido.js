@@ -57,6 +57,9 @@ const PersecucionAudio = {
     return { doppler: factor, volumen: clamp((op.intensidad ?? 1) * at * obst * int, 0, 1), corte: op.ocluido ? 650 : op.interior ? 1600 : 3200 };
   },
   motor(op = {}) {
+    /* 5.0 · con rpm (MC.Dinamica): el pulso de encendido f = rpm/60 × cilindros/2 (4 cilindros: 28 Hz en mínimo, 200 Hz a 6.000) y su octava abajo */
+    if (op.rpm > 0) { const f = op.rpm / 60 * (op.cilindros || 4) / 2, k = clamp(op.rpm / (op.rpmMax || 6500), 0, 1), c = clamp(op.carga ?? 0, 0, 1);
+      return { agudo: f, grave: f / 2, corte: 380 + k * 1500 + c * 700, volumen: op.activo ? .028 + k * .03 + c * .025 : 0, rpm: op.rpm }; }
     const v = Math.max(0, Math.abs(Number(op.velocidad) || 0)), a = clamp(Number(op.aceleracion) || 0, -1, 1),
       marcha = Math.min(5, Math.floor(v / 9)), rpm = clamp(.25 + ((v - marcha * 9) / 9) * .75, .25, 1);
     return { agudo: 42 + rpm * 70 + marcha * 6, grave: (42 + rpm * 70 + marcha * 6) / 2,

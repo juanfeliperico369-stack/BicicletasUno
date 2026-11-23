@@ -12,7 +12,7 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), r
 const tc = path.join(RAIZ, 'dist/juegos/getaway.html'); if (!fs.existsSync(tc)) { console.log('· falta dist/juegos/getaway.html (node herramientas/construir.mjs)'); process.exit(0); }
 const html = fs.readFileSync(tc, 'utf8'), licencia = /Copyright 2010-2024 Three\.js Authors/.test(html) && /SPDX-License-Identifier: MIT/.test(html);
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }), p = await b.newPage({ viewport: { width: 860, height: 412 } }), errs = [], red = [];
-p.on('pageerror', e => errs.push('pageerror ' + e.message)); p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) red.push(r.url()); });
+p.on('pageerror', e => errs.push('pageerror ' + e.message)); p.on('request', r => { if (!r.isNavigationRequest() && !/^(file|data|blob):/.test(r.url())) red.push(r.url()); });
 await p.goto((process.env.MC_PRUEBAS_URL ? new URL('dist/juegos/getaway.html', process.env.MC_PRUEBAS_URL).href : pathToFileURL(tc).href) + '?portada'); await p.waitForFunction(() => window.TURNO_LISTO);
 await p.click('#bAbierto'); await p.waitForFunction(() => TURNO.M && !TURNO.transicion && TURNO.cuerpo, null, { timeout: 120000 });
 for (let i = 0; i < 8; i++) { const d = await p.$('.mcui .dialogo button'); if (!d) break; await d.click().catch(() => {}); await p.waitForTimeout(150); }

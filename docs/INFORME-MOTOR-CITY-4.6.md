@@ -68,3 +68,22 @@ El autor: «el problema es el arranque: si se suelta el joystick se deja de acel
 - **Lección para portar:** con three.js ≥ 0.163, no usar `scene.environment` (tiñe de azul todo lo que mira hacia arriba); los reflejos van por material.
 - **Plan de realismo y pedidos de arte y datos:** `motor-city/docs/PLAN-REALISMO.md` y `motor-city/docs/PEDIDOS-CHATGPT-4.9.md`.
 - Este juego no cambió en esta versión.
+
+## Motor City 5.0.0 «Que se sienta» (23‑nov‑2026, Claude)
+- **`MC.Dinamica` (`motor-city/js/37-dinamica.js`):** el manejo real del carro.
+  - Hoja de manejo por vehículo.
+  - Peso que pasa adelante al frenar.
+  - Llantas que se saturan, con círculo de fricción y subviraje de fábrica.
+  - Marchas automáticas.
+  - Carrocería con resortes: cabeceo, alabeo y rebote.
+  - Choques con impulso contra paredes y contra el tráfico.
+  - Ayudas para celular: velocidad pedida según el dedo, reversa corta si queda trancado y ayuda de esquinas.
+- Se activa con `MC.opciones.manejo = 'real'`; en Turno Cero es lo de fábrica (⚙️ 🛞 Manejo). **Este juego no lo usa:** sigue con su manejo, que es el arcade de EnCicla del que salió el del motor.
+- **Si lo quieres portar:**
+  - la prueba `motor-city/pruebas/dinamica.mjs` trae los números de referencia (0–100 en 6,6 s, frenada en 41 m, 1,3 g en curva);
+  - el tono del motor sale de las rpm: f = rpm/60 × cilindros/2 (`MC.PersecucionAudio.motor`).
+- **El plan y los pedidos de las IA:**
+  - `motor-city/docs/PLAN-5.0.md`;
+  - `motor-city/docs/PEDIDOS-CHATGPT-5.0.md`;
+  - `motor-city/docs/PEDIDOS-GEMINI-5.0.md`.
+- Este juego no cambió por la 5.0.

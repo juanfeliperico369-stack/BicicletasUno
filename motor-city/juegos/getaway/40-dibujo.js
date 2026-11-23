@@ -122,7 +122,7 @@ function hud() {
   U.ficha('heat', '🚨'.repeat(B.nivel) + '◦'.repeat(5 - B.nivel) + (banda ? ' · 🔫 banda' : '') + (B.visto ? ' · 👁' : B.nivel ? ' · buscando' : '')).hidden = !(B.nivel || banda);
   U.ficha('ev', '🧳 ' + G.evidencia).hidden = !G.hist;
   U.ficha('lugar', '📍 ' + (tramo ? planeta.def(G.id).nombre + ' · ' + MC.Planeta.BIOMAS[M.carretera.bioma(C.y)].n : (M.calle(C.x, C.y) || planeta.def(G.id).nombre))).hidden = B.nivel > 0;
-  U.velocidad(C.v, V.icon || ''); U.barra('carro', '🔧 Carro', enCarro ? G.carro : 1); U.barraVisible('carro', enCarro); U.barra('vida', '❤️ Vida', G.vida); U.barra('nitro', '⚡ Turbo', G.nitro); U.barraVisible('nitro', enCarro);
+  U.velocidad(C.v, (V.icon || '') + (C._din && MC.Dinamica.activa(C) ? ' <small>' + (C.marcha < 0 ? 'R' : C.marcha + 'ª') + '</small>' : ''));   /* 5.0: la marcha (manejo real) */ U.barra('carro', '🔧 Carro', enCarro ? G.carro : 1); U.barraVisible('carro', enCarro); U.barra('vida', '❤️ Vida', G.vida); U.barra('nitro', '⚡ Turbo', G.nitro); U.barraVisible('nitro', enCarro);
   /* el objetivo, con lo urgente primero */
   const O = G.objetivo, dist = O ? Math.round(Math.hypot(O.x - C.x, O.y - C.y)) : null;
   if (G.hist && Historia.p) { const p = Historia.p; U.mision('<b>' + suave(p.texto) + '</b><br>' + (dist != null ? '<b>' + (dist > 1500 ? (dist / 1000).toFixed(1) + ' km' : dist + ' m') + '</b>' : '') + (G.reloj_mision != null ? ' · ⏱ ' + Math.ceil(G.reloj_mision) + ' s' : '') + (p.tipo === 'destruir' ? ' · 💥 ' + Historia.est.fuera + '/' + p.n : '') + (O && O.texto ? ' · ' + O.texto : '')); }

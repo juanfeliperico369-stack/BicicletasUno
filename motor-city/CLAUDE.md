@@ -1,7 +1,9 @@
 # Instrucciones para agentes (Codex, Gemini, Claude, Cursor…)
 
 > **¿Te dijeron «mira el repositorio y haz tu parte»?**
-> - **Si eres ChatGPT o Codex:** abre **`docs/PEDIDOS-CHATGPT-4.9.md`**. Desde la 4.9 tienes todos los pedidos, incluidos los que eran de Gemini.
+> - **Si eres ChatGPT o Codex:** abre **`docs/PEDIDOS-CHATGPT-5.0.md`** (lo fuerte: datos, render, física, IA y modelos).
+> - **Si eres Gemini o Antigravity:** abre **`docs/PEDIDOS-GEMINI-5.0.md`** (lo fácil y mediano: interfaz, cámara, textos, arte y modos).
+> - **El plan de la 5.0** (los motores de los que se toman ideas y quién hace qué): `docs/PLAN-5.0.md`.
 > - **Cualquier otra IA:** `TAREAS-IA.md`.
 
 **Lee primero `CONTEXTO-RELEVO.md`** (el relevo entre IAs: plan, hecho, falta; al terminar, deja tu entrada) y luego **`docs/DOCUMENTO-UNICO.md`** (todo el contexto, el código a usar y el plan de cada IA). Después, si vas a tocar el motor: `CONTEXTO-IA.md` → `MOTOR.md` → `CONTRIBUIR.md`. Todo junto en un archivo: `node motor.mjs documento` → `dist/MOTOR-CITY-TODO.md`.

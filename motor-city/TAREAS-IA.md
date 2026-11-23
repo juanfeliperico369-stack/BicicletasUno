@@ -1,5 +1,10 @@
 # Tareas de cada IA · Motor City 4.0
 
+> **5.0 (23‑nov‑2026), decisión del autor: Gemini vuelve.** El plan está en **`docs/PLAN-5.0.md`**.
+> - **ChatGPT y Codex** (lo fuerte: datos, render, física, IA y modelos): **`docs/PEDIDOS-CHATGPT-5.0.md`**.
+> - **Gemini y Antigravity** (lo fácil y mediano: interfaz, cámara, textos, arte y modos): **`docs/PEDIDOS-GEMINI-5.0.md`**.
+> - Lo de abajo, incluida la nota de la 4.9, queda como historial.
+
 > **4.9 (22‑nov‑2026), decisión del autor: todos los pedidos que eran de Gemini y de ChatGPT pasan a ChatGPT** (imágenes en ChatGPT; código y commits en Codex). Gemini queda en pausa. **La lista vigente, en orden, con sus contratos técnicos: `docs/PEDIDOS-CHATGPT-4.9.md`.** Lo de abajo queda como historial.
 
 > **4.5 (21‑nov‑2026), decisión del autor:** EnCicla, El Metro y Run Scooter **siguen con su propio motor**. Reciben Motor City en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.5.md` de cada repositorio. Las tareas de «migrar a motor-city» quedan anuladas. Lo de este motor: `CONTEXTO-RELEVO.md` § 0 y § 5.

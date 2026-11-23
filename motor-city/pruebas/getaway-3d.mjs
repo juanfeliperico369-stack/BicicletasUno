@@ -9,7 +9,7 @@ const require=createRequire(import.meta.url),{chromium}=require('playwright');
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const html=readFileSync(path.join(root,'juegos/getaway/turno-cero-accion-3d.html'),'utf8');
 const output=path.join(root,'dist/getaway-3d');mkdirSync(output,{recursive:true});
-const browser=await chromium.launch({headless:false,args:['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader']});
+const browser=await chromium.launch({headless:!process.env.DISPLAY,args:['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader']});
 try{
  for(const [w,h] of [[360,740],[412,860],[900,440],[1440,900]]){
   const context=await browser.newContext({viewport:{width:w,height:h},hasTouch:w<600});

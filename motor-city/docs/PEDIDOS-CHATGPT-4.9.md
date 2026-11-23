@@ -1,5 +1,7 @@
 # Pedidos para ChatGPT · Motor City 4.9 «Realismo» (22‑nov‑2026)
 
+> **Reemplazado por `docs/PEDIDOS-CHATGPT-5.0.md` (23‑nov‑2026).** Gemini volvió y tiene su lista en `docs/PEDIDOS-GEMINI-5.0.md`. Esto queda como historial.
+
 > **Decisión del autor:** todo lo que estaba pendiente para Gemini (Antigravity) y para ChatGPT (Codex) pasa a **ChatGPT**. Gemini queda en pausa.
 > - El arte (imágenes) lo hace ChatGPT.
 > - El código y los commits los hace Codex, en el repositorio `juanfeliperico369-stack/motorcity`.

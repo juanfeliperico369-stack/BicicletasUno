@@ -1,0 +1,106 @@
+{
+  "identificador": "motorcity-r1-chatgpt-medellin-2026-11-22",
+  "autor": "ChatGPT (OpenAI)",
+  "tipo": "atlas_de_fachadas_prueba_arte",
+  "version": "0.1.0",
+  "objetivo": "Motor City 4.9, VistaTres._edificio",
+  "estado": "conectado en VistaTres (4.9.1); en el HTML van las copias de juego de arte/fachadas/medellin/juego (albedo 1024, emisión 512)",
+  "formato": "WebP",
+  "dimensiones_px": [
+    2048,
+    2048
+  ],
+  "dimensiones_modulo_m": {
+    "piso": 3.0,
+    "vano_con_muro": 2.7
+  },
+  "material": "albedo_diurno + emision_nocturna",
+  "licencia": "arte original generado para el proyecto, sin marcas ni logos",
+  "notas": [
+    "Cada textura se ha remuestreado de un original de 1254x1254 y corregido en bordes; no se inventa detalle adicional de 2048.",
+    "Los mapas nocturnos se derivan de la imagen diurna para alinear ventanas: su emisión no contiene luz ambiental.",
+    "Es una entrega visual de prueba, no un atlas PBR completo ni una integración 3D.",
+    "El tipo local_persiana debe aplicarse a la planta baja, no repetirse indefinidamente en altura.",
+    "No se afirma que la arquitectura coincida con edificios concretos."
+  ],
+  "fachadas": [
+    {
+      "id": "ladrillo_ladera",
+      "day": "arte/fachadas/medellin/ladrillo_ladera_albedo_2048.webp",
+      "emission": "arte/fachadas/medellin/ladrillo_ladera_emision_2048.webp",
+      "modulos_x": 3,
+      "pisos_y": 4,
+      "pixel_seam_error": {
+        "vertical": 0.0,
+        "horizontal": 0.0
+      },
+      "albedo_sha256": "eebf7106c620258b82cfefd3ec7f6fae6b94e12eeeeafad00ee5b3ee2898d20f",
+      "emission_sha256": "f0ebc4502047eb3d8cbb67ced1737178861565ebff6141a2ae631437b7e789a7"
+    },
+    {
+      "id": "revoque_colores",
+      "day": "arte/fachadas/medellin/revoque_colores_albedo_2048.webp",
+      "emission": "arte/fachadas/medellin/revoque_colores_emision_2048.webp",
+      "modulos_x": 4,
+      "pisos_y": 4,
+      "pixel_seam_error": {
+        "vertical": 0.0,
+        "horizontal": 0.0
+      },
+      "albedo_sha256": "46ac856ddc651cf40dbe6dc34ebb9b1be0f69dc1021beeb09b9ae55018f4e830",
+      "emission_sha256": "fdef6361d7c9ed1b03fc0e1913de6ba0d6a6b05890ebab8937d0f37235c697b4"
+    },
+    {
+      "id": "concreto",
+      "day": "arte/fachadas/medellin/concreto_albedo_2048.webp",
+      "emission": "arte/fachadas/medellin/concreto_emision_2048.webp",
+      "modulos_x": 4,
+      "pisos_y": 5,
+      "pixel_seam_error": {
+        "vertical": 0.0,
+        "horizontal": 0.0
+      },
+      "albedo_sha256": "3afebd5fc043c972904a14fd1eb21917343c4187c0530631e1cee4dcc0f8f06e",
+      "emission_sha256": "21b2c9e5e708801d661b9a344b72c14d388c967889a3d653f3e02374ddb048cc"
+    },
+    {
+      "id": "vidrio_torre",
+      "day": "arte/fachadas/medellin/vidrio_torre_albedo_2048.webp",
+      "emission": "arte/fachadas/medellin/vidrio_torre_emision_2048.webp",
+      "modulos_x": 4,
+      "pisos_y": 6,
+      "pixel_seam_error": {
+        "vertical": 0.0,
+        "horizontal": 0.0
+      },
+      "albedo_sha256": "1595fa84c9b4957b142728f54eb9af3490549af739deb6816fb9211847ef73c3",
+      "emission_sha256": "88d2103e151738c1956bbeab606bd1bfb59f06aaab033665be7743c01a71d7bf"
+    },
+    {
+      "id": "colonial_madera",
+      "day": "arte/fachadas/medellin/colonial_madera_albedo_2048.webp",
+      "emission": "arte/fachadas/medellin/colonial_madera_emision_2048.webp",
+      "modulos_x": 4,
+      "pisos_y": 4,
+      "pixel_seam_error": {
+        "vertical": 0.0,
+        "horizontal": 0.0
+      },
+      "albedo_sha256": "0935d154e50f970eb235ab32c109e88a36ed2fa9083a71a9c835692ce355a547",
+      "emission_sha256": "89cfe38f1c5928f0024c52bef5f960a5c77b0f2a0653de56ae687071d8f235ff"
+    },
+    {
+      "id": "local_persiana",
+      "day": "arte/fachadas/medellin/local_persiana_albedo_2048.webp",
+      "emission": "arte/fachadas/medellin/local_persiana_emision_2048.webp",
+      "modulos_x": 4,
+      "pisos_y": 4,
+      "pixel_seam_error": {
+        "vertical": 0.0,
+        "horizontal": 0.0
+      },
+      "albedo_sha256": "1ef08a0b247b16f67e1956dbcd87dc83f65230b9f59b787ff8edfa4d7c66150e",
+      "emission_sha256": "df4484f8618f4d96f1fac24a4806e31c5eca36cd747572b9f6a2762962f66c1b"
+    }
+  ]
+}

@@ -5,6 +5,7 @@
    tamaño de los botones, cámara y calidad). El motor no guarda nada: cada juego guarda el objeto donde quiera
    (Turno Cero en leerG().flex) y lo aplica al cargar.
    - 🕹️ control: según la cámara (lo de siempre), apuntar en el mundo, volante o un pulgar (acelera solo);
+   - 🛞 manejo de los carros (5.0): real (MC.Dinamica: peso, suspensión, marchas, derrapes, choques con impulso) o arcade;
    - 🎯 giro: normal, rápido o suave (MC.opciones.giro, en el manejo y en la física);
    - 🚗 velocidad de los vehículos: ×1 a ×1,5 o ×0,8 (MC.Vehiculos.escala; también para los rivales, para que sea justo);
    - 🎥 distancia de la cámara: normal, lejos o cerca (MC.opciones.camDist);
@@ -20,6 +21,7 @@ const Flex = {
   /* [clave, nombre, opciones]: la primera opción es la de fábrica */
   DEF: [
     ['control', '🕹️ Control', [['auto', 'según la cámara'], ['mundo', 'apuntar hacia donde voy'], ['volante', 'volante (↑ acelera, ◀ ▶ giran)'], ['un_pulgar', 'un pulgar (acelera solo)']]],
+    ['manejo', '🛞 Manejo de los carros', [['real', 'real: peso, suspensión, marchas y derrapes'], ['arcade', 'arcade: va por donde apuntas, sin derrapar']]],
     ['giro', '🎯 Giro', [[1, 'normal'], [1.3, 'rápido'], [.75, 'suave']]],
     ['velocidad', '🚗 Velocidad de los vehículos', [[1, '×1'], [1.25, '×1,25'], [1.5, '×1,5'], [.8, '×0,8']]],
     ['camara', '🎥 Distancia de la cámara', [[1, 'normal'], [1.3, 'lejos'], [.8, 'cerca']]],
@@ -39,7 +41,7 @@ const Flex = {
   siguiente(f, k) { const ops = this.DEF.find(d => d[0] === k)[2], i = ops.findIndex(p => p[0] === f[k]); return Object.assign({}, f, { [k]: ops[(i + 1) % ops.length][0] }); },
   aplicar(f, op = {}) {
     f = this.valores(f); const O = MC.opciones;
-    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.pantalla = f.pantalla; const cambiaGraf = O.graficos !== undefined && O.graficos !== f.graficos; O.graficos = f.graficos; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
+    O.manejo = f.manejo; O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.pantalla = f.pantalla; const cambiaGraf = O.graficos !== undefined && O.graficos !== f.graficos; O.graficos = f.graficos; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
     if (MC.Vehiculos) MC.Vehiculos.escala = f.velocidad;
     if (typeof document !== 'undefined') { document.documentElement.style.setProperty('--mc-ui', String(f.ui)); if (document.body) document.body.classList.toggle('mc-zurdo', O.zurdo); }
     const V = op.vistas; if (V) { if (f.calidad === 'auto') V.auto = true; else { V.auto = false; V.calidad = f.calidad; } }

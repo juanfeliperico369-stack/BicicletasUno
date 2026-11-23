@@ -46,7 +46,7 @@ Object.assign(Malla.prototype, {
     if (detalle >= 2) for (let i = 0; i < (E.forma === 'ancha' ? 3 : 2); i++) { const a = hx * 6.28 + i * 2.2, d = r * ancho * .62; this.esfera(x + Math.cos(a) * d, yc + rv * (.15 - i * .12), z + Math.sin(a) * d, r * .62, rv * .55, r * .62, i ? top : C1, osc3(C2, .7), sem + i + 1, 0); }
   },
   /* edificio con fachada (P: huella del mapa; O: origen GL; zb: pie en GL; e: el edificio del mundo; st: su estilo) */
-  edificio3d(P, O, zb, e, st, detalle, Z, noche = 0) {
+  edificio3d(P, O, zb, e, st, detalle, Z, noche = 0, sinDetallesFachada = false) {
     const muro = hex3(st.muro), techo = hex3(st.techo), H = e.h, zt = zb + H + .3, sem = (e.s * 1e5) | 0, casa = H <= 10.5;
     if (detalle < 2) { this.prisma(P, O, zb, zt, muro, techo, {}); return; }
     const n = P.length >> 1, V = []; let A = 0, cx = 0, cz = 0; for (let i = 0; i < n; i++) { V.push([P[2 * i] - O[0], P[2 * i + 1] - O[1]]); cx += V[i][0] / n; cz += V[i][1] / n; }
@@ -77,7 +77,7 @@ Object.assign(Malla.prototype, {
         }
       }
     }
-    if (detalle < 3 && !casa) return;
+    if (sinDetallesFachada || (detalle < 3 && !casa)) return;
     /* fachada por cada muro: zócalo, ventanas con marco y vidrio, puerta, balcones y cornisa */
     const zoc = casa && h2(sem, 6, 84) < (Z.zocalos ?? .6) ? hex3(PAL_ZOCALO[(sem >>> 3) % PAL_ZOCALO.length]) : osc3(muro, .72), marco = acl3(muro, .55), vidrio = [.16, .2, .26], luz = [1, .84, .5], puerta = hex3(['#6b3e26', '#2f5d8a', '#8a2f2f', '#2f6b45'][sem % 4]), cor = acl3(muro, .3);
     const pisos = Math.max(1, Math.floor((H - .4) / 3)); let largo = -1, iL = 0; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L > largo) { largo = L; iL = i; } }

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "agente": "chatgpt",
-  "rama": "ia/chatgpt/4-0-2-gemini-auditoria",
+  "rama": "ia/chatgpt/r1-fachadas-medellin",
   "rol": "Motor City 4.0.2: integración y QA de Claude/Gemini, 3D, memoria y PBR",
-  "fase_actual": "Claude 4.0.2 integrado · Gemini PR8 importado · pruebas G-H21/22/23, C-M31/32/33/34/35/36, C-A16/17 parcial",
-  "estado": "PR draft, CI en verificación",
-  "ultima_actualizacion_utc": "2026-11-21",
+  "fase_actual": "Integración R1 fachadas, investigación inicial R4 y R3",
+  "estado": "en revisión",
+  "ultima_actualizacion_utc": "2026-11-23",
   "zonas_reclamadas": [
     "js/13-planeta.js",
     "juegos/getaway/10-contenido.js",
@@ -31,5 +31,6 @@
     "ramas ajenas",
     "datos geográficos binarios"
   ],
-  "pendiente_para_compañeras": "G-H20/24 GPU, RAM, p95 en Android/iOS reales; QA calle/parcelas; C-M34 streaming completo; C-A16 shader PBR y mallas; revisar CI de PR#7."
+  "pendiente_para_compañeras": "G-H20/24 GPU, RAM, p95 en Android/iOS reales; QA calle/parcelas; C-M34 streaming completo; C-A16 shader PBR y mallas; revisar CI de PR#7.",
+  "entrega_r1": "reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md"
 }
