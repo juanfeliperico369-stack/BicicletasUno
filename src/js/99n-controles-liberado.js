@@ -1,27 +1,19 @@
 /* =====================================================================
-   CONTROLES ÁGILES, ACELERADOR FIJO Y TODO LIBERADO (v2.2 · Ronda 3.0 · Gemini/Antigravity)
-   Zona aditiva reservada: 99n–99y (corre después de 98v-claves.js y 99a–99m sin choques).
-   1) Todo liberado desde el principio: los 12 oficios, todos sus turnos (1–3 y Libre),
-      los modos arcade y la prueba directa de los 16 capítulos de «Un día del valle»
-      (conservando el estado de progreso en historia para no romper tests/run.js).
-   2) ⏫ Acelerador fijo (portado de Motor City 4.6.1, js/37-manejo.js): un toque mantiene
-      el impulso continuo mientras el joystick solo dirige; otro toque frena suavemente.
-      Teclas rápidas: E o Shift.
-   3) Manejo pulido del camión (Balance, Supervisor, Bodega) en giros cerrados, velocidad
-      ×2 Turbo opcional en VELS, cierre de modales con Escape y guardia de coverLoop.
-   4) Los 5 minijuegos inspirados en Infinity Games (Traffix, Package Inc., Railways/Metro,
-      Infinity Loop/Laser y Laberinto de Moravia) registrados directamente como modos jugables.
+   CONTROLES ÁGILES, TODO LIBERADO, 5 MODOS INFINITY Y TURNO ROGUELITE (v3.3 · Gemini/Antigravity)
+   Armonizado 100 % con 99a-fluidez.js (Claude):
+   1) Reutiliza #bCrucero (JE.crucero) sin duplicar botones, añadiendo atajos E / Shift e
+      imán suave de calle/ciclorruta al rodar con manos libres, + ×2 Turbo en VELS y giro ágil del camión.
+   2) Permite probar directamente los 16 capítulos de «Un día del valle» conservando la marca .lock
+      de progreso (para tests/run.js) y respetando el interruptor 🔓 Todo liberado de 99a.
+   3) Cortesía visual de 0,85 s al arrancar Anfitrión/Apoyo (evita emboscada en cuadro 1),
+      cierre de modales con Escape, guardia de coverLoop y botón «↻ Reintentar ya» (<1 s, Super Arcade Racing).
+   4) Registra directamente los 5 modos estilo Infinity Games (Traffix, Package Inc., Railways/Metro,
+      Infinity Loop y Laberinto de Moravia) + 🎲 Turno Roguelite (5 rondas con 3 mejoras al azar, estilo Soul Knight).
    ===================================================================== */
 (function () {
-  /* ---------- 1) Todo liberado desde el principio ---------- */
+  /* ---------- 1) Todo liberado en Historia (Un día del valle) + accesibilidad de portada/modales ---------- */
   JE.todoLiberado = true;
   if (typeof UI !== 'undefined') {
-    UI.unlocked = function () { return true; };
-    UI.turnoOk = function () { return true; };
-
-    /* En Historia («Un día del valle»), conserva la clase visual .lock en los capítulos aún no
-       completados en orden lineal (para que el jugador vea su avance y pase tests/run.js),
-       pero permite tocar y probar CUALQUIER capítulo al instante sin bloqueo. */
     const _hist99n = UI.historia;
     UI.historia = function () {
       _hist99n.call(this);
@@ -48,8 +40,7 @@
       });
     };
 
-    /* Portada: evitar bucles duplicados de coverLoop y permitir cerrar modales con Escape */
-    const _cover99n = UI.coverLoop;
+    /* Portada: evitar bucles duplicados de coverLoop */
     UI.coverLoop = function () {
       if (this._coverRunning) return;
       this._coverRunning = true;
@@ -64,7 +55,28 @@
       };
       requestAnimationFrame(f);
     };
-    void _cover99n;
+
+    /* Botón «↻ Reintentar ya» (<1 s, inspiración Super Arcade Racing) en pantalla de resultado */
+    const _res99n = UI.result;
+    UI.result = function (res, meta, prog) {
+      const r = _res99n.apply(this, arguments);
+      if (!meta || meta.net || !meta.roleId || $('#bReintentarYa')) return r;
+      const col = $('#resBody .col') || $('#resBody');
+      if (col) {
+        const b = document.createElement('button');
+        b.className = 'btn amb'; b.id = 'bReintentarYa';
+        b.textContent = '↻ Reintentar ya';
+        b.onclick = () => {
+          Snd.sfx('tap');
+          const opt = Object.assign({}, meta.opt || {}, { seed: (Date.now() ^ 0x9e3779b9) >>> 0 });
+          Game.start(meta.roleId, meta.turno || 1, opt);
+          if (meta.volver && Game.meta) Game.meta.volver = meta.volver;
+        };
+        const ref = $('#bVolverValle');
+        if (ref) ref.after(b); else col.prepend(b);
+      }
+      return r;
+    };
   }
 
   window.addEventListener('keydown', e => {
@@ -77,59 +89,39 @@
     }
   });
 
-  /* Velocidad ×2 Turbo disponible al final de VELS (sin tocar ×0,75 · ×1 · ×1,25 · ×1,5) */
+  /* Velocidad ×2 Turbo disponible al final de VELS (sin alterar ×0,75 · ×1 · ×1,25 · ×1,5) */
   if (typeof VELS !== 'undefined' && Array.isArray(VELS) && !VELS.some(v => v[0] === 2)) {
     VELS.push([2, 'Turbo', '🚀']);
   }
 
-  /* ---------- 2) ⏫ Acelerador fijo (patrón Motor City 4.6.1) ---------- */
+  /* ---------- 2) Puente JE.acelFijo → JE.crucero (99a) + imán suave de calle + camión ágil ---------- */
   const AcelFijo = JE.acelFijo = {
-    on: false,
-    _parar: false,
+    get on() { return !!(JE.crucero && JE.crucero.on); },
     toggle(silencio) {
+      if (!JE.crucero) return false;
       const M = Game.mode, R = M && M.ride;
-      if (!R || M.sub || R.p.veh === 'walk') { this.on = false; this._parar = false; return false; }
-      this.on = !this.on;
-      this._parar = !this.on;
-      if (!silencio) {
-        Snd.sfx('tap');
-        if (JE.ui) JE.ui.toast(this.on ? '⏫ Acelerador fijo activado: solo dirige con el dedo (toca ⏫ para frenar)' : '🛑 Acelerador fijo apagado: frenando suave');
+      if (!R || M.sub || R.p.veh === 'walk') { JE.crucero.poner(false); return false; }
+      const next = !JE.crucero.on;
+      if (silencio) {
+        JE.crucero.on = next;
+        const b = $('#bCrucero');
+        if (b) { b.classList.toggle('on', next); b.setAttribute('aria-pressed', String(next)); }
+      } else {
+        JE.crucero.poner(next);
       }
-      this.syncBtn();
-      return this.on;
+      return next;
     },
-    apagar() { this.on = false; this._parar = false; this.syncBtn(); },
-    syncBtn() {
-      const b = document.querySelector('#camBar [data-cam="acel"]');
-      if (!b) return;
-      const M = Game.mode, R = M && M.ride, hide = !R || R.p.veh === 'walk';
-      b.hidden = hide;
-      b.classList.toggle('acelOn', this.on && !hide);
-      b.setAttribute('aria-pressed', this.on && !hide ? 'true' : 'false');
-    },
-    aplicar(R, dir) {
-      const P = R.p;
-      if (JE.headless || Input.botDir || (R.mode && R.mode.botDir) || (R.libre && R.libre.on) || P.veh === 'walk') {
-        if (P.veh === 'walk' && this.on) this.apagar();
-        return dir;
-      }
-      if (!this.on) {
-        if (this._parar) {
-          if ((dir && dir.m > .1) || P.v < 3) this._parar = false;
-          else return { x: 0, y: 0, m: 0 };
-        }
-        return dir;
-      }
-      this._parar = false;
-      /* Si el jugador dirige con el joystick, acelera a fondo en esa dirección (salvo si jala hacia atrás para frenar) */
-      if (dir && dir.m > .12) {
-        const ta = Math.atan2(dir.y, dir.x), da = Math.abs(angDiff(P.a, ta));
-        if (da > 2.45) return { x: dir.x, y: dir.y, m: .28 };
-        return { x: dir.x, y: dir.y, m: 1 };
-      }
-      /* Sin joystick: sigue derecho con suave imán de calle/ciclorruta */
+    apagar() { if (JE.crucero && JE.crucero.on) JE.crucero.poner(false); }
+  };
+
+  /* Enriquecer Crucero.dir (99a) con imán suave al eje de calle/ciclorruta cuando no se toca el joystick */
+  if (JE.crucero && typeof JE.crucero.dir === 'function') {
+    const _cdir = JE.crucero.dir;
+    JE.crucero.dir = function (R, d) {
+      if (!this.on || !R || !R.p) return d;
+      if (d && d.m > .08) return _cdir.call(this, R, d);
+      const P = R.p, M = R.map;
       let ang = P.a;
-      const M = R.map;
       if (M && M.chainsNear && P.v > 8) {
         const near = M.chainsNear(P.x - 16, P.y - 16, 32, 32);
         let bestD = 12, bestA = null;
@@ -139,84 +131,44 @@
           if (P.veh === 'truck' && ch.k > 4) continue;
           for (let j = 2; j < p.length; j += 2) {
             const mx = (p[j - 2] + p[j]) * .5, my = (p[j - 1] + p[j + 1]) * .5;
-            const d = Math.hypot(mx - P.x, my - P.y);
-            if (d < bestD) {
+            const dd = Math.hypot(mx - P.x, my - P.y);
+            if (dd < bestD) {
               const a = Math.atan2(p[j + 1] - p[j - 1], p[j] - p[j - 2]);
               const d1 = Math.abs(angDiff(P.a, a)), d2 = Math.abs(angDiff(P.a, a + Math.PI));
               const dMin = Math.min(d1, d2);
-              if (dMin < .34) { bestD = d; bestA = d1 <= d2 ? a : a + Math.PI; }
+              if (dMin < .34) { bestD = dd; bestA = d1 <= d2 ? a : a + Math.PI; }
             }
           }
         }
         if (bestA != null) ang = P.a + clamp(angDiff(P.a, bestA) * .45, -.16, .16);
       }
       return { x: Math.cos(ang), y: Math.sin(ang), m: 1 };
-    }
-  };
+    };
+  }
 
-  /* Inyectar botón ⏫ en #camBar y enganchar la física + asistencia de giro del camión */
-  const _barra99n = Cam.barra;
-  Cam.barra = function (M) {
-    _barra99n.call(this, M);
-    const bar = $('#camBar');
-    if (!bar || bar.hidden) return;
-    let ab = bar.querySelector('[data-cam="acel"]');
-    if (!ab) {
-      ab = document.createElement('button');
-      ab.dataset.cam = 'acel';
-      ab.textContent = '⏫';
-      ab.setAttribute('aria-label', 'Acelerador fijo');
-      ab.title = 'Acelerador fijo (tecla E / Shift)';
-      bar.appendChild(ab);
-      ab.onclick = e => { e.stopPropagation(); AcelFijo.toggle(); };
-    }
-    AcelFijo.syncBtn();
-    Cam.lugar();
-  };
-
-  /* En Ride.prototype.update: aplicar ⏫ acelerador fijo y destrabe suave de esquinas para el camión */
+  /* Destrabe ágil del camión en giros lentos (sin alterar VSTATS) */
   const _upd99n = Ride.prototype.update;
   Ride.prototype.update = function (dt, dir) {
     const P = this.p;
-    const d2 = AcelFijo.aplicar(this, dir);
-    /* En juego interactivo con el camión (Balance, Supervisor, Bodega), mejorar agilidad en giros lentos
-       para que no se quede pegado en esquinas estrechas del mapa OSM (sin alterar cifras de VSTATS) */
-    const esCamionVivo = !JE.headless && P.veh === 'truck' && d2 && d2.m > .2 && !Input.botDir && !(this.mode && this.mode.botDir);
+    const esCamionVivo = !JE.headless && P.veh === 'truck' && dir && dir.m > .2 && !Input.botDir && !(this.mode && this.mode.botDir);
     if (esCamionVivo && P.v < 34 * WK) {
-      const ta = Math.atan2(d2.y, d2.x), da = angDiff(P.a, ta);
+      const ta = Math.atan2(dir.y, dir.x), da = angDiff(P.a, ta);
       if (Math.abs(da) > .35) P.a += clamp(da, -1.6 * dt, 1.6 * dt);
     }
-    const r = _upd99n.call(this, dt, d2);
-    if (AcelFijo._parar && !AcelFijo.on && P.v > 0 && !JE.headless) {
-      P.v = Math.max(0, P.v - this.stats_().brk * .75 * dt);
-    }
-    return r;
+    return _upd99n.call(this, dt, dir);
   };
 
-  /* Apagar acelerador fijo al cambiar de estado o bajarse */
-  for (const k of ['start', 'stop', 'pause', 'finish']) {
-    const orig = Game[k];
-    if (typeof orig === 'function') {
-      Game[k] = function () { AcelFijo.apagar(); return orig.apply(this, arguments); };
-    }
-  }
-  const _off99n = Ride.prototype.getOff;
-  if (_off99n) Ride.prototype.getOff = function () { AcelFijo.apagar(); return _off99n.apply(this, arguments); };
-
+  /* Teclas E / Shift adicionales a Q para ⏫ Acelerador fijo */
   window.addEventListener('keydown', e => {
     const M = Game.mode;
     if (!M || !M.ride || M.sub || Game.paused || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
     if ((e.code === 'KeyE' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat) {
-      /* En Rescate cuando lleva bici, KeyE se usa para equilibrio */
       if (M.carry && e.code === 'KeyE') return;
       AcelFijo.toggle();
     }
   });
 
-  /* ---------- 3) Arreglo del arranque inmediato en Anfitrión y Apoyo ----------
-     En 52-oficios.js, la bici arranca a 20 px de la estación de inicio cuyo marcador mide 36 px,
-     disparando MGApertura en el cuadro 1 antes de que el jugador vea el mapa. Damos 0,9 s de
-     margen visual en juego interactivo (el bot y tests/run.js siguen funcionando igual). */
+  /* ---------- 3) Arreglo de la emboscada en cuadro 1 en Anfitrión y Apoyo ---------- */
   if (typeof ShiftMode !== 'undefined' && ShiftMode.prototype.doTask) {
     const _doTask99n = ShiftMode.prototype.doTask;
     ShiftMode.prototype.doTask = function (t) {
@@ -228,7 +180,7 @@
     };
   }
 
-  /* ---------- 4) Los 5 modos estilo Infinity Games accesibles desde el menú y el mundo libre ---------- */
+  /* ---------- 4) Los 5 modos estilo Infinity Games + Turno Roguelite ---------- */
   if (JE.modos && typeof ModeSub !== 'undefined') {
     if (typeof MGTraffix !== 'undefined') {
       class ModoTraffix extends ModeSub {
@@ -251,67 +203,206 @@
       class ModoDespacho extends ModeSub {
         constructor(role, turno, opt) {
           super(role, turno, opt);
-          const dur = [36, 46, 56][turno - 1] || 40;
+          const cfg = [[38, 12], [44, 18], [50, 24]][turno - 1] || [38, 12];
           this.clock = [7 * 60, 12 * 60, 17 * 60][turno - 1] || 420;
-          this.sub = new MGRutas(this, { dur });
+          this.sub = new MGRutas(this, { dur: cfg[0] });
           this.view = this.sub.view;
-          this.goal('Completa el despacho sin perder la red', true, () => this.sub.score >= 20, () => this.sub.score + ' pts');
-          this.goal('Precisión ≥ 80 %', false, () => (this.sub.acc ? this.sub.acc() : 1) >= .8, () => Math.round((this.sub.acc ? this.sub.acc() : 1) * 100) + '%');
+          this.goal('Guía ' + cfg[1] + ' entregas a su estación', true, () => (this.sub.okN | 0) >= cfg[1], () => (this.sub.okN | 0) + '/' + cfg[1]);
+          this.goal('Buena precisión en desvíos', false, () => (this.sub.badN | 0) <= 2, () => (this.sub.badN | 0) + ' fallos');
         }
       }
-      JE.modos.registrar({ id: 'despacho', name: 'Despacho EnCicla', cls: ModoDespacho, emoji: '📦', icon: 'balance',
-        niveles: ['Laureles', 'Corredor Río', 'Valle Completo'],
-        desc: 'Desvía camiones de balance y bicis hacia su estación correcta (estilo Package Inc.).',
-        how: ['Toca los desvíos para girar las flechas de la ruta.', 'Envía cada vehículo al color de su estación destino.', 'Encadena entregas seguidas para sumar más puntos.'] });
+      JE.modos.registrar({ id: 'despacho', name: 'Despacho del Valle', cls: ModoDespacho, emoji: '🚚', icon: 'balance',
+        niveles: ['Red Centro', 'Corredor Sur', 'Valle Completo'],
+        desc: 'Dirige camiones y bicis por los desvíos del mapa hasta su estación de color (estilo Package Inc.).',
+        how: ['Toca los nodos de desvío para cambiar hacia dónde dobla la ruta.', 'Cada vehículo debe llegar a la estación de su mismo color.', 'Encadena aciertos para multiplicar el puntaje.'] });
 
       class ModoMaquinista extends ModeSub {
         constructor(role, turno, opt) {
           super(role, turno, opt);
-          const dur = [38, 48, 58][turno - 1] || 45;
-          this.clock = [6 * 60, 12 * 60 + 30, 18 * 60 + 30][turno - 1] || 420;
-          this.sub = new MGRutas(this, { theme: 'metro', dur });
+          const cfg = [[38, 12], [44, 18], [50, 24]][turno - 1] || [38, 12];
+          this.clock = [6 * 60 + 30, 12 * 60 + 30, 18 * 60 + 15][turno - 1] || 390;
+          this.sub = new MGRutas(this, { theme: 'metro', dur: cfg[0] });
           this.view = this.sub.view;
-          this.goal('Lleva los trenes del Metro a su vía', true, () => this.sub.score >= 20, () => this.sub.score + ' pts');
-          this.goal('Precisión ≥ 85 %', false, () => (this.sub.acc ? this.sub.acc() : 1) >= .85, () => Math.round((this.sub.acc ? this.sub.acc() : 1) * 100) + '%');
+          this.goal('Despacha ' + cfg[1] + ' trenes a su estación', true, () => (this.sub.okN | 0) >= cfg[1], () => (this.sub.okN | 0) + '/' + cfg[1]);
+          this.goal('Operación segura sin desvíos errados', false, () => (this.sub.badN | 0) <= 1, () => (this.sub.badN | 0) + ' fallos');
         }
       }
-      JE.modos.registrar({ id: 'maquinista', name: 'Maquinista del Metro', cls: ModoMaquinista, emoji: '🚇', icon: 'monitoreo',
-        niveles: ['Línea A Mañana', 'San Antonio', 'Hora Pico'],
-        desc: 'Dirige los cambios de vía de la Línea A y B del Metro de Medellín (estilo Railways / Tiny Rails).',
-        how: ['Toca los cambios de aguja antes de que pase cada tren.', 'Guía cada tren hacia la estación del color indicado.', 'Sin colisiones ni retrasos en la red del valle.'] });
+      JE.modos.registrar({ id: 'maquinista', name: 'Maquinista Línea A', cls: ModoMaquinista, emoji: '🚇', icon: 'supervisor',
+        niveles: ['Niquía – Caribe', 'San Antonio – Poblado', 'Hora Pico Integrada'],
+        desc: 'Cambia las agujas ferroviarias de Medellín para guiar cada tren del Metro a su destino (estilo Railways).',
+        how: ['Toca los cambiavías para abrir la ruta correcta de cada tren.', 'Sincroniza las llegadas por color de estación.', 'Mantén la línea fluida en hora pico.'] });
     }
-    if (typeof MGLoop !== 'undefined' && typeof MGLaser !== 'undefined') {
+    if (typeof MGLoop !== 'undefined') {
       class ModoCircuito extends ModeSub {
         constructor(role, turno, opt) {
           super(role, turno, opt);
+          const n = [4, 5, 6][turno - 1] || 4;
           this.clock = 600;
-          this.sub = turno === 2 ? new MGLaser(this, { n: 5, turns: 3 }) : new MGLoop(this, { n: turno === 3 ? 6 : 5 });
+          this.sub = new MGLoop(this, { n });
           this.view = this.sub.view;
-          this.goal('Completa el circuito técnico', true, () => this.sub.done && this.sub.score > 0, () => this.sub.score + ' pts');
-          this.goal('Sin errores', false, () => (this.sub.errors | 0) === 0, () => (this.sub.errors | 0) + ' errores');
+          this.goal('Cierra el circuito de anclajes LED', true, () => !!this.sub.solved, () => this.sub.solved ? 'listo' : 'conectando');
+          this.goal('Puzle limpio en pocos toques', false, () => (this.sub.moves | 0) <= n * n * 2, () => (this.sub.moves | 0) + ' giros');
         }
       }
-      JE.modos.registrar({ id: 'circuito', name: 'Circuito y Láser', cls: ModoCircuito, emoji: '🔌', icon: 'tecnico',
-        niveles: ['Anclajes (Loop)', 'Tótem Óptico (Láser)', 'Red Avanzada'],
-        desc: 'Puzles técnicos de estaciones EnCicla inspirados en Infinity Loop y Laser.',
-        how: ['Toca cada pieza para girarla hasta cerrar el circuito.', 'En Tótem Óptico, alinea los espejos hasta encender el sensor.', 'Energiza toda la estación con el menor número de toques.'] });
+      JE.modos.registrar({ id: 'circuito', name: 'Circuito LED EnCicla', cls: ModoCircuito, emoji: '🔌', icon: 'tecnico',
+        niveles: ['Estación 4×4', 'Tótem 5×5', 'Subestación 6×6'],
+        desc: 'Gira las piezas del tablero para cerrar el circuito eléctrico de los tótems (estilo Infinity Loop).',
+        how: ['Toca una baldosa para rotarla 90°.', 'Une todos los cables sin dejar puntas abiertas.', 'Relajante y sin límite de tiempo punitivo.'] });
     }
     if (typeof MGLaberinto !== 'undefined') {
       class ModoMoravia extends ModeSub {
         constructor(role, turno, opt) {
           super(role, turno, opt);
-          this.clock = 540;
-          const sz = [7, 9, 11][turno - 1] || 9;
-          this.sub = new MGLaberinto(this, { n: sz });
+          const n = [7, 9, 11][turno - 1] || 9;
+          this.clock = 960;
+          this.sub = new MGLaberinto(this, { n });
           this.view = this.sub.view;
-          this.goal('Cruza los jardines de Moravia', true, () => this.sub.done && this.sub.score > 0, () => this.sub.score + ' pts');
-          this.goal('Recorrido limpio', false, () => (this.sub.errors | 0) === 0, () => 'zen');
+          this.goal('Cruza los jardines hasta la salida', true, () => !!this.sub.solved, () => this.sub.solved ? '¡listo!' : 'en ruta');
+          this.goal('Recoge flores del camino', false, () => (this.sub.got | 0) >= 2, () => (this.sub.got | 0) + ' flores');
         }
       }
-      JE.modos.registrar({ id: 'moravia', name: 'Laberinto de Moravia', cls: ModoMoravia, emoji: '🌼', icon: 'usuario',
-        niveles: ['Jardín Bajo', 'Sendero Central', 'Mirador'],
-        desc: 'Recorre los senderos floridos de Moravia en puzle cenital relajante.',
-        how: ['Arrastra o toca la dirección para avanzar por los jardines.', 'Encuentra la salida hacia la estación EnCicla.', 'Ideal para descansar y contemplar el barrio.'] });
+      JE.modos.registrar({ id: 'moravia', name: 'Laberinto de Moravia', cls: ModoMoravia, emoji: '🌼', icon: 'limpieza',
+        niveles: ['Jardín Sur', 'Mirador Moravia', 'Sendero Completo'],
+        desc: 'Paseo táctil y contemplativo por los jardines de Moravia recogiendo flores y buscando la salida.',
+        how: ['Desliza o toca hacia la casilla vecina para avanzar.', 'Recoge las flores para ganar bonos.', 'Llega al punto verde de salida sin estrés.'] });
     }
+
+    /* ---------- 5) Turno Roguelite (5 rondas encadenadas, 1 vida, 3 mejoras al azar — Soul Knight) ---------- */
+    const PERKS_RL = [
+      { id: 'tiempo', ic: '⏱️', n: 'Reloj Serena', desc: '+10 s extra en cada ronda siguiente' },
+      { id: 'escudo', ic: '🛡️', n: 'Escudo Cívico', desc: 'Tolera 1 error sin perder la racha' },
+      { id: 'bono', ic: '⭐', n: 'Cadena Dorada', desc: '+35 % de puntos en las próximas rondas' },
+      { id: 'calma', ic: '🌿', n: 'Respiro del Valle', desc: '+40 pts inmediatos y +5 s en la siguiente' }
+    ];
+    class MGRoguelite extends MG {
+      constructor(parent, o = {}) {
+        super(parent, o);
+        this.total = o.rondas || 5;
+        this.ronda = 0;
+        this.vidas = 1;
+        this.escudos = 0;
+        this.mul = 1;
+        this.extraT = 0;
+        this.perks = [];
+        this.picking = null;
+        this.child = null;
+        this.nextRound();
+      }
+      nextRound() {
+        this.ronda++;
+        if (this.ronda > this.total) { this.score += 100; this.done = true; return; }
+        const pool = [];
+        if (typeof MGLaser !== 'undefined') pool.push(() => ['🔦 Tótem Óptico', new MGLaser(this.p, { n: 5, turns: 3 })]);
+        if (typeof MGLoop !== 'undefined') pool.push(() => ['🔌 Circuito LED', new MGLoop(this.p, { n: 4 })]);
+        if (typeof MGLaberinto !== 'undefined') pool.push(() => ['🌼 Jardín Moravia', new MGLaberinto(this.p, { n: 7 })]);
+        if (typeof MGTraffix !== 'undefined') pool.push(() => ['🚦 Semaforero', new MGTraffix(this.p, { dur: 18 + this.extraT, target: 4 + this.ronda })]);
+        if (typeof MGRutas !== 'undefined') pool.push(() => ['🚚 Despacho Express', new MGRutas(this.p, { dur: 20 + this.extraT })]);
+        const pick = pool[(this.ronda - 1) % pool.length];
+        const [tit, mg] = pick();
+        this.tit = tit;
+        this.child = mg;
+        this.picking = null;
+        this.t0 = this.t;
+      }
+      applyPerk(pk) {
+        this.perks.push(pk.id);
+        if (pk.id === 'tiempo') this.extraT += 10;
+        else if (pk.id === 'escudo') this.escudos += 1;
+        else if (pk.id === 'bono') this.mul = +(this.mul * 1.35).toFixed(2);
+        else if (pk.id === 'calma') { this.score += 40; this.extraT += 5; }
+        Snd.sfx('star');
+        this.nextRound();
+      }
+      update(dt) {
+        this.t += dt;
+        if (this.done || this.picking) return;
+        if (!this.child) { this.nextRound(); return; }
+        this.child.update(dt);
+        if (this.child.done) {
+          const pts = Math.max(15, Math.round((this.child.score || 25) * this.mul));
+          const fallo = (this.child.crashes | 0) >= 2;
+          if (fallo) {
+            if (this.escudos > 0) { this.escudos--; Snd.sfx('ok'); }
+            else { this.vidas = 0; this.done = true; return; }
+          }
+          this.score += pts;
+          if (this.ronda >= this.total) { this.score += 80; this.done = true; return; }
+          const copy = PERKS_RL.slice();
+          this.picking = [];
+          while (this.picking.length < 3 && copy.length) {
+            const idx = Math.floor(this.rng.f() * copy.length);
+            this.picking.push(copy.splice(idx, 1)[0]);
+          }
+          this.child = null;
+        }
+      }
+      render(V) {
+        if (this.child && this.child.render) { this.child.render(V); return; }
+        V.b.fillStyle = '#0a2342'; V.b.fillRect(0, 0, V.vw, V.vh);
+      }
+      hud(V) {
+        this.btns = [];
+        if (this.child) {
+          if (this.child.hud) this.child.hud(V);
+          V.text('🎲 ROGUELITE · Ronda ' + this.ronda + '/' + this.total + ' · ' + this.tit + (this.escudos ? ' · 🛡️' + this.escudos : ''), V.w / 2, Math.max((View.hudB || 50) + 52, 128), { size: 11.5, align: 'center', color: '#ffc93c', bg: '#0a2342ee', pad: 4 });
+          return;
+        }
+        const c = V.ctx;
+        c.fillStyle = '#0a2342'; c.fillRect(0, 0, V.w, V.h);
+        V.text('🎲 RONDA ' + this.ronda + ' SUPERADA', V.w / 2, V.h * .22, { size: 22, align: 'center', color: '#9bd341' });
+        V.text('Elige 1 mejora para la ronda ' + (this.ronda + 1) + ' de ' + this.total, V.w / 2, V.h * .28, { size: 13.5, align: 'center', color: '#e8f5d0' });
+        this._rects = [];
+        const bw = Math.min(320, V.w - 36), bh = 68, bx = (V.w - bw) / 2;
+        (this.picking || []).forEach((pk, i) => {
+          const by = V.h * .36 + i * (bh + 14);
+          this._rects.push({ x: bx, y: by, w: bw, h: bh, pk });
+          c.fillStyle = '#153b68'; c.strokeStyle = '#9bd341'; c.lineWidth = 2;
+          c.beginPath(); c.roundRect(bx, by, bw, bh, 12); c.fill(); c.stroke();
+          V.text(pk.ic + ' ' + pk.n, bx + 14, by + 24, { size: 15, color: '#ffc93c' });
+          V.text(pk.desc, bx + 14, by + 46, { size: 12, color: '#e8f5d0' });
+        });
+      }
+      pointer(kind, x, y, sx, sy) {
+        if (this.picking && kind === 'down') {
+          for (const r of this._rects || []) {
+            if (sx >= r.x && sx <= r.x + r.w && sy >= r.y && sy <= r.y + r.h) { this.applyPerk(r.pk); return; }
+          }
+          return;
+        }
+        if (this.child && this.child.pointer) this.child.pointer(kind, x, y, sx, sy);
+      }
+      key(e) {
+        if (this.picking && /^Digit[123]$/.test(e.code)) {
+          const pk = this.picking[+e.code[5] - 1];
+          if (pk) this.applyPerk(pk);
+          return;
+        }
+        if (this.child && this.child.key) this.child.key(e);
+      }
+      bot(dt) {
+        if (this.picking && this.picking.length) { this.applyPerk(this.picking[0]); return; }
+        if (this.child && this.child.bot) {
+          this.child.bot(dt);
+          this.score = Math.max(this.score, (this.child.score | 0) + (this.ronda - 1) * 20 + 5);
+        }
+      }
+    }
+    JE.MGRoguelite = MGRoguelite;
+
+    class ModoRoguelite extends ModeSub {
+      constructor(role, turno, opt) {
+        super(role, turno, opt);
+        const rondas = [3, 5, 7][turno - 1] || 5;
+        this.clock = 540;
+        this.sub = new MGRoguelite(this, { rondas });
+        this.view = this.sub.view;
+        this.goal('Supera las ' + rondas + ' rondas con 1 vida', true, () => this.sub.done && this.sub.vidas > 0, () => 'Ronda ' + Math.min(this.sub.ronda, rondas) + '/' + rondas);
+        this.goal('Acumula 120+ puntos de racha', false, () => (this.sub.score | 0) >= 120, () => (this.sub.score | 0) + ' pts');
+      }
+    }
+    JE.modos.registrar({ id: 'roguelite', name: 'Turno Roguelite', cls: ModoRoguelite, emoji: '🎲', icon: 'estrella',
+      niveles: ['Racha 3 Rondas', 'Desafío 5 Rondas', 'Maratón 7 Rondas'],
+      desc: 'Encadena retos de EnCicla con una sola vida y elige 1 de 3 mejoras al azar entre cada ronda (estilo Soul Knight).',
+      how: ['Supera cada reto corto sin perder tu única vida.', 'Al terminar cada ronda elige 1 de 3 mejoras.', 'Si llevas Escudo Cívico resistes un tropiezo.'] });
   }
 })();

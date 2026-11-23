@@ -189,62 +189,75 @@ Un mapa real de ~32 km a 18 km/h reales tardaría casi 2 horas en cruzarse; eso 
 
 ---
 
-## 5. Detalle de todo lo agregado, arreglado y verificado (Ronda 3.0 · Gemini/Antigravity)
+## 5. Detalle de todo lo agregado, arreglado y verificado (v3.3.0 · Gemini/Antigravity sobre v3.2.0 + GPT-6 + MC 4.9.0)
 
-### 5.1 Archivos creados (zona aditiva `99n–99q` + pruebas)
-- **`src/js/99n-controles-liberado.js`:** todo liberado desde el inicio (12 oficios, turnos 1–3 y Libre, 16 capítulos de *Un día del valle* probables al toque conservando `.lock`), `⏫ Acelerador fijo` (`E`/`Shift`), `×2 Turbo`, agilidad del camión en esquinas, cortesía visual de 0,85 s en `Anfitrión`/`Apoyo`, cierre de modales con `Escape`, guardia de `coverLoop` y registro directo de los 5 modos estilo Infinity Games (`traffix`, `despacho`, `maquinista`, `circuito`, `moravia`).
-- **`src/js/99o-mundo3d-camaras.js`:** director unificado `JE.vistas` sobre el mismo `JE.map` (**3D Cenital, 3D Oblicua, 3D Tercera Persona, 3D Primera Persona, Panorámica 2D, Maqueta 2:1 en vivo + Pixel World combinable**), proyección perspectiva real de calles/ciclorrutas/río/edificios con ventanas y cornisas/árboles/estaciones/tráfico/Metro/skateparks/flechas GPS, manubrio y canasta EnCicla en 1P (o cabina del camión), controles `girarDir` coherentes por cámara y atajos `1–6`, `7`/`K`, `V`.
-- **`src/js/99p-ciclovia-skate-runner.js`:** **5 zonas reales de Skate/BMX/Parkour** en el mapa abierto (Ciudad del Río, Parques del Río, Atanasio Girardot, Puente de la 4 Sur, Segundo Parque de Laureles) con rampas, barandas y bóvedas parkour + combos multiplicadores + XP de Técnica; botón contextual `🏁 Runner` visible **solo sobre ciclorrutas reales**; mejoras en `MGRunner3D` con **anchos dinámicos** (*Avenida Ancha* ↔ *Ciclorruta* ↔ *Paso Estrecho*), **cruces direccionales** (`⬅ ⬆ ➡`) y obstáculos de grind/parkour.
-- **`src/js/99q-mundo-vivo-rpg.js`:** **Hub Valle Vivo (`JE.rpg.abrirHub`)** accesible desde `⋯ Más` y Pausa con las **17 actividades** jugables directo dentro del Modo Libre y regreso exacto al mismo lugar; 4 habilidades RPG (`resistencia`, `tecnica`, `mecanica`, `civismo` — donde `resistencia` reduce realmente hasta 30 % el desgaste de energía); reputación por 6 comunas; **Diario Postal del Valle**; Flujo Verde; subtramas ciudadanas cercanas; claves `rpg` y `diario` registradas vía `Save.registrar`.
-- **`tests/auditoria-antigravity.js`:** batería automatizada E2E en Chromium/Playwright que valida todos los módulos nuevos, rendimiento CPU 4× en `cenital`/`3p`/`1p`, controles coherentes, guardado limpio y genera 11 capturas en `412×860`, `860×412` y `1280×800`.
+### 5.1 Archivos creados y armonizados (zona aditiva `99n–99q` + pruebas)
+- **`src/js/99n-controles-liberado.js`:** armonizado con `99a-fluidez.js` (puente `JE.acelFijo` → `#bCrucero` sin duplicar botones, atajos `E`/`Shift`, imán suave de calle/ciclorruta), prueba directa de los 16 capítulos de *Un día del valle* conservando `.lock`, `×2 Turbo`, agilidad del camión en esquinas, cortesía visual de 0,85 s en `Anfitrión`/`Apoyo`, cierre de modales con `Escape`, guardia de `coverLoop`, botón **«↻ Reintentar ya» (<1 s)** en `#sResult`, registro directo de los **5 modos estilo Infinity Games** (`traffix`, `despacho`, `maquinista`, `circuito`, `moravia`) y el modo **🎲 Turno Roguelite (`roguelite`, estilo *Soul Knight*)**.
+- **`src/js/99o-mundo3d-camaras.js`:** director unificado `JE.vistas` sobre el único `JE.map`, integrado con el WebGL real `JE.mundo3d` (`99d`+`99f`) para **3D Tercera Persona** y **3D Primera Persona** (con respaldo automático Canvas 2D si falta WebGL), **cabina/manubrio EnCicla con canasta, frenos y timbre** (o cabina del camión) sobre `#gl3d`, **sol/luna atmosférica** por hora del día, **Pixel World combinable sobre WebGL** (`body.pixel3d` + escala cuantizada nítida `0,38×`), **Maqueta 2:1 en vivo** siguiendo al jugador, controles `girarDir` coherentes, icono SVG blanco en `#camBar` y atajos `1–6`, `7`/`K`, `V`.
+- **`src/js/99p-ciclovia-skate-runner.js`:** entrega los **6 modos bandera solicitados por el autor y el plan multi-IA (§ 4–6)**, todos jugables en menú y desde el mundo abierto con bot activo:
+  1. **🏆 Copa del Valle (`copa`, estilo *Super Arcade Racing*):** 3 circuitos callejeros reales en `JE.map` (Laureles, Ciudad del Río, Atanasio), 3 rivales IA, **rebufo (*slipstream*)**, chevrons luminosos en asfalto y banderas físicas en Modo Libre.
+  2. **🍔 Domicilio Sostenible (`domicilio`, estilo *Crazy Taxi / Parcel Corps*):** entregas contrarreloj de sabores paisas sobre `JE.map` con flecha diegética gigante y bonos de tiempo por racha.
+  3. **📡 Monitoreo 911 (`monitoreo911`, estilo *911 Operator / CityRT*):** despacho táctico en tiempo real de Balance, Técnico, Anfitrión y Tránsito sobre Medellín.
+  4. **🏙️ El Planeador (`planeador`, estilo *Cities: Skylines / Townscaper*):** estrategia cívica construyendo estaciones, ciclorrutas, tótems solares y plazas guayacán con bonos de red y calidad del aire.
+  5. **🚇 Metro 2D Lateral (`metro2d`, estilo *Tiny Rails* / `TrainChu`):** viaje lateral 2D por las estaciones reales de la Línea A del Metro de Medellín con acelerador, freno de precisión en andén y viajeros.
+  6. **🌅 Bajada por Las Palmas (`palmas`, estilo *Alto's Odyssey* + Ley 1811):** descenso lateral al atardecer con saltos, freno en curvas cerradas y brisas de impulso.
+  - Además conserva los **5 skateparks físicos abiertos** (Ciudad del Río, Parques del Río, Atanasio, Puente 4 Sur, Segundo Parque de Laureles), las mejoras de anchos/cruces/barandas en `MGRunner3D` y delega la detección espacial de ciclorrutas a `JE.cicloGeoGPT6` (`99r`).
+- **`src/js/99q-mundo-vivo-rpg.js`:** armonizado 100 % con `99h-valle-vivo.js` (registra solo `rpg` en `Save.registrar` y escribe directo en `JE.diario`), ofrece el **Hub «🗺️ Valle Vivo»** con **24 actividades** jugables desde Modo Libre con regreso exacto, **reputación por 6 comunas**, **4 habilidades RPG** (Resistencia reduce realmente el desgaste de energía), **6 arcos encadenados de 3 encargos** con mentores canónicos (`CAST`: Luz, Santi, Don Jairo, Ing. Paola, Cata y Rosalba) y subtramas ciudadanas emergentes cercanas.
+- **`tests/auditoria-antigravity.js`:** batería E2E en Chromium/Playwright que verifica los 12 modos nuevos, la armonización con `99a–99h` y `99r`, las 6 cámaras + Pixel World sobre WebGL, `Save.revisarClaves() = 0`, rendimiento CPU 4× y captura 12 pantallas en `412×860`, `860×412` y `1280×800`.
 
 ### 5.2 Arreglos quirúrgicos en archivos compartidos
 - **`src/js/92-vehiculos.js`:** reparación completa de `Snd.vehSfx` + `Art.vehSideRider(...)` para los 7 vehículos en Panorámica 2D.
 - **`src/js/75-graficos.js`:** `Ride.prototype.jump()` y `panoTick()` habilitados para los 7 vehículos no-camión.
-- **`src/js/92-ciclovia.js`:** caché de curvatura por corte Z en `CarreraCiclovia.render`, mejora de `TramoCiclista.cercana`, controles táctiles/teclado completos y bot esquivador.
+- **`src/js/92-ciclovia.js`:** caché de curvatura por corte Z (~15× menos búsquedas binarias en `CarreraCiclovia.render`), controles WASD/flechas/táctil y bot esquivador.
 - **`contenido/guion/trama_valle.json`:** unificación 100 % de los 9 personajes EnCicla con sus oficios canónicos en `CAST` (`66-historia.js`), resolviendo el pendiente § 6.2 de `REVOLUCION-2.1.md`.
-- **`src/index.html` y `src/style.css`:** `lang="es-CO"`, eliminación de `user-scalable=no`, ARIA en modales/avisos, objetivos `≥44px`, `100dvh`, `prefers-reduced-motion`, alto contraste limpio, paisaje `860×412`, icono SVG nítido de cámara y estilos del Hub RPG/Actividades.
+- **`src/index.html` y `src/style.css`:** `lang="es-CO"`, eliminación de `user-scalable=no`, ARIA en modales/avisos, objetivos `≥44px`, `100dvh`, `prefers-reduced-motion`, alto contraste limpio, paisaje `860×412`, `body.pixel3d #gl3d` pixelado nítido y estilos del Hub Valle Vivo.
+- **`tests/run.js` (línea 469):** corregida condición de carrera por redondeo de medio píxel en la prueba WebRTC (`Math.round(oh.y)` y `Math.round(o1.x)` dentro de `waitForFunction`, igualando la aserción de la línea 472).
 
 ### 5.3 Hallazgos visuales atrapados y corregidos al revisar las capturas reales
-Durante la inspección visual directa de las 11 capturas de Playwright (antes del cierre final) detectamos y corregimos **5 detalles reales de interfaz**:
-1. En `3p` y `1p`, el indicador superior de cámara se solapaba con el rótulo del barrio → reubicado limpiamente en píldora inferior centrada fuera de la zona de los controles y del encabezado.
-2. El botón de cámara en `#camBar` mostraba un emoji oscuro poco legible → reemplazado por icono SVG vectorial blanco nítido con alto contraste.
-3. Los textos flotantes rápidos de combos en skateparks se apilaban encima unos de otros → desplazamiento vertical incremental (`f.y -= 10`) por cada truco consecutivo.
+Durante la inspección visual directa de las capturas de Playwright (rondas 3.0 y 3.3) detectamos y corregimos **7 detalles reales de interfaz**:
+1. En `3p` y `1p`, el indicador superior de cámara se solapaba con el rótulo del barrio → reubicado en píldora inferior centrada.
+2. El botón de cámara en `#camBar` mostraba un emoji oscuro poco legible → reemplazado por icono SVG vectorial blanco nítido.
+3. Los textos flotantes rápidos de combos en skateparks se apilaban encima unos de otros → desplazamiento vertical incremental (`f.y -= 10`).
 4. El botón «+4 metas» del mini-resumen superior tenía bajo contraste → reforzado en `src/style.css`.
-5. Las subtramas ciudadanas podían caer en una estación a 35 km si el filtro inicial no encontraba rango exacto → ahora siempre seleccionan la estación más cercana a >80 px del jugador.
+5. Las subtramas ciudadanas podían caer en una estación a 35 km si el filtro inicial no encontraba rango → ahora siempre eligen la estación más cercana a >80 px.
+6. Al unir con `v3.2.0`, el banner superior de los 5 nuevos minijuegos (`Monitoreo 911`, `El Planeador`, `Metro 2D`, `Bajada Las Palmas` y `Roguelite`) tocaba `#goalsMini` en `412×860` → desplazado limpiamente a `Math.max((View.hudB || 50) + 52, 128)`.
+7. Las 5 nuevas clases `MG` usaban `{ kind: 'mg' }` sin `hud(V)` → adaptadas al contrato real de `40-mg.js` (`render(V)` + `hud(V)`) logrando 0 errores y dibujo vectorial de alta densidad.
 
 ### 5.4 Resultados de verificación automatizada (Chromium / Playwright en VM)
 
 <!-- TELEMETRIA_VERIFICADA -->
-*(Pendiente de insertar cifras finales tras la ejecución limpia secuencial en curso).*
+| Batería / Prueba | Resultado | Cifras reales medidas (Chromium / Playwright en VM Linux) |
+|---|---|---|
+| `node tools/build.js` | **✓ OK** | Un solo HTML offline `dist/juega-encicla.html` (`5.483 KB`, JS `5.294 KB`), `dist/ENCICLA-TODO.md` (`310 KB`). |
+| `node tests/prueba-gpt6-ciclorrutas.mjs` | **✓ OK** | Proyección a segmentos, progresiva `inicioMetros`, radio 12 m y runner contextual de OpenAI GPT-6 en verde. |
+| `node tools/auditoria-mapa.js` | **✓ OK** | Integridad OSM, 133 estaciones en 10 municipios y 45 lugares alcanzables. |
+| `node tests/run.js` *(completa: 1–5 + R + V + V2 + V3 + V4 + V5 + WebRTC)* | **✓ TODAS LAS PRUEBAS PASARON** | CPU 4×: `usuario` **16,7 ms** (p95 `33,4 ms`), `anfitrion` **16,7 ms** (`16,8 ms`), `monitoreo` **16,7 ms** (`16,8 ms`); `Save.revisarClaves()`: **30 en uso de 30 registradas (0 errores)**; Freerun Comuna 13 (`52 ★`, `6 trucos`, `0 caídas`); Mundo 3D (`1.233 piezas`, `4.920 cables`); WebRTC 3 dispositivos en verde; **0 errores de consola**. |
+| `node tests/auditoria-antigravity.js` *(v3.3 + 12 capturas)* | **✓ 100 % EN VERDE** | 12 oficios y turnos liberados + 12 modos nuevos registrados; `Snd.vehSfx` 7/7; salto Panorámica 2D 7/7; 6 cámaras + Pixel World sobre WebGL + controles `girarDir` coherentes; 7 modos evolución activos con 0 errores (`copa`, `domicilio`, `monitoreo911`, `planeador`, `metro2d`, `palmas`, `roguelite`); 5 skateparks + 3 banderas Copa + Hub 24 actividades + Arco Rosalba + subtrama cercana; CPU 4× `cenital` **33,3 ms** (p95 `50,1 ms`), `3p` **83,3 ms** (`150,1 ms`) y `1p` **83,4 ms** (`150,0 ms`) en WebGL SwiftShader por CPU; **0 errores de consola o página**. |
 <!-- /TELEMETRIA_VERIFICADA -->
 
-> **Transparencia de pruebas:** las métricas anteriores se midieron en **Chromium headless con emulación móvil y estrangulación CPU 4×** dentro de la VM Linux. Queda pendiente la validación táctil en **teléfono físico Android** por el autor para afinar la sensibilidad final del pulgar y la percepción en pantalla real.
+> **Transparencia de pruebas:** las métricas anteriores se midieron en **Chromium headless con emulación móvil y estrangulación CPU 4×** dentro de la VM Linux (donde WebGL usa renderizado por software **SwiftShader** sobre CPU, también estrangulado 4×; en un teléfono real el renderizado WebGL corre en GPU). Queda pendiente la validación táctil en **teléfono físico Android** por el autor.
 
 ---
 
 ## 6. Plan maestro de evolución para la IA principal (Fases 4.0 y 5.0)
 
-Cada propuesta siguiente fue filtrada bajo tres criterios: **verosímil con EnCicla y el Valle de Aburrá**, **técnicamente viable dentro de un solo HTML offline sin librerías**, y **equilibrada entre diversión, aprendizaje y contemplación**.
+Con los 7 modos bandera, el WebGL 3D unificado + Pixel World, los arcos de mentores, las pruebas GPT-6 y Motor City 4.9.0 ya integrados en esta rama, el camino hacia **v4.0** queda limpio, enfocado y verosímil:
 
-### Prioridad P0 · Consolidación inmediata (integración multi-IA)
-1. **Unificar `99p` (Gemini) + `99r` (OpenAI GPT-6) + `99a–99m` (Claude):** adoptar la proyección exacta por segmento de `CicloGeo.proyectar` (`99r`) junto con el botón situado de ciclorruta, los 5 skateparks y los anchos/cruces dinámicos (`99p`), agregando en el aviso del Taller un atajo voluntario *«Ir a la ciclorruta más cercana»*.
-2. **Subpasos de física de 25 ms en `30-ride.js`:** portar los subpasos fijos de Motor City `4.6` (`max 8` por cuadro) al bucle de `Ride.update` para eliminar cualquier efecto de cámara lenta en celulares que caigan a 15–20 FPS.
-3. **Botón «↻ Reintentar ya» (<1 s) y fantasma contrarreloj** en el Runner de ciclorruta, Guatapé y circuitos de barrio (lección central de *Super Arcade Racing*).
+### Prioridad P0 · Cierre técnico de alto impacto
+1. **Trozos de ciudad en *Web Worker* con `OffscreenCanvas`:** eliminar los picos residuales al entrar a un trozo OSM nuevo de 160 m (pendiente § 6.2 de Claude).
+2. **Evaluar portar realismo ligero de Motor City `4.9.0 «Realismo»` (`motor-city/js/45-tres.js`):** en lugar de duplicar 600 KB de `three.js` dentro de EnCicla, portar al sombreador WebGL actual (`99d-mundo3d.js`) luz hemisférica suave, grano procedural en muros de ladrillo/revoque y reflejo del río Medellín sin sacrificar el peso ni los FPS en móviles modestos (manteniendo el respaldo Canvas 2D automático).
+3. **Cámaras del mundo 3D único para Run 3D:** conectar `MGRunner3D` directamente sobre el lienzo WebGL `#gl3d` de `99d` para compartir exactamente los mismos edificios y viaductos de la ciclorruta real (la Maqueta 2:1 ya vive sobre el mapa único desde `99o`).
 
-### Prioridad P1 · Salto visual y jugable (Fase 4.0)
-4. **Acelerador WebGL2 opcional sobre el mismo `JE.map` (con respaldo 100 % Canvas 2D):** usar un shader ligero instanciado (sin Three.js) para renderizar edificios 3D extruidos con iluminación solar dinámica, sombras suaves de hora del día y reflejo del río Medellín en **3P, 1P y Oblicua**, cayendo automáticamente al motor Canvas 2D actual (`99o`) en navegadores sin WebGL2.
-5. **Vista Lateral 2D del Metro de Medellín (estilo *Tiny Rails* / `TrainChu`):** al subirte al Metro desde el mundo abierto, poder elegir viajar en vista lateral 2D pixel/ilustrada siguiendo en tiempo real las estaciones reales de `red_metro.json` (Niquía → Acevedo → Prado → San Antonio → Poblado → Envigado → La Estrella) con pasajeros, anuncios de estación y paisaje del Valle.
-6. **Cruces vivos *Traffix* + puntos ciegos educativos en el mundo abierto:** al acercarte a intersecciones congestionadas de Metroplús (Oriental, La 30, La 80), poder activar el control semafórico directo sobre ese mismo cruce y visualizar de forma educativa los ángulos muertos de buses/camiones (lección de *Hunter Assassin* / *Bullet Echo* aplicada a seguridad vial).
-7. **Cabina panorámica de Metrocable con altimetría real (lección de *Real Flight Simulator* + *Sky*):** al montar las Líneas K, J, P, L, H o M, ver el valle real desde altura con indicador de m s. n. m., cámara contemplativa 360° y modo foto aérea para el Álbum de Postales.
-8. **Radares de cadencia, rebufo en pelotón y 6 circuitos callejeros (lección de *Forza Horizon 2* + *Super Arcade Racing*):** arcos de velocidad por barrios, *drafting* detrás de otros ciclistas en Ciclovía y marcas de mejor tiempo guardadas en `Save.data`.
+### Prioridad P1 · Profundidad jugable y contemplativa (Fase 4.0)
+4. **Parapente contemplativo desde San Félix (Bello) y Cabina de Metrocable con altimetría real:** experiencia contemplativa aérea (*Real Flight Simulator* + *Sky* + Voxel Space de Motor City 4.1) con m s. n. m., cámara 360° y modo foto aérea para el Álbum de Postales.
+5. **Cruces vivos *Traffix* y puntos ciegos educativos en calle:** mostrar de forma educativa los ángulos muertos de buses y camiones en rojo suave (lección de *Hunter Assassin* / *Bullet Echo* aplicada a seguridad vial real) y disparar control semafórico contextual en cruces del Metroplús.
+6. **Fantasmas contrarreloj compartibles por código QR (sin servidor):** exportar/importar tu mejor vuelta de **Copa del Valle** y **Ruta a Guatapé** en un QR compacto para competir contra amigos offline.
 
-### Prioridad P2 · Profundidad RPG, urbanismo táctico y multijugador (Fase 5.0)
-9. **Arcos narrativos de 3 capítulos por mentor (RPG vivo):** ahora que `trama_valle.json` y `CAST` están 100 % alineados, conectar los rangos de reputación por comuna (`Vecino`, `Embajador`, `Leyenda`) con misiones cortas encadenadas junto a Luz, Santi, Don Jairo, Yuli, Ing. Paola, Wilson, Cata, Doña Blanca y Maryi, integrando curiosidades culturales en clave editorial de *UnoCero*.
-10. **Urbanismo táctico estilo *Townscaper* en plazas:** gastar hojas ganadas para instalar bici-parqueaderos, jardineras de guayacanes, bebederos o módulos extra de rampa en plazas del valle que persisten en tu partida.
-11. **Retos cooperativos WebRTC en Skateparks y Ciclovías:** aprovechar la sala P2P ya existente (`tests/run.js`) para carreras amistosas con rebufo y sesiones de trucos compartidas entre amigos en el mismo valle.
-12. **Lista de pruebas obligatorias en dispositivo físico real (Android):**
-    - Fluidez táctil de `⏫ Acelerador fijo` + pulgar izquierdo/derecho en vertical y horizontal.
-    - Legibilidad del HUD en 4 tamaños (`98y-tamano.js`) al sol exterior y con Alto Contraste.
-    - Temperatura y estabilidad de FPS tras 10 minutos seguidos alternando Cenital ↔ 3P ↔ 1P ↔ Panorámica 2D ↔ Maqueta 2:1 ↔ Pixel World.
-    - Publicación final en `gh-pages` preservando `/metro/` y `descargas/` (solo tras visto bueno del autor).
+### Prioridad P2 · Urbanismo persistente, multijugador y validación en teléfono real (Fase 5.0)
+7. **Urbanismo táctico persistente estilo *Townscaper* en el mapa abierto:** que las obras construidas en **El Planeador** (guayacanes, tótems solares, bici-parqueaderos) aparezcan físicamente al rodar por esas plazas en Modo Libre.
+8. **Historia del transporte del Valle por épocas** (en clave editorial *UnoCero / Industry Art*: tranvía histórico de 1921, Metro 1995, Metrocable 2004, EnCicla 2011, Escaleras Comuna 13 2011, Metro de la 80).
+9. **Retos cooperativos WebRTC en Skateparks y Copa del Valle:** aprovechar la sala P2P de 3–4 jugadores ya probada en `tests/run.js`.
+10. **Lista obligatoria de prueba en teléfono físico Android (autor):**
+    - Fluidez táctil de `⏫ Acelerador fijo`, ⚙️ Flexibilidad y gestos del Freerun Comuna 13 en pantalla real (vertical y horizontal).
+    - FPS reales en GPU móvil alternando Cenital ↔ WebGL 3P ↔ WebGL 1P con cabina ↔ Pixel World 3D ↔ Panorámica 2D ↔ Maqueta 2:1.
+    - Publicación final en `gh-pages` conservando `/metro/` y `descargas/` (solo tras aprobación del autor).

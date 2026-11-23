@@ -23,6 +23,9 @@
   const Vistas = JE.vistas = {
     lista: VISTAS,
     actual() {
+      if (typeof Mundo3D !== 'undefined' && Mundo3D.modo && !Mundo3D.mirador) {
+        return Mundo3D.modo === 'primera' ? '1p' : '3p';
+      }
       const S = Save.data && Save.data.settings;
       if (!S) return 'cenital';
       if (S.vista === 'pano') return 'pano';
@@ -33,6 +36,16 @@
     esPersp() { const v = this.actual(); return v === '3p' || v === '1p'; },
     esMaqueta() { return this.actual() === 'maqueta'; },
     esPixel() { return !!(Save.data && Save.data.settings && Save.data.settings.gfx === 'pixel'); },
+    _syncGL(id) {
+      if (typeof Mundo3D === 'undefined' || Mundo3D.mirador) return;
+      const glOk = Mundo3D.ok();
+      const target = (id === '3p' && glOk) ? 'tercera' : (id === '1p' && glOk) ? 'primera' : null;
+      Mundo3D.modo = target;
+      const b = $('#b3D');
+      if (b) { b.textContent = target === 'tercera' ? '🧍' : target === 'primera' ? '👁️' : '3D'; b.classList.toggle('on', !!target); }
+      if (Mundo3D.cv) Mundo3D.cv.hidden = !target;
+      document.body.classList.toggle('gl3d', !!target);
+    },
     poner(id, quiet) {
       const S = Save.data && Save.data.settings; if (!S) return;
       const item = VISTAS.find(v => v.id === id) || VISTAS[0];
@@ -42,6 +55,7 @@
       if (item.id === 'cenital') { C.t = 0; C.sigue = 0; C.r = 0; }
       else if (item.id === 'oblicua') { C.t = .62; C.sigue = 1; }
       else if (item.id === '3p' || item.id === '1p' || item.id === 'maqueta') { C.t = 0; C.sigue = 0; C.r = 0; }
+      this._syncGL(item.id);
       Save.save();
       View.rotOn = false; View.rot = 0; View.apply();
       this.cerrarPop();
@@ -51,11 +65,12 @@
     togglePixel(quiet) {
       const S = Save.data && Save.data.settings; if (!S) return;
       S.gfx = S.gfx === 'pixel' ? '3d' : 'pixel';
+      document.body.classList.toggle('pixel3d', S.gfx === 'pixel');
       Save.save();
       if (typeof Art !== 'undefined' && Art.cache) Art.cache.clear();
       if (typeof CityMap !== 'undefined' && CityMap.chunks2) CityMap.chunks2.clear();
       View.apply();
-      if (!quiet && JE.ui) JE.ui.toast(S.gfx === 'pixel' ? '👾 Estilo Pixel World activado (combinable con cualquier cámara)' : '✨ Estilo 3D Detallado activado');
+      if (!quiet && JE.ui) JE.ui.toast(S.gfx === 'pixel' ? '👾 Estilo Pixel World activado (combinable con cualquier cámara 3D/2D)' : '✨ Estilo 3D Detallado activado');
       this.pintarPop();
     },
     siguiente() {
@@ -134,6 +149,9 @@
       const cur = VISTAS.find(v => v.id === Vistas.actual()) || VISTAS[0];
       angBtn.setAttribute('aria-label', 'Cámara: ' + cur.n);
       angBtn.title = 'Cambiar cámara / vista (' + cur.n + ')';
+      if (!angBtn.querySelector('svg')) {
+        angBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>';
+      }
       if (!angBtn.dataset.v99o) {
         angBtn.dataset.v99o = '1';
         angBtn.onclick = e => { e.stopPropagation(); Snd.sfx('tap'); Vistas.togglePop(); };
@@ -185,7 +203,8 @@
      hacia adelante, Izquierda/Derecha = girar respecto a la cámara, Abajo = frenar/voltear. */
   const _girar99o = Ride.prototype.girarDir;
   Ride.prototype.girarDir = function (d) {
-    if (Vistas.esPersp() && d && d.m > 0) {
+    const glOn = typeof Mundo3D !== 'undefined' && Mundo3D.activo(this);
+    if (!glOn && Vistas.esPersp() && d && d.m > 0) {
       const yaw = this._yaw3 != null ? this._yaw3 : this.p.a;
       const ca = Math.cos(yaw), sa = Math.sin(yaw);
       /* Pantalla arriba (d.y = -1) → adelante (ca, sa); pantalla derecha (d.x = 1) → derecha (-sa, ca) */
@@ -193,7 +212,7 @@
       const wy = -d.y * sa + d.x * ca;
       return { x: wx, y: wy, m: d.m };
     }
-    if (Vistas.esMaqueta() && d && d.m > 0) {
+    if (!glOn && Vistas.esMaqueta() && d && d.m > 0) {
       /* En Maqueta 2:1 los ejes están rotados 45° respecto a pantalla */
       const a = Math.atan2(d.y, d.x) - Math.PI / 4;
       return { x: Math.cos(a), y: Math.sin(a), m: d.m };
@@ -805,12 +824,64 @@
   }
 
   /* =====================================================================
-     ENGANCHE EN Ride.prototype.render / renderTop / hud + MEJORA VISUAL 3D CENITAL
+     ARMONIZACIÓN CON Mundo3D (WebGL, 99d/99f) + PIXEL 3D + CABINA 1P + MAQUETA 2:1
      ===================================================================== */
+  if (typeof Mundo3D !== 'undefined') {
+    const _glPoner = Mundo3D.poner;
+    Mundo3D.poner = function (m) {
+      _glPoner.call(this, m);
+      if (this.mirador) return;
+      const S = Save.data && Save.data.settings;
+      if (S) {
+        S.vista = 'cenital';
+        S.vista3d = m === 'primera' ? '1p' : m === 'tercera' ? '3p' : 'cenital';
+      }
+      document.body.classList.toggle('pixel3d', Vistas.esPixel());
+    };
+    /* Pixel World combinable sobre el WebGL real: baja resolución del lienzo #gl3d y escala nítida */
+    const _glDib = Mundo3D.dibujar;
+    Mundo3D.dibujar = function (R) {
+      const px = Vistas.esPixel();
+      document.body.classList.toggle('pixel3d', px);
+      if (!px) return _glDib.call(this, R);
+      const q0 = View.calidad;
+      View.calidad = Math.min(q0 || 1, .38);
+      try { return _glDib.call(this, R); } finally { View.calidad = q0; }
+    };
+  }
+
+  /* Sol / luna atmosférica ligera sobre WebGL 3D (inspirada en Motor City 4.9 «Realismo») */
+  function drawSkyGlow(c, W, H, min, yaw) {
+    const hr = (((min || 600) / 60) % 24 + 24) % 24;
+    const isDay = hr >= 6 && hr <= 18.5;
+    const az = isDay ? ((hr - 6) / 12.5) * Math.PI : Math.PI * .35;
+    const rel = angDiff(yaw || 0, az - Math.PI * .5);
+    if (Math.abs(rel) > 1.25) return;
+    const sx = W * .5 + (rel / 1.25) * W * .48;
+    const elev = isDay ? Math.sin(((hr - 6) / 12.5) * Math.PI) : .55;
+    const sy = H * (.34 - elev * .22);
+    c.save();
+    const g = c.createRadialGradient(sx, sy, 2, sx, sy, isDay ? 44 : 26);
+    if (isDay) {
+      const warm = hr < 8 || hr > 16.5;
+      g.addColorStop(0, warm ? 'rgba(255,232,165,.78)' : 'rgba(255,252,228,.72)');
+      g.addColorStop(.35, warm ? 'rgba(255,168,88,.34)' : 'rgba(255,244,200,.22)');
+      g.addColorStop(1, 'rgba(255,220,150,0)');
+    } else {
+      g.addColorStop(0, 'rgba(232,242,255,.70)');
+      g.addColorStop(.4, 'rgba(155,190,255,.20)');
+      g.addColorStop(1, 'rgba(120,160,255,0)');
+    }
+    c.fillStyle = g;
+    c.beginPath(); c.arc(sx, sy, isDay ? 44 : 26, 0, TAU); c.fill();
+    c.restore();
+  }
+
   const _render99o = Ride.prototype.render;
   Ride.prototype.render = function (V, min) {
     this.min = min;
-    if (Vistas.esPersp() || Vistas.esMaqueta()) {
+    const glOn = typeof Mundo3D !== 'undefined' && Mundo3D.activo(this);
+    if (!glOn && (Vistas.esPersp() || Vistas.esMaqueta())) {
       this.pLab = [];
       return;
     }
@@ -819,6 +890,19 @@
 
   const _rtop99o = Ride.prototype.renderTop;
   Ride.prototype.renderTop = function (V) {
+    const glOn = typeof Mundo3D !== 'undefined' && Mundo3D.activo(this);
+    if (glOn) {
+      _rtop99o.call(this, V);
+      if (!Mundo3D.mirador) {
+        const c = V.ctx;
+        c.save();
+        c.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);
+        drawSkyGlow(c, V.w, V.h, this.min || 600, Mundo3D.yaw);
+        if (Mundo3D.modo === 'primera') drawCockpit1P(c, V.w, V.h, this, (this.mode && this.mode.t) || 0);
+        c.restore();
+      }
+      return;
+    }
     if (Vistas.esPersp()) {
       renderWorld3D(this, V, this.min || 600, Vistas.actual() === '1p');
       return;
@@ -841,15 +925,25 @@
     }
   };
 
-  /* HUD limpio sobre 3P / 1P / Maqueta: etiquetas abajo-centro para CERO solapamiento con el barrio arriba */
+  /* HUD limpio sobre WebGL 3P / 1P, respaldo 2D y Maqueta 2:1 */
   const _hud99o = Ride.prototype.hud;
   Ride.prototype.hud = function (V, opts) {
+    const glOn = typeof Mundo3D !== 'undefined' && Mundo3D.activo(this);
+    if (glOn) {
+      _hud99o.call(this, V, opts);
+      if (!Mundo3D.mirador) {
+        const tag = Mundo3D.modo === 'primera' ? '1.ª PERSONA · 3D' : '3.ª PERSONA · 3D';
+        const kmh = Math.round((this.p.v || 0) * M_PER_PX * 3.6);
+        V.text(tag + (Vistas.esPixel() ? ' · PIXEL' : '') + ' · ' + kmh + ' km/h', V.w / 2, V.h - 16, { size: 11.5, align: 'center', color: '#c4ec7c', bg: '#0a2342dc', pad: 4, body: true });
+      }
+      return;
+    }
     if (!Vistas.esPersp() && !Vistas.esMaqueta()) return _hud99o.call(this, V, opts);
     const cx = this.cxf, cy = this.cyf, T = this.target, fx = this.fx;
     this.cxf = -1e7; this.cyf = -1e7; this.target = null; this.fx = [];
     try { _hud99o.call(this, V, opts); } finally { this.cxf = cx; this.cyf = cy; this.target = T; this.fx = fx; }
     const tag = Vistas.actual() === '1p' ? '1.ª PERSONA · 3D' : Vistas.actual() === '3p' ? '3.ª PERSONA · 3D' : 'MAQUETA 2:1';
-    const kmh = Math.round((this.p.v || 0) * .24);
+    const kmh = Math.round((this.p.v || 0) * M_PER_PX * 3.6);
     const baseY = V.h - 16;
     V.text(tag + (Vistas.esPixel() ? ' · PIXEL' : '') + ' · ' + kmh + ' km/h', V.w / 2, baseY, { size: 11.5, align: 'center', color: '#c4ec7c', bg: '#0a2342dc', pad: 4, body: true });
     if (T) {

@@ -1,7 +1,7 @@
 {
  "version": "3.2.0",
- "hash": "a4e9024a",
- "cache": "juega-encicla-v3.2.0-a4e9024a",
+ "hash": "91aefe97",
+ "cache": "juega-encicla-v3.2.0-91aefe97",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -81,11 +81,15 @@
   "99f-mundo3d-transporte.js",
   "99g-freerun.js",
   "99h-valle-vivo.js",
+  "99n-controles-liberado.js",
+  "99o-mundo3d-camaras.js",
+  "99p-ciclovia-skate-runner.js",
+  "99q-mundo-vivo-rpg.js",
   "99r-ciclo-geometria-gpt6.js"
  ],
  "bytes": {
-  "single": 5453681,
-  "web": 5454705,
-  "js": 5264004
+  "single": 5614566,
+  "web": 5615590,
+  "js": 5421202
  }
 }
