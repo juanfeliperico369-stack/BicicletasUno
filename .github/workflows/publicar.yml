@@ -1,0 +1,89 @@
+# K-3 · OpenAI GPT-6 / Codex · EnCicla.
+# main -> gh-pages tras pruebas; ramas -> gh-pages-ensayo; /metro y /descargas intocables.
+name: Publicar EnCicla con pruebas
+on:
+  push:
+    branches: [main, openai-gpt6/encicla-3.6-chatgpt-codex]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: encicla-pages-${{ github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Chromium y Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Compilar HTML independiente y web PWA
+        run: node tools/build.js
+      - name: Geometría y chunks progresivos
+        run: |
+          node tests/prueba-gpt6-ciclorrutas.mjs
+          node tests/prueba-gpt6-chunks.mjs
+      - name: Pruebas completas
+        run: node tests/run.js
+      - name: Exigir p95 menor que 50ms y peor cuadro menor que 120ms en 2km CPU×4
+        run: node tests/benchmark-2km-gpt6.mjs --cpu=4 --km=2 --step=12 --assert
+      - name: Comprobar salida web
+        run: |
+          test -s dist/web/index.html
+          test -f dist/web/.nojekyll
+          test -s dist/web/manifest.webmanifest
+          test ! -e dist/web/metro
+      - uses: actions/upload-artifact@v4
+        with:
+          name: encicla-web-validado
+          path: dist/web/
+          include-hidden-files: true
+          retention-days: 5
+  publicar:
+    needs: comprobar
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name == 'main' && 'gh-pages' || 'gh-pages-ensayo' }}
+          path: pages
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: encicla-web-validado
+          path: salida
+      - name: Resguardar Metro y descargas
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s pages/metro/index.html
+          test -d pages/descargas
+          METRO_ANTES=$(find pages/metro -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+          DESC_ANTES=$(find pages/descargas -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+          rsync -a --delete --exclude='/.git/' --exclude='/metro/' --exclude='/descargas/' --exclude='/CNAME' salida/ pages/
+          METRO_DESPUES=$(find pages/metro -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+          DESC_DESPUES=$(find pages/descargas -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+          test "$METRO_ANTES" = "$METRO_DESPUES"
+          test "$DESC_ANTES" = "$DESC_DESPUES"
+          test -s pages/index.html
+      - name: Publicar si todo está verde
+        working-directory: pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'OpenAI GPT-6 / Codex'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "deploy(encicla): tests verdes ${{ github.sha }} [OpenAI GPT-6]"
+            git push origin "HEAD:${{ github.ref_name == 'main' && 'gh-pages' || 'gh-pages-ensayo' }}"
+          fi

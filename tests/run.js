@@ -444,6 +444,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   await require('./revolucion-encicla').v6(p, ok);   /* ronda 3.3: perdón, primer minuto, Hoy en el valle, modo prueba, vecinos, Controles y lo que ve el jugador */
   await require('./revolucion-encicla').v7(p, ok);   /* ronda 3.5: la ciudad responde, la bici se inclina, medir, llegar ya y todo junto */
   await require('./revolucion-encicla').v8(p, ok);   /* ronda 3.6 (Gemini · Antigravity): 12 modos con bot hasta el final, 15 encargos y 88 frases */
+  await require('./revolucion-encicla').v9(p, ok);   /* ronda 3.6 GPT-6: chunks progresivos, respaldo de capas y telemetría */
   ok(!errs.length, 'sin errores de consola al final ' + errs.slice(0, 3).join(' | '));
   /* v2.1 · registro de claves del guardado (TAREAS-IA 10): después de jugar todo, cada clave de Save.data está registrada con su tipo */
   const claves = await p.evaluate(() => ({ mal: Save.revisarClaves(), n: Object.keys(Save.data).length, reg: Object.keys(Save.CLAVES).length }));

@@ -1119,3 +1119,22 @@ Pedido del autor: «continúa lo que falta y las sugerencias, por ahora haz los 
 **Qué se probó:** `node tools/build.js` y `node tests/run.js`, todas en verde, con una prueba nueva (3h3). También una captura en el mundo libre.
 
 **Qué falta:** migrar a `motor-city/` para tener el mundo 3D único con sus cámaras.
+
+
+## 2026-11-23 · ronda 3.6 · ChatGPT + Codex K-1/K-2/K-3 y C-130/C-133
+**Firma: OpenAI GPT-6.** Se parte de `ccr-6f184fb6-vtpkye` (Claude 3.5), sin modificar otros repositorios.
+
+**Arte:** 14 PNG originales para Comuna 13, Línea A, Las Palmas y corredor, en `arte/entregas/2026-11-23-gpt6-c130-c133/` con manifiesto SHA-256. Script reproducible `tools/generar-arte-lateral-gpt6.py`, workflow de validación geométrica `crear-arte-lateral-gpt6.yml`. Estilo aún **prototipo** y sujeto a revisión visual.
+
+**K-1:** `75-graficos.js` ahora admite dibujo de suelo por fases reanudables; `99w-chunks-progresivos.js` difiere el render de cada trozo mediante rAF (presupuesto nominal 6 ms), fondo inmediato, caché LRU, cancelación y telemetría. Medición base de Claude en CPU×4: **24–89 ms/trozo**. **No se ha confirmado la meta final** p95 <50 ms y máximo <120 ms para 2 km, ya que ciertas fases indivisibles pueden exceder el presupuesto.
+
+**K-2:** `tools/capas.js` empaqueta WebP sin pérdidas cuando cwebp está disponible, PNG cuando no; límite de crecimiento del HTML 1,5 MB; `99x-capas-laterales.js` dibuja 4 capas 21:9 y sprite 4×4, reemplaza magenta exacto y conserva el fallback si falta arte. Integraciones pequeñas en `99g-freerun.js` y `99p-ciclovia-skate-runner.js`.
+
+**K-3:** `.github/workflows/publicar.yml`: construir y pasar Chromium antes de actualizar `gh-pages` (`main`) o `gh-pages-ensayo` (rama 3.6). Excluye del rsync y verifica por hash `/metro/` y `/descargas/`, protege `CNAME`.
+
+**Pruebas añadidas:** `tests/prueba-gpt6-chunks.mjs`, V8 en `tests/revolucion-encicla.js` y `tests/run.js`. Los estados finales se verifican en Actions sobre el commit de entrega; no inferirlos de una ejecución anterior.
+
+**Documentos:** `PROMPTS-3.5-Claude.md` reconstruye el archivo que faltaba; `docs/ENTREGA-ENCICLA-3.6-GPT6.md` contiene diseño, archivos, pruebas, compromisos y pasos de integración.
+
+
+**Auditoría regresión CI de ronda 3.6:** en la ejecución del commit `f9ddf0edc`, todo V8 y la mayoría de la batería pasaron, pero V7 midió solo 0,13 rad de ladeo 3D durante una curva, frente a un mínimo de 0,2 rad. Se corrigió el **realce visual** y velocidad de interpolación en `src/js/99d-mundo3d.js` (factor 1,8; límite ±0,65; filtrado 12 s⁻¹) sin alterar la física. Nueva batería obligatoria antes de fusión.

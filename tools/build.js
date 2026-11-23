@@ -15,13 +15,15 @@ const VALLE = `const VALLE_META = ${rd('data/valle.json')};\nconst VALLE_BIN = '
 // guion del juego (contenido/guion/*.json): historia "Un día del valle", frases de la ciudad, tutor, fiestas y Metro
 const GDIR = path.join(ROOT, 'contenido', 'guion');
 const GUION = fs.existsSync(GDIR) ? Object.fromEntries(fs.readdirSync(GDIR).filter(f => f.endsWith('.json')).sort().map(f => [f.slice(0, -5), JSON.parse(fs.readFileSync(path.join(GDIR, f), 'utf8'))])) : {};
+// K-2 (GPT-6/Codex): capas opcionales incrustadas, nunca requeridas para jugar offline.
+const CAPAS = require('./capas').obtener();
 // lo que va en alto (motor-valle/geo/alturas.py): tramos del metro en viaducto y puentes de las vías
 const ALT = fs.existsSync(path.join(SRC, 'data', 'alturas.json')) ? rd('data/alturas.json') : 'null';
 // Metroplús como en El Metro (motor-valle/geo/metroplus_elmetro.py): corredores de OSM de las Líneas 1 y 2 y andenes reales
 const MPR = fs.existsSync(path.join(SRC, 'data', 'metroplus.json')) ? rd('data/metroplus.json') : 'null';
 // la red completa de El Metro (tools/red_metro.js): alimentadores, líneas futuras, escaleras de la Comuna 13 y datos de las estaciones
 const REDM = fs.existsSync(path.join(SRC, 'data', 'red_metro.json')) ? rd('data/red_metro.json') : 'null';
-js = VALLE + `const GUION = ${JSON.stringify(GUION)};\nconst ALTURAS = ${ALT};\nconst MP_REAL = ${MPR};\nconst RED_M = ${REDM};\n` + js;
+js = VALLE + `const GUION = ${JSON.stringify(GUION)};\nconst CAPAS_EMBEBIDAS = ${JSON.stringify(CAPAS.data)};\nconst ALTURAS = ${ALT};\nconst MP_REAL = ${MPR};\nconst RED_M = ${REDM};\n` + js;
 const version = (js.match(/version: '([^']+)'/) || [])[1] || '0.0.0';
 const b64 = f => fs.readFileSync(path.join(SRC, 'assets', f)).toString('base64');
 const fonts = `@font-face{font-family:"Titulos";font-weight:300 700;font-stretch:75% 125%;src:url(data:font/woff2;base64,${b64('titulos.woff2')}) format("woff2");font-display:swap}@font-face{font-family:"Cuerpo";font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}`;
@@ -79,6 +81,6 @@ if (fs.existsSync(LAND)) fs.cpSync(LAND, WEB, { recursive: true, filter: s => !/
 const apk = fs.readdirSync(DIST).filter(f => f.endsWith('.apk')).sort().pop();
 if (apk) { fs.mkdirSync(path.join(WEB, 'descargas'), { recursive: true }); fs.copyFileSync(path.join(DIST, apk), path.join(WEB, 'descargas', 'JuegaEnCicla.apk')); }
 fs.writeFileSync(path.join(DIST, 'build.json'), JSON.stringify({ version, hash, cache: CACHE, files: jsFiles, bytes: { single: single.length, web: web.length, js: js.length } }, null, 1));
-console.log('OK v' + version, 'cache', CACHE, '| único', (single.length / 1024).toFixed(0) + ' KB | js', (js.length / 1024).toFixed(0) + ' KB');
+console.log('OK v' + version, 'cache', CACHE, '| único', (single.length / 1024).toFixed(0) + ' KB | js', (js.length / 1024).toFixed(0) + ' KB | arte lateral opcional', (CAPAS.bytes / 1024).toFixed(0) + ' KB');
 // documento único para las IA de arte e historia (docs/IA-ENCICLA.md + anexos)
 try { const r = require('./todo-ia.js')(); console.log('Documento para IA: dist/ENCICLA-TODO.md ·', (r.bytes / 1024).toFixed(0), 'KB'); } catch (e) { console.warn('Documento para IA:', e.message); }

@@ -1,0 +1,40 @@
+# OpenAI GPT-6 · Benchmark reproducible de K-1, separado de la publicación.
+# El CI informa fallos pero jamás toca main ni gh-pages.
+name: Benchmark 2 km CPU ×4 GPT-6
+on:
+  push:
+    branches:
+      - openai-gpt6/encicla-3.6-chatgpt-codex
+    paths:
+      - tests/benchmark-2km-gpt6.mjs
+      - .github/workflows/benchmark-2km-gpt6.yml
+      - src/js/99w-chunks-progresivos.js
+      - src/js/75-graficos.js
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  comparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Chromium real
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Compilar HTML offline
+        run: node tools/build.js
+      - name: Recorrer 2 km (Carrera 43A y Las Palmas), CPU ×4
+        run: node tests/benchmark-2km-gpt6.mjs --cpu=4 --km=2 --step=12 --assert
+      - name: Evidencia de rendimiento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-2km-cpux4-gpt6
+          path: tests/out/benchmark-2km-gpt6.json
+          if-no-files-found: ignore
+          retention-days: 30

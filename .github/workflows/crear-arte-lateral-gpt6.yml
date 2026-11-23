@@ -1,0 +1,59 @@
+# Arte original C-130 a C-133 · OpenAI GPT-6
+# Genera PNG y manifiesto en una carpeta exclusiva; sin modificar arte de Gemini.
+name: Crear arte lateral GPT-6
+on:
+  push:
+    branches: [openai-gpt6/encicla-3.6-chatgpt-codex]
+    paths:
+      - tools/generar-arte-lateral-gpt6.py
+      - .github/workflows/crear-arte-lateral-gpt6.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: arte-c130-c133
+  cancel-in-progress: false
+jobs:
+  producir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar Pillow (solo autoría; no depende el HTML)
+        run: python -m pip install --quiet 'Pillow>=10,<13'
+      - name: Generar 14 PNG y manifiesto
+        run: python tools/generar-arte-lateral-gpt6.py
+      - name: Inspeccionar dimensiones, fondo y bordes para bucle
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import json
+          d=Path('arte/entregas/2026-11-23-gpt6-c130-c133')
+          m=json.loads((d/'manifiesto.json').read_text(encoding='utf8'))
+          assert len(m['imagenes'])==14
+          for a in m['imagenes']:
+              p=d/a['archivo']; im=Image.open(p).convert('RGB'); w,h=im.size
+              assert (w,h)==(a['anchura'],a['altura']), p
+              if '_capa' in p.name:
+                  assert w*9 == h*21, p
+                  assert list(im.crop((0,0,1,h)).getdata()) == list(im.crop((w-1,0,w,h)).getdata()), p
+                  if not p.name.endswith('capa1.png'):
+                      assert im.getpixel((w//2,3))==(255,0,255), p
+              if p.name=='c133_corredor_lado.png':
+                  assert (w,h)==(1024,1024)
+                  assert im.getpixel((2,2))==(255,0,255)
+              print('OK',p.name,w,h)
+          PY
+      - name: Guardar arte bajo firma GPT-6
+        run: |
+          git config user.name 'OpenAI GPT-6 / ChatGPT'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add arte/entregas/2026-11-23-gpt6-c130-c133/
+          if ! git diff --cached --quiet; then
+            git commit -m "art(encicla): 14 PNG C-130..C-133 validados y manifiesto [OpenAI GPT-6]"
+            git push origin HEAD:openai-gpt6/encicla-3.6-chatgpt-codex
+          fi

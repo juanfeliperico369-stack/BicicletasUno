@@ -148,6 +148,7 @@ class MGFreerun extends MG {
     this.camY += (this.y - this.camY) * .12; const cx = this.x - vw * .24 / K, X = x => Math.round((x - cx) * K), Y = h => Math.round(y0 - (h - this.camY) * K); this.L = { vw, vh };
     /* el valle al fondo (la panorámica de siempre) que baja a medida que subes */
     const hz = Math.round(clamp(vh * .5 + this.camY * K * .35, vh * .42, vh * .9) / 8) * 8;   /* en pasos de 8 px: la panorámica se guarda y no se vuelve a pintar en cada cuadro */ b.drawImage(Art.panorama(vw, vh, this.min, hz), 0, 0);
+    if (JE.capas) JE.capas.dibujar(b, 'comuna13', cx * K, vw, vh); /* K-2: capas opcionales */
     /* las casas de ladrillo de la ladera (paralaje), con su color, ventanas y techos */
     const par = .5, base = cx * par, dark = n > .5; prect(b, 0, hz, vw, vh - hz, dark ? '#1c2a22' : '#5f7d45');   /* la ladera bajo el horizonte */
     for (let i = Math.floor(base / 5) - 1; i < Math.floor(base / 5) + vw / (5 * K) + 2; i++) {
@@ -189,7 +190,7 @@ class MGFreerun extends MG {
     if (this.giro) b.rotate(this.giro);
     if (this.desliza > 0 && this.suelo) b.rotate(-1.2); else if (this.pose === 'bola') b.scale(1, .7); else if (this.pose === 'der') b.rotate(.5); else if (this.pose === 'arriba') b.scale(1.1, .9);
     if (this.tropT > 0 && (this.t * 12 | 0) % 2) b.globalAlpha = .55;
-    b.scale(1.3, 1.3); Art.person(b, 0, 9, me, this.suelo ? this.pasos / 1.4 : .25, 1); b.restore();   /* un poco más grande que la escala del mundo: se lee en el celular */
+    b.scale(1.3, 1.3); if (!(JE.capas && JE.capas.corredor(b, this, 0, 9, 14, 22))) Art.person(b, 0, 9, me, this.suelo ? this.pasos / 1.4 : .25, 1); b.restore();   /* un poco más grande que la escala del mundo: se lee en el celular */
   }
   /* el patrón de ladrillo (16 × 8 px), uno de día y otro de noche */
   muro(b, dark) {

@@ -280,7 +280,9 @@ Object.assign(CityMap, {
     R = { all, ed, casas }; C0.set(key, R); if (C0.size > 64) C0.delete(C0.keys().next().value);
     return R;
   },
-  drawGround3(c, cx, cy, q) {
+  /* Contrato síncrono conservado para usos externos; la ruta normal usa el iterador K-1. */
+  drawGround3(c, cx, cy, q) { for (const _ of this.drawGround3Etapas(c, cx, cy, q)) {} },
+  *drawGround3Etapas(c, cx, cy, q) {
     const x0 = cx * CH, y0 = cy * CH, px0 = x0 * TS, py0 = y0 * TS, S = CH * TS, g = (x, y) => this.get(x, y);
     c.setTransform(q, 0, 0, q, -px0 * q, -py0 * q); c.lineCap = 'round'; c.lineJoin = 'round';
     // 1) suelo: piso de ciudad y capas suavizadas encima (sin casillas a la vista)
@@ -288,28 +290,40 @@ Object.assign(CityMap, {
     const cov = this.cov, pk = (x, y) => { const v = g(x, y); return (v === TT.ROAD || v === TT.AVE || v === TT.AUTO) && cov && x >= 0 && y >= 0 && x < MW && y < MH && !cov[y * MW + x]; };
     const capa = (test, col, thr) => { if (this.contorno(c, x0, y0, test, thr)) { c.fillStyle = col; c.fill(); } };
     capa(v => v === TT.MOUNT, '#3f7a3c');
+    yield; /* K-1: ceder tras una máscara de terreno completa */
     capa(v => v === TT.GRASS || v === TT.CANAL || v === TT.LAND, '#69a84e');
+    yield; /* K-1: ceder tras una máscara de terreno completa */
     capa(v => v === TT.PLAZA, '#ddd3bd');
+    yield; /* K-1: ceder tras una máscara de terreno completa */
     capa((v, x, y) => { if (!pk(x, y)) return false; let n = 0; for (const [dx, dy] of N8) if (pk(x + dx, y + dy)) n++; return n >= 5; }, '#8e929a');
+    yield; /* K-1: ceder tras una máscara de terreno completa */
     capa(v => v === TT.BRICK, '#a99f91');
+    yield; /* K-1: ceder tras una máscara de terreno completa */
     const verdeZ = /Poblado|Laureles/.test(this.comunaAt(px0 + S / 2, py0 + S / 2)) || /Envigado/.test(this.muniAt(px0 + S / 2, py0 + S / 2));   // desde el aire, El Poblado, Laureles y Envigado son casi bosque entre los edificios
     capa(v => v === TT.BLDG, verdeZ ? '#8fb072' : '#9fa2a7');   // allí, entre las torres hay jardines de las unidades
     const agua = this.decks && this.decks.length ? v => v === TT.WATER || v === TT.BRIDGE : v => v === TT.WATER;   // con los puentes en alto, el río sigue por debajo
     capa(agua, '#87a872', .3);
+    yield; /* K-1: ceder tras una máscara de terreno completa */
     capa(agua, '#3f86c8');
+    yield; /* K-1: ceder tras una máscara de terreno completa */
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // textura del pasto y del monte: puntos, no cuadros
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) { const v = g(x, y); if (v !== TT.GRASS && v !== TT.MOUNT) continue; c.fillStyle = v === TT.MOUNT ? '#356d34' : '#78b65c'; c.beginPath(); for (let k = 0; k < 3; k++) { const X = x * TS + 2 + h2(x, y, 30 + k) * 12, Y = y * TS + 2 + h2(x, y, 40 + k) * 12; c.moveTo(X + .9, Y); c.arc(X, Y, .9, 0, TAU); } c.fill(); }
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // relieve suave (luz del noroeste)
     const RS = CH + 3, rc = Art.mk(RS, RS, r => { const im = r.createImageData(RS, RS), D = im.data; for (let j = 0; j < RS; j++) for (let i = 0; i < RS; i++) { const tx = x0 - 1 + i, ty = y0 - 1 + j, gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile, f = clamp((gx + gy) * 1.1, -.3, .25), o = (j * RS + i) * 4; if (f > 0) { D[o] = 255; D[o + 1] = 250; D[o + 2] = 230; D[o + 3] = f * 127.5; } else { D[o] = 10; D[o + 1] = 20; D[o + 2] = 40; D[o + 3] = -f * 153; } } r.putImageData(im, 0, 0); });
     c.imageSmoothingEnabled = true; c.drawImage(rc, 0, 0, RS, RS, px0 - TS * 1.5, py0 - TS * 1.5, RS * TS, RS * TS);   // una muestra por casilla: el relieve es suave (datos de 80 m) y el suavizado lo estira
     const CHS = this.chainsNear(px0 - 2 * TS, py0 - 2 * TS, S + 4 * TS, S + 4 * TS);
     const run = (f, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash || []); c.beginPath(); for (const ch of CHS) { if (!f(ch.k)) continue; const p = ch.p; c.moveTo(p[0], p[1]); if (p.length === 2) c.lineTo(p[0] + .01, p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); } c.stroke(); c.setLineDash([]); };
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // lugares emblemáticos: su suelo vectorial (prados, caminos, agua, canchas, el estadio, los cerros), bajo las calles que los cruzan
     const LMV = []; LANDMARKS.forEach((L, i) => { if (!(L.x + L.w < x0 - 3 || L.x > x0 + CH + 3 || L.y + L.h < y0 - 3 || L.y > y0 + CH + 3)) LMV.push(i); });
     for (const i of LMV) this.lugar3(c, LANDMARKS[i], i, 0);
     this.sitSuelo(c, cx, cy);   // canchas con sus líneas, pistas atléticas y piscinas (22-sitios.js)
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // 2) quebradas: un hilo de agua por su trazo real, dentro de su retiro verde
     run(k => k === 9, 7.5, 'rgba(105,168,78,.9)'); run(k => k === 9, 3.4, '#6f9a7c'); run(k => k === 9, 2.2, '#4f9bd4');
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // 3) andenes con sardinel a lo largo de cada calle (y peatonales, escalas y senderos)
     const RD = k => k > 0 && k < 5, GW = new Map(); for (const ch of CHS) if (RD(ch.k)) { const key = ch.k * 1e4 + Math.round(ch.w * 10); (GW.get(key) || GW.set(key, []).get(key)).push(ch); }
     const KO = { 1: 0, 4: 1, 2: 2, 3: 3 }, GK = [...GW.keys()].sort((a, b) => KO[(a / 1e4) | 0] - KO[(b / 1e4) | 0] || a - b), ASF = { 1: '#565a62', 4: '#565a62', 2: '#50545c', 3: '#4a4e56' };
@@ -319,6 +333,7 @@ Object.assign(CityMap, {
     run(q => q === 6, (CHW[6] + .14) * TS, '#b3ab98'); run(q => q === 6, CHW[6] * TS, '#e6dfcd');
     run(q => q === 7, CHW[7] * TS, '#cbc1ab'); run(q => q === 7, CHW[7] * TS * .9, '#a99d84', [.8, 1.5]);
     run(q => q === 8, CHW[8] * TS, '#d6c9a8', [3, 2.5]);
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // 4) calles: cada una con su ancho, bordes, separadores y líneas
     for (const key of GK) runL(GW.get(key), (key % 1e4) / 10 + 1, '#7d796f');
     for (const key of GK) runL(GW.get(key), (key % 1e4) / 10, ASF[(key / 1e4) | 0]);
@@ -326,18 +341,22 @@ Object.assign(CityMap, {
     for (const key of GK) { const k = (key / 1e4) | 0, w = (key % 1e4) / 10, L = GW.get(key); if (k === 1) runL(L, .7, '#e6e4dc', [5, 7]); else if (k === 4) runL(L, .75, '#eceae2', [6, 6]); else if (k === 2 && w < 1.7 * TS) runL(L, .8, '#e8c64a', [8, 6]); else if (k === 3) runL(L, .8, '#f2f0e8', [9, 6]); }
     for (const ch of CHS) { if (!RD(ch.k)) continue; const p = ch.p, w = ch.w / 2 - .5; c.fillStyle = ASF[ch.k]; if (ch.j0) { c.beginPath(); c.arc(p[0], p[1], w, 0, TAU); c.fill(); } if (ch.j1) { c.beginPath(); c.arc(p[p.length - 2], p[p.length - 1], w, 0, TAU); c.fill(); } }
     run(k => k === 9, .9, 'rgba(79,155,212,.45)', [2.5, 3.2]);   // las quebradas que pasan cubiertas bajo las calles (la Santa Elena bajo La Playa): línea tenue
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // cebras en los cruces con semáforo
     c.strokeStyle = '#eceae2'; c.lineWidth = 1.6; c.lineCap = 'butt'; c.beginPath();
     for (const z of this.zebras(px0 - 40, py0 - 40, S + 80, S + 80)) { const nx = -z.uy, ny = z.ux; for (let k = -z.hw + 1.5; k <= z.hw - 1.5; k += 3) { const x = z.x + nx * k, y = z.y + ny * k; c.moveTo(x - z.ux * 3, y - z.uy * 3); c.lineTo(x + z.ux * 3, y + z.uy * 3); } }
     c.stroke(); c.lineCap = 'round';
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // ciclorrutas: carril verde con bordes y bicis pintadas
     run(q => q === 5, .52 * TS, '#e9e6dc'); run(q => q === 5, .42 * TS, '#2e9d55'); run(q => q === 5, .55, '#d8f0c8', [3, 4]);
     for (const ch of CHS) { if (ch.k !== 5) continue; const len = chainLen(ch.p); for (let s = 20 + h2(ch.p[0] | 0, ch.p[1] | 0, 12) * 40; s < len - 8; s += 70) { const a = this.chPt(ch, s), b = this.chPt(ch, s + 2); if (a.x < px0 - 4 || a.y < py0 - 4 || a.x > px0 + S + 4 || a.y > py0 + S + 4) continue; const an = Math.atan2(b.y - a.y, b.x - a.x); c.save(); c.translate(a.x, a.y); c.rotate(an); c.strokeStyle = '#e6f5da'; c.lineWidth = .6; c.beginPath(); c.arc(-1.6, 0, 1.2, 0, TAU); c.moveTo(2.8, 0); c.arc(1.6, 0, 1.2, 0, TAU); c.stroke(); c.restore(); } }
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // 5) lotes: sombras, casas con su techo y base de los edificios (el volumen de los edificios va en draw3D)
     const LT = this.lotes(cx, cy), poly = (P, dx, dy) => { c.moveTo(P[0] + dx, P[1] + dy); c.lineTo(P[2] + dx, P[3] + dy); c.lineTo(P[4] + dx, P[5] + dy); c.lineTo(P[6] + dx, P[7] + dy); c.closePath(); };
     c.fillStyle = 'rgba(8,14,30,.24)'; c.beginPath(); for (const L of LT.all) if (!L.B) poly(L.pts, 1.2, 1.5); c.fill();
     c.fillStyle = 'rgba(8,14,30,.26)'; for (const L of LT.all) if (L.B) { const d = 3 + L.z * 13, H = hull8(L.pts, d); c.beginPath(); c.moveTo(H[0], H[1]); for (let k = 2; k < H.length; k += 2) c.lineTo(H[k], H[k + 1]); c.closePath(); c.fill(); }
     c.fillStyle = '#8f9399'; c.beginPath(); for (const L of LT.all) if (L.B) poly(L.pts, 0, 0); c.fill();   // base de los edificios (su volumen va en draw3D)
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // casas con volumen: techo levantado según sus pisos y fachadas hacia el sur (la cámara inclinada de las ciudades de arcade); por color, en pocos trazos
     const muros = new Map(), techos = new Map(), ruta = (m, h) => m.get(h) || m.set(h, new Path2D()).get(h), cumbre = new Path2D(), tanques = new Path2D(), ropa = [];
     for (const L of LT.all) {
@@ -352,6 +371,7 @@ Object.assign(CityMap, {
     for (const [h, t] of techos) { c.fillStyle = h; c.fill(t); }
     c.strokeStyle = 'rgba(20,16,12,.22)'; c.lineWidth = .7; c.stroke(cumbre); c.fillStyle = '#1e2126'; c.fill(tanques);
     for (const [L, hz] of ropa) for (let j = -1; j <= 1; j += 2) { const X = L.x + L.ux * j * L.w * .2 + L.nx * L.d * .15, Y = L.y + L.uy * j * L.w * .2 + L.ny * L.d * .15 - hz; c.fillStyle = ROPA[((L.k * 61 | 0) + j + 2) % ROPA.length]; c.fillRect(X - .7, Y - .7, 1.4, 1.5); }
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // edificios reales de los sitios (22-sitios.js): sombra, base de los altos y los bajos (1 o 2 pisos) con su volumen, como las casas
     const STR = this.sitTrozo(cx, cy);
     if (STR) {
@@ -381,6 +401,7 @@ Object.assign(CityMap, {
       c.font = 'italic 700 6.6px Cuerpo, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
       const vistos = new Set(); for (const [n, x, y, k] of this._pq.get(cx + ',' + cy) || []) { if (vistos.has(n)) continue; vistos.add(n); const tw = c.measureText(n).width;   /* un nombre por trozo */ if (x - tw / 2 < px0 + 2 || x + tw / 2 > px0 + S - 2) continue; c.lineWidth = 2; c.strokeStyle = 'rgba(246,244,236,.92)'; c.strokeText(n, x, y); c.fillStyle = k === 2 ? '#6b5326' : '#2f6b2a'; c.fillText(n, x, y); } }
     this.sitNombres(c, cx, cy);   // universidades, alcaldías, hospitales y demás con su nombre
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // 6) mobiliario: postes de luz en el andén; en las avenidas, árboles (algunos guayacanes). No en las esquinas.
     for (const ch of CHS) {
       if (!(ch.k >= 1 && ch.k <= 4) || ch.k === 3) continue; const len = chainLen(ch.p), hw = ch.w / 2 + SWK[ch.k] * .55, step = ch.k === 2 ? 24 : 38; let j = 0;
@@ -391,12 +412,15 @@ Object.assign(CityMap, {
         else { const lx = X + uy * sd * 3.4, ly = Y - ux * sd * 3.4; c.strokeStyle = 'rgba(8,14,30,.28)'; c.lineWidth = .9; c.beginPath(); c.moveTo(X + 1.4, Y + 1.4); c.lineTo(lx + 1.4, ly + 1.4); c.stroke(); c.strokeStyle = '#2f3540'; c.lineWidth = .7; c.beginPath(); c.moveTo(X, Y); c.lineTo(lx, ly); c.stroke(); c.fillStyle = '#2f3540'; c.beginPath(); c.arc(X, Y, 1.1, 0, TAU); c.fill(); c.fillStyle = '#fff4cf'; c.beginPath(); c.ellipse(lx, ly, 1.3, .8, Math.atan2(uy, ux), 0, TAU); c.fill(); }
       }
     }
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // bancas en las plazas
     c.fillStyle = '#7a5a3a';
     for (let y = y0; y < y0 + CH; y++) for (let x = x0; x < x0 + CH; x++) if (g(x, y) === TT.PLAZA && h2(x, y, 72) < .07 && !this.lid.has(this.idx(x, y))) { const X = x * TS + 4 + h2(x, y, 73) * 6, Y = y * TS + 5 + h2(x, y, 74) * 6; c.fillRect(X, Y, 5, 1.5); c.fillStyle = '#5c4229'; c.fillRect(X, Y + 1.5, 5, .5); c.fillStyle = '#7a5a3a'; }
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // lugares emblemáticos
     for (const i of LMV) this.lugar3(c, LANDMARKS[i], i, 1);   // árboles, esculturas, postes, buses, aviones, la rueda de Chicago, las cruces
     const cub = new Set(); if (verdeZ) for (const L of LT.all) { const P = L.pts; cub.add(this.idx(Math.floor(L.x / TS), Math.floor(L.y / TS))); for (let k = 0; k < 8; k += 2) cub.add(this.idx(Math.floor(P[k] / TS), Math.floor(P[k + 1] / TS))); }   // casillas con lote (ahí no van árboles)
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // árboles con sombra (en parques, monte y andenes anchos)
     for (let y = y0 - 1; y <= y0 + CH; y++) for (let x = x0 - 1; x <= x0 + CH; x++) {
       const v = g(x, y), r = h2(x, y, 5); let rad = 0;
@@ -409,6 +433,7 @@ Object.assign(CityMap, {
       c.fillStyle = 'rgba(8,14,30,.28)'; c.beginPath(); c.arc(X + R * .35, Y + R * .4, R, 0, TAU); c.fill(); c.fillStyle = sombra18(col); c.beginPath(); c.arc(X, Y, R, 0, TAU); c.fill();
       c.fillStyle = col; c.beginPath(); c.arc(X - R * .15, Y - R * .15, R * .78, 0, TAU); c.fill(); c.fillStyle = k < .09 ? '#fff3a088' : '#ffffff2e'; c.beginPath(); c.arc(X - R * .35, Y - R * .35, R * .38, 0, TAU); c.fill();
     }
+    yield; /* K-1: presupuesto de dibujo por cuadro */
     // 7) tranvía, Metroplús y metro: los andenes van A LO LARGO del trazo (siguen sus curvas), y los rieles mueren en ellos
     const near = (x, y, m) => x > px0 - m && y > py0 - m && x < px0 + S + m && y < py0 + S + m;
     const path = (L, w, col, dx = 0, dy = 0) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); L.pts.forEach((p, i) => i ? c.lineTo(p.x + dx, p.y + dy) : c.moveTo(p.x + dx, p.y + dy)); c.stroke(); };

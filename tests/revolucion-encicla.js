@@ -279,9 +279,9 @@ module.exports.v7 = async function (p, ok) {
     out.dicho = Dichos.dicho && Dichos.dicho.t; out.frases = Dichos.frases().length;
     const ctx = { lugar: 'estacion', min: 420, lluvia: false, noche: false, veh: 'bike' }, f = Dichos.elegir('ambiente', ctx); out.especifica = !!(f && f.lugar === 'estacion');
     /* 2) la bici se inclina en las curvas del 3D */
-    if (Mundo3D.ok()) { Mundo3D.poner('tercera'); R.p.v = R.stats_().max * .9; Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600 }); let m = 0; const t0 = performance.now();
+    if (Mundo3D.ok()) { const bloqueoOriginal = R.blocked; R.blocked = () => false; /* aislar el ensayo de ladeo: en esta fase el jugador sigue junto al peatón del timbre y puede chocar */ Mundo3D.poner('tercera'); R.p.v = R.stats_().max * .9; Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600 }); let m = 0; const t0 = performance.now();
       while (performance.now() - t0 < 1400) { const a = R.p.a + 1.4; Input.joy.x = 200 + Math.cos(a) * 46; Input.joy.y = 600 + Math.sin(a) * 46; await espera(50); m = Math.max(m, Math.abs(Mundo3D.lad || 0)); }
-      Input.joy.on = false; out.ladeo = +m.toFixed(2); Mundo3D.poner(null); }
+      Input.joy.on = false; R.blocked = bloqueoOriginal; out.ladeo = +m.toFixed(2); Mundo3D.poner(null); }
     /* 3) 🚀 llegar ya en el mapa grande */
     const L = LM.cerro, x = (L.x + L.w / 2) * TS, y = (L.y + L.h) * TS + 20; R.way = { x, y, label: 'Cerro Nutibara', col: '#ff2fb3' }; JE.mapView.show(R); await espera(400);
     const B = JE.mapView.btns.find(b => b.y === View.h - 140); if (B) B.fn(); await espera(200); out.llegar = { boton: !!B, llego: Math.hypot(R.p.x - x, R.p.y - y) < 2 };
@@ -378,3 +378,36 @@ module.exports.v8 = async function (p, ok) {
     '🗣️ A-2 frases ciudad: ' + r.fr.n + ' frases ' + JSON.stringify(c));
 };
 
+
+/* V8 · GPT-6/Codex 3.6: el render del trozo no bloquea el cuadro de entrada;
+ * fondos opcionales y rutas de respaldo. El benchmark de CPU 4x es externo. */
+module.exports.v9 = async function (p, ok) {
+  console.log('V9) ronda 3.6 · chunks reanudables y capas laterales opcionales');
+  const r = await p.evaluate(async () => {
+    const out = {}, perfil = JE.chunksGPT6, capas = JE.capas;
+    if (!perfil || !capas) return { instalado: false };
+    out.instalado = true;
+    const gfx0 = Save.data.settings.gfx;
+    Save.data.settings.gfx = '3d';
+    try {
+      const s = homeStation(), tam = CH * TS, cx = Math.floor(s.x / tam) + 7, cy = Math.floor(s.y / tam) + 4;
+      const q = JE.map.cq(), k = cx + ',' + cy + ':' + q;
+      JE.map.chunks2.delete(k);
+      const ini = perfil.creados, t0 = performance.now(), canvas = JE.map.chunkG(cx, cy);
+      out.solicitudMs = +(performance.now() - t0).toFixed(2);
+      out.creado = perfil.creados === ini + 1 && !!canvas && canvas.width > 0;
+      out.reutilizado = JE.map.chunkG(cx, cy) === canvas;
+      const im = canvas.getContext('2d').getImageData(1, 1, 1, 1).data;
+      out.respaldo = im[0] === 207 && im[1] === 201 && im[2] === 188;
+      await new Promise(res => setTimeout(res, 1800));
+      out.progreso = perfil.terminados >= 0 && perfil.maxEtapaMs >= 0 && perfil.errores === 0;
+      out.etapas = { pendientes: perfil.pendientes, completados: perfil.terminados, p95: perfil.percentil95(), max: perfil.maxEtapaMs };
+      out.sinCapas = capas.dibujar(canvas.getContext('2d'), '__sin_arte__', 0, 50, 50) === false;
+      out.capas = capas.activos();
+    } finally { Save.data.settings.gfx = gfx0; }
+    return out;
+  });
+  ok(r.instalado && r.creado && r.reutilizado && r.respaldo && r.progreso,
+     'K-1: chunk se crea instantáneamente con color tierra y continúa por cuadros ' + JSON.stringify(r));
+  ok(r.instalado && r.sinCapas, 'K-2: si falta cualquier paquete de arte, permanece el dibujo anterior');
+};
