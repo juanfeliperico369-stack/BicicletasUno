@@ -864,6 +864,7 @@
         c.lineTo(x, y);
       }
       c.lineTo(W, H * .72); c.lineTo(0, H * .72); c.closePath(); c.fill();
+      if (JE.capas) JE.capas.dibujar(c, 'lineaA', off, W, H); /* K-2: 4 capas; fallback previo */
       const vy = Math.round(H * .68);
       c.fillStyle = '#475569'; c.fillRect(0, vy, W, 18);
       c.fillStyle = '#334155';
@@ -986,6 +987,7 @@
       c.beginPath(); c.moveTo(0, H * .66);
       for (let x = 0; x <= W + 40; x += 28) c.lineTo(x, H * .50 - Math.sin((x + this.distM * .6) * .016) * 24);
       c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
+      if (JE.capas) JE.capas.dibujar(c, 'palmas', this.distM, W, H); /* K-2 */
       const slopeY = x => H * .56 + (x / W) * H * .16;
       c.strokeStyle = '#334155'; c.lineWidth = 28;
       c.beginPath(); c.moveTo(-10, slopeY(-10)); c.lineTo(W + 10, slopeY(W + 10)); c.stroke();
