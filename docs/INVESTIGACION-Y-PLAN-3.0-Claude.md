@@ -1,4 +1,4 @@
-# Investigación y plan 3.0 · Claude (al día con la 3.2.0)
+# Investigación y plan 3.0 · Claude (al día con la 3.3.0)
 
 **22‑nov‑2026 · Claude (Claude Code), una de las tres IA a las que el autor les pidió lo mismo a la vez.** Las otras dos publican su propio documento con su marca en el título; leerlos y unir lo que esté en verde es parte del trabajo (`coord/buzon/`). Mi rama: `ccr-6f184fb6-vtpkye`.
 
@@ -42,6 +42,18 @@ Antes de seguir uní lo que publicaron las otras IA: la auditoría de **OpenAI G
 | 23 | La **auditoría de modos** ahora cuenta los puntos del minijuego en curso y marca si hubo acción | `tests/auditoria-modos.js` | — |
 
 Las pruebas nuevas están en `tests/revolucion-encicla.js` (sección V5) y la batería completa queda en verde.
+
+## 0c. «¿Cómo podríamos mejorar el juego?» → hecho en la 3.3.0
+Las cinco mejoras que propuse, en orden de impacto, más la de contenido. Todas probadas (sección V6).
+
+| # | Qué | Archivo | Cómo se probó |
+|---|---|---|---|
+| 24 | **El perdón en los saltos** (como en Celeste): si tocas «saltar» un instante antes de caer, el salto se guarda y sale al tocar el piso. Antes ese toque se perdía en Run 3D y en la carrera de la ciclorruta, y en el freerun se volvía un truco | `99i-perdon.js` | En los tres, el toque en la bajada salta al caer |
+| 25 | **El primer minuto fluido.** Medido con el perfilador y la CPU 4× lenta: cada trozo de ciudad tarda de 24 a 89 ms y el primer cuadro dibujaba todos los visibles de una vez. Ahora la salida del valle se dibuja **mientras estás en el menú**, y el adelanto en el tiempo libre nunca dibuja dos trozos seguidos | `99j-primer-minuto.js` | El primer cuadro bajó de 413 a 219 ms y el peor de los siguientes de 89 a 63 ms (p95 de 37 a 31 ms). En la prueba de rendimiento de la batería (modo libre, CPU 4×), la mediana por cuadro pasó de 33,3 a 16,8 ms: antes, el adelanto dibujaba un trozo en casi cada rato libre |
+| 26 | **🧭 Hoy en el valle:** un solo «siguiente» claro sin cerrar nada. Junta las misiones del día, la trama, el boleto, «Un día del valle», los oficios, los vecinos, los radares, los miradores, las zonas de trucos, el freerun y la carrera de la ciclorruta, y propone **tres**: una de historia, una de tu día y una para descubrir, con su distancia. Sale sola solo si no tienes ya un destino, o **al llegar a uno** (el momento de «¿y ahora qué?»); el botón 🧭 la abre cuando quieras. Tocar una pone el destino 📍 | `99k-hoy-valle.js` | Tres sugerencias, tarjeta, botón y destino |
+| 27 | **🧪 Modo prueba** (Más): para probar con personas reales, sin internet y **sin nombres**: por partida, el modo, la hora, cuánto duró, cómo acabó (terminó, no pasó o se salió), los puntos, las estrellas, los errores, los cuadros lentos y una carita opcional en los resultados. «Ver» muestra el resumen (dónde se salen, cuántas terminan) y el JSON para copiar | `99m-modo-prueba.js` | La partida queda anotada, sin el nombre del jugador |
+| 28 | **Red de seguridad:** el flujo `.github/workflows/pruebas.yml` corre la batería completa en un Chromium real en cada push a `main` y a las ramas de las IA, y en cada pull request; la regla quedó en `CLAUDE.md`: no se publica si no está en verde. Y dos pruebas nuevas: **Controles guarda** (el error de la 3.1.0) y **lo que ve el jugador**: en 17 modos, el número de la pantalla de resultados y la ★ del final coinciden con lo guardado | `.github/workflows/pruebas.yml`, `tests/revolucion-encicla.js` | En verde |
+| 29 | **💬 Encargos de los vecinos:** 6 historias de 3 pasos con los personajes que ya viven en el valle (Santi, Doña Luz, Cata, Don Efraín, Wílmar y Don Jairo), con ❗ sobre quien te necesita, la tarjeta con su cara, pasos que piden ir **a pie** o llegar **de noche**, su final, puntos, hojas, el diario y los logros «Buen vecino» y «El valle es mi barrio». El texto está en `contenido/guion/encargos.json`: se escriben más sin programar | `99l-vecinos.js`, `contenido/guion/encargos.json` | La historia de Santi, de punta a punta; el paso a pie no avanza en bici |
 
 ## 1. Auditoría: qué estaba roto, qué era lento y por qué
 **Cómo se midió.** Chromium con la CPU 4× más lenta (`Emulation.setCPUThrottlingRate`), 412 × 860, tiempo real, una persona simulada con el joystick a fondo sobre una avenida recta.
@@ -186,7 +198,7 @@ La regla para cada referencia: **qué hace mejor que nadie → si cabe en un jue
 | Idea | Cómo | Estado |
 |---|---|---|
 | **Habilidades que suben al usarlas:** Pedaleo, Resistencia, Equilibrio, Conocer el valle | GTA San Andreas; se guardan con `Save.registrar` | ✅ 3.2 |
-| **Vecinos con encargos encadenados** (los 15 de la trama y los de El Metro): 3 a 5 encargos cada uno, con su final | Contenido en `contenido/guion/*.json` | 🔜 M |
+| **Vecinos con encargos encadenados** (los 15 de la trama y los de El Metro): 3 a 5 encargos cada uno, con su final | Contenido en `contenido/guion/*.json` | ✅ 3.3: 6 historias en `encargos.json`; faltan 9 vecinos |
 | **Reputación por barrio** (te saludan, te avisan de atajos) | Sobre lo que ya hay de saludos y charlas | 🗓️ M |
 | **Tu historia en el valle:** un diario automático de lo que hiciste | The Sims, Sky | ✅ 3.2 |
 | **Fantasmas de tus amigos** por código QR, sin servidor | Sky | 🗓️ M |
@@ -213,11 +225,14 @@ La regla para cada referencia: **qué hace mejor que nadie → si cabe en un jue
 - **Para no repetir:** de § 4, yo seguiría con lo de § 4.1 (pulir modos), los radares y saltos, el diario y las habilidades. Sugiero que una IA tome **Copa del Valle + Domicilio contrarreloj** y la otra **Planeador + Monitoreo como 911 Operator**. Avisen en `coord/buzon/` antes de empezar.
 - **Cómo probar:** `node tools/build.js && node tests/run.js` (todo en verde) y `node tests/auditoria-modos.js --cpu=4` para medir.
 
-## 6. Lo que falta (en orden; lo de la 3.0 que quedó hecho está en § 0b)
-1. Que Run 3D y la maqueta usen las cámaras del mundo 3D único (hoy tienen las suyas).
-2. Dibujar los trozos en un *worker* con `OffscreenCanvas` (los picos que quedan al llegar a un trozo nuevo).
-3. Lo del § 4 que sigue en 🔜: Copa del Valle y Domicilio contrarreloj, Monitoreo como 911 Operator, la ley de los 1,5 m en el valle, la bajada lateral por Las Palmas, los vecinos con encargos, alimentadores y Metroplús como Traffix, Conecta la ciclorruta, el rebalanceo como Package Inc y el turno roguelite.
-4. Probar en un celular real: el acelerador fijo, la tercera persona, el mirador, el freerun con gestos y la carrera con giros (aquí solo hay Chromium con la CPU 4× lenta).
+## 6. Lo que falta (en orden; lo hecho está en § 0b y § 0c)
+1. **Probar con personas reales** con el 🧪 modo prueba: tres rondas cortas de 5 personas, niños y adultos por separado, y un celular modesto (Android 7 o iPhone 8).
+2. Más encargos: los otros 9 vecinos (Yuli, Kevin, la ingeniera Paola, Wílson, Don Rubén, Doña Marleny, Don Libardo, Jhon y Rosalba, que ya tiene su boleto) en `contenido/guion/encargos.json`.
+3. Publicar desde un flujo con las pruebas en verde que conserve `/metro/` (hoy se publica a mano; la regla ya está en `CLAUDE.md`).
+4. Que Run 3D y la maqueta usen las cámaras del mundo 3D único (hoy tienen las suyas).
+5. Dibujar los trozos en un *worker* con `OffscreenCanvas`, o por partes en varios cuadros: el primer minuto mejoró, pero un trozo nuevo todavía cuesta de 24 a 89 ms en un celular lento.
+6. Lo del § 4 que sigue en 🔜: Copa del Valle y Domicilio contrarreloj, Monitoreo como 911 Operator, la ley de los 1,5 m en el valle, la bajada lateral por Las Palmas, los vecinos con encargos, alimentadores y Metroplús como Traffix, Conecta la ciclorruta, el rebalanceo como Package Inc y el turno roguelite.
+7. Probar en un celular real: el acelerador fijo, la tercera persona, el mirador, el freerun con gestos, la carrera con giros y el perdón en los saltos (aquí solo hay Chromium con la CPU 4× lenta).
 
 ## Fuentes
 - Super Arcade Racing: [Pocket Gamer](https://www.pocketgamer.com/articles/081706/five-reasons-to-play-super-arcade-racing-from-outofthebit-studio/), [The Xbox Hub](https://www.thexboxhub.com/super-arcade-racing-review/), [Bonus Stage](https://www.bonusstage.co.uk/archives/178310).
@@ -226,5 +241,8 @@ La regla para cada referencia: **qué hace mejor que nadie → si cabe en un jue
 - Tiny Rails (Tiny Titan Studios): [Pocket Gamer](https://www.pocketgamer.com/tiny-rails/tiny-rails-is-a-no-fuss-pixellated-train-sim-out-now-on-ios-and-android).
 - Skate Space: [App Store](https://apps.apple.com/us/app/id1466582074), [gamebrain](https://gamebrain.co/game/skate-space).
 - No encontré `cityrt.com` ni un «Train Chu» de Tiny Titan Studios: si el autor confirma qué son, se agregan.
+- El perdón en los saltos: [Celeste & Forgiveness (Maddy Thorson)](https://maddymakesgames.com/articles/celeste_and_forgiveness/) y [Blizzard Watch](https://blizzardwatch.com/2020/03/13/celeste-developer-game-feel/).
+- Probar con personas: [Why You Only Need to Test with 5 Users (NN/g)](https://nngroup.com/articles/why-you-only-need-to-test-with-5-users/) y [MeasuringU](https://measuringu.com/five-users/).
+- Muchas opciones no paralizan en promedio: [Scheibehenne, Greifeneder y Todd, 2010](https://abcwest.cogs.indiana.edu/pmwiki/pdf/scheibehenne.options.2010.pdf).
 - Escaleras eléctricas de la Comuna 13 (diciembre de 2011, seis tramos, 384 m): [Alcaldía de Medellín](https://www.medellin.gov.co/es/sala-de-prensa/noticias/las-escaleras-electricas-de-la-comuna-13-de-medellin-recibieron-mantenimiento-integral/), [ABC News / AP](https://abcnews.go.com/blogs/technology/2011/12/infamous-colombian-city-gets-giant-outdoor-escalator); la equivalencia de unos 28 pisos es de la prensa ([Voz de América](https://www.vozdeamerica.com/a/escalera-mecanica-para-pobres-medellin-136263718/107531.html)).
 - Las demás referencias (GTA 1, 2 y San Andreas, Forza Horizon, Alto's Odyssey, Sky, Monument Valley, Townscaper, WorldBox, Vector, Soul Knight, 911 Operator, Idle Supermarket Tycoon, Package Inc, Traffix, Infinity Loop, Grand Mountain Adventure 2, Hunter Assassin y los simuladores de vuelo) se analizaron por su diseño público. De sus juegos solo se toman ideas, nunca su arte.

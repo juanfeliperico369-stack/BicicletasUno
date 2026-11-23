@@ -450,3 +450,13 @@ body.libre21 #coach.mini{font-size:calc(13px*var(--u))!important;padding:calc(7p
 #camBar #b3D.on{background:var(--vd);color:var(--az);border-color:#fff;font-size:calc(18px*var(--u))}
 /* los consejos de las carreras en pseudo‑3D van abajo, sobre los botones (no tapan la vía) */
 body.mg3d21 #coach{top:auto!important;bottom:calc(var(--sab) + 112px)!important}
+/* 3.3 · 🧭 Hoy en el valle (99k-hoy-valle.js): tres sugerencias, sin tapar el juego más de 12 s */
+#hoy21{position:absolute;left:calc(12px*var(--u));right:calc(12px*var(--u));bottom:calc(var(--sab) + 172px*var(--u));z-index:30;max-width:440px;margin:0 auto;background:#0a2342f0;border:2px solid var(--vd);border-radius:14px;padding:calc(8px*var(--u));display:flex;flex-direction:column;gap:calc(6px*var(--u));color:#fff;box-shadow:0 6px 18px #0007}
+#hoy21[hidden]{display:none}
+#hoy21 .hoyT{display:flex;justify-content:space-between;align-items:center;font:700 calc(14px*var(--u)) var(--fd);letter-spacing:.02em}
+#hoy21 .hoyX{background:none;border:0;color:#fff;font-size:calc(16px*var(--u));padding:2px 8px;min-height:32px}
+#hoy21 .hoyI{display:grid;grid-template-columns:auto 1fr auto;gap:calc(8px*var(--u));align-items:center;text-align:left;background:#ffffff14;border:1px solid #ffffff38;border-radius:10px;padding:calc(7px*var(--u)) calc(9px*var(--u));color:#fff;font:600 calc(13px*var(--u)) var(--fb);min-height:44px}
+#hoy21 .hoyI:active{background:#9bd34133}
+#hoy21 .hoyE{font-size:calc(18px*var(--u))}
+#hoy21 small{opacity:.8;font-weight:500;white-space:nowrap}
+#camBar #bHoy{font-size:calc(18px*var(--u));background:#0a2342d0}

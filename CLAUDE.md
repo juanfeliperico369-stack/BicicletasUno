@@ -15,4 +15,5 @@
   - español de Colombia y todo público;
   - no romper el guardado;
   - al publicar en `gh-pages`, conserva `/metro/`;
+  - no publiques en `main` ni en `gh-pages` si `node tests/run.js` no está en verde (también lo corre `.github/workflows/pruebas.yml` en cada push);
   - nunca subas llaves.

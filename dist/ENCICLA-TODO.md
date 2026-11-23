@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.2.0 · compilado el 2026-11-23.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.3.0 · compilado el 2026-11-23.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.2.0)
+## 2.3 Estado actual (v3.3.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-23 | Claude Code | documento creado (v3.2.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-23 | Claude Code | documento creado (v3.3.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2265,6 +2265,18 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 ## BITÁCORA · Juega EnCicla
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
+
+### 23-nov-2026 · v3.3.0 · «¿Cómo podríamos mejorar el juego?»: lo propuesto, hecho (Claude)
+- **Unión:** Motor City 4.9.0 «Realismo» de `main` (solo en `motor-city/`; el juego no usa sus librerías).
+- **El perdón en los saltos** (`99i-perdon.js`): el toque de «saltar» justo antes de caer se guarda y salta al tocar el piso (Run 3D, ciclorruta y freerun), como en Celeste.
+- **Primer minuto fluido** (`99j-primer-minuto.js`): la salida del valle se dibuja en el menú y el adelanto nunca dibuja dos trozos seguidos. Primer cuadro de 413 a 219 ms; peor cuadro siguiente de 89 a 63 ms; en la prueba de rendimiento de la batería, mediana de 33,3 a 16,8 ms por cuadro (CPU 4×).
+- **🧭 Hoy en el valle** (`99k-hoy-valle.js`): tres sugerencias (historia, tu día y para descubrir) que juntan todos los sistemas de objetivos; sale sola sin destino o al llegar a uno; botón 🧭.
+- **💬 Encargos de los vecinos** (`99l-vecinos.js`, `contenido/guion/encargos.json`): 6 historias de 3 pasos (Santi, Doña Luz, Cata, Don Efraín, Wílmar y Don Jairo), con pasos a pie o de noche, final, diario y logros «Buen vecino» y «El valle es mi barrio».
+- **🧪 Modo prueba** (`99m-modo-prueba.js`, Más): partidas anotadas en el celular, sin nombres ni internet, con resumen y JSON para copiar, y carita opcional en los resultados.
+- **Red de seguridad:** `.github/workflows/pruebas.yml` (la batería en cada push a `main` y a las ramas de las IA, y en los pull requests) y la regla en `CLAUDE.md`. Pruebas nuevas: Controles guarda y «lo que ve el jugador» en 17 modos.
+- Claves nuevas del guardado, registradas: `encargos` (objeto) y `prueba` (objeto). Versión 3.3.0 (APK 30300).
+- **Probado:** `node tools/build.js` y `node tests/run.js`: las 147 pruebas pasaron (sección V6 nueva).
+- **Falta:** probar con personas reales (modo prueba), los encargos de los otros 9 vecinos, publicar desde un flujo con las pruebas en verde, las cámaras del 3D para Run 3D y la maqueta, y los trozos por partes o en un *worker*.
 
 ### 22-nov-2026 · v3.2.0 · «Retoma, continúa y termina»: modos pulidos, transporte en 3D, freerun de la Comuna 13 y el valle que recuerda (Claude)
 - **Unión:** la 3.1.0 de la otra sesión de Claude (⚙️ Flexibilidad, Motor City 4.7 y 4.8) y la auditoría de GPT‑6. Arreglado lo que traía la unión: en Controles, tocar una opción **no guardaba** (un comentario a mitad de línea apagaba `Save.save()` en `81-controles.js`).
