@@ -1,0 +1,58 @@
+{
+  "nota": "Lo que dice la gente del valle (99s-ciudad-responde.js). Tono familiar, español de Colombia. Cada frase: t (el texto), ev (los eventos en que se dice) y, si quiere, condiciones: lugar (banca, paradero, estacion, parque, ciclorruta, calle), hora [desde, hasta] en minutos del día, lluvia (true o false), noche (true o false) y veh (vehículos). Se dice la más específica que cumpla y no se repite en un rato. Idea de las «reglas de respuesta» de los diálogos de Left 4 Dead 2 (Valve), traída de Motor City 5.2.",
+  "frases": [
+    { "t": "Uy, sí, siga, siga.", "ev": ["timbre"] },
+    { "t": "Pase, joven, que yo me hago a un lado.", "ev": ["timbre"] },
+    { "t": "Así da gusto: avisando con el timbre.", "ev": ["timbre"] },
+    { "t": "¡Qué timbre tan bonito!", "ev": ["timbre"] },
+    { "t": "Gracias por no echármele encima.", "ev": ["timbre"], "lugar": "parque" },
+    { "t": "En la ciclorruta uno camina por el ladito, ¿cierto?", "ev": ["timbre"], "lugar": "ciclorruta" },
+    { "t": "Siga, mijo, y prenda la luz, que ya está oscuro.", "ev": ["timbre"], "noche": true },
+
+    { "t": "¿Todo bien, mijo? ¿Se aporreó?", "ev": ["choque"] },
+    { "t": "¡Uy! Despacio, que no hay afán.", "ev": ["choque"] },
+    { "t": "Ese carro no lo vio. ¿Está bien?", "ev": ["choque"] },
+    { "t": "Con el piso mojado se frena más largo, ojo.", "ev": ["choque"], "lluvia": true },
+    { "t": "De noche póngase algo que brille, que no lo ven.", "ev": ["choque"], "noche": true },
+
+    { "t": "¡Mijo, el andén es pa' caminar!", "ev": ["peaton"] },
+    { "t": "Despacio, que por aquí pasan niños.", "ev": ["peaton"] },
+    { "t": "Use el timbre, joven, y uno se corre.", "ev": ["peaton"] },
+    { "t": "¡Casi me lleva! El peatón va primero.", "ev": ["peaton"] },
+    { "t": "En el parque, mejor a paso de caminante.", "ev": ["peaton"], "lugar": "parque" },
+
+    { "t": "¡Ese semáforo estaba en rojo!", "ev": ["semaforo"] },
+    { "t": "En rojo también para la bici, mijo.", "ev": ["semaforo"] },
+    { "t": "Uno espera un minutico y llega igual.", "ev": ["semaforo"] },
+
+    { "t": "¡Uy, qué nivel!", "ev": ["truco"] },
+    { "t": "¡Hágale otra vez, que no lo grabé!", "ev": ["truco"] },
+    { "t": "Ese truco estuvo bien bonito.", "ev": ["truco"] },
+    { "t": "¡Con casco y todo, así sí!", "ev": ["truco"] },
+
+    { "t": "¿Hay bicis disponibles hoy?", "ev": ["ambiente"], "lugar": "estacion" },
+    { "t": "Yo vengo todos los días en EnCicla.", "ev": ["ambiente"], "lugar": "estacion" },
+    { "t": "Cuadre bien la bici en el anclaje, que si no, no la recibe.", "ev": ["ambiente"], "lugar": "estacion" },
+    { "t": "Con la Cívica uno presta la bici en un segundo.", "ev": ["ambiente"], "lugar": "estacion" },
+    { "t": "A esta hora se acaban las bicis, toca madrugar.", "ev": ["ambiente"], "lugar": "estacion", "hora": [390, 510] },
+    { "t": "Ese bus no pasa nunca.", "ev": ["ambiente"], "lugar": "paradero" },
+    { "t": "Mejor me voy en metro.", "ev": ["ambiente"], "lugar": "paradero" },
+    { "t": "Acá descansando un ratico.", "ev": ["ambiente"], "lugar": "parque" },
+    { "t": "Qué rico este solecito.", "ev": ["ambiente"], "lugar": "parque", "hora": [420, 960], "lluvia": false },
+    { "t": "Mire esos guayacanes tan florecidos.", "ev": ["ambiente"], "lugar": "parque", "hora": [360, 1080] },
+    { "t": "En bici uno ve el barrio que en carro ni se nota.", "ev": ["ambiente"], "lugar": "ciclorruta" },
+    { "t": "La ciclorruta es de todos: despacio en los cruces.", "ev": ["ambiente"], "lugar": "ciclorruta" },
+    { "t": "Buenos días, vecino.", "ev": ["ambiente"], "hora": [300, 690] },
+    { "t": "Buenas tardes. ¿Pa' dónde va tan rápido?", "ev": ["ambiente"], "hora": [720, 1080] },
+    { "t": "Buenas noches. Prenda la luz de la bici.", "ev": ["ambiente"], "noche": true },
+    { "t": "Ya es tarde, cuídese mucho.", "ev": ["ambiente"], "noche": true },
+    { "t": "¡Qué calor tan berraco!", "ev": ["ambiente"], "hora": [690, 930], "lluvia": false },
+    { "t": "Ya se vino el aguacero.", "ev": ["ambiente"], "lluvia": true },
+    { "t": "Con lluvia, frene suavecito y con tiempo.", "ev": ["ambiente"], "lluvia": true },
+    { "t": "¿Quiubo pues? ¿Todo bien?", "ev": ["ambiente"] },
+    { "t": "Qué bueno ver tanta gente en bici.", "ev": ["ambiente"] },
+    { "t": "En bici uno llega más tranquilo.", "ev": ["ambiente"] },
+    { "t": "Ojo con los huecos de esta cuadra.", "ev": ["ambiente"], "lugar": "calle" },
+    { "t": "Por aquí cerquita queda una estación de EnCicla.", "ev": ["ambiente"], "lugar": "calle" }
+  ]
+}

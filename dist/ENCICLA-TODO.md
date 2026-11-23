@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.4.0 · compilado el 2026-11-23.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.5.0 · compilado el 2026-11-23.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.4.0)
+## 2.3 Estado actual (v3.5.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-23 | Claude Code | documento creado (v3.4.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-23 | Claude Code | documento creado (v3.5.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2265,6 +2265,23 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 ## BITÁCORA · Juega EnCicla
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
+
+### 23-nov-2026 · v3.5.0 · Todo lo nuevo del motor, todo junto, y los pedidos para Gemini y ChatGPT (Claude)
+- **Unión:** EnCicla 3.4.0 (de la otra sesión de Claude: mi 3.3.0 con la 3.3.0 de Gemini y Antigravity) y Motor City 5.0, 5.1 y 5.2 en `motor-city/`.
+- **🗣️ La ciudad te responde** (`99s-ciudad-responde.js`, `contenido/guion/frases.json`): la gente contesta al timbre, a los choques, al peatón al que le pasas cerca, al semáforo en rojo y a los trucos, y comenta según el lugar, la hora, la lluvia y la noche. Se elige la frase más específica y no se repite en 90 s. Viene de Motor City 5.2 «Ciudad viva».
+- **🚲 La bici se inclina en las curvas** del mundo 3D, con el ciclista (`99d-mundo3d.js`).
+- **📏 Medir este celular** (Más, o `?medir`) y **🚀 Llegar ya** en el mapa grande (`99t-medir-y-saltar.js`).
+- **Todo junto** (`99u-todo-junto.js`, `99h`):
+  - un solo panel con seis habilidades (sin la «Resistencia» repetida);
+  - los encargos de los vecinos en el hub Valle Vivo;
+  - «Hoy en el valle» con los arcos de mentores, las actividades del hub y «Ver todo».
+  - **Reparto con doble rol** en `trama_valle.json`.
+- **Documentos:**
+  - `docs/PEDIDOS-Y-PLAN-3.5-Claude.md`: la evaluación, los pedidos con sus prompts para ChatGPT, Codex, Gemini y Antigravity, y el siguiente paso de Claude;
+  - `docs/SUGERENCIAS-Claude.md`;
+  - `TAREAS-IA.md` al día.
+- **Probado:** `node tools/build.js` y `node tests/run.js` (sección V7 nueva: 7 pruebas).
+- **Falta:** que el autor mida en su celular y pruebe con personas; lo que entreguen las otras IA; ordenar el menú de 31 modos y la pestaña Más; las cámaras del 3D para Run 3D y la maqueta.
 
 ### 23-nov-2026 · v3.4.0 · Unión de las dos 3.3.0 (Claude)
 - **Había dos 3.3.0 a la vez:**

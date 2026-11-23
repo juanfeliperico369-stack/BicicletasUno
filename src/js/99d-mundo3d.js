@@ -55,6 +55,21 @@ const Mundo3D = JE.mundo3d = {
     const c = Math.cos(a), s = Math.sin(a), P = [[-Lg / 2, -W / 2], [Lg / 2, -W / 2], [Lg / 2, W / 2], [-Lg / 2, W / 2]].map(([u, v]) => [x + u * c - v * s, y + u * s + v * c]);
     this.prisma(o, P, z0, z0 + h, col, col);
   },
+  /* 3.5 · una cara con su frente hacia la normal n (puntos [x, altura, y], como en prisma) */
+  quad(o, a, b, c, d, n, col) {
+    const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], t = (p, q, r) => { for (const k of [p, q, r]) o.push(k[0], k[1], k[2], n[0], n[1], n[2], col[0], col[1], col[2], 0, 0); };
+    if ((uy * vz - uz * vy) * n[0] + (uz * vx - ux * vz) * n[1] + (ux * vy - uy * vx) * n[2] >= 0) { t(a, b, c); t(a, c, d); } else { t(a, c, b); t(a, d, c); }
+  },
+  /* 3.5 · caja con ALABEO (this.lad) alrededor del eje de avance y el pivote en zp (el piso): la bici y el ciclista se inclinan
+     hacia adentro de la curva, φ = atan(v·ω/g), como en Motor City 5.2 */
+  cajaL(o, x, y, a, Lg, W, h, z0, col, zp) {
+    const r = this.lad || 0; if (Math.abs(r) < .015) return this.caja(o, x, y, a, Lg, W, h, z0, col);
+    const ca = Math.cos(a), sa = Math.sin(a), cr = Math.cos(r), sr = Math.sin(r), F = [ca, 0, sa], Sd = [-sa * cr, sr, ca * cr], U = [sa * sr, cr, -ca * sr];
+    const P = (u, v, z) => [x + F[0] * u + Sd[0] * v + U[0] * (z - zp), zp + Sd[1] * v + U[1] * (z - zp), y + F[2] * u + Sd[2] * v + U[2] * (z - zp)], ng = n => n.map(t => -t);
+    const u0 = -Lg / 2, u1 = Lg / 2, v0 = -W / 2, v1 = W / 2, za = z0, zb = z0 + h, c = [P(u0, v0, za), P(u1, v0, za), P(u1, v1, za), P(u0, v1, za), P(u0, v0, zb), P(u1, v0, zb), P(u1, v1, zb), P(u0, v1, zb)];
+    this.quad(o, c[4], c[5], c[6], c[7], U, col); this.quad(o, c[0], c[1], c[2], c[3], ng(U), col); this.quad(o, c[1], c[2], c[6], c[5], F, col);
+    this.quad(o, c[0], c[3], c[7], c[4], ng(F), col); this.quad(o, c[2], c[3], c[7], c[6], Sd, col); this.quad(o, c[0], c[1], c[5], c[4], ng(Sd), col);
+  },
   /* prisma con base poligonal convexa P (sentido cualquiera): muros con su normal y techo */
   prisma(o, P, z0, z1, muro, techo, muro2, vent) {
     const n = P.length; let area = 0; for (let i = 0; i < n; i++) { const [x0, y0] = P[i], [x1, y1] = P[(i + 1) % n]; area += x0 * y1 - x1 * y0; } const sg = area > 0 ? 1 : -1;
@@ -122,9 +137,10 @@ const Mundo3D = JE.mundo3d = {
       this.caja(o, c.x, c.y, c.ang, Lg, Wd, h * .55, z0, col); this.caja(o, c.x - Math.cos(c.ang) * Lg * .08, c.y - Math.sin(c.ang) * Lg * .08, c.ang, Lg * .58, Wd * .9, h * .42, z0 + h * .55, col.map(v => v * .55)); }
     for (const q of R.peds || []) { if (Math.abs(q.x - P.x) > 400 || Math.abs(q.y - P.y) > 400) continue; this.caja(o, q.x, q.y, 0, .9, .9, 2.8, 0, this.rgb(q.col)); }
     const me = Art.me(), v = P.veh, alto = (P.lvl > 0 ? (P.z || 0) : 0) * this.ZA, ca = P.a;
+    { const S0 = R.stats_(), veq = clamp(P.v / Math.max(1, S0.max), 0, 1.2) * 7, obj = v === 'walk' || v === 'truck' ? 0 : clamp(-Math.atan(veq * (P.w || 0) / 9.81), -.6, .6); this.lad = (this.lad || 0) + (obj - (this.lad || 0)) * Math.min(1, (this._dt || .016) * 8); }   /* 3.5: con la velocidad equivalente a la real (una bici a fondo ≈ 25 km/h), no con la del juego */
     if (v === 'truck') { this.caja(o, P.x, P.y, ca, 12, 4, 4.5, alto, this.rgb('#9bd341')); this.caja(o, P.x + Math.cos(ca) * 4.6, P.y + Math.sin(ca) * 4.6, ca, 3, 3.8, 3, alto + 4.5, this.rgb('#e9eef3')); }
-    else { if (v !== 'walk') { this.caja(o, P.x, P.y, ca, 3, .35, 1.6, alto, [.1, .1, .12]); this.caja(o, P.x, P.y, ca, 2.4, .3, .5, alto + 1.4, this.rgb(PAL.vd)); }
-      const z1 = alto + (v === 'walk' ? 0 : 1.6); this.caja(o, P.x, P.y, ca, .9, .9, 1.5, z1, this.rgb(me.pants || '#2a3b5c')); this.caja(o, P.x, P.y, ca, 1.1, 1.3, 1.6, z1 + 1.5, this.rgb(me.shirt || PAL.vd)); this.caja(o, P.x, P.y, ca, .8, .8, .8, z1 + 3.1, this.rgb(me.cap || '#ffffff')); }
+    else { if (v !== 'walk') { this.cajaL(o, P.x, P.y, ca, 3, .35, 1.6, alto, [.1, .1, .12], alto); this.cajaL(o, P.x, P.y, ca, 2.4, .3, .5, alto + 1.4, this.rgb(PAL.vd), alto); }
+      const z1 = alto + (v === 'walk' ? 0 : 1.6); this.cajaL(o, P.x, P.y, ca, .9, .9, 1.5, z1, this.rgb(me.pants || '#2a3b5c'), alto); this.cajaL(o, P.x, P.y, ca, 1.1, 1.3, 1.6, z1 + 1.5, this.rgb(me.shirt || PAL.vd), alto); this.cajaL(o, P.x, P.y, ca, .8, .8, .8, z1 + 3.1, this.rgb(me.cap || '#ffffff'), alto); }
     if (this.extraMovil) try { this.extraMovil(o, R); } catch (e) { JE.errors.push('3d móvil: ' + e.message); }   /* 3.2: trenes, tranvía, Metroplús y cabinas (99f) */
     if (o.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.din); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(o), gl.DYNAMIC_DRAW); this.pintar({ b: this.din, n: o.length / 11 }); }
   }

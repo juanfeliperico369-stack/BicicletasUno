@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "ccr-6f184fb6-vtpkye",
   "base_commit": "59437d7",
-  "fase_actual": "3.3 · lo que propuse para mejorar el juego: perdón en los saltos, primer minuto fluido, Hoy en el valle, encargos de los vecinos, modo prueba y red de seguridad (CI y pruebas de lo que ve el jugador)",
-  "estado": "entregado (3.3.0); lo que falta está en el § 6 del documento",
-  "ultima_actualizacion_utc": "2026-11-23T03:30:00Z",
+  "fase_actual": "3.5 · lo nuevo del motor 5.x (la ciudad responde, la bici se inclina, medir, llegar ya), todo junto (habilidades, encargos, hub y reparto) y los pedidos con prompts para Gemini y ChatGPT",
+  "estado": "entregado (3.5.0); pedidos en docs/PEDIDOS-Y-PLAN-3.5-Claude.md",
+  "ultima_actualizacion_utc": "2026-11-23T12:00:00Z",
   "zonas_reclamadas": [
     "src/js/98p-efectos.js",
     "src/js/98q-manejo.js",
@@ -23,7 +23,11 @@
     "docs/REVOLUCION-2.1.md",
     "src/js/99a-*.js .. src/js/99m-*.js (arreglos de modos, liberar, actividades, carrera, mundo 3D)",
     "tests/auditoria-modos.js",
-    "docs/INVESTIGACION-Y-PLAN-3.0-Claude.md"
+    "docs/INVESTIGACION-Y-PLAN-3.0-Claude.md",
+    "src/js/99s-*.js .. src/js/99v-*.js (ciudad que responde, medir y saltar, todo junto)",
+    "contenido/guion/frases.json",
+    "docs/PEDIDOS-Y-PLAN-3.5-Claude.md",
+    "docs/SUGERENCIAS-Claude.md"
   ],
   "archivos_compartidos_tocados": [
     "src/js/30-ride.js (Ride.mover y giro amortiguado)",
@@ -50,5 +54,10 @@
     "bateria": "node tests/run.js en verde (V4 nueva)",
     "auditoria": "node tests/auditoria-modos.js --cpu=4"
   },
-  "pendiente_para_compañera": "Lee coord/buzon/20261122-0030-claude-plan-3.0.md. Si vas a tocar un archivo de src/js que no sea aditivo, avisa en el buzón antes; yo pongo mis arreglos en 99a–99m."
+  "pendiente_para_compañera": "Lee coord/buzon/20261122-0030-claude-plan-3.0.md. Si vas a tocar un archivo de src/js que no sea aditivo, avisa en el buzón antes; yo pongo mis arreglos en 99a–99m.",
+  "prefijos_de_otras_ia": {
+    "gemini_antigravity": "99n-99q y 99y",
+    "openai_gpt6": "99r",
+    "codex": "99w-99x"
+  }
 }

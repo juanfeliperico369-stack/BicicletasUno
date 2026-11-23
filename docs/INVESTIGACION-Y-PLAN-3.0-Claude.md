@@ -1,4 +1,4 @@
-# Investigación y plan 3.0 · Claude (al día con la 3.3.0)
+# Investigación y plan 3.0 · Claude (al día con la 3.3.0; lo de la 3.5 está en `docs/PEDIDOS-Y-PLAN-3.5-Claude.md`)
 
 **22‑nov‑2026 · Claude (Claude Code), una de las tres IA a las que el autor les pidió lo mismo a la vez.** Las otras dos publican su propio documento con su marca en el título; leerlos y unir lo que esté en verde es parte del trabajo (`coord/buzon/`). Mi rama: `ccr-6f184fb6-vtpkye`.
 

@@ -2,6 +2,23 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 23-nov-2026 · v3.5.0 · Todo lo nuevo del motor, todo junto, y los pedidos para Gemini y ChatGPT (Claude)
+- **Unión:** EnCicla 3.4.0 (de la otra sesión de Claude: mi 3.3.0 con la 3.3.0 de Gemini y Antigravity) y Motor City 5.0, 5.1 y 5.2 en `motor-city/`.
+- **🗣️ La ciudad te responde** (`99s-ciudad-responde.js`, `contenido/guion/frases.json`): la gente contesta al timbre, a los choques, al peatón al que le pasas cerca, al semáforo en rojo y a los trucos, y comenta según el lugar, la hora, la lluvia y la noche. Se elige la frase más específica y no se repite en 90 s. Viene de Motor City 5.2 «Ciudad viva».
+- **🚲 La bici se inclina en las curvas** del mundo 3D, con el ciclista (`99d-mundo3d.js`).
+- **📏 Medir este celular** (Más, o `?medir`) y **🚀 Llegar ya** en el mapa grande (`99t-medir-y-saltar.js`).
+- **Todo junto** (`99u-todo-junto.js`, `99h`):
+  - un solo panel con seis habilidades (sin la «Resistencia» repetida);
+  - los encargos de los vecinos en el hub Valle Vivo;
+  - «Hoy en el valle» con los arcos de mentores, las actividades del hub y «Ver todo».
+  - **Reparto con doble rol** en `trama_valle.json`.
+- **Documentos:**
+  - `docs/PEDIDOS-Y-PLAN-3.5-Claude.md`: la evaluación, los pedidos con sus prompts para ChatGPT, Codex, Gemini y Antigravity, y el siguiente paso de Claude;
+  - `docs/SUGERENCIAS-Claude.md`;
+  - `TAREAS-IA.md` al día.
+- **Probado:** `node tools/build.js` y `node tests/run.js` (sección V7 nueva: 7 pruebas).
+- **Falta:** que el autor mida en su celular y pruebe con personas; lo que entreguen las otras IA; ordenar el menú de 31 modos y la pestaña Más; las cámaras del 3D para Run 3D y la maqueta.
+
 ## 23-nov-2026 · v3.4.0 · Unión de las dos 3.3.0 (Claude)
 - **Había dos 3.3.0 a la vez:**
   - la de la otra sesión de Claude (`ccr-6f184fb6-vtpkye`): perdón en los saltos, primer minuto fluido, 🧭 Hoy en el valle, 💬 encargos de los vecinos y 🧪 modo prueba;

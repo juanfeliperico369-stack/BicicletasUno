@@ -1,7 +1,7 @@
 {
- "version": "3.4.0",
- "hash": "934bae33",
- "cache": "juega-encicla-v3.4.0-934bae33",
+ "version": "3.5.0",
+ "hash": "f331ff2f",
+ "cache": "juega-encicla-v3.5.0-f331ff2f",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -90,11 +90,14 @@
   "99o-mundo3d-camaras.js",
   "99p-ciclovia-skate-runner.js",
   "99q-mundo-vivo-rpg.js",
-  "99r-ciclo-geometria-gpt6.js"
+  "99r-ciclo-geometria-gpt6.js",
+  "99s-ciudad-responde.js",
+  "99t-medir-y-saltar.js",
+  "99u-todo-junto.js"
  ],
  "bytes": {
-  "single": 5651977,
-  "web": 5653001,
-  "js": 5457374
+  "single": 5680253,
+  "web": 5681277,
+  "js": 5485650
  }
 }

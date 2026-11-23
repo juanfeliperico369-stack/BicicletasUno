@@ -212,7 +212,7 @@ module.exports.v5 = async function (p, ok) {
   ok(r.radar.radares >= 6 && r.radar.record > 10 && r.radar.km > 0, '📸 radares en las ciclorrutas con récord y 💪 Pedaleo que suma km ' + JSON.stringify(r.radar));
   ok(r.mirador.accion && r.mirador.miradores >= 4 && (r.mirador.gira === undefined || (r.mirador.gira && r.mirador.sale)), '🔭 miradores: la cámara gira sobre la ciudad y se sale bien ' + JSON.stringify(r.mirador));
   ok(!r.t3d || (r.t3d.piezas > 50 && r.t3d.cables > 0 && r.t3d.sinError), 'mundo 3D: viaducto, estaciones, puentes y metrocables ' + JSON.stringify(r.t3d || 'sin WebGL'));
-  ok(r.diario >= 2 && r.modal === 4, '📔 el diario anota solo y muestra las 4 habilidades (' + r.diario + ' notas)');
+  ok(r.diario >= 2 && r.modal >= 4, '📔 el diario anota solo y muestra las habilidades (' + r.diario + ' notas, ' + r.modal + ' habilidades)');   /* 3.5: con el RPG de Gemini son 6 en un solo panel */
 };
 
 /* ronda 3.3 (Claude): perdón en los saltos, primer minuto, Hoy en el valle, modo prueba, encargos de los vecinos, Controles que
@@ -264,4 +264,42 @@ module.exports.v6 = async function (p, ok) {
   ok(r.controles.boton && r.controles.guardado, 'Controles guarda lo que tocas (el error que traía la 3.1.0) ' + JSON.stringify(r.controles));
   const mal = r.modos.filter(m => !m.ok || m.errores);
   ok(r.modos.length >= 15 && !mal.length, 'lo que ve el jugador: en ' + r.modos.length + ' modos, el resultado en pantalla y la ★ coinciden con lo guardado' + (mal.length ? ' · fallan: ' + JSON.stringify(mal) : ''));
+};
+
+/* ronda 3.5 (Claude): lo nuevo del motor 5.2 (la ciudad responde, la bici se inclina), 📏 medir, 🚀 llegar ya y todo junto
+   (un panel de habilidades, los encargos en el hub, Hoy en el valle con «Ver todo» y el reparto con doble rol) */
+module.exports.v7 = async function (p, ok) {
+  console.log('V7) ronda 3.5 · la ciudad responde, la bici se inclina, medir, llegar ya y todo junto');
+  const r = await p.evaluate(async () => {
+    const out = {}, espera = ms => new Promise(s => setTimeout(s, ms)), _now = Cal.now; Cal.now = () => new Date(2026, 10, 18, 12, 0);
+    JE.game.stop && JE.game.stop(); JE.game.start('usuario', 1, { seed: 5, nov: NOVEDADES[0], free: true, bici: 'propia' }); await espera(500); Cal.now = _now; const M = JE.game.mode, R = M.ride;
+    /* 1) la ciudad responde: el timbre junto a la gente y la frase más específica */
+    let k = 0; while (!(R.peds || []).length && k++ < 40) await espera(100); const q = (R.peds || [])[0];
+    if (q) { R.p.x = q.x + 10; R.p.y = q.y; R.p.v = 0; Dichos._t0 = -99; R.bell(); }
+    out.dicho = Dichos.dicho && Dichos.dicho.t; out.frases = Dichos.frases().length;
+    const ctx = { lugar: 'estacion', min: 420, lluvia: false, noche: false, veh: 'bike' }, f = Dichos.elegir('ambiente', ctx); out.especifica = !!(f && f.lugar === 'estacion');
+    /* 2) la bici se inclina en las curvas del 3D */
+    if (Mundo3D.ok()) { Mundo3D.poner('tercera'); R.p.v = R.stats_().max * .9; Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600 }); let m = 0; const t0 = performance.now();
+      while (performance.now() - t0 < 1400) { const a = R.p.a + 1.4; Input.joy.x = 200 + Math.cos(a) * 46; Input.joy.y = 600 + Math.sin(a) * 46; await espera(50); m = Math.max(m, Math.abs(Mundo3D.lad || 0)); }
+      Input.joy.on = false; out.ladeo = +m.toFixed(2); Mundo3D.poner(null); }
+    /* 3) 🚀 llegar ya en el mapa grande */
+    const L = LM.cerro, x = (L.x + L.w / 2) * TS, y = (L.y + L.h) * TS + 20; R.way = { x, y, label: 'Cerro Nutibara', col: '#ff2fb3' }; JE.mapView.show(R); await espera(400);
+    const B = JE.mapView.btns.find(b => b.y === View.h - 140); if (B) B.fn(); await espera(200); out.llegar = { boton: !!B, llego: Math.hypot(R.p.x - x, R.p.y - y) < 2 };
+    /* 4) todo junto: el panel con las seis habilidades, los encargos en el hub y Hoy con «Ver todo» */
+    UI.diario(); await espera(100); out.habilidades = [...document.querySelectorAll('#mBody .opt span:first-child')].map(s => s.textContent.split('·')[0].trim()).filter(t => /Pedaleo|Conocer|Resistencia|Técnica|Oficio|Cultura|Equilibrio/.test(t)); UI.closeModal();
+    JE.rpg.abrirHub(M, 'arcos'); await espera(150); { const txt = (document.querySelector('#mBody') || {}).textContent || ''; out.encargosHub = Encargos.lista().filter(e => txt.includes(e.titulo)).length; } UI.closeModal(); Game.resume && Game.resume();   /* los títulos (los terminados no tienen botón: la V6 ya terminó el de Santi) */
+    R.way = null; R.target = null; JE.hoy.mostrar(M); await espera(100); out.verTodo = !!document.querySelector('#hoy21 .hoyTodo'); JE.hoy.cerrar();
+    out.reparto = (Trama.personajes().find(p => p.id === 'santi') || {}).rol;
+    JE.game.stop();
+    /* 5) 📏 medir (corto, 1 s por vista) */
+    const med = await JE.medir.correr(1); out.medir = { cenital: !!(med.cenital && med.cenital.fps > 0), equipo: !!(med.equipo && med.equipo.pantalla), sinError: !med.error };
+    UI.go('sHome'); return out;
+  });
+  ok(r.dicho && r.frases >= 40 && r.especifica, '🗣️ la ciudad responde: al timbre alguien contesta y se elige la frase más específica (' + r.dicho + ')');
+  ok(r.ladeo === undefined || r.ladeo > .2, '🚲 la bici y el ciclista se inclinan en las curvas del 3D (ladeo máx. ' + r.ladeo + ' rad)');
+  ok(r.llegar.boton && r.llegar.llego, '🚀 llegar ya: el mapa grande te lleva al destino');
+  ok(r.habilidades.length === 6 && !r.habilidades.some(t => /Equilibrio/.test(t)) && r.habilidades.filter(t => /Resistencia/.test(t)).length === 1, '💪 un solo panel con seis habilidades, sin repetir (' + r.habilidades.join(', ') + ')');
+  ok(r.encargosHub >= 6 && r.verTodo, '🗺️ los encargos de los vecinos en el hub y «Ver todo» en Hoy en el valle');
+  ok(/Estudiante/.test(r.reparto) && /anfitrión/.test(r.reparto), '👥 reparto con doble rol (Santi: ' + r.reparto + ')');
+  ok(r.medir.cenital && r.medir.equipo && r.medir.sinError, '📏 medir este celular da su informe ' + JSON.stringify(r.medir));
 };

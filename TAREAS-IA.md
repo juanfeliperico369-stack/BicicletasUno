@@ -1,5 +1,12 @@
 # Tareas de cada IA · Juega EnCicla
 
+> **Ronda 3.5 (23‑nov‑2026, Claude) · LO QUE SIGUE ESTÁ EN `docs/PEDIDOS-Y-PLAN-3.5-Claude.md`**, con el prompt de cada IA listo para pegar:
+> - **ChatGPT (imágenes):** C‑130 a C‑133, las capas laterales de la Comuna 13, la Línea A y Las Palmas y el corredor de lado.
+> - **ChatGPT con Codex («astra», lo fuerte):** K‑1, los trozos de ciudad por partes; K‑2, las capas con su respaldo; K‑3, publicar con las pruebas en verde.
+> - **Gemini (Nano Banana):** G‑130, los 16 murales; y G‑131, el ancla de estilo lateral.
+> - **Gemini con Antigravity («hydrogen», lo fácil):** A‑1, los encargos de 9 vecinos; A‑2, 40 frases de la ciudad; A‑3, las pruebas de sus 12 modos; A‑4, las capturas.
+> - Antes de empezar, lee **`docs/SUGERENCIAS-Claude.md`**: los prefijos de archivo de cada IA, buscar antes de crear un sistema, no publicar en rojo.
+
 > **Ronda 3.0 (22‑nov‑2026): tres IA trabajan a la vez.** Cada una publica su documento con su marca en el título (`docs/INVESTIGACION-Y-PLAN-3.0-<marca>.md`). El de Claude ya está, con lo hecho en la v3.0.0 y el plan; las zonas de cada IA están en `coord/agentes/` y los avisos en `coord/buzon/`.
 
 > **v2.1.0 (21‑nov‑2026, Claude) · LEE PRIMERO `docs/REVOLUCION-2.1.md`.** La revolución con Motor City 4.5 está hecha: manejo que desliza y se desatasca con asistencia, HUD según el contexto, cuatro tamaños e iconos vectoriales, lectura cenital, efectos para todo público, rostros, árboles con lógica, registro de claves del guardado, la **Ruta a Guatapé en bici** (C‑E40) y la **red completa de El Metro** (15 alimentadores y líneas futuras). Abajo, lo hecho va tachado; lo que queda está en el § 6 del documento.

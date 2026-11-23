@@ -83,8 +83,8 @@ const Mirador = JE.mirador = {
   Ride.prototype.stats_ = function () { const S = _st.apply(this, arguments); if (!HUMANOS3.has(this.p.veh) || !Habil.yo(this)) return S; const n = Habil.nivel('pedaleo'); return n > 1 ? Object.assign({}, S, { max: S.max * (1 + .015 * (n - 1)) }) : S; };
   const _up = Ride.prototype.update;
   Ride.prototype.update = function (dt, dir) {
-    const yo = Habil.yo(this), P = this.p, x0 = P.x, y0 = P.y, nR = yo && HUMANOS3.has(P.veh) ? Habil.nivel('resistencia') : 1, M = this.map; let r;
-    if (nR > 1 && M && M.slope) { const f = M.slope, k = 1 - .05 * (nR - 1); M.slope = function (x, y, a) { const s = f.call(this, x, y, a); return s > 0 ? s * k : s; }; try { r = _up.call(this, dt, dir); } finally { M.slope = f; } }
+    const yo = Habil.yo(this), P = this.p, x0 = P.x, y0 = P.y, rpg = JE.rpg && JE.rpg.nivel, nR = yo && HUMANOS3.has(P.veh) ? (rpg ? JE.rpg.nivel('resistencia') : Habil.nivel('resistencia')) : 1, M = this.map; let r;
+    if (nR > 1 && M && M.slope) { const f = M.slope, k = 1 - (rpg ? Math.min(.27, .03 * (nR - 1)) : .05 * (nR - 1));   /* 3.5: una sola Resistencia (la del RPG de Gemini, 1–10) */ M.slope = function (x, y, a) { const s = f.call(this, x, y, a); return s > 0 ? s * k : s; }; try { r = _up.call(this, dt, dir); } finally { M.slope = f; } }
     else r = _up.call(this, dt, dir);
     if (yo) try { this.valleVivo(dt, x0, y0); } catch (e) { JE.errors.push('valle vivo: ' + e.message); }
     return r;
@@ -92,7 +92,7 @@ const Mirador = JE.mirador = {
   Ride.prototype.valleVivo = function (dt, x0, y0) {
     const P = this.p, d = Math.hypot(P.x - x0, P.y - y0) * M_PER_PX / 1000;
     if (d > 0 && d < .05 && HUMANOS3.has(P.veh)) { this._km = (this._km || 0) + d; if (this.sl > .015) this._loma = (this._loma || 0) + d; }
-    if ((this._km || 0) > .05) { const a = this._km, b = this._loma || 0; this._km = 0; this._loma = 0; Habil.subir('pedaleo', H => { H.km += a; }); if (b) Habil.subir('resistencia', H => { H.loma += b; }); if ((this._gd = (this._gd || 0) + a) > .5) { this._gd = 0; Save.save(); } }
+    if ((this._km || 0) > .05) { const a = this._km, b = this._loma || 0; this._km = 0; this._loma = 0; Habil.subir('pedaleo', H => { H.km += a; }); if (b) { Habil.subir('resistencia', H => { H.loma += b; }); if (JE.rpg && JE.rpg.ganarSkill) { this._lomaRpg = (this._lomaRpg || 0) + b * 20; if (this._lomaRpg >= 1) { JE.rpg.ganarSkill('resistencia', Math.floor(this._lomaRpg)); this._lomaRpg %= 1; } } } if ((this._gd = (this._gd || 0) + a) > .5) { this._gd = 0; Save.save(); } }
     if ((this._bT = (this._bT || 0) - dt) <= 0) {   // barrios nuevos, una vez por segundo
       this._bT = 1; const b = this.map.barrioAt && this.map.barrioAt(P.x, P.y);   /* en px del mundo (la función divide por TS) */
       if (b && b !== this._bU) { this._bU = b; const H = Habil.d(); if (!H.barrios.includes(b)) { Habil.subir('valle', H2 => { H2.barrios.push(b); }); if (Date.now() - (this._bToast || 0) > 8000 && JE.ui) { this._bToast = Date.now(); JE.ui.toast('🗺️ Barrio nuevo: ' + b + ' · llevas ' + H.barrios.length); } Diario.anotar('Conociste ' + b, '🗺️'); } }
@@ -104,7 +104,7 @@ const Mirador = JE.mirador = {
     const _hacer = Trucos.hacer;
     Trucos.hacer = function (R) {
       const antes = R.truco; _hacer.call(this, R); if (!R.truco || R.truco === antes) return;
-      if (Habil.yo(R)) { Habil.subir('equilibrio', H => { H.trucos++; }); const n = Habil.nivel('equilibrio'); if (n > 1) R.mode.score += 2 * (n - 1); }
+      if (Habil.yo(R)) { Habil.subir('equilibrio', H => { H.trucos++; }); if (JE.rpg && JE.rpg.ganarSkill) { JE.rpg.ganarSkill('tecnica', 2); const n = JE.rpg.nivel('tecnica'); if (n > 1) R.mode.score += n - 1; } else { const n = Habil.nivel('equilibrio'); if (n > 1) R.mode.score += 2 * (n - 1); } }   /* 3.5: una sola Técnica */
       const z = this.en(R), S = R.stats_(); if (!z || R.p.v < S.max * .45) return;
       const m = +(1 + R.p.v / S.max * 5.5).toFixed(1), H = Habil.d(), rec = +H.saltos[z.id] || 0;
       if (m > rec) { H.saltos[z.id] = m; R.mode.score += 10; if (JE.ui) JE.ui.toast('🛹 Salto de ' + String(m).replace('.', ',') + ' m en ' + z.name + ' · ¡récord! +10'); Diario.anotar('Récord de salto en ' + z.name + ': ' + String(m).replace('.', ',') + ' m', '🛹'); }
@@ -163,7 +163,11 @@ const Mirador = JE.mirador = {
     const barra = (h) => { const n = Habil.nivel(h.id), v = Habil.valor(h.id), a = h.umbral[n - 1] || 0, z = h.umbral[n] != null ? h.umbral[n] : v, f = n >= 5 ? 1 : clamp((v - a) / Math.max(1e-6, z - a), 0, 1), val = h.id === 'pedaleo' || h.id === 'resistencia' ? String(v.toFixed(1)).replace('.', ',') : v;
       return `<div class="opt"><span>${h.ico} ${h.nombre} · nivel ${n}<br><small class="m">${val} ${h.u} · ${esc(h.efecto(n))}</small></span><span style="flex:0 0 96px;height:10px;border-radius:5px;background:#0a234233;overflow:hidden;display:block"><i style="display:block;height:100%;width:${Math.round(f * 100)}%;background:${PAL.vd}"></i></span></div>`; };
     const rad = Radares.lista().filter(r => H.radares[r.id]).sort((a, b) => H.radares[b.id] - H.radares[a.id]).slice(0, 5), sal = Object.entries(H.saltos).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    this.modal(`<h2>📔 Mi diario y habilidades</h2><p class="m">Suben solas al rodar, subir lomas, hacer trucos y conocer barrios del valle.</p>${HAB.map(barra).join('')}
+    const RPGS = [['resistencia', '⛰️', 'Resistencia', n => n > 1 ? '−' + Math.min(27, 3 * (n - 1)) + ' % de lo que frena la loma y menos cansancio' : 'sube lomas y rueda por las ciclorrutas'], ['tecnica', '🛹', 'Técnica y trucos', n => n > 1 ? '+' + (n - 1) + ' puntos por truco en las plazas; bonos en skateparks y freerun' : 'haz trucos en plazas y skateparks'], ['mecanica', '🔧', 'Oficio y estrategia', n => n > 1 ? '+' + 8 * (n - 1) + ' % en oficios, puzles, Monitoreo 911 y el Planeador' : 'juega oficios y puzles'], ['civismo', '🌿', 'Cultura cívica', n => n > 1 ? 'más reputación en tu comuna y bonos en los encargos' : 'ayuda a los vecinos y a los mentores']];
+    const barraRpg = ([id, ic, nom, ef]) => { const R2 = JE.rpg, E = R2.estado(), n = R2.nivel(id), xp = E.sk[id] | 0, a = (n - 1) * (n - 1) * 25, z = n * n * 25, f = n >= 10 ? 1 : clamp((xp - a) / Math.max(1, z - a), 0, 1);
+      return `<div class="opt"><span>${ic} ${nom} · nivel ${n}<br><small class="m">${esc(ef(n))}</small></span><span style="flex:0 0 96px;height:10px;border-radius:5px;background:#0a234233;overflow:hidden;display:block"><i style="display:block;height:100%;width:${Math.round(f * 100)}%;background:${PAL.vd}"></i></span></div>`; };
+    const filas = JE.rpg && JE.rpg.estado ? HAB.filter(h => h.id === 'pedaleo' || h.id === 'valle').map(barra).join('') + RPGS.map(barraRpg).join('') : HAB.map(barra).join('');   /* 3.5: un solo panel con las habilidades de las dos IA, sin repetir */
+    this.modal(`<h2>📔 Mi diario y habilidades</h2><p class="m">Suben solas: al rodar, al subir lomas, con los trucos, los oficios, los encargos y conociendo barrios.</p>${filas}
       <p class="pag">Récords</p>${rad.length || sal.length ? rad.map(r => `<p class="m" style="margin:4px 0">📸 ${esc(r.nombre)}: <b>${H.radares[r.id]} km/h</b></p>`).join('') + sal.map(([id, m]) => `<p class="m" style="margin:4px 0">🛹 ${esc((LM[id] || {}).name || id)}: <b>${String(m).replace('.', ',')} m</b></p>`).join('') : '<p class="m">Pasa por un 📸 radar de ciclorruta o salta en una 🛹 zona de trucos.</p>'}
       <p class="pag">Lo que has vivido</p>${L.length ? L.map(e => `<p class="m" style="margin:4px 0">${e.i || '📝'} <small>${fecha(e.t)}</small> · ${esc(e.d)}</p>`).join('') : '<p class="m">Todavía nada: sal al valle. Lo que hagas quedará aquí.</p>'}
       <div class="col"><button class="btn pri" id="mClose">Listo</button></div>`);
