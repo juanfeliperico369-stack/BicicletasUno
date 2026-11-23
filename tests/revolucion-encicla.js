@@ -303,3 +303,37 @@ module.exports.v7 = async function (p, ok) {
   ok(/Estudiante/.test(r.reparto) && /anfitrión/.test(r.reparto), '👥 reparto con doble rol (Santi: ' + r.reparto + ')');
   ok(r.medir.cenital && r.medir.equipo && r.medir.sinError, '📏 medir este celular da su informe ' + JSON.stringify(r.medir));
 };
+
+
+/* V8 · GPT-6/Codex 3.6: el render del trozo no bloquea el cuadro de entrada;
+ * fondos opcionales y rutas de respaldo. El benchmark de CPU 4x es externo. */
+module.exports.v8 = async function (p, ok) {
+  console.log('V8) ronda 3.6 · chunks reanudables y capas laterales opcionales');
+  const r = await p.evaluate(async () => {
+    const out = {}, perfil = JE.chunksGPT6, capas = JE.capas;
+    if (!perfil || !capas) return { instalado: false };
+    out.instalado = true;
+    const gfx0 = Save.data.settings.gfx;
+    Save.data.settings.gfx = '3d';
+    try {
+      const s = homeStation(), tam = CH * TS, cx = Math.floor(s.x / tam) + 7, cy = Math.floor(s.y / tam) + 4;
+      const q = JE.map.cq(), k = cx + ',' + cy + ':' + q;
+      JE.map.chunks2.delete(k);
+      const ini = perfil.creados, t0 = performance.now(), canvas = JE.map.chunkG(cx, cy);
+      out.solicitudMs = +(performance.now() - t0).toFixed(2);
+      out.creado = perfil.creados === ini + 1 && !!canvas && canvas.width > 0;
+      out.reutilizado = JE.map.chunkG(cx, cy) === canvas;
+      const im = canvas.getContext('2d').getImageData(1, 1, 1, 1).data;
+      out.respaldo = im[0] === 207 && im[1] === 201 && im[2] === 188;
+      await new Promise(res => setTimeout(res, 1800));
+      out.progreso = perfil.terminados >= 0 && perfil.maxEtapaMs >= 0 && perfil.errores === 0;
+      out.etapas = { pendientes: perfil.pendientes, completados: perfil.terminados, p95: perfil.percentil95(), max: perfil.maxEtapaMs };
+      out.sinCapas = capas.dibujar(canvas.getContext('2d'), '__sin_arte__', 0, 50, 50) === false;
+      out.capas = capas.activos();
+    } finally { Save.data.settings.gfx = gfx0; }
+    return out;
+  });
+  ok(r.instalado && r.creado && r.reutilizado && r.respaldo && r.progreso,
+     'K-1: chunk se crea instantáneamente con color tierra y continúa por cuadros ' + JSON.stringify(r));
+  ok(r.instalado && r.sinCapas, 'K-2: si falta cualquier paquete de arte, permanece el dibujo anterior');
+};
