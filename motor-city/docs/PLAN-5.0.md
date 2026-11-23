@@ -85,8 +85,8 @@ El PS2 tenía 32 MB de memoria y un procesador de 300 MHz; el Nintendo DS de Chi
 
 | Fase | Qué | Quién |
 |---|---|---|
-| **1 · Que se sienta** | ✅ Dinámica real y sonido por rpm. Falta: motos que se inclinan (con el piloto), vuelcos y deformación | Claude; motos y vuelcos, ChatGPT (C5‑01) |
-| **2 · Ciudad viva** | Sistema de eventos: choque, robo y sirena que la gente cercana oye y a la que reacciona. Escenas de la calle sacadas de las bancas, paraderos y tiendas del mapa real. Frases con condiciones. Despacho de policía, ambulancia y bomberos. Densidad por comuna y hora | Claude (núcleo); Gemini (textos de las frases y escenas); ChatGPT (multitudes) |
+| **1 · Que se sienta** | ✅ Dinámica real y sonido por rpm. ✅ 5.2: motos y bicis que se inclinan con el piloto (C5‑01, Claude). Falta: vuelcos y deformación | Claude; vuelcos, ChatGPT (C5‑01) |
+| **2 · Ciudad viva** | ✅ 5.2 (`MC.CiudadViva`): eventos que la gente oye y a los que reacciona (mira, huye, llama, ayuda); escenas en las bancas y paraderos reales; frases con condiciones (G5‑03, las escribió Claude); en Turno Cero, el testigo sube la búsqueda y llegan la ambulancia o los bomberos por la ruta real. Falta: escenas en tiendas, densidad por comuna y hora, y multitudes | Claude (hecho); ChatGPT (multitudes, C5‑06) |
 | **3 · Mundo grande sin tirones** | Hilos aparte (Web Workers desde el mismo HTML, sin internet), mallas pre-cocinadas por sector (R6) y presupuesto de memoria por celular | ChatGPT (R6 y C5‑04) |
 | **4 · Contenido en serie** | Lenguaje de misiones con hilos, fallas y reintentos; modo creador para poner retos en el mapa y compartirlos por enlace o QR; repeticiones exactas y un bot que gana cada misión | Claude (lenguaje y repeticiones); Gemini (interfaz del creador); ChatGPT (misiones en serie) |
 | **5 · Estilo Chinatown Wars** | Vista «Historieta» (cámara inclinada que gira con el carro y contorno negro) y minijuegos táctiles | Gemini |

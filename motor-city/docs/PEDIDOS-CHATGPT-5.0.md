@@ -7,7 +7,16 @@
 >
 > Este documento reemplaza a `docs/PEDIDOS-CHATGPT-4.9.md`, que queda como historial.
 
-## ★ Estado 5.1 y orden nuevo (23‑nov‑2026, Claude) · empieza aquí
+## ★ Estado 5.2 (23‑nov‑2026, Claude) · empieza aquí
+El autor pidió que Claude retome lo que las otras IA no alcancen. **Ya no son tuyos** (están en `main`, con prueba):
+- **C5‑01, la mitad de las motos:** motos y bicis que se inclinan con el piloto (`Cuerpo._ladear` en `js/32-fisica.js`, `ladeo` en el 3D). **Sigue siendo tuyo:** los vuelcos con auto‑enderezado y la deformación fuerte.
+- **R8, los cuartos falsos:** `VistaTres._cuartosR1` en `js/45-tres.js` (interior mapping en el material R1, uniforme `uCuartos`, atributos `aTan` y `aSem`). **Sigue siendo tuyo:** el SSAO solo en GPU buenas (encadénalo con `posRender`, no lo pises), los faroles con luz y el agua con reflejo.
+
+**Cambio de convención que te afecta:** `Vistas.aPantalla(E, x, y, z)` recibe la **altura sobre el suelo**; la vista le suma la cota en 3D. Si llamas a `gl.aPantalla` directo, ahí sí va la cota absoluta.
+
+**Orden nuevo:** R6‑b (sectores precocinados en el juego, con Workers) → R4‑b → C5‑01 vuelcos → R8 SSAO → C5‑05 policía → C5‑06 multitudes (la ciudad viva ya tiene escenas y reacciones: las multitudes deben usar `MC.CiudadViva`) → lo demás.
+
+## ★ Estado 5.1 y orden nuevo (23‑nov‑2026, Claude)
 **Lo tuyo que ya está en `main`:**
 - R3 (herramienta de recuento del catastro), R4 (auditoría de Overture, cruce seguro y reproyección), R5 (informe de licencias del relieve) y R6 (precocinado de sectores en 3 niveles, con formato v2 i16).
 - **Medido por Claude con tu herramienta** (`reportes/r3-cobertura-catastro.json`, solo conteos): la capa *Construccion (8)* del catastro tiene **1.135.621 construcciones y el 96,7 % trae pisos válidos**. Cubre toda la ciudad.

@@ -63,10 +63,18 @@ class Cuerpo {
      (Antes se cortaba el tiempo de cada cuadro —a 0,1 s aquí y a 0,05 s en el modelo del taller—: con 15 cuadros por segundo el
      juego andaba en cámara lenta, y eso se sentía «pesado».) */
   actualizar(dt, E = {}) {
-    dt = Math.min(dt || 0, .2); if (dt <= .026) return this._paso(dt, E);
+    dt = Math.min(dt || 0, .2); const a0 = this.a; if (dt <= .026) { this._paso(dt, E); this._ladear(a0, dt); return this; }
     const n = Math.min(8, Math.ceil(dt / .025)), h = dt / n, ev = new Set();
     for (let i = 0; i < n; i++) { this._paso(h, i ? Object.assign({}, E, { salto: false }) : E); for (const e of this.eventos) ev.add(e); }
-    this.eventos.length = 0; for (const e of ev) this.eventos.push(e); return this;
+    this.eventos.length = 0; for (const e of ev) this.eventos.push(e); this._ladear(a0, dt); return this;
+  }
+  /* 5.2 · C5-01 (retomado por Claude): las motos y lo de ruedas (bici, patinete, skate, patines) se inclinan hacia adentro de la curva, φ = atan(v·ω/g) con la
+     gravedad real (9,81) y el giro de verdad (ω = cuánto cambió el rumbo), con tope (45° la moto, 32° la bici), suavizado como
+     el peso que se pasa de un lado al otro. En el aire y quieto, se endereza. Lo dibuja el 3D: el modelo, el piloto y las ruedas. */
+  _ladear(a0, dt) {
+    const k = this.veh && this.veh.clase; if (k !== 'moto' && k !== 'rueda') { this.ladeo = 0; return; } if (!(dt > 0)) return;
+    const w = angDif(a0, this.a) / dt, tope = k === 'moto' ? .78 : .56, obj = this.enAire || this.nadando ? 0 : clamp(Math.atan(this.v * w / 9.81), -tope, tope);
+    this.ladeo = (this.ladeo || 0) + (obj - (this.ladeo || 0)) * (1 - Math.exp(-dt / .14));
   }
   _paso(dt, E = {}) {
     const V = this.veh, M = this.mundo; this.eventos.length = 0; this._dt = dt;

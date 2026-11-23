@@ -53,8 +53,11 @@ class Vistas {
   gl3d() { return this.motor3d !== '2d' && this.motor3d !== 'raster' && this.hayGL() && !this.usaRaster(); }
   efectiva() { const v = this.actual; return v.respaldo && !this.gl3d() ? (v._r2d ||= Object.assign({}, v, { tipo: '2d', modo: v.respaldo })) : v; }
   /* metros → pantalla con la vista que esté (2D, pixel o 3D): para la flecha al objetivo, globos y etiquetas */
-  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual; if (v.tipo === 'gl' && this.usaRaster() && this.raster && typeof this.raster.aPantalla === 'function') return this.raster.aPantalla(x, y, z, this._W || 1, this._H || 1);   /* 4.7: con el respaldo por software (Gemini, js/44-raster.js) */
-    if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, z, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
+  /* 5.2: z es la altura SOBRE EL SUELO (como en 2D); el 3D (Gl, VistaTres y Raster) trabaja con la cota absoluta, así que se le suma la
+     del terreno. Antes, en las lomas de Medellín, los globos, la flecha al objetivo y las sirenas quedaban decenas de metros abajo. */
+  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual, M = this.mundo, za = v.tipo === 'gl' && M && typeof M.cota === 'function' ? z + M.cota(x, y) : z;
+    if (v.tipo === 'gl' && this.usaRaster() && this.raster && typeof this.raster.aPantalla === 'function') return this.raster.aPantalla(x, y, za, this._W || 1, this._H || 1);   /* 4.7: con el respaldo por software (Gemini, js/44-raster.js) */
+    if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, za, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
   dibujar(g, W, H, E, dt = 1 / 60) {
     const t0 = MC.ahora(), v = this._ef = this.efectiva(), px = this.pixel; this._W = W; this._H = H; if (E.camara) { E.camara.pantalla = [W, H]; if (this.actual.perfil && E.camara.perfil !== this.actual.perfil) E.camara.usarPerfil(this.actual.perfil); } E.losas = this.losas; E.losasLejos = this.losasLejos; E.calidad = this.calidad;
     let dst = g, w = W, h = H;

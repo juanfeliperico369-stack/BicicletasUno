@@ -139,3 +139,12 @@ Está en `TAREAS-IA.md` § «4.0». En resumen:
 
   Se cambia en caliente.
 
+
+## 5.2 · La ciudad viva, los retos del semáforo y 📏 medir
+- **La gente reacciona** a lo que haces: un choque fuerte, un derrape, un atropello, un disparo, una explosión o una sirena se oyen hasta cierta distancia. Quien lo oye **mira** (❗), **huye** (💨), **llama** por celular (📞) o **se acerca a ayudar** (🩹), y algunos lo comentan en un globo.
+- **Hay gente sentada en las bancas y esperando en los paraderos** de verdad del mapa; de día más, de noche poca, con lluvia menos en las bancas.
+- **Testigos:** si alguien llama por algo grave que hiciste, la búsqueda sube («un vecino llamó a la policía») y llega 🚑 la ambulancia (se lleva a los heridos) o 🚒 los bomberos, por las calles reales y con la sirena.
+- **🚦 Retos del semáforo:** quieto junto a un semáforo, sostén 🛑 y acelera a la vez (⏫ o el joystick): quemas llanta y el de al lado acepta una carrera hasta un sitio con nombre a medio kilómetro o más.
+- **🏍️ Las motos y las bicis se inclinan** en las curvas, con el piloto.
+- **🪟 De noche**, con GPU media o alta, detrás de cada ventana encendida se ve un cuarto con su lámpara.
+- **📏 Medir el rendimiento:** ⏸ Menú → 📏, o `?medir` en la dirección. Guía en `docs/MEDIR-EN-EL-CELULAR.md`.

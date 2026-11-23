@@ -76,5 +76,21 @@ ok(!C3._din && C3.v > 3, 'en arcade la dinámica real no se usa');
 const S = MC.PersecucionAudio.motor({ rpm: 3000, cilindros: 4, activo: true, carga: 1 });
 ok(Math.abs(S.agudo - 100) < .01 && S.volumen > .05, 'el tono del motor sale de las rpm (3.000 rpm, 4 cilindros → 100 Hz)', S);
 const F = MC.Flex.valores({}); ok(F.manejo === 'real', 'en ⚙️ Flexibilidad, el manejo real es lo de fábrica');
+console.log('7) Motos y bicis que se inclinan (C5-01)');
+/* un sitio abierto (sin edificios a 35 m) para dar vueltas */
+const TTS = [.55, .25, .3, .3, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9, .42, .4, .3, .35];   /* el agarre de cada suelo (TT_SUPERFICIE): 0 es agua */
+let abierto = null; for (let k = 0; k < 900 && !abierto; k++) { const x = col.x + (k % 30 - 15) * 45, y = col.y + Math.floor(k / 30 - 15) * 45; let libre = true; for (let r = 0; r <= 35 && libre; r += 5) for (let i = 0; i < 12 && libre; i++) if (M.edificioEn(x + Math.cos(i / 12 * 6.283) * r, y + Math.sin(i / 12 * 6.283) * r, 1)) libre = false; if (libre && (TTS[M.suelo(x, y)] || 0) >= .5) abierto = { x, y }; }
+const vuelta = (veh, izq, manejo) => { MC.opciones.manejo = manejo; const Cm = new MC.Cuerpo(M, { x: abierto.x, y: abierto.y, a: 0, veh }); const L = []; for (let i = 0; i < 150; i++) { const a0 = Cm.a; Cm.actualizar(1 / 30, { dir: { x: Math.cos(Cm.a + (izq ? .9 : -.9)), y: Math.sin(Cm.a + (izq ? .9 : -.9)), m: .75 } }); if (i > 100) L.push({ f: Cm.ladeo, teo: Math.atan(Cm.v * angDifJ(a0, Cm.a) * 30 / 9.81) }); } const m = k => L.reduce((s, q) => s + q[k], 0) / L.length; return { ladeo: m('f'), teoria: m('teo'), v: Cm.v }; };
+const angDifJ = (a, b) => { let d = (b - a) % 6.283185307; if (d > Math.PI) d -= 6.283185307; if (d < -Math.PI) d += 6.283185307; return d; };
+if (!abierto) ok(false, 'hay un sitio abierto para dar vueltas'); else {
+  const mi = vuelta('moto', true, 'real'), md = vuelta('moto', false, 'real'), ma = vuelta('moto', true, 'arcade'), bi = vuelta('bici', true, 'arcade'), ca = vuelta('prueba_vega', true, 'real');
+  const r2 = o => ({ ladeo: Math.round(o.ladeo * 573) / 10 + '°', teoria: Math.round(o.teoria * 573) / 10 + '°', v: r1(o.v) });
+  ok(mi.ladeo > .12 && Math.abs(mi.ladeo - mi.teoria) < .08, 'la moto en curva se inclina hacia adentro ≈ atan(v·ω/g)', r2(mi));
+  ok(md.ladeo < -.12 && Math.abs(md.ladeo - md.teoria) < .08, 'y en la curva contraria, al otro lado', r2(md));
+  ok(ma.ladeo > .1, 'también con el manejo arcade', r2(ma));
+  ok(bi.ladeo > .05 && bi.ladeo <= .56, 'la bici se inclina menos (tope de 32°)', r2(bi));
+  ok(!ca.ladeo, 'el carro no se inclina (lo suyo es el alabeo de la suspensión)');
+  MC.opciones.manejo = 'real'; const Cq = new MC.Cuerpo(M, { x: abierto.x, y: abierto.y, a: 0, veh: 'moto' }); Cq.ladeo = .5; for (let i = 0; i < 30; i++) Cq.actualizar(1 / 30, {}); ok(Math.abs(Cq.ladeo) < .03, 'quieta, se endereza', r1(Cq.ladeo * 57.3) + '°');
+}
 console.log((mal ? '✗ ' : '✓ ') + 'Dinámica real: ' + bien + ' bien, ' + mal + ' mal');
 process.exit(mal ? 1 : 0);

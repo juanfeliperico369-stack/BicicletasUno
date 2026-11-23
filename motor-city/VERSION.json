@@ -1,12 +1,12 @@
 {
-  "version": "5.1.0",
+  "version": "5.2.0",
   "fecha": "2026-11-23",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 5.1.0 como referencia; el juego va en 3.4.0 (unión de las dos 3.3.0, de Claude y de Antigravity)",
-    "MetroZero: motor-city/ 5.1.0 como referencia; el juego va en 3.5.0 (unión de las dos 3.4.0, de Claude y de Antigravity)",
-    "RunRunZero: motor-city/ 5.1.0 como referencia; APK que gira"
+    "BicicletasUno: motor-city/ 5.2.0 como referencia; el juego va en 3.4.0",
+    "MetroZero: motor-city/ 5.2.0 como referencia; el juego va en 3.5.0",
+    "RunRunZero: motor-city/ 5.2.0 como referencia; APK que gira"
   ],
-  "estado": "5.1.0 «Todo junto»: se unió lo nuevo de ChatGPT/Codex (R3 recuento del catastro, R4 auditoría de techos de Overture, R5 licencias del relieve, R6 sectores precocinados en 3 niveles) y de Gemini/Antigravity (G5-01 vista Historieta, V4 paralaje por biomas en 🏁 Arcade); Claude lo pulió: la Historieta pasa de la CPU a un pase en la GPU (de ~8 a ~2 ms, tinta desde la geometría y colores planos) y las imágenes de los biomas salen del código (769 KB → 30 KB) y se incrustan al construir. Recuento real del catastro: 1.135.621 construcciones, 96,7 % con pisos. Juegos hermanos: EnCicla 3.4.0 y El Metro 3.5.0 (las dos versiones paralelas de cada uno, unidas). Antes, 5.0.0 «Que se sienta»: MC.Dinamica, el manejo real del carro."
+  "estado": "5.2.0 «Ciudad viva»: fase 2 del plan 5.0. La gente oye, ve y reacciona (mira, huye, llama, ayuda) a choques, derrapes, atropellos, disparos, explosiones y sirenas; hay gente sentada en las bancas y esperando en los paraderos reales; la gente habla con frases que eligen las reglas de respuesta; en Turno Cero el testigo que llama sube la búsqueda y trae la ambulancia o los bomberos por la ruta real. Claude retomó lo de las otras IA: G5-03 (las frases), C5-01 (motos y bicis que se inclinan), R8 (cuartos falsos detrás de las ventanas de noche), G5-06 (retos desde cualquier semáforo) y G5-12 (📏 medir el rendimiento en el celular). Arreglos: la proyección 3D suma la cota (globos, flecha y destellos en las lomas) y el carro ya arranca con el joystick de lado. Antes, 5.1.0 «Todo junto»."
 }

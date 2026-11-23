@@ -90,7 +90,11 @@ const Dinamica = {
        rápida se va de largo de trompa, no hace trompo); la cola se suelta con el freno de mano o con potencia de sobra */
     const ue = Math.max(.5, au), af = Math.atan2(D.w + H.a * D.r, ue) - dl * Math.sign(D.u || 1), ar = Math.atan2(D.w - H.b * D.r, ue), Bf = H.rig / (1.4 * Math.max(.1, mu)), Br = Bf * 1.35, muR = mu * 1.06;
     const lat = (al, Fz, Fx, B, m2) => { const cap = Math.sqrt(Math.max(0, 1 - Math.min(1, (Fx / Math.max(1, m2 * Fz)) ** 2))); return -m2 * Fz * Math.sin(1.4 * Math.atan(B * al)) * Math.max(.25, cap); };
-    let Fyf = lat(af, Fzf, Fxf, Bf, mu), Fyr = lat(ar, Fzr, Fxr, Br, muR); if (U.mano) Fyr *= .2;
+    /* 5.2: casi quieto (menos de 0,5 m/s) la deriva se mide contra un piso de 0,5 m/s y, con el volante a tope, se inventaba un
+       derrape de la trompa que frenaba tanto como empujaba el motor: arrancando con el dedo de lado el carro no se movía. Ahí el carro
+       va por donde apuntan las ruedas (el cinemático de abajo), así que las fuerzas de lado entran de a poco desde 0 */
+    const kLat = clamp(au / .5, 0, 1);
+    let Fyf = lat(af, Fzf, Fxf, Bf, mu) * kLat, Fyr = lat(ar, Fzr, Fxr, Br, muR) * kLat; if (U.mano) Fyr *= .2;
     const ax = (Fxf * cd + Fxr - Fyf * sd - Fres) / m, ay = (Fxf * sd + Fyf * cd + Fyr) / m, dr = (H.a * (Fyf * cd + Fxf * sd) - H.b * Fyr) / H.Iz;
     const u0 = D.u; D.u += (ax + D.w * D.r) * h; D.w += (ay - D.u * D.r) * h; D.r += dr * h;
     /* control de estabilidad (ESP): si el carro gira más de lo que piden las ruedas y la cola se está yendo, frena por rueda (aquí:

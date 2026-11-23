@@ -66,23 +66,23 @@ const Modos = {
     /* extremo: lo más alto cerca y, desde ahí, lo más bajo a menos de 1,2 km (bajadas de 1 a 4 km, no vueltas por medio valle) */
     if (extremo) { const alto = this.extremoVias(x0, y0, 1200, 1); const bajo = alto && this.extremoVias(alto.x, alto.y, 800, -1);
       if (alto && bajo && alto.z - bajo.z > 25) { const Q = rutaTC(M, [alto, bajo], false); if (bueno(Q)) { P = Q; tipo = 'Bajada'; desnivel = Math.round(alto.z - bajo.z); } } }
-    for (let intento = 0; intento < 6 && !P; intento++) { cerrada = intento % 2 === 0; const pts = [], n = cerrada ? 5 : 2, R = (extremo ? 260 : 380) * Math.pow(.7, intento);
+    for (let intento = 0; intento < 12 && !P; intento++) { cerrada = intento % 2 === 0; const pts = [], n = cerrada ? 5 : 2, R = (extremo ? 260 : 380) * Math.pow(.78, intento % 6);
       for (let k = 0; k < n; k++) { const a = k / n * TAU + this._rnd() * .4, q = M.viaCercana(x0 + Math.cos(a) * R * (cerrada ? 1 : 3.2), y0 + Math.sin(a) * R * (cerrada ? .8 : 3.2), 220, extremo ? null : deCarro); if (q) pts.push(q); }
       if (!cerrada) { const q0 = M.viaCercana(x0, y0, 120, extremo ? null : deCarro); if (q0) pts.unshift(q0); pts.length = Math.min(pts.length, 2); }
       if (pts.length >= 2) { const Q = rutaTC(M, pts, cerrada); if (bueno(Q)) { P = Q; tipo = cerrada ? 'Circuito' : 'Sprint'; } } }
     if (!P) return false;
     const p = new PistaTC(P, cerrada); if (p.L < 300) return false; const vueltas = cerrada && p.L < 2200 ? 2 : 1, antes = C.veh.id;
-    /* 4.7: la salida, en un tramo despejado: si los primeros 15 m de pista chocan con algo (un edificio, un poste), la salida avanza por la pista */
-    let s0 = 0; const libre = s => { for (let d = 2; d <= 15; d += 2.5) { const q = p.punto(s + d); if (G.M.edificioEn(q.x, q.y, 1.2)) return false; } return true; }; while (s0 < Math.min(150, p.L / 3) && !libre(s0)) s0 += 6;
+    /* 4.7: la salida, en un tramo despejado: si los primeros 36 m de pista chocan con algo o doblan en seco, la salida avanza por la pista */
+    let s0 = 0; const libre = s => { const a0 = p.punto(s).a; for (let d = 2; d <= 36; d += 3) { const q = p.punto(s + d); if (G.M.edificioEn(q.x, q.y, 1.8) || Math.abs(MC.angDif(a0, q.a)) > .45) return false; } return true; }; while (s0 < Math.min(240, p.L / 2) && !libre(s0)) s0 += 6;
     if (s0 > 0) { const P2 = []; for (let s = s0; s <= p.L - (cerrada ? 0 : 1); s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (cerrada) for (let s = 0; s < s0; s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (P2.length >= 8) return this._pistaLista(new PistaTC(P2, cerrada), cerrada, extremo, tipo, desnivel, antes); }
     return this._pistaLista(p, cerrada, extremo, tipo, desnivel, antes);
   },
-  _pistaLista(p, cerrada, extremo, tipo, desnivel, antes) {
+  _pistaLista(p, cerrada, extremo, tipo, desnivel, antes, op = {}) {   /* op (5.2, retos del semáforo): nombres de los rivales y alLado (salen junto al jugador) */
     const C = G.cuerpo, vueltas = cerrada && p.L < 2200 ? 2 : 1, q0 = p.punto(0);
     if (extremo) { if (C.veh.id !== 'mtb') C.setVeh('mtb'); } else if (C.veh.clase === 'pie' || C.veh.clase === 'rueda') { C.setVeh(G.veh); C.estacionado = null; }
     const d0 = Math.hypot(q0.x - C.x, q0.y - C.y);   /* 4.8 (ChatGPT TC-P1-08): lejos de la salida, el jugador elige ir manejando o saltar a la parrilla */
-    const nombres = extremo ? ['Lucía «la Flecha»', 'el Mono Rendón'] : ['Lucía «la Flecha»', 'el Mono Rendón', 'Kira Salazar'], R = [];
-    nombres.forEach((nombre, k) => { const off = (k + 1) * 7, q = p.punto(cerrada ? -off : 0), lado = (k % 2 ? 1 : -1) * 2.2, Cb = new MC.Cuerpo(G.M, { x: q.x - Math.sin(q.a) * lado - (cerrada ? 0 : Math.cos(q.a) * off), y: q.y + Math.cos(q.a) * lado - (cerrada ? 0 : Math.sin(q.a) * off), a: q.a, veh: extremo ? 'mtb' : ['tc_noir', 'tc_arrow', 'tc_mercury'][k] || 'carro' }); Cb.ia = true; R.push({ nombre, color: ['#2f80ed', '#27ae60', '#f2c94c'][k], cuerpo: Cb, s: cerrada ? -off : 0, ruta: null, fin: null, habil: .9 + k * .05 }); });
+    const nombres = op.nombres || (extremo ? ['Lucía «la Flecha»', 'el Mono Rendón'] : ['Lucía «la Flecha»', 'el Mono Rendón', 'Kira Salazar']), R = [];
+    nombres.forEach((nombre, k) => { const off = op.alLado ? 0 : (k + 1) * 7, q = p.punto(cerrada ? -off : 0), lado = (k % 2 ? 1 : -1) * (op.alLado ? 3.2 : 2.2), Cb = new MC.Cuerpo(G.M, { x: q.x - Math.sin(q.a) * lado - (cerrada ? 0 : Math.cos(q.a) * off), y: q.y + Math.cos(q.a) * lado - (cerrada ? 0 : Math.sin(q.a) * off), a: q.a, veh: extremo ? 'mtb' : ['tc_noir', 'tc_arrow', 'tc_mercury'][k] || 'carro' }); Cb.ia = true; R.push({ nombre, color: ['#2f80ed', '#27ae60', '#f2c94c'][k], cuerpo: Cb, s: cerrada ? -off : 0, ruta: null, fin: null, habil: .9 + k * .05 }); });
     this.m = { id: extremo ? 'extremo' : 'carrera', extremo, p, vueltas, total: vueltas * p.L, rivales: R, yo: { s: 0, fin: null }, t: -3.5, puntos: 0, aire: 0, enAire: false, antes: extremo ? antes : null, tipo, desnivel };
     if (extremo && BOT.saltar) BOT.saltar.hidden = false;
     const c = this.m; if (d0 > 30) { c.ir = true; G.objetivo = { x: q0.x, y: q0.y, texto: '🏁 Salida' };
@@ -147,7 +147,7 @@ const Modos = {
   luces() { const T = G.trafico; if (!T || !T.luces) return null; if (this._lucesDe === T) return this._lucesG; const g = new Map(); for (const L of T.luces().values()) { const k = Math.floor(L.x / 60) + ',' + Math.floor(L.y / 60); if (!g.has(k)) g.set(k, []); g.get(k).push(L); } this._lucesDe = T; return (this._lucesG = g); },
   pasoEnCicla(dt) {
     const m = this.m, C = G.cuerpo, v = Math.abs(C.v);
-    if (m.fase === 0) { if (Math.hypot(m.o.x - C.x, m.o.y - C.y) < 16 && v < 2.5) { m.esp += dt; if (m.esp > .8) { m.fase = 1; m.t = 0; C.setVeh('bici'); G.objetivo = { x: m.d.x, y: m.d.y, texto: '🚲 ' + m.d.nombre }; G.ui.aviso('🚲 ¡Cicla tomada! Llévala a ' + m.d.nombre + ' (' + this.bicis(m.d) + ' de 15): por la ciclorruta suma racha', 2800, 'modos'); } } return; }
+    if (m.fase === 0) { if (Math.hypot(m.o.x - C.x, m.o.y - C.y) < 16 && v < 2.5) { m.esp += dt; if (m.esp > .8) { m.esp = 0; m.fase = 1; m.t = 0; C.setVeh('bici'); G.objetivo = { x: m.d.x, y: m.d.y, texto: '🚲 ' + m.d.nombre }; G.ui.aviso('🚲 ¡Cicla tomada! Llévala a ' + m.d.nombre + ' (' + this.bicis(m.d) + ' de 15): por la ciclorruta suma racha', 2800, 'modos'); } } else m.esp = 0; return; }
     m.t += dt;
     /* la racha por la ciclorruta (EnCicla): cada 8 s seguidos sube el multiplicador hasta ×3 */
     if (v > 2 && G.M.esCiclovia(C.x, C.y, 4)) { m.racha += dt; m.fuera = 0; } else if ((m.fuera += dt) > 1.5) m.racha = 0;
@@ -155,7 +155,7 @@ const Modos = {
     /* el semáforo en rojo (EnCicla): pasar con la luz roja resta */
     const g = this.luces(); if (g && v > 3) { const k = Math.floor(C.x / 60) + ',' + Math.floor(C.y / 60); for (const L of g.get(k) || []) { if (Math.hypot(L.x - C.x, L.y - C.y) > 7) continue; const ult = m.pasados.get(L.nodo) || -99; if (G.t - ult < 20) continue; m.pasados.set(L.nodo, G.t); if (G.trafico.luz(L.nodo, C.a, G.reloj.seg) === 'rojo') { m.puntos = Math.max(0, m.puntos - 50); m.rojos++; m.racha = 0; G.ui.aviso('🚦 ¡Te volaste el semáforo en rojo! −50', 1800, 'rojo'); } } }
     if (Math.hypot(m.d.x - C.x, m.d.y - C.y) < 14 && v < 2.5) { m.esp += dt; if (m.esp < .8) return; m.esp = 0; const B = this._bicis; B.set(m.d.id || m.d.nombre, this.bicis(m.d) + 1); B.set(m.o.id || m.o.nombre, Math.max(0, this.bicis(m.o) - 1)); const bono = Math.max(0, Math.round((m.limite - m.t) * 2)) + 100; m.puntos += bono; m.vueltas++;
-      G.ui.aviso('🚲 Cicla devuelta en ' + m.d.nombre + ' · +' + bono + (m.t > m.limite ? ' (tarde)' : ''), 2400, 'modos'); if (m.vueltas < 3) { if (this.armarEnCicla(m.d) === false) this.finEnCicla(); } else this.finEnCicla(); }
+      G.ui.aviso('🚲 Cicla devuelta en ' + m.d.nombre + ' · +' + bono + (m.t > m.limite ? ' (tarde)' : ''), 2400, 'modos'); if (m.vueltas < 3) { if (this.armarEnCicla(m.d) === false) this.finEnCicla(); } else this.finEnCicla(); } else m.esp = 0;
   },
   finEnCicla() { const m = this.m, rec = this.record('encicla:' + G.id, m.puntos, false); this.terminar(null); MC.emit('modo:resultado', { id: 'encicla', puntos: m.puntos, rojos: m.rojos }); G.ui.dialogo('🚲 EnCicla', 'Rebalanceaste ' + m.vueltas + ' estaciones · <b>' + Math.round(m.puntos) + ' puntos</b>' + (m.rojos ? ' · 🚦 ' + m.rojos + ' semáforo(s) en rojo' : ' · ningún semáforo en rojo 👏') + (rec.mejor ? '<br>⭐ ¡Récord!' : ''), ['Listo']); },
 
@@ -241,7 +241,7 @@ const Modos = {
       if (k === 'estilo') { const i = est.findIndex(e => e.id === MC.estilo); MC.estilo = est[(i + 1) % est.length].id; if (G.vistas && G.vistas.losas) { G.vistas.losas.limpiar(); if (G.vistas.losasLejos) G.vistas.losasLejos.limpiar(); } this.laboratorio(); }
       else if (k === 'hora') { G.reloj.min = (G.reloj.min + 180) % 1440; this.laboratorio(); }
       else if (k === 'clima') { const i = climas.indexOf(G.climaForzado); G.climaForzado = i >= climas.length - 1 ? null : climas[i + 1]; G.clima.forzar(G.climaForzado); this.laboratorio(); }
-      else if (k === 'veh') { const L = TC.VEHICULOS.map(v => ({ id: 'tc:' + v.id, texto: (v.icon || '🚗') + ' ' + v.n })).concat(['mtb', 'bmx', 'ebike', 'patinete', 'skate', 'patines', 'moto', 'quad', 'jetpack', 'camion', 'buseta'].map(id => ({ id: 'mc:' + id, texto: '🧩 ' + id }))); G.ui.menu('🚗 Vehículo', L, v => { if (v.startsWith('tc:')) { if (C.veh.clase === 'pie') C.setVeh(v.slice(3)); cambiarVeh(v.slice(3)); } else C.setVeh(v.slice(3)); }); }
+      else if (k === 'veh') { const L = TC.VEHICULOS.map(v => ({ id: 'tc:' + v.id, texto: (v.icon || '🚗') + ' ' + v.n })).concat(['mtb', 'bmx', 'ebike', 'patinete', 'skate', 'patines', 'moto', 'quad', 'jetpack', 'avioneta', 'avion', 'camion', 'buseta'].map(id => ({ id: 'mc:' + id, texto: '🧩 ' + id }))); G.ui.menu('🚗 Vehículo', L, v => { if (v.startsWith('tc:')) { if (C.veh.clase === 'pie') C.setVeh(v.slice(3)); cambiarVeh(v.slice(3)); } else C.setVeh(v.slice(3)); }); }
     });
     return true;
   },

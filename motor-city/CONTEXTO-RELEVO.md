@@ -28,13 +28,13 @@
 
 ---
 
-## 0. Entregables de la 5.1.0 «Todo junto» (HTML, APK y enlaces)
+## 0. Entregables de la 5.2.0 «Ciudad viva» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 5.1.0** (18+), el juego de prueba con todo: 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.1.0/MotorCity-getaway.apk> |
+| **Turno Cero 5.2.0** (18+), el juego de prueba con todo: 🗣️ ciudad viva (la gente reacciona, habla y llama; 🚑 y 🚒 llegan por la ruta real), 🚦 retos desde cualquier semáforo, 🏍️ motos que se inclinan, 🪟 cuartos falsos de noche, 📏 medir el rendimiento, 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.2.0/MotorCity-getaway.apk> |
 | Juega EnCicla 3.4.0 (unión de las 3.3.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
 | El Metro 3.5.0 (unión de las 3.4.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 33) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
@@ -820,4 +820,27 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - **fase 2, la ciudad viva:** eventos que la gente oye y a los que reacciona, escenas de la calle sacadas de las bancas, paraderos y tiendas del mapa, el motor de frases que usará los textos de Gemini (G5‑03) y el despacho de policía, ambulancia y bomberos;
   - **después, fase 4:** lenguaje de misiones, repeticiones exactas y el bot que gana cada misión.
 - **Pedidos:** la sección «★ Estado 5.1 y orden nuevo» al principio de `docs/PEDIDOS-CHATGPT-5.0.md` y de `docs/PEDIDOS-GEMINI-5.0.md`.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.0 · G5‑02 Anillos de recoger y entregar (Mandados y EnCicla) y controles de vuelo
+- **Pedido:** `G5-02` de `docs/PEDIDOS-GEMINI-5.0.md` (rama `ia/gemini/g5-02-anillos`).
+- **Hecho:**
+  - Módulo aditivo `juegos/getaway/61-anillos.js` (`G.AnillosVuelo`) que proyecta los anillos de recoger y entregar en `📦 Mandados` (`r = 22 m`, `#ffc23a` / `#3fae5a`), `🚲 EnCicla` (`r = 16 m / 14 m`, `#3fae5a` / `#2dd4bf`) y `📞 Contratos` (`r = 18 m`) sobre el asfalto en 3D y 2D (`29` vértices proyectados), con onda concéntrica interior, 4 postes de luz vertical (`z = 0.18..2.1 m`) y arco radial blanco de progreso (`0 % → 100 %`) al esperar dentro del anillo.
+  - Botones táctiles `🔼 Subir` (`BOT.sube` / `#bSube`) y `🔽 Bajar` (`BOT.baja` / `#bBaja`, `≥ 48 × 48 px`) en `.vuelo-ctl`, visibles únicamente cuando el jugador lleva `jetpack`, `avioneta` o `avion` (`C.veh.clase === 'aire' || C.veh.vuela`), ubicados fuera de `zonaLibre()` (`412 × 860` y `860 × 412`), con empuje automático de despegue por encima de `vmin` en aeronaves de ala fija y sin activar el freno de mano con `Space`.
+  - Ajuste mínimo en `juegos/getaway/60-modos.js`: incluye `'avioneta'` y `'avion'` en el selector de vehículos de `🧪 Laboratorio` y reinicia `m.esp = 0` al completar la fase 0 o salir del anillo en `pasoEnCicla`.
+  - Prueba automatizada `pruebas/anillos.mjs`, reporte `reportes/2026-11-23-gemini-g5-02-anillos.md` y capturas WebP en `reportes/img/gemini-g5-02/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+9.4 KB`.
+- **Pruebas:** `node herramientas/construir.mjs`, `node pruebas/anillos.mjs`, `node pruebas/dinamica.mjs`, `node pruebas/humano.mjs`, `node pruebas/modos.mjs` y `node pruebas/prueba.mjs --navegador`.
+- **Sigue (Gemini):** `G5-03` (`datos/frases/*.json` con 200 frases y escenas de la calle en rama `ia/gemini/g5-03-frases`) y `G5-07` (fichas y dibujos de referencia de los ~30 sitios icónicos de Medellín empezando por el Edificio Coltejer).
+- **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+
+### Claude · 23‑nov‑2026 · motor 5.2.0 «Ciudad viva»
+- **Pedido del autor:** «Haz tu parte; en algún momento ya dejarán de proveer, así que retómalos».
+- **Hecho:**
+  - **Fase 2, la ciudad viva:** `js/26-vida-ciudad.js` (`MC.CiudadViva`: eventos, reacciones, escenas y frases) y `juegos/getaway/66-ciudad-viva.js` (testigos, búsqueda, 🚑 y 🚒 por la ruta real, globos e íconos).
+  - **Retomado de Gemini:** G5‑03 (las frases), G5‑06 (retos desde cualquier semáforo, `67-retos-semaforo.js`) y G5‑12 (📏 medir, `68-medir.js`).
+  - **Retomado de ChatGPT:** C5‑01, motos y bicis que se inclinan (falta vuelco y deformación); R8, cuartos falsos de noche en las fachadas R1 (falta SSAO, faroles y agua).
+  - **Arreglos:** `Vistas.aPantalla` suma la cota en 3D (antes, en Medellín, todo lo dibujado encima quedaba fuera de la pantalla); el manejo real ya arranca con el joystick de lado.
+- **Probado:** la batería completa con `ciudad-viva.mjs` (45), `retos-semaforo.mjs`, `medir.mjs` y `dinamica.mjs` (25), más la QA de siempre y `prueba.mjs --navegador`.
+- **Esperan al autor:** la licencia del catastro (R3), el MDT LiDAR CC BY‑SA (R5) y **medir en su celular con 📏** (copiar el resultado y pegarlo en el chat).
+- **Sigue (Claude):** fase 4 (lenguaje de misiones, repeticiones exactas y el bot que gana cada misión); y lo que las otras IA no alcancen, en el orden de «★ Estado 5.2» de los pedidos.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.

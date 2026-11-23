@@ -123,12 +123,17 @@ Object.assign(Malla.prototype, {
       this.cajaF(l[0], l[1], l[2], a, .3, .14, .34, f ? [1, .1, .1] : [.35, .05, .05], f); this.cajaF(r[0], r[1], r[2], a, .3, .14, .34, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); }
   },
   /* persona (peatón): piernas, torso, brazos, cabeza y pelo */
-  persona3d(x, y, z, a, A, fase = 0, alto = 1.7) {
+  persona3d(x, y, z, a, A, fase = 0, alto = 1.7, pose = null) {
     const k = alto / 1.7, ca = Math.cos(a), sa = Math.sin(a), sw = Math.sin(fase) * .22, pt = (u, v, h) => [x + u * ca - v * sa, y + h * k, z + u * sa + v * ca];
     const pan = hex3(A.cPantalon), cam = hex3(A.cCamisa), piel = hex3(A.cPiel), pelo = hex3(A.cPelo || '#2b1d14');
+    /* 5.2 · sentado (en una banca): muslos adelante a la altura del asiento, canillas abajo, torso y cabeza más bajos */
+    if (pose === 'sentado') { const ys = .46; for (const s of [.1, -.1]) { const m = pt(.22, s, ys - .05), c = pt(.44, s, 0); this.cajaF(m[0], m[1], m[2], a, .44, .17, .14 * k, pan); this.cajaF(c[0], c[1], c[2], a, .14, .15, (ys - .02) * k, pan); }
+      const t = pt(0, 0, ys); this.cajaF(t[0], t[1], t[2], a, .26, .44, .6 * k, cam); for (const s of [.27, -.27]) { const b = pt(.12, s, ys + .1); this.cajaF(b[0], b[1], b[2], a, .13, .12, .5 * k, A.manga ? cam : piel); }
+      const h = pt(0, 0, ys + .76); this.esfera(h[0], h[1], h[2], .14 * k, .16 * k, .14 * k, piel, osc3(piel, .85), 3, 0); const hp = pt(-.02, 0, ys + .84); this.esfera(hp[0], hp[1], hp[2], .145 * k, .1 * k, .145 * k, pelo, osc3(pelo, .8), 3, 0); return; }
     for (const [s, f] of [[.1, sw], [-.1, -sw]]) { const p = pt(f * .35, s, 0); this.cajaF(p[0], p[1], p[2], a + f * .4, .2, .17, .86 * k, pan); }
     const t = pt(0, 0, .86); this.cajaF(t[0], t[1], t[2], a, .26, .44, .6 * k, cam);
-    for (const [s, f] of [[.27, -sw], [-.27, sw]]) { const p = pt(f * .3, s, .9); this.cajaF(p[0], p[1], p[2], a, .13, .12, .55 * k, A.manga ? cam : piel); }
+    for (const [s, f] of [[.27, -sw], [-.27, sw]]) { if (pose === 'celular' && s < 0) { const b = pt(.08, -.2, 1.12), tel = pt(.1, -.16, 1.5); this.cajaF(b[0], b[1], b[2], a, .11, .11, .42 * k, A.manga ? cam : piel); this.cajaF(tel[0], tel[1], tel[2], a, .05, .09, .14 * k, [.06, .06, .08]); continue; }   /* 5.2: hablando por celular */
+      const p = pt(f * .3, s, .9); this.cajaF(p[0], p[1], p[2], a, .13, .12, .55 * k, A.manga ? cam : piel); }
     const h = pt(0, 0, 1.62); this.esfera(h[0], h[1], h[2], .14 * k, .16 * k, .14 * k, piel, osc3(piel, .85), 3, 0);
     const pl = pt(-.03, 0, 1.69); this.esfera(pl[0], pl[1], pl[2], .15 * k, .1 * k, .15 * k, pelo, osc3(pelo, .8), 5, 0);
   }

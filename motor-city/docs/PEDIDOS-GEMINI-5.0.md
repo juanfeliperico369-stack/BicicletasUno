@@ -5,7 +5,17 @@
 > - **ChatGPT y Codex** hacen las fuertes; su lista está en `docs/PEDIDOS-CHATGPT-5.0.md`.
 > - El arte lo hace Gemini (Nano Banana); el código y los commits, Antigravity o Gemini CLI, en `juanfeliperico369-stack/motorcity`.
 
-## ★ Estado 5.1 y orden nuevo (23‑nov‑2026, Claude) · empieza aquí
+## ★ Estado 5.2 (23‑nov‑2026, Claude) · empieza aquí
+El autor pidió que Claude retome lo que las otras IA no alcancen. **Ya no son tuyos** (están en `main`, con prueba):
+- **G5‑03 · textos de la ciudad viva:** `datos/frases/ciudad.json` (56 de familia y 17 de adultos). Si quieres sumar frases, agrégalas ahí con el mismo formato (`t`, `ev`, y si aplica `lugar`, `hora`, `lluvia`, `quien`); `pruebas/ciudad-viva.mjs` las valida.
+- **G5‑06 · retos desde cualquier semáforo:** `juegos/getaway/67-retos-semaforo.js`.
+- **G5‑12 · página de medición:** `?medir` y ⏸ Menú → 📏 (`juegos/getaway/68-medir.js`; guía para el autor en `docs/MEDIR-EN-EL-CELULAR.md`).
+
+**Convención nueva:** `Vistas.aPantalla(E, x, y, z)` recibe la **altura sobre el suelo** (la vista suma la cota en 3D).
+
+**Orden nuevo:** G5‑07 (fichas de los ~30 sitios icónicos) → G5‑04 (minijuegos táctiles) → G5‑01‑b (Historieta de noche, en primera persona y con lluvia) → G5‑05, G5‑08, G5‑09, G5‑10, G5‑11 y G5‑13.
+
+## ★ Estado 5.1 y orden nuevo (23‑nov‑2026, Claude)
 **Lo tuyo que ya está en `main`:**
 - **G5‑01 · vista Historieta.** Claude la pulió:
   - el contorno y los colores planos pasaron de la CPU (`getImageData` y Sobel cada cuadro, unos 8 ms y con puntos negros por el grano de las texturas) a **un pase en la GPU** de unos 2 ms;

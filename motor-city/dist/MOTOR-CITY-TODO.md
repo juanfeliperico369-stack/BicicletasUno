@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.1.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.2.0 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -83,13 +83,13 @@ Lee este documento, CONTEXTO-RELEVO.md, TAREAS-IA.md y coord/. Al terminar tu tu
 
 ---
 
-## 0. Entregables de la 5.1.0 «Todo junto» (HTML, APK y enlaces)
+## 0. Entregables de la 5.2.0 «Ciudad viva» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 5.1.0** (18+), el juego de prueba con todo: 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.1.0/MotorCity-getaway.apk> |
+| **Turno Cero 5.2.0** (18+), el juego de prueba con todo: 🗣️ ciudad viva (la gente reacciona, habla y llama; 🚑 y 🚒 llegan por la ruta real), 🚦 retos desde cualquier semáforo, 🏍️ motos que se inclinan, 🪟 cuartos falsos de noche, 📏 medir el rendimiento, 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.2.0/MotorCity-getaway.apk> |
 | Juega EnCicla 3.4.0 (unión de las 3.3.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
 | El Metro 3.5.0 (unión de las 3.4.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 33) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
@@ -875,6 +875,29 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - **fase 2, la ciudad viva:** eventos que la gente oye y a los que reacciona, escenas de la calle sacadas de las bancas, paraderos y tiendas del mapa, el motor de frases que usará los textos de Gemini (G5‑03) y el despacho de policía, ambulancia y bomberos;
   - **después, fase 4:** lenguaje de misiones, repeticiones exactas y el bot que gana cada misión.
 - **Pedidos:** la sección «★ Estado 5.1 y orden nuevo» al principio de `docs/PEDIDOS-CHATGPT-5.0.md` y de `docs/PEDIDOS-GEMINI-5.0.md`.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.0 · G5‑02 Anillos de recoger y entregar (Mandados y EnCicla) y controles de vuelo
+- **Pedido:** `G5-02` de `docs/PEDIDOS-GEMINI-5.0.md` (rama `ia/gemini/g5-02-anillos`).
+- **Hecho:**
+  - Módulo aditivo `juegos/getaway/61-anillos.js` (`G.AnillosVuelo`) que proyecta los anillos de recoger y entregar en `📦 Mandados` (`r = 22 m`, `#ffc23a` / `#3fae5a`), `🚲 EnCicla` (`r = 16 m / 14 m`, `#3fae5a` / `#2dd4bf`) y `📞 Contratos` (`r = 18 m`) sobre el asfalto en 3D y 2D (`29` vértices proyectados), con onda concéntrica interior, 4 postes de luz vertical (`z = 0.18..2.1 m`) y arco radial blanco de progreso (`0 % → 100 %`) al esperar dentro del anillo.
+  - Botones táctiles `🔼 Subir` (`BOT.sube` / `#bSube`) y `🔽 Bajar` (`BOT.baja` / `#bBaja`, `≥ 48 × 48 px`) en `.vuelo-ctl`, visibles únicamente cuando el jugador lleva `jetpack`, `avioneta` o `avion` (`C.veh.clase === 'aire' || C.veh.vuela`), ubicados fuera de `zonaLibre()` (`412 × 860` y `860 × 412`), con empuje automático de despegue por encima de `vmin` en aeronaves de ala fija y sin activar el freno de mano con `Space`.
+  - Ajuste mínimo en `juegos/getaway/60-modos.js`: incluye `'avioneta'` y `'avion'` en el selector de vehículos de `🧪 Laboratorio` y reinicia `m.esp = 0` al completar la fase 0 o salir del anillo en `pasoEnCicla`.
+  - Prueba automatizada `pruebas/anillos.mjs`, reporte `reportes/2026-11-23-gemini-g5-02-anillos.md` y capturas WebP en `reportes/img/gemini-g5-02/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+9.4 KB`.
+- **Pruebas:** `node herramientas/construir.mjs`, `node pruebas/anillos.mjs`, `node pruebas/dinamica.mjs`, `node pruebas/humano.mjs`, `node pruebas/modos.mjs` y `node pruebas/prueba.mjs --navegador`.
+- **Sigue (Gemini):** `G5-03` (`datos/frases/*.json` con 200 frases y escenas de la calle en rama `ia/gemini/g5-03-frases`) y `G5-07` (fichas y dibujos de referencia de los ~30 sitios icónicos de Medellín empezando por el Edificio Coltejer).
+- **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+
+### Claude · 23‑nov‑2026 · motor 5.2.0 «Ciudad viva»
+- **Pedido del autor:** «Haz tu parte; en algún momento ya dejarán de proveer, así que retómalos».
+- **Hecho:**
+  - **Fase 2, la ciudad viva:** `js/26-vida-ciudad.js` (`MC.CiudadViva`: eventos, reacciones, escenas y frases) y `juegos/getaway/66-ciudad-viva.js` (testigos, búsqueda, 🚑 y 🚒 por la ruta real, globos e íconos).
+  - **Retomado de Gemini:** G5‑03 (las frases), G5‑06 (retos desde cualquier semáforo, `67-retos-semaforo.js`) y G5‑12 (📏 medir, `68-medir.js`).
+  - **Retomado de ChatGPT:** C5‑01, motos y bicis que se inclinan (falta vuelco y deformación); R8, cuartos falsos de noche en las fachadas R1 (falta SSAO, faroles y agua).
+  - **Arreglos:** `Vistas.aPantalla` suma la cota en 3D (antes, en Medellín, todo lo dibujado encima quedaba fuera de la pantalla); el manejo real ya arranca con el joystick de lado.
+- **Probado:** la batería completa con `ciudad-viva.mjs` (45), `retos-semaforo.mjs`, `medir.mjs` y `dinamica.mjs` (25), más la QA de siempre y `prueba.mjs --navegador`.
+- **Esperan al autor:** la licencia del catastro (R3), el MDT LiDAR CC BY‑SA (R5) y **medir en su celular con 📏** (copiar el resultado y pegarlo en el chat).
+- **Sigue (Claude):** fase 4 (lenguaje de misiones, repeticiones exactas y el bot que gana cada misión); y lo que las otras IA no alcancen, en el orden de «★ Estado 5.2» de los pedidos.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
 # MOTOR CITY · Documento único
@@ -4432,6 +4455,24 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
 
+### 23-nov-2026 · 5.2.0 «Ciudad viva» · fase 2 del plan 5.0 y lo de las otras IA, retomado
+- **El autor:** «Haz tu parte; en algún momento ya dejarán de proveer, así que retómalos». Claude hizo la fase 2 y tomó los pedidos de Gemini y ChatGPT que más se notan en el juego.
+- **Fase 2 · la ciudad viva** (`js/26-vida-ciudad.js`, `MC.CiudadViva`; idea de los «escenarios» de los mundos abiertos y de las reglas de respuesta de los diálogos de Valve, en sala limpia):
+  - **Eventos con radio de oído:** choque, derrape, bocina, atropello, disparo, explosión, sirena y servicio.
+  - **Reacciones:** según el evento, la distancia y el «valor» de cada persona (sale de su semilla), la gente **mira**, **huye**, **llama** por celular o **se acerca a ayudar**. La rutina se pausa y, al terminar, vuelve caminando a su sitio; nadie se mete a un edificio.
+  - **Escenas de la calle:** gente sentada en las bancas y esperando en los paraderos del mobiliario real, según la hora y la lluvia (de noche, menos). Son estables: la misma persona en la misma banca.
+  - **Frases** (G5‑03, escritas por Claude porque Gemini no alcanzó): `datos/frases/ciudad.json`, 56 de familia y 17 de adultos, con condiciones de evento, lugar, hora y lluvia. Gana la más específica y no se repite en 90 s. Se incrustan al construir (`MC_FRASES`).
+  - **Turno Cero** (`juegos/getaway/66-ciudad-viva.js`): el testigo que llama por un atropello, un disparo o una explosión **sube la búsqueda** («un vecino llamó a la policía») y pide el servicio. 🚑 La ambulancia o 🚒 los bomberos salen a unos 300 m, llegan por la ruta real con la sirena, atienden (la ambulancia se lleva a los heridos) y se van. Globos con lo que dice la gente y 📞 ❗ 🩹 💨 sobre quien llama, mira, ayuda o huye. Poses nuevas: sentado y con el celular.
+- **Lo de las otras IA, retomado:**
+  - **C5‑01 · motos que se inclinan** (de ChatGPT): motos, bicis, patinetes y patines se inclinan hacia adentro de la curva, φ = atan(v·ω/g) con la gravedad real y un tope (45° la moto, 32° lo de ruedas), en los dos manejos. El 3D inclina el modelo, el piloto y las ruedas. Faltan los vuelcos y la deformación.
+  - **R8 · cuartos falsos** (de ChatGPT): detrás de cada ventana encendida de las fachadas R1, de noche, un cuarto de 2,7 × 3 × 3–5 m trazado en el sombreador (interior mapping): pared del fondo con un cuadro o un mueble, piso de madera o baldosa, techo con su lámpara y luz cálida, blanca o el azul de un televisor. Las rejas y las cortinas se conservan. Solo con GPU media o alta; en gama baja y en la Historieta queda la ventana plana. Captura en `reportes/r8-cuartos-falsos-5.2.webp`. Faltan el SSAO, los faroles con luz y el agua con reflejo.
+  - **G5‑06 · retos desde cualquier semáforo** (de Gemini; idea de Burnout Paradise): quieto junto a uno de los 355 semáforos reales, 🛑 y acelerar a la vez quema llanta en el sitio y reta al de al lado a una carrera hasta un sitio con nombre (lugares, hitos o estaciones) a 0,5–1,6 km. Es la 🏁 de Modos con un solo rival que sale al lado.
+  - **G5‑12 · 📏 medir el rendimiento** (de Gemini): `?medir` en la dirección o ⏸ Menú → 📏. Un bot maneja 60 s en tres cámaras y sale un panel con fps, p50, p95, p99, tirones, memoria y GPU, y **📋 Copiar resultados**. Guía en `docs/MEDIR-EN-EL-CELULAR.md`.
+- **Arreglos que salieron al probar:**
+  - **La proyección 3D no sumaba la cota.** `Vistas.aPantalla` recibía la altura sobre el suelo, pero el 3D trabaja con la cota absoluta (unos 1.500 m en el centro de Medellín): la flecha al objetivo, los globos y los destellos de las sirenas quedaban fuera de la pantalla en las lomas. Ahora la vista suma la cota (y `tres.mjs` pasa la altura sobre el suelo, como el resto).
+  - **El carro no arrancaba con el joystick de lado.** Casi quieto, la deriva de la llanta delantera se medía contra un piso de 0,5 m/s y, con el volante a tope, el modelo inventaba un derrape que frenaba tanto como empujaba el motor. Ahora las fuerzas de lado entran de a poco desde 0 m/s (a esa velocidad manda el modelo cinemático).
+- **Pruebas nuevas:** `ciudad-viva.mjs` (45 comprobaciones, en Node con el mundo real y en el navegador con el despacho), `retos-semaforo.mjs` y `medir.mjs`; `dinamica.mjs` suma la inclinación de motos y bicis (25). Las cuatro, más `anillos.mjs`, entran a la QA.
+
 ### 23-nov-2026 · 5.1.0 «Todo junto» · lo nuevo de ChatGPT y Gemini, unido y pulido
 - **El autor:** «Listo lo nuevo: ármalo todo, mejóralo, púlelo y optimízalo; piensa cuál será el siguiente paso y dame los prompts para Gemini/Antigravity y ChatGPT/Codex, y lo que harás tú mientras vuelven».
 - **De ChatGPT y Codex** (cuatro ramas, sin tocar el juego):
@@ -4451,6 +4492,14 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
   - **EnCicla 3.4.0:** la 3.3.0 de la otra sesión de Claude más la 3.3.0 de Antigravity;
   - **El Metro 3.5.0:** la 3.4.0 «Jugo y ciclovías» de la otra sesión de Claude más la 3.4.0 «Mundo 3D y Realismo» de Antigravity, con la colisión barrida que le faltaba a la carrera por ciclorruta.
 - **Pruebas:** `historieta.mjs` y `paralaje-biomas.mjs` entran a la QA.
+- **Dos tropiezos que salieron al unir** (las pruebas humana y de modos fallaban):
+  - **El presupuesto de regiones.** Las dos ramas de Gemini envolvían `VistaTres.dibujar` para construir de un golpe 28 regiones (biomas) o 95 (Historieta) cuando había pocas. Así salían completas sus capturas, pero en el juego era un tirón de segundos al empezar, al teletransportarse o con el rescate. Se quitó: el presupuesto lo decide `MC.Vistas` según la calidad. Las pruebas de Gemini siguen en verde.
+  - **El manejo real en un atasco.** La prueba humana fallaba según la hora: el reloj del juego sigue la hora real y, con el semáforo en rojo, los rivales quedaban quietos junto a una torre, donde la pista roza el edificio. Ahora:
+    - los rivales y la policía se pueden **empujar** (impulso por masas, `cuerpo` en sus obstáculos);
+    - un roce suave contra una pared **desliza** y conserva la rapidez;
+    - si queda **encajado** más de 0,6 s, toma el movimiento del arcade mientras siga rozando y vuelve al real 0,4 s después.
+  - La prueba humana pasa 3 de 3 (249 a 450 m).
+  - El modo Extremo de la prueba de modos falla a veces, como ya pasaba en la 4.8: teletransporta al jugador, así que no depende de la física.
 
 
 ### 23-nov-2026 · 5.0.0 «Que se sienta» · el manejo real del carro y el plan para las tres IA

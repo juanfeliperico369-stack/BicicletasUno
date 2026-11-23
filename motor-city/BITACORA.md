@@ -1,5 +1,23 @@
 # Bitácora de Motor City
 
+## 23-nov-2026 · 5.2.0 «Ciudad viva» · fase 2 del plan 5.0 y lo de las otras IA, retomado
+- **El autor:** «Haz tu parte; en algún momento ya dejarán de proveer, así que retómalos». Claude hizo la fase 2 y tomó los pedidos de Gemini y ChatGPT que más se notan en el juego.
+- **Fase 2 · la ciudad viva** (`js/26-vida-ciudad.js`, `MC.CiudadViva`; idea de los «escenarios» de los mundos abiertos y de las reglas de respuesta de los diálogos de Valve, en sala limpia):
+  - **Eventos con radio de oído:** choque, derrape, bocina, atropello, disparo, explosión, sirena y servicio.
+  - **Reacciones:** según el evento, la distancia y el «valor» de cada persona (sale de su semilla), la gente **mira**, **huye**, **llama** por celular o **se acerca a ayudar**. La rutina se pausa y, al terminar, vuelve caminando a su sitio; nadie se mete a un edificio.
+  - **Escenas de la calle:** gente sentada en las bancas y esperando en los paraderos del mobiliario real, según la hora y la lluvia (de noche, menos). Son estables: la misma persona en la misma banca.
+  - **Frases** (G5‑03, escritas por Claude porque Gemini no alcanzó): `datos/frases/ciudad.json`, 56 de familia y 17 de adultos, con condiciones de evento, lugar, hora y lluvia. Gana la más específica y no se repite en 90 s. Se incrustan al construir (`MC_FRASES`).
+  - **Turno Cero** (`juegos/getaway/66-ciudad-viva.js`): el testigo que llama por un atropello, un disparo o una explosión **sube la búsqueda** («un vecino llamó a la policía») y pide el servicio. 🚑 La ambulancia o 🚒 los bomberos salen a unos 300 m, llegan por la ruta real con la sirena, atienden (la ambulancia se lleva a los heridos) y se van. Globos con lo que dice la gente y 📞 ❗ 🩹 💨 sobre quien llama, mira, ayuda o huye. Poses nuevas: sentado y con el celular.
+- **Lo de las otras IA, retomado:**
+  - **C5‑01 · motos que se inclinan** (de ChatGPT): motos, bicis, patinetes y patines se inclinan hacia adentro de la curva, φ = atan(v·ω/g) con la gravedad real y un tope (45° la moto, 32° lo de ruedas), en los dos manejos. El 3D inclina el modelo, el piloto y las ruedas. Faltan los vuelcos y la deformación.
+  - **R8 · cuartos falsos** (de ChatGPT): detrás de cada ventana encendida de las fachadas R1, de noche, un cuarto de 2,7 × 3 × 3–5 m trazado en el sombreador (interior mapping): pared del fondo con un cuadro o un mueble, piso de madera o baldosa, techo con su lámpara y luz cálida, blanca o el azul de un televisor. Las rejas y las cortinas se conservan. Solo con GPU media o alta; en gama baja y en la Historieta queda la ventana plana. Captura en `reportes/r8-cuartos-falsos-5.2.webp`. Faltan el SSAO, los faroles con luz y el agua con reflejo.
+  - **G5‑06 · retos desde cualquier semáforo** (de Gemini; idea de Burnout Paradise): quieto junto a uno de los 355 semáforos reales, 🛑 y acelerar a la vez quema llanta en el sitio y reta al de al lado a una carrera hasta un sitio con nombre (lugares, hitos o estaciones) a 0,5–1,6 km. Es la 🏁 de Modos con un solo rival que sale al lado.
+  - **G5‑12 · 📏 medir el rendimiento** (de Gemini): `?medir` en la dirección o ⏸ Menú → 📏. Un bot maneja 60 s en tres cámaras y sale un panel con fps, p50, p95, p99, tirones, memoria y GPU, y **📋 Copiar resultados**. Guía en `docs/MEDIR-EN-EL-CELULAR.md`.
+- **Arreglos que salieron al probar:**
+  - **La proyección 3D no sumaba la cota.** `Vistas.aPantalla` recibía la altura sobre el suelo, pero el 3D trabaja con la cota absoluta (unos 1.500 m en el centro de Medellín): la flecha al objetivo, los globos y los destellos de las sirenas quedaban fuera de la pantalla en las lomas. Ahora la vista suma la cota (y `tres.mjs` pasa la altura sobre el suelo, como el resto).
+  - **El carro no arrancaba con el joystick de lado.** Casi quieto, la deriva de la llanta delantera se medía contra un piso de 0,5 m/s y, con el volante a tope, el modelo inventaba un derrape que frenaba tanto como empujaba el motor. Ahora las fuerzas de lado entran de a poco desde 0 m/s (a esa velocidad manda el modelo cinemático).
+- **Pruebas nuevas:** `ciudad-viva.mjs` (45 comprobaciones, en Node con el mundo real y en el navegador con el despacho), `retos-semaforo.mjs` y `medir.mjs`; `dinamica.mjs` suma la inclinación de motos y bicis (25). Las cuatro, más `anillos.mjs`, entran a la QA.
+
 ## 23-nov-2026 · 5.1.0 «Todo junto» · lo nuevo de ChatGPT y Gemini, unido y pulido
 - **El autor:** «Listo lo nuevo: ármalo todo, mejóralo, púlelo y optimízalo; piensa cuál será el siguiente paso y dame los prompts para Gemini/Antigravity y ChatGPT/Codex, y lo que harás tú mientras vuelven».
 - **De ChatGPT y Codex** (cuatro ramas, sin tocar el juego):

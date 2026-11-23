@@ -103,11 +103,54 @@ class VistaTres extends VistaGL {
         f.albedo = textura(dia, 1024); f.emision = textura(noche, 512);
         f.material = new T.MeshStandardMaterial({ map: f.albedo, emissiveMap: f.emision,
           emissive: 0xffffff, emissiveIntensity: 0, roughness: .9, side: T.DoubleSide });
+        this._cuartosR1(f.material, id, datos);
         f.listo = true; dia.onload = noche.onload = null; f.dia = f.noche = null; this._fachadasActualizar = true;
       };
       dia.onload = noche.onload = revisar;
       dia.src = datos.dia; noche.src = datos.noche;
     }
+  }
+  /* 5.2 · R8 (retomado por Claude): CUARTOS FALSOS detrás de las ventanas encendidas de noche («interior mapping», la idea de
+     Joost van Dongen, 2008; código propio). Cada vano de la textura R1 mide 2,7 × 3 m (columnas × pisos del manifiesto): detrás
+     de él se traza un rayo dentro de una caja de 2,7 × 3 × (3 a 5) m y se pinta lo que toca (pared del fondo con un cuadro o un
+     mueble, piso de madera o baldosa, techo con su lámpara, paredes de los lados), con la luz de una lámpara en el techo. La
+     máscara de la ventana (rejas y cortinas incluidas) sale de la textura de emisión; cada cuarto cambia de color, de hondo y de
+     luz (cálida, blanca o el azul de un televisor) según su sitio. Solo con GPU media o alta y calidad > 0,35 (uCuartos); en gama
+     baja y en la vista Historieta queda la ventana plana de siempre. */
+  _cuartosR1(mat, id, datos) {
+    const U = this.uCuartos || (this.uCuartos = { value: 0 });
+    mat.customProgramCacheKey = () => 'fachadaR1:' + id;
+    mat.onBeforeCompile = s => {
+      s.uniforms.uCuartos = U; s.uniforms.uRejR1 = { value: new THREE.Vector2(datos.columnas || 4, datos.pisos || 4) };
+      s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aTan;\nattribute float aSem;\nvarying vec3 vMundoF;\nvarying vec2 vTanF;\nvarying float vSemF;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMundoF = (modelMatrix * vec4(transformed, 1.0)).xyz; vTanF = aTan; vSemF = aSem;');
+      s.fragmentShader = s.fragmentShader.replace('#include <common>', `#include <common>
+uniform float uCuartos; uniform vec2 uRejR1; varying vec3 vMundoF; varying vec2 vTanF; varying float vSemF;
+vec3 cuartoR1(vec2 uvc, vec3 pos) {
+  vec3 T = normalize(vec3(vTanF.x, 0.0, vTanF.y)), N = vec3(-T.z, 0.0, T.x), rd = normalize(pos - cameraPosition); if (dot(N, rd) > 0.0) N = -N;
+  float du = dot(rd, T), dv = rd.y, dw = max(dot(rd, -N), .06);
+  vec2 cel = uvc * uRejR1, f = fract(cel) * vec2(2.7, 3.0), k = floor(cel);
+  float s = fract(sin(vSemF * 91.7 + k.x * 12.9898 + k.y * 78.233) * 43758.5453), sb = fract(s * 7.13), sc = fract(s * 13.7), sd = fract(s * 3.71);
+  float D = 3.0 + 2.0 * sb;
+  vec3 pared = s < .55 ? vec3(.86, .79, .66) : s < .8 ? vec3(.62, .73, .8) : s < .92 ? vec3(.8, .62, .54) : vec3(.66, .78, .6);
+  vec3 piso = sc < .5 ? vec3(.34, .2, .11) : vec3(.42, .4, .37), techo = vec3(.95, .93, .9);
+  vec3 luz = sd < .14 ? vec3(.42, .58, 1.0) : sd < .6 ? vec3(1.0, .76, .48) : vec3(1.0, .93, .82);
+  float tU = du > 0.0 ? (2.7 - f.x) / du : -f.x / min(du, -1e-4), tV = dv > 0.0 ? (3.0 - f.y) / dv : -f.y / min(dv, -1e-4), tW = D / dw;
+  float t = min(min(tU, tV), tW); vec3 h = vec3(f.x + du * t, f.y + dv * t, dw * t); vec3 c;
+  if (t == tW) { c = pared;
+    c = mix(c, vec3(.22, .3, .42) + .45 * vec3(sc, s, sb), step(.45, sb) * step(abs(h.x - 1.35 - (sc - .5) * .6), .42) * step(abs(h.y - 1.8), .3));
+    c = mix(c, pared * .42, step(h.y, .8) * step(abs(h.x - 1.35 + (s - .5) * .9), .75)); }
+  else if (t == tV) c = dv > 0.0 ? techo : piso;
+  else c = pared * .62;
+  float dl = length(h - vec3(1.35, 2.85, D * .45));
+  c *= luz * (.16 + 1.3 / (1.0 + dl * dl * .4));
+  return c * (1.0 - .35 * h.z / D) * .74;
+}`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+#ifdef USE_EMISSIVEMAP
+  if (uCuartos > .5) { float masc = clamp(dot(emissiveColor.rgb, vec3(.3, .59, .11)) * 1.9, 0.0, 1.0);
+    totalEmissiveRadiance = totalEmissiveRadiance * .3 + emissive * cuartoR1(vEmissiveMapUv, vMundoF) * masc * 1.05; }
+#endif`);
+    };
   }
   _tipoFachada(e, st, Z) {
     const clase = e.clase || '';
@@ -133,9 +176,11 @@ class VistaTres extends VistaGL {
     const lado = area > 0 ? 1 : -1;
     const muro = (id, x0, y0, x1, y1, abajo, alto, u0, u1, v0, v1) => {
       const f = this._fachadas[id]; if (!f || !f.listo || alto <= 0) return;
-      const k = this._paredesR1[id] || (this._paredesR1[id] = { p: [], uv: [] });
+      const k = this._paredesR1[id] || (this._paredesR1[id] = { p: [], uv: [], t: [], s: [] });
       const x = [x0, x1, x1, x0], z = [y0, y1, y1, y0], y = [zb + abajo, zb + abajo, zb + abajo + alto, zb + abajo + alto];
-      for (const a of [0, 1, 2, 0, 2, 3]) { k.p.push(x[a], y[a], z[a]); k.uv.push(a === 0 || a === 3 ? u0 : u1, a < 2 ? v0 : v1); }
+      /* 5.2 · R8: la dirección del muro (hacia donde crece u) y una semilla por muro, para los cuartos falsos */
+      const lt = Math.hypot(x1 - x0, y1 - y0) || 1, tx = (x1 - x0) / lt, tz = (y1 - y0) / lt, sem = Math.abs(Math.sin((x0 + O[0]) * 12.9898 + (y0 + O[1]) * 78.233) * 43758.5453) % 1;
+      for (const a of [0, 1, 2, 0, 2, 3]) { k.p.push(x[a], y[a], z[a]); k.uv.push(a === 0 || a === 3 ? u0 : u1, a < 2 ? v0 : v1); k.t.push(tx, tz); k.s.push(sem); }
     };
     for (let i = 0; i < P.length; i += 2) {
       const j = (i + 2) % P.length, dx = P[j] - P[i], dy = P[j + 1] - P[i + 1], L = Math.hypot(dx, dy);
@@ -161,6 +206,7 @@ class VistaTres extends VistaGL {
       const geo = new T.BufferGeometry();
       geo.setAttribute('position', new T.Float32BufferAttribute(datos.p, 3));
       geo.setAttribute('uv', new T.Float32BufferAttribute(datos.uv, 2));
+      geo.setAttribute('aTan', new T.Float32BufferAttribute(datos.t, 2)); geo.setAttribute('aSem', new T.Float32BufferAttribute(datos.s, 1));
       geo.computeVertexNormals(); geo.computeBoundingSphere();
       const pared = new T.Mesh(geo, this._fachadas[id].material);
       pared.userData.fachadaR1 = id; pared.receiveShadow = true; grupo.add(pared);
@@ -210,6 +256,7 @@ class VistaTres extends VistaGL {
     const noche = S.noche || 0, dia = clamp(S.luzSol ?? .6, 0, 1), bajo = clamp(1 - L[1] * 1.8, 0, 1);
     this.uNoche.value = noche;
     for (const f of Object.values(this._fachadas)) if (f.material) f.material.emissiveIntensity = noche * 1.8;
+    if (this.uCuartos) { const nv = GPU.perfil().nivel; this.uCuartos.value = noche > .05 && cal > .35 && nv !== 'baja' && nv !== 'software' && !this.uPlano.value ? 1 : 0; }   /* R8: los cuartos falsos */
     this.hemi.intensity = .2 + 1.35 * clamp(S.ambiente ?? .8, 0, 1.2) + .35 * dia * (1 - L[1]);   /* con el sol bajo (mañana y tarde) el cielo rellena más */ r.toneMappingExposure = 1.12 + .25 * noche;   /* la luz del cielo rellena las sombras (en la calle nunca son negras) */   /* de noche: luz de luna y de la ciudad, sin quedar a oscuras */ this.hemi.color.setRGB(.93 + S.top[0] * .07, .94 + S.top[1] * .06, .95 + S.top[2] * .05, T.SRGBColorSpace);   /* luz de cielo casi neutra: el azul ya lo pone el domo */ this.hemi.groundColor.setRGB(.55, .5, .43, T.SRGBColorSpace);   /* cielo poco saturado: las sombras no se vuelven azules */
     this.sol.intensity = 2.4 * dia * (1 - lluvia * .45) * (1 - niebla * .5); this.sol.color.setRGB(1, .97 - .28 * bajo, .9 - .5 * bajo, T.SRGBColorSpace);
     /* sombras: una caja que sigue a lo que se mira, alineada a la rejilla de texeles (no tiemblan al moverse) */

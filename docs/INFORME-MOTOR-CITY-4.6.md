@@ -99,3 +99,15 @@ El autor: «el problema es el arranque: si se suelta el joystick se deja de acel
   - el manejo real se zafa de los atascos: rivales empujables, roce que desliza y salida con el movimiento del arcade.
 - **Para portar:** si tu juego tiene una vista en 3D con three.js, `VistaTres.posRender` permite un pase propio después de la escena (como el de la Historieta).
 - Este juego no cambió por la 5.1 del motor (su propia versión se cuenta en su bitácora).
+
+## Motor City 5.2.0 «Ciudad viva» (23‑nov‑2026, Claude)
+- **Nuevo en el motor:**
+  - `MC.CiudadViva` (`js/26-vida-ciudad.js`): la gente oye choques, derrapes, bocinas y sirenas y reacciona (mira, huye, llama o ayuda); hay gente sentada en las bancas y esperando en los paraderos del mobiliario real; habla con frases que eligen reglas de respuesta (`datos/frases/ciudad.json`, con un juego de frases de familia y otro de adultos).
+  - Motos, bicis, patinetes y patines se inclinan hacia adentro de la curva (φ = atan(v·ω/g)), con el piloto.
+  - Cuartos falsos detrás de las ventanas de noche en el 3D realista (solo GPU media o alta).
+  - En Turno Cero: testigos que llaman, 🚑 y 🚒 por la ruta real, 🚦 retos desde cualquier semáforo y 📏 medir el rendimiento (`?medir`).
+- **Arreglos que sirven a todos:**
+  - `Vistas.aPantalla(E, x, y, z)` recibe la altura **sobre el suelo** y en 3D le suma la cota. Antes, en las lomas (Medellín está a ~1.500 m), lo que se dibuja encima de la vista quedaba fuera de la pantalla.
+  - El manejo real ya arranca con el joystick de lado (casi quieto, las fuerzas de lado de las llantas entran de a poco).
+- **Para portar a este juego (familia, sin violencia):** `MC.CiudadViva` con `tono: 'familia'` sin emitir disparos ni atropellos (solo choque, derrape, bocina y sirena); la inclinación de la bici en las curvas (`Cuerpo._ladear`, lo calcula la física); la página de medición como idea para el celular del autor.
+- Este juego no cambió por la 5.2 del motor (su propia versión se cuenta en su bitácora).

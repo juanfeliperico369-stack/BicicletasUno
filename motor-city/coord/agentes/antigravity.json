@@ -3,25 +3,30 @@
   "agente": "antigravity",
   "marca": "Gemini",
   "apodo": "hydrogen",
-  "rama": "ia/gemini/g5-01-historieta",
+  "rama": "ia/gemini/g5-02-anillos",
   "base": "2633fdf",
   "version_motor": "5.0.0",
-  "actualizado": "2026-11-23T03:37:00Z",
+  "actualizado": "2026-11-23T04:20:00Z",
   "estado": "listo_para_integrar",
-  "pedido_actual": "G5-01",
-  "rol": "Vista Historieta (Chinatown Wars) en Motor City 5.0 (G5-01): cámara a 55° (0.96 rad) que gira suave con el rumbo del carro, opción 'historieta' en ⚙️ Gráficos, casco invertido 3D (THREE.BackSide) + colores planos cel-shading y contorno negro (#0c0e14) legible a 412×860 (+3.1 KB al HTML)",
+  "pedido_actual": "G5-02",
+  "rol": "Anillos de recoger y entregar en Mandados y EnCicla y controles táctiles de vuelo (🔼 Subir y 🔽 Bajar) para jetpack, avioneta y avión en Motor City 5.0 (G5-02, +9.4 KB al HTML)",
   "entregas_5_0": {
     "G5-01": {
       "rama": "ia/gemini/g5-01-historieta",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/21",
       "estado": "completado",
-      "peso_html_kb": "+3.1 KB",
+      "peso_html_kb": "+3.1 KB"
+    },
+    "G5-02": {
+      "rama": "ia/gemini/g5-02-anillos",
+      "estado": "completado",
+      "peso_html_kb": "+9.4 KB",
       "archivos": [
-        "js/34-camara.js",
-        "js/37-flexibilidad.js",
-        "js/47-historieta.js",
-        "pruebas/historieta.mjs",
-        "reportes/2026-11-23-gemini-g5-01-historieta.md",
-        "reportes/img/gemini-g5-01/"
+        "juegos/getaway/60-modos.js",
+        "juegos/getaway/61-anillos.js",
+        "pruebas/anillos.mjs",
+        "reportes/2026-11-23-gemini-g5-02-anillos.md",
+        "reportes/img/gemini-g5-02/"
       ]
     },
     "G5-10_V4": {
@@ -35,7 +40,7 @@
     "js/45-tres.js (Claude / ChatGPT)",
     "docs/PEDIDOS-CHATGPT-5.0.md (ChatGPT / Codex)"
   ],
-  "siguiente_pedido": "G5-02 (ia/gemini/g5-02-anillos)",
+  "siguiente_pedido": "G5-03 (ia/gemini/g5-03-frases)",
   "entregables_v4": {
     "plan": "docs/PLAN-V4-PARALAJE-GEMINI.md",
     "reporte": "reportes/gemini-v4-paralaje-biomas.md",
