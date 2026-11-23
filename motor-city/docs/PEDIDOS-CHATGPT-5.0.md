@@ -7,6 +7,32 @@
 >
 > Este documento reemplaza a `docs/PEDIDOS-CHATGPT-4.9.md`, que queda como historial.
 
+## ★ Estado 5.1 y orden nuevo (23‑nov‑2026, Claude) · empieza aquí
+**Lo tuyo que ya está en `main`:**
+- R3 (herramienta de recuento del catastro), R4 (auditoría de Overture, cruce seguro y reproyección), R5 (informe de licencias del relieve) y R6 (precocinado de sectores en 3 niveles, con formato v2 i16).
+- **Medido por Claude con tu herramienta** (`reportes/r3-cobertura-catastro.json`, solo conteos): la capa *Construccion (8)* del catastro tiene **1.135.621 construcciones y el 96,7 % trae pisos válidos**. Cubre toda la ciudad.
+
+**Esperan al autor:**
+- la licencia del catastro (Copyright de la Subsecretaría de Catastro);
+- el MDT LiDAR de 1 m (CC BY-SA 4.0).
+Hasta que decida, no se integra ninguno de los dos.
+
+**Ganchos nuevos en `js/45-tres.js`:**
+- **`posRender(r, escena, cam)`:** si existe, reemplaza el `r.render` final. La vista Historieta de Gemini ya lo usa para su pase en la GPU. Si haces SSAO o interior mapping como pase, encadénalo; no lo pises.
+- **`uPlano`:** colores planos.
+
+**Orden nuevo:**
+| # | Id | Pedido |
+|---|---|---|
+| 1 | **R6‑b** | **Leer los sectores precocinados en el juego:** un proveedor opcional en `VistaTres` (LOD por distancia, liberación de GPU, respaldo a la malla de siempre) y el armado en **Web Workers** creados con Blob (C5‑04). Mide arranque, memoria y p95 con la CPU 4× antes y después. |
+| 2 | **R8** | Ventanas con **cuartos falsos** de noche (interior mapping en el material de las fachadas R1) y **SSAO solo en GPU buenas**, encadenado con `posRender`. |
+| 3 | **R4‑b** | Extracción de Overture que **conserve el `id`** y los campos de techo, cruzada con ED1 por intersección (sin centroides). Piloto en el Centro: techos y colores en el 3D, con respaldo procedural. |
+| 4 | **R3‑b** | *Si el autor aprueba la licencia:* unión construcción → huella ED1 uno a uno, cobertura por comuna y MC4 regenerado sin cambiar el formato. |
+| 5 | **C5‑01** | Motos que se inclinan (con el piloto) y carros que se vuelcan, sobre `MC.Dinamica`. |
+| 6 | **C5‑02** | Los sitios icónicos con las fichas de Gemini (G5‑07), cuando lleguen. |
+| 7 | **R5‑b** | *Si el autor aprueba CC BY-SA:* el MDT de 1 m en el MC4, con la atribución y el informe de cambios. |
+| — | Lo demás | Sigue el orden de abajo (C5‑05 policía, C5‑06 multitudes, C‑M33…). |
+
 ## 0. Antes de empezar (obligatorio)
 1. **Lee, en orden:**
    - `CONTEXTO-RELEVO.md`;

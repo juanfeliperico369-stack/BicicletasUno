@@ -35,14 +35,15 @@ class VistaTres extends VistaGL {
     const sh = this.sol.shadow; sh.mapSize.set(2048, 2048); sh.bias = -.0004; sh.normalBias = .5; sh.camera.near = 1; sh.camera.far = 1600;
     this.escena.add(this.hemi, this.sol, this.sol.target);
     /* el material de todas las mallas: color por vértice, luz física, ventanas que brillan de noche y grano en los muros */
-    this.uNoche = { value: 0 };
+    this.uNoche = { value: 0 }; this.uPlano = { value: 0 };   /* uPlano = 1: colores planos (vista Historieta): sin grano ni juntas */
+    this.posRender = null;   /* 5.1: un pase propio después de la escena (la vista Historieta lo usa para el contorno en la GPU) */
     this._iniciarFachadas();
     const mat = this.matCosas = new T.MeshStandardMaterial({ vertexColors: true, roughness: .86, metalness: .02, envMapIntensity: .18 });
     mat.onBeforeCompile = s => {
-      s.uniforms.uNoche = this.uNoche;
+      s.uniforms.uNoche = this.uNoche; s.uniforms.uPlano = this.uPlano;
       s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nattribute float aE;\nvarying float vE;\nvarying vec3 vMundo;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvE = aE;\nvMundo = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-      s.fragmentShader = s.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uNoche;\nvarying float vE;\nvarying vec3 vMundo;\nfloat hashM(vec3 p){ return fract(sin(dot(floor(p), vec3(12.9898, 78.233, 37.719))) * 43758.5453); }')
+      s.fragmentShader = s.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uNoche;\nuniform float uPlano;\nvarying float vE;\nvarying vec3 vMundo;\nfloat hashM(vec3 p){ return fract(sin(dot(floor(p), vec3(12.9898, 78.233, 37.719))) * 43758.5453); }')
         .replace('#include <color_fragment>', `#include <color_fragment>
           {   /* grano del material y juntas del ladrillo en los muros (normal casi horizontal) */
             vec3 nW = normalize(cross(dFdx(vMundo), dFdy(vMundo)));
@@ -50,15 +51,16 @@ class VistaTres extends VistaGL {
             float g = .94 + .06 * hashM(vMundo * 6.0);
             float ladr = step(.08, diffuseColor.r - diffuseColor.g) * step(diffuseColor.b, diffuseColor.g);
             float junta = muro * ladr * (1.0 - smoothstep(.0, .06, fract(vMundo.y * 4.0))) * .22;
-            diffuseColor.rgb *= mix(1.0, g, muro) * (1.0 - junta);
+            diffuseColor.rgb *= mix(mix(1.0, g, muro) * (1.0 - junta), 1.0, uPlano);
           }`)
         .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n/* aE = 1: ventana encendida (luz cálida); aE parcial: lo que el clásico aclara de noche (carros, letreros) */\ntotalEmissiveRadiance += uNoche * (step(.9, vE) * vec3(1.0, .74, .38) * 2.2 + (1.0 - step(.9, vE)) * vE * diffuseColor.rgb * .5);');
     };
     /* el suelo: la losa del motor con grano fino (asfalto, andén) y manchas grandes, como en la calle de verdad */
     this._granoSuelo = sh => {
+      sh.uniforms.uPlano = this.uPlano;
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vMundoS;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvMundoS = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vMundoS;\nfloat hashS(vec2 p){ return fract(sin(dot(floor(p), vec2(127.1, 311.7))) * 43758.5453); }\nfloat ruidoS(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hashS(i), hashS(i + vec2(1, 0)), f.x), mix(hashS(i + vec2(0, 1)), hashS(i + 1.0), f.x), f.y); }')
-        .replace('#include <map_fragment>', '#include <map_fragment>\n{ vec2 q = vMundoS.xz; float fino = .9 + .1 * hashS(q * 9.0), mancha = .9 + .14 * ruidoS(q * .07) + .05 * ruidoS(q * .6); diffuseColor.rgb *= fino * mancha; }');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uPlano;\nvarying vec3 vMundoS;\nfloat hashS(vec2 p){ return fract(sin(dot(floor(p), vec2(127.1, 311.7))) * 43758.5453); }\nfloat ruidoS(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hashS(i), hashS(i + vec2(1, 0)), f.x), mix(hashS(i + vec2(0, 1)), hashS(i + 1.0), f.x), f.y); }')
+        .replace('#include <map_fragment>', '#include <map_fragment>\n{ vec2 q = vMundoS.xz; float fino = .9 + .1 * hashS(q * 9.0), mancha = .9 + .14 * ruidoS(q * .07) + .05 * ruidoS(q * .6); diffuseColor.rgb *= mix(fino * mancha, 1.0, uPlano); }');
     };
     this.matLejos = new T.MeshLambertMaterial({ vertexColors: true });
     /* el domo del cielo (degradé de MC.Cielo, sin niebla) */
@@ -228,7 +230,7 @@ class VistaTres extends VistaGL {
     this.recorte = { regiones: this.regiones.size, dibujadas: dib, porPVS, pvs: !!pvs };
     /* lo que se mueve: una malla por cuadro, reusando el búfer */
     const D = this._dinamico(E); this._ponerDinamico(D);
-    r.render(this.escena, cam);
+    if (this.posRender) this.posRender(r, this.escena, cam); else r.render(this.escena, cam);
     const mvp = new T.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); this.mvp = Float32Array.from(mvp.elements);
     return this.cv;
   }

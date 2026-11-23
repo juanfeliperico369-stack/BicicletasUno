@@ -119,10 +119,17 @@ const Dinamica = {
     const dmax = H.dirMax * lerp(1, .32, clamp(au / 35, 0, 1));
     let dObj = 0;
     if (E.dir && E.dir.m > .08) {
-      const ta = Math.atan2(E.dir.y, E.dir.x), da = angDif(Q.a, ta), am = Math.abs(da);
-      D.revT = Math.max(0, (D.revT || 0) - (Q._dt || 1 / 60));
-      /* trancado de trompa contra algo y pidiendo otro rumbo: una reversa corta girando (lo que haría una persona) */
-      if (!U.mano && Q.bloqueo && D.choqueDir > 0 && au < 1.5 && am > .9 && !D.revT) D.revT = .9;
+      const ta = Math.atan2(E.dir.y, E.dir.x), da = angDif(Q.a, ta), am = Math.abs(da); D.ta = ta;
+      const dtq = Q._dt || 1 / 60; D.revT = Math.max(0, (D.revT || 0) - dtq);
+      /* trancado de trompa contra algo: si pide otro rumbo, o si lleva medio segundo empujando sin avanzar (encajado entre un carro y
+         una pared), una reversa corta girando hacia donde apunta el dedo, y vuelve a intentar (lo que haría una persona). 5.1 */
+      const trancado = !U.mano && Q.bloqueo && D.choqueDir > 0 && au < 1.2;
+      D.atT = trancado && !D.revT ? (D.atT || 0) + dtq : 0;
+      if (!D.revT && trancado && am > .9) { D.revT = 1; D.atT = 0; }
+      /* encajado más de 0,6 s (la esquina de un edificio, un carro quieto y una pared): 1,2 s con el movimiento del arcade, que
+         resbala por las paredes a buena velocidad (probado desde la 4.5); luego vuelve el manejo real. Nunca queda peor que el arcade */
+      if (D.atT > .6) { D.atA = 1.2; D.atT = 0; }
+      if (D.revT > 0 && Q.bloqueo && D.choqueDir < 0 && au < .5) D.revT = 0;   /* retrocediendo, chocó de cola: ya no más reversa */
       if (D.revT > 0) { U.rev = Math.max(.6, E.dir.m); const rObj = clamp(da * 2, -1.2, 1.2); dObj = Math.atan(L * rObj / Math.min(-1.2, D.u)); }
       else if (am > 2.4 && D.u < 2) {   /* el joystick apunta atrás y casi quieto: reversa (vuelta en tres puntos) */
         U.rev = E.dir.m; const db = angDif(Q.a + Math.PI, ta), rObj = clamp(-db * 3, -1.4, 1.4);   /* la trompa gira hacia donde apunta el dedo (como en arcade) */ dObj = Math.atan(L * rObj / Math.min(-1.2, D.u));
@@ -137,7 +144,7 @@ const Dinamica = {
         else if (D.u < vObj) U.thr = E.dir.m * clamp(1.15 - am * .55, .25, 1);
       }
     } else {
-      const ac = clamp(E.acel || 0, -1, 1), gi = clamp(E.giro || 0, -1, 1);
+      D.ta = null; const ac = clamp(E.acel || 0, -1, 1), gi = clamp(E.giro || 0, -1, 1);
       /* volante y teclado: el ángulo pedido, sin pasar del que satura las llantas a esta velocidad (salvo con el freno de mano) */
       const dLim = Math.max(.035, Math.atan(L * mu * g * 1.05 / Math.max(1, D.u * D.u))); dObj = gi * dmax * gir; if (!U.mano) dObj = clamp(dObj, -dLim, dLim);
       if (ac > 0) U.thr = ac; else if (ac < 0) { if (D.u > .5) U.freno = -ac; else U.rev = -ac; }
@@ -156,6 +163,8 @@ Cuerpo.prototype._real = function (dt, E, suelo, loma) {
   let D = this._din; if (!D || D.veh !== V) { D = this._din = Dinamica.estado(); D.veh = V; D.u = this.v; D.d = 0; }
   /* si el juego cambió la velocidad desde afuera (teletransporte, cinemático, rescate), el modelo la toma */
   if (Math.abs(this.v - D.u) > 1.5) { D.u = this.v; D.w = 0; D.r = 0; }
+  /* 5.1 · zafarse: un rato con el movimiento del arcade (ver mando) */
+  if (D.atA > 0) { D.atA -= dt; if (this.bloqueo) D.atA = Math.max(D.atA, .4); const r = this._arcade(dt, E, suelo, loma);   /* mientras siga rozando, sigue; el real vuelve 0,4 s después de despegarse */ D.u = this.v; D.w = 0; D.r = 0; D.d = 0; this.rpm = D.rpm; this.marcha = D.marcha; return r; }
   this._dt = dt;
   /* el piso: agarre (asfalto 1; pasto, tierra y arena menos), clima, y lo blando frena (rodadura extra) */
   /* (como en los juegos de mundo abierto, en pasto o tierra se agarra menos pero se puede manejar: μ del piso de 0,6 a 1) */
@@ -202,26 +211,46 @@ Cuerpo.prototype._moverReal = function (dx, dy, dt, D, H) {
   for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); if (!this.puede(px + cx * r, py + cy * r, true)) { bx += cx; by += cy; } }
   const bl = Math.hypot(bx, by), nx = bl > .01 ? -bx / bl : -dx / L, ny = bl > .01 ? -by / bl : -dy / L;
   const ca = Math.cos(this.a), sa = Math.sin(this.a); let Vx = ca * D.u - sa * D.w, Vy = sa * D.u + ca * D.w;
-  const ag = ob && ob.ag, m1 = H.masa, m2 = ag ? (ag.masa || DIN_MASA_TRAF[ag.tipo] || 1300) : Infinity, V2x = ag ? Math.cos(ag.a || 0) * (ag.v || 0) : 0, V2y = ag ? Math.sin(ag.a || 0) * (ag.v || 0) : 0;
+  /* el otro: un carro del tráfico (ag) o un cuerpo con física (cu: rivales de las carreras, la policía), con su masa y su velocidad */
+  const ag = ob && ob.ag, cu = ob && ob.cuerpo && ob.cuerpo !== this ? ob.cuerpo : null, m1 = H.masa, m2 = ag ? (ag.masa || DIN_MASA_TRAF[ag.tipo] || 1300) : cu ? ((cu.veh && cu.veh.masa) || 1300) : Infinity;
+  const a2 = cu ? (cu.rumboRodado ?? cu.a) : ag ? (ag.a || 0) : 0, v2 = cu ? cu.v || 0 : ag ? ag.v || 0 : 0, V2x = Math.cos(a2) * v2, V2y = Math.sin(a2) * v2;
   const vn = (Vx - V2x) * nx + (Vy - V2y) * ny; D.choqueDir = D.u >= 0 ? 1 : -1;   /* de trompa (1) o de cola (−1): para saber si conviene la reversa */
+  const U0 = D.U || {}, empuja0 = (U0.thr || 0) > .1;
+  /* 5.1 · roce suave contra algo fijo (menos de 3 m/s de frente) acelerando: se DESLIZA a lo largo, conservando casi toda la
+     rapidez, como en el arcade (antes cada roce dejaba el carro en cero y se quedaba empujando la esquina de un edificio) */
+  if (vn < 0 && -vn < 3 && empuja0 && !ag && !cu && bl > .01) {
+    const tx = -ny, ty = nx; let sg = Math.sign(Vx * tx + Vy * ty) || Math.sign(ca * tx + sa * ty) || 1; if (D.ta != null) { const dT = Math.cos(D.ta) * tx + Math.sin(D.ta) * ty; if (Math.abs(dT) > .2) sg = Math.sign(dT); }
+    const rap = Math.max(Math.hypot(Vx, Vy) * .97, 2); Vx = tx * sg * rap; Vy = ty * sg * rap;
+    this.a += angDif(this.a, Math.atan2(Vy, Vx)) * Math.min(1, dt * 6); const c2 = Math.cos(this.a), s2 = Math.sin(this.a);
+    D.u = Vx * c2 + Vy * s2; D.w = -Vx * s2 + Vy * c2; D.r *= .5;
+    const px2 = this.x + Vx * dt, py2 = this.y + Vy * dt; if (this.puede(px2, py2, true)) { this.x = px2; this.y = py2; return; }
+  }
   if (vn < 0) {
-    const e = ag ? .3 : .16, j = -(1 + e) * vn / (1 / m1 + (isFinite(m2) ? 1 / m2 : 0));
+    const e = ag || cu ? .3 : .16, j = -(1 + e) * vn / (1 / m1 + (isFinite(m2) ? 1 / m2 : 0));
     Vx += j / m1 * nx; Vy += j / m1 * ny;
     /* roce a lo largo de la pared */
     const tx = -ny, ty = nx, vt = Vx * tx + Vy * ty, fr = Math.min(Math.abs(vt), .35 * j / m1); Vx -= Math.sign(vt) * fr * tx; Vy -= Math.sign(vt) * fr * ty;
     /* el golpe en una punta hace girar: momento = brazo × impulso (la punta que va adelante) */
     const sg = D.u >= 0 ? 1 : -1, rcx = ca * H.largo * .45 * sg, rcy = sa * H.largo * .45 * sg; D.r = clamp(D.r + (rcx * j * ny - rcy * j * nx) / H.Iz * .7, -4, 4);
+    if (cu) { const k = j / m2, hx = Math.cos(cu.a), hy = Math.sin(cu.a); cu.v -= k * (nx * hx + ny * hy); cu._empujon = { x: -nx * Math.min(1.5, k * .3), y: -ny * Math.min(1.5, k * .3) }; cu.choque = .4; }   /* 5.1: el golpe lo corre y le cambia la velocidad */
     if (ag) { const k = j / m2; ag.golpe = { vx: V2x - k * nx, vy: V2y - k * ny, r: clamp(-(rcx * ny - rcy * nx) * k * .25, -2.5, 2.5), t: 2.4 }; }
     D.u = Vx * ca + Vy * sa; D.w = -Vx * sa + Vy * ca;
     const imp = -vn; if (imp > 2.5 && !(this.choque > .15)) { this.eventos.push('choque'); this.choque = .4; this.impacto = imp; this.normalChoque = [nx, ny]; MC.emit('choque', this); }
     D.vcab -= Math.min(.8, imp * .05) * sg; D.valab += (Math.random() - .5) * Math.min(.6, imp * .04);
   }
+  /* 5.1 · deslizarse por la pared (como en el arcade): si acelera contra ella, la trompa se alinea con la pared hacia el lado
+     al que apunta el dedo (o hacia donde ya iba), así se dobla la esquina de un edificio en vez de quedarse empujándolo */
+  const U = D.U || {}, empuja = (U.thr || 0) > .1;
+  if (empuja && bl > .01) { const tx = -ny, ty = nx; let sg = Math.sign(ca * tx + sa * ty) || 1; if (D.ta != null) { const dT = Math.cos(D.ta) * tx + Math.sin(D.ta) * ty; if (Math.abs(dT) > .2) sg = Math.sign(dT); } this.a += angDif(this.a, Math.atan2(ty * sg, tx * sg)) * Math.min(1, dt * 5); }
   /* lo que queda del movimiento: a lo largo de la pared, si cabe; si no, un empujoncito hacia afuera */
   const sx = Vx * dt, sy = Vy * dt;
   if (Math.hypot(sx, sy) > 1e-5 && this.puede(this.x + sx, this.y + sy, true)) { this.x += sx; this.y += sy; return; }
-  /* la ayuda de esquinas (la de EnCicla y del arcade): prueba ángulos cercanos y resbala, girando un poco hacia el hueco */
-  const st = Math.max(L, .03), dir = Math.atan2(dy, dx);
-  for (const da of (D.d >= 0 ? [.35, -.35, .7, -.7, 1.1, -1.1] : [-.35, .35, -.7, .7, -1.1, 1.1])) { const ax = this.x + Math.cos(dir + da) * st, ay = this.y + Math.sin(dir + da) * st; if (this.puede(ax, ay, true)) { this.x = ax; this.y = ay; this.a += da * Math.min(1, dt * 6); return; } }
+  /* la ayuda de esquinas (la de EnCicla y del arcade): prueba ángulos cercanos, primero hacia el lado al que apunta el dedo, y
+     resbala girando un poco hacia el hueco. Despacio, el rumbo sale de la trompa (no de una velocidad casi nula) y, acelerando,
+     sigue a paso de 2,5 m/s: así rodea un poste, un pilar del viaducto o la esquina de un edificio como en el arcade (5.1) */
+  const lento = Math.abs(D.u) < 2, atras = (U.rev || 0) > 0, st = Math.max(L, empuja || atras ? 2.5 * dt : .03), dir = lento || L < 1e-4 ? this.a + (atras ? Math.PI : 0) : Math.atan2(dy, dx);
+  const pref = D.ta != null ? (Math.sign(angDif(dir, D.ta)) || 1) : (D.d >= 0 ? 1 : -1);
+  for (const k of [.35, .7, 1.1]) for (const sg of [pref, -pref]) { const da = k * sg, ax = this.x + Math.cos(dir + da) * st, ay = this.y + Math.sin(dir + da) * st; if (this.puede(ax, ay, true)) { this.x = ax; this.y = ay; this.a += da * Math.min(1, dt * 7.5); if (empuja && lento) D.u = Math.max(D.u, 2.5); return; } }
   if (this.puede(this.x + nx * .05, this.y + ny * .05, true)) { this.x += nx * .05; this.y += ny * .05; }
 };
 Object.assign(MC, { Dinamica, DIN_CLASE });

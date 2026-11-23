@@ -87,3 +87,15 @@ El autor: «el problema es el arranque: si se suelta el joystick se deja de acel
   - `motor-city/docs/PEDIDOS-CHATGPT-5.0.md`;
   - `motor-city/docs/PEDIDOS-GEMINI-5.0.md`.
 - Este juego no cambió por la 5.0.
+
+## Motor City 5.1.0 «Todo junto» (23‑nov‑2026, Claude)
+- **Se unió:**
+  - de ChatGPT y Codex: R3, el recuento del catastro (1.135.621 construcciones, 96,7 % con pisos); R4, la auditoría de los techos de Overture; R5, las licencias del relieve (MDT LiDAR de 1 m, CC BY-SA); R6, los sectores precocinados en 3 niveles;
+  - de Gemini y Antigravity: la vista Historieta y el paralaje por biomas en Arcade.
+- **Pulido:**
+  - la Historieta pasa de la CPU a un pase en la GPU (de ~8 a ~2 ms);
+  - las imágenes de los biomas se incrustan al construir;
+  - fuera el empujón de presupuesto de regiones, que daba tirones de segundos;
+  - el manejo real se zafa de los atascos: rivales empujables, roce que desliza y salida con el movimiento del arcade.
+- **Para portar:** si tu juego tiene una vista en 3D con three.js, `VistaTres.posRender` permite un pase propio después de la escena (como el de la Historieta).
+- Este juego no cambió por la 5.1 del motor (su propia versión se cuenta en su bitácora).

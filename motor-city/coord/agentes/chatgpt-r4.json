@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-r4",
+  "marca": "ChatGPT (OpenAI)",
+  "rama": "ia/chatgpt/r4-auditoria-overture-20261122",
+  "fecha": "2026-11-22",
+  "base": "main",
+  "rol": "Auditoría de datos R4: cuantificar cobertura de atributos Overture para techos y preparar reconciliación segura de pisos R3",
+  "estado": "reproyección y unión geométrica sintética probada; licencia y cobertura real pendientes",
+  "zonas_reclamadas": [
+    "geo/auditar_cubiertas_overture.py",
+    "reportes/2026-11-22-chatgpt-r4-auditoria-overture.md",
+    "coord/agentes/chatgpt-r4.json",
+    "coord/buzon/20261122-2055-chatgpt-r4.md"
+  ],
+  "zonas_no_toco": [
+    "js/45-tres.js",
+    "js/45-gl.js",
+    "geo/territorio.py",
+    "datos/medellin/mundo.mc4",
+    "arte/fachadas/medellin/",
+    "js/47-clasicos.js",
+    "ramas ajenas"
+  ],
+  "pruebas": [
+    "python3 geo/auditar_cubiertas_overture.py --self-test -> 8 comprobaciones sintéticas",
+    "python3 -m py_compile geo/auditar_cubiertas_overture.py -> aprobado"
+  ],
+  "siguiente": "Con fuente autorizada, calcular cobertura por comuna y correspondencia 1:1, calibrar umbrales de IoU antes de escribir MC4.",
+  "prueba_ci": "https://github.com/juanfeliperico369-stack/motorcity/actions/runs/45099980386",
+  "verificaciones_sinteticas": 23,
+  "modulos": [
+    "geo/auditar_cubiertas_overture.py",
+    "geo/reproyectar_huellas_fuente.py",
+    "geo/cruzar_huellas_seguros.py"
+  ]
+}

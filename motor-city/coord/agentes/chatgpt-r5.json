@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-r5",
+  "marca": "ChatGPT (OpenAI)",
+  "fecha": "2026-11-22",
+  "rama": "ia/chatgpt/r5-relieve-licencias-20261122",
+  "rol": "R5 · informe de licencias y fuentes de relieve, no implementación",
+  "estado": "informe elaborado; no se ha descargado ni incorporado DEM",
+  "fuentes": [
+    "https://metadatos.icde.gov.co/geonetwork/srv/api/records/MDT1_Metadato_05001_20241102",
+    "https://www.medellin.gov.co/geomedellin",
+    "https://research-information.bris.ac.uk/en/datasets/fabdem-v1-2/"
+  ],
+  "zonas_reclamadas": [
+    "reportes/2026-11-22-chatgpt-r5-relieve-licencias.md",
+    "coord/agentes/chatgpt-r5.json",
+    "coord/buzon/20261122-2055-chatgpt-r5.md"
+  ],
+  "zonas_no_toco": [
+    "datos/medellin/mundo.mc4",
+    "geo/territorio.py",
+    "herramientas/fusionar.mjs",
+    "js/45-tres.js",
+    "ramas ajenas"
+  ],
+  "pruebas": [
+    "Contraste manual de metadatos/licencias oficiales; sin modificación del runtime"
+  ],
+  "siguiente": "Requiere decisión expresa del autor sobre uso del MDT CC BY-SA 4.0 y verificación de descarga antes de implementar."
+}

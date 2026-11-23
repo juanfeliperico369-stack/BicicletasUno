@@ -176,7 +176,7 @@ class Busqueda {
     return this.rivales.map(r => { const c = r.cuerpo; return { id: r.id, tipo: 'carro', clase: 'auto', x: c.x, y: c.y, a: c.a, v: c.v, largo: c.veh.largo || 4.6, ancho: c.veh.ancho || 1.85, color: r.roto ? '#2a2420' : r.B.color, sirena: r.B.sirena && !r.roto && !r.retirada && !(r.aturdido > 0), roto: r.roto, humo: r.roto ? r.humo : 0, bando: r.bando, frena: 0, dano: r.golpes || null }; });
   }
   /* para cuerpo.obstaculos: nadie atraviesa a nadie */
-  obstaculos() { const L = []; for (const r of this.rivales) { const c = r.cuerpo, l = (c.veh.largo || 4.6) / 3, cs = Math.cos(c.a), sn = Math.sin(c.a); for (const k of [-1, 0, 1]) L.push({ x: c.x + cs * l * k, y: c.y + sn * l * k, r: (c.veh.ancho || 1.85) / 2 + .1, motivo: 'rival:' + r.id }); } return L; }
+  obstaculos() { const L = []; for (const r of this.rivales) { const c = r.cuerpo, l = (c.veh.largo || 4.6) / 3, cs = Math.cos(c.a), sn = Math.sin(c.a); for (const k of [-1, 0, 1]) L.push({ x: c.x + cs * l * k, y: c.y + sn * l * k, r: (c.veh.ancho || 1.85) / 2 + .1, motivo: 'rival:' + r.id, cuerpo: c }); } return L; }
   /* para la interfaz: qué tan cerca está el rival más cercano y de qué bando */
   masCercano(J) { let m = null, md = 1e9; for (const r of this.rivales) { if (r.roto || r.retirada) continue; const d = Math.hypot(r.cuerpo.x - J.x, r.cuerpo.y - J.y); if (d < md) { md = d; m = r; } } return m ? { d: md, bando: m.bando, r: m } : null; }
 }

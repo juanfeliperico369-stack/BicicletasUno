@@ -1,0 +1,29 @@
+{
+  "advertencias": [
+    "Este porcentaje es de objetos de la capa municipal, NO porcentaje de huellas ED1 cubiertas.",
+    "Se requiere unión geométrica y cobertura por comuna antes de cambiar pisos en Motor City.",
+    "Verificar licencia, vigencia y autorización de reutilización; visibilidad REST no equivale a licencia abierta.",
+    "Un mismo lote puede tener más de una construcción; no cruzar por centroide sin ambigüedad."
+  ],
+  "campo_pisos": "numero_pisos",
+  "capa": "VC_Catastro_VCT / Construccion (MapServer/8)",
+  "clases_revisadas": [
+    "N",
+    "E",
+    "BQ",
+    "TO",
+    "CA"
+  ],
+  "estado": "solo_recuento_no_integrado_a_MC4",
+  "fuente": "https://www.medellin.gov.co/servidormapas/rest/services/vivienda_ciudad_terri/VC_Catastro_VCT/MapServer/8",
+  "porcentaje_pisos_en_clases": 97.34,
+  "porcentaje_pisos_validos": 96.73,
+  "publicador": "Subsecretaría de Catastro, Alcaldía de Medellín",
+  "recuentos": {
+    "clase_con_pisos": 904900,
+    "construcciones_clase": 929582,
+    "pisos_validos": 1098434,
+    "total": 1135621
+  },
+  "srid_de_la_capa": 9377
+}

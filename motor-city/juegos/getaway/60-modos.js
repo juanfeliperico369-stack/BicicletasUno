@@ -252,7 +252,7 @@ const Modos = {
     if (this.m && this.m.vis) G.E.vehiculos = (G.E.vehiculos || []).concat([this.m.vis]); },
   entrada(e) { const m = this.m; if (!m) return; if ((m.id === 'carrera' || m.id === 'extremo') && m.t < 0 && !m.ir) { e.dir = null; e.acel = 0; e.giro = 0; } if (m.id === 'extremo' || m.id === 'trucos') { e.salto = e.salto || G.ctl.botones.has('saltar'); if (m.id === 'extremo') e.turbo = false; } },
   trafico() { const m = this.m; if (!m || !m.rivales) return []; return m.rivales.map(r => ({ id: r.nombre, tipo: m.extremo ? 'bici' : 'carro', clase: 'auto', x: r.cuerpo.x, y: r.cuerpo.y, a: r.cuerpo.a, v: r.cuerpo.v, color: r.color, largo: m.extremo ? 1.8 : 4.4, ancho: m.extremo ? .6 : 1.8 })); },
-  obstaculos() { const m = this.m; if (!m || !m.rivales) return []; return m.rivales.map(r => ({ x: r.cuerpo.x, y: r.cuerpo.y, r: m.extremo ? .5 : 1.2 })); },
+  obstaculos() { const m = this.m; if (!m || !m.rivales) return []; return m.rivales.map(r => ({ x: r.cuerpo.x, y: r.cuerpo.y, r: m.extremo ? .5 : 1.2, cuerpo: r.cuerpo })); },   /* 5.1: cuerpo → el manejo real lo empuja al chocarlo */
   hud() {
     const m = this.m, f = (k, t) => { const el = G.ui.ficha(k, t); el.hidden = !t; }; if (BOT.modos) BOT.modos.hidden = !(this.disponible() || m); if (!m) return;
     if ((m.id === 'carrera' || m.id === 'extremo') && m.ir) { const q = m.p.punto(0); f('m1', '🏁 Ve a la salida · ' + Math.round(Math.hypot(q.x - G.cuerpo.x, q.y - G.cuerpo.y)) + ' m'); f('m2', ''); f('m3', ''); G.objetivo = { x: q.x, y: q.y, texto: '🏁 Salida' }; }

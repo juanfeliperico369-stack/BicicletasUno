@@ -31,7 +31,7 @@ const Flex = {
     ['ui', '🔠 Tamaño de la interfaz', [[1, '100 %'], [1.15, '115 %'], [1.3, '130 %'], [.9, '90 %']]],
     ['calidad', '🎨 Calidad', [['auto', 'automática'], [.45, 'baja'], [.7, 'media'], [1, 'alta']]],
     ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]],
-    ['graficos', '🖼️ Gráficos', [['auto', 'automáticos: realistas si el aparato da la talla'], ['realistas', 'realistas: sol con sombras, luz física y cielo (three.js)'], ['clasicos', 'clásicos: más livianos para celulares modestos']]],
+    ['graficos', '🖼️ Gráficos', [['auto', 'automáticos: realistas si el aparato da la talla'], ['realistas', 'realistas: sol con sombras, luz física y cielo (three.js)'], ['clasicos', 'clásicos: más livianos para celulares modestos'], ['historieta', 'historieta: colores planos y contorno negro (Chinatown Wars)']]],
     ['pantalla', '✂️ Pantalla', [['mitades', 'en mitades: arriba la cámara, abajo manejar'], ['clasica', 'clásica: joystick en toda la izquierda']]]
   ],
   actual: null,
@@ -45,7 +45,7 @@ const Flex = {
     if (MC.Vehiculos) MC.Vehiculos.escala = f.velocidad;
     if (typeof document !== 'undefined') { document.documentElement.style.setProperty('--mc-ui', String(f.ui)); if (document.body) document.body.classList.toggle('mc-zurdo', O.zurdo); }
     const V = op.vistas; if (V) { if (f.calidad === 'auto') V.auto = true; else { V.auto = false; V.calidad = f.calidad; } }
-    if (V && cambiaGraf && V.reiniciarGL) V.reiniciarGL();   /* 4.9: cambia el 3D (realista ⇄ clásico) en caliente */
+    if (V && cambiaGraf && V.reiniciarGL && (!V.gl || (f.graficos === 'clasicos') === !!V.gl.tres)) V.reiniciarGL();   /* 4.9: cambia el 3D (realista ⇄ clásico) en caliente */
     this.actual = f; MC.emit('flex', f); return f;
   },
   /* el esquema de MC.Manejo.aplicar según el ajuste y la cámara ('auto' deja lo que la cámara pide) */

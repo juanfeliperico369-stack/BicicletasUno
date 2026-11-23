@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-r3",
+  "marca": "ChatGPT (OpenAI)",
+  "rama": "ia/chatgpt/r3-catastro-20261122",
+  "fecha": "2026-11-22",
+  "rol": "Validar cobertura preliminar de número de pisos de la nueva capa municipal Construccion (MapServer/8), sin alterar MC4",
+  "estado": "diagnostico_y_autopruebas_verificados,consulta_real_pendiente",
+  "fuente": "https://www.medellin.gov.co/servidormapas/rest/services/vivienda_ciudad_terri/VC_Catastro_VCT/MapServer/8",
+  "zonas_reclamadas": [
+    "geo/auditar_pisos_catastro.py",
+    "reportes/2026-11-22-chatgpt-r3-catastro-fuente-oficial.md",
+    "coord/agentes/chatgpt-r3.json",
+    "coord/buzon/20261122-2055-chatgpt-r3.md"
+  ],
+  "zonas_no_toco": [
+    "js/45-tres.js",
+    "arte/fachadas/medellin/",
+    "js/47-clasicos.js",
+    "geo/territorio.py",
+    "herramientas/fusionar.mjs",
+    "datos/medellin/mundo.mc4",
+    "ramas ajenas"
+  ],
+  "pruebas": [
+    "python3 geo/auditar_pisos_catastro.py --self-test -> 7 comprobaciones sintéticas",
+    "python3 -m py_compile geo/auditar_pisos_catastro.py -> aprobado"
+  ],
+  "siguiente": "Confirmar consulta real, licencia de reutilización, cobertura por comuna y coincidencia geométrica ED1. No llamar oficiales los valores inferidos."
+}

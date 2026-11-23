@@ -23,3 +23,6 @@ dist/publico.json
 juegos/getaway/arte3d/modelos/
 juegos/getaway/arte3d/pbr/
 juegos/getaway/arte3d/rigged/
+
+# salida de pruebas/getaway-3d.mjs (capturas de la prueba; en la QA se suben como artefacto)
+dist/getaway-3d/

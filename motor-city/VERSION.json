@@ -1,12 +1,12 @@
 {
-  "version": "5.0.0",
+  "version": "5.1.0",
   "fecha": "2026-11-23",
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "BicicletasUno: motor-city/ 5.0.0 como referencia; el juego sigue con su Motor del Valle y va en 3.2.0 (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "MetroZero: motor-city/ 5.0.0 como referencia; el juego sigue con su Motor del Valle y va en 3.3.0 (docs/INFORME-MOTOR-CITY-4.6.md)",
-    "RunRunZero: motor-city/ 5.0.0 como referencia; APK que gira (docs/INFORME-MOTOR-CITY-4.6.md)"
+    "BicicletasUno: motor-city/ 5.1.0 como referencia; el juego va en 3.4.0 (unión de las dos 3.3.0, de Claude y de Antigravity)",
+    "MetroZero: motor-city/ 5.1.0 como referencia; el juego va en 3.5.0 (unión de las dos 3.4.0, de Claude y de Antigravity)",
+    "RunRunZero: motor-city/ 5.1.0 como referencia; APK que gira"
   ],
-  "estado": "5.0.0 «Que se sienta»: MC.Dinamica, el manejo real del carro (hoja de manejo por vehículo, carga que cambia entre ejes, llantas que se saturan con círculo de fricción, marchas automáticas, carrocería con resortes, choques con impulso contra paredes y tráfico, ayudas para celular), el tono del motor por rpm y ⚙️ 🛞 Manejo real/arcade; R1 de ChatGPT (fachadas de Medellín) unido con menos peso; plan 5.0 y pedidos para ChatGPT y Gemini (docs/PLAN-5.0.md). Antes, 4.9.0 «Realismo»: three.js 0.170 incrustado y MC.VistaTres (luz física, sombras del sol, cielo y ventanas de noche)."
+  "estado": "5.1.0 «Todo junto»: se unió lo nuevo de ChatGPT/Codex (R3 recuento del catastro, R4 auditoría de techos de Overture, R5 licencias del relieve, R6 sectores precocinados en 3 niveles) y de Gemini/Antigravity (G5-01 vista Historieta, V4 paralaje por biomas en 🏁 Arcade); Claude lo pulió: la Historieta pasa de la CPU a un pase en la GPU (de ~8 a ~2 ms, tinta desde la geometría y colores planos) y las imágenes de los biomas salen del código (769 KB → 30 KB) y se incrustan al construir. Recuento real del catastro: 1.135.621 construcciones, 96,7 % con pisos. Juegos hermanos: EnCicla 3.4.0 y El Metro 3.5.0 (las dos versiones paralelas de cada uno, unidas). Antes, 5.0.0 «Que se sienta»: MC.Dinamica, el manejo real del carro."
 }

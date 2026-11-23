@@ -46,12 +46,18 @@ if (fs.existsSync(manifiestoFachadas)) {
       noche: 'data:image/webp;base64,' + fs.readFileSync(noche).toString('base64') };
   }
 }
+/* V4 (Gemini): los paisajes de paralaje por bioma de 🏁 Arcade (18 WebP de 1024 × 256), desde su manifiesto */
+const datosBiomas = {};
+{ const mb = path.join(RAIZ, 'arte/arcade/biomas/manifiesto.json');
+  if (fs.existsSync(mb)) for (const [id, t] of Object.entries(JSON.parse(fs.readFileSync(mb, 'utf8')).texturas || {})) {
+    const f = path.join(RAIZ, 'arte/arcade/biomas', path.basename(t.ruta || id + '.webp')); if (fs.existsSync(f)) datosBiomas[id] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64'); } }
 const motor = `/* ${VER.nombre} ${VER.version} · ${VER.fecha} · https://github.com/${VER.fuente_de_verdad}
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
 'use strict';
 ${threeJS}const MC_FACHADAS_R1 = ${JSON.stringify(datosFachadas)};
+const MC_BIOMAS_V4 = ${JSON.stringify(datosBiomas)};
 ${cuerpo}
 MC.archivos = ${JSON.stringify(lista)};
 root.MC = MC;

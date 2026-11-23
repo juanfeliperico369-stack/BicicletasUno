@@ -1,5 +1,34 @@
 # Bitácora de Motor City
 
+## 23-nov-2026 · 5.1.0 «Todo junto» · lo nuevo de ChatGPT y Gemini, unido y pulido
+- **El autor:** «Listo lo nuevo: ármalo todo, mejóralo, púlelo y optimízalo; piensa cuál será el siguiente paso y dame los prompts para Gemini/Antigravity y ChatGPT/Codex, y lo que harás tú mientras vuelven».
+- **De ChatGPT y Codex** (cuatro ramas, sin tocar el juego):
+  - **R3:** `geo/auditar_pisos_catastro.py`. Claude lo corrió (solo conteos): la capa *Construccion (8)* tiene **1.135.621 construcciones y el 96,7 % trae pisos válidos**, en `reportes/r3-cobertura-catastro.json`.
+  - **R4:** auditoría de los techos de Overture, cruce seguro de huellas y reproyección.
+  - **R5:** informe de licencias del relieve. Existe un **MDT LiDAR de 1 m de Medellín (2024), CC BY-SA 4.0**; espera la decisión del autor.
+  - **R6:** `herramientas/precocinar-sectores.mjs`, mallas por sector de 1 km en 3 niveles, formato v2 i16.
+  - Más dos flujos de QA que corren solo en los pull requests de esas herramientas.
+- **De Gemini y Antigravity:**
+  - **G5‑01, vista Historieta** (⚙️ Gráficos → historieta; cámara a 55° que gira con el carro);
+  - **V4, paralaje por biomas** en 🏁 Arcade (6 biomas × 3 capas).
+- **Pulido de Claude:**
+  - **Historieta en la GPU.** Antes, cada cuadro pasaba por la CPU (`getImageData`, Sobel y `putImageData`: unos 8 ms, y el grano de las texturas salía como puntos negros). Ahora es un pase en la GPU de unos 2 ms: la tinta sale del laplaciano de la profundidad, que en un plano es cero, y se apaga con la niebla. Colores por bandas suaves; muros y suelo sin grano ni texturas de fachada (`uPlano`).
+  - **Ganchos nuevos en `VistaTres`:** `posRender` y `uPlano`.
+  - **Biomas:** las 18 imágenes ya no van en el código (769 KB → 30 KB); se incrustan al construir desde su manifiesto (`MC_BIOMAS_V4`).
+- **Juegos hermanos**, cada uno tenía dos versiones paralelas:
+  - **EnCicla 3.4.0:** la 3.3.0 de la otra sesión de Claude más la 3.3.0 de Antigravity;
+  - **El Metro 3.5.0:** la 3.4.0 «Jugo y ciclovías» de la otra sesión de Claude más la 3.4.0 «Mundo 3D y Realismo» de Antigravity, con la colisión barrida que le faltaba a la carrera por ciclorruta.
+- **Pruebas:** `historieta.mjs` y `paralaje-biomas.mjs` entran a la QA.
+- **Dos tropiezos que salieron al unir** (las pruebas humana y de modos fallaban):
+  - **El presupuesto de regiones.** Las dos ramas de Gemini envolvían `VistaTres.dibujar` para construir de un golpe 28 regiones (biomas) o 95 (Historieta) cuando había pocas. Así salían completas sus capturas, pero en el juego era un tirón de segundos al empezar, al teletransportarse o con el rescate. Se quitó: el presupuesto lo decide `MC.Vistas` según la calidad. Las pruebas de Gemini siguen en verde.
+  - **El manejo real en un atasco.** La prueba humana fallaba según la hora: el reloj del juego sigue la hora real y, con el semáforo en rojo, los rivales quedaban quietos junto a una torre, donde la pista roza el edificio. Ahora:
+    - los rivales y la policía se pueden **empujar** (impulso por masas, `cuerpo` en sus obstáculos);
+    - un roce suave contra una pared **desliza** y conserva la rapidez;
+    - si queda **encajado** más de 0,6 s, toma el movimiento del arcade mientras siga rozando y vuelve al real 0,4 s después.
+  - La prueba humana pasa 3 de 3 (249 a 450 m).
+  - El modo Extremo de la prueba de modos falla a veces, como ya pasaba en la 4.8: teletransporta al jugador, así que no depende de la física.
+
+
 ## 23-nov-2026 · 5.0.0 «Que se sienta» · el manejo real del carro y el plan para las tres IA
 - **El autor:**
   - «¿Cómo podemos llegar hasta el nivel del motor de GTA San Andreas o Chinatown Wars?»;

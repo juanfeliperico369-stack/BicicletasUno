@@ -5,6 +5,31 @@
 > - **ChatGPT y Codex** hacen las fuertes; su lista está en `docs/PEDIDOS-CHATGPT-5.0.md`.
 > - El arte lo hace Gemini (Nano Banana); el código y los commits, Antigravity o Gemini CLI, en `juanfeliperico369-stack/motorcity`.
 
+## ★ Estado 5.1 y orden nuevo (23‑nov‑2026, Claude) · empieza aquí
+**Lo tuyo que ya está en `main`:**
+- **G5‑01 · vista Historieta.** Claude la pulió:
+  - el contorno y los colores planos pasaron de la CPU (`getImageData` y Sobel cada cuadro, unos 8 ms y con puntos negros por el grano de las texturas) a **un pase en la GPU** de unos 2 ms;
+  - la tinta sale de la **geometría** (laplaciano de la profundidad);
+  - los muros y el suelo van sin grano ni texturas de fachada (`uPlano`);
+  - tu casco invertido para los carros y la gente se queda;
+  - tu prueba (`pruebas/historieta.mjs`) acepta los dos caminos.
+- **V4 · paralaje por biomas.** Las 18 imágenes salieron del código (769 KB → 30 KB) y se incrustan al construir desde `arte/arcade/biomas/manifiesto.json`. Tu prueba sigue en verde.
+- **En EnCicla y El Metro** tus ramas ya están unidas: EnCicla **3.4.0** y El Metro **3.5.0**. En El Metro, la carrera por ciclorruta ganó tu «colisión barrida».
+
+> **Regla nueva (5.1):** no subas el presupuesto de regiones de `VistaTres` (`op.presupuesto`) para que tus capturas salgan completas. Armar 28 o 95 regiones de golpe es un tirón de segundos en el juego, y por eso fallaban las pruebas humana y de modos. En tus pruebas, espera a que la escena esté armada.
+
+**Orden nuevo** (Claude empieza la ciudad viva y necesita tus textos primero):
+| # | Id | Pedido |
+|---|---|---|
+| 1 | **G5‑03** | **Textos de la ciudad viva:** las frases con condiciones y las escenas de la calle. Claude ya escribe el motor que las elige (fase 2). Sin esto, la gente no habla. |
+| 2 | **G5‑07** | **Fichas de los ~30 sitios icónicos** para que Codex los modele. |
+| 3 | **G5‑02** | Anillos de recoger y entregar, y vuelo del jetpack y la avioneta. |
+| 4 | **G5‑06** | Retos desde cualquier semáforo. |
+| 5 | **G5‑04** | Minijuegos táctiles cortos. |
+| 6 | **G5‑12** | Página de medición para el celular del autor. |
+| 7 | **G5‑01‑b** | Historieta, segunda pasada: probarla en 412 × 860 de noche, en primera persona y con lluvia; ajustar `umbralGeo` y `bandas` si hace falta y dejar capturas. **No** vuelvas al filtro en la CPU con el 3D realista. |
+| — | Lo demás | G5‑05, G5‑08, G5‑09, G5‑10 (2D, Arcade y Pixel), G5‑11 y G5‑13, en ese orden. |
+
 ## 0. Antes de empezar (obligatorio)
 1. **Lee, en orden:**
    - `CONTEXTO-RELEVO.md`;

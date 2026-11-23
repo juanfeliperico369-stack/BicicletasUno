@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-r6",
+  "marca": "ChatGPT (OpenAI)",
+  "fecha": "2026-11-22",
+  "rama": "ia/chatgpt/r6-sectores-lod-20261122",
+  "rol": "Prehorneado de mallas de ED1 y EDJ por sectores de 1 km y tres niveles LOD",
+  "estado": "prehorneado real probado en GitHub Actions; integración visual en VistaTres pendiente",
+  "zonas_reclamadas": [
+    "herramientas/precocinar-sectores.mjs",
+    ".github/workflows/r6-sectores-qa.yml",
+    "reportes/2026-11-22-chatgpt-r6-sectores-lod.md",
+    "coord/agentes/chatgpt-r6.json",
+    "coord/buzon/20261122-2055-chatgpt-r6.md"
+  ],
+  "no_toco": [
+    "js/45-tres.js",
+    "js/45-gl.js",
+    "datos/medellin/mundo.mc4",
+    "juegos/getaway",
+    "ramas ajenas"
+  ],
+  "pruebas": [
+    "node --check herramientas/precocinar-sectores.mjs",
+    "node herramientas/precocinar-sectores.mjs --self-test: 2 sectores, 3 LOD, 46/40/30 triángulos, 873 bytes"
+  ],
+  "siguiente": "Integración opcional lazy load con fallback y test visual/performance. Respetar PR R1 de Codex.",
+  "resultados_reales": {
+    "ciudad": "Medellín",
+    "sectores": 2086,
+    "bytes_tres_lod": 101492868,
+    "triangulos_tres_lod": [
+      6853547,
+      6394570,
+      2339000
+    ],
+    "lod2_40m_bytes": 10646954,
+    "lod2_80m_bytes": 5302620,
+    "lod2_80m_triangulos": 1159190,
+    "ahorro_lod2_80m_vs_40m_pct": 50.2,
+    "huellas_guatape_exportadas": 2661
+  },
+  "prueba_ci": "https://github.com/juanfeliperico369-stack/motorcity/actions/runs/45100429558",
+  "riesgos": [
+    "Aún no se usa en runtime ni se midió FPS o GPU real",
+    "LOD 80 m pierde fidelidad visual; requiere capturas",
+    "No empaquetar los 2086 sectores completos en el HTML"
+  ]
+}

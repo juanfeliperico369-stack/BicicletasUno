@@ -2,43 +2,49 @@
   "schema_version": 1,
   "agente": "antigravity",
   "marca": "Gemini",
-  "rama": "ia/gemini/4.7-evolucion-arte-render",
-  "base": "c3fc286",
-  "version_motor": "4.6.1",
-  "actualizado": "2026-11-22T14:16:00Z",
-  "estado": "en_curso",
-  "rol": "Plan maestro comparativo (docs/PLAN-EVOLUCION-GEMINI.md), auditoría móvil 4.6.1 vertical/horizontal, mejora de render 3D/2D/pixel sin chocar con Claude, arreglos críticos de Raster 3D y Primera Persona, y módulo aditivo de mundo vivo RPG/Skate-Parkour/UnoCero",
-  "trabajo_4_7": {
-    "documento": "docs/PLAN-EVOLUCION-GEMINI.md",
-    "zonas_reclamadas": [
-      "docs/PLAN-EVOLUCION-GEMINI.md",
-      "js/45-gl.js",
-      "js/45-gl3d.js",
-      "js/44-raster.js",
-      "js/47-clasicos.js",
-      "js/41-vista2d.js",
-      "juegos/getaway/62-mundo-vivo.js",
-      "pruebas/evolucion-4.7-gemini.mjs",
-      "reportes/2026-11-22-gemini-evolucion-4.7.md",
-      "reportes/img/evolucion-4.7/",
-      "arte/gemini/evolucion-4.7/",
-      "coord/agentes/antigravity.json",
-      "coord/buzon/20261122-*-antigravity-*.md"
-    ],
-    "zonas_respetadas_no_toco": [
-      "juegos/getaway/60-modos.js (Claude)",
-      "juegos/getaway/20-juego.js (Claude)",
-      "juegos/getaway/90-inicio.js (Claude)",
-      "juegos/getaway/40-dibujo.js (Claude)",
-      "juegos/getaway/50-extras.js (Claude)",
-      "juegos/getaway/30-historia.js (Codex)",
-      "js/32-fisica.js (Claude)",
-      "js/37-manejo.js (Claude)",
-      "js/46-vistas.js (Claude)",
-      "js/34-camara.js (Claude)",
-      "js/50-run.js (Claude)",
-      "js/70-interfaz.js (Codex)",
-      "pruebas/prueba.mjs y pruebas/modos.mjs (Claude)"
-    ]
-  }
+  "apodo": "hydrogen",
+  "rama": "ia/gemini/g5-01-historieta",
+  "base": "2633fdf",
+  "version_motor": "5.0.0",
+  "actualizado": "2026-11-23T03:37:00Z",
+  "estado": "listo_para_integrar",
+  "pedido_actual": "G5-01",
+  "rol": "Vista Historieta (Chinatown Wars) en Motor City 5.0 (G5-01): cámara a 55° (0.96 rad) que gira suave con el rumbo del carro, opción 'historieta' en ⚙️ Gráficos, casco invertido 3D (THREE.BackSide) + colores planos cel-shading y contorno negro (#0c0e14) legible a 412×860 (+3.1 KB al HTML)",
+  "entregas_5_0": {
+    "G5-01": {
+      "rama": "ia/gemini/g5-01-historieta",
+      "estado": "completado",
+      "peso_html_kb": "+3.1 KB",
+      "archivos": [
+        "js/34-camara.js",
+        "js/37-flexibilidad.js",
+        "js/47-historieta.js",
+        "pruebas/historieta.mjs",
+        "reportes/2026-11-23-gemini-g5-01-historieta.md",
+        "reportes/img/gemini-g5-01/"
+      ]
+    },
+    "G5-10_V4": {
+      "rama": "ia/antigravity/v4-paralaje-biomas",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/18",
+      "estado": "completado"
+    }
+  },
+  "zonas_respetadas_no_toco": [
+    "js/37-dinamica.js (Claude)",
+    "js/45-tres.js (Claude / ChatGPT)",
+    "docs/PEDIDOS-CHATGPT-5.0.md (ChatGPT / Codex)"
+  ],
+  "siguiente_pedido": "G5-02 (ia/gemini/g5-02-anillos)",
+  "entregables_v4": {
+    "plan": "docs/PLAN-V4-PARALAJE-GEMINI.md",
+    "reporte": "reportes/gemini-v4-paralaje-biomas.md",
+    "texturas_biomas": "arte/arcade/biomas/*.webp (18 texturas 1024×256 RGBA WebP lossless con detalle regional colombiano y geológico, costura_mae = 0.0000, 540.58 KB)",
+    "manifiesto": "arte/arcade/biomas/manifiesto.json",
+    "modulo_motor": "js/47-paralaje-biomas.js (MC.ParalajeBiomas + capa 0 cirros/aves + aureola solar + neblina entre planos + inclinación centrífuga, 0 líneas tocadas en js/47-clasicos.js)",
+    "prueba_e2e": "pruebas/paralaje-biomas.mjs",
+    "capturas": "reportes/img/gemini-v4/ (27 capturas WebP antes/después día/noche 412×860 y 860×412 + 6 previews 3×)"
+  },
+  "mision_v4": "MISIÓN V4: Revolución visual de los biomas y el modo Arcade (Issue #14)",
+  "rama_v4": "ia/antigravity/v4-paralaje-biomas"
 }

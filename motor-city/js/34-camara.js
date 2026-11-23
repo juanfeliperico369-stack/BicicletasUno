@@ -17,7 +17,8 @@ const CAM_PERFIL = {
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
   cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75 },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua */
   oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0, alejaVel: .35 },
-  maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 }
+  maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 },
+  historieta: { fijo: true, pitch: .96, pitchCerca: .88, fov: .68, giraRumbo: true, dist: 0, alto: 0, alejaVel: .45 }   /* 5.0 (G5-01 · Chinatown Wars): ~55° desde arriba, gira suave con el rumbo del carro */
 };
 class Camara {
   constructor(op = {}) {
@@ -34,7 +35,7 @@ class Camara {
     else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); if (g.fijo) this._fija = true; } }
     else if (g.tipo === 'recentrar') { this.mira = 0; this._fija = false; this.d = Object.assign({}, CAM_PERFIL[this.perfil] || this.d); }   /* 4.8: doble toque arriba endereza la cámara */
   }
-  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; this._fija = false; }
+  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; this._fija = false; this._rumboIniciado = false; }
   /* giro y inclinación animados (la vista lateral gira de a 90°, como el mundo de FEZ) */
   girar90(dir = 1) { const base = this.yawObj ?? this.yaw; this.yawObj = Math.round(base / (Math.PI / 2)) * (Math.PI / 2) + dir * Math.PI / 2; return this; }
   girarA(yaw) { this.yawObj = yaw; return this; }
@@ -94,7 +95,14 @@ class Camara {
      3D de los navegadores. Con la velocidad y la persecución se aleja y se inclina hacia adelante (Reckless Getaway, #DRIVE);
      en persecución, además, un vaivén lateral; el trauma la sacude. */
   _aereo(dt, o) {
-    const P = this.d, M = o.mundo || this.mundo, Hp = this.pantalla ? this.pantalla[1] : 800, Zl = this.limites.zoom;
+    const esHist = this.perfil === 'historieta' || (typeof MC !== 'undefined' && MC.opciones && MC.opciones.graficos === 'historieta' && (this.perfil === 'cenital' || this.perfil === 'oblicua'));
+    const P = esHist ? CAM_PERFIL.historieta : this.d, M = o.mundo || this.mundo, Hp = this.pantalla ? this.pantalla[1] : 800, Zl = this.limites.zoom;
+    if (P.giraRumbo && o.a != null && this.yawObj == null && !this._fija && !(this._mirando > 0)) {
+      if (Math.abs(this.mira) > .001) this.mira *= Math.pow(.35, dt);
+      const yr = -(o.a + Math.PI / 2) + (this.mira || 0);
+      if (!this._rumboIniciado) { this.yaw = yr; this._vy.v = 0; this._rumboIniciado = true; }
+      else if (Math.abs(o.v || 0) > .35 || Math.abs(angDif(this.yaw, yr)) > .04) this.yaw = resorteAng(this.yaw, yr, this._vy, .28, dt);
+    }
     const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
     const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
