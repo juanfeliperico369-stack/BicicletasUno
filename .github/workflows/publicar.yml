@@ -31,6 +31,8 @@ jobs:
           node tests/prueba-gpt6-chunks.mjs
       - name: Pruebas completas
         run: node tests/run.js
+      - name: Exigir p95 menor que 50ms y peor cuadro menor que 120ms en 2km CPU×4
+        run: node tests/benchmark-2km-gpt6.mjs --cpu=4 --km=2 --step=12 --assert
       - name: Comprobar salida web
         run: |
           test -s dist/web/index.html
