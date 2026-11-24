@@ -191,13 +191,22 @@ Object.assign(CityMap, {
   },
   /* lotes del trozo: { all: los que tocan el trozo (para el suelo), ed: los edificios con centro en el trozo (para el volumen) } */
   lotes(cx, cy) {
-    const key = cx + ',' + cy, C0 = this.lotC; let R = C0.get(key); if (R) { C0.delete(key); C0.set(key, R); return R; }
+    const key = cx + ',' + cy, C0 = this.lotC, R = C0.get(key); if (R) { C0.delete(key); C0.set(key, R); return R; }
+    const it = this.lotesEtapas(cx, cy); let r; while (!(r = it.next()).done); return r.value;   /* 3.8: el mismo cálculo, de una vez */
+  },
+  /* 3.8 (Claude) · los lotes POR PARTES: el cálculo cede (yield) cuando lleva ~3 ms, para que el iterador de los trozos (K-1,
+     99w) y la cola de 99v-rendimiento repartan un trozo pesado (de 12 a 58 ms con la CPU 4× lenta) en varios cuadros.
+     El resultado es idéntico al de antes: solo cambia cuándo se calcula. */
+  *lotesEtapas(cx, cy) {
+    const key = cx + ',' + cy, C0 = this.lotC; let R = C0.get(key); if (R) return R;
+    let tY = performance.now(), nY = 0;
     if (!this.tallT) this.tallT = TALL.map(([la, lo, r]) => { const g = geoT(la, lo); return [g.x, g.y, r * MS]; });
     const S = CH * TS, X0 = cx * S, Y0 = cy * S, MG = 120, RANK = { 2: 0, 4: 1, 1: 2, 6: 3, 7: 4, 8: 5 };
     const ok = v => v === TT.BRICK || v === TT.BLDG, atras = v => v === TT.BRICK || v === TT.BLDG || v === TT.GRASS || v === TT.WALK || v === TT.PLAZA, frente = v => !(v === TT.WATER || v === TT.CANAL || v === TT.AUTO || v === TT.STATION || v === TT.LAND || v === TT.BRIDGE || v === TT.DEPOT);   // el frente del lote puede tocar la casilla de la calle (que incluye el andén)
     const T = (x, y) => { const tx = Math.floor(x / TS), ty = Math.floor(y / TS); return this.lid.has(this.idx(tx, ty)) ? TT.LAND : this.get(tx, ty); };
     const cand = [];
     for (const ch of this.chainsNear(X0 - MG, Y0 - MG, S + 2 * MG, S + 2 * MG)) {
+      if (performance.now() - tY > 2) { yield; tY = performance.now(); }
       const rk = RANK[ch.k]; if (rk == null || ch.p.length < 4) continue;
       const cum = this.chCum(ch), len = cum[cum.length - 1], p = ch.p; if (len < 14) continue;
       let sa = 1e9, sb = -1; for (let i = 0; i < cum.length; i++) { const x = p[i * 2], y = p[i * 2 + 1]; if (x > X0 - MG && x < X0 + S + MG && y > Y0 - MG && y < Y0 + S + MG) { sa = Math.min(sa, cum[Math.max(0, i - 1)]); sb = Math.max(sb, cum[Math.min(cum.length - 1, i + 1)]); } }
@@ -222,12 +231,14 @@ Object.assign(CityMap, {
       }
     }
     // dos lotes vecinos de edificio se vuelven un solo edificio (parejas fijas: 0-1, 2-3…)
+    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
     const byK = new Map(); for (const q of cand) byK.set(q.id + ':' + q.sd + ':' + q.r + ':' + q.i, q);
     for (const q of cand) {
       if (!q.B || q.dead || (q.i & 1)) continue; const o = byK.get(q.id + ':' + q.sd + ':' + q.r + ':' + (q.i + 1)); if (!o || !o.B || h2(q.id, q.i, 41) > .72) continue;
       let ux = o.x - q.x, uy = o.y - q.y; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul; q.x = (q.x + o.x) / 2; q.y = (q.y + o.y) / 2; q.ux = ux; q.uy = uy; q.nx = -uy * q.sd; q.ny = ux * q.sd; q.w = q.w + o.w + .7; q.d = Math.max(q.d, o.d); o.dead = true;
     }
     // sin traslapes: un lote se descarta si pisa a otro de mayor prioridad (fila, tipo de calle, calle, lado, número)
+    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
     const live = cand.filter(q => !q.dead).sort((a, b) => { for (let k = 0; k < 5; k++) if (a.pr[k] !== b.pr[k]) return a.pr[k] - b.pr[k]; return 0; });
     const G = new Map(), CE = 32, KX = 65536;   // celdas de 32 px con clave numérica (rápido en celulares)
     const proy = (Q, ax, ay) => Math.abs(Q.w / 2 * (Q.ux * ax + Q.uy * ay)) + Math.abs(Q.d / 2 * (Q.nx * ax + Q.ny * ay)), sep = (A, B, ax, ay) => Math.abs((B.x - A.x) * ax + (B.y - A.y) * ay) >= proy(A, ax, ay) + proy(B, ax, ay) - .8;
@@ -235,8 +246,10 @@ Object.assign(CityMap, {
     // corredores del metro, del tranvía y del Metroplús: ningún lote los pisa (el viaducto y los rieles van sobre la calle)
     const TR = this._trG || (this._trG = (() => { const G2 = new Map(), C = 64, add = (L, r) => { const P = L.pts; for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i], sg = [a.x, a.y, b.x, b.y, r]; for (let gy = Math.floor((Math.min(a.y, b.y) - 24) / C); gy <= Math.floor((Math.max(a.y, b.y) + 24) / C); gy++) for (let gx = Math.floor((Math.min(a.x, b.x) - 24) / C); gx <= Math.floor((Math.max(a.x, b.x) + 24) / C); gx++) { const k = gx * 65536 + gy; (G2.get(k) || G2.set(k, []).get(k)).push(sg); } } }; add(this.lineA, 9); add(this.lineB, 9); add(this.tram, 7); for (const m of this.mp || []) add(m, 5); return G2; })());
     const choca = q => { const L = TR.get(Math.floor(q.x / 64) * KX + Math.floor(q.y / 64)); if (!L) return false; const R = Math.hypot(q.w, q.d) / 2 * .8; for (const sg of L) { const ax = sg[0], ay = sg[1], dx = sg[2] - ax, dy = sg[3] - ay, t = clamp(((q.x - ax) * dx + (q.y - ay) * dy) / (dx * dx + dy * dy || 1), 0, 1); if (Math.hypot(ax + dx * t - q.x, ay + dy * t - q.y) < R + sg[4]) return true; } return false; };
+    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
     const all = [], ed = [], ladZ = /Poblado/.test(this.comunaAt(X0 + S / 2, Y0 + S / 2)) || /Envigado|Sabaneta|Itag/.test(this.muniAt(X0 + S / 2, Y0 + S / 2));
     for (const q of live) {
+      if ((++nY & 15) === 0 && performance.now() - tY > 2) { yield; tY = performance.now(); }
       if (choca(q)) continue; const rq = (q.w + q.d) / 2 + 1, gx0 = Math.floor((q.x - rq) / CE), gx1 = Math.floor((q.x + rq) / CE), gy0 = Math.floor((q.y - rq) / CE), gy1 = Math.floor((q.y + rq) / CE); let hit = false;
       for (let gy = gy0; gy <= gy1 && !hit; gy++) for (let gx = gx0; gx <= gx1 && !hit; gx++) { const L = G.get(gx * KX + gy); if (L) for (const o of L) if (cruza(q, o)) { hit = true; break; } }
       for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) { const k = gx * KX + gy, L = G.get(k); if (L) L.push(q); else G.set(k, [q]); }
@@ -257,19 +270,20 @@ Object.assign(CityMap, {
     // casas del interior de la manzana: en cada casilla de ladrillo que no cubre un lote, una casa girada con la calle más cercana
     const dentro = (x, y) => { for (const o of G.get(Math.floor(x / CE) * KX + Math.floor(y / CE)) || []) { if (o.pts === undefined) continue; const dx = x - o.x, dy = y - o.y; if (Math.abs(dx * o.ux + dy * o.uy) < o.w / 2 + 2 && Math.abs(dx * o.nx + dy * o.ny) < o.d / 2 + 2) return true; } return false; };
     const tx0 = cx * CH - 1, ty0 = cy * CH - 1, SG = new Map(), SC = 32;   // tramos de calle por celda de 32 px: cada casa del interior toma la dirección de la calle más cercana (a menos de 48 px)
-    for (const ch of this.chainsNear(X0 - 48, Y0 - 48, S + 96, S + 96)) { if (RANK[ch.k] == null) continue; const p = ch.p;
+    for (const ch of this.chainsNear(X0 - 48, Y0 - 48, S + 96, S + 96)) { if (performance.now() - tY > 2) { yield; tY = performance.now(); } if (RANK[ch.k] == null) continue; const p = ch.p;
       for (let i = 2; i < p.length; i += 2) { const ax = p[i - 2], ay = p[i - 1], bx = p[i], by = p[i + 1]; if ((bx - ax) * (bx - ax) + (by - ay) * (by - ay) < .01) continue;
         const x0 = Math.max(Math.min(ax, bx), X0 - 96), x1 = Math.min(Math.max(ax, bx), X0 + S + 96), y0 = Math.max(Math.min(ay, by), Y0 - 96), y1 = Math.min(Math.max(ay, by), Y0 + S + 96); if (x0 > x1 || y0 > y1) continue;
         const sg = [ax, ay, bx, by]; for (let gy = Math.floor(y0 / SC); gy <= Math.floor(y1 / SC); gy++) for (let gx = Math.floor(x0 / SC); gx <= Math.floor(x1 / SC); gx++) { const k = gx * KX + gy, L = SG.get(k); if (L) L.push(sg); else SG.set(k, [sg]); } } }
     const rumbo = (x, y) => { let bd = 48, ux = 1, uy = 0; for (let gy = Math.floor((y - 48) / SC); gy <= Math.floor((y + 48) / SC); gy++) for (let gx = Math.floor((x - 48) / SC); gx <= Math.floor((x + 48) / SC); gx++) { const L = SG.get(gx * KX + gy); if (L) for (const sg of L) { const ax = sg[0], ay = sg[1], dx = sg[2] - ax, dy = sg[3] - ay, L2 = dx * dx + dy * dy, t = clamp(((x - ax) * dx + (y - ay) * dy) / L2, 0, 1), d = Math.hypot(ax + dx * t - x, ay + dy * t - y); if (d < bd) { bd = d; const l = Math.sqrt(L2); ux = dx / l; uy = dy / l; } } } return [ux, uy]; };
-    for (let ty = ty0; ty <= ty0 + CH + 1; ty++) for (let tx = tx0; tx <= tx0 + CH + 1; tx++) {
+    for (let ty = ty0; ty <= ty0 + CH + 1; ty++) { if (performance.now() - tY > 2) { yield; tY = performance.now(); } for (let tx = tx0; tx <= tx0 + CH + 1; tx++) {
       if (this.get(tx, ty) !== TT.BRICK || this.lid.has(this.idx(tx, ty)) || h2(tx, ty, 51) < .08 || (this.sitT && this.sitT.has(this.idx(tx, ty)))) continue;
       const x = (tx + .5) * TS + (h2(tx, ty, 52) - .5) * 3, y = (ty + .5) * TS + (h2(tx, ty, 53) - .5) * 3; if (dentro(x, y) || choca({ x, y, w: 12, d: 12 })) continue;
       const [ux, uy] = rumbo(x, y);
       const q = { x, y, ux, uy, nx: -uy, ny: ux, w: 11 + h2(tx, ty, 54) * 2, d: 11 + h2(tx, ty, 55) * 2, B: false, int: true, id: tx, i: ty, r: 9, sd: 1 }, hw = q.w / 2, hd = q.d / 2;
       q.pts = [x - ux * hw + uy * hd, y - uy * hw - ux * hd, x + ux * hw + uy * hd, y + uy * hw - ux * hd, x + ux * hw - uy * hd, y + uy * hw + ux * hd, x - ux * hw - uy * hd, y - uy * hw + ux * hd];
       q.k = h2(tx, ty, 56); all.push(q);
-    }
+    } }
+    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
     // volumen y colores de cada casa (1 a 3 pisos)
     const casas = [];
     // en las laderas (así se ven desde el aire): casas de ladrillo a la vista con plancha gris; en lo plano, más teja de barro
@@ -314,7 +328,8 @@ Object.assign(CityMap, {
     const RS = CH + 3, rc = Art.mk(RS, RS, r => { const im = r.createImageData(RS, RS), D = im.data; for (let j = 0; j < RS; j++) for (let i = 0; i < RS; i++) { const tx = x0 - 1 + i, ty = y0 - 1 + j, gx = (this.elevT(tx + .5, ty) - this.elevT(tx - .5, ty)) / VM.tile, gy = (this.elevT(tx, ty + .5) - this.elevT(tx, ty - .5)) / VM.tile, f = clamp((gx + gy) * 1.1, -.3, .25), o = (j * RS + i) * 4; if (f > 0) { D[o] = 255; D[o + 1] = 250; D[o + 2] = 230; D[o + 3] = f * 127.5; } else { D[o] = 10; D[o + 1] = 20; D[o + 2] = 40; D[o + 3] = -f * 153; } } r.putImageData(im, 0, 0); });
     c.imageSmoothingEnabled = true; c.drawImage(rc, 0, 0, RS, RS, px0 - TS * 1.5, py0 - TS * 1.5, RS * TS, RS * TS);   // una muestra por casilla: el relieve es suave (datos de 80 m) y el suavizado lo estira
     const CHS = this.chainsNear(px0 - 2 * TS, py0 - 2 * TS, S + 4 * TS, S + 4 * TS);
-    const run = (f, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash || []); c.beginPath(); for (const ch of CHS) { if (!f(ch.k)) continue; const p = ch.p; c.moveTo(p[0], p[1]); if (p.length === 2) c.lineTo(p[0] + .01, p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); } c.stroke(); c.setLineDash([]); };
+    const hl = w => w * q <= 1.6 ? .99 / q : w;   /* 3.8: las rayas finas (centro de las calles, bordes) de 1 px en el trozo van por el camino rápido de Skia («hairline»); se ven igual */
+    const run = (f, w, col, dash) => { c.strokeStyle = col; c.lineWidth = hl(w); c.setLineDash(dash || []); c.beginPath(); for (const ch of CHS) { if (!f(ch.k)) continue; const p = ch.p; c.moveTo(p[0], p[1]); if (p.length === 2) c.lineTo(p[0] + .01, p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); } c.stroke(); c.setLineDash([]); };
     yield; /* K-1: presupuesto de dibujo por cuadro */
     // lugares emblemáticos: su suelo vectorial (prados, caminos, agua, canchas, el estadio, los cerros), bajo las calles que los cruzan
     const LMV = []; LANDMARKS.forEach((L, i) => { if (!(L.x + L.w < x0 - 3 || L.x > x0 + CH + 3 || L.y + L.h < y0 - 3 || L.y > y0 + CH + 3)) LMV.push(i); });
@@ -327,7 +342,7 @@ Object.assign(CityMap, {
     // 3) andenes con sardinel a lo largo de cada calle (y peatonales, escalas y senderos)
     const RD = k => k > 0 && k < 5, GW = new Map(); for (const ch of CHS) if (RD(ch.k)) { const key = ch.k * 1e4 + Math.round(ch.w * 10); (GW.get(key) || GW.set(key, []).get(key)).push(ch); }
     const KO = { 1: 0, 4: 1, 2: 2, 3: 3 }, GK = [...GW.keys()].sort((a, b) => KO[(a / 1e4) | 0] - KO[(b / 1e4) | 0] || a - b), ASF = { 1: '#565a62', 4: '#565a62', 2: '#50545c', 3: '#4a4e56' };
-    const runL = (L, w, col, dash) => { c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash || []); c.beginPath(); for (const ch of L) { const p = ch.p; c.moveTo(p[0], p[1]); if (p.length === 2) c.lineTo(p[0] + .01, p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); } c.stroke(); c.setLineDash([]); };
+    const runL = (L, w, col, dash) => { c.strokeStyle = col; c.lineWidth = hl(w); c.setLineDash(dash || []); c.beginPath(); for (const ch of L) { const p = ch.p; c.moveTo(p[0], p[1]); if (p.length === 2) c.lineTo(p[0] + .01, p[1]); for (let i = 2; i < p.length; i += 2) c.lineTo(p[i], p[i + 1]); } c.stroke(); c.setLineDash([]); };
     for (const key of GK) { const k = (key / 1e4) | 0; if (k !== 3) runL(GW.get(key), (key % 1e4) / 10 + 2 * SWK[k] + 1.4, '#9d978b'); }
     for (const key of GK) { const k = (key / 1e4) | 0; if (k !== 3) runL(GW.get(key), (key % 1e4) / 10 + 2 * SWK[k], '#dcd7cc'); else runL(GW.get(key), (key % 1e4) / 10 + 3, '#8fae74'); }
     run(q => q === 6, (CHW[6] + .14) * TS, '#b3ab98'); run(q => q === 6, CHW[6] * TS, '#e6dfcd');
@@ -336,9 +351,13 @@ Object.assign(CityMap, {
     yield; /* K-1: presupuesto de dibujo por cuadro */
     // 4) calles: cada una con su ancho, bordes, separadores y líneas
     for (const key of GK) runL(GW.get(key), (key % 1e4) / 10 + 1, '#7d796f');
+    yield; /* 3.8: las calles eran la etapa más pesada (17-20 ms de rasterizado con la CPU 4× lenta): va en partes */
     for (const key of GK) runL(GW.get(key), (key % 1e4) / 10, ASF[(key / 1e4) | 0]);
+    yield; /* 3.8 */
     for (const key of GK) { const k = (key / 1e4) | 0, w = (key % 1e4) / 10, L = GW.get(key); if (k < 2 || k > 3) continue; runL(L, w - .14 * TS, k === 3 ? '#e8c64a' : '#d9d6cc'); runL(L, w - .22 * TS, ASF[k]); if (k === 2 && w >= 1.7 * TS) { runL(L, .22 * TS, '#cfcabf'); runL(L, .13 * TS, '#5f9e46'); } }
+    yield; /* 3.8 */
     for (const key of GK) { const k = (key / 1e4) | 0, w = (key % 1e4) / 10, L = GW.get(key); if (k === 1) runL(L, .7, '#e6e4dc', [5, 7]); else if (k === 4) runL(L, .75, '#eceae2', [6, 6]); else if (k === 2 && w < 1.7 * TS) runL(L, .8, '#e8c64a', [8, 6]); else if (k === 3) runL(L, .8, '#f2f0e8', [9, 6]); }
+    yield; /* 3.8 */
     for (const ch of CHS) { if (!RD(ch.k)) continue; const p = ch.p, w = ch.w / 2 - .5; c.fillStyle = ASF[ch.k]; if (ch.j0) { c.beginPath(); c.arc(p[0], p[1], w, 0, TAU); c.fill(); } if (ch.j1) { c.beginPath(); c.arc(p[p.length - 2], p[p.length - 1], w, 0, TAU); c.fill(); } }
     run(k => k === 9, .9, 'rgba(79,155,212,.45)', [2.5, 3.2]);   // las quebradas que pasan cubiertas bajo las calles (la Santa Elena bajo La Playa): línea tenue
     yield; /* K-1: presupuesto de dibujo por cuadro */
@@ -352,7 +371,7 @@ Object.assign(CityMap, {
     for (const ch of CHS) { if (ch.k !== 5) continue; const len = chainLen(ch.p); for (let s = 20 + h2(ch.p[0] | 0, ch.p[1] | 0, 12) * 40; s < len - 8; s += 70) { const a = this.chPt(ch, s), b = this.chPt(ch, s + 2); if (a.x < px0 - 4 || a.y < py0 - 4 || a.x > px0 + S + 4 || a.y > py0 + S + 4) continue; const an = Math.atan2(b.y - a.y, b.x - a.x); c.save(); c.translate(a.x, a.y); c.rotate(an); c.strokeStyle = '#e6f5da'; c.lineWidth = .6; c.beginPath(); c.arc(-1.6, 0, 1.2, 0, TAU); c.moveTo(2.8, 0); c.arc(1.6, 0, 1.2, 0, TAU); c.stroke(); c.restore(); } }
     yield; /* K-1: presupuesto de dibujo por cuadro */
     // 5) lotes: sombras, casas con su techo y base de los edificios (el volumen de los edificios va en draw3D)
-    const LT = this.lotes(cx, cy), poly = (P, dx, dy) => { c.moveTo(P[0] + dx, P[1] + dy); c.lineTo(P[2] + dx, P[3] + dy); c.lineTo(P[4] + dx, P[5] + dy); c.lineTo(P[6] + dx, P[7] + dy); c.closePath(); };
+    const LT = this.lotC.has(cx + ',' + cy) ? this.lotes(cx, cy) : (yield* this.lotesEtapas(cx, cy)), poly = (P, dx, dy) => { c.moveTo(P[0] + dx, P[1] + dy); c.lineTo(P[2] + dx, P[3] + dy); c.lineTo(P[4] + dx, P[5] + dy); c.lineTo(P[6] + dx, P[7] + dy); c.closePath(); };
     c.fillStyle = 'rgba(8,14,30,.24)'; c.beginPath(); for (const L of LT.all) if (!L.B) poly(L.pts, 1.2, 1.5); c.fill();
     c.fillStyle = 'rgba(8,14,30,.26)'; for (const L of LT.all) if (L.B) { const d = 3 + L.z * 13, H = hull8(L.pts, d); c.beginPath(); c.moveTo(H[0], H[1]); for (let k = 2; k < H.length; k += 2) c.lineTo(H[k], H[k + 1]); c.closePath(); c.fill(); }
     c.fillStyle = '#8f9399'; c.beginPath(); for (const L of LT.all) if (L.B) poly(L.pts, 0, 0); c.fill();   // base de los edificios (su volumen va en draw3D)
@@ -478,8 +497,13 @@ Ride.prototype.draw3D = function (c, ox, oy, vw, vh) {
     const AP = M.altG && M.altG.get(cx + ',' + cy); if (AP) for (const b of AP) { const x = b.x - ox, y = b.y - oy; if (x > vw + mg + 40 || y > vh + mg + 40 || x < -mg - 40 || y < -mg - 40) continue; b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* lo que va en alto: viaducto del metro, estaciones elevadas y puentes (76-altura.js) */
     const ST = M.sitTrozo(cx, cy); if (ST) for (const b of ST.e) { if (b.oculto || (b.fl < 3 && !b.P) || Math.floor(b.x / S) !== cx || Math.floor(b.y / S) !== cy) continue; const x = b.x - ox, y = b.y - oy, m2 = ((b.zt || b.z) > .6 ? mg + 200 : mg) + (b.bb[2] - b.bb[0]) / 2; if (x > vw + m2 || y > vh + m2 || x < -m2 || y < -m2) continue; b.dd = (x - px) * (x - px) + (y - py) * (y - py); L.push(b); }   /* edificios reales de los sitios (22-sitios.js) */
   }
-  L.sort((a, b) => b.dd - a.dd); c.lineWidth = .5; const bx = [0, 0, 0, 0], by = [0, 0, 0, 0], rx = [0, 0, 0, 0], ry = [0, 0, 0, 0];
+  /* 3.8 (Claude): las líneas de los pisos y del borde del techo miden medio px del mundo; si eso queda en menos de 1,6 px de
+     la pantalla (celulares de densidad 1), se dibujan de 1 px exacto: Skia las traza por su camino rápido («hairline»), unas
+     6 veces más barato con la CPU lenta, y se ven igual. En pantallas densas no cambia nada. */
+  const Tm = c.getTransform(), kz = Math.hypot(Tm.a, Tm.b) || 1, lw = .5 * kz <= 1.6 ? .99 / kz : .5;
+  L.sort((a, b) => b.dd - a.dd); c.lineWidth = lw; const bx = [0, 0, 0, 0], by = [0, 0, 0, 0], rx = [0, 0, 0, 0], ry = [0, 0, 0, 0];
   for (const b of L) {
+    c.lineWidth = lw;
     if (b.alto) { this.altoPieza(c, b, ox, oy, px, py, K, nb); continue; }
     const p = b.pal[nb] || (b.pal[nb] = { roof: mixHex(b.roof, '#0b1430', nb * .17), wa: mixHex(b.wa, '#0b1430', nb * .17), wb: mixHex(b.wb, '#0b1430', nb * .17), ln: nb >= 2 ? '#ffd97a' : shade(b.wb, -.22), top: mixHex(shade(b.roof, .16), '#0b1430', nb * .17) });
     if (b.sitio) { sitEdif3D(c, b, ox, oy, px, py, K, p, nb); continue; }   // con su forma real

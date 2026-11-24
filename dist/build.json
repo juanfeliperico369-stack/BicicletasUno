@@ -1,7 +1,7 @@
 {
  "version": "3.7.0",
- "hash": "437a15ca",
- "cache": "juega-encicla-v3.7.0-437a15ca",
+ "hash": "e26a8fdb",
+ "cache": "juega-encicla-v3.7.0-e26a8fdb",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -94,12 +94,13 @@
   "99s-ciudad-responde.js",
   "99t-medir-y-saltar.js",
   "99u-todo-junto.js",
+  "99v-rendimiento.js",
   "99w-chunks-progresivos.js",
   "99x-capas-laterales.js"
  ],
  "bytes": {
-  "single": 5776029,
-  "web": 5777053,
-  "js": 5581426
+  "single": 5791851,
+  "web": 5792875,
+  "js": 5597248
  }
 }

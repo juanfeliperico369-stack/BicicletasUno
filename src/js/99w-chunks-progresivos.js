@@ -24,12 +24,16 @@
   const reloj = () => (typeof performance !== 'undefined' && performance.now)
     ? performance.now() : Date.now();
   const valido = trabajo => trabajo.map.chunks2.get(trabajo.key) === trabajo.canvas;
-  function reanudar() {
+  function reanudar(ts) {
     activo = false;
     const inicio = reloj(); let n = 0;
+    /* 3.8 (Claude): un solo presupuesto por cuadro para todo el trabajo de fondo (JE.fondo, 99v): si el cuadro ya va
+     * cargado, se hace una sola etapa (siempre al menos una, para no detenerse). */
+    const F = JE.fondo, lim = F && F.limite ? F.limite(ts, presupuesto) : presupuesto;
+    if (F && F.turno && cola.length) { if (lim <= 0 && !F.turno(ts, 'suelo', 0)) { pedir(); return; } F.paso('suelo'); }
     /* Cada paso puede consumir más de 6 ms si una operación indivisible
      * (lotes o contorno) es lenta. Se registra: no se oculta ese límite. */
-    while (cola.length && reloj() - inicio < presupuesto && n < 10) {
+    while (cola.length && (n === 0 || reloj() - inicio < lim) && n < 10) {
       const t = cola.shift();
       if (!valido(t)) { P.cancelados++; continue; }
       const a = reloj();
