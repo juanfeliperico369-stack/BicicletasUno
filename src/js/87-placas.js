@@ -19,7 +19,19 @@ const PLACAS = [
   ['bibespana', 'Tres rocas en la montaña', 6.29473, -75.54413, 'Las tres «rocas» del Parque Biblioteca España (2007), de Giancarlo Mazzanti, están revestidas de pizarra oscura.'],
   ['metrocable', 'El cable que es metro', 6.29350, -75.54260, 'La línea K del Metrocable (2004) llevó el cable aéreo al transporte público de la ciudad, conectado con el metro.'],
   ['escaleras', 'Escaleras al aire libre', 6.25680, -75.62190, 'Las escaleras eléctricas de la Comuna 13 abrieron en 2011 y cambiaron la forma de subir la ladera.'],
-  ['encicla', 'Así empezó EnCicla', 6.20017, -75.57858, 'EnCicla nació en 2011 como un piloto que conectaba universidades con el metro.']
+  ['encicla', 'Así empezó EnCicla', 6.20017, -75.57858, 'EnCicla nació en 2011 como un piloto que conectaba universidades con el metro.'],
+  /* 3.8 · de las fichas de los 30 sitios icónicos del motor 5.3 (Gemini) y fuentes públicas; solo lo comprobable */
+  ['luces', 'Un bosque de luz', 6.246047, -75.572301, 'El Parque de las Luces, en la Plaza de Cisneros, es un bosque de unos 300 postes altos: de día dan sombra y de noche se ve como una constelación.'],
+  ['carre', 'El arquitecto de la Catedral', 6.245966, -75.571389, 'El Edificio Carré, junto al Vásquez, lleva el apellido del francés Charles Émile Carré, el mismo que diseñó la Catedral Metropolitana.'],
+  ['pies', 'Para caminar descalzo', 6.244676, -75.576876, 'En el Parque de los Pies Descalzos la idea es quitarse los zapatos: arena, agua y un bosque de guaduas para sentir el suelo.'],
+  ['nacional', 'Otra obra de Goovaerts', 6.24901, -75.570401, 'El Palacio Nacional, sobre Carabobo, también es del belga Agustín Goovaerts, como el Palacio de la Cultura; hoy es un centro comercial.'],
+  ['memoria', 'Junto a la quebrada', 6.245899, -75.556501, 'El Museo Casa de la Memoria, en el Parque Bicentenario y junto a la quebrada Santa Elena, guarda historias del conflicto para que no se repitan.'],
+  ['pueblito', 'Un pueblo en la cima', 6.23615, -75.57988, 'En la cima del cerro Nutibara está el Pueblito Paisa: la réplica de un pueblo antioqueño, con su plaza, su iglesia y balcones de colores.'],
+  ['explora', 'Las cajas rojas', 6.270883, -75.565711, 'Las cajas rojas del Parque Explora guardan un museo de ciencia con uno de los acuarios de agua dulce más grandes de América Latina.'],
+  ['orquideorama', 'Árboles de madera', 6.27065, -75.56372, 'El Orquideorama del Jardín Botánico es una cubierta de «árboles-flor» hexagonales de madera que dan sombra sin cerrar el espacio.'],
+  ['deseos', 'Un reloj de sol', 6.26836, -75.56585, 'En el Parque de los Deseos, junto al Planetario, hay un reloj de sol y se hace cine al aire libre bajo el cielo.'],
+  ['atanasio', 'Un prócer paisa', 6.256797, -75.590146, 'El estadio lleva el nombre de Atanasio Girardot, prócer de la independencia nacido en Medellín en 1791.'],
+  ['mamm', 'Un museo en un taller', 6.223673, -75.574045, 'El Museo de Arte Moderno de Medellín (MAMM) ocupa la nave de ladrillo de los antiguos Talleres Robledo, una vieja fábrica metalmecánica.']
 ];
 const Placas = JE.placas = {
   pts: null,

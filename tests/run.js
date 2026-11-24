@@ -74,6 +74,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   for (const t of ['album', 'parts', 'mas', 'ruta']) { await p.click(`#tabs button[data-tab=${t}]`); await p.waitForTimeout(150); }
   if (SHOTS) { await p.click('#tabs button[data-tab=album]'); await p.screenshot({ path: path.join(OUT, 'album.png') }); await p.click('#tabs button[data-tab=mas]'); }
   else await p.click('#tabs button[data-tab=mas]');
+  await p.evaluate(() => JE.masSecciones && JE.masSecciones.abrirTodo());   /* 3.8: la pestaña Más va en secciones plegables */
   await p.click('#tab-mas [data-ui="3"]'); ok(await p.evaluate(() => document.body.classList.contains('big') && Save.data.settings.big && Save.data.settings.ui === 3 && getComputedStyle(document.documentElement).getPropertyValue('--u').trim() === '1.18'), 'tamaño de textos y botones: Grande (antes «letra grande»)'); await p.click('#tab-mas [data-ui="1"]');
   for (const act of ['avatar', 'historia', 'personajes', 'ranking', 'multi', 'howto', 'cred', 'intro', 'apoya']) { await p.click(`#tab-mas [data-act=${act}]`); await p.waitForTimeout(120); ok(await p.isVisible('#modal'), 'modal ' + act); await p.evaluate(() => UI.closeModal()); }
   await p.click('#tab-mas [data-act=bot]'); await p.click('#dRun'); await p.waitForFunction(() => /SIN ERRORES|PROBLEMAS/.test(document.querySelector('#dOut').textContent), null, { timeout: 120000 });
@@ -445,6 +446,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   await require('./revolucion-encicla').v7(p, ok);   /* ronda 3.5: la ciudad responde, la bici se inclina, medir, llegar ya y todo junto */
   await require('./revolucion-encicla').v8(p, ok);   /* ronda 3.6 (Gemini · Antigravity): 12 modos con bot hasta el final, 15 encargos y 88 frases */
   await require('./revolucion-encicla').v9(p, ok);   /* ronda 3.6 GPT-6: chunks progresivos, respaldo de capas y telemetría */
+  await require('./revolucion-encicla').v10(p, ok);   /* ronda 3.8: rendimiento con el mismo resultado, Más y Escalafón en secciones, placas y capas */
   ok(!errs.length, 'sin errores de consola al final ' + errs.slice(0, 3).join(' | '));
   /* v2.1 · registro de claves del guardado (TAREAS-IA 10): después de jugar todo, cada clave de Save.data está registrada con su tipo */
   const claves = await p.evaluate(() => ({ mal: Save.revisarClaves(), n: Object.keys(Save.data).length, reg: Object.keys(Save.CLAVES).length }));

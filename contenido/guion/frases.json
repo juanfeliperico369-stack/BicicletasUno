@@ -71,14 +71,14 @@
     { "t": "Un metro de distancia nos cuida a los dos.", "ev": ["peaton"] },
     { "t": "En la estación siempre sale gente con afán.", "ev": ["peaton"], "lugar": "estacion" },
     { "t": "Ojo en el paradero, que uno baja mirando el bus.", "ev": ["peaton"], "lugar": "paradero" },
-    { "t": "Mejor bájese un tricito en el andén, vecino.", "ev": ["peaton"], "lugar": "calle" },
+    { "t": "En el andén, mejor bájese y camine la bici, vecino.", "ev": ["peaton"], "lugar": "calle" },
     { "t": "Con piso liso toca darle más espacio al peatón.", "ev": ["peaton"], "lluvia": true },
     { "t": "De noche casi no se ve la bici, despacito.", "ev": ["peaton"], "noche": true },
 
     { "t": "El rojo es un respiro pa' todos en el cruce.", "ev": ["semaforo"] },
     { "t": "Con calma, parce: en verde pasamos seguros.", "ev": ["semaforo"] },
     { "t": "Si la bici para en rojo, los carros la respetan.", "ev": ["semaforo"] },
-    { "t": "Espere el cambio de luz, que la esquina cruza.", "ev": ["semaforo"], "lugar": "calle" },
+    { "t": "Espere el cambio de luz: por la esquina cruza gente.", "ev": ["semaforo"], "lugar": "calle" },
     { "t": "Con aguacero, pasarse en rojo es doble riesgo.", "ev": ["semaforo"], "lluvia": true },
     { "t": "De noche parar en rojo salva vidas, ojo pues.", "ev": ["semaforo"], "noche": true },
 

@@ -1,7 +1,7 @@
 {
- "version": "3.7.0",
- "hash": "e26a8fdb",
- "cache": "juega-encicla-v3.7.0-e26a8fdb",
+ "version": "3.8.0",
+ "hash": "2a06ce94",
+ "cache": "juega-encicla-v3.8.0-2a06ce94",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -99,8 +99,8 @@
   "99x-capas-laterales.js"
  ],
  "bytes": {
-  "single": 5791851,
-  "web": 5792875,
-  "js": 5597248
+  "single": 5806273,
+  "web": 5807297,
+  "js": 5611670
  }
 }

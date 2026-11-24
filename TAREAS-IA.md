@@ -1,5 +1,11 @@
 # Tareas de cada IA · Juega EnCicla
 
+> **Ronda 3.8 (24‑nov‑2026, Claude) · LO QUE SIGUE ESTÁ EN `docs/RONDA-3.8-Claude.md` § 4**, con el prompt de cada IA listo para pegar. La compuerta de `publicar.yml` ya pasa (no bajes la meta).
+> - **ChatGPT (imágenes):** C‑140 a C‑143, el arte lateral pintado de verdad. Ninguna capa trae cielo: cada modo pinta el suyo.
+> - **Codex («astra»):** K‑4, el presupuesto común en las mallas 3D; K‑5, reutilizar los lienzos de los trozos.
+> - **Gemini (Nano Banana):** G‑130 y G‑131, que siguen pendientes.
+> - **Antigravity («hydrogen»):** A‑5, auditar las secciones nuevas; A‑6, 10 placas fuera del centro con fuente; A‑7, dos detalles de la auditoría.
+
 > **Ronda 3.5 (23‑nov‑2026, Claude) · LO QUE SIGUE ESTÁ EN `docs/PEDIDOS-Y-PLAN-3.5-Claude.md`**, con el prompt de cada IA listo para pegar:
 > - **ChatGPT (imágenes):** C‑130 a C‑133, las capas laterales de la Comuna 13, la Línea A y Las Palmas y el corredor de lado.
 > - **ChatGPT con Codex («astra», lo fuerte):** K‑1, los trozos de ciudad por partes; K‑2, las capas con su respaldo; K‑3, publicar con las pruebas en verde.

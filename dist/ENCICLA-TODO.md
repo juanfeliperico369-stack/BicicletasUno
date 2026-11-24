@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.7.0 · compilado el 2026-11-23.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.8.0 · compilado el 2026-11-24.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.7.0)
+## 2.3 Estado actual (v3.8.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-23 | Claude Code | documento creado (v3.7.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-24 | Claude Code | documento creado (v3.8.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2265,6 +2265,31 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 ## BITÁCORA · Juega EnCicla
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
+
+### 24-nov-2026 · v3.8.0 · La compuerta de rendimiento en verde, la auditoría A-4 resuelta y todo ordenado (Claude)
+- **Rendimiento (`99v-rendimiento.js`, `75-graficos.js` y `99w`), para la compuerta de GPT-6 (2 km con la CPU 4×: p95 < 50 ms y peor cuadro < 120 ms):**
+  - índice espacial de ciclorrutas;
+  - el GPS del jugador por partes;
+  - los lotes de los edificios por partes (`lotesEtapas`, mismo resultado) y en cola fuera del dibujo;
+  - el suelo de cada trozo se rasteriza dentro del presupuesto;
+  - rayas finas de 1 px exacto (el camino rápido de Skia);
+  - un solo presupuesto por cuadro para el trabajo de fondo (`JE.fondo`).
+  - Local: p95 de 43 a 49 ms y peor cuadro de 56 a 74 ms (antes: p95 de 82 a 131 y peor de 135 a 179). La meta no se tocó.
+- **Auditoría A-4 de Gemini:**
+  - las estadísticas de Despacho, Maquinista, Circuito y Moravia van debajo de las metas;
+  - la pestaña Más va en 6 secciones plegables (de 3.085 a 1.530 px, sin perder opciones; «Controles» y «⚙️ Flexibilidad» en una fila);
+  - el Valle Vivo se cierra desde arriba.
+- **Escalafón en secciones:** tres de juegos con sus nombres y los 12 oficios abiertos (de 6.231 a 3.213 px).
+- **Arte lateral de GPT-6:** revisadas las capturas de 412 × 860; se dibujan las capas 2 a 4 sobre el cielo de cada modo (la capa 1, un cielo opaco, tapaba el degradado).
+- **Contenido:** 11 placas nuevas de lo poco conocido (27 en total), con datos de las fichas de los sitios del motor 5.3; corregidos el dato de Sabaneta y dos frases.
+- **Probado:** `node tests/run.js` completo en verde con la nueva **V10**, que comprueba que lotes y GPS por partes dan el mismo resultado que de una vez, las secciones sin opciones perdidas, las 27 placas y las capas. También `node tests/benchmark-2km-gpt6.mjs --assert` en verde (3 de 3 corridas).
+- **Documento:** `docs/RONDA-3.8-Claude.md`, con lo poco conocido que salió de medir y los prompts de la ronda 3.9.
+- **Falta:**
+  - C-140 a C-143 (el arte lateral pintado de verdad);
+  - K-4 y K-5 (Codex);
+  - G-130 y G-131 (Gemini);
+  - A-5 a A-7 (Antigravity);
+  - la medida con 📏 en el celular del autor.
 
 ### 23-nov-2026 · v3.7.0 (sin cambio de versión) · Motor City 5.3.1 en `motor-city/` y skills para todas las IA
 - **Qué cambió:**

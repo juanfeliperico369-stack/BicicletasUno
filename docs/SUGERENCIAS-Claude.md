@@ -25,6 +25,10 @@
 - Lo que más falta: dibujar cada trozo por partes o en un Worker (pedido K‑1 a Codex).
 - En el 3D: un trozo de textura nuevo por cuadro, caché de 40 texturas y 60 mallas, y la niebla esconde el borde.
 
+- **3.8 · Medir el rasterizado, no solo el JavaScript.** Canvas graba las órdenes y las rasteriza al pintar ese lienzo en otro: un presupuesto que solo mide la grabación se queda corto (en los trozos del suelo, ~11 ms grabados contra ~45 ms rasterizados). Para que cuente, pinten el lienzo en uno de 1 × 1, sin leer píxeles.
+- **3.8 · Rayas de 1 px o de 2 px o más, nunca de 1,5.** Por debajo de 1 px de pantalla Skia usa su camino rápido («hairline»), unas seis veces más barato con la CPU lenta.
+- **3.8 · Un solo presupuesto por cuadro.** Si su código trabaja de fondo en `requestAnimationFrame`, use `JE.fondo.limite(ts, ms)` y `JE.fondo.turno(ts, nombre, ranura)` (`99v-rendimiento.js`).
+
 ## 5. Diseño para todo público
 - **Arcade antes que realismo:** la velocidad del juego es la del mundo comprimido; cuando hay que mostrar una cifra, se usa la equivalente a la real (los radares dicen 24 km/h para una bici a fondo, no 270).
 - **Enseñar sin regañar:** las frases de la ciudad y los datos («¿Sabías que?») van donde pasan las cosas: el peatón va primero, en rojo también para la bici, luz de noche.
@@ -39,6 +43,8 @@
 - **Pedir arte solo donde el dibujo por código llegó a su techo** (hoy: las escenas laterales). La entrega c99 (292 imágenes) no entró porque no superaba lo que ya había.
 - Siempre con **respaldo por código** (si falta la imagen, se ve lo de hoy), **fondo magenta** `#FF00FF` y archivada en `arte/entregas/<fecha>-<entrega>/` con su manifiesto.
 - Una **imagen ancla** primero (G‑00, G‑131) y, cuando el autor la apruebe, el resto.
+
+- **3.8 · El arte lateral no trae cielo:** cada modo pinta el suyo (degradado, sol, montañas). Un cielo opaco en la capa lejana tapa todo eso y, estirado al alto del celular, deja un borde duro a media pantalla.
 
 ## 8. Privacidad
 - El 🧪 modo prueba y el 📏 medir **no mandan nada a ninguna parte**: el informe solo sale si alguien lo copia. Nada de nombres ni del correo del autor en el repositorio.

@@ -411,3 +411,49 @@ module.exports.v9 = async function (p, ok) {
      'K-1: chunk se crea instantáneamente con color tierra y continúa por cuadros ' + JSON.stringify(r));
   ok(r.instalado && r.sinCapas, 'K-2: si falta cualquier paquete de arte, permanece el dibujo anterior');
 };
+
+/* V10 · ronda 3.8 (Claude): rendimiento que pasa la compuerta (con el MISMO resultado), la pestaña Más y el Escalafón en
+ * secciones (sin perder ninguna opción), el arte lateral sobre el cielo de cada modo, 27 placas y los textos corregidos. */
+module.exports.v10 = async function (p, ok) {
+  console.log('V10) ronda 3.8 · rendimiento con el mismo resultado, Más y Escalafón en secciones, placas y capas');
+  const r = await p.evaluate(async () => {
+    const out = {}, M = JE.map, raf = () => new Promise(res => requestAnimationFrame(res)), s = homeStation(), S = CH * TS;
+    const huella = R => JSON.stringify([R.all.length, R.ed.length, R.casas.length, R.ed.map(b => [Math.round(b.x * 10), Math.round(b.y * 10), Math.round(b.z * 1000), b.roof]), R.all.slice(0, 60).map(b => [Math.round(b.x * 10), Math.round(b.y * 10), b.B ? 1 : 0])]);
+    /* 1) lotes por partes = lotes de una vez, aunque se intercalen otros trozos a mitad del cálculo */
+    const A = [Math.floor(s.x / S) + 2, Math.floor(s.y / S) + 1], B = [A[0] + 3, A[1] - 2];
+    M.lotC.delete(A + ''); M.lotC.delete(B + ''); M.lotesCede = 0;   /* cede en cada punto: muchos pasos, de verdad intercalados */
+    const it = M.lotesEtapas(A[0], A[1]); let pasos = 0, st = { done: false };
+    for (let i = 0; i < 3 && !st.done; i++) { st = it.next(); pasos++; }
+    M.lotes(B[0], B[1]); while (!st.done) { st = it.next(); pasos++; } M.lotesCede = null; const porPartes = huella(st.value);
+    M.lotC.delete(A + ''); const JH = JE.headless; JE.headless = true; const deUna = huella(M.lotes(A[0], A[1])); JE.headless = JH;
+    out.lotes = { iguales: porPartes === deUna, pasos, edificios: M.lotes(A[0], A[1]).ed.length };
+    /* 2) el GPS por partes llega a la misma ruta que el cálculo de una vez */
+    Save.data.settings.gfx = '3d'; JE.game.start('usuario', 1, { seed: 3, nov: NOVEDADES[0], free: true }); await new Promise(res => setTimeout(res, 300));
+    const R = JE.game.mode.ride; JE.game.paused = true; R.way = null; R.target = { x: R.p.x + 40 * TS, y: R.p.y + 12 * TS };
+    M.flows.clear(); const n0 = M.flowsPorPartes | 0; R.calcGps(); const vacio = R.gps.length === 0; let k = 0;
+    while (k++ < 240 && (M.flowsPorPartes | 0) === n0) await raf();
+    R.calcGps(); const porPartesG = JSON.stringify(R.gps); JE.headless = true; M.flows.clear(); R.calcGps(); const deUnaG = JSON.stringify(R.gps); JE.headless = JH;
+    out.gps = { primeroSinTiron: vacio, listoEnCuadros: k, iguales: porPartesG === deUnaG && R.gps.length > 3 };
+    JE.game.stop();
+    /* 3) presupuesto común por cuadro y ciclorrutas con índice */
+    out.fondo = !!(JE.fondo && JE.fondo.limite && JE.fondo.turno); out.indice = JE.cicloGeoGPT6 && JE.cicloGeoGPT6.indice ? JE.cicloGeoGPT6.indice() > 0 : null;
+    /* 4) Más y Escalafón en secciones, sin perder nada */
+    UI.go('sHome'); await new Promise(res => setTimeout(res, 200)); UI.renderMas();
+    const T = document.getElementById('tab-mas'); out.mas = { secciones: T.querySelectorAll('details.mas-sec').length, opciones: T.querySelectorAll('.opt').length, botones: T.querySelectorAll('details.mas-sec button[data-act], details.mas-sec button[data-diario]').length, sueltas: T.querySelectorAll(':scope > .opt').length, flexUnida: !T.querySelector('[data-act="flex"]') && !!T.querySelector('#mCtrl'), alto: T.scrollHeight };
+    UI.renderRuta(); const E = document.getElementById('tab-ruta');
+    out.ruta = { secciones: E.querySelectorAll('details.ruta-sec').length, roles: E.querySelectorAll('details.ruta-sec .role').length, juegos: E.querySelectorAll('details.ruta-sec .paper.juego, details.ruta-sec .paper.race').length, sueltos: E.querySelectorAll(':scope > .role, :scope > .paper.juego').length, oficiosAbiertos: !!E.querySelector('details[data-sec="oficios"][open]') };
+    /* 5) placas y capas */
+    out.placas = PLACAS.length; out.placasUnicas = new Set(PLACAS.map(x => x[0])).size;
+    const cv = document.createElement('canvas'); cv.width = 60; cv.height = 40; const c = cv.getContext('2d'); c.fillStyle = '#123456'; c.fillRect(0, 0, 60, 40);
+    const dib = JE.capas && JE.capas.tiene('lineaA') ? JE.capas.dibujar(c, 'lineaA', 0, 60, 40) : null; const px = c.getImageData(30, 1, 1, 1).data;
+    out.capas = { dibujo: dib, cieloDelModo: dib === null || (px[0] === 0x12 && px[1] === 0x34 && px[2] === 0x56) };
+    return out;
+  });
+  ok(r.lotes.iguales && r.lotes.pasos > 5, 'lotes por partes: el mismo resultado que de una vez, aunque otro trozo se calcule en medio ' + JSON.stringify(r.lotes));
+  ok(r.gps.primeroSinTiron && r.gps.iguales, 'GPS por partes: sin tirón y con la misma ruta que de una vez ' + JSON.stringify(r.gps));
+  ok(r.fondo && r.indice !== false, 'un presupuesto por cuadro para el trabajo de fondo e índice de ciclorrutas');
+  ok(r.mas.secciones === 6 && r.mas.sueltas === 0 && r.mas.opciones >= 21 && r.mas.botones >= 11 && r.mas.flexUnida, 'la pestaña Más en 6 secciones, sin perder opciones ' + JSON.stringify(r.mas));
+  ok(r.ruta.secciones === 4 && r.ruta.roles === 12 && r.ruta.juegos >= 17 && r.ruta.sueltos === 0 && r.ruta.oficiosAbiertos, 'el Escalafón en secciones: 12 oficios abiertos y los juegos agrupados ' + JSON.stringify(r.ruta));
+  ok(r.placas === 27 && r.placasUnicas === 27, '27 placas de lo poco conocido, sin repetir');
+  ok(r.capas.cieloDelModo, 'el arte lateral va sobre el cielo de cada modo ' + JSON.stringify(r.capas));
+};

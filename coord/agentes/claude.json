@@ -2,10 +2,10 @@
   "schema_version": 1,
   "agente": "claude",
   "rama": "ccr-6f184fb6-vtpkye",
-  "base_commit": "59437d7",
-  "fase_actual": "3.5 · lo nuevo del motor 5.x (la ciudad responde, la bici se inclina, medir, llegar ya), todo junto (habilidades, encargos, hub y reparto) y los pedidos con prompts para Gemini y ChatGPT",
-  "estado": "entregado (3.5.0); pedidos en docs/PEDIDOS-Y-PLAN-3.5-Claude.md",
-  "ultima_actualizacion_utc": "2026-11-23T12:00:00Z",
+  "base_commit": "1b3ce40",
+  "fase_actual": "3.8 · la compuerta de rendimiento en verde (99v), auditoría A-4 resuelta, Más y Escalafón en secciones, arte lateral sobre el cielo de cada modo, 27 placas",
+  "estado": "entregado (3.8.0); pedidos de la 3.9 en docs/RONDA-3.8-Claude.md § 4",
+  "ultima_actualizacion_utc": "2026-11-24T12:00:00Z",
   "zonas_reclamadas": [
     "src/js/98p-efectos.js",
     "src/js/98q-manejo.js",
@@ -27,7 +27,8 @@
     "src/js/99s-*.js .. src/js/99v-*.js (ciudad que responde, medir y saltar, todo junto)",
     "contenido/guion/frases.json",
     "docs/PEDIDOS-Y-PLAN-3.5-Claude.md",
-    "docs/SUGERENCIAS-Claude.md"
+    "docs/SUGERENCIAS-Claude.md",
+    "docs/RONDA-3.8-Claude.md"
   ],
   "archivos_compartidos_tocados": [
     "src/js/30-ride.js (Ride.mover y giro amortiguado)",
@@ -41,7 +42,13 @@
     "src/js/81-controles.js (arreglo: Save.save comentado por la unión de la 3.1.0)",
     "CLAUDE.md (regla: no publicar si las pruebas no están en verde)",
     ".github/workflows/pruebas.yml (nuevo)",
-    "contenido/guion/encargos.json (nuevo: historias de los vecinos)"
+    "contenido/guion/encargos.json (nuevo: historias de los vecinos)",
+    "src/js/99w-chunks-progresivos.js (presupuesto común JE.fondo)",
+    "src/js/99x-capas-laterales.js (sin la capa de cielo por defecto)",
+    "src/js/45-mg2.js (estadísticas bajo las metas)",
+    "src/js/75-graficos.js (lotesEtapas, rayas de 1 px, calles en partes)",
+    "src/js/87-placas.js (11 placas nuevas)",
+    "contenido/guion/encargos.json (dato de Sabaneta)"
   ],
   "zonas_libres_para_ia_companera": [
     "src/js/99n-*.js .. src/js/99y-*.js",

@@ -30,12 +30,16 @@
   }
   JE.capas = {
     tiene(id) { return Array.isArray(paquetes[id]) && paquetes[id].length === 4 && [0,1,2,3].every(k => carga[id + ':' + k]); },
-    dibujar(b, id, metros, w, h) {
+    /* 3.8 (Claude, revisión de las capturas de 412×860 que pide CLAUDE.md): la capa 1 es un cielo OPACO de franjas planas
+     * (crema/azul, rojo/naranja); estirada al alto del celular tapaba el cielo degradado que ya pinta cada modo y dejaba
+     * un borde duro a media pantalla. Por defecto se dibujan las capas 2 a 4 (con transparencia) sobre el cielo del modo;
+     * quien no tenga cielo propio pide { conCielo: true }. */
+    dibujar(b, id, metros, w, h, o) {
       if (!this.tiene(id) || !b || typeof b.drawImage !== 'function') return false;
       w = w || (b.canvas && b.canvas.width) || 400; h = h || (b.canvas && b.canvas.height) || 240;
       const fac = [.02, .065, .16, .33], x0 = Number.isFinite(metros) ? metros : 0;
       b.save(); b.imageSmoothingEnabled = false;
-      for (let i = 0; i < 4; i++) {
+      for (let i = o && o.conCielo ? 0 : 1; i < 4; i++) {
         const img = imagenes[id + ':' + i];
         if (!img) continue;
         const ancho = h * img.width / img.height, salto = Math.max(ancho, 1);

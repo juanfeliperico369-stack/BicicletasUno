@@ -199,14 +199,14 @@ Object.assign(CityMap, {
      El resultado es idéntico al de antes: solo cambia cuándo se calcula. */
   *lotesEtapas(cx, cy) {
     const key = cx + ',' + cy, C0 = this.lotC; let R = C0.get(key); if (R) return R;
-    let tY = performance.now(), nY = 0;
+    let tY = performance.now(), nY = 0; const CED = this.lotesCede == null ? 2 : this.lotesCede;   /* ms antes de ceder (las pruebas usan 0) */
     if (!this.tallT) this.tallT = TALL.map(([la, lo, r]) => { const g = geoT(la, lo); return [g.x, g.y, r * MS]; });
     const S = CH * TS, X0 = cx * S, Y0 = cy * S, MG = 120, RANK = { 2: 0, 4: 1, 1: 2, 6: 3, 7: 4, 8: 5 };
     const ok = v => v === TT.BRICK || v === TT.BLDG, atras = v => v === TT.BRICK || v === TT.BLDG || v === TT.GRASS || v === TT.WALK || v === TT.PLAZA, frente = v => !(v === TT.WATER || v === TT.CANAL || v === TT.AUTO || v === TT.STATION || v === TT.LAND || v === TT.BRIDGE || v === TT.DEPOT);   // el frente del lote puede tocar la casilla de la calle (que incluye el andén)
     const T = (x, y) => { const tx = Math.floor(x / TS), ty = Math.floor(y / TS); return this.lid.has(this.idx(tx, ty)) ? TT.LAND : this.get(tx, ty); };
     const cand = [];
     for (const ch of this.chainsNear(X0 - MG, Y0 - MG, S + 2 * MG, S + 2 * MG)) {
-      if (performance.now() - tY > 2) { yield; tY = performance.now(); }
+      if (performance.now() - tY > CED) { yield; tY = performance.now(); }
       const rk = RANK[ch.k]; if (rk == null || ch.p.length < 4) continue;
       const cum = this.chCum(ch), len = cum[cum.length - 1], p = ch.p; if (len < 14) continue;
       let sa = 1e9, sb = -1; for (let i = 0; i < cum.length; i++) { const x = p[i * 2], y = p[i * 2 + 1]; if (x > X0 - MG && x < X0 + S + MG && y > Y0 - MG && y < Y0 + S + MG) { sa = Math.min(sa, cum[Math.max(0, i - 1)]); sb = Math.max(sb, cum[Math.min(cum.length - 1, i + 1)]); } }
@@ -231,14 +231,14 @@ Object.assign(CityMap, {
       }
     }
     // dos lotes vecinos de edificio se vuelven un solo edificio (parejas fijas: 0-1, 2-3…)
-    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
+    if (performance.now() - tY > CED) { yield; tY = performance.now(); }
     const byK = new Map(); for (const q of cand) byK.set(q.id + ':' + q.sd + ':' + q.r + ':' + q.i, q);
     for (const q of cand) {
       if (!q.B || q.dead || (q.i & 1)) continue; const o = byK.get(q.id + ':' + q.sd + ':' + q.r + ':' + (q.i + 1)); if (!o || !o.B || h2(q.id, q.i, 41) > .72) continue;
       let ux = o.x - q.x, uy = o.y - q.y; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul; q.x = (q.x + o.x) / 2; q.y = (q.y + o.y) / 2; q.ux = ux; q.uy = uy; q.nx = -uy * q.sd; q.ny = ux * q.sd; q.w = q.w + o.w + .7; q.d = Math.max(q.d, o.d); o.dead = true;
     }
     // sin traslapes: un lote se descarta si pisa a otro de mayor prioridad (fila, tipo de calle, calle, lado, número)
-    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
+    if (performance.now() - tY > CED) { yield; tY = performance.now(); }
     const live = cand.filter(q => !q.dead).sort((a, b) => { for (let k = 0; k < 5; k++) if (a.pr[k] !== b.pr[k]) return a.pr[k] - b.pr[k]; return 0; });
     const G = new Map(), CE = 32, KX = 65536;   // celdas de 32 px con clave numérica (rápido en celulares)
     const proy = (Q, ax, ay) => Math.abs(Q.w / 2 * (Q.ux * ax + Q.uy * ay)) + Math.abs(Q.d / 2 * (Q.nx * ax + Q.ny * ay)), sep = (A, B, ax, ay) => Math.abs((B.x - A.x) * ax + (B.y - A.y) * ay) >= proy(A, ax, ay) + proy(B, ax, ay) - .8;
@@ -246,10 +246,10 @@ Object.assign(CityMap, {
     // corredores del metro, del tranvía y del Metroplús: ningún lote los pisa (el viaducto y los rieles van sobre la calle)
     const TR = this._trG || (this._trG = (() => { const G2 = new Map(), C = 64, add = (L, r) => { const P = L.pts; for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i], sg = [a.x, a.y, b.x, b.y, r]; for (let gy = Math.floor((Math.min(a.y, b.y) - 24) / C); gy <= Math.floor((Math.max(a.y, b.y) + 24) / C); gy++) for (let gx = Math.floor((Math.min(a.x, b.x) - 24) / C); gx <= Math.floor((Math.max(a.x, b.x) + 24) / C); gx++) { const k = gx * 65536 + gy; (G2.get(k) || G2.set(k, []).get(k)).push(sg); } } }; add(this.lineA, 9); add(this.lineB, 9); add(this.tram, 7); for (const m of this.mp || []) add(m, 5); return G2; })());
     const choca = q => { const L = TR.get(Math.floor(q.x / 64) * KX + Math.floor(q.y / 64)); if (!L) return false; const R = Math.hypot(q.w, q.d) / 2 * .8; for (const sg of L) { const ax = sg[0], ay = sg[1], dx = sg[2] - ax, dy = sg[3] - ay, t = clamp(((q.x - ax) * dx + (q.y - ay) * dy) / (dx * dx + dy * dy || 1), 0, 1); if (Math.hypot(ax + dx * t - q.x, ay + dy * t - q.y) < R + sg[4]) return true; } return false; };
-    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
+    if (performance.now() - tY > CED) { yield; tY = performance.now(); }
     const all = [], ed = [], ladZ = /Poblado/.test(this.comunaAt(X0 + S / 2, Y0 + S / 2)) || /Envigado|Sabaneta|Itag/.test(this.muniAt(X0 + S / 2, Y0 + S / 2));
     for (const q of live) {
-      if ((++nY & 15) === 0 && performance.now() - tY > 2) { yield; tY = performance.now(); }
+      if ((++nY & 15) === 0 && performance.now() - tY > CED) { yield; tY = performance.now(); }
       if (choca(q)) continue; const rq = (q.w + q.d) / 2 + 1, gx0 = Math.floor((q.x - rq) / CE), gx1 = Math.floor((q.x + rq) / CE), gy0 = Math.floor((q.y - rq) / CE), gy1 = Math.floor((q.y + rq) / CE); let hit = false;
       for (let gy = gy0; gy <= gy1 && !hit; gy++) for (let gx = gx0; gx <= gx1 && !hit; gx++) { const L = G.get(gx * KX + gy); if (L) for (const o of L) if (cruza(q, o)) { hit = true; break; } }
       for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) { const k = gx * KX + gy, L = G.get(k); if (L) L.push(q); else G.set(k, [q]); }
@@ -270,12 +270,12 @@ Object.assign(CityMap, {
     // casas del interior de la manzana: en cada casilla de ladrillo que no cubre un lote, una casa girada con la calle más cercana
     const dentro = (x, y) => { for (const o of G.get(Math.floor(x / CE) * KX + Math.floor(y / CE)) || []) { if (o.pts === undefined) continue; const dx = x - o.x, dy = y - o.y; if (Math.abs(dx * o.ux + dy * o.uy) < o.w / 2 + 2 && Math.abs(dx * o.nx + dy * o.ny) < o.d / 2 + 2) return true; } return false; };
     const tx0 = cx * CH - 1, ty0 = cy * CH - 1, SG = new Map(), SC = 32;   // tramos de calle por celda de 32 px: cada casa del interior toma la dirección de la calle más cercana (a menos de 48 px)
-    for (const ch of this.chainsNear(X0 - 48, Y0 - 48, S + 96, S + 96)) { if (performance.now() - tY > 2) { yield; tY = performance.now(); } if (RANK[ch.k] == null) continue; const p = ch.p;
+    for (const ch of this.chainsNear(X0 - 48, Y0 - 48, S + 96, S + 96)) { if (performance.now() - tY > CED) { yield; tY = performance.now(); } if (RANK[ch.k] == null) continue; const p = ch.p;
       for (let i = 2; i < p.length; i += 2) { const ax = p[i - 2], ay = p[i - 1], bx = p[i], by = p[i + 1]; if ((bx - ax) * (bx - ax) + (by - ay) * (by - ay) < .01) continue;
         const x0 = Math.max(Math.min(ax, bx), X0 - 96), x1 = Math.min(Math.max(ax, bx), X0 + S + 96), y0 = Math.max(Math.min(ay, by), Y0 - 96), y1 = Math.min(Math.max(ay, by), Y0 + S + 96); if (x0 > x1 || y0 > y1) continue;
         const sg = [ax, ay, bx, by]; for (let gy = Math.floor(y0 / SC); gy <= Math.floor(y1 / SC); gy++) for (let gx = Math.floor(x0 / SC); gx <= Math.floor(x1 / SC); gx++) { const k = gx * KX + gy, L = SG.get(k); if (L) L.push(sg); else SG.set(k, [sg]); } } }
     const rumbo = (x, y) => { let bd = 48, ux = 1, uy = 0; for (let gy = Math.floor((y - 48) / SC); gy <= Math.floor((y + 48) / SC); gy++) for (let gx = Math.floor((x - 48) / SC); gx <= Math.floor((x + 48) / SC); gx++) { const L = SG.get(gx * KX + gy); if (L) for (const sg of L) { const ax = sg[0], ay = sg[1], dx = sg[2] - ax, dy = sg[3] - ay, L2 = dx * dx + dy * dy, t = clamp(((x - ax) * dx + (y - ay) * dy) / L2, 0, 1), d = Math.hypot(ax + dx * t - x, ay + dy * t - y); if (d < bd) { bd = d; const l = Math.sqrt(L2); ux = dx / l; uy = dy / l; } } } return [ux, uy]; };
-    for (let ty = ty0; ty <= ty0 + CH + 1; ty++) { if (performance.now() - tY > 2) { yield; tY = performance.now(); } for (let tx = tx0; tx <= tx0 + CH + 1; tx++) {
+    for (let ty = ty0; ty <= ty0 + CH + 1; ty++) { if (performance.now() - tY > CED) { yield; tY = performance.now(); } for (let tx = tx0; tx <= tx0 + CH + 1; tx++) {
       if (this.get(tx, ty) !== TT.BRICK || this.lid.has(this.idx(tx, ty)) || h2(tx, ty, 51) < .08 || (this.sitT && this.sitT.has(this.idx(tx, ty)))) continue;
       const x = (tx + .5) * TS + (h2(tx, ty, 52) - .5) * 3, y = (ty + .5) * TS + (h2(tx, ty, 53) - .5) * 3; if (dentro(x, y) || choca({ x, y, w: 12, d: 12 })) continue;
       const [ux, uy] = rumbo(x, y);
@@ -283,7 +283,7 @@ Object.assign(CityMap, {
       q.pts = [x - ux * hw + uy * hd, y - uy * hw - ux * hd, x + ux * hw + uy * hd, y + uy * hw - ux * hd, x + ux * hw - uy * hd, y + uy * hw + ux * hd, x - ux * hw - uy * hd, y - uy * hw + ux * hd];
       q.k = h2(tx, ty, 56); all.push(q);
     } }
-    if (performance.now() - tY > 2) { yield; tY = performance.now(); }
+    if (performance.now() - tY > CED) { yield; tY = performance.now(); }
     // volumen y colores de cada casa (1 a 3 pisos)
     const casas = [];
     // en las laderas (así se ven desde el aire): casas de ladrillo a la vista con plancha gris; en lo plano, más teja de barro

@@ -2,6 +2,31 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 24-nov-2026 · v3.8.0 · La compuerta de rendimiento en verde, la auditoría A-4 resuelta y todo ordenado (Claude)
+- **Rendimiento (`99v-rendimiento.js`, `75-graficos.js` y `99w`), para la compuerta de GPT-6 (2 km con la CPU 4×: p95 < 50 ms y peor cuadro < 120 ms):**
+  - índice espacial de ciclorrutas;
+  - el GPS del jugador por partes;
+  - los lotes de los edificios por partes (`lotesEtapas`, mismo resultado) y en cola fuera del dibujo;
+  - el suelo de cada trozo se rasteriza dentro del presupuesto;
+  - rayas finas de 1 px exacto (el camino rápido de Skia);
+  - un solo presupuesto por cuadro para el trabajo de fondo (`JE.fondo`).
+  - Local: p95 de 43 a 49 ms y peor cuadro de 56 a 74 ms (antes: p95 de 82 a 131 y peor de 135 a 179). La meta no se tocó.
+- **Auditoría A-4 de Gemini:**
+  - las estadísticas de Despacho, Maquinista, Circuito y Moravia van debajo de las metas;
+  - la pestaña Más va en 6 secciones plegables (de 3.085 a 1.530 px, sin perder opciones; «Controles» y «⚙️ Flexibilidad» en una fila);
+  - el Valle Vivo se cierra desde arriba.
+- **Escalafón en secciones:** tres de juegos con sus nombres y los 12 oficios abiertos (de 6.231 a 3.213 px).
+- **Arte lateral de GPT-6:** revisadas las capturas de 412 × 860; se dibujan las capas 2 a 4 sobre el cielo de cada modo (la capa 1, un cielo opaco, tapaba el degradado).
+- **Contenido:** 11 placas nuevas de lo poco conocido (27 en total), con datos de las fichas de los sitios del motor 5.3; corregidos el dato de Sabaneta y dos frases.
+- **Probado:** `node tests/run.js` completo en verde con la nueva **V10**, que comprueba que lotes y GPS por partes dan el mismo resultado que de una vez, las secciones sin opciones perdidas, las 27 placas y las capas. También `node tests/benchmark-2km-gpt6.mjs --assert` en verde (3 de 3 corridas).
+- **Documento:** `docs/RONDA-3.8-Claude.md`, con lo poco conocido que salió de medir y los prompts de la ronda 3.9.
+- **Falta:**
+  - C-140 a C-143 (el arte lateral pintado de verdad);
+  - K-4 y K-5 (Codex);
+  - G-130 y G-131 (Gemini);
+  - A-5 a A-7 (Antigravity);
+  - la medida con 📏 en el celular del autor.
+
 ## 23-nov-2026 · v3.7.0 (sin cambio de versión) · Motor City 5.3.1 en `motor-city/` y skills para todas las IA
 - **Qué cambió:**
   - la copia del motor pasó a la 5.3.1;

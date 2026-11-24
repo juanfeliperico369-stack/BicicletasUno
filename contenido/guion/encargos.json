@@ -84,7 +84,7 @@
     "id": "wilson-sur", "quien": "wilson", "titulo": "La ruta del sur de Wílson", "premio": 80,
     "pasos": [
       { "a": "lm:otraparte", "corto": "Parada en Otraparte", "pide": "Hoy me tocó revisar tótems por todo el sur. ¿Me llevas un rollo de cintas reflectivas hasta la Casa Museo Otraparte, en Envigado?", "luego": "🏡 En la casa de Fernando González te cuentan que el filósofo caminaba el valle pensando despacio, igual que quien viaja en bici." },
-      { "a": "lm:sabaneta", "corto": "El tótem de Sabaneta", "pide": "«Sigue al Parque de Sabaneta, el municipio más pequeño de Colombia en extensión, y verifica la estación de la plaza».", "luego": "🟢 El tótem de Sabaneta lee la Cívica al instante y deja ocho bicis listas para rodar." },
+      { "a": "lm:sabaneta", "corto": "El tótem de Sabaneta", "pide": "«Sigue al Parque de Sabaneta, uno de los municipios más pequeños de Colombia (unos 15 km²), y verifica la estación de la plaza».", "luego": "🟢 El tótem de Sabaneta lee la Cívica al instante y deja ocho bicis listas para rodar." },
       { "a": "lm:ditaires", "corto": "Respiro en Ditaires", "pide": "«Termina pasando por el Parque Ditaires, en Itagüí, para avisar que el camión de Balance ya viene en camino».", "luego": "" }
     ],
     "final": "El Valle de Aburrá son diez municipios unidos por el mismo río y la misma ciclorruta."
