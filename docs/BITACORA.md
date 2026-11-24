@@ -2,6 +2,25 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 24-nov-2026 · v3.8.0 (sin cambio de versión) · Motor del Valle 1.3.0: el mapa saneado, Fase 1 del renacimiento cenital (Claude)
+- **Qué cambió (solo datos y herramientas; el juego es el mismo byte a byte):**
+  - **Motor del Valle 1.3.0** en `motor-valle/` (la fuente de verdad), copiado a MetroZero con `sincronizar.mjs`:
+    - la **ley de soberanía vial** (`geo/sanear.py` y `geo/anchos.json`, con la regla A del autor): ninguna casa de capa 0 sobre una vía de capa 0 ni sobre el agua, rehecho desde las fuentes originales;
+    - las casas confiables de OSM que chocan con calles menores no se recortan: van a `geometry-conflicts.geojson` (44.538, 131 críticas);
+    - la **rasante** de las vías (`geo/rasante.py`), las capas de puentes y túneles (`geo/niveles.py`) y el subcomando `node motor-valle/motor.mjs sanear`;
+    - dos fuentes nuevas (`huellas` y `agua_niveles`) y los ejes precisos de las vías (`build.py` con `VIAS_M`);
+    - las pruebas `motor-valle/pruebas/geometria.py` (exacta) y `geometria.mjs` (como lo lee el juego).
+  - **Para EnCicla, sin conectar:** `src/data/edificios.bin` + `edificios.json` (626.140 huellas saneadas en trozos de 160 m, con una guarda contra las vías que dibuja EnCicla) y `src/data/vias-cota.bin` (la cota de las 35.746 vías de `vias.bin`). `tools/build.js` no los mete al HTML: la Fase 3 decide, con la compuerta.
+- **Cifras:** se conserva el **98,45 %** del área construida; desaparecen 9.864 casas (7.668 restos de menos de 16 m² y 2.196 que estaban enteras en la calle o el agua).
+- **Probado:**
+  - `node motor-valle/motor.mjs sanear` y `pruebas/geometria.py`: BIEN;
+  - `node tools/build.js`: el HTML es idéntico (mismo md5);
+  - `node tests/run.js`: 177 ✓ y 0 ✗;
+  - `node tests/regresion-encicla.js`: 0;
+  - `sincronizar.mjs ../MetroZero --verificar`: «los archivos son iguales».
+- **El informe:** `motorcity/reportes/2026-11-24-claude-fase1-cenital.md`.
+- **Falta:** el OK del autor para la Fase 2 (render cenital con bandera en el modo libre) y las decisiones del informe (casas confiables, vías precisas y ancho por fachadas).
+
 ## 24-nov-2026 · v3.8.0 · La compuerta de rendimiento en verde, la auditoría A-4 resuelta y todo ordenado (Claude)
 - **Rendimiento (`99v-rendimiento.js`, `75-graficos.js` y `99w`), para la compuerta de GPT-6 (2 km con la CPU 4×: p95 < 50 ms y peor cuadro < 120 ms):**
   - índice espacial de ciclorrutas;

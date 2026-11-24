@@ -1,6 +1,6 @@
 {
- "version": "1.2.0",
- "fecha": "2026-11-19",
+ "version": "1.3.0",
+ "fecha": "2026-11-24",
  "fuente_de_verdad": "juanfeliperico369-stack/BicicletasUno (carpeta motor-valle/)",
  "copias": [
   "juanfeliperico369-stack/MetroZero (carpeta motor-valle/)"
@@ -27,13 +27,19 @@
    "red_sitva",
    "metroplus",
    "alturas",
-   "tuneles"
+   "tuneles",
+   "huellas_saneadas",
+   "rasante",
+   "biomas",
+   "trozos_160m"
   ],
   "encicla": [
    "vias.bin",
    "sitios",
    "ciclorrutas",
-   "estaciones_encicla"
+   "estaciones_encicla",
+   "edificios.bin (sin conectar)",
+   "vias-cota.bin (sin conectar)"
   ],
   "elmetro": [
    "valle.js",
@@ -45,7 +51,9 @@
    "metroplus_andenes",
    "rieles",
    "rutas_calles",
-   "ajustes"
+   "ajustes",
+   "edificios.js v2 (saneado)",
+   "vias.js · flujo COTA"
   ]
  },
  "propuestas": [
@@ -71,6 +79,20 @@
    "version": "1.2.0",
    "fecha": "2026-11-19",
    "que": "une las dos 1.1.0 con la fuente de verdad en BicicletasUno; valle.js con las dos interfaces; sincronizar --verificar"
+  },
+  {
+   "version": "1.3.0",
+   "fecha": "2026-11-24",
+   "que": "ley de soberanía vial (geo/sanear.py y geo/anchos.json): ninguna casa de capa 0 sobre una vía de capa 0 ni sobre el agua, con las casas confiables de OSM marcadas en geometry-conflicts.geojson; rasante de las vías (geo/rasante.py: cota única en los nodos y pendiente con tope); capas de puentes y túneles (geo/niveles.py); huellas saneadas para EnCicla (geo/huellas.py, sin conectar); pruebas de geometría (pruebas/); fuentes huellas y agua_niveles; ejes precisos de las vías (build.py con VIAS_M); subcomando sanear"
   }
- ]
+ ],
+ "saneamiento": {
+  "regla": "A (el real: ancho de la malla vial oficial o de su clase + 1,3 m en calles de carros; + 0,3 m en peatonales, escalas y ciclorrutas)",
+  "trozo_m": 160,
+  "anchos": "geo/anchos.json",
+  "pruebas": [
+   "pruebas/geometria.py (exacta, verdad compartida)",
+   "pruebas/geometria.mjs (como lo lee el juego)"
+  ]
+ }
 }
