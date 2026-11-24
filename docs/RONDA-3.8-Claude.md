@@ -25,6 +25,12 @@ Medido con el perfilador de Chromium sobre el mismo recorrido de GPT‑6:
 | Tres tareas de fondo a la vez | se apilaban en el mismo cuadro | un solo presupuesto por cuadro (`JE.fondo`), con turnos (`99v`, `99w`) |
 
 **Resultado local** (este contenedor es ~2× más lento que el servidor de GitHub): Carrera 43A con p95 de 43 a 49 ms y peor cuadro de 56 a 74 ms; Las Palmas con p95 de 36 a 41 ms y peor de 44 a 74. Antes: p95 de 82 a 131 ms y peor de 135 a 179.
+**En el servidor de GitHub (la compuerta real):**
+- Carrera 43A: p95 de 37,4 ms y peor cuadro de 46,2 ms.
+- Las Palmas: p95 de 31,9 ms y peor cuadro de 38 ms.
+- Ningún cuadro pasó de 50 ms. Con la 3.7.0 había sido p95 de 51,4 ms y peor cuadro de 137 a 145 ms.
+- La página se publicó con la 3.8.0.
+
 La prueba V10 comprueba que los lotes por partes y el GPS por partes dan **exactamente** el mismo resultado que de una vez.
 
 ### 2.2 La auditoría A‑4 de Gemini, resuelta

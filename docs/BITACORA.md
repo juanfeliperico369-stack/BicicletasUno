@@ -20,6 +20,11 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - **Contenido:** 11 placas nuevas de lo poco conocido (27 en total), con datos de las fichas de los sitios del motor 5.3; corregidos el dato de Sabaneta y dos frases.
 - **Probado:** `node tests/run.js` completo en verde con la nueva **V10**, que comprueba que lotes y GPS por partes dan el mismo resultado que de una vez, las secciones sin opciones perdidas, las 27 placas y las capas. También `node tests/benchmark-2km-gpt6.mjs --assert` en verde (3 de 3 corridas).
 - **Documento:** `docs/RONDA-3.8-Claude.md`, con lo poco conocido que salió de medir y los prompts de la ronda 3.9.
+- **Publicado (24-nov-2026):**
+  - `main` en `08fb72e`; `publicar.yml` en verde por primera vez desde que existe la compuerta.
+  - En el servidor: Carrera 43A con p95 de 37,4 ms y peor cuadro de 46,2; Las Palmas con 31,9 y 38. Ningún cuadro pasó de 50 ms; antes: p95 de 51,4 y peor de 137 a 145.
+  - La página dice 3.8.0, y `/metro/` y `/descargas/` quedaron intactos (comprobado por hash).
+  - APK `JuegaEnCicla-v3.8.0-debug.apk` en la publicación `v3.8.0` (sha256 `8f915e52…`).
 - **Falta:**
   - C-140 a C-143 (el arte lateral pintado de verdad);
   - K-4 y K-5 (Codex);
