@@ -28,7 +28,8 @@ const r = await p.evaluate(async () => {
   /* 3) acepta */
   const bt = dlg && [...dlg.querySelectorAll('button')].find(x => /Dele/.test(x.textContent)); if (bt) bt.click(); await espera(400);
   const Modos = G.Modos, m = Modos.m, inicio = m ? { id: m.id, rivales: m.rivales.length, reto: m.reto, largo: Math.round(m.p.L), alLado: Math.round(Math.hypot(m.rivales[0].cuerpo.x - C.x, m.rivales[0].cuerpo.y - C.y) * 10) / 10 } : null;
-  await espera(6500); const avanza = m && m.rivales[0] ? Math.round(m.rivales[0].s) : 0;
+  /* 5.5.1: espera hasta que el rival arranque (tope de 15 s), no 6,5 s fijos: en el runner lento de la CI la cuenta regresiva de la salida se comía la espera */
+  let avanza = 0; for (let i = 0; i < 75 && avanza <= 10; i++) { await espera(200); avanza = m && m.rivales[0] ? Math.round(m.rivales[0].s) : 0; }
   /* 4) dentro de un modo: no se ofrece otro reto */
   const n0 = ofrecidos.length; G.ctl.boton('freno', true); G.acelFijo = true; C.v = 0; await espera(1100); G.ctl.boton('freno', false); G.acelFijo = false; const enModo = ofrecidos.length === n0;
   if (Modos.m) Modos.terminar('fin de la prueba'); for (const d of document.querySelectorAll('.mcui .dialogo')) d.remove(); await espera(300);

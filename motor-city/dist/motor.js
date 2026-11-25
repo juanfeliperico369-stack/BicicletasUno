@@ -1,4 +1,4 @@
-/* Motor City 5.5.0 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 5.5.1 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -30,7 +30,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '5.5.0',
+  version: '5.5.1',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -4649,10 +4649,11 @@ const CAM_PERFIL = {
   aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
   /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
-  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75, tercio: .32, pitchTercera: .62, giraTercera: true },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua.
+  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75, tercio: .3, pitchTercera: .7, fovTercera: .96, giraTercera: true },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua.
      5.5.0 · LA CÁMARA ÚNICA (el autor: «vista cenital de cámara más bien centrada y que se puede mover al gusto, acercarse y alejarse,
-     y así añadiría un poco la forma de tercera persona»): el último tercio del zoom (tercio, en escala logarítmica) baja de 66° a
-     36° (pitchTercera) y gira poco a poco detrás del rumbo (giraTercera). Lo prende el juego (camara.tercio = true, con el tope del
+     y así añadiría un poco la forma de tercera persona»): el último tramo del zoom (tercio, en escala logarítmica) baja de 66° a
+     40° (pitchTercera), abre el lente de 35° a 55° (fovTercera: con el lente estrecho, inclinar solo daba un teleobjetivo) y gira
+     poco a poco detrás del rumbo (giraTercera): una cámara de persecución alta, con perspectiva de verdad (5.5.1). Lo prende el juego (camara.tercio = true, con el tope del
      zoom más alto: Turno Cero, 20-juego.js); sin eso, la cenital queda igual que antes. */
   oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0, alejaVel: .35 },
   maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 },
@@ -4745,7 +4746,7 @@ class Camara {
     const vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1); this.casiTercera = tc;
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
     const pitch = lerp(lerp(P.pitch, P.pitchCerca ?? P.pitch, t), P.pitchTercera ?? P.pitch, tc) - this._vel * .07 * (1 - tc) - this._per * .05;
-    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22) * (MC.opciones.camDist || 1);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
+    const fov = lerp(P.fov, P.fovTercera ?? P.fov, tc), D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22) * (MC.opciones.camDist || 1);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
     /* 5.5.0 · de cerca, la cámara se va detrás del rumbo (un poco de tercera persona). Mueve la misma yaw que leen los controles
        (la palanca va hacia donde se ve); de lejos manda el giro con dos dedos, como siempre */
     if (P.giraTercera && o.a != null && tc > .02 && this.yawObj == null && !this._fija && !(this._mirando > 0) && (Math.abs(o.v || 0) > .35 || tc > .5)) this.yaw = resorteAng(this.yaw, -(o.a + Math.PI / 2), this._vy, lerp(3, .45, tc), dt);
@@ -4753,7 +4754,7 @@ class Camara {
     const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
     let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);
     if (this._per > .02) { const w = Math.sin(this._t * 1.7) * this._per * D * .03; ex += uy * w; ey -= ux * w; }
-    this.ojo = [ex, ey, ez]; this.blanco = [this.x, this.y, zt]; this.fov = P.fov; this.distAerea = D; this.yawAereo = yaw;
+    this.ojo = [ex, ey, ez]; this.blanco = [this.x, this.y, zt]; this.fov = fov; this.distAerea = D; this.yawAereo = yaw;
   }
   /* transición entre vistas: 0..1 (la usa el gestor de vistas para mezclar) */
   transicion(dur = .6) { this.tr = { t: 0, dur }; }

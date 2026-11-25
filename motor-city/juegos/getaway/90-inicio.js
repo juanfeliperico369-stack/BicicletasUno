@@ -37,12 +37,12 @@ function iniciarInterfaz() {
    mundo «enteramente en un 3D, para jugarse en vista cenital de cámara más bien centrada y que se puede mover al gusto, acercarse
    y alejarse, y así añadiría un poco la forma de tercera persona»). El mundo abierto se ve solo con la cenital 3D:
    - pellizcar acerca y aleja; dos dedos que giran la giran; dos dedos arriba o abajo la inclinan; doble toque arriba la endereza;
-   - el botón 🔍 (y la tecla C) pasan por cuatro acercamientos: de lejos, cenital, de cerca y casi tercera persona (de 20 a 60 px/m
-     la cámara baja y se va detrás del rumbo, js/34-camara.js);
+   - el botón 🔍 (y la tecla C) pasan por cuatro acercamientos: de lejos, cenital, de cerca y casi tercera persona (de 15 a 30 px/m
+     la cámara baja, abre el lente y se va detrás del rumbo, js/34-camara.js);
    - se fueron la ciudad 3D, la tercera y la primera persona, el dron, la maqueta, 🏁 Arcade y ⛰️ Vuelo como cámaras del mundo
      abierto. Las 🏎️ Carreras retro (pseudo‑3D) siguen como su propio modo, y el mirador muestra su vista de cine unos segundos. */
 const CAMARAS = ['cenital'];
-const ZOOMS = [[4, '🛰️', 'de lejos'], [10, '🗺️', 'cenital'], [20, '🔎', 'de cerca'], [52, '🎮', 'casi tercera persona']];   /* px por metro (× la densidad de la pantalla) */
+const ZOOMS = [[4, '🛰️', 'de lejos'], [9, '🗺️', 'cenital'], [15, '🔎', 'de cerca'], [30, '🎮', 'casi tercera persona']];   /* 5.5.1: el último, una cámara de persecución alta (40°, lente de 55°) */   /* px por metro (× la densidad de la pantalla) */
 /* 4.7 · cada cámara donde tiene sentido (el autor: «las vistas no tienen coherencia con cómo se adaptaron»): las cinco del mundo 3D
    siempre; 🏁 Arcade (la carretera pseudo-3D de OutRun) solo en las carreteras entre ciudades y en las carreras; ⛰️ Vuelo (Voxel
    Space) solo volando (jetpack). Si cambia el contexto, la cámara vuelve sola a la cenital 3D. */

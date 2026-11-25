@@ -10,7 +10,7 @@
    El botón «📋 Copiar resultados» copia todo como texto para pegarlo en el chat de las IA. No se envía nada a ningún lado.
    ===================================================================== */
 const Medir = {
-  activo: null, TRAMOS: [['lejos', 'Cenital de lejos', 6], ['cerca', 'Cenital de cerca', 20], ['tercera', 'Casi tercera persona', 52]], SEG: 20,   /* 5.5.0: la cámara única con tres acercamientos (px por metro) */
+  activo: null, TRAMOS: [['lejos', 'Cenital de lejos', 6], ['cerca', 'Cenital de cerca', 15], ['tercera', 'Casi tercera persona', 30]], SEG: 20,   /* 5.5.0: la cámara única con tres acercamientos (px por metro) */
   /* empieza: el mundo abierto (si hace falta), la calle y la primera cámara */
   async empezar() {
     if (this.activo) return; const portada = () => { const P = document.getElementById('portada'); return !!P && !P.hidden; }, listo = () => !portada() && G.M && G.cuerpo && G.E && !G.transicion;

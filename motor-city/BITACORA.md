@@ -1,5 +1,20 @@
 # Bitácora de Motor City
 
+## 25-nov-2026 · 5.5.1 «La cámara de persecución» y la QA que vuelve a correr (Claude)
+- **Por qué:**
+  - en Turno Cero, «casi tercera persona» a 52 px/m con el lente de 35° dejaba el carro llenando la pantalla: era un teleobjetivo inclinado y no daba sensación de tercera persona;
+  - además, la QA de GitHub no corría desde la 5.4.0: un nombre de paso con «: » sin comillas dejaba inválido todo el YAML.
+- **Hecho:**
+  - `js/34-camara.js`: el tramo de casi tercera persona abre el lente de 35° a 55° (`fovTercera`), baja a 40° (`pitchTercera`) y gira detrás del rumbo, como una cámara de persecución alta con perspectiva;
+  - Turno Cero: zoom de 2,4 a 30 px/m y acercamientos de 4, 9, 15 y 30; 📏 mide en 6, 15 y 30, y el sigilo queda hasta «de cerca» (15);
+  - `.github/workflows/motor-city-qa.yml`: el nombre va entre comillas y corre en cada PR a `main`;
+  - `pruebas/retos-semaforo.mjs`: espera a que el rival arranque, con un tope de 15 s, en vez de 6,5 s fijos (en el runner lento la cuenta regresiva se comía la espera);
+  - `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`: el plan quedó aprobado, va lo hecho en la fase A, y se suma la fase F (P12, la lámina de la apertura y el cierre de estaciones de EnCicla) al final, como lo pidió el autor.
+- **Probado:**
+  - `prueba --navegador`: 158 bien;
+  - `medir.mjs`, `capsulas.mjs`, `sonido-guardian.mjs` y `retos-semaforo.mjs`: en verde;
+  - también los pasos de la QA que no corrían en GitHub: sitios, vuelcos, minijuegos, química, R6-b, fachadas, C-M34, el prototipo y el 3D de Turno Cero (con xvfb), la portada, las 14 capturas y el público simulado.
+
 ## 25-nov-2026 · 5.5.0 «La cámara única» y 5.4.2 «Guardián del sonido» (Claude)
 - **Lo que pidió el autor** (palabra por palabra en `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`):
   - el mundo 3D en vista cenital, con la cámara centrada que se mueve, se acerca y se aleja («y así añadiría un poco la forma de tercera persona»);

@@ -119,7 +119,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const lat = M.cfgCiudad ? (M.cfgCiudad.lat ?? M.metrosAGeo(C.x, C.y).lat) : (planeta.enGlobo(id, C.x, C.y).lat);
   G.clima = new MC.ClimaGlobal({ lat: Math.abs(lat) > 1 ? lat : 6.2, alt: M.cota(C.x, C.y) }); C.clima = G.clima; if (G.climaForzado) G.clima.forzar(G.climaForzado);
   const dpr0 = Math.min(2, devicePixelRatio || 1);
-  G.vistas = new MC.Vistas(M); G.flex = MC.Flex.aplicar(leerG().flex, { vistas: G.vistas });   /* 4.8 · ⚙️ Flexibilidad */ G.camara = new MC.Camara({ zoom: G.zoom || Math.max(8, Math.min(15, Math.min(innerWidth, innerHeight) / 50)) * dpr0, mundo: M }); G.camara.limites.zoom = [2.4 * dpr0, 60 * dpr0]; G.camara.tercio = true;   /* 5.5.0 · la cámara única: de 20 a 60 px/m la cenital se inclina y se va detrás del rumbo (casi tercera persona, js/34-camara.js) */
+  G.vistas = new MC.Vistas(M); G.flex = MC.Flex.aplicar(leerG().flex, { vistas: G.vistas });   /* 4.8 · ⚙️ Flexibilidad */ G.camara = new MC.Camara({ zoom: G.zoom || Math.max(8, Math.min(15, Math.min(innerWidth, innerHeight) / 50)) * dpr0, mundo: M }); G.camara.limites.zoom = [2.4 * dpr0, 30 * dpr0]; G.camara.tercio = true;   /* 5.5.1 · la cámara única: de unos 15 a 30 px/m la cenital se inclina, abre el lente y se va detrás del rumbo (casi tercera persona, js/34-camara.js) */
   G.camara.x = C.x; G.camara.y = C.y;
   G.trafico = new MC.Trafico(M, { n: M.esCiudad ? 16 : 7, peatones: 0, red: 'rueda', radio: 460 });
   G.pobl = M.esCiudad ? new MC.Poblacion(M, { n: 30, centro: { x: C.x, y: C.y }, radio: 900, semilla: 17 }) : null;
