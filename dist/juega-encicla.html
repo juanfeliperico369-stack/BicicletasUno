@@ -508,6 +508,16 @@ body.mg3d21 #coach{top:auto!important;bottom:calc(var(--sab) + 112px)!important}
   #actBar.dock .abtn{width:48px;height:48px;font-size:9.5px}#actBar.dock .abtn.mas{width:44px;height:44px}
   #camPop{left:calc(8px + var(--sal));top:calc(var(--hudB,46px) + 52px);transform:none;max-height:65vh;flex-direction:row;flex-wrap:wrap;max-width:420px}
 }
+/* portada viva (3.9.1): mientras se arma el mapa, la tira de la portada se anima en el compositor (98z-portada-viva.js) */
+#portadaViva{position:absolute;z-index:1;overflow:hidden;pointer-events:none;transition:opacity .3s}
+#portadaViva.fuera{opacity:0}
+#portadaViva>canvas{position:absolute;left:0;width:100%;image-rendering:pixelated;animation:pvTira .5s steps(10) infinite;will-change:transform}
+@keyframes pvTira{to{transform:translateY(-100%)}}
+#portadaCarga{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 12px 6px;border-radius:999px;background:#061529cc;color:var(--bl);font:700 12px/1.1 var(--fb);white-space:nowrap}
+#portadaCarga>i{display:block;position:relative;width:96px;height:3px;border-radius:2px;background:#ffffff33;overflow:hidden}
+#portadaCarga>i::after{content:'';position:absolute;inset:0;width:40%;border-radius:2px;background:var(--vd);animation:pvBarra 1.1s ease-in-out infinite}
+@keyframes pvBarra{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+@media (prefers-reduced-motion:reduce){#portadaViva>canvas,#portadaCarga>i::after{animation:none}}
 </style>
 </head><body><noscript>Juega EnCicla necesita JavaScript activado.</noscript>
 <div id="app">
@@ -568,7 +578,7 @@ const RED_M = {"fuente":"El Metro (MetroZero/src/data/red.js 2026-11 y rutas_cal
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '3.9.0', errors: [], headless: false };
+const JE = window.JE = { version: '3.9.1', errors: [], headless: false, arranque: { codigo: Math.round(performance.now()) } };   /* arranque: los tiempos del inicio en ms (3.9.1, 99-boot.js) */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -822,6 +832,57 @@ const View = JE.view = {
   /* coordenadas CSS -> virtuales */
   toV(x, y) { return { x: x / this.s, y: y / this.s }; }
 };
+
+/* ---- 00b-sonido-guardian.js ---- */
+/* =====================================================================
+   GUARDIÁN DEL SONIDO (Juega EnCicla 3.9.1 · Claude, 25‑nov‑2026)
+   El autor: «cuando se sale de la app aún sigue sonando la música» (El Metro, EnCicla y Turno Cero).
+   Al salir de la app (o cambiar de pestaña, bloquear la pantalla o cerrar), todo el sonido se calla de una, en cualquier
+   pantalla del juego:
+   - cada AudioContext que se cree queda registrado (una subclase) y se suspende: la música, los efectos, el paisaje sonoro y
+     los motores paran al instante, también las notas que ya estaban programadas;
+   - los <audio> y <video> que suenan se pausan y la voz de los anuncios se corta;
+   - mientras la app está afuera, nada vuelve a sonar aunque el juego lo pida (resume() y play() esperan);
+   - al volver, sigue solo lo que sonaba.
+   Avisos que escucha: visibilitychange, pagehide y pageshow, freeze y resume (el ciclo de vida de la página), pause y resume en
+   document (Capacitor los da en la APK cuando la actividad se pausa, aunque el WebView siga «visible») y app:pausa y app:sigue
+   (los manda la actividad nativa).
+   La misma pieza está en Motor City (js/01-sonido-guardian.js, para Turno Cero) y en El Metro (src/js/00b-sonido-guardian.js).
+   Estado para las pruebas: window.guardianSonido (fuera, veces, contextos).
+   ===================================================================== */
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined' || window.guardianSonido) return;
+  const W = window, AC = W.AudioContext || W.webkitAudioContext, ctxs = new Set(), medios = new Set(), dormidos = new Set(), pausados = new Set();
+  let fuera = false, veces = 0;
+  const G = W.guardianSonido = { get fuera() { return fuera; }, get veces() { return veces; }, get contextos() { return ctxs.size; }, callar, volver };
+  if (AC) {
+    const Guardado = class extends AC {
+      constructor(...a) { super(...a); ctxs.add(this); if (fuera) { dormidos.add(this); super.suspend().catch(() => { }); } }
+      resume() { if (fuera) { dormidos.add(this); return Promise.resolve(); } return super.resume(); }
+    };
+    try { W.AudioContext = Guardado; if (W.webkitAudioContext) W.webkitAudioContext = Guardado; } catch (e) { /* sin reemplazo: quedan los medios */ }
+  }
+  const MP = W.HTMLMediaElement && W.HTMLMediaElement.prototype, play0 = MP && MP.play;
+  if (play0) MP.play = function () { medios.add(this); if (fuera) { pausados.add(this); return Promise.resolve(); } return play0.apply(this, arguments); };
+  function callar() {
+    if (fuera) return; fuera = true; veces++;
+    for (const c of ctxs) if (c.state === 'running') { dormidos.add(c); c.suspend().catch(() => { }); }
+    for (const m of medios) if (!m.paused) { pausados.add(m); try { m.pause(); } catch (e) { /* nada */ } }
+    try { if (W.speechSynthesis) W.speechSynthesis.cancel(); } catch (e) { /* sin voz */ }
+  }
+  function volver() {
+    if (!fuera || document.hidden) return; fuera = false;
+    for (const c of dormidos) if (c.state !== 'closed') c.resume().catch(() => { });
+    dormidos.clear();
+    for (const m of pausados) { try { const p = play0.call(m); if (p && p.catch) p.catch(() => { }); } catch (e) { /* nada */ } }
+    pausados.clear();
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) callar(); else volver(); });
+  W.addEventListener('pagehide', callar); W.addEventListener('pageshow', volver);
+  document.addEventListener('freeze', callar); document.addEventListener('resume', volver);
+  document.addEventListener('pause', callar);
+  W.addEventListener('app:pausa', callar); W.addEventListener('app:sigue', volver);
+})();
 
 /* ---- 10-art.js ---- */
 /* =====================================================================
@@ -1085,13 +1146,13 @@ const Art = JE.art = {
     // calle y ciclorruta
     prect(x, 0, hor, w, h - hor, '#3b4250'); prect(x, 0, hor, w, 3, '#b7b3a6'); prect(x, 0, hor + 3, w, 7, '#5e9a1e'); prect(x, 0, hor + 3, w, 1, PAL.vd);
     for (let i = (-(t * 40) % 10 + 10) % 10 - 10; i < w; i += 10) prect(x, i, hor + 6, 5, 1, '#e8f5d0');
-    for (let i = (-(t * 60) % 16 + 16) % 16 - 16; i < w; i += 16) prect(x, i, hor + 15, 8, 1, '#c9ccd1');
+    for (let i = (-(t * 64) % 16 + 16) % 16 - 16; i < w; i += 16) prect(x, i, hor + 15, 8, 1, '#c9ccd1');
     // ciclista
-    const cxp = Math.round(w * .5), cy = hor + 9, ph = t * 2;
+    const cxp = Math.round(w * .5), cy = hor + 9, ph = t * 4 * Math.PI;   // 3.9.1: todo el ciclo (rayas y piernas) dura medio segundo justo, para la portada viva (98z)
     const P = Save.data ? Save.data.profile : { skin: 1, shirt: 0, helmet: 0 };
     this.bikeSide(x, cxp, cy, { r: 5, face: 1, col: Save.data ? bikeCol() : PAL.vd });
     const sk = SKINS[P.skin] || SKINS[1], sh = SHIRTS[P.shirt] || PAL.vd, he = HELMETS[P.helmet] || '#fff';
-    const lx = Math.round(Math.sin(ph * 6) * 2);
+    const lx = Math.round(Math.sin(ph) * 2);
     prect(x, cxp - 1 + lx, cy - 9, 2, 5, PAL.az2); prect(x, cxp - 1 - lx, cy - 9, 2, 5, '#1d2c44');
     prect(x, cxp - 2, cy - 17, 5, 8, sh); pline(x, cxp + 2, cy - 15, cxp + 5, cy - 12, sk);
     prect(x, cxp - 1, cy - 22, 5, 5, sk); prect(x, cxp - 2, cy - 24, 7, 3, he); prect(x, cxp + 3, cy - 20, 1, 1, '#141414');
@@ -12934,7 +12995,7 @@ Ride.prototype.renderTop0 = function (V, sw, sh) { _top97.call(this, V, sw, sh);
    - ▶ Jugar entra DIRECTO al modo libre: pedaleando por el valle con un ciclista listo (1 toque).
      Con EnCicla abierta sale en bici de EnCicla; de noche o con suspensión, en su bici.
    - Lo demás queda opcional:
-     · un botón nuevo, «🏆 Oficios y modos», lleva al escalafón (los 11 oficios, el álbum, las partidas);
+     · un botón nuevo, «🏆 Escalafón» (antes «Oficios y modos»), lleva directo al escalafón (los 11 oficios, el álbum, las partidas);
      · la bienvenida está en «Cómo jugar»;
      · el personaje se arma cuando uno quiera, en Mi ciclista.
    Archivo aditivo (rango 98n–98z, libre según coord/agentes/antigravity.json): envuelve UI.init sin reescribir 60-ui.js.
@@ -12950,7 +13011,10 @@ Ride.prototype.renderTop0 = function (V, sw, sh) { _top97.call(this, V, sw, sh);
     const play = document.getElementById('bPlay'); if (!play || !play.onclick || play.onclick === libreYa) return;
     /* el arranque puede asignar los botones después de que este archivo corre: se guarda el manejador original cada vez que aparezca uno nuevo */
     montar.viejo = play.onclick; play.onclick = libreYa; play.innerHTML = '▶ Jugar <small style="display:block;font-size:12px;font-weight:600;opacity:.85">Modo libre: pedalea por el valle</small>';
-    if (!document.getElementById('bOficios')) { const b = document.createElement('button'); b.className = 'btn'; b.id = 'bOficios'; b.textContent = '🏆 Oficios y modos'; b.onclick = e => { Snd.sfx && Snd.sfx('tap'); montar.viejo && montar.viejo.call(play, e); }; play.insertAdjacentElement('afterend', b); }
+    /* 3.9.1 (el autor: «haz que en EnCicla aparezca el escalafón como botón en la pantalla de inicio, porque para ir a él hace falta
+       ingresar al mundo abierto y luego salirse de allí»): el botón se llama 🏆 Escalafón y lleva directo a su pestaña, sin la
+       bienvenida (sigue en Más › ¿Qué es EnCicla?). El personaje se crea la primera vez, como siempre (80-limpieza.js). */
+    if (!document.getElementById('bOficios')) { const b = document.createElement('button'); b.className = 'btn'; b.id = 'bOficios'; b.setAttribute('aria-label', 'Escalafón: oficios, modos, álbum y partidas'); b.innerHTML = '🏆 Escalafón <small style="display:block;font-size:12px;font-weight:600;opacity:.85">Oficios, modos, álbum y partidas</small>'; b.onclick = () => { Snd.sfx && Snd.sfx('tap'); UI.tab = 'ruta'; UI.go('sHome'); UI.setTab('ruta'); }; play.insertAdjacentElement('afterend', b); }
   };
   /* UI.init asigna los botones al arrancar: se monta después */
   if (UI && UI.init) { const _init = UI.init; UI.init = function () { const r = _init.apply(this, arguments); try { montar(); } catch (e) { console.error(e); } return r; }; }
@@ -14106,14 +14170,73 @@ const icoSVG = id => ICO21[id] ? `<svg class="ico21" viewBox="0 0 24 24" aria-hi
   };
 })();
 
+/* ---- 98z-portada-viva.js ---- */
+/* =====================================================================
+   PORTADA VIVA (3.9.1 · Claude, 25‑nov‑2026): el panel animado de la portada sale en el primer instante
+   El autor: «EnCicla tiene un bug en la pantalla de inicio y es que no carga el panel de la animación».
+   La causa: el mapa del Valle se arma de un solo tirón antes de UI.init (8,6 s medidos con el CPU 4×, como un celular modesto)
+   y la animación de la portada solo arrancaba al final, así que el panel quedaba en blanco todo ese rato.
+   Ahora, antes de armar el mapa (99-boot.js):
+   - se dibujan los 10 cuadros de un ciclo de la portada (medio segundo: las rayas de la ciclorruta y de la calle y las piernas
+     del ciclista; el tren todavía no ha entrado) en una tira;
+   - la tira se anima con una transformación en pasos (CSS): la mueve el compositor, aunque el hilo principal esté ocupado
+     armando el mapa;
+   - una píldora dice «Cargando el valle…», y si tocas un botón antes de tiempo, se hace en cuanto el juego queda listo.
+   Cuando UI.init arranca el lienzo de siempre (con el tren), la tira se va. Sin el compositor (o con «menos movimiento»), queda
+   el primer cuadro quieto: nunca en blanco.
+   ===================================================================== */
+const PortadaViva = JE.portadaViva = {
+  N: 10, P: .5, el: null, pil: null, pedido: null, listo: false,
+  empezar() {
+    const cv = $('#coverArt'), caja = cv && cv.parentElement; if (!cv || !caja || this.el) return false;
+    const W = cv.width, H = cv.height, N = this.N, F = H + 2, tira = document.createElement('canvas'); tira.width = W; tira.height = F * N;
+    const x = tira.getContext('2d'); x.imageSmoothingEnabled = false;
+    for (let k = 0; k < N; k++) {
+      /* cada cuadro con una fila de margen arriba y abajo (copia de su propio borde): el paso del compositor nunca muestra un hilo del vecino */
+      x.save(); x.translate(0, k * F + 1); x.beginPath(); x.rect(0, 0, W, H); x.clip(); Art.cover(x, W, H, k * this.P / N); x.restore();
+      x.drawImage(tira, 0, k * F + 1, W, 1, 0, k * F, W, 1); x.drawImage(tira, 0, k * F + H, W, 1, 0, k * F + H + 1, W, 1);
+    }
+    const c0 = cv.getContext('2d'); c0.imageSmoothingEnabled = false; c0.drawImage(tira, 0, 1, W, H, 0, 0, W, H);   /* el lienzo de siempre ya no está en blanco */
+    const d = this.el = document.createElement('div'); d.id = 'portadaViva';
+    tira.setAttribute('aria-hidden', 'true'); tira.style.height = (N * F / H * 100) + '%'; tira.style.top = (-100 / H) + '%'; tira.style.animationDuration = this.P + 's'; tira.style.animationTimingFunction = 'steps(' + N + ')';
+    const pil = this.pil = document.createElement('div'); pil.id = 'portadaCarga'; pil.setAttribute('role', 'status'); pil.innerHTML = '<span>Cargando el valle…</span><i></i>';
+    d.appendChild(tira); d.appendChild(pil); cv.after(d);
+    const pon = () => { if (!this.el) return; const s = d.style; s.left = (cv.offsetLeft + cv.clientLeft) + 'px'; s.top = (cv.offsetTop + cv.clientTop) + 'px'; s.width = cv.clientWidth + 'px'; s.height = cv.clientHeight + 'px'; s.borderRadius = getComputedStyle(cv).borderRadius; };
+    /* sigue al lienzo en cada cuadro que el hilo principal pueda dibujar (también cuando UI.init suma botones y la portada se corre):
+       se acomoda antes de pintar, así que nunca queda corrida */
+    const sigue = () => { if (this.el !== d) return; pon(); requestAnimationFrame(sigue); }; sigue();
+    const v = $('#ver'); if (v) v.textContent = 'v' + JE.version;
+    /* un toque antes de tiempo no se pierde: se hace en cuanto el juego queda listo */
+    this.tapa = e => { if (this.listo) return; const b = e.target && e.target.closest && e.target.closest('#sCover button'); if (!b || !b.id) return; e.preventDefault(); e.stopImmediatePropagation(); this.pedido = b.id; pil.firstChild.textContent = 'Ya casi: abre en cuanto cargue'; };
+    document.addEventListener('click', this.tapa, true);
+    JE.arranque.portada = Math.round(performance.now());
+    return true;
+  },
+  /* UI.init ya corrió: los botones tienen su función y el lienzo de siempre se anima */
+  terminar() {
+    this.listo = true; document.removeEventListener('click', this.tapa, true);
+    const d = this.el, p = this.pedido; this.pedido = null;
+    if (d) {
+      /* dos cuadros después, el lienzo de siempre ya dibujó: la tira se desvanece sin parpadeo */
+      requestAnimationFrame(() => requestAnimationFrame(() => { d.classList.add('fuera'); setTimeout(() => { d.remove(); if (this.el === d) this.el = null; }, 320); }));
+    }
+    if (p) { const b = document.getElementById(p); if (b) b.click(); }
+  }
+};
+
 /* ---- 99-boot.js ---- */
 /* =====================================================================
    ARRANQUE
    ===================================================================== */
 (async function boot() {
+  const A = JE.arranque; A.boot = Math.round(performance.now());
   Save.load(); document.body.classList.toggle('big', !!Save.data.settings.big); View.init();
-  const t0 = performance.now(); try { await JE.map.load(); } catch (e) { JE.errors.push('mapa: ' + e.message); console.error(e); } JE.mapMs = Math.round(performance.now() - t0);
-  UI.init(); bindCanvas();
+  /* 3.9.1: la portada se anima desde el primer instante (98z-portada-viva.js); el mapa se arma después de pintar un cuadro */
+  try { PortadaViva.empezar(); } catch (e) { console.warn('portada viva', e); }
+  await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+  const t0 = performance.now(); A.mapa0 = Math.round(t0); try { await JE.map.load(); } catch (e) { JE.errors.push('mapa: ' + e.message); console.error(e); } JE.mapMs = Math.round(performance.now() - t0);
+  UI.init(); bindCanvas(); A.ui = Math.round(performance.now());
+  try { PortadaViva.terminar(); } catch (e) { console.warn('portada viva', e); }
   const q = new URLSearchParams(location.search);
   if (q.get('unlock')) JE.debugUnlock = true;
   const standalone = true;
@@ -14122,7 +14245,7 @@ const icoSVG = id => ICO21[id] ? `<svg class="ico21" viewBox="0 0 24 24" aria-hi
     navigator.serviceWorker.register('sw.js').catch(e => JE.errors.push('sw: ' + e.message));
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (!had) return; if (UI.cur !== 'sGame') location.reload(); else UI.toast('Hay una versión nueva: se aplicará al volver al menú'); });
   }
-  JE.ready = true;
+  JE.ready = true; A.listo = Math.round(performance.now());
 })();
 
 /* ---- 99a-fluidez.js ---- */

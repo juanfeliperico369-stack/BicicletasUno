@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.9.0 · compilado el 2026-11-25.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.9.1 · compilado el 2026-11-25.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.9.0)
+## 2.3 Estado actual (v3.9.1)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-25 | Claude Code | documento creado (v3.9.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-25 | Claude Code | documento creado (v3.9.1) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2266,6 +2266,11 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+### 25-nov-2026 · v3.9.0 (sin cambio de versión) · Motor City 5.4.0 y 5.4.1 en `motor-city/` (Claude)
+- **Qué cambió:** la copia de referencia del motor pasa de la 5.3.1 a la 5.4.0 con `node motor.mjs sincronizar` desde motorcity, la fuente de verdad. Trae los mundos saneados (5.3.2) y `MC.Pista`, las carreras retro pseudo‑3D de Turno Cero (5.4.0, Fase 4 del renacimiento cenital). Después pasa a la 5.4.1 (Fase 5: el garaje de Turno Cero, 📏 de las carreras retro y el arreglo de 📏).
+- **El juego no cambia:** su compilación no lee `motor-city/`, y el HTML sale igual (el mismo hash de caché).
+- **Probado:** `sincronizar --verificar` da «los archivos son iguales».
+
 ### 25-nov-2026 · v3.9.0 · El cenital nuevo encendido en el modo libre, con las huellas reales del Valle (Fase 3 del renacimiento cenital, Claude)
 - **Qué cambió:**
   - **La bandera del cenital, encendida** (`src/js/99y-cenital.js`, `PREDETERMINADA = 1`), **solo en el modo libre**: bruma, sombras de contacto, tu silueta y la cámara exponencial. Los 9 oficios, los turnos y los minijuegos siguen con el render de siempre. `?cenital=0` o `Save.data.settings.cenital = 0` la apagan; el guardado `juegaencicla.v1` no cambia.
@@ -2301,7 +2306,10 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
     | Huellas | 46,3 ms | 41,3 ms | 60–85 ms | **cumplida 3 de 3** |
 
 - **El informe:** `motorcity/reportes/2026-11-25-claude-fase3-cenital.md`.
-- **Falta:** el OK del autor para publicar (página y APK) y para pasar a `main`.
+- **Publicada el 25‑nov** (el autor pidió los enlaces y las APK al día):
+  - entró a `main` con el PR #4, y `publicar.yml` la publicó con las pruebas en verde (caché `juega-encicla-v3.9.0-606e1d30`);
+  - la APK está en la release v3.9.0 y en `descargas/JuegaEnCicla.apk`, que antes era la 3.4.0;
+  - `/metro/`, El Metro 1.0.0 que ya nada enlaza, se dejó como estaba: El Metro va en https://juanfeliperico369-stack.github.io/MetroZero/.
 
 ### 24-nov-2026 · v3.8.0 (sin cambio de versión) · El cenital nuevo en el modo libre, con bandera (Fase 2 del renacimiento cenital, Claude)
 - **Qué cambió:**

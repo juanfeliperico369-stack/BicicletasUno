@@ -4,6 +4,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -36,6 +37,29 @@ public class MainActivity extends BridgeActivity {
             return WindowInsetsCompat.CONSUMED;
         });
         hideSystemBars();
+    }
+
+    /* 3.9.1 · al salir de la app el juego se entera: el WebView pasa a «oculto» (la página se pausa sola) y el guardián del
+       sonido (src/js/00b-sonido-guardian.js) calla la música y los efectos al instante; al volver, sigue lo que sonaba.
+       Capacitor no pausa el WebView por su cuenta, así que antes la música seguía sonando con la app afuera. */
+    @Override
+    public void onPause() {
+        WebView w = getBridge() != null ? getBridge().getWebView() : null;
+        if (w != null) {
+            w.evaluateJavascript("window.dispatchEvent(new Event('app:pausa'))", null);
+            w.onPause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        WebView w = getBridge() != null ? getBridge().getWebView() : null;
+        if (w != null) {
+            w.onResume();
+            w.evaluateJavascript("window.dispatchEvent(new Event('app:sigue'))", null);
+        }
     }
 
     @Override
