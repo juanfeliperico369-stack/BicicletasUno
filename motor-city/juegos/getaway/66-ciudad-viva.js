@@ -30,8 +30,9 @@ const Viva = {
   /* 🚑 / 🚒 · salen a ~300 m por una vía de carro, llegan por la ruta real, atienden y se van */
   despachar(tipo, x, y) {
     const M = G.M; if (!M || this.servicios.length >= 2 || this.servicios.some(s => s.tipo === tipo && Math.hypot(s.dx - x, s.dy - y) < 80)) return null;
-    let ini = null; for (let k = 0; k < 12 && !ini; k++) { const a = (k / 12) * TAU + Math.random() * .5, R = 260 + Math.random() * 120; ini = M.viaCercana(x + Math.cos(a) * R, y + Math.sin(a) * R, 140, deCarro); }
-    if (!ini) return null; const r = MC.Manejo.rutaA(M, { x: ini.x, y: ini.y, a: 0 }, { x, y }, 'rueda'); if (!Array.isArray(r) || r.length < 4) return null;
+    /* 5.3.2: si desde el primer punto no hay ruta (un tramo suelto de la red), prueba otros: la ambulancia siempre sale si hay calle */
+    let ini = null, r = null; for (let k = 0; k < 12 && !r; k++) { const a = (k / 12) * TAU + Math.random() * .5, R = 260 + Math.random() * 120, q = M.viaCercana(x + Math.cos(a) * R, y + Math.sin(a) * R, 140, deCarro); if (!q) continue; const rr = MC.Manejo.rutaA(M, { x: q.x, y: q.y, a: 0 }, { x, y }, 'rueda'); if (Array.isArray(rr) && rr.length >= 4) { ini = q; r = rr; } }
+    if (!ini || !r) return null;
     const T = new MC.Trazo(r), s = { tipo, T, s: 0, v: 0, fase: 'va', t: 0, dx: x, dy: y, x: ini.x, y: ini.y, a: 0 };
     this.servicios.push(s); G.ui.aviso(tipo === 'ambulancia' ? '🚑 Alguien llamó una ambulancia' : '🚒 Vienen los bomberos', 2400, 'servicio'); MC.emit('despacho', { tipo, x, y }); return s;
   },

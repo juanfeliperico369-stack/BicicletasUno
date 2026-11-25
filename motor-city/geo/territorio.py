@@ -45,7 +45,7 @@ vias = q('vias', f"SELECT class, subclass, names.primary AS nombre, to_json(road
 agua = q('agua', f"SELECT subtype, class, names.primary, ST_AsWKB(geometry) g FROM read_parquet('{REL}/theme=base/type=water/*', hive_partitioning=1) WHERE {dentro}")
 uso = q('uso', f"SELECT subtype, class, names.primary, ST_AsWKB(geometry) g FROM read_parquet('{REL}/theme=base/type=land_use/*', hive_partitioning=1) WHERE {dentro}")
 tierra = q('tierra', f"SELECT subtype, class, names.primary, ST_AsWKB(geometry) g FROM read_parquet('{REL}/theme=base/type=land/*', hive_partitioning=1) WHERE {dentro}")
-edif = q('edificios', f"SELECT subtype, class, height, num_floors, names.primary, ST_AsWKB(geometry) g FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {dentro}")
+edif = q('edificios2', f"SELECT subtype, class, height, num_floors, names.primary, ST_AsWKB(geometry) g, sources[1].dataset AS src FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {dentro}")   # 5.4: con su fuente (las de OSM son confiables)
 lug = q('lugares', f"SELECT names.primary AS n, basic_category AS cat, confidence, ST_X(geometry) lon, ST_Y(geometry) lat FROM read_parquet('{REL}/theme=places/type=place/*', hive_partitioning=1) WHERE {dentro} AND names.primary IS NOT NULL ORDER BY confidence DESC LIMIT 400")
 print(f'  vías {len(vias)} · agua {len(agua)} · uso {len(uso)} · tierra {len(tierra)} · edificios {len(edif)} · lugares {len(lug)}'); sys.stdout.flush()
 
@@ -119,20 +119,76 @@ def edk(st, cl):
     if cl in ('parking', 'garage', 'garages'): return 14
     if st == 'agricultural' or cl in ('barn', 'farm', 'farm_auxiliary', 'stable', 'cowshed'): return 15
     return 0
-EDJ = []
-for st, cl, alto, pisos, _, g in edif:
-    if not g: continue
-    G = amet(WKB.loads(g)); P = G if isinstance(G, Polygon) else max(getattr(G, 'geoms', []), key=lambda p: p.area, default=None)
-    if P is None or P.is_empty or P.area < 6: continue
-    pol(P, TT['BLDG']); k = edk(st, cl)
-    pis = int(pisos) if pisos else int(round(alto / 3.05)) if alto else (1 if k in (0, 15, 10) else 2)
-    r = P.minimum_rotated_rectangle; cs = list(r.exterior.coords)[:4]; e1 = (cs[1][0] - cs[0][0], cs[1][1] - cs[0][1]); e2 = (cs[2][0] - cs[1][0], cs[2][1] - cs[1][1])
-    l1, l2 = math.hypot(*e1), math.hypot(*e2); ang = math.atan2(e1[1], e1[0]) if l1 >= l2 else math.atan2(e2[1], e2[0]); c0 = r.centroid
-    ring = [round(v, 1) for xy in list(P.simplify(.3).exterior.coords)[:-1] for v in xy]
-    EDJ.append([round(c0.x, 1), round(c0.y, 1), round(max(l1, l2) / 2, 2), round(min(l1, l2) / 2, 2), round(ang, 3), max(1, min(60, pis)), k, ring if len(ring) >= 6 else None])
 VK = {'motorway': (3, 'AUTO', 22), 'trunk': (3, 'AUTO', 18), 'primary': (2, 'AVE', 14), 'secondary': (2, 'AVE', 11), 'tertiary': (1, 'ROAD', 8), 'residential': (1, 'ROAD', 7), 'unclassified': (1, 'ROAD', 6),
       'living_street': (1, 'ROAD', 6), 'service': (1, 'ROAD', 5), 'pedestrian': (6, 'WALK', 5), 'footway': (6, 'WALK', 2.5), 'sidewalk': (6, 'WALK', 2), 'crosswalk': (6, 'WALK', 3), 'steps': (7, 'STEPS', 2.5),
       'path': (8, 'WALK', 2), 'track': (8, 'ROAD', 3.5), 'cycleway': (5, 'CICLO', 2.6), 'bridleway': (8, 'WALK', 2)}
+# ---------- 3b. Ley de soberanía vial (5.4 · renacimiento cenital, Fase 2: la misma regla A del Motor del Valle 1.3) ----------
+# Ninguna casa sobre la calle ni sobre el agua: a cada huella se le quita el corredor de cada vía a nivel (su ancho / 2 + 1,3 m en
+# las de carros; + 0,3 m en peatonales, escalas, senderos y ciclorrutas; las aceras y cebras ya van dentro de su calle) y el agua.
+# Las casas de OSM (confiables) no pierden el andén de las calles menores (quedan marcadas), pero sí el asfalto: en un juego ningún
+# carro puede chocar con una casa pintada sobre la calle (el Motor del Valle las conserva enteras; El Metro las recorta igual). Los restos de menos de 16 m² se van,
+# salvo que conserven el 90 % y 12 m². Los puentes y túneles no despejan nada (van por encima o por debajo).
+from shapely.strtree import STRtree
+F_EXT = 1 / math.cos(1.5 * math.pi / 32)   # el búfer de GEOS es un polígono inscrito: así contiene el disco real
+CARROS = {'ROAD', 'AVE', 'AUTO'}
+def nivel(fl):   # 0 a ras; 1 puente o elevada; −1 túnel, cubierta o por dentro de un edificio (no despejan nada: pasan por encima o por debajo)
+    try: F = json.loads(fl) if fl else None
+    except Exception: F = None
+    V = {v for f in (F or []) for v in (f.get('values') or [])}
+    return -1 if V & {'is_tunnel', 'is_covered', 'is_indoor'} else 1 if 'is_bridge' in V else 0
+a_nivel = lambda fl: nivel(fl) == 0
+COR, MENOR, ASF = [], [], []   # el corredor completo, si es calle menor y, si lo es, solo su asfalto (ancho / 2)
+for cl, sub, nom, fl, g in vias:
+    if not g or sub in ('sidewalk', 'crosswalk') or not a_nivel(fl): continue
+    k, tt, ancho = VK.get(cl or '', (1, 'ROAD', 5)); G = amet(WKB.loads(g)); men = k != 2 and k != 3
+    COR.append(shapely.buffer(G, (ancho / 2 + (1.3 if tt in CARROS else .3)) * F_EXT, quad_segs=8)); MENOR.append(men); ASF.append(shapely.buffer(G, ancho / 2 * F_EXT, quad_segs=8) if men else None)
+for st, cl, _, g in agua:
+    if not g: continue
+    G = amet(WKB.loads(g))
+    COR.append(G if isinstance(G, (Polygon, MultiPolygon)) else shapely.buffer(G, (2 if cl in ('stream', 'ditch', 'drain') else 7) * F_EXT, quad_segs=8)); MENOR.append(False); ASF.append(None)
+COR = np.array(COR, dtype=object); MENOR = np.array(MENOR, dtype=bool); ARBOL = STRtree(COR) if len(COR) else None
+SAN = dict(huellas=0, tocan=0, recortadas=0, quitadas=0, marcadas=0, area0=0.0, area1=0.0)
+def piezas(g):
+    if g.is_empty: return []
+    if isinstance(g, Polygon): return [g]
+    return [p for h in getattr(g, 'geoms', []) for p in piezas(h)]
+def intacta(P, confiable):   # la huella que no se recorta va simplificada a 0,3 m como siempre, salvo que el atajo toque un corredor
+    s2 = shapely.simplify(P, .3, preserve_topology=True)
+    if s2.is_empty or not isinstance(s2, Polygon) or not s2.is_valid: return [P]
+    if ARBOL is not None and any((ASF[j] if confiable and MENOR[j] else COR[j]) is not None and (ASF[j] if confiable and MENOR[j] else COR[j]).intersects(s2) for j in ARBOL.query(s2, predicate='intersects')): return [P]
+    return [s2]
+def limpia(P, confiable):
+    a0 = P.area; SAN['huellas'] += 1; SAN['area0'] += a0
+    if ARBOL is None: SAN['area1'] += a0; return intacta(P, confiable)
+    js = list(ARBOL.query(P, predicate='intersects'))
+    if not js: SAN['area1'] += a0; return intacta(P, confiable)
+    if confiable and any(MENOR[j] for j in js): SAN['marcadas'] += 1
+    G = [ASF[j] if confiable and MENOR[j] else COR[j] for j in js]; G = [g for g in G if g is not None and g.intersects(P)]
+    if not G: SAN['area1'] += a0; return intacta(P, confiable)
+    SAN['tocan'] += 1; M = shapely.union_all(G); vale = lambda p: p.area >= 16 or (p.area >= .9 * a0 and p.area >= 12)
+    out = []
+    for p in piezas(shapely.make_valid(shapely.difference(P, M))):
+        if not vale(p): continue
+        s2 = shapely.simplify(p, .3, preserve_topology=True)   # la forma simplificada se vuelve a recortar: el atajo no puede volver a la calle
+        if shapely.intersection(s2, M).area > 1e-6: s2 = shapely.difference(s2, M)
+        out += [q for q in piezas(shapely.make_valid(s2)) if vale(q)]
+    if not out: SAN['quitadas'] += 1
+    elif sum(q.area for q in out) < a0 - .01: SAN['recortadas'] += 1   # solo tocaba un borde: no cuenta como recortada
+    SAN['area1'] += sum(q.area for q in out); return out
+EDJ = []
+for st, cl, alto, pisos, _, g, src in edif:
+    if not g: continue
+    G = amet(WKB.loads(g)); P0 = G if isinstance(G, Polygon) else max(getattr(G, 'geoms', []), key=lambda p: p.area, default=None)
+    if P0 is None or P0.is_empty or P0.area < 6: continue
+    for P in limpia(P0, src == 'OpenStreetMap'):
+     pol(P, TT['BLDG']); k = edk(st, cl)
+     pis = int(pisos) if pisos else int(round(alto / 3.05)) if alto else (1 if k in (0, 15, 10) else 2)
+     r = P.minimum_rotated_rectangle; cs = list(r.exterior.coords)[:4]; e1 = (cs[1][0] - cs[0][0], cs[1][1] - cs[0][1]); e2 = (cs[2][0] - cs[1][0], cs[2][1] - cs[1][1])
+     l1, l2 = math.hypot(*e1), math.hypot(*e2); ang = math.atan2(e1[1], e1[0]) if l1 >= l2 else math.atan2(e2[1], e2[0]); c0 = r.centroid
+     ring = [round(v, 1) for xy in list(P.exterior.coords)[:-1] for v in xy]   # ya simplificada a 0,3 m (y recortada si tocaba)
+     EDJ.append([round(c0.x, 1), round(c0.y, 1), round(max(l1, l2) / 2, 2), round(min(l1, l2) / 2, 2), round(ang, 3), max(1, min(60, pis)), k, ring if len(ring) >= 6 else None])
+SAN['conserva_area_pct'] = round(100 * SAN['area1'] / max(1, SAN['area0']), 3); SAN['area0'] = round(SAN['area0']); SAN['area1'] = round(SAN['area1'])
+print('  saneamiento (ley de soberanía vial):', SAN); sys.stdout.flush()
 VJ = []; nombres = []
 for cl, sub, nom, fl, g in sorted(vias, key=lambda v: -VK.get(v[0] or 'x', (0, '', 0))[2]):
     if not g: continue
@@ -140,7 +196,7 @@ for cl, sub, nom, fl, g in sorted(vias, key=lambda v: -VK.get(v[0] or 'x', (0, '
     if sub in ('sidewalk', 'crosswalk'): k, tt, ancho = VK[sub]
     G = amet(WKB.loads(g)); lin(G, TT[tt], ancho)
     for l in ([G] if isinstance(G, LineString) else list(getattr(G, 'geoms', []))):
-        if isinstance(l, LineString) and len(l.coords) > 1: VJ.append([k, nom or '', round(ancho, 1), [round(v, 1) for xy in l.simplify(.4).coords for v in xy]])
+        if isinstance(l, LineString) and len(l.coords) > 1: nv = nivel(fl); VJ.append([k, nom or '', round(ancho, 1), [round(v, 1) for xy in l.simplify(.4).coords for v in xy]] + ([nv] if nv else []))   # 5.4: [5] = nivel si no va a ras
 suelo = np.asarray(img, dtype=np.uint8)
 print('  casillas por tipo', {k: int((suelo == v).sum()) for k, v in TT.items() if (suelo == v).sum()}); sys.stdout.flush()
 
@@ -180,7 +236,7 @@ meta = {'formato': 'MC4', 'v': 4, 'motor': json.load(open(os.path.join(RAIZ, 'VE
         'fuentes': {'overture': A.release, 'relieve': f'terrarium z{Z}'}, 'atribucion': ['© colaboradores de OpenStreetMap (ODbL), vía Overture Maps Foundation; huellas de Overture (OSM, Microsoft y Google)', 'Relieve: Terrain Tiles (AWS Open Data; SRTM/NASA y otros)'], 'capas': tabla}
 mj = J(meta); data = b'MC4\0' + len(mj).to_bytes(4, 'little') + mj + b''.join(blobs)
 open(os.path.join(OUT, 'mundo.mc4'), 'wb').write(data)
-json.dump({'ciudad': A.id, 'bytes': len(data), 'casillas': [W, H], 'tile': T, 'vias': len(VJ), 'edificios': len(EDJ), 'lugares': len(lugares), 'relieve': [int(rel.min()), int(rel.max())]}, open(os.path.join(OUT, 'resumen.json'), 'w'), indent=1)
+json.dump({'ciudad': A.id, 'bytes': len(data), 'casillas': [W, H], 'tile': T, 'vias': len(VJ), 'edificios': len(EDJ), 'lugares': len(lugares), 'relieve': [int(rel.min()), int(rel.max())], 'saneamiento': SAN}, open(os.path.join(OUT, 'resumen.json'), 'w'), indent=1)
 cfg = os.path.join(RAIZ, 'ciudades', A.id + '.json')
 if not os.path.exists(cfg):
     base = json.load(open(os.path.join(RAIZ, 'ciudades', 'medellin.json'), encoding='utf8'))

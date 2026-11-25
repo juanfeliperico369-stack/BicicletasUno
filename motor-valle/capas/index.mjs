@@ -1,5 +1,5 @@
 /* =====================================================================
-   CAPAS COMPARTIDAS DEL MOTOR DEL VALLE (motor-valle/capas/index.mjs · v1.2.0)
+   CAPAS COMPARTIDAS DEL MOTOR DEL VALLE (motor-valle/capas/index.mjs · v1.3.1)
    Catálogo descriptivo de las capas que comparten Juega EnCicla y El Metro
    sobre el mismo sistema de coordenadas del Valle de Aburrá.
    ===================================================================== */
@@ -22,6 +22,11 @@ export const CAPAS_VALLE = {
   metroplus_andenes: { id: 'metroplus_andenes', fuente: 'OSM', formato: 'src/data/metroplus_andenes.js de El Metro; en EnCicla, metroplus.json', compartido: ['encicla', 'elmetro'] },
   rieles: { id: 'rieles', fuente: 'OSM railway', formato: 'src/data/rieles.js de El Metro', compartido: ['elmetro'] },
   rutas_calles: { id: 'rutas_calles', fuente: 'Rutas de buses sobre la malla vial', formato: 'src/data/rutas_calles.js de El Metro (tools/rutas_calles.mjs)', compartido: ['elmetro'] },
+  /* 1.3.0 · renacimiento cenital, Fase 1: el mapa SANEADO (node motor-valle/motor.mjs sanear) */
+  huellas_saneadas: { id: 'huellas_saneadas', fuente: 'Overture buildings (OSM, Microsoft y Google) contra la malla vial (OSM y Alcaldía de Medellín) y el agua', formato: 'geo/sanear.py → salida/sanear/huellas.parquet (metros); EnCicla: src/data/edificios.bin + edificios.json (trozos de 160 m) y edificios-ligero.bin + .json (1.3.1: el que lee el juego, un rectángulo por huella); El Metro: src/data/edificios.js v2 (tools/edificios_datos.py --saneadas)', compartido: ['encicla', 'elmetro'] },
+  conflictos: { id: 'conflictos', fuente: 'geo/sanear.py', formato: 'salida/sanear/geometry-conflicts.geojson: casas confiables (OSM) que chocan con calles menores, con fuente y severidad (baja, media, alta o crítica)', compartido: ['encicla', 'elmetro'] },
+  rasante: { id: 'rasante', fuente: 'SRTM (AWS Terrain Tiles z13) a lo largo de cada eje; capas de Overture (road_flags, level_rules)', formato: 'geo/rasante.py → salida/sanear/rasante.bin; flujo COTA: EnCicla src/data/vias-cota.bin (sin conectar), El Metro al final de vias.js', compartido: ['encicla', 'elmetro'] },
+  biomas: { id: 'biomas', fuente: 'zonas de El Metro (VC.ZC y VC.ZM), uso del suelo, densidad y pendiente', formato: 'salida/sanear/biomas.json: un bioma por trozo de 160 m (centro, ladera_ladrillo, residencial_verde, industrial_rio, rural_montana; costa en Turno Cero)', compartido: ['encicla', 'elmetro'] },
   /* propuesta (entrega de ChatGPT, EnCicla v2.0): pasos a distinto nivel con nivel firmado */
   pasos: { id: 'pasos', fuente: 'Overture (is_tunnel, is_bridge, between)', formato: 'geo/pasos.py → candidatos; js/red-niveles.mjs (red por casilla y nivel)', compartido: [], propuesta: true },
   personajes: { id: 'personajes', fuente: 'Guion compartido Ruedas y Rieles del Aburrá', formato: 'contenido/guion/metro.json + contenido/guion/trama_valle.json', compartido: ['encicla', 'elmetro'] }

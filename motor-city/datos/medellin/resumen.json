@@ -1,7 +1,7 @@
 {
  "ciudad": "medellin",
- "bytes": 6818818,
- "sha1": "1f0e31d333d9",
+ "bytes": 6956761,
+ "sha1": "8dc6892ef654",
  "capas": {
   "suelo": {
    "kb": 1340,
@@ -64,10 +64,10 @@
    "sha1": "2b6046abe72c"
   },
   "edificios": {
-   "kb": 3224,
-   "raw_kb": 5161,
+   "kb": 3358,
+   "raw_kb": 5257,
    "tipo": "bin",
-   "sha1": "115070913ac9"
+   "sha1": "e7409c07234e"
   },
   "info": {
    "kb": 44,
@@ -104,7 +104,7 @@
   "casillas": 21239036,
   "pasos": 2193,
   "casillas_con_nivel": 24967,
-  "edificios": 639457,
+  "edificios": 622086,
   "vias": 35746,
   "lineas": 31,
   "estaciones_encicla": 133,

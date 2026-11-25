@@ -1,7 +1,7 @@
 {
- "version": "3.8.0",
- "hash": "2a06ce94",
- "cache": "juega-encicla-v3.8.0-2a06ce94",
+ "version": "3.9.0",
+ "hash": "606e1d30",
+ "cache": "juega-encicla-v3.9.0-606e1d30",
  "files": [
   "00-core.js",
   "10-art.js",
@@ -96,11 +96,13 @@
   "99u-todo-junto.js",
   "99v-rendimiento.js",
   "99w-chunks-progresivos.js",
-  "99x-capas-laterales.js"
+  "99x-capas-laterales.js",
+  "99y-cenital.js",
+  "99z-huellas.js"
  ],
  "bytes": {
-  "single": 5806273,
-  "web": 5807297,
-  "js": 5611670
+  "single": 10229329,
+  "web": 10230353,
+  "js": 10034726
  }
 }

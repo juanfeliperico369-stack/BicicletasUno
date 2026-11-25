@@ -1,0 +1,105 @@
+{
+ "fecha": "2026-11-24",
+ "autor": "Claude (Claude Code, sesión en la nube)",
+ "fase": "0 · línea base, solo lectura",
+ "maquina": "VM Linux, 4 núcleos, 15 GB, Chromium de Playwright sin GPU física (WebGL por software)",
+ "repos": {
+  "motorcity": {
+   "commit": "245bbb0",
+   "version": "5.3.1",
+   "construir": {
+    "cmd": "node herramientas/construir.mjs",
+    "rc": 0,
+    "s": 2
+   },
+   "prueba": {
+    "cmd": "node pruebas/prueba.mjs --navegador",
+    "rc": 0,
+    "s": 106,
+    "resultado": "158 bien"
+   },
+   "html_kb": {
+    "getaway": 28839,
+    "mandados": 8823,
+    "motor-city": 13552
+   }
+  },
+  "MetroZero": {
+   "commit": "7b7733a",
+   "version": "3.8.0",
+   "construir": {
+    "cmd": "node tools/build.mjs",
+    "rc": 0,
+    "s": 1
+   },
+   "prueba": {
+    "cmd": "node tools/test.mjs 100",
+    "rc": 0,
+    "s": 106,
+    "resultado": "100 partidas, 287221 pasos, 0 errores; 0 errores de consola"
+   },
+   "html_kb": {
+    "index": 8749
+   }
+  },
+  "BicicletasUno": {
+   "commit": "1b3ce40",
+   "version": "3.7.0",
+   "construir": {
+    "cmd": "node tools/build.js",
+    "rc": 0,
+    "s": 1
+   },
+   "prueba": {
+    "cmd": "node tests/run.js",
+    "rc": 0,
+    "s": 166,
+    "resultado": "170 bien"
+   },
+   "html_kb": {
+    "juega-encicla": 5641
+   },
+   "compuerta_rendimiento": {
+    "cmd": "node tests/benchmark-2km-gpt6.mjs --cpu=4 --km=2 --step=12",
+    "meta": "p95 < 50 ms y peor cuadro < 120 ms",
+    "aprobado": false,
+    "pasos": [
+     {
+      "via": "Carrera 43A",
+      "distanciaM": 2000,
+      "cuadros": 181,
+      "medianaMs": 50.8,
+      "p95Ms": 103.7,
+      "maxMs": 141.9,
+      "fps": 17.3,
+      "cuadrosSobre50": 97,
+      "cuadrosSobre120": 4
+     },
+     {
+      "via": "Avenida de Las Palmas",
+      "distanciaM": 2000,
+      "cuadros": 181,
+      "medianaMs": 37.9,
+      "p95Ms": 61.2,
+      "maxMs": 243.7,
+      "fps": 24.7,
+      "cuadrosSobre50": 32,
+      "cuadrosSobre120": 1
+     }
+    ]
+   }
+  }
+ },
+ "motor_del_valle": {
+  "version": "1.2.0",
+  "copias_iguales": true,
+  "cmd": "node motor-valle/sincronizar.mjs ../MetroZero --verificar"
+ },
+ "herramientas": {
+  "shapely": "2.2.0 (pip)",
+  "duckdb": "2.0.1 (pip)",
+  "overture_s3": "HTTP 200",
+  "aws_terrain_tiles": "HTTP 200"
+ },
+ "conflictos_elmetro": "reportes/fase0-cenital/conflictos-elmetro.json"
+}

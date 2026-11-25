@@ -38,7 +38,7 @@ const Medir = {
   /* el reloj propio: el tiempo entre cuadros de verdad (lo que ve el jugador) y lo que tardó en dibujar la vista */
   cuadro(t) {
     const A = this.activo; if (!A) return; if (this._rafUlt) { const ms = t - this._rafUlt, T = A.tramos[A.tramo]; if (ms > 0 && ms < 2000) { T.cuadros.push(ms); A.cuadros.push(ms); const d = G.vistas.ms; if (d >= 0) { T.dib.push(d); A.dib.push(d); } } }
-    this._rafUlt = t; { const C = G.cuerpo; if (A._px != null) A.dist += Math.min(40, Math.hypot(C.x - A._px, C.y - A._py)); A._px = C.x; A._py = C.y; } const seg = (t - A.t0) / 1000, i = Math.min(this.TRAMOS.length - 1, Math.floor(seg / this.SEG));
+    this._rafUlt = t; { const C = G.cuerpo; if (A._px != null) A.dist += Math.min(40, Math.hypot(C.x - A._px, C.y - A._py)); A._px = C.x; A._py = C.y; } const seg = Math.max(0, (t - A.t0) / 1000), i = Math.min(this.TRAMOS.length - 1, Math.floor(seg / this.SEG));   /* 5.4.1: el sello del cuadro (rAF) puede ser anterior a A.t0: sin el tope, i = −1 y TRAMOS[−1][0] rompía (la carrera intermitente de pruebas/medir.mjs) */
     if (performance.memory && (!A._mt || t - A._mt > 1000)) { A._mt = t; A.mem.push(performance.memory.usedJSHeapSize / 1048576); }
     if (seg >= this.SEG * this.TRAMOS.length) return this.terminar();
     if (i !== A.tramo) this.cambiarTramo(i);

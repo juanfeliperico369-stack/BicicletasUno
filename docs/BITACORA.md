@@ -2,6 +2,83 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 25-nov-2026 · v3.9.0 (sin cambio de versión) · Motor City 5.4.0 y 5.4.1 en `motor-city/` (Claude)
+- **Qué cambió:** la copia de referencia del motor pasa de la 5.3.1 a la 5.4.0 con `node motor.mjs sincronizar` desde motorcity, la fuente de verdad. Trae los mundos saneados (5.3.2) y `MC.Pista`, las carreras retro pseudo‑3D de Turno Cero (5.4.0, Fase 4 del renacimiento cenital). Después pasa a la 5.4.1 (Fase 5: el garaje de Turno Cero, 📏 de las carreras retro y el arreglo de 📏).
+- **El juego no cambia:** su compilación no lee `motor-city/`, y el HTML sale igual (el mismo hash de caché).
+- **Probado:** `sincronizar --verificar` da «los archivos son iguales».
+
+## 25-nov-2026 · v3.9.0 · El cenital nuevo encendido en el modo libre, con las huellas reales del Valle (Fase 3 del renacimiento cenital, Claude)
+- **Qué cambió:**
+  - **La bandera del cenital, encendida** (`src/js/99y-cenital.js`, `PREDETERMINADA = 1`), **solo en el modo libre**: bruma, sombras de contacto, tu silueta y la cámara exponencial. Los 9 oficios, los turnos y los minijuegos siguen con el render de siempre. `?cenital=0` o `Save.data.settings.cenital = 0` la apagan; el guardado `juegaencicla.v1` no cambia.
+  - **Las huellas reales en el modo libre** (`src/js/99z-huellas.js`, nuevo y aditivo):
+    - con la bandera, los lotes inventados del paseo libre se cambian por las **625.880 huellas saneadas del Motor del Valle 1.3.1** (OpenStreetMap, Microsoft y Google);
+    - cada huella tiene la forma de un lote (4 esquinas, altura y colores), así que el 2D de los trozos y el 3D las dibujan sin cambiar: de 1 a 2 pisos son casas con techo, y de 3 o más, edificios;
+    - cada región de 160 m se arma una vez, y cada trozo dibuja también las huellas de sus vecinos que entran en él, sin costuras en los bordes;
+    - al entrar o salir del modo libre se vacían las cachés de lotes, trozos 2D y mallas 3D.
+  - **Los datos** (`src/data/edificios-ligero.bin` + `.json`, de `motor-valle/geo/huellas.py`, Motor del Valle 1.3.1):
+    - uno o dos rectángulos por huella, con centros y medidas cada 0,25 m;
+    - en las huellas de polígono (recortadas o irregulares, el 17 %), los rectángulos más grandes que caben adentro; el segundo cubre el otro brazo de una L y «sigue» al primero, con el mismo aspecto;
+    - **ningún rectángulo toca una vía, el Metroplús, el tranvía ni el agua**;
+    - `tools/build.js` lo mete en el HTML tal cual. Si falta, o si salió de otro `edificios.bin`, el modo libre sigue con los lotes.
+  - **Versión 3.9.0:** `src/js/00-core.js` y `app/android/app/build.gradle` (versionCode 30900).
+- **Cifras:**
+  - 667.644 rectángulos de 625.880 edificios;
+  - 41.764 huellas con segundo rectángulo;
+  - 260 huellas sin rectángulo posible (más delgadas que 1 m);
+  - área inscrita / polígono: mediana **0,805** (con un rectángulo y las medidas de 0,5 m de `edificios.bin` era 0,62);
+  - el HTML pasa de 5.678 KB a 9.990 KB.
+- **Probado:**
+  - `node tools/build.js`: 9.990 KB;
+  - `node tests/run.js`: **177 ✓ y 0 ✗**, con la regresión (5 ✓);
+    - «mundo 3D único» falló una vez cuando corrió al tiempo con otra prueba pesada: espera 700 ms a que se acomode la cámara;
+    - sola pasó 6 de 6, y la batería sola, completa;
+  - `node tests/cenital-libre.mjs`: BIEN. Con la bandera, el modo libre tiene bruma, sombras, silueta y huellas reales en 9 de 9 y 20 de 20 trozos; Balance no cambia; sin la bandera, nada cambia;
+  - `node motor-valle/pruebas/geometria.mjs --encicla . --ligero`: BIEN, con 0 de 667.644 rectángulos sobre un corredor (geometría exacta, 2 cm de tolerancia) y 0 en el agua;
+  - la compuerta (`tests/benchmark-2km-gpt6.mjs --cpu=4`, sin cambiarla; 3 rondas por variante, con la bandera):
+
+    | Variante | p95 media, Carrera 43A | p95 media, Las Palmas | Peor cuadro | Meta |
+    |---|---|---|---|---|
+    | Lotes | 49,7 ms | 38,8 ms | 72–102 ms | cumplida 1 de 3 |
+    | Huellas | 46,3 ms | 41,3 ms | 60–85 ms | **cumplida 3 de 3** |
+
+- **El informe:** `motorcity/reportes/2026-11-25-claude-fase3-cenital.md`.
+- **Falta:** el OK del autor para publicar (página y APK) y para pasar a `main`.
+
+## 24-nov-2026 · v3.8.0 (sin cambio de versión) · El cenital nuevo en el modo libre, con bandera (Fase 2 del renacimiento cenital, Claude)
+- **Qué cambió:**
+  - **`src/js/99y-cenital.js` (nuevo, aditivo):** el render nuevo **solo en el modo libre** (`mode.free`) y detrás de una bandera (decisión 3 del autor). Los 9 oficios, los turnos y los minijuegos siguen con el render de hoy. En la Fase 2 viene **apagada** (`PREDETERMINADA = 0`; la Fase 3 la enciende). Se prueba con `?cenital`, con `Save.data.settings.cenital` (1 o 0; sin el campo, la predeterminada: el guardado `juegaencicla.v1` no cambia) o con `JE.cenital.forzar`.
+    1. **3D (tercera persona):** tu silueta donde un edificio, el viaducto o un puente te tapa (una caja un poco más grande que tú, solo con sus caras de adelante y solo donde algo está delante). El tablero nunca se esconde.
+    2. **3D:** sombra de contacto (dos octágonos, el centro más oscuro) bajo cada carro, bus, bici, persona y bajo ti, en un solo dibujo.
+    3. **Bruma** en el 12 % de arriba (2D y 3D), con el color del horizonte de la hora: una capa CSS justo después de `#cv`, debajo del HUD.
+    4. **Cámara 3D:** el giro y la distancia con `1 − e^(−k·dt)` (antes `min(1, dt·k)`).
+  - Lo que EnCicla ya tenía y se queda igual: la sombra de contacto del 2D (la elipse de `blit`), la silueta del ciclista cuando algo lo tapa en la ciudad 3D del 2D y la cámara 2D con `1 − e^(−k·dt)`. **No aplican aquí:** el anillo lejano (es de El Metro), los zócalos y el terreno facetado (el piso 3D de EnCicla es plano).
+  - **`tests/cenital-libre.mjs` (nueva):** con la bandera, el modo libre cambia (bruma; en 3D, sombras y silueta) y un oficio (Balance) no; sin la bandera, nada cambia.
+- **Probado:**
+  - `node tools/build.js`: 5.678 KB;
+  - `node tests/cenital-libre.mjs`: BIEN;
+  - `node tests/run.js`: 177 ✓ y 0 ✗ con la bandera apagada **y encendida por defecto**; `node tests/regresion-encicla.js`: 0 en los dos casos;
+  - la compuerta (`tests/benchmark-2km-gpt6.mjs --cpu=4`, sin cambiarla; cada variante se compiló aparte): ver el informe de la Fase 2 en `motorcity/reportes/2026-11-24-claude-fase2-cenital.md`.
+- **Falta (Fase 3):** encender la bandera en el modo libre y decidir con la compuerta si los lotes inventados se cambian por las huellas reales de `edificios.bin`.
+
+## 24-nov-2026 · v3.8.0 (sin cambio de versión) · Motor del Valle 1.3.0: el mapa saneado, Fase 1 del renacimiento cenital (Claude)
+- **Qué cambió (solo datos y herramientas; el juego es el mismo byte a byte):**
+  - **Motor del Valle 1.3.0** en `motor-valle/` (la fuente de verdad), copiado a MetroZero con `sincronizar.mjs`:
+    - la **ley de soberanía vial** (`geo/sanear.py` y `geo/anchos.json`, con la regla A del autor): ninguna casa de capa 0 sobre una vía de capa 0 ni sobre el agua, rehecho desde las fuentes originales;
+    - las casas confiables de OSM que chocan con calles menores no se recortan: van a `geometry-conflicts.geojson` (44.538, 131 críticas);
+    - la **rasante** de las vías (`geo/rasante.py`), las capas de puentes y túneles (`geo/niveles.py`) y el subcomando `node motor-valle/motor.mjs sanear`;
+    - dos fuentes nuevas (`huellas` y `agua_niveles`) y los ejes precisos de las vías (`build.py` con `VIAS_M`);
+    - las pruebas `motor-valle/pruebas/geometria.py` (exacta) y `geometria.mjs` (como lo lee el juego).
+  - **Para EnCicla, sin conectar:** `src/data/edificios.bin` + `edificios.json` (626.140 huellas saneadas en trozos de 160 m, con una guarda contra las vías que dibuja EnCicla) y `src/data/vias-cota.bin` (la cota de las 35.746 vías de `vias.bin`). `tools/build.js` no los mete al HTML: la Fase 3 decide, con la compuerta.
+- **Cifras:** se conserva el **98,45 %** del área construida; desaparecen 9.864 casas (7.668 restos de menos de 16 m² y 2.196 que estaban enteras en la calle o el agua).
+- **Probado:**
+  - `node motor-valle/motor.mjs sanear` y `pruebas/geometria.py`: BIEN;
+  - `node tools/build.js`: el HTML es idéntico (mismo md5);
+  - `node tests/run.js`: 177 ✓ y 0 ✗;
+  - `node tests/regresion-encicla.js`: 0;
+  - `sincronizar.mjs ../MetroZero --verificar`: «los archivos son iguales».
+- **El informe:** `motorcity/reportes/2026-11-24-claude-fase1-cenital.md`.
+- **Falta:** el OK del autor para la Fase 2 (render cenital con bandera en el modo libre) y las decisiones del informe (casas confiables, vías precisas y ancho por fachadas).
+
 ## 24-nov-2026 · v3.8.0 · La compuerta de rendimiento en verde, la auditoría A-4 resuelta y todo ordenado (Claude)
 - **Rendimiento (`99v-rendimiento.js`, `75-graficos.js` y `99w`), para la compuerta de GPT-6 (2 km con la CPU 4×: p95 < 50 ms y peor cuadro < 120 ms):**
   - índice espacial de ciclorrutas;

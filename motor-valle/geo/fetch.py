@@ -29,6 +29,11 @@ q('edificios', f"SELECT names.primary AS name, subtype, class, height, num_floor
 # lo que va en alto (motor-valle/geo/alturas.py): puentes de las vías y tramos del metro con road_flags/rail_flags (is_bridge) y level_rules
 q('puentes', f"SELECT id, class, subclass, names.primary AS name, to_json(road_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='road' AND {inside} AND (road_flags IS NOT NULL OR level_rules IS NOT NULL)")
 q('rail_niveles', f"SELECT id, class, names.primary AS name, to_json(rail_flags) flags, to_json(level_rules) niveles, ST_AsText(geometry) wkt FROM {seg} WHERE subtype='rail' AND {inside}")
+# Motor del Valle 1.3 (geo/sanear.py): las huellas con su id de Overture y su fuente (OpenStreetMap, Microsoft ML Buildings o Google Open Buildings),
+# porque una casa confiable (un polígono de OSM) que choca con una calle menor no se recorta: se marca para revisar
+q('huellas', f"SELECT id, sources[1].dataset AS src, subtype, class, height, num_floors, ST_AsWKB(geometry) wkb FROM read_parquet('{REL}/theme=buildings/type=building/*', hive_partitioning=1) WHERE {inside}")
+# y el agua con su nivel y sus etiquetas de OSM: una quebrada tapada (level < 0, tunnel=culvert) pasa por debajo y no recorta lo que está encima
+q('agua_niveles', f"SELECT id, subtype, class, names.primary AS name, level, to_json(source_tags) tags, ST_AsText(geometry) wkt FROM read_parquet('{REL}/theme=base/type=water/*', hive_partitioning=1) WHERE {inside}")
 q('lugares_poi', f"SELECT names.primary AS name, basic_category AS cat, taxonomy.primary AS tax, ST_Y(geometry) lat, ST_X(geometry) lon, confidence FROM read_parquet('{REL}/theme=places/type=place/*', hive_partitioning=1) WHERE {inside}")
 # relieve
 Z = 13

@@ -1,16 +1,26 @@
 {
  "ciudad": "guatape",
- "bytes": 421486,
+ "bytes": 420509,
  "casillas": [
   952,
   730
  ],
- "tile": 5,
+ "tile": 5.0,
  "vias": 362,
- "edificios": 2661,
+ "edificios": 2571,
  "lugares": 400,
  "relieve": [
   1756,
   2043
- ]
+ ],
+ "saneamiento": {
+  "huellas": 2661,
+  "tocan": 524,
+  "recortadas": 430,
+  "quitadas": 93,
+  "marcadas": 48,
+  "area0": 276577,
+  "area1": 261841,
+  "conserva_area_pct": 94.672
+ }
 }

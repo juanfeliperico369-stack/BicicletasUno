@@ -85,8 +85,11 @@ const angDifJ = (a, b) => { let d = (b - a) % 6.283185307; if (d > Math.PI) d -=
 if (!abierto) ok(false, 'hay un sitio abierto para dar vueltas'); else {
   const mi = vuelta('moto', true, 'real'), md = vuelta('moto', false, 'real'), ma = vuelta('moto', true, 'arcade'), bi = vuelta('bici', true, 'arcade'), ca = vuelta('prueba_vega', true, 'real');
   const r2 = o => ({ ladeo: Math.round(o.ladeo * 573) / 10 + '°', teoria: Math.round(o.teoria * 573) / 10 + '°', v: r1(o.v) });
-  ok(mi.ladeo > .12 && Math.abs(mi.ladeo - mi.teoria) < .08, 'la moto en curva se inclina hacia adentro ≈ atan(v·ω/g)', r2(mi));
-  ok(md.ladeo < -.12 && Math.abs(md.ladeo - md.teoria) < .08, 'y en la curva contraria, al otro lado', r2(md));
+  /* 5.3.2: la teoría con el tope del motor (0,78 rad ≈ 45°, js/32-fisica.js · _ladear): con el mundo saneado, el primer sitio abierto
+     es una avenida (agarre 1) y no un andén (0,62); la moto gira más rápido y pide más de 45° */
+  const tope = t => Math.max(-.78, Math.min(.78, t));
+  ok(mi.ladeo > .12 && Math.abs(mi.ladeo - tope(mi.teoria)) < .08, 'la moto en curva se inclina hacia adentro ≈ atan(v·ω/g), hasta su tope de 45°', r2(mi));
+  ok(md.ladeo < -.12 && Math.abs(md.ladeo - tope(md.teoria)) < .08, 'y en la curva contraria, al otro lado', r2(md));
   ok(ma.ladeo > .1, 'también con el manejo arcade', r2(ma));
   ok(bi.ladeo > .05 && bi.ladeo <= .56, 'la bici se inclina menos (tope de 32°)', r2(bi));
   ok(!ca.ladeo, 'el carro no se inclina (lo suyo es el alabeo de la suspensión)');

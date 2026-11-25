@@ -1,0 +1,70 @@
+{
+ "version": "1.3.0",
+ "que_es": "Ancho de los corredores viales para la ley de soberanía vial (geo/sanear.py): un edificio de capa 0 no puede pisar el corredor de una vía de capa 0 ni el agua. Se cambia aquí, sin tocar código.",
+ "regla_activa": "A",
+ "decision": "El autor eligió el 24-nov-2026 la regla A, «el real» (decisión 1 de docs/PROMPT-RELEVO.md de motorcity). Las reglas B y C quedan escritas, pero apagadas.",
+ "tipos": { "1": "calle", "2": "avenida", "3": "autopista", "4": "carrera", "5": "ciclorruta", "6": "peatonal", "7": "escalas" },
+ "ancho_de_clase_m": { "1": 7, "2": 15, "3": 12, "4": 10, "5": 2.5, "6": 5, "7": 3 },
+ "nota_ancho_real": "El ancho de cada vía es el de la malla vial oficial de Medellín (campo Ancho: la calzada; calzada_ve es el número de calzadas, no un ancho) o, si no lo tiene, el de su clase. Es el mismo que guardan vias.bin de EnCicla y vias.js de El Metro.",
+ "reglas": {
+  "A": {
+   "nombre": "el real",
+   "radio": "max(radio_minimo, ancho / 2 + anden[tipo])",
+   "anden_m": { "1": 1.3, "2": 1.3, "3": 1.3, "4": 1.3, "5": 0.3, "6": 0.3, "7": 0.3 },
+   "radio_minimo_m": 1.0,
+   "nota": "Es la regla del recorte en tiempo real de El Metro (11-edificios.js · segsCelda), con las ciclorrutas incluidas (el juego hoy no las despeja; en EnCicla importan)."
+  },
+  "B": {
+   "nombre": "jugable (master prompt)",
+   "radio": "max(ancho_jugable[tipo], ancho) / 2 + anden[tipo]",
+   "ancho_jugable_m": { "3": 22, "2": 15, "4": 11, "1": 8.5, "5": 3.5 },
+   "anden_m": { "3": 3.0, "2": 2.5, "4": 2.0, "1": 1.5, "5": 0.8, "6": 0.3, "7": 0.3 },
+   "viaducto_m": [10, 2],
+   "radio_minimo_m": 1.0,
+   "nota": "Nunca más angosta que la real. Medida en la Fase 0: borraba 24.983 casas en las laderas."
+  },
+  "C": {
+   "nombre": "híbrida por bioma",
+   "radio": "ladera: ancho / 2 + 0,5 · ciudad plana: regla A · avenidas y autopistas: regla B",
+   "anden_ladera_m": 0.5,
+   "tipos_con_regla_B": [2, 3],
+   "radio_minimo_m": 1.0
+  }
+ },
+ "transporte_a_nivel_m": {
+  "brt": 5.5,
+  "tram": 5.0,
+  "nota": "Carril del Metroplús y vía del tranvía de Ayacucho: los mismos radios que despeja El Metro en tiempo real (11-edificios.js · segsCelda)."
+ },
+ "agua": {
+  "lineas_m": { "river": 4.0, "stream": 1.5, "canal": 2.0, "drain": 0.75, "ditch": 0.75 },
+  "poligonos": ["river", "lake", "reservoir", "pond", "water", "canal", "stream", "basin", "oxbow", "wastewater"],
+  "no_son_agua": ["swimming_pool", "reflecting_pool", "fountain"],
+  "nota": "Solo el agua a cielo abierto: una quebrada tapada (level < 0 o tunnel/culvert/covered en las etiquetas de OSM) va en la capa -1 y no recorta lo que está encima."
+ },
+ "confiables": {
+  "fuentes": ["OpenStreetMap"],
+  "calles_menores": [1, 5, 6, 7],
+  "regla": "Una casa confiable (un polígono de OSM) que choca solo con calles menores no se recorta en la verdad compartida: se marca en geometry-conflicts.geojson, porque la desplazada puede ser la calle. Con una vía mayor (carrera, avenida, autopista o transporte) o con el agua sí se recorta."
+ },
+ "severidad_m2": { "baja": 0.3, "media": 2.0 },
+ "critica": { "radio_estacion_m": 30, "nota": "Si tapa la entrada de una estación (metro, tranvía, cable o andén del Metroplús), la severidad es crítica aunque el área sea pequeña." },
+ "higiene": {
+  "area_minima_m2": 12,
+  "fragmento_minimo_m2": 16,
+  "douglas_peucker_m": 0.6,
+  "iou_rectangulo": 0.92,
+  "nota": "Los restos de menos de 16 m² se quitan; lo que queda se simplifica con Douglas-Peucker a 0,6 m (y se vuelve a recortar si la simplificación lo devolvió a la calle); si lo recortado sigue siendo un rectángulo (IoU >= 0,92), se guarda como rectángulo."
+ },
+ "zocalo_m": 6,
+ "trozo_m": 160,
+ "biomas": ["centro", "ladera_ladrillo", "residencial_verde", "industrial_rio", "rural_montana", "costa"],
+ "opciones_apagadas": {
+  "ancho_por_fachadas": {
+   "activo": false,
+   "que_es": "En una vía menor sin ancho oficial, angostar el ancho de clase hasta que la calzada y el andén no pisen las fachadas confiables (sin bajar del mínimo jugable).",
+   "ancho_minimo_m": { "1": 4.0, "5": 1.5, "6": 2.0, "7": 1.5 },
+   "medido": "24-nov-2026: angosta 4.079 de 18.243 vías menores y baja las casas confiables marcadas de 42.979 a 34.132. Queda para que el autor decida."
+  }
+ }
+}

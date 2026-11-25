@@ -108,7 +108,7 @@ if (!process.argv.includes('--sin-navegador')) {
     const car = G.vistas.aPantalla(G.E, C.x, C.y, 0), cota = M.cota(C.x, C.y);
     /* un atropello delante del carro: alguien de la escena a 3 m */
     const cerca = G.E.peatones.slice().sort((a, b) => Math.hypot(a.x - C.x, a.y - C.y) - Math.hypot(b.x - C.x, b.y - C.y))[0];
-    const n0 = G.busq.nivel; CV.emitir('atropello', cerca.x + 2, cerca.y, { grave: true }); G.caidos.push({ x: cerca.x + 2, y: cerca.y, a: 0 });
+    const n0 = G.busq.nivel, h0 = G.busq.heat; window._h0 = h0; CV.emitir('atropello', cerca.x + 2, cerca.y, { grave: true }); G.caidos.push({ x: cerca.x + 2, y: cerca.y, a: 0 });
     await espera(600); const reac = G.E.peatones.filter(p => p.reac).map(p => p.reac.tipo); CV._ultDicho = -99; const R0 = G.E.peatones.find(p => p.reac && enPantalla(pr(p.x, p.y, 2.7))) || G.E.peatones.find(p => enPantalla(pr(p.x, p.y, 2.7))) || cerca; CV.decir(R0, 'atropello', { reloj: G.reloj, tono: 'adulto' });
     await espera(200); const dib = G.Viva.dibujados, dentro = CV.dichos.filter(D => enPantalla(pr(D.p.x, D.p.y, 2.7))).length;
     window._cv = { esc, sentados, car, cota, reac, dib, dentro, n0 }; return 1; });
@@ -116,18 +116,19 @@ if (!process.argv.includes('--sin-navegador')) {
   const r = await p.evaluate(async () => { const G = TURNO, espera = ms => new Promise(q => setTimeout(q, ms)), { esc, sentados, car, cota, reac, dib, dentro, n0 } = window._cv;
     /* el testigo (3 s) y la ambulancia */
     let serv = null; for (let i = 0; i < 40 && !G.Viva.servicios.length; i++) await espera(250); serv = G.Viva.servicios[0];
-    const ruta = serv ? Math.round(serv.T.largo) : 0, nivel = G.busq.nivel;
+    const ruta = serv ? Math.round(serv.T.largo) : 0, nivel = G.busq.nivel, calor = G.busq.heat, h0 = window._h0;
     /* la ambulancia llega, atiende y se lleva al herido (se acelera el tiempo del servicio) */
     let fases = new Set(); if (serv) { serv.s = Math.max(serv.s, serv.T.largo - 40); for (let i = 0; i < 80 && G.Viva.servicios.includes(serv) && serv.fase !== 'sale'; i++) { fases.add(serv.fase); if (serv.fase === 'atiende') serv.t = Math.max(serv.t, 10.5); await espera(150); } fases.add(serv.fase); }
     const enTrafico = G.E.trafico.some(v => v.servicio === 'ambulancia');
-    return { esc, sentados, car, cota, W: G.W, H: G.H, reac, dib, dentro, ruta, n0, nivel, fases: [...fases], caidos: G.caidos.length, enTrafico, err: (MC.fallas || []).slice(0, 3) }; });
+    return { esc, sentados, car, cota, W: G.W, H: G.H, reac, dib, dentro, ruta, n0, nivel, calor, h0, fases: [...fases], caidos: G.caidos.length, enTrafico, err: (MC.fallas || []).slice(0, 3) }; });
   await b.close();
   ok(r.esc >= 3, 'hay gente en las bancas y los paraderos junto al Parque Berrío', { escenas: r.esc, sentados: r.sentados });
   ok(r.car && r.car[1] > 0 && r.car[1] < r.H && r.car[0] > 0 && r.car[0] < r.W, 'el carro se proyecta dentro de la pantalla en 3D (cota ' + Math.round(r.cota) + ' m)', r.car && r.car.map(Math.round));
   ok(r.reac.length >= 2 && r.reac.some(t => t === 'llama'), 'la gente reacciona al atropello y alguien llama', r.reac);
   ok(r.dib >= 1 && r.dentro >= 1, 'los globos y los íconos se dibujan dentro de la pantalla', { dibujados: r.dib, dentro: r.dentro });
   ok(r.ruta > 100, 'el testigo pidió una ambulancia que viene por una ruta real', r.ruta + ' m');
-  ok(r.nivel > r.n0, 'y la búsqueda subió («un vecino llamó a la policía»)', { antes: r.n0, despues: r.nivel });
+  /* 5.3.2: lo que sube una llamada es el calor de la búsqueda (8 por un atropello); el nivel 1 pide 15, o sea dos testigos, y cuántos llaman depende de quién quedó cerca */
+  ok(r.calor > r.h0, 'y la búsqueda subió («un vecino llamó a la policía»)', { calorAntes: r.h0, calorDespues: +r.calor.toFixed(1), nivelAntes: r.n0, nivel: r.nivel });
   ok(r.fases.includes('atiende') && r.fases.includes('sale') && r.caidos === 0, 'la ambulancia llega, atiende, se lleva al herido y se va', { fases: r.fases, caidos: r.caidos });
   ok(errs.length === 0, 'sin errores en la página', errs.slice(0, 3));
 }

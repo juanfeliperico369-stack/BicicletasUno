@@ -620,7 +620,7 @@ for name, g in streams:   # quebradas (tipo 9): un hilo de agua con su retiro ve
 from shapely.ops import linemerge
 grp = {}
 for k, name, nom, wd, pts in vias: grp.setdefault((k, name, nom), []).append((LineString(pts), wd))
-VIAS = []
+VIAS, VIAS_M = [], []
 for (k, name, nom), lw in grp.items():
     ls = [l for l, _ in lw]; wd = float(np.median([w for _, w in lw]))
     for g in geoms(linemerge(ls) if len(ls) > 1 else ls[0]):
@@ -630,13 +630,19 @@ for (k, name, nom), lw in grp.items():
         if len(q) < 2: continue
         ix, iy = (int(v) for v in q[len(q) // 2] / VQ)
         if not (0 <= ix < MW and 0 <= iy < MH) or MUNI[iy, ix] == 0: continue
-        for a0 in range(0, len(q) - 1, 60000): VIAS.append((k, name, nom, wd, q[a0:a0 + 60001]))
+        for a0 in range(0, len(q) - 1, 60000): VIAS.append((k, name, nom, wd, q[a0:a0 + 60001])); VIAS_M.append(np.asarray(g.coords) * TILE)   # el eje sin simplificar ni redondear, en metros (para geo/sanear.py y geo/rasante.py)
 calles = sorted({n for _, n, _, _, _ in VIAS if n} | {n for _, _, n, _, _ in VIAS if n}); cidx = {n: i + 1 for i, n in enumerate(calles)}
 vb = bytearray(struct.pack('<I', len(VIAS)))
 for k, name, nom, wd, q in VIAS:   # v3: tipo, nombre, nomenclatura oficial, ancho (medios metros), n.º de puntos
     vb += struct.pack('<BHHBH', k, cidx.get(name, 0), cidx.get(nom, 0), int(min(255, round(wd * 2))), len(q)); vb += np.concatenate([q[:1], np.diff(q, axis=0)]).astype('<i2').tobytes()
 comp = zlib.compressobj(9, zlib.DEFLATED, -15); vdata = comp.compress(bytes(vb)) + comp.flush()
 open(os.path.join(OUT, 'vias.bin'), 'wb').write(vdata)
+if os.environ.get('VIAS_M'):   # Motor del Valle 1.3: los mismos ejes de vias.bin, en el mismo orden, sin simplificar ni redondear (metros; x al este, y al sur)
+    vm_ = bytearray(struct.pack('<4sII', b'VIAM', 1, len(VIAS)))
+    for (k, name, nom, wd, q), pm in zip(VIAS, VIAS_M):
+        vm_ += struct.pack('<BHHBI', k, cidx.get(name, 0), cidx.get(nom, 0), int(min(255, round(wd * 2))), len(pm)); vm_ += pm.astype('<f4').tobytes()
+    open(os.environ['VIAS_M'], 'wb').write(zlib.compress(bytes(vm_), 6)); json.dump({'calles': calles, 'tile': TILE}, open(os.environ['VIAS_M'] + '.json', 'w'), ensure_ascii=False)
+    print('ejes precisos de las vías ->', os.environ['VIAS_M'], len(VIAS_M), 'líneas ·', sum(len(p) for p in VIAS_M), 'puntos')
 named = {k: [0, 0] for k in range(1, 10)}
 for k, name, nom, wd, q in VIAS: named[k][0] += 1; named[k][1] += 1 if name else 0
 print('vías', len(VIAS), 'líneas ·', sum(len(q) for *_, q in VIAS), 'puntos ·', len(calles), 'nombres · vias.bin', len(vdata) // 1024, 'KB · con nombre por tipo', {k: f'{v[1]}/{v[0]}' for k, v in named.items() if v[0]})

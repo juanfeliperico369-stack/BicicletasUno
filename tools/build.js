@@ -3,7 +3,7 @@
    dist/juega-encicla.html  -> un solo archivo, offline (también es el www de Capacitor)
    dist/web/                -> PWA para GitHub Pages (index.html, manifest, sw.js, íconos, OG)
    Uso: node tools/build.js   (luego node tools/assets.js para íconos e imagen OG) */
-const fs = require('fs'), path = require('path'), crypto = require('crypto');
+const fs = require('fs'), path = require('path'), crypto = require('crypto'), zlib = require('zlib');
 const ROOT = path.join(__dirname, '..'), SRC = path.join(ROOT, 'src'), DIST = path.join(ROOT, 'dist'), WEB = path.join(DIST, 'web');
 const URL = 'https://juanfeliperico369-stack.github.io/BicicletasUno/';
 const rd = f => fs.readFileSync(path.join(SRC, f), 'utf8');
@@ -23,7 +23,20 @@ const ALT = fs.existsSync(path.join(SRC, 'data', 'alturas.json')) ? rd('data/alt
 const MPR = fs.existsSync(path.join(SRC, 'data', 'metroplus.json')) ? rd('data/metroplus.json') : 'null';
 // la red completa de El Metro (tools/red_metro.js): alimentadores, líneas futuras, escaleras de la Comuna 13 y datos de las estaciones
 const REDM = fs.existsSync(path.join(SRC, 'data', 'red_metro.json')) ? rd('data/red_metro.json') : 'null';
-js = VALLE + `const GUION = ${JSON.stringify(GUION)};\nconst CAPAS_EMBEBIDAS = ${JSON.stringify(CAPAS.data)};\nconst ALTURAS = ${ALT};\nconst MP_REAL = ${MPR};\nconst RED_M = ${REDM};\n` + js;
+// 3.9 · las huellas reales saneadas del Motor del Valle 1.3.1 en su versión ligera (motor-valle/geo/huellas.py → src/data/edificios-ligero.bin):
+// un rectángulo por huella, el más grande que cabe adentro en las de polígono, sin el zócalo (el piso 3D es plano), con la marca y el
+// bioma. Reemplazan los lotes inventados del modo libre con la bandera del cenital (src/js/99z-huellas.js). Se meten tal cual (ya
+// vienen comprimidos); si no están o no son de este edificios.bin, el juego sigue con los lotes de siempre (nunca con huellas viejas).
+const EDIF = (() => {
+  const d = path.join(SRC, 'data'), fb = path.join(d, 'edificios-ligero.bin'), fj = path.join(d, 'edificios-ligero.json'), nada = "const EDIF_META = null, EDIF_BIN = '';\n";
+  if (!fs.existsSync(fb) || !fs.existsSync(fj)) { console.warn('⚠ sin src/data/edificios-ligero.bin: el modo libre sigue con los lotes (python3 motor-valle/geo/huellas.py --ligero src/data)'); return nada; }
+  const M = JSON.parse(fs.readFileSync(fj, 'utf8')), comp = fs.readFileSync(fb), raw = zlib.inflateRawSync(comp), full = path.join(d, 'edificios.bin');
+  if (raw.length !== M.raw || M.len.length !== 7 || M.len.reduce((a, b) => a + b, 0) !== raw.length) throw new Error('edificios-ligero.bin no coincide con edificios-ligero.json');
+  if (fs.existsSync(full) && M.de && M.de['edificios.bin'] !== crypto.createHash('sha1').update(fs.readFileSync(full)).digest('hex').slice(0, 16)) throw new Error('edificios-ligero.bin es de otro edificios.bin: corre python3 motor-valle/geo/huellas.py --ligero src/data');
+  const meta = { v: M.v, ligero: true, motor: M.motor, R: M.R, nx: M.nx, ny: M.ny, n: M.n, Q: M.Q, kinds: M.kinds, biomas: M.biomas, len: M.len, raw: M.raw, src: M.src };
+  return `const EDIF_META = ${JSON.stringify(meta)};\nconst EDIF_BIN = '${comp.toString('base64')}';\n`;
+})();
+js = VALLE + EDIF + `const GUION = ${JSON.stringify(GUION)};\nconst CAPAS_EMBEBIDAS = ${JSON.stringify(CAPAS.data)};\nconst ALTURAS = ${ALT};\nconst MP_REAL = ${MPR};\nconst RED_M = ${REDM};\n` + js;
 const version = (js.match(/version: '([^']+)'/) || [])[1] || '0.0.0';
 const b64 = f => fs.readFileSync(path.join(SRC, 'assets', f)).toString('base64');
 const fonts = `@font-face{font-family:"Titulos";font-weight:300 700;font-stretch:75% 125%;src:url(data:font/woff2;base64,${b64('titulos.woff2')}) format("woff2");font-display:swap}@font-face{font-family:"Cuerpo";font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${b64('cuerpo.woff2')}) format("woff2")}`;
