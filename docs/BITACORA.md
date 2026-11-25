@@ -2,6 +2,22 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 24-nov-2026 · v3.8.0 (sin cambio de versión) · El cenital nuevo en el modo libre, con bandera (Fase 2 del renacimiento cenital, Claude)
+- **Qué cambió:**
+  - **`src/js/99y-cenital.js` (nuevo, aditivo):** el render nuevo **solo en el modo libre** (`mode.free`) y detrás de una bandera (decisión 3 del autor). Los 9 oficios, los turnos y los minijuegos siguen con el render de hoy. En la Fase 2 viene **apagada** (`PREDETERMINADA = 0`; la Fase 3 la enciende). Se prueba con `?cenital`, con `Save.data.settings.cenital` (1 o 0; sin el campo, la predeterminada: el guardado `juegaencicla.v1` no cambia) o con `JE.cenital.forzar`.
+    1. **3D (tercera persona):** tu silueta donde un edificio, el viaducto o un puente te tapa (una caja un poco más grande que tú, solo con sus caras de adelante y solo donde algo está delante). El tablero nunca se esconde.
+    2. **3D:** sombra de contacto (dos octágonos, el centro más oscuro) bajo cada carro, bus, bici, persona y bajo ti, en un solo dibujo.
+    3. **Bruma** en el 12 % de arriba (2D y 3D), con el color del horizonte de la hora: una capa CSS justo después de `#cv`, debajo del HUD.
+    4. **Cámara 3D:** el giro y la distancia con `1 − e^(−k·dt)` (antes `min(1, dt·k)`).
+  - Lo que EnCicla ya tenía y se queda igual: la sombra de contacto del 2D (la elipse de `blit`), la silueta del ciclista cuando algo lo tapa en la ciudad 3D del 2D y la cámara 2D con `1 − e^(−k·dt)`. **No aplican aquí:** el anillo lejano (es de El Metro), los zócalos y el terreno facetado (el piso 3D de EnCicla es plano).
+  - **`tests/cenital-libre.mjs` (nueva):** con la bandera, el modo libre cambia (bruma; en 3D, sombras y silueta) y un oficio (Balance) no; sin la bandera, nada cambia.
+- **Probado:**
+  - `node tools/build.js`: 5.678 KB;
+  - `node tests/cenital-libre.mjs`: BIEN;
+  - `node tests/run.js`: 177 ✓ y 0 ✗ con la bandera apagada **y encendida por defecto**; `node tests/regresion-encicla.js`: 0 en los dos casos;
+  - la compuerta (`tests/benchmark-2km-gpt6.mjs --cpu=4`, sin cambiarla; cada variante se compiló aparte): ver el informe de la Fase 2 en `motorcity/reportes/2026-11-24-claude-fase2-cenital.md`.
+- **Falta (Fase 3):** encender la bandera en el modo libre y decidir con la compuerta si los lotes inventados se cambian por las huellas reales de `edificios.bin`.
+
 ## 24-nov-2026 · v3.8.0 (sin cambio de versión) · Motor del Valle 1.3.0: el mapa saneado, Fase 1 del renacimiento cenital (Claude)
 - **Qué cambió (solo datos y herramientas; el juego es el mismo byte a byte):**
   - **Motor del Valle 1.3.0** en `motor-valle/` (la fuente de verdad), copiado a MetroZero con `sincronizar.mjs`:

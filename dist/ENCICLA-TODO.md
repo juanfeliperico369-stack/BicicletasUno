@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.8.0 · compilado el 2026-11-24.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.8.0 · compilado el 2026-11-25.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-24 | Claude Code | documento creado (v3.8.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-25 | Claude Code | documento creado (v3.8.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2266,6 +2266,41 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+### 24-nov-2026 · v3.8.0 (sin cambio de versión) · El cenital nuevo en el modo libre, con bandera (Fase 2 del renacimiento cenital, Claude)
+- **Qué cambió:**
+  - **`src/js/99y-cenital.js` (nuevo, aditivo):** el render nuevo **solo en el modo libre** (`mode.free`) y detrás de una bandera (decisión 3 del autor). Los 9 oficios, los turnos y los minijuegos siguen con el render de hoy. En la Fase 2 viene **apagada** (`PREDETERMINADA = 0`; la Fase 3 la enciende). Se prueba con `?cenital`, con `Save.data.settings.cenital` (1 o 0; sin el campo, la predeterminada: el guardado `juegaencicla.v1` no cambia) o con `JE.cenital.forzar`.
+    1. **3D (tercera persona):** tu silueta donde un edificio, el viaducto o un puente te tapa (una caja un poco más grande que tú, solo con sus caras de adelante y solo donde algo está delante). El tablero nunca se esconde.
+    2. **3D:** sombra de contacto (dos octágonos, el centro más oscuro) bajo cada carro, bus, bici, persona y bajo ti, en un solo dibujo.
+    3. **Bruma** en el 12 % de arriba (2D y 3D), con el color del horizonte de la hora: una capa CSS justo después de `#cv`, debajo del HUD.
+    4. **Cámara 3D:** el giro y la distancia con `1 − e^(−k·dt)` (antes `min(1, dt·k)`).
+  - Lo que EnCicla ya tenía y se queda igual: la sombra de contacto del 2D (la elipse de `blit`), la silueta del ciclista cuando algo lo tapa en la ciudad 3D del 2D y la cámara 2D con `1 − e^(−k·dt)`. **No aplican aquí:** el anillo lejano (es de El Metro), los zócalos y el terreno facetado (el piso 3D de EnCicla es plano).
+  - **`tests/cenital-libre.mjs` (nueva):** con la bandera, el modo libre cambia (bruma; en 3D, sombras y silueta) y un oficio (Balance) no; sin la bandera, nada cambia.
+- **Probado:**
+  - `node tools/build.js`: 5.678 KB;
+  - `node tests/cenital-libre.mjs`: BIEN;
+  - `node tests/run.js`: 177 ✓ y 0 ✗ con la bandera apagada **y encendida por defecto**; `node tests/regresion-encicla.js`: 0 en los dos casos;
+  - la compuerta (`tests/benchmark-2km-gpt6.mjs --cpu=4`, sin cambiarla; cada variante se compiló aparte): ver el informe de la Fase 2 en `motorcity/reportes/2026-11-24-claude-fase2-cenital.md`.
+- **Falta (Fase 3):** encender la bandera en el modo libre y decidir con la compuerta si los lotes inventados se cambian por las huellas reales de `edificios.bin`.
+
+### 24-nov-2026 · v3.8.0 (sin cambio de versión) · Motor del Valle 1.3.0: el mapa saneado, Fase 1 del renacimiento cenital (Claude)
+- **Qué cambió (solo datos y herramientas; el juego es el mismo byte a byte):**
+  - **Motor del Valle 1.3.0** en `motor-valle/` (la fuente de verdad), copiado a MetroZero con `sincronizar.mjs`:
+    - la **ley de soberanía vial** (`geo/sanear.py` y `geo/anchos.json`, con la regla A del autor): ninguna casa de capa 0 sobre una vía de capa 0 ni sobre el agua, rehecho desde las fuentes originales;
+    - las casas confiables de OSM que chocan con calles menores no se recortan: van a `geometry-conflicts.geojson` (44.538, 131 críticas);
+    - la **rasante** de las vías (`geo/rasante.py`), las capas de puentes y túneles (`geo/niveles.py`) y el subcomando `node motor-valle/motor.mjs sanear`;
+    - dos fuentes nuevas (`huellas` y `agua_niveles`) y los ejes precisos de las vías (`build.py` con `VIAS_M`);
+    - las pruebas `motor-valle/pruebas/geometria.py` (exacta) y `geometria.mjs` (como lo lee el juego).
+  - **Para EnCicla, sin conectar:** `src/data/edificios.bin` + `edificios.json` (626.140 huellas saneadas en trozos de 160 m, con una guarda contra las vías que dibuja EnCicla) y `src/data/vias-cota.bin` (la cota de las 35.746 vías de `vias.bin`). `tools/build.js` no los mete al HTML: la Fase 3 decide, con la compuerta.
+- **Cifras:** se conserva el **98,45 %** del área construida; desaparecen 9.864 casas (7.668 restos de menos de 16 m² y 2.196 que estaban enteras en la calle o el agua).
+- **Probado:**
+  - `node motor-valle/motor.mjs sanear` y `pruebas/geometria.py`: BIEN;
+  - `node tools/build.js`: el HTML es idéntico (mismo md5);
+  - `node tests/run.js`: 177 ✓ y 0 ✗;
+  - `node tests/regresion-encicla.js`: 0;
+  - `sincronizar.mjs ../MetroZero --verificar`: «los archivos son iguales».
+- **El informe:** `motorcity/reportes/2026-11-24-claude-fase1-cenital.md`.
+- **Falta:** el OK del autor para la Fase 2 (render cenital con bandera en el modo libre) y las decisiones del informe (casas confiables, vías precisas y ancho por fachadas).
+
 ### 24-nov-2026 · v3.8.0 · La compuerta de rendimiento en verde, la auditoría A-4 resuelta y todo ordenado (Claude)
 - **Rendimiento (`99v-rendimiento.js`, `75-graficos.js` y `99w`), para la compuerta de GPT-6 (2 km con la CPU 4×: p95 < 50 ms y peor cuadro < 120 ms):**
   - índice espacial de ciclorrutas;
@@ -2284,6 +2319,11 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - **Contenido:** 11 placas nuevas de lo poco conocido (27 en total), con datos de las fichas de los sitios del motor 5.3; corregidos el dato de Sabaneta y dos frases.
 - **Probado:** `node tests/run.js` completo en verde con la nueva **V10**, que comprueba que lotes y GPS por partes dan el mismo resultado que de una vez, las secciones sin opciones perdidas, las 27 placas y las capas. También `node tests/benchmark-2km-gpt6.mjs --assert` en verde (3 de 3 corridas).
 - **Documento:** `docs/RONDA-3.8-Claude.md`, con lo poco conocido que salió de medir y los prompts de la ronda 3.9.
+- **Publicado (24-nov-2026):**
+  - `main` en `08fb72e`; `publicar.yml` en verde por primera vez desde que existe la compuerta.
+  - En el servidor: Carrera 43A con p95 de 37,4 ms y peor cuadro de 46,2; Las Palmas con 31,9 y 38. Ningún cuadro pasó de 50 ms; antes: p95 de 51,4 y peor de 137 a 145.
+  - La página dice 3.8.0, y `/metro/` y `/descargas/` quedaron intactos (comprobado por hash).
+  - APK `JuegaEnCicla-v3.8.0-debug.apk` en la publicación `v3.8.0` (sha256 `8f915e52…`).
 - **Falta:**
   - C-140 a C-143 (el arte lateral pintado de verdad);
   - K-4 y K-5 (Codex);
