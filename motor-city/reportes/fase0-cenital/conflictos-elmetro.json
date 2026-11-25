@@ -1,0 +1,266 @@
+{
+ "fuente": {
+  "repo": "MetroZero",
+  "vias": 26919,
+  "viasPorTipo": {
+   "1": 19458,
+   "2": 1938,
+   "3": 572,
+   "4": 1874,
+   "5": 234,
+   "6": 696,
+   "7": 2147
+  },
+  "edificios": 639457,
+  "conPoligono": 30088,
+  "sinTechoLigero": 638303,
+  "areaEdificiosM2": 100030483
+ },
+ "reglaA_juegoHoy": {
+  "tocan": 120187,
+  "centroEnVia": 12267,
+  "area": 2565434,
+  "cubos": {
+   "<0,3 m²": 2868,
+   "0,3–2 m²": 9548,
+   "2–10 m²": 34183,
+   "10–50 m²": 64729,
+   ">50 m²": 8859
+  },
+  "porTipoVia": {
+   "1": 94388,
+   "2": 5526,
+   "3": 428,
+   "4": 11468,
+   "6": 2673,
+   "7": 5704
+  },
+  "fraccionMediaTocados": 0.218
+ },
+ "reglaB_promptMaestro": {
+  "tocan": 151055,
+  "centroEnVia": 24983,
+  "area": 4228543,
+  "cubos": {
+   "<0,3 m²": 2644,
+   "0,3–2 m²": 8949,
+   "2–10 m²": 32422,
+   "10–50 m²": 88361,
+   ">50 m²": 18679
+  },
+  "porTipoVia": {
+   "1": 117084,
+   "2": 7999,
+   "3": 1342,
+   "4": 17113,
+   "5": 136,
+   "6": 2362,
+   "7": 5019
+  },
+  "fraccionMediaTocados": 0.279
+ },
+ "rellenoCasillasAnilloLejano": {
+  "casillasBLDGoBRICK": 515666,
+  "conCajaQueTocaCorredorA": 76585,
+  "nota": "cajas de 21 × 19 m como máximo (l+4, w+4 de 22-gl.js); sin el parche de ciudad.js; solo se dibujan entre 700 y 1100 m de la cámara"
+ },
+ "muestras": {
+  "A": [
+   {
+    "x": 33990.5,
+    "y": 5437,
+    "area_m2": 142,
+    "invade_m2": 51.8,
+    "tipoVia": 2,
+    "poligono": true
+   },
+   {
+    "x": 23455.5,
+    "y": 7958,
+    "area_m2": 20,
+    "invade_m2": 13,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 28236.5,
+    "y": 8906,
+    "area_m2": 221,
+    "invade_m2": 27.5,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 28172,
+    "y": 9138,
+    "area_m2": 136,
+    "invade_m2": 17.8,
+    "tipoVia": 1,
+    "poligono": true
+   },
+   {
+    "x": 16984.5,
+    "y": 12276,
+    "area_m2": 160,
+    "invade_m2": 14.5,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 24975,
+    "y": 13049,
+    "area_m2": 132,
+    "invade_m2": 29.8,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 15167,
+    "y": 14024.5,
+    "area_m2": 45,
+    "invade_m2": 17.3,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 14911.5,
+    "y": 14085.5,
+    "area_m2": 294,
+    "invade_m2": 42.8,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 13605,
+    "y": 15742,
+    "area_m2": 70,
+    "invade_m2": 25,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 14875.5,
+    "y": 15757,
+    "area_m2": 78,
+    "invade_m2": 21,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 14433,
+    "y": 16254,
+    "area_m2": 165,
+    "invade_m2": 56.5,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 16007.5,
+    "y": 16727.5,
+    "area_m2": 60,
+    "invade_m2": 34.3,
+    "tipoVia": 2,
+    "poligono": false
+   }
+  ],
+  "B": [
+   {
+    "x": 33990.5,
+    "y": 5437,
+    "area_m2": 142,
+    "invade_m2": 71,
+    "tipoVia": 2,
+    "poligono": true
+   },
+   {
+    "x": 23455.5,
+    "y": 7958,
+    "area_m2": 20,
+    "invade_m2": 17.8,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 28236.5,
+    "y": 8906,
+    "area_m2": 221,
+    "invade_m2": 44,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 28172,
+    "y": 9138,
+    "area_m2": 136,
+    "invade_m2": 35,
+    "tipoVia": 1,
+    "poligono": true
+   },
+   {
+    "x": 16984.5,
+    "y": 12276,
+    "area_m2": 160,
+    "invade_m2": 24.3,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 24975,
+    "y": 13049,
+    "area_m2": 132,
+    "invade_m2": 42,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 15167,
+    "y": 14024.5,
+    "area_m2": 45,
+    "invade_m2": 26,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 14911.5,
+    "y": 14085.5,
+    "area_m2": 294,
+    "invade_m2": 56.5,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 844,
+    "y": 14823,
+    "area_m2": 220.5,
+    "invade_m2": 30.8,
+    "tipoVia": 4,
+    "poligono": true
+   },
+   {
+    "x": 13605,
+    "y": 15742,
+    "area_m2": 70,
+    "invade_m2": 32.3,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 14875.5,
+    "y": 15757,
+    "area_m2": 78,
+    "invade_m2": 27,
+    "tipoVia": 1,
+    "poligono": false
+   },
+   {
+    "x": 12980,
+    "y": 16627.5,
+    "area_m2": 56,
+    "invade_m2": 16.5,
+    "tipoVia": 1,
+    "poligono": false
+   }
+  ]
+ },
+ "segundos": 31.191
+}

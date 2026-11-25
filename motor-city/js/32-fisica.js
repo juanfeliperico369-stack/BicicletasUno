@@ -43,10 +43,11 @@ class Cuerpo {
     /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
     const T = Terreno.paso(this, x, y); if (!T.ok && !(this.ia && !T.agua && BORDE_IA.has(this.mundo.suelo(x, y)) && !this.mundo.edificioEn(x, y, .3))) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }   /* 4.2: las casillas del borde de la calle (ladrillo o edificio sin edificio real encima) no traban a la IA; la huella de verdad se revisa abajo */
     if (this.chocaEdificios && V.clase !== 'agua') {
-      /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
-         y también los edificios de los sitios y las partes bajas de los emblemáticos */
+      /* edificios: siempre, con el mismo radio en la calle y fuera de ella. 5.4 · renacimiento cenital (Fase 2): los mundos están
+         saneados (ninguna huella sobre la calle ni el agua: Motor del Valle 1.3 y geo/territorio.py), así que se quitó la tolerancia
+         de 1 m que dejaba meterse en la huella sobre la vía. También los edificios de los sitios y las partes bajas de los emblemáticos */
       const tt = this.mundo.suelo(x, y), enVia = VIA_TT.has(tt), r = V.clase === 'pie' ? .2 : .4;
-      if (this.mundo.edificioEn(x, y, enVia ? -1 : r)) return this._bloquea('un edificio');
+      if (this.mundo.edificioEn(x, y, r)) return this._bloquea('un edificio');
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
       /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
       /* 4.2: y en el andén, los carros de la IA tampoco se trancan con lo menor (poste, banca, paradero, caneca, hidrante): lo atropellan como en GTA; árboles y rocas sí los paran */

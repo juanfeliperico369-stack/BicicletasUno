@@ -160,7 +160,7 @@ class Mundo {
   /* ---------- vías con nombre (vectores) ---------- */
   vias() {
     if (this._vias) return this._vias;
-    if (this.capaInfo('vias').formato === 'VIASJ') return (this._vias = this.capa('vias').map((v, i) => ({ i, k: v[0], nombre: v[1] || '', nom: '', ancho: v[2] || VIA_ANCHO[v[0]] || 6, p: Float32Array.from(v[3]) })));   // [tipo, nombre, ancho, [x,y,…] metros]
+    if (this.capaInfo('vias').formato === 'VIASJ') return (this._vias = this.capa('vias').map((v, i) => ({ i, k: v[0], nombre: v[1] || '', nom: '', ancho: v[2] || VIA_ANCHO[v[0]] || 6, p: Float32Array.from(v[3]), nivel: v[4] || 0 })));   // [tipo, nombre, ancho, [x,y,…] metros, nivel] (5.4: nivel 1 puente, −1 túnel o cubierta; sin él, a ras)
     const c = this.capaInfo('vias'), u8 = this.capa('vias'), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = dv.getUint32(0, true), L = new Array(n), v3 = (c.v || 3) >= 3, K = this.tile / (c.vq || 4), NOM = this.capa('info').calles;
     let o = 4;
     for (let i = 0; i < n; i++) {

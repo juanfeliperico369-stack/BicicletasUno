@@ -1,0 +1,17 @@
+{
+ "regiones": 4731,
+ "edificios": 622086,
+ "recortados": 0,
+ "quitados": 0,
+ "porRegion": [],
+ "muestras": [],
+ "ms": 10403,
+ "erroresConsola": [],
+ "datos": {
+  "edificios_v": 2,
+  "edificios_n": 622086,
+  "vias_v": 2,
+  "vias_u": 2.5
+ },
+ "resultado": "BIEN"
+}

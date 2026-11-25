@@ -7,7 +7,7 @@
        calles con nombre y nomenclatura (vias.bin), 1.203 sitios y 5.314 edificios con forma y partes de
        los emblemáticos (sitios.bin), viaducto, puentes y túneles (alturas.json), carriles y semáforos,
        Metroplús, lugares con postal y las 133 estaciones EnCicla.
-     · El Metro (metros): TODAS las huellas (639.457 casas y edificios, edificios.js), hitos con su huella
+     · El Metro (metros): TODAS las huellas (622.086 casas y edificios saneados por el Motor del Valle 1.3, edificios.js v2), hitos con su huella
        (hitos.js), 2.176 puentes y deprimidos con ancho y altura (puentes.js), red completa (red.js),
        eje real de los rieles (rieles.js), corredores y andenes del Metroplús, rutas de bus por calles.
    Todo queda en METROS del mapa (x hacia el oriente, y hacia el sur) salvo las capas binarias que

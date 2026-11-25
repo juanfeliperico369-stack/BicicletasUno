@@ -35,7 +35,7 @@ ok(M.calle(col.x, col.y) !== '', 'la calle más cercana tiene nombre', M.calle(c
 
 console.log('3) Edificios, sitios, pasos y transporte');
 const ED = M._ed(); let tot = 0; for (let r = 0; r < ED.nx * ED.ny; r++) tot += ED.cnt[r];
-ok(tot === 639457, 'las 639.457 huellas reales están indexadas', tot);
+ok(tot === M.capaInfo('edificios').cuantos && tot > 600000, 'las huellas reales están indexadas (5.4: 622.086 saneadas por el Motor del Valle 1.3; antes 639.457)', tot);
 const cerca = M.edificiosEn(col.x - 150, col.y - 150, col.x + 150, col.y + 150); ok(cerca.length > 40 && cerca.every(e => e.h > 0 && isFinite(e.x)), 'edificios alrededor del Coltejer con altura', cerca.length);
 const S = M.sitios(); ok(S.S.length === 1203 && S.E.length === 5314, '1.203 sitios y 5.314 edificios con forma real');
 ok(S.E.some(e => /Coltejer/.test(e.nombre) && e.partes && e.h > 100), 'el Coltejer modelado por partes y más de 100 m de alto');
@@ -515,7 +515,7 @@ console.log('25) Manejo 4.5: desliza contra la pared, pierde velocidad según el
   let rasante = null, frente = null, desatasca = null;
   for (const e of L0.slice(0, 12)) {
     /* punto frente a la cara larga del edificio, a 9 m, en la calle */
-    const nx = -e.uy, ny = e.ux, px = e.x + nx * (e.hd + 9), py = e.y + ny * (e.hd + 9); if (M.edificioEn(px, py, 2)) continue;
+    const nx = -e.uy, ny = e.ux, px = e.x + nx * (e.hd + 9), py = e.y + ny * (e.hd + 9); if (M.edificioEn(px, py, 2) || ![4, 5, 14].includes(M.suelo(px, py))) continue;   /* 5.3.2: que de verdad sea calle (con el mundo saneado, el primer rectángulo grande daba a un patio) */
     const correr = (ang, v0, seg, E0 = {}) => { const C = new MC.Cuerpo(M, { x: px, y: py, a: ang, veh: 'carro' }); C.v = v0; let ch = false, des = false; const x0 = C.x, y0 = C.y; for (let t = 0; t < seg; t += 1 / 60) { C.actualizar(1 / 60, Object.assign({ acel: 1, asistencia: false }, E0)); if (C.eventos.includes('choque')) ch = true; if (C.eventos.includes('desatasco')) des = true; } return { C, ch, des, avance: Math.hypot(C.x - x0, C.y - y0) }; };
     const haciaPared = Math.atan2(-ny, -nx), r1 = correr(haciaPared + 1.2, 12, 1.6), r2 = correr(haciaPared, 14, .9);
     /* atascado de verdad: aparece metido 1,5 m dentro de la huella y empuja hacia adentro */
@@ -569,7 +569,7 @@ console.log('22) Motores clásicos 4.1: DDA (Wolfenstein), semillas (Elite), gem
   /* la gema: a mediodía en una calle abierta hay más luz que a medianoche; el ruido rodea un edificio (el camino es más largo que la recta) */
   const cE = M.viaCercana(...Object.values(M.geoAMetros(6.2442, -75.5812)), 300), dia = new MC.Reloj({ fecha: '2026-11-20', min: 12 * 60 }), noche = new MC.Reloj({ fecha: '2026-11-20', min: 0 });
   const luzDia = MC.Sigilo.luz(M, cE.x, cE.y, { reloj: dia }), luzNoche = MC.Sigilo.luz(M, cE.x, cE.y, { reloj: noche }), alc = [MC.Sigilo.alcance(24, MC.Sigilo.gema(luzNoche, { agachado: true })), MC.Sigilo.alcance(24, MC.Sigilo.gema(luzDia, { vel: 5 }))];
-  let rodea = null; { const Lb = M.edificiosEn(cE.x - 150, cE.y - 150, cE.x + 150, cE.y + 150).filter(e => e.hw > 8 && e.hd > 6); for (const e of Lb) { const a = { x: e.x - e.ux * (e.hw + 3), y: e.y - e.uy * (e.hw + 3) }, b = { x: e.x + e.ux * (e.hw + 3), y: e.y + e.uy * (e.hw + 3) }; if (M.edificioEn(a.x, a.y, 0) || M.edificioEn(b.x, b.y, 0)) continue; const R = MC.Sigilo.ruido(M, a.x, a.y, 60, { celda: 2 }), cam = R.camino(b.x, b.y), rec = Math.hypot(b.x - a.x, b.y - a.y); if (isFinite(cam)) { rodea = { recta: Math.round(rec), camino: Math.round(cam), oye: +R.oye(b.x, b.y).toFixed(2) }; break; } } }
+  let rodea = null; { const Lb = M.edificiosEn(cE.x - 400, cE.y - 400, cE.x + 400, cE.y + 400).filter(e => e.hw > 8 && e.hd > 6);   /* 5.3.2: 400 m (en 150 había un solo caso, que el mundo saneado cambió: en las manzanas cerradas rodear pide más de 60 m) */ for (const e of Lb) { const a = { x: e.x - e.ux * (e.hw + 3), y: e.y - e.uy * (e.hw + 3) }, b = { x: e.x + e.ux * (e.hw + 3), y: e.y + e.uy * (e.hw + 3) }; if (M.edificioEn(a.x, a.y, 0) || M.edificioEn(b.x, b.y, 0)) continue; const R = MC.Sigilo.ruido(M, a.x, a.y, 60, { celda: 2 }), cam = R.camino(b.x, b.y), rec = Math.hypot(b.x - a.x, b.y - a.y); if (isFinite(cam)) { rodea = { recta: Math.round(rec), camino: Math.round(cam), oye: +R.oye(b.x, b.y).toFixed(2) }; break; } } }
   /* la carretera arcade sigue la calle; el Voxel Space arma su mapa de alturas con los edificios encima del relieve */
   const A = new MC.Arcade(M), P = A.camino(cE.x, cE.y, cE.ang), enCalle = P.filter(q => M.viaCercana(q.x, q.y, 14)).length / P.length;
   const V = new MC.VoxelSpace(M, { N: 256, celda: 4 }).preparar(cE.x, cE.y); let maxSalto = 0; for (let k = 1; k < V.alt.length; k++) maxSalto = Math.max(maxSalto, V.alt[k] - V.alt[k - 1]);

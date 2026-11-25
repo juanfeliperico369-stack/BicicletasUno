@@ -1,0 +1,66 @@
+{
+ "regiones": 50,
+ "edificios": 12047,
+ "recortados": 0,
+ "quitados": 0,
+ "porRegion": [
+  {
+   "rx": 23,
+   "ry": 36,
+   "zona": "Centro · La Candelaria",
+   "edificios": 645,
+   "recortados": 0,
+   "quitados": 0
+  },
+  {
+   "rx": 18,
+   "ry": 37,
+   "zona": "Laureles",
+   "edificios": 664,
+   "recortados": 0,
+   "quitados": 0
+  },
+  {
+   "rx": 22,
+   "ry": 43,
+   "zona": "El Poblado",
+   "edificios": 466,
+   "recortados": 0,
+   "quitados": 0
+  },
+  {
+   "rx": 27,
+   "ry": 28,
+   "zona": "Ladera nororiental (Santo Domingo)",
+   "edificios": 2294,
+   "recortados": 0,
+   "quitados": 0
+  },
+  {
+   "rx": 21,
+   "ry": 39,
+   "zona": "Río y viaducto (Industriales)",
+   "edificios": 143,
+   "recortados": 0,
+   "quitados": 0
+  },
+  {
+   "rx": 34,
+   "ry": 43,
+   "zona": "Rural (Santa Elena)",
+   "edificios": 171,
+   "recortados": 0,
+   "quitados": 0
+  }
+ ],
+ "muestras": [],
+ "ms": 472,
+ "erroresConsola": [],
+ "datos": {
+  "edificios_v": 2,
+  "edificios_n": 622086,
+  "vias_v": 2,
+  "vias_u": 2.5
+ },
+ "resultado": "BIEN"
+}

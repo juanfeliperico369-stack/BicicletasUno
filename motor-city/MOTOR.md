@@ -250,6 +250,18 @@ Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limp
   - `camino(x, y, a)` da los puntos `{x, y, z, w, u}` cada 6 m por la autopista o por la calle y sus empalmes; `u` fija las franjas al mundo;
   - `dibujar(g, W, H, E)`;
   - `aPantalla(x, y, z)`.
+- **`MC.Pista` (5.4, `js/47-pista.js`): las carreras retro pseudo‑3D en circuitos** (MC.Arcade se queda para la calle real). Escrita desde cero con la técnica clásica de segmentos:
+  - **la pista:** segmentos de 200 de largo con `p1` y `p2` (mundo, cámara y pantalla), curva, banda de color cada 3 segmentos, objetos, carros y `clip`; colinas cosenoidales y curvas acumuladas con fuerza centrífuga; dos circuitos (`palmas` y `regional`); `crearDe(def)` arma otros (las pruebas arman una loma);
+  - **el dibujo**, `dibujar(g, W, H, S, op)`:
+    - pasada 1, de cerca a lejos con `maxY`: recorta cada segmento contra lo ya pintado, guarda `seg.clip` y pone niebla en los últimos 45 segmentos;
+    - las franjas se juntan por color y nivel de niebla: unos 40 rellenos por cuadro;
+    - pasada 2, de lejos a cerca: objetos y rivales recortados contra `seg.clip`;
+    - además: paralaje de 3 capas, el carro con 6 estados, la baranda continua, chispas, humo y el tablero;
+  - **la carrera sin pantalla:**
+    - `carrera(P, op)`, `paso(S, dt, ent)` (paso fijo de 1/120 s), `bot(S)` y `simular(id, op)`;
+    - rebufo a menos de 15 segmentos, nitro (FOV de 100° a 116°) y rivales que cambian de carril sin saltos;
+    - `perfil(P)` (curvas y alturas, para las pruebas) y `cieloDe(E)` (el cielo de `cieloRetro`);
+  - **el juego completo:** `entrar({ circuito, lienzo, capa, vueltas, rivales, cielo, noche, alTerminar, alSalir })`, con controles táctiles en las esquinas. En vertical, el carro va encima de la fila de botones. Lo usa Turno Cero en «🏎️ Carreras retro» (`juegos/getaway/70-retro.js`).
 - **`MC.VoxelSpace(M, { N, celda })`:**
   - `preparar(x, y)` arma, de una vez, la ventana N × N (suelo, relieve, agua, edificios y luz horneada);
   - durante el juego, la ventana nueva se arma por franjas (`_iniciar` y `_trabajar`) mientras se dibuja la anterior.
@@ -290,3 +302,5 @@ Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limp
 | **2.2.0** | 19‑nov‑2026 | GPU virtual (perfil, resolución dinámica, bucle de paso fijo y raster 3D por software). Física de niveles por superficies. Cámara con resortes, brazo con choque, FOV por velocidad y trauma. **Vista lateral.** Manejo (curvas, esquemas y asistencias), sprites, escala real, interfaz por zonas, interiores con 8 estilos y catálogo, **Mi casa** desde la dirección, lugares jugables y desgaste, historias con director, ocurrencias y cosmos. 103 pruebas. |
 | **2.1.0** | 19‑nov‑2026 | Nombre: solo «Motor City» (carpeta `motor-city/`). Ciencia, economía, generador de mundos, territorios (`geo/territorio.py`), clima global, seres, taller, IA y población, interiores, música, interfaz y mecánicas. Minijuego Mandados, plantillas, reportes y skills. 80 pruebas. |
 | **2.0.0** | 19‑nov‑2026 | **Motor City.** La fuente de verdad pasa a `motorcity`.<br>• Mundo 2.0 en un solo archivo (MC4), con todas las huellas, sitios, pasos con nivel, transporte, lugares y tráfico.<br>• El motor en el navegador: personaje, vehículos, física, controles, cámara, 8 vistas más pixel, panorámica de perfil, WebGL, reglas del mundo y Run en la ciclovía.<br>• Banco de pruebas jugable y 54 pruebas.<br>• La tubería 1.x sigue igual (y ya lee cualquier ventana de ciudad). |
+| **5.3.2** | 24‑nov‑2026 | **Mundos saneados** (renacimiento cenital, Fase 2): `geo/territorio.py` con la ley de soberanía vial del Motor del Valle 1.3 (regla A; las casas de OSM conservan el andén de las calles menores, no el asfalto; puentes, túneles y vías cubiertas con su nivel en `VIASJ[5]`, que el cargador lee como `via.nivel`); Medellín, Guatapé y Nueva York regenerados con su agua y su PVS; la colisión con edificios sin la tolerancia de 1 m sobre la calle (`js/32-fisica.js`); prueba `pruebas/calles-libres.mjs`. |
+| **5.4.0** | 25‑nov‑2026 | **Carreras retro** (renacimiento cenital, Fase 4): `MC.Pista` (`js/47-pista.js`), las carreras pseudo‑3D por segmentos en circuitos, escritas desde cero (dos pasadas con `maxY` y `seg.clip`, niebla, franjas juntas por color, paralaje de 3 capas, el carro con 6 estados, rebufo, nitro, rivales con IA de carril, HUD, minimapa y controles táctiles; circuitos `palmas` y `regional`; `simular`, `bot` y `perfil` para las pruebas). En Turno Cero, «🏎️ Carreras retro» (`juegos/getaway/70-retro.js`). Prueba `pruebas/pista-retro.mjs`. |

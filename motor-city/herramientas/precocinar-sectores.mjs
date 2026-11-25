@@ -51,7 +51,7 @@ function edificiosDe(c){
   if(E.formato!=='ED1'&&E.tipo!=='bin')error('formato edificios no admitido');
   if(!(E.nx>0&&E.ny>0&&E.R>0&&E.Q>0&&E.cuantos>=0&&Array.isArray(E.len)&&E.len.length>=7))error('cabecera ED1 incompleta');
   const L=E.len,oPos=L[0],oDim=oPos+L[1],oAng=oDim+L[2],oPis=oAng+L[3],oKin=oPis+L[4],oPol=oKin+L[5];
-  if(oPol+L[6]!==b.length)error('ED1: secciones fuera de límites');
+  if(oPol+L[6]+L.slice(7).reduce((a,v)=>a+v,0)!==b.length)error('ED1: secciones fuera de límites');   /* 5.3.2: el ED1 v2 de El Metro trae flujos de más al final (zb, el zócalo): se saltan */
   const readVar=(end,ref)=>{
     let v=0,shift=0;
     for(let i=0;i<8;i++){

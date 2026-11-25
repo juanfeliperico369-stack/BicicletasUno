@@ -35,3 +35,4 @@ Para abrir uno: `node motor.mjs reporte "Título corto" --juego elmetro --autor 
 | 2026-11-23 | [Entrega 5.2 · G5-04: Minijuegos táctiles cortos (Chinatown Wars)](./2026-11-23-gemini-g5-04-minijuegos.md) | getaway / familia | Gemini · Antigravity («hydrogen») | Listo para integrar (`4/4` en `minijuegos.mjs`, `+27.8 KB`) |
 
 
+| 2026-11-24 | [Fase 0 del renacimiento cenital: línea base de los 3 repositorios, edificios contra vías en El Metro (18,8 %) y capturas «antes»](./2026-11-24-claude-fase0-cenital.md) | motor / El Metro / EnCicla / getaway | Claude | Fase 1 en espera de las decisiones del autor |

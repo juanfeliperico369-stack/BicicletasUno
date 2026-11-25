@@ -1,0 +1,65 @@
+{
+ "fecha": "2026-11-24",
+ "metodo": "tools/osm-ventanas.mjs + api.openstreetmap.org/api/0.6/map (3 cajas, OSM de hoy) + tools/osm_comparar.py; las ventanas de casillas del juego son idénticas antes y después de la Fase 1 (cmp)",
+ "zonas": [
+  {
+   "zona": "San Antonio",
+   "casillas_via_osm": 1644,
+   "casillas_via_juego": 1448,
+   "recall_exacto": 0.844,
+   "recall_20m": 0.981,
+   "recall_arterias_20m": 1.0,
+   "precision_20m": 1.0,
+   "precision_20m_incl_peatonal": 1.0,
+   "edificios_osm_casillas": 1844,
+   "edificios_osm_en_juego": 0.529,
+   "calles_con_nombre": 214,
+   "calles_80pct": 214
+  },
+  {
+   "zona": "Niquía",
+   "casillas_via_osm": 1193,
+   "casillas_via_juego": 839,
+   "recall_exacto": 0.672,
+   "recall_20m": 0.835,
+   "recall_arterias_20m": 1.0,
+   "precision_20m": 0.994,
+   "precision_20m_incl_peatonal": 1.0,
+   "edificios_osm_casillas": 906,
+   "edificios_osm_en_juego": 0.661,
+   "calles_con_nombre": 65,
+   "calles_80pct": 65
+  },
+  {
+   "zona": "Santo Domingo Savio",
+   "casillas_via_osm": 1328,
+   "casillas_via_juego": 1193,
+   "recall_exacto": 0.846,
+   "recall_20m": 0.995,
+   "recall_arterias_20m": 0.0,
+   "precision_20m": 0.995,
+   "precision_20m_incl_peatonal": 0.996,
+   "edificios_osm_casillas": 3099,
+   "edificios_osm_en_juego": 0.556,
+   "calles_con_nombre": 181,
+   "calles_80pct": 181
+  }
+ ],
+ "auditoria_17nov": {
+  "San Antonio": {
+   "recall_20m": 1.0,
+   "precision_20m": 0.999,
+   "calles": "214/214"
+  },
+  "Niquía": {
+   "recall_20m": 0.98,
+   "precision_20m": 0.996,
+   "calles": "62/62"
+  },
+  "Santo Domingo Savio": {
+   "recall_20m": 1.0,
+   "precision_20m": 0.995,
+   "calles": "181/181"
+  }
+ }
+}

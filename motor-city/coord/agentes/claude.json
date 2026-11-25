@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "agente": "claude",
-  "rama": "claude/motor-city-engine-xu7p4y",
+  "rama": "ccr-4f6eeea5-yulqk1",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "5.3.1 entregada «Skills para todas las IA»: node motor.mjs skills --integrar --agente <tu-agente> deja las skills propias en .claude/skills y .agents/skills, el .gitignore al día y las 4 externas instaladas con su commit revisado; prompt para compartir: docs/PROMPT-SKILLS.md. Antes: 5.3.0 «Todo lo nuevo, unido». Sigue: fase 4 (lenguaje de misiones y repeticiones) y lo que las otras IA no alcancen.",
-  "estado": "entregado",
-  "ultima_actualizacion_utc": "2026-11-23T17:50:00Z",
+  "fase_actual": "25-nov-2026 · Fase 4 del «renacimiento cenital» hecha: MC.Pista (js/47-pista.js), las carreras retro pseudo-3D, y «🏎️ Carreras retro» en Turno Cero (juegos/getaway/70-retro.js); Motor City 5.4.0 (reportes/2026-11-25-claude-fase4-pista.md). Rama ccr-4f6eeea5-yulqk1. Sigue la Fase 5 (Turno Cero en cápsulas y en el celular).",
+  "estado": "Fase 4 en verde; sigue la Fase 5 (publicar, la APK y main esperan el OK del autor)",
+  "ultima_actualizacion_utc": "2026-11-25T09:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -38,12 +38,24 @@
     "pruebas/puentear-robo.mjs",
     "herramientas/skills-externas.mjs",
     ".agents/skills/ (copia de .claude/skills)",
-    "docs/PROMPT-SKILLS.md"
+    "docs/PROMPT-SKILLS.md",
+    "docs/AUDITORIA-FASE0-CENITAL.md",
+    "docs/referencias/renacimiento-cenital-2026/",
+    "reportes/fase0-cenital/",
+    "reportes/fase1-cenital/",
+    "reportes/2026-11-24-claude-fase1-cenital.md",
+    "BicicletasUno/motor-valle/ (1.3.0: geo/sanear.py, rasante.py, niveles.py, huellas.py, anchos.json, pruebas/)",
+    "MetroZero/tools/edificios_datos.py, vias_datos.mjs, corredores.mjs, prueba-recorte.mjs",
+    "MetroZero/src/data/edificios.js y vias.js (v2)",
+    "BicicletasUno/src/data/edificios.bin, edificios.json y vias-cota.bin",
+    "js/47-pista.js",
+    "juegos/getaway/70-retro.js",
+    "pruebas/pista-retro.mjs"
   ],
   "no_toco": [
-    "src/ de BicicletasUno, MetroZero y RunRunZero (zonas de Antigravity y Codex)",
     "juegos/getaway/arte3d/",
-    "juegos/getaway/turno-cero-accion-3d.html"
+    "juegos/getaway/turno-cero-accion-3d.html",
+    "src/js/ de BicicletasUno y MetroZero (en la Fase 1 no se tocó ningún render)"
   ],
   "simbolos_exportados": [
     "MC.Planeta",
@@ -71,9 +83,9 @@
     "TURNO.Abierto"
   ],
   "pruebas_verificadas": {
-    "motor": "node motor.mjs prueba --navegador (4.0.3)",
-    "encicla": "tests/run.js en verde",
-    "el_metro": "node tools/test.mjs 100: 0 errores",
+    "motor": "node motor.mjs prueba --navegador (5.3.2): 158 bien; la lista de motor-city-qa.yml",
+    "encicla": "tests/run.js 177 ✓ (bandera apagada y encendida); tests/cenital-libre.mjs BIEN",
+    "el_metro": "node tools/test.mjs 100: 0 errores (bandera apagada y encendida); tools/prueba-cenital.mjs BIEN; tools/prueba-rutas.mjs 0",
     "getaway_contenido": "node pruebas/getaway-contenido.mjs: todo OK"
   },
   "pendiente_para_compañeras": "Leer CONTEXTO-RELEVO.md § 5 (qué falta y a quién le toca) y dejar su entrada en § 8 al terminar.",
@@ -94,5 +106,37 @@
       "pruebas/"
     ],
     "propuesta_a_las_otras_IA": "Para no chocar: cada IA escribe su documento docs/PLAN-EVOLUCION-<MARCA>.md y trabaja en su rama ia/<marca>/4.7-*. Si tocan los mismos archivos de arriba, avisen en coord/buzon/ antes. Sugerencia de reparto: arte 3D (modelos GLB, texturas, iluminación) y 2D/pixel para quien tenga mejor generación de imagen; investigación de rendimiento en celulares reales para quien pueda medir; Claude: jugabilidad de los modos, mundo abierto con actividades y cámaras."
-  }
+  },
+  "sesion_2026_11_24": {
+    "rama": "ccr-408a25e1-xz3rl6 (motorcity; en los juegos hermanos no hubo cambios)",
+    "skills": "node motor.mjs skills --integrar --agente claude-code → «4) Verificación: ✓ todo en orden»",
+    "documentos": [
+      "docs/AUDITORIA-FASE0-CENITAL.md",
+      "docs/investigacion_tecnica_motor_valle.md",
+      "docs/referencias/renacimiento-cenital-2026/",
+      "reportes/2026-11-24-claude-fase0-cenital.md",
+      "reportes/fase0-cenital/",
+      "docs/VISION-Y-MISION.md"
+    ],
+    "plan_fase_1": "BicicletasUno/motor-valle/ (fuente de verdad) → MetroZero con sincronizar.mjs: geo/anchos.json, geo/sanear.py, geo/rasante.py y pruebas/geometria.{mjs,py}; Motor del Valle 1.3.0; sin tocar src/js/",
+    "reclama_para_fase_1": [
+      "BicicletasUno/motor-valle/ (avisar en coord/ antes)",
+      "MetroZero/tools/edificios_datos.py",
+      "MetroZero/src/data/edificios.js y vias.js (solo datos)"
+    ],
+    "prompt_relevo": "docs/PROMPT-RELEVO.md: las fases 1 a 5 del renacimiento cenital, con las decisiones del autor, los comandos, los criterios de «hecho» y las reglas (aviso en CLAUDE.md, AGENTS.md y GEMINI.md)",
+    "decisiones_autor": {
+      "anchos": "real (regla A; + ciclorrutas)",
+      "trozos_m": 160,
+      "encicla": "solo modo libre",
+      "el_metro": "Ciudad Libre y Bus",
+      "fuente": "rehacer desde las fuentes originales, con la prueba de craqueo",
+      "turno_cero": "solo en motorcity"
+    }
+  },
+  "reclama_para_fase_2": [
+    "MetroZero/src/js/97d-cenital.js y 22-gl.js (partido en funciones)",
+    "BicicletasUno/src/js/99y-cenital.js",
+    "motorcity/geo/territorio.py, js/32-fisica.js, js/10-mundo.js, datos/*"
+  ]
 }

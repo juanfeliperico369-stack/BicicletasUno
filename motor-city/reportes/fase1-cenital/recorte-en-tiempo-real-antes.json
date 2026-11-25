@@ -1,0 +1,14 @@
+{
+ "nota": "El Metro 3.8.0 antes de la Fase 1 (datos de git): el recorte en tiempo real (11-edificios.js · recorta) en todas las regiones con casas (tools/prueba-recorte.mjs --todas)",
+ "regiones": 4734,
+ "edificios": 639457,
+ "recortados": 107546,
+ "quitados": 17190,
+ "ms": 9995,
+ "datos": {
+  "edificios_v": 1,
+  "edificios_n": 639457,
+  "vias_v": 1,
+  "vias_u": 2.5
+ }
+}
