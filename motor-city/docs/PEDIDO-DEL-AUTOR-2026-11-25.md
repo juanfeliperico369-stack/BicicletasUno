@@ -13,6 +13,14 @@
 > «Hay que eliminar las "camaras", la de maqueta, la de panorámica 2D, etc. Ya dije que debe prevalecer
 > Y haz que en encicla aparezca el escalafón como botón en la pantalla de inicio, porque para ir a el hace falta ingresar al mundo abierto y luego salirse de allí, eso no es ideal»
 
+**Tercer mensaje** (al aprobar el plan; con una lámina de EnCicla, «Un día en EnCicla · Para la apertura y el cierre»):
+
+> «Sí, hazlo, publica y el plan está bien, ya veremos sobre la marcha»
+>
+> «Agrega todo esto al videojuego de encicla» … «Haz lo de la imagen al final del plan»
+
+La lámina está en el repositorio de EnCicla: `docs/referencias/2026-11-25-apertura-y-cierre.jpg` (detalle en § 4, fase F).
+
 ## 2. Lo que pide, punto por punto
 
 | # | Pedido | En los juegos |
@@ -28,6 +36,7 @@
 | P9 | **La portada de EnCicla**: el panel de la animación no cargaba. | EnCicla |
 | P10 | **Controles**: mejor sensibilidad, más formas de control, personalizables, con recomendaciones según se juegue en vertical o en horizontal. | todos |
 | P11 | **El escalafón como botón en la portada de EnCicla** (antes había que entrar al mundo abierto y salir). | EnCicla |
+| P12 | **La apertura y el cierre de estaciones** de la lámina «Un día en EnCicla», dentro del juego. **Va al final del plan**, después de las fases A–E. | EnCicla |
 
 ## 3. Lo que ya quedó (25‑nov‑2026, Claude)
 
@@ -37,6 +46,8 @@
 | P8 | **El guardián del sonido**: al salir de la app todo calla, en cualquier pantalla, y al volver sigue lo que sonaba. En la APK lo avisa la actividad nativa. | EnCicla 3.9.1, El Metro 3.10.1 y Motor City 5.4.2 (`*sonido-guardian*`) |
 | P9 | **La portada viva** de EnCicla: la animación sale a ~1,9 s en vez de quedar ~10 s en blanco (CPU 4×), mientras el mapa se arma. | EnCicla 3.9.1 (`src/js/98z-portada-viva.js`) |
 | P11 | **🏆 Escalafón** en la portada de EnCicla, directo a su pestaña. | EnCicla 3.9.1 (`src/js/98n-abierto.js`) |
+| P6 (fase A, EnCicla) | **La carga sin huecos.** Lo cercano y lo de adelante primero, de a uno hasta terminarlo; el caché cuenta la vista girada. Mientras se arma, el trozo se ve en baja resolución con los colores del suelo. En la compuerta de 2 km pasó de 0 trozos terminados a 14 y 20, con p95 de 43 y 35 ms. | EnCicla 3.10.1 (`src/js/99w-chunks-progresivos.js`) |
+| P2 (afinada) | **La cámara de persecución de cerca:** en Turno Cero, el último tramo abre el lente de 35° a 55° y baja a 40° (con el lente estrecho, inclinar solo daba un teleobjetivo). En El Metro, de cerca la cámara queda a unos 40°, con el ojo a 8 m o más. | Motor City 5.5.1, El Metro 3.11.1 |
 
 **Siguen como modos propios** (no son cámaras del mundo):
 - en Turno Cero, las 🏎️ Carreras retro (pseudo‑3D) y el 🧰 garaje (fichas pixel);
@@ -46,7 +57,7 @@
 
 **Pixel World** de EnCicla sigue como estilo en Más › Gráficos, no como cámara.
 
-## 4. Lo que falta: propuesta por fases (espera el OK del autor)
+## 4. El plan por fases (aprobado el 25‑nov: «el plan está bien, ya veremos sobre la marcha»)
 
 Cada fase tiene su informe, sus pruebas y su 📏 en el celular.
 
@@ -71,6 +82,29 @@ Cada fase tiene su informe, sus pruebas y su 📏 en el celular.
    - El mundo de EnCicla hoy es un lienzo 2.5D. Esta fase lo pasa al 3D de verdad (WebGL, como El Metro y Motor City), con el 2D solo de respaldo para equipos sin WebGL.
    - Es la fase más grande, y su orden lo decide el autor.
 
+6. **Fase F · «Un día en EnCicla»: la apertura y el cierre de estaciones (P12, de la lámina del autor).** Va al final del plan, como lo pidió. Todo lo de la lámina entra al juego:
+   - **Los horarios:**
+     - apertura de 5:00 a 5:30 a. m.;
+     - cierre de 10:00 a 10:30 p. m.
+   - **Los pasos de la apertura y el cierre:**
+     1. antes de enviar el formulario, revisar y verificar los números de todas las bicicletas;
+     2. comprobar que **no** quede ningún préstamo activo en la estación;
+     3. en las bicicletas **mecánicas** cuyo número empieza por 0, escribir **B** al principio (0123 → B0123);
+     4. en el formulario de la estación **manual**, escribir las bicicletas y, si hay dañadas, poner la palabra **MALA** y debajo sus números;
+     5. en las estaciones **automáticas**, revisar que ninguna bicicleta esté mal anclada (así se evita perderlas);
+     6. usar siempre el **casco**, y practicar el autocuidado y la inteligencia vial.
+   - **Los personajes:** Buen Servicio Gómez, Linda Amable Palacio y Jorge Descuido (el que se equivoca, para aprender de él).
+   - **Los lemas:**
+     - «Cada encuentro cuenta»;
+     - «¡Que no se nos escape ningún detalle!»;
+     - «Apertura y cierre: verificar también es cuidar»;
+     - «¡De nuestro compromiso depende que EnCicla siga rodando!».
+   - **Cómo entra (propuesta, se ajusta con el autor):**
+     - un turno de apertura y otro de cierre en las estaciones manuales y automáticas;
+     - un formulario táctil donde se verifican los números, se escribe B0123 y MALA, se confirma que no queden préstamos y se revisan los anclajes;
+     - un recuento con los errores de Jorge Descuido;
+     - las fichas de la lámina en Más › La historia.
+
 ## 5. Reglas para quien siga
 
 - **No vuelvas a poner un selector de cámaras** ni cámaras de tercera o primera persona, maqueta, panorámica o cine en el mundo de ningún juego.
@@ -78,4 +112,4 @@ Cada fase tiene su informe, sus pruebas y su 📏 en el celular.
   - Si una prueba necesita otra vista del motor para medir un dibujo, la pone a mano; el jugador no la ve.
 - **Nada pintado en el suelo** que deba tener altura.
 - **2D y pixel solo en los modos ya establecidos.**
-- El orden de las fases de § 4 lo confirma el autor.
+- El orden de las fases de § 4 lo aprobó el autor («el plan está bien, ya veremos sobre la marcha»); la fase F (la lámina de la apertura y el cierre) va al final, como lo pidió.

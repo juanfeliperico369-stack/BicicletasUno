@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.5.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.5.1 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -3130,6 +3130,7 @@ Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limp
 | **5.4.1** | 25‑nov‑2026 | **Cápsulas** (renacimiento cenital, Fase 5): en Turno Cero, 🧰 Garaje y colección (`juegos/getaway/71-garaje.js`: fichas en 2D pixel con `MC.Taller`, la moto con `MC.Dinamica` y la capa aérea; se abre desde la portada sin cargar ninguna ciudad); 📏 de las carreras retro (`G.Retro.medir()`, `?medir=retro`); `MC.Pista.entrar` da `ultimoMs`; arreglo de la carrera intermitente de 📏 (`68-medir.js`). Prueba `pruebas/capsulas.mjs`. |
 | **5.4.2** | 25‑nov‑2026 | **Guardián del sonido** (`js/01-sonido-guardian.js`, `MC.GuardianSonido`): al salir de la app todo calla al instante, y al volver sigue lo que sonaba. Cada AudioContext queda registrado (una subclase) y se suspende; se pausan los medios y se corta la voz. Escucha `visibilitychange`, `pagehide`, `freeze` y el `pause`/`resume` que Capacitor da en `document`. Prueba: `pruebas/sonido-guardian.mjs`. |
 | **5.5.0** | 25‑nov‑2026 | **La cámara única** (el autor: «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»; `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`). En el perfil `cenital` de `MC.Camara`, el último tercio del zoom (`tercio`) baja de 66° a 36° (`pitchTercera`) y gira detrás del rumbo (`giraTercera`), moviendo la misma yaw que leen los controles. Lo prende el juego con `camara.tercio = true`. En Turno Cero el mundo abierto se ve solo en la cenital 3D: el 🔍 (y la tecla C) pasan por cuatro acercamientos (de lejos, cenital, de cerca y casi tercera persona; zoom de 2,4 a 60 px/m). Se fueron la ciudad 3D, la tercera y la primera persona, el dron, la maqueta, Arcade y Vuelo como cámaras, y 📏 mide la cámara única de lejos, de cerca y casi en tercera persona. |
+| **5.5.1** | 25‑nov‑2026 | **La cámara de persecución de cerca:** en el perfil `cenital` de `MC.Camara`, el tramo de casi tercera persona abre el lente de 35° a 55° (`fovTercera`) y baja a 40° (`pitchTercera`). Con el lente estrecho, inclinar solo daba un teleobjetivo y el carro llenaba la pantalla. En Turno Cero el zoom va de 2,4 a 30 px/m, con los acercamientos de lejos 4, cenital 9, de cerca 15 y casi tercera persona 30. La QA (`motor-city-qa.yml`) vuelve a correr: un nombre con «: » sin comillas la tenía rota desde la 5.4.0. `retos-semaforo.mjs` espera a que el rival arranque en vez de 6,5 s fijos. |
 
 
 ---
@@ -4830,6 +4831,21 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 25-nov-2026 · 5.5.1 «La cámara de persecución» y la QA que vuelve a correr (Claude)
+- **Por qué:**
+  - en Turno Cero, «casi tercera persona» a 52 px/m con el lente de 35° dejaba el carro llenando la pantalla: era un teleobjetivo inclinado y no daba sensación de tercera persona;
+  - además, la QA de GitHub no corría desde la 5.4.0: un nombre de paso con «: » sin comillas dejaba inválido todo el YAML.
+- **Hecho:**
+  - `js/34-camara.js`: el tramo de casi tercera persona abre el lente de 35° a 55° (`fovTercera`), baja a 40° (`pitchTercera`) y gira detrás del rumbo, como una cámara de persecución alta con perspectiva;
+  - Turno Cero: zoom de 2,4 a 30 px/m y acercamientos de 4, 9, 15 y 30; 📏 mide en 6, 15 y 30, y el sigilo queda hasta «de cerca» (15);
+  - `.github/workflows/motor-city-qa.yml`: el nombre va entre comillas y corre en cada PR a `main`;
+  - `pruebas/retos-semaforo.mjs`: espera a que el rival arranque, con un tope de 15 s, en vez de 6,5 s fijos (en el runner lento la cuenta regresiva se comía la espera);
+  - `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`: el plan quedó aprobado, va lo hecho en la fase A, y se suma la fase F (P12, la lámina de la apertura y el cierre de estaciones de EnCicla) al final, como lo pidió el autor.
+- **Probado:**
+  - `prueba --navegador`: 158 bien;
+  - `medir.mjs`, `capsulas.mjs`, `sonido-guardian.mjs` y `retos-semaforo.mjs`: en verde;
+  - también los pasos de la QA que no corrían en GitHub: sitios, vuelcos, minijuegos, química, R6-b, fachadas, C-M34, el prototipo y el 3D de Turno Cero (con xvfb), la portada, las 14 capturas y el público simulado.
 
 ### 25-nov-2026 · 5.5.0 «La cámara única» y 5.4.2 «Guardián del sonido» (Claude)
 - **Lo que pidió el autor** (palabra por palabra en `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`):

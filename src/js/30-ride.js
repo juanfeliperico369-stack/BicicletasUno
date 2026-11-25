@@ -266,7 +266,7 @@ class Ride {
     let made = 0;
     for (let cy = Math.floor(oy / S); cy <= Math.floor((oy + BH) / S); cy++) for (let cx = Math.floor(ox / S); cx <= Math.floor((ox + BW) / S); cx++) {
       if (cx < 0 || cy < 0 || cx * CH >= MW || cy * CH >= MH) continue;
-      if (!this.map.hasG(cx, cy)) { if (made && this.dibujado) { b.fillStyle = '#cfc9bc'; b.fillRect(cx * S - ox, cy * S - oy, S, S); made++; continue; } made++; }   // a lo sumo un trozo nuevo por cuadro (sin tirones); el resto llega en los cuadros siguientes
+      if (!this.map.hasG(cx, cy)) { if (made && this.dibujado) { if (JE.chunksGPT6 && JE.chunksGPT6.boceto) JE.chunksGPT6.boceto(this.map, b, cx, cy, cx * S - ox, cy * S - oy, S, S); else { b.fillStyle = '#cfc9bc'; b.fillRect(cx * S - ox, cy * S - oy, S, S); } made++; continue; } made++; }   // 3.10.1: lo que aún no se pide se ve en baja resolución, con los colores del suelo   // a lo sumo un trozo nuevo por cuadro (sin tirones); el resto llega en los cuadros siguientes
       b.drawImage(this.map.chunkG(cx, cy), cx * S - ox, cy * S - oy, S, S);
     }
     this.dibujado = true;
