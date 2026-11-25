@@ -2,7 +2,7 @@
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '3.10.0', errors: [], headless: false, arranque: { codigo: Math.round(performance.now()) } };   /* arranque: los tiempos del inicio en ms (3.9.1, 99-boot.js) */
+const JE = window.JE = { version: '3.10.1', errors: [], headless: false, arranque: { codigo: Math.round(performance.now()) } };   /* arranque: los tiempos del inicio en ms (3.9.1, 99-boot.js) */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;

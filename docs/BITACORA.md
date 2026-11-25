@@ -2,6 +2,21 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 25-nov-2026 · v3.10.1 (versionCode 31001) · Fase A: la carga del mundo sin huecos (Claude)
+- **Lo que pidió el autor** (fase A del pedido aprobado, `motor-city/docs/PEDIDO-DEL-AUTOR-2026-11-25.md`): «El mundo en tercera persona no carga en totalidad ni aunque avances más, hay que pensar en formas ingeniosas para hacer la carga del mundo».
+- **Lo que se midió primero** (la compuerta de 2 km con CPU 4×, 3.10.0): de 32 a 40 trozos pedidos, **0 terminados** y de 21 a 40 cancelados. La cola iba en ronda (una etapa de cada trozo por turno): ninguno terminaba, y al moverse se botaban a medio hacer. Lo pendiente se veía como cuadros beige.
+- **Qué cambió** (`src/js/99w-chunks-progresivos.js` y `src/js/30-ride.js`):
+  - **lo cercano primero:** la cola se ordena en cada cuadro por la distancia al centro de la vista, con ventaja para lo que queda adelante del rumbo;
+  - **de a uno y hasta terminarlo:** el primero de la cola sigue con sus etapas hasta acabar, dentro del mismo presupuesto de 6 ms;
+  - **el caché cuenta la vista de verdad:** con la cámara girada (de cerca va detrás del rumbo), el suelo se dibuja en un cuadrado más grande; antes el tope se quedaba corto y botaba trozos que seguían en pantalla;
+  - **el boceto:** mientras se arma, el trozo se ve en baja resolución con los mismos colores del suelo detallado (8 × 8 muestras del mapa, suavizadas), y el detalle se dibuja aparte y lo reemplaza al terminar. Nunca más un cuadro vacío. Lo que aún no se pide también se ve así;
+  - `JE.chunksGPT6.latencias`: cuánto tarda cada trozo desde que se pide hasta quedar completo.
+- **Qué se probó:**
+  - la compuerta de 2 km con CPU 4×: META CUMPLIDA. Carrera 43A con p95 de 43 ms, 14 terminados y 3 cancelados; Las Palmas con p95 de 35 ms, 20 terminados y 5 cancelados (antes 0 terminados);
+  - A/B de 4 corridas por cola en esta máquina: la nueva no es más lenta (p95 promedio de 52,5 contra 55,4 ms en la 43A; 47,0 contra 46,9 en Las Palmas);
+  - `node tests/run.js`: 179 ✓. La K-1 ahora pide que el trozo nazca opaco con el boceto, en vez del beige exacto.
+- **Qué falta:** la fase A en El Metro y Turno Cero, y las fases B–E. Al final del plan va lo de la imagen del autor: la apertura y el cierre de estaciones.
+
 ## 25-nov-2026 · v3.10.0 (versionCode 31000) · La cámara única, la portada viva, el guardián del sonido y 🏆 Escalafón en la portada (Claude)
 - **Lo que pidió el autor** después de jugar la 3.9.0 (palabra por palabra en `motor-city/docs/PEDIDO-DEL-AUTOR-2026-11-25.md`, cuando se sincronice el motor; la fuente es motorcity):
   - «EnCicla tiene un bug en la pantalla de inicio y es que no carga el panel de la animación»;

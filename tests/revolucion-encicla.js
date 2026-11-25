@@ -399,7 +399,7 @@ module.exports.v9 = async function (p, ok) {
       out.creado = perfil.creados === ini + 1 && !!canvas && canvas.width > 0;
       out.reutilizado = JE.map.chunkG(cx, cy) === canvas;
       const im = canvas.getContext('2d').getImageData(1, 1, 1, 1).data;
-      out.respaldo = im[0] === 207 && im[1] === 201 && im[2] === 188;
+      out.respaldo = im[3] === 255 && im[0] + im[1] + im[2] > 120;   /* 3.10.1 (Claude): nace con el boceto del suelo en baja resolución (antes, color tierra plano): opaco y con color de suelo */
       await new Promise(res => setTimeout(res, 1800));
       out.progreso = perfil.terminados >= 0 && perfil.maxEtapaMs >= 0 && perfil.errores === 0;
       out.etapas = { pendientes: perfil.pendientes, completados: perfil.terminados, p95: perfil.percentil95(), max: perfil.maxEtapaMs };
@@ -409,7 +409,7 @@ module.exports.v9 = async function (p, ok) {
     return out;
   });
   ok(r.instalado && r.creado && r.reutilizado && r.respaldo && r.progreso,
-     'K-1: chunk se crea instantáneamente con color tierra y continúa por cuadros ' + JSON.stringify(r));
+     'K-1: chunk se crea instantáneamente con el boceto del suelo y continúa por cuadros ' + JSON.stringify(r));
   ok(r.instalado && r.sinCapas, 'K-2: si falta cualquier paquete de arte, permanece el dibujo anterior');
 };
 

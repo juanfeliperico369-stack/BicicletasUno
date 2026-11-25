@@ -1,7 +1,7 @@
 {
- "version": "3.10.0",
- "hash": "2461b204",
- "cache": "juega-encicla-v3.10.0-2461b204",
+ "version": "3.10.1",
+ "hash": "8f46a48c",
+ "cache": "juega-encicla-v3.10.1-8f46a48c",
  "files": [
   "00-core.js",
   "00b-sonido-guardian.js",
@@ -104,8 +104,8 @@
   "99zz-camara-unica.js"
  ],
  "bytes": {
-  "single": 10245225,
-  "web": 10246249,
-  "js": 10049441
+  "single": 10249566,
+  "web": 10250590,
+  "js": 10053782
  }
 }
