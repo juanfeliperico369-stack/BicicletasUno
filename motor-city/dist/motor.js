@@ -1,4 +1,4 @@
-/* Motor City 5.4.1 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 5.5.0 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -30,7 +30,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '5.4.1',
+  version: '5.5.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -171,6 +171,58 @@ async function inflar(u8, size) {
   return inflarSync(u8, size);
 }
 Object.assign(MC, { inflarCrudo, inflarSync, inflar, deB64 });
+
+/* ---- js/01-sonido-guardian.js ---- */
+/* =====================================================================
+   GUARDIÁN DEL SONIDO (Motor City 5.4.2 · Claude, 25‑nov‑2026)
+   El autor: «cuando se sale de la app aún sigue sonando la música» (El Metro, EnCicla y Turno Cero).
+   Al salir de la app (o cambiar de pestaña, bloquear la pantalla o cerrar), todo el sonido se calla de una, en cualquier
+   pantalla del juego:
+   - cada AudioContext que se cree queda registrado (una subclase) y se suspende: la música, los efectos, el paisaje sonoro y
+     los motores paran al instante, también las notas que ya estaban programadas;
+   - los <audio> y <video> que suenan se pausan y la voz de los anuncios se corta;
+   - mientras la app está afuera, nada vuelve a sonar aunque el juego lo pida (resume() y play() esperan);
+   - al volver, sigue solo lo que sonaba.
+   Avisos que escucha: visibilitychange, pagehide y pageshow, freeze y resume (el ciclo de vida de la página), pause y resume en
+   document (Capacitor los da en la APK cuando la actividad se pausa, aunque el WebView siga «visible») y app:pausa y app:sigue
+   (los manda la actividad nativa).
+   La misma pieza va en EnCicla (src/js/00b-sonido-guardian.js) y en El Metro (src/js/00b-sonido-guardian.js).
+   Estado para las pruebas: window.guardianSonido (fuera, veces, contextos).
+   ===================================================================== */
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined' || window.guardianSonido) return;
+  const W = window, AC = W.AudioContext || W.webkitAudioContext, ctxs = new Set(), medios = new Set(), dormidos = new Set(), pausados = new Set();
+  let fuera = false, veces = 0;
+  const G = W.guardianSonido = { get fuera() { return fuera; }, get veces() { return veces; }, get contextos() { return ctxs.size; }, callar, volver };
+  if (typeof MC !== 'undefined' && MC) MC.GuardianSonido = G;
+  if (AC) {
+    const Guardado = class extends AC {
+      constructor(...a) { super(...a); ctxs.add(this); if (fuera) { dormidos.add(this); super.suspend().catch(() => { }); } }
+      resume() { if (fuera) { dormidos.add(this); return Promise.resolve(); } return super.resume(); }
+    };
+    try { W.AudioContext = Guardado; if (W.webkitAudioContext) W.webkitAudioContext = Guardado; } catch (e) { /* sin reemplazo: quedan los medios */ }
+  }
+  const MP = W.HTMLMediaElement && W.HTMLMediaElement.prototype, play0 = MP && MP.play;
+  if (play0) MP.play = function () { medios.add(this); if (fuera) { pausados.add(this); return Promise.resolve(); } return play0.apply(this, arguments); };
+  function callar() {
+    if (fuera) return; fuera = true; veces++;
+    for (const c of ctxs) if (c.state === 'running') { dormidos.add(c); c.suspend().catch(() => { }); }
+    for (const m of medios) if (!m.paused) { pausados.add(m); try { m.pause(); } catch (e) { /* nada */ } }
+    try { if (W.speechSynthesis) W.speechSynthesis.cancel(); } catch (e) { /* sin voz */ }
+  }
+  function volver() {
+    if (!fuera || document.hidden) return; fuera = false;
+    for (const c of dormidos) if (c.state !== 'closed') c.resume().catch(() => { });
+    dormidos.clear();
+    for (const m of pausados) { try { const p = play0.call(m); if (p && p.catch) p.catch(() => { }); } catch (e) { /* nada */ } }
+    pausados.clear();
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) callar(); else volver(); });
+  W.addEventListener('pagehide', callar); W.addEventListener('pageshow', volver);
+  document.addEventListener('freeze', callar); document.addEventListener('resume', volver);
+  document.addEventListener('pause', callar);
+  W.addEventListener('app:pausa', callar); W.addEventListener('app:sigue', volver);
+})();
 
 /* ---- js/02-ciencia.js ---- */
 /* =====================================================================
@@ -4597,7 +4649,11 @@ const CAM_PERFIL = {
   aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
   /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
-  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75 },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua */
+  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75, tercio: .32, pitchTercera: .62, giraTercera: true },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua.
+     5.5.0 · LA CÁMARA ÚNICA (el autor: «vista cenital de cámara más bien centrada y que se puede mover al gusto, acercarse y alejarse,
+     y así añadiría un poco la forma de tercera persona»): el último tercio del zoom (tercio, en escala logarítmica) baja de 66° a
+     36° (pitchTercera) y gira poco a poco detrás del rumbo (giraTercera). Lo prende el juego (camara.tercio = true, con el tope del
+     zoom más alto: Turno Cero, 20-juego.js); sin eso, la cenital queda igual que antes. */
   oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0, alejaVel: .35 },
   maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 },
   historieta: { fijo: true, pitch: .96, pitchCerca: .88, fov: .68, giraRumbo: true, dist: 0, alto: 0, alejaVel: .45 }   /* 5.0 (G5-01 · Chinatown Wars): ~55° desde arriba, gira suave con el rumbo del carro */
@@ -4685,10 +4741,14 @@ class Camara {
       if (!this._rumboIniciado) { this.yaw = yr; this._vy.v = 0; this._rumboIniciado = true; }
       else if (Math.abs(o.v || 0) > .35 || Math.abs(angDif(this.yaw, yr)) > .04) this.yaw = resorteAng(this.yaw, yr, this._vy, .28, dt);
     }
-    const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
+    const u = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), ter = P.tercio && this.tercio ? P.tercio : 0, t = ter ? clamp(u / (1 - ter), 0, 1) : u, tc = ter ? suave(clamp((u - (1 - ter)) / ter, 0, 1)) : 0;
+    const vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1); this.casiTercera = tc;
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
-    const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
+    const pitch = lerp(lerp(P.pitch, P.pitchCerca ?? P.pitch, t), P.pitchTercera ?? P.pitch, tc) - this._vel * .07 * (1 - tc) - this._per * .05;
     const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22) * (MC.opciones.camDist || 1);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
+    /* 5.5.0 · de cerca, la cámara se va detrás del rumbo (un poco de tercera persona). Mueve la misma yaw que leen los controles
+       (la palanca va hacia donde se ve); de lejos manda el giro con dos dedos, como siempre */
+    if (P.giraTercera && o.a != null && tc > .02 && this.yawObj == null && !this._fija && !(this._mirando > 0) && (Math.abs(o.v || 0) > .35 || tc > .5)) this.yaw = resorteAng(this.yaw, -(o.a + Math.PI / 2), this._vy, lerp(3, .45, tc), dt);
     const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
     const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
     let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);
@@ -12163,7 +12223,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","26-vida-ciudad.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-dinamica.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","38-vuelcos.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","45-y-sitios.js","45-z-r6b.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-historieta.js","47-paralaje-biomas.js","47-pista.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","89-quimica-mundo.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","01-sonido-guardian.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","26-vida-ciudad.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-dinamica.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","38-vuelcos.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","45-y-sitios.js","45-z-r6b.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-historieta.js","47-paralaje-biomas.js","47-pista.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","89-quimica-mundo.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

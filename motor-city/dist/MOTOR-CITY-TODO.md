@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.4.1 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.5.0 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -179,7 +179,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 | 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor; El Metro tiene los suyos desde su 3.1.0): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
 | 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`. El Metro lo hizo su propia sesión en la 3.1.0 «Fluido» (rama `ccr-2a67f935-oat714`). |
-| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Las cinco fases hechas (Claude). La 1 está aprobada; publicar y pasar a `main` esperan el OK del autor** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. Fase 1 (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. **Fase 2** (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m): `reportes/2026-11-24-claude-fase2-cenital.md`. **Fase 3** (la bandera encendida; El Metro 3.9.0 y EnCicla 3.9.0, con las huellas reales en su modo libre; Motor del Valle 1.3.1): `reportes/2026-11-25-claude-fase3-cenital.md`. **Fase 4** (`MC.Pista`: carreras retro pseudo‑3D, y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0): `reportes/2026-11-25-claude-fase4-pista.md`. **Fase 5** (las cápsulas, 🧰 el garaje y 📏 de las carreras; Motor City 5.4.1): `reportes/2026-11-25-claude-fase5-capsulas.md`. Todo en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Publicar y pasar a `main` esperan el OK del autor. |
+| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Las cinco fases hechas y publicadas (Claude, 25‑nov): EnCicla 3.9.0, El Metro 3.10.0, Motor City 5.4.1** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. Fase 1 (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. **Fase 2** (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m): `reportes/2026-11-24-claude-fase2-cenital.md`. **Fase 3** (la bandera encendida; El Metro 3.9.0 y EnCicla 3.9.0, con las huellas reales en su modo libre; Motor del Valle 1.3.1): `reportes/2026-11-25-claude-fase3-cenital.md`. **Fase 4** (`MC.Pista`: carreras retro pseudo‑3D, y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0): `reportes/2026-11-25-claude-fase4-pista.md`. **Fase 5** (las cápsulas, 🧰 el garaje y 📏 de las carreras; Motor City 5.4.1): `reportes/2026-11-25-claude-fase5-capsulas.md`. Todo en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Publicar y pasar a `main` esperan el OK del autor. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -1195,6 +1195,43 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Esperan al autor:** publicar las páginas y las APK (El Metro 3.9.0, EnCicla 3.9.0 y Turno Cero), pasar a `main` (con PR en BicicletasUno y MetroZero), medir en su celular con 📏 y el peso del HTML de EnCicla (9,99 MB).
 - **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, al día.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Claude · 25‑nov‑2026 · todo publicado: «optimiza y entregame todos los html, apk y links actualizados»
+- **Optimizar:**
+  - los HTML ya van sin comentarios (quedan del 0,1 al 2,6 %) y con sus datos comprimidos;
+  - reordenar los flujos de las huellas de EnCicla no ganó nada (deflate ya está en su límite);
+  - zopfli (4–5 % menos) no se pudo instalar: lo negaron los permisos de la sesión;
+  - achicar los mundos de Turno Cero sería quitarles detalle, así que no se hizo sin el autor.
+- **Unir a `main`:** PR motorcity #32, BicicletasUno #4, MetroZero #6 y RunRunZero #2, todos en avance limpio sobre `main`.
+- **El Metro 3.10.0 (versionCode 38):** había otra 3.9.0, «Unido y medido», de la rama `ccr-2a67f935-oat714`. Estaba publicada y no en `main`.
+  - Se unió con el cenital: en `22-gl.js`, las celdas con su caja salen de `edifCerca`, y la malla del cenital (`MBF`) va por celdas.
+  - `test.mjs 100` da 0 errores; `prueba-cenital` y `prueba-rutas` dan BIEN.
+  - La página (`gh-pages` de MetroZero) se publicó a mano y `tools/verify-pages.mjs` da bien: el service worker con la caché 3.10.0, instalable, sin conexión y 0 errores.
+- **EnCicla 3.9.0:** la publicó `publicar.yml` desde `main`, con las pruebas en verde. `descargas/JuegaEnCicla.apk` pasó de la 3.4.0 a la 3.9.0. `/metro/` (El Metro 1.0.0, que ya nada enlaza) se dejó como estaba.
+- **Releases con su APK:** EnCicla v3.9.0, El Metro v3.10.0 y Motor City v5.4.1 (Turno Cero). Los sha256 se comprobaron.
+- **Enlaces:**
+
+| Juego | Página | APK |
+|---|---|---|
+| Juega EnCicla 3.9.0 | https://juanfeliperico369-stack.github.io/BicicletasUno/ | https://github.com/juanfeliperico369-stack/BicicletasUno/releases/tag/v3.9.0 (y `descargas/JuegaEnCicla.apk` en la página) |
+| El Metro 3.10.0 | https://juanfeliperico369-stack.github.io/MetroZero/ | https://github.com/juanfeliperico369-stack/MetroZero/releases/tag/v3.10.0 (y `el-metro.apk` en la página) |
+| Turno Cero, Motor City 5.4.1 | https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html (Mandados: `…/mandados.html`; el banco: `…/dist/motor-city.html`) | https://github.com/juanfeliperico369-stack/motorcity/releases/tag/v5.4.1 |
+| Run Scooter 2.5.0 (no cambió) | https://juanfeliperico369-stack.github.io/RunRunZero/ | https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk |
+- **Falta:** medir en el celular del autor con 📏 («Carreras retro» y las tres cámaras).
+
+### Claude · 25‑nov‑2026 · el pedido del autor después de jugar: la cámara única, la música, la portada y el escalafón
+- **Lo que pidió el autor:** está palabra por palabra en **`docs/PEDIDO-DEL-AUTOR-2026-11-25.md`**, que manda sobre lo demás. Pide:
+  - el mundo enteramente 3D en vista cenital, con **una sola cámara**: centrada, que se mueve, se acerca y se aleja hasta «un poco» de tercera persona, y que se eliminen las demás;
+  - **que nada quede pintado en el suelo**, y el 2D y el pixel solo en los modos ya establecidos;
+  - la carga del mundo y la fluidez, la música que seguía sonando al salir de la app y la portada de EnCicla sin su animación;
+  - controles personalizables con recomendaciones según se juegue en vertical o en horizontal;
+  - el escalafón en la portada de EnCicla.
+- **Hecho (en la rama `ccr-4f6eeea5-yulqk1` de cada repo; nada en `main`):**
+  - **el guardián del sonido** en los tres juegos: Motor City 5.4.2, EnCicla 3.9.1 y El Metro 3.10.1, con el aviso nativo en las APK;
+  - **la portada viva** de EnCicla: la animación sale a ~1,9 s en vez de ~10 s en blanco con el CPU 4×;
+  - **🏆 Escalafón** en la portada de EnCicla;
+  - **la cámara única**: EnCicla 3.10.0, El Metro 3.11.0, y Turno Cero en Motor City 5.5.0 (`MC.Camara`, perfil `cenital` con `tercio`).
+- **Falta, con el OK del autor:** las fases A–E de `docs/PEDIDO-DEL-AUTOR-2026-11-25.md` § 4 (la carga sin huecos, la fluidez, los controles a gusto, nada pintado en el suelo y un solo mundo 3D), y publicar.
 
 # MOTOR CITY · Documento único
 
@@ -3091,6 +3128,8 @@ Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limp
 | **5.3.2** | 24‑nov‑2026 | **Mundos saneados** (renacimiento cenital, Fase 2): `geo/territorio.py` con la ley de soberanía vial del Motor del Valle 1.3 (regla A; las casas de OSM conservan el andén de las calles menores, no el asfalto; puentes, túneles y vías cubiertas con su nivel en `VIASJ[5]`, que el cargador lee como `via.nivel`); Medellín, Guatapé y Nueva York regenerados con su agua y su PVS; la colisión con edificios sin la tolerancia de 1 m sobre la calle (`js/32-fisica.js`); prueba `pruebas/calles-libres.mjs`. |
 | **5.4.0** | 25‑nov‑2026 | **Carreras retro** (renacimiento cenital, Fase 4): `MC.Pista` (`js/47-pista.js`), las carreras pseudo‑3D por segmentos en circuitos, escritas desde cero (dos pasadas con `maxY` y `seg.clip`, niebla, franjas juntas por color, paralaje de 3 capas, el carro con 6 estados, rebufo, nitro, rivales con IA de carril, HUD, minimapa y controles táctiles; circuitos `palmas` y `regional`; `simular`, `bot` y `perfil` para las pruebas). En Turno Cero, «🏎️ Carreras retro» (`juegos/getaway/70-retro.js`). Prueba `pruebas/pista-retro.mjs`. |
 | **5.4.1** | 25‑nov‑2026 | **Cápsulas** (renacimiento cenital, Fase 5): en Turno Cero, 🧰 Garaje y colección (`juegos/getaway/71-garaje.js`: fichas en 2D pixel con `MC.Taller`, la moto con `MC.Dinamica` y la capa aérea; se abre desde la portada sin cargar ninguna ciudad); 📏 de las carreras retro (`G.Retro.medir()`, `?medir=retro`); `MC.Pista.entrar` da `ultimoMs`; arreglo de la carrera intermitente de 📏 (`68-medir.js`). Prueba `pruebas/capsulas.mjs`. |
+| **5.4.2** | 25‑nov‑2026 | **Guardián del sonido** (`js/01-sonido-guardian.js`, `MC.GuardianSonido`): al salir de la app todo calla al instante, y al volver sigue lo que sonaba. Cada AudioContext queda registrado (una subclase) y se suspende; se pausan los medios y se corta la voz. Escucha `visibilitychange`, `pagehide`, `freeze` y el `pause`/`resume` que Capacitor da en `document`. Prueba: `pruebas/sonido-guardian.mjs`. |
+| **5.5.0** | 25‑nov‑2026 | **La cámara única** (el autor: «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»; `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`). En el perfil `cenital` de `MC.Camara`, el último tercio del zoom (`tercio`) baja de 66° a 36° (`pitchTercera`) y gira detrás del rumbo (`giraTercera`), moviendo la misma yaw que leen los controles. Lo prende el juego con `camara.tercio = true`. En Turno Cero el mundo abierto se ve solo en la cenital 3D: el 🔍 (y la tecla C) pasan por cuatro acercamientos (de lejos, cenital, de cerca y casi tercera persona; zoom de 2,4 a 60 px/m). Se fueron la ciudad 3D, la tercera y la primera persona, el dron, la maqueta, Arcade y Vuelo como cámaras, y 📏 mide la cámara única de lejos, de cerca y casi en tercera persona. |
 
 
 ---
@@ -4791,6 +4830,37 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 25-nov-2026 · 5.5.0 «La cámara única» y 5.4.2 «Guardián del sonido» (Claude)
+- **Lo que pidió el autor** (palabra por palabra en `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`):
+  - el mundo 3D en vista cenital, con la cámara centrada que se mueve, se acerca y se aleja («y así añadiría un poco la forma de tercera persona»);
+  - «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»;
+  - que la música no siga sonando al salir de la app (Turno Cero «carece» de eso).
+- **Hecho (5.4.2):**
+  - `js/01-sonido-guardian.js` (`MC.GuardianSonido`): al salir de la app todo calla, también las notas ya programadas, y al volver sigue lo que sonaba.
+    - Cada AudioContext queda registrado y se suspende; los medios se pausan y la voz se corta.
+    - Mientras la app está afuera, `resume()` y `play()` esperan.
+    - Escucha `visibilitychange`, `pagehide` y `pageshow`, `freeze` y `resume`, y el `pause`/`resume` que Capacitor da en `document`.
+    - Antes, la APK de Turno Cero no pausaba nada: Capacitor no pausa el WebView.
+  - La misma pieza va en EnCicla 3.9.1 y El Metro 3.10.1.
+- **Hecho (5.5.0):**
+  - `js/34-camara.js`: el perfil `cenital` suma un tramo de casi tercera persona.
+    - El último tercio del zoom (`tercio`) baja de 66° a 36° (`pitchTercera`) y gira detrás del rumbo (`giraTercera`).
+    - Mueve la misma yaw que leen los controles, así que la palanca va hacia donde se ve.
+    - Lo prende el juego (`camara.tercio = true`); Mandados y Motor City siguen igual.
+  - Turno Cero (`juegos/getaway/90-inicio.js`, `20-juego.js`, `58-sigilo.js` y `68-medir.js`):
+    - el mundo abierto se ve solo en la cenital 3D (zoom de 2,4 a 60 px/m);
+    - el 🔍 del HUD, el menú y la tecla C pasan por cuatro acercamientos: de lejos (76°), cenital (71°), de cerca (67°) y casi tercera persona (37°, detrás del carro);
+    - se fueron la ciudad 3D, la tercera y la primera persona, el dron, la maqueta, Arcade y Vuelo como cámaras;
+    - siguen las 🏎️ Carreras retro como su propio modo, el mirador con su vista de cine y el sigilo desde arriba (hasta «de cerca»);
+    - 📏 mide la cámara única en tres acercamientos.
+  - `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`: el pedido literal, lo hecho y la propuesta de fases A–E (carga, fluidez, controles, nada pintado en el suelo y un solo mundo 3D), que espera el OK del autor. Avisos en `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`.
+- **Probado:**
+  - `node pruebas/sonido-guardian.mjs` ✓: el mundo abierto registra 2 contextos; al salir todo se suspende (también `MC.Musica`); al volver, sigue;
+  - `node pruebas/medir.mjs` ✓: el bot maneja en los tres acercamientos de la cámara única, a 60 fps con p95 de 16,7 ms en Chromium de escritorio;
+  - `node pruebas/capsulas.mjs` ✓: el paso a las Carreras retro y de vuelta sigue sin perder nada, y 📏 sigue en las carreras;
+  - `node motor.mjs prueba`: 146 bien; `prueba --navegador`: **158 bien**;
+  - las cuatro cámaras de Turno Cero en Chromium (412 × 860): zoom 4, 10, 20 y 52 px/m dan 76°, 71°, 67° y 37°.
 
 ### 25-nov-2026 · 5.4.1 «Cápsulas» · Fase 5 del renacimiento cenital (Claude)
 - **Lo que pide el prompt de relevo, Fase 5:**

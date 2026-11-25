@@ -3,14 +3,14 @@
    Cómo se usa (sin herramientas ni cables):
    - en la página publicada, agregar ?medir a la dirección (…/getaway.html?medir), o
    - en el juego (también en la APK): ⏸ Menú → 📏 Medir el rendimiento.
-   Qué hace: un bot maneja solo 60 s por calles reales de Medellín (20 s en cada cámara: cenital, tercera persona y ciudad 3D),
+   Qué hace: un bot maneja solo 60 s por calles reales de Medellín (20 s en cada acercamiento de la cámara única: de lejos, de cerca y casi tercera persona; 5.5.0),
    sin policía ni historia. Mide cada cuadro con su propio reloj (requestAnimationFrame) y el tiempo de dibujo de la vista, y
    al final muestra: cuadros por segundo, p50, p95 y p99 del cuadro, tirones (cuadros de más de 50 ms), dibujo p50 y p95,
    memoria de JavaScript (si el navegador la da), la GPU (nivel, nombre, WebGL), la pantalla y los gráficos que se usaron.
    El botón «📋 Copiar resultados» copia todo como texto para pegarlo en el chat de las IA. No se envía nada a ningún lado.
    ===================================================================== */
 const Medir = {
-  activo: null, TRAMOS: [['cenital', 'Cenital'], ['tercera', 'Tercera persona'], ['ciudad3d', 'Ciudad 3D']], SEG: 20,
+  activo: null, TRAMOS: [['lejos', 'Cenital de lejos', 6], ['cerca', 'Cenital de cerca', 20], ['tercera', 'Casi tercera persona', 52]], SEG: 20,   /* 5.5.0: la cámara única con tres acercamientos (px por metro) */
   /* empieza: el mundo abierto (si hace falta), la calle y la primera cámara */
   async empezar() {
     if (this.activo) return; const portada = () => { const P = document.getElementById('portada'); return !!P && !P.hidden; }, listo = () => !portada() && G.M && G.cuerpo && G.E && !G.transicion;
@@ -21,7 +21,7 @@ const Medir = {
     if (G.busq && G.busq.ponerNivel) G.busq.ponerNivel(0);
     const ruta = this.ruta(); if (!ruta) { G.ui.aviso('📏 No encontré una calle larga para medir aquí', 2400, 'medir'); return; }
     const q = ruta.punto(0); Object.assign(C, { x: q.x, y: q.y, a: q.a, v: 0 });
-    this.activo = { ruta, s: 0, dist: 0, t0: performance.now(), tramo: -1, cuadros: [], dib: [], mem: [], vistaAntes: G.vistaId, antes: { acelFijo: G.acelFijo } };
+    this.activo = { ruta, s: 0, dist: 0, t0: performance.now(), tramo: -1, cuadros: [], dib: [], mem: [], vistaAntes: G.vistaId, zoomAntes: G.camara.zoom, antes: { acelFijo: G.acelFijo } };
     this.cambiarTramo(0); this._rafUlt = 0; requestAnimationFrame(t => this.cuadro(t));
     G.ui.aviso('📏 Midiendo 60 s: el bot maneja solo. No toques nada', 3000, 'medir');
   },
@@ -33,7 +33,7 @@ const Medir = {
   },
   cambiarTramo(i) {
     const A = this.activo; A.tramo = i; A.tramos = A.tramos || []; A.tramos[i] = { id: this.TRAMOS[i][0], n: this.TRAMOS[i][1], cuadros: [], dib: [] };
-    G.vistaId = this.TRAMOS[i][0]; G.vistas.usar(this.TRAMOS[i][0], G.E);
+    const Tr = this.TRAMOS[i]; G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); if (Tr[2]) G.camara.zoom = Tr[2] * (G.dEf || 1);
   },
   /* el reloj propio: el tiempo entre cuadros de verdad (lo que ve el jugador) y lo que tardó en dibujar la vista */
   cuadro(t) {
@@ -55,7 +55,7 @@ const Medir = {
   pct(L, p) { if (!L.length) return 0; const S = L.slice().sort((a, b) => a - b); return S[Math.min(S.length - 1, Math.floor(p * (S.length - 1) + .5))]; },
   resumen(L, D) { const r1 = v => Math.round(v * 10) / 10, p50 = this.pct(L, .5); return { cuadros: L.length, fps: p50 ? Math.round(1000 / p50) : 0, p50: r1(p50), p95: r1(this.pct(L, .95)), p99: r1(this.pct(L, .99)), tirones: L.filter(v => v > 50).length, dibujo_p50: r1(this.pct(D, .5)), dibujo_p95: r1(this.pct(D, .95)) }; },
   terminar() {
-    const A = this.activo; if (!A) return; this.activo = null; G.cuerpo.v = 0; G.vistaId = A.vistaAntes || 'cenital'; G.vistas.usar(G.vistaId, G.E);
+    const A = this.activo; if (!A) return; this.activo = null; G.cuerpo.v = 0; G.vistaId = A.vistaAntes || 'cenital'; G.vistas.usar(G.vistaId, G.E); if (A.zoomAntes) G.camara.zoom = A.zoomAntes;
     const P = MC.GPU.perfil(), r1 = v => Math.round(v * 10) / 10, mem = A.mem.length ? { inicio_MB: r1(A.mem[0]), fin_MB: r1(A.mem[A.mem.length - 1]), pico_MB: r1(Math.max(...A.mem)) } : 'el navegador no la da';
     const R = this.res = { version: MC.version || '', fecha: new Date().toISOString().slice(0, 16).replace('T', ' '), segundos: this.SEG * this.TRAMOS.length, recorrido_m: Math.round(A.dist), total: this.resumen(A.cuadros, A.dib),
       tramos: A.tramos.map(T => Object.assign({ camara: T.n }, this.resumen(T.cuadros, T.dib))), memoria: mem,
