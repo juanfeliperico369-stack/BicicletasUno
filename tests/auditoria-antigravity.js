@@ -116,13 +116,15 @@ const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) fails
     });
     if (SHOTS) await p.screenshot({ path: path.join(SHOTS, '02-vista-' + vid + '.png') });
   }
-  ok(vistas.every(v => vRes[v].cur === v && vRes[v].nonBlack), 'las 6 vistas proyectan el mismo mundo real (WebGL + respaldo + Maqueta): ' + JSON.stringify(vRes));
+  /* 3.10.0 · la cámara única (el autor, 25‑nov‑2026: «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»):
+     pedir cualquier vista vieja deja la cenital 3D, y el mundo se sigue dibujando */
+  ok(vistas.every(v => vRes[v].cur === 'cenital' && !vRes[v].gl && vRes[v].nonBlack), 'cámara única: las vistas viejas (oblicua, 3p, 1p, panorámica, maqueta) quedan en la cenital 3D: ' + JSON.stringify(vRes));
 
   await p.evaluate(() => { JE.vistas.poner('3p', true); JE.vistas.togglePixel(true); });
   await p.waitForTimeout(450);
   if (SHOTS) await p.screenshot({ path: path.join(SHOTS, '03-vista-3p-pixel.png') });
   const pxCheck = await p.evaluate(() => ({ v: JE.vistas.actual(), px: JE.vistas.esPixel(), cls: document.body.classList.contains('pixel3d') }));
-  ok(pxCheck.v === '3p' && pxCheck.px && pxCheck.cls, 'Pixel World combinable sobre WebGL 3D Tercera Persona');
+  ok(pxCheck.v === 'cenital' && pxCheck.px && pxCheck.cls, 'Pixel World sigue como estilo, sobre la cámara única');
   await p.evaluate(() => { JE.vistas.togglePixel(true); JE.vistas.poner('cenital', true); });
 
   const g3p = await p.evaluate(() => {
@@ -134,7 +136,7 @@ const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); if (!c) fails
     JE.vistas.poner('cenital', true);
     return { fwdX: +fwd.x.toFixed(2), fwdY: +fwd.y.toFixed(2), rightX: +right.x.toFixed(2), rightY: +right.y.toFixed(2) };
   });
-  ok(g3p.fwdX > .95 && g3p.rightY > .95, 'controles coherentes en 3P/1P (arriba = adelante, derecha = +90°): ' + JSON.stringify(g3p));
+  ok(g3p.fwdY < -.95 && g3p.rightX > .95, 'controles coherentes en la cámara única (de lejos: arriba = norte, derecha = oriente): ' + JSON.stringify(g3p));
 
   console.log('4) Prueba activa de los 7 modos evolución (Copa, Domicilio, 911, Planeador, Metro 2D, Las Palmas, Roguelite)');
   const modoIds = ['copa', 'domicilio', 'monitoreo911', 'planeador', 'metro2d', 'palmas', 'roguelite'];

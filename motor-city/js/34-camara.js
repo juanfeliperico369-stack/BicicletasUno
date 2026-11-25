@@ -15,7 +15,11 @@ const CAM_PERFIL = {
   aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
   /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
-  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75 },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua */
+  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75, tercio: .32, pitchTercera: .62, giraTercera: true },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua.
+     5.5.0 · LA CÁMARA ÚNICA (el autor: «vista cenital de cámara más bien centrada y que se puede mover al gusto, acercarse y alejarse,
+     y así añadiría un poco la forma de tercera persona»): el último tercio del zoom (tercio, en escala logarítmica) baja de 66° a
+     36° (pitchTercera) y gira poco a poco detrás del rumbo (giraTercera). Lo prende el juego (camara.tercio = true, con el tope del
+     zoom más alto: Turno Cero, 20-juego.js); sin eso, la cenital queda igual que antes. */
   oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0, alejaVel: .35 },
   maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 },
   historieta: { fijo: true, pitch: .96, pitchCerca: .88, fov: .68, giraRumbo: true, dist: 0, alto: 0, alejaVel: .45 }   /* 5.0 (G5-01 · Chinatown Wars): ~55° desde arriba, gira suave con el rumbo del carro */
@@ -103,10 +107,14 @@ class Camara {
       if (!this._rumboIniciado) { this.yaw = yr; this._vy.v = 0; this._rumboIniciado = true; }
       else if (Math.abs(o.v || 0) > .35 || Math.abs(angDif(this.yaw, yr)) > .04) this.yaw = resorteAng(this.yaw, yr, this._vy, .28, dt);
     }
-    const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
+    const u = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), ter = P.tercio && this.tercio ? P.tercio : 0, t = ter ? clamp(u / (1 - ter), 0, 1) : u, tc = ter ? suave(clamp((u - (1 - ter)) / ter, 0, 1)) : 0;
+    const vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1); this.casiTercera = tc;
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
-    const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
+    const pitch = lerp(lerp(P.pitch, P.pitchCerca ?? P.pitch, t), P.pitchTercera ?? P.pitch, tc) - this._vel * .07 * (1 - tc) - this._per * .05;
     const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22) * (MC.opciones.camDist || 1);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
+    /* 5.5.0 · de cerca, la cámara se va detrás del rumbo (un poco de tercera persona). Mueve la misma yaw que leen los controles
+       (la palanca va hacia donde se ve); de lejos manda el giro con dos dedos, como siempre */
+    if (P.giraTercera && o.a != null && tc > .02 && this.yawObj == null && !this._fija && !(this._mirando > 0) && (Math.abs(o.v || 0) > .35 || tc > .5)) this.yaw = resorteAng(this.yaw, -(o.a + Math.PI / 2), this._vy, lerp(3, .45, tc), dt);
     const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
     const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
     let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);

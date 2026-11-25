@@ -154,9 +154,10 @@ module.exports.v4 = async function (p, ok) {
     out.carrera = { metros: Math.round(cs.metros), seg: Math.round(k / 60), giros: (cs.giros || []).length, bien: cs.giroOk, vidas: cs.vidas, vel: Math.round(cs.rapidez() * 3.6) };
     /* 7) el mundo 3D único */
     JE.game.stop(); JE.game.start('usuario', 1, { seed: 5, nov: NOVEDADES[0], free: true }); await espera(300); out.gl = JE.mundo3d.ok();
-    if (out.gl) { const R3 = JE.game.mode.ride; JE.mundo3d.poner('tercera'); await espera(700); const q = R3.w2s(R3.p.x + Math.cos(R3.p.a) * 60, R3.p.y + Math.sin(R3.p.a) * 60), dd = R3.girarDir({ x: 0, y: -1, m: 1 });
-      out.gl3 = { dibuja: !!JE.mundo3d.vp && !(JE.errors || []).some(e => /3d:/.test(e)), proyecta: q.x > 0 && q.x < View.w && q.y > 0 && q.y < View.h, adelante: Math.cos(Math.atan2(dd.y, dd.x) - JE.mundo3d.yaw) > .99, mallas: JE.mundo3d.mallas.size };
-      JE.mundo3d.poner('primera'); await espera(300); out.gl3.primera = !(JE.errors || []).some(e => /3d:/.test(e)); JE.mundo3d.poner(null); }
+    /* 3.10.0 · la cámara única: el mundo 3D en WebGL queda para los miradores 🔭; fuera de ellos manda la cenital */
+    if (out.gl) { const M3 = JE.game.mode, R3 = M3.ride, mir = JE.mirador.lista()[0]; R3.p.x = mir.x; R3.p.y = mir.y; R3.p.v = 0; JE.mirador.abrir(M3, mir); await espera(900);
+      out.gl3 = { mirador: !!JE.mundo3d.mirador, dibuja: !!JE.mundo3d.vp && !(JE.errors || []).some(e => /3d:/.test(e)), mallas: JE.mundo3d.mallas.size };
+      JE.mirador.cerrar(M3); JE.mundo3d.poner('tercera'); await espera(400); out.gl3.unica = !JE.mundo3d.modo && JE.vistas.actual() === 'cenital' && !(JE.errors || []).some(e => /3d:/.test(e)); }
     JE.game.stop(); UI.go('sHome'); return out;
   });
   ok(r.subpasos > .19 && r.subpasos < .21, 'subpasos: un cuadro lento de 200 ms hace avanzar el juego ' + r.subpasos + ' s (antes 0,05: cámara lenta)');
@@ -165,7 +166,7 @@ module.exports.v4 = async function (p, ok) {
   ok(r.enEstacion && r.oficios >= 7 && r.mismo && r.volvio, 'oficios en el valle: en la estación y en Casa EnCicla (' + r.oficios + ' botones), el mismo módulo del menú y el regreso al mismo punto');
   ok(r.trucos.zonas >= 5 && r.trucos.accion && r.trucos.puntos, 'zonas de trucos en el valle ' + JSON.stringify(r.trucos));
   ok(r.carrera.metros >= 700 && r.carrera.giros >= 2 && r.carrera.bien >= 1 && r.carrera.vidas > 0 && r.carrera.vel >= 55, 'carrera de la ciclorruta con giros, tramos estrechos y zonas de trucos ' + JSON.stringify(r.carrera));
-  ok(!r.gl || (r.gl3.dibuja && r.gl3.proyecta && r.gl3.adelante && r.gl3.primera && r.gl3.mallas > 3), 'mundo 3D único: tercera y primera persona sobre el mismo mapa, nombres proyectados y joystick según la cámara ' + JSON.stringify(r.gl3 || 'sin WebGL'));
+  ok(!r.gl || (r.gl3.mirador && r.gl3.dibuja && r.gl3.mallas > 3 && r.gl3.unica), 'mundo 3D único: el mirador 🔭 dibuja el mismo mapa en WebGL y fuera de él manda la cámara única (sin tercera ni primera persona) ' + JSON.stringify(r.gl3 || 'sin WebGL'));
 };
 
 /* ronda 3.2 (Claude): los modos a medias pulidos, el transporte en el mundo 3D, el freerun de la Comuna 13 con gestos y
@@ -279,7 +280,7 @@ module.exports.v7 = async function (p, ok) {
     out.dicho = Dichos.dicho && Dichos.dicho.t; out.frases = Dichos.frases().length;
     const ctx = { lugar: 'estacion', min: 420, lluvia: false, noche: false, veh: 'bike' }, f = Dichos.elegir('ambiente', ctx); out.especifica = !!(f && f.lugar === 'estacion');
     /* 2) la bici se inclina en las curvas del 3D */
-    if (Mundo3D.ok()) { const bloqueoOriginal = R.blocked; R.blocked = () => false; /* aislar el ensayo de ladeo: en esta fase el jugador sigue junto al peatón del timbre y puede chocar */ Mundo3D.poner('tercera'); R.p.v = R.stats_().max * .9; Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600 }); let m = 0; const t0 = performance.now();
+    if (Mundo3D.ok() && JE.vistas.lista.some(v => v.id === '3p')) { const bloqueoOriginal = R.blocked;   /* 3.10.0: con la cámara única no hay tercera persona en el mundo (queda sin medir) */ R.blocked = () => false; /* aislar el ensayo de ladeo: en esta fase el jugador sigue junto al peatón del timbre y puede chocar */ Mundo3D.poner('tercera'); R.p.v = R.stats_().max * .9; Object.assign(Input.joy, { on: true, id: 99, ox: 200, oy: 600 }); let m = 0; const t0 = performance.now();
       while (performance.now() - t0 < 1400) { const a = R.p.a + 1.4; Input.joy.x = 200 + Math.cos(a) * 46; Input.joy.y = 600 + Math.sin(a) * 46; await espera(50); m = Math.max(m, Math.abs(Mundo3D.lad || 0)); }
       Input.joy.on = false; R.blocked = bloqueoOriginal; out.ladeo = +m.toFixed(2); Mundo3D.poner(null); }
     /* 3) 🚀 llegar ya en el mapa grande */

@@ -38,15 +38,35 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
 
   console.log('3) Humo de interfaz');
   await p.reload(); await p.waitForFunction(() => window.JE && JE.ready);
+  /* 3.9.1 · el guardián del sonido: al salir de la app (pause de Capacitor o app:pausa de la actividad) todo calla y al volver sigue */
+  await p.mouse.click(5, 5); const son = await p.evaluate(async () => {   /* el guardián del sonido (00b-sonido-guardian.js): al salir de la app todo calla, nada vuelve a sonar aunque el juego lo pida y al volver sigue */
+    const e = ms => new Promise(r => setTimeout(r, ms)), G = window.guardianSonido; if (!G) return { falta: true };
+    const delJuego = G.contextos, A = new AudioContext(); for (let i = 0; i < 20 && A.state !== 'running'; i++) { A.resume(); await e(50); }
+    const o = { delJuego, antes: A.state };
+    document.dispatchEvent(new Event('pause')); await e(150); o.pausa = A.state; o.fuera = G.fuera;   /* lo que manda Capacitor al pausar la actividad */
+    A.resume(); await e(150); o.pideSonar = A.state;
+    document.dispatchEvent(new Event('resume')); await e(250); o.vuelve = A.state;
+    window.dispatchEvent(new Event('app:pausa')); await e(150); o.appPausa = A.state;   /* lo que manda la actividad nativa */
+    window.dispatchEvent(new Event('app:sigue')); await e(250); o.appSigue = A.state;
+    A.close(); return o;
+  });
+  ok((s => s.antes === 'running' && s.pausa === 'suspended' && s.fuera && s.pideSonar === 'suspended' && s.vuelve === 'running' && s.appPausa === 'suspended' && s.appSigue === 'running')(son), 'guardián del sonido: al salir de la app todo calla, nada suena aunque el juego lo pida y al volver sigue ' + JSON.stringify(son));
   /* mundo abierto primero (regla del autor, auditoría G-H28): ▶ Jugar entra directo al modo libre, sin bienvenida ni personaje */
   await p.click('#bPlay'); await p.waitForTimeout(800); ok(await p.isVisible('#sGame') && !(await p.isVisible('#modal')) && await p.evaluate(() => !!(Game.meta && Game.meta.free)), 'mundo abierto primero: ▶ Jugar entra directo al modo libre');
   await p.reload(); await p.waitForFunction(() => window.JE && JE.ready);
-  await p.click('#bOficios'); ok(await p.isVisible('#modal'), 'introducción ¿Qué es EnCicla? (opcional, desde 🏆 Oficios y modos)');
-  for (let k = 0; k < 4 && await p.isVisible('#inNext'); k++) await p.click('#inNext');
+  /* 3.9.1: 🏆 Escalafón en la portada lleva directo a su pestaña (sin la bienvenida); la primera vez se crea el personaje */
+  await p.click('#bOficios'); await p.waitForTimeout(300);
+  ok(await p.isVisible('#sHome') && await p.evaluate(() => UI.tab === 'ruta' && document.querySelector('#tabs button[data-tab=ruta]').classList.contains('on') && /Escalaf/.test(document.getElementById('bOficios') ? document.getElementById('bOficios').textContent : 'Escalafón')), '🏆 Escalafón en la portada: directo a su pestaña');
+  await p.waitForSelector('#avOk', { timeout: 3000 }).catch(() => null);
   ok(await p.isVisible('#avOk') && await p.isVisible('#avPrev'), 'al empezar se crea el personaje');
   await p.click('.avtabs button[data-tab=ropa]'); await p.click('#mBody [data-k=pants][data-i="2"]'); await p.click('#avOk');
   ok(await p.evaluate(() => Save.data.profile.pants === 2 && Save.data.settings.seen.profile === 1), 'personaje guardado');
-  ok(await p.isVisible('#sHome') && !(await p.isVisible('#modal')), '🏆 Oficios y modos → introducción → personaje → escalafón');
+  ok(await p.isVisible('#sHome') && !(await p.isVisible('#modal')), '🏆 Escalafón → personaje → escalafón');
+  /* la bienvenida sigue a mano en Más › ¿Qué es EnCicla? */
+  await p.click('#tabs button[data-tab=mas]'); await p.click('[data-act=intro]'); ok(await p.isVisible('#modal') && await p.isVisible('#inNext'), 'introducción ¿Qué es EnCicla? (opcional, desde Más)');
+  for (let k = 0; k < 4 && await p.isVisible('#inNext'); k++) await p.click('#inNext');
+  if (await p.isVisible('#modal')) await p.evaluate(() => UI.closeModal());
+  await p.click('#tabs button[data-tab=ruta]');
   if (SHOTS) await p.screenshot({ path: path.join(OUT, 'escalafon.png') });
   await p.click('button[data-role=usuario][data-t="1"]'); ok(await p.isVisible('#sBrief'), 'briefing de Usuario');
   await p.click('#bGo'); await p.waitForTimeout(400); ok(await p.isVisible('#sGame'), 'juego iniciado');
@@ -173,7 +193,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     JE.headless = true; const P = new MGPausa({ rng: new RNG(2), has: () => false }, { lvl: 1 }); P.bot(0); let k = 0; while (!P.done && k < 30 * 90) { P.update(1 / 30); k++; } out.pausa = P.acc; JE.headless = false;
     out.err = JE.errors.slice(e0); UI.go('sHome'); return out;
   });
-  ok(g3.hibridocenital.q > 1 && g3['2dcenital'].q > 1 && g3.pixelpano.pano && !g3.err.length, 'gráficos híbrido y 2D con mapa dibujado, y vista panorámica sin errores ' + g3.err.join(' | '));
+  ok(g3.hibridocenital.q > 1 && g3['2dcenital'].q > 1 && !g3.pixelpano.pano && !g3.err.length, 'gráficos híbrido y 2D con mapa dibujado; la panorámica 2D ya no existe (un guardado viejo vuelve a la cámara única) ' + g3.err.join(' | '));
   ok(g3.music.join() === 'lofi,rock,jazz', 'música automática: lo-fi en menús, soft rock en turnos y jazz de noche (' + g3.music.join() + ')');
   ok(g3.e === 'mix,solo,mix,solo,mix,solo,mix,solo' && !g3.eLate && g3.eDay, 'corredores eléctricos: 4 pares mixta y solo eléctricas; servicio eléctrico hasta las 7 p. m.');
   ok(g3.tut, 'tutorial opcional con compañero (Maryi en Pausas Activas)');

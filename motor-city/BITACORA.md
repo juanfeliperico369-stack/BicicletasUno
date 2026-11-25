@@ -1,5 +1,36 @@
 # Bitácora de Motor City
 
+## 25-nov-2026 · 5.5.0 «La cámara única» y 5.4.2 «Guardián del sonido» (Claude)
+- **Lo que pidió el autor** (palabra por palabra en `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`):
+  - el mundo 3D en vista cenital, con la cámara centrada que se mueve, se acerca y se aleja («y así añadiría un poco la forma de tercera persona»);
+  - «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»;
+  - que la música no siga sonando al salir de la app (Turno Cero «carece» de eso).
+- **Hecho (5.4.2):**
+  - `js/01-sonido-guardian.js` (`MC.GuardianSonido`): al salir de la app todo calla, también las notas ya programadas, y al volver sigue lo que sonaba.
+    - Cada AudioContext queda registrado y se suspende; los medios se pausan y la voz se corta.
+    - Mientras la app está afuera, `resume()` y `play()` esperan.
+    - Escucha `visibilitychange`, `pagehide` y `pageshow`, `freeze` y `resume`, y el `pause`/`resume` que Capacitor da en `document`.
+    - Antes, la APK de Turno Cero no pausaba nada: Capacitor no pausa el WebView.
+  - La misma pieza va en EnCicla 3.9.1 y El Metro 3.10.1.
+- **Hecho (5.5.0):**
+  - `js/34-camara.js`: el perfil `cenital` suma un tramo de casi tercera persona.
+    - El último tercio del zoom (`tercio`) baja de 66° a 36° (`pitchTercera`) y gira detrás del rumbo (`giraTercera`).
+    - Mueve la misma yaw que leen los controles, así que la palanca va hacia donde se ve.
+    - Lo prende el juego (`camara.tercio = true`); Mandados y Motor City siguen igual.
+  - Turno Cero (`juegos/getaway/90-inicio.js`, `20-juego.js`, `58-sigilo.js` y `68-medir.js`):
+    - el mundo abierto se ve solo en la cenital 3D (zoom de 2,4 a 60 px/m);
+    - el 🔍 del HUD, el menú y la tecla C pasan por cuatro acercamientos: de lejos (76°), cenital (71°), de cerca (67°) y casi tercera persona (37°, detrás del carro);
+    - se fueron la ciudad 3D, la tercera y la primera persona, el dron, la maqueta, Arcade y Vuelo como cámaras;
+    - siguen las 🏎️ Carreras retro como su propio modo, el mirador con su vista de cine y el sigilo desde arriba (hasta «de cerca»);
+    - 📏 mide la cámara única en tres acercamientos.
+  - `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`: el pedido literal, lo hecho y la propuesta de fases A–E (carga, fluidez, controles, nada pintado en el suelo y un solo mundo 3D), que espera el OK del autor. Avisos en `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`.
+- **Probado:**
+  - `node pruebas/sonido-guardian.mjs` ✓: el mundo abierto registra 2 contextos; al salir todo se suspende (también `MC.Musica`); al volver, sigue;
+  - `node pruebas/medir.mjs` ✓: el bot maneja en los tres acercamientos de la cámara única, a 60 fps con p95 de 16,7 ms en Chromium de escritorio;
+  - `node pruebas/capsulas.mjs` ✓: el paso a las Carreras retro y de vuelta sigue sin perder nada, y 📏 sigue en las carreras;
+  - `node motor.mjs prueba`: 146 bien; `prueba --navegador`: **158 bien**;
+  - las cuatro cámaras de Turno Cero en Chromium (412 × 860): zoom 4, 10, 20 y 52 px/m dan 76°, 71°, 67° y 37°.
+
 ## 25-nov-2026 · 5.4.1 «Cápsulas» · Fase 5 del renacimiento cenital (Claude)
 - **Lo que pide el prompt de relevo, Fase 5:**
   - comprobar que el paso entre el mundo abierto cenital y las Carreras retro conserve el estado;

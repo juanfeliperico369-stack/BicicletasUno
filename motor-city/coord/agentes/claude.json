@@ -4,8 +4,8 @@
   "rama": "ccr-4f6eeea5-yulqk1",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
   "fase_actual": "25-nov-2026 · las cinco fases del «renacimiento cenital» hechas; la última, la Fase 5: las cápsulas de Turno Cero, 🧰 el garaje (71-garaje.js) y 📏 de las carreras retro; Motor City 5.4.1 (reportes/2026-11-25-claude-fase5-capsulas.md). Rama ccr-4f6eeea5-yulqk1 en motorcity, BicicletasUno, MetroZero y RunRunZero.",
-  "estado": "Renacimiento cenital terminado y en verde; publicar (páginas y APK) y pasar a main esperan el OK del autor",
-  "ultima_actualizacion_utc": "2026-11-25T10:30:00Z",
+  "estado": "Renacimiento cenital terminado, en verde y publicado (25-nov): EnCicla 3.9.0, El Metro 3.10.0 y Motor City 5.4.1 con sus APK",
+  "ultima_actualizacion_utc": "2026-11-25T16:45:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",

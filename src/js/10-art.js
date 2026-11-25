@@ -259,13 +259,13 @@ const Art = JE.art = {
     // calle y ciclorruta
     prect(x, 0, hor, w, h - hor, '#3b4250'); prect(x, 0, hor, w, 3, '#b7b3a6'); prect(x, 0, hor + 3, w, 7, '#5e9a1e'); prect(x, 0, hor + 3, w, 1, PAL.vd);
     for (let i = (-(t * 40) % 10 + 10) % 10 - 10; i < w; i += 10) prect(x, i, hor + 6, 5, 1, '#e8f5d0');
-    for (let i = (-(t * 60) % 16 + 16) % 16 - 16; i < w; i += 16) prect(x, i, hor + 15, 8, 1, '#c9ccd1');
+    for (let i = (-(t * 64) % 16 + 16) % 16 - 16; i < w; i += 16) prect(x, i, hor + 15, 8, 1, '#c9ccd1');
     // ciclista
-    const cxp = Math.round(w * .5), cy = hor + 9, ph = t * 2;
+    const cxp = Math.round(w * .5), cy = hor + 9, ph = t * 4 * Math.PI;   // 3.9.1: todo el ciclo (rayas y piernas) dura medio segundo justo, para la portada viva (98z)
     const P = Save.data ? Save.data.profile : { skin: 1, shirt: 0, helmet: 0 };
     this.bikeSide(x, cxp, cy, { r: 5, face: 1, col: Save.data ? bikeCol() : PAL.vd });
     const sk = SKINS[P.skin] || SKINS[1], sh = SHIRTS[P.shirt] || PAL.vd, he = HELMETS[P.helmet] || '#fff';
-    const lx = Math.round(Math.sin(ph * 6) * 2);
+    const lx = Math.round(Math.sin(ph) * 2);
     prect(x, cxp - 1 + lx, cy - 9, 2, 5, PAL.az2); prect(x, cxp - 1 - lx, cy - 9, 2, 5, '#1d2c44');
     prect(x, cxp - 2, cy - 17, 5, 8, sh); pline(x, cxp + 2, cy - 15, cxp + 5, cy - 12, sk);
     prect(x, cxp - 1, cy - 22, 5, 5, sk); prect(x, cxp - 2, cy - 24, 7, 3, he); prect(x, cxp + 3, cy - 20, 1, 1, '#141414');

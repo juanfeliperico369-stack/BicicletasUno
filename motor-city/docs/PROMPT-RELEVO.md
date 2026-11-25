@@ -1,4 +1,4 @@
-# Prompt de relevo · «Renacimiento cenital»: las cinco fases están hechas; esperan el OK del autor para publicar (24/25‑nov‑2026)
+# Prompt de relevo · «Renacimiento cenital»: las cinco fases están hechas y publicadas (24/25‑nov‑2026)
 
 > **Cópialo entero a la IA que siga:** otra sesión de Claude, ChatGPT/Codex, Gemini/Antigravity, Cursor o cualquier otra.
 > Lo escribió Claude al cerrar la Fase 0 y lo puso al día al cerrar las fases 1 a **5** (24/25‑nov). El detalle está en:
@@ -22,7 +22,15 @@ Vas a continuar **Motor City**: un motor de juegos en un solo HTML, sin internet
 - un cenital 2.5D/3D bello y legible en El Metro y en Juega EnCicla;
 - un modo de carreras retro pseudo‑3D en Turno Cero.
 
-La Fase 0 (auditoría y línea base), la **Fase 1 (el Valle saneado, Motor del Valle 1.3.0)** y la **Fase 2 (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados)** ya están hechas, y también la **Fase 3** (la bandera encendida: El Metro 3.9.0 en Ciudad Libre y Bus, y EnCicla 3.9.0 en el modo libre, con las huellas reales del Motor del Valle 1.3.1). El autor aprobó la Fase 1 («ok, aprobado, haz lo mejor, inicia») y pidió seguir con las fases siguientes. La **Fase 4** también está hecha (`MC.Pista` en `js/47-pista.js` y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0). La **Fase 5** también está hecha (🧰 Garaje y colección, el paso entre cápsulas con el mismo estado y 📏 de las carreras retro; Motor City 5.4.1). **Lo que sigue espera al autor:** publicar El Metro 3.9.0 y EnCicla 3.9.0 (las páginas y las APK) y la APK de Turno Cero, pasar a `main` y medir en su celular con 📏. Cada fase termina con pruebas en verde; publicar (APK y páginas) y pasar a `main` siguen esperando el OK del autor. Nada de lo que ya funciona se puede romper.
+La Fase 0 (auditoría y línea base), la **Fase 1 (el Valle saneado, Motor del Valle 1.3.0)** y la **Fase 2 (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados)** ya están hechas, y también la **Fase 3** (la bandera encendida: El Metro 3.9.0 en Ciudad Libre y Bus, y EnCicla 3.9.0 en el modo libre, con las huellas reales del Motor del Valle 1.3.1). El autor aprobó la Fase 1 («ok, aprobado, haz lo mejor, inicia») y pidió seguir con las fases siguientes. La **Fase 4** también está hecha (`MC.Pista` en `js/47-pista.js` y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0). La **Fase 5** también está hecha (🧰 Garaje y colección, el paso entre cápsulas con el mismo estado y 📏 de las carreras retro; Motor City 5.4.1). **Todo quedó publicado el 25‑nov** (el autor pidió «entregame todos los html, apk y links actualizados»): las ramas entraron a `main` (PR motorcity #32, BicicletasUno #4, MetroZero #6 y RunRunZero #2), las páginas están al día y las APK en sus releases. **El Metro salió como 3.10.0** (versionCode 38): une la 3.9.0 «Unido y medido» de otra sesión (rama `ccr-2a67f935-oat714`, que estaba publicada y no en `main`) con el cenital. Falta medir en el celular del autor con 📏.
+
+| Juego | Página | APK |
+|---|---|---|
+| Juega EnCicla 3.9.0 | https://juanfeliperico369-stack.github.io/BicicletasUno/ | https://github.com/juanfeliperico369-stack/BicicletasUno/releases/tag/v3.9.0 (y `descargas/JuegaEnCicla.apk` en la página) |
+| El Metro 3.10.0 | https://juanfeliperico369-stack.github.io/MetroZero/ | https://github.com/juanfeliperico369-stack/MetroZero/releases/tag/v3.10.0 (y `el-metro.apk` en la página) |
+| Turno Cero, Motor City 5.4.1 | https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html (Mandados: `…/mandados.html`; el banco: `…/dist/motor-city.html`) | https://github.com/juanfeliperico369-stack/motorcity/releases/tag/v5.4.1 |
+| Run Scooter 2.5.0 (no cambió) | https://juanfeliperico369-stack.github.io/RunRunZero/ | https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk |
+ Cada fase termina con pruebas en verde; publicar (APK y páginas) y pasar a `main` siguen esperando el OK del autor. Nada de lo que ya funciona se puede romper.
 
 ## La misión y la visión (no se distorsionan)
 Están completas en `docs/VISION-Y-MISION.md`. **Solo el autor las cambia.**

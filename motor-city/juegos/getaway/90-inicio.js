@@ -16,7 +16,7 @@ function iniciarInterfaz() {
   ui.accion({ id: 'freno', icono: '🛑', texto: 'Freno', mantener: true, ctl: G.ctl });
   ui.accion({ id: 'turbo', icono: '⚡', texto: 'Turbo', mantener: true, ctl: G.ctl });
   const b = (k, icono, texto, al) => (BOT[k] = ui.boton({ id: k, icono, texto, al }));
-  b('menu', '⏸', 'Menú', menu); b('mapa', '🗺️', 'Mapa', abrirMapaTC); b('globo', '🌍', 'Planeta', () => Globo.abrir()); b('camara', '🎥', 'Cámara', siguienteCamara);
+  b('menu', '⏸', 'Menú', menu); b('mapa', '🗺️', 'Mapa', abrirMapaTC); b('globo', '🌍', 'Planeta', () => Globo.abrir()); b('camara', '🔍', 'Cámara', siguienteCamara);
   b('taller', '🔧', 'Taller', menuTaller); b('metro', '🚇', 'Metro', menuTransporte); b('encicla', '🚲', 'EnCicla', () => { G.cuerpo.setVeh('bici'); G.ui.aviso('🚲 EnCicla: por la ciclorruta no te sigue nadie en carro', 2200); });
   b('lancha', '🚤', 'Lancha', () => { if (G.cuerpo.embarcar('lancha')) { G.ui.aviso('🚤 Al embalse: la policía se queda en la orilla', 2200); if (G.busq.nivel && !G.busq.visto) G.busq.esconder('embalse'); } });
   b('tierra', '🏝️', 'Tierra', () => { if (G.cuerpo.desembarcar()) G.ui.aviso('🏝️ En tierra: consigue un carro', 1800); });
@@ -33,15 +33,26 @@ function iniciarInterfaz() {
   $('#fPortada').onclick = () => location.reload();
   t0 = performance.now(); requestAnimationFrame(cuadro);
 }
-const CAMARAS = ['cenital', 'ciudad3d', 'tercera', 'primera', 'maqueta', 'arcade', 'vuelo'];   /* 4.1: 🏁 arcade (OutRun) y ⛰️ vuelo (Voxel Space de Comanche) */
+/* 5.5.0 · LA CÁMARA ÚNICA (el autor, 25‑nov‑2026: «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»; el
+   mundo «enteramente en un 3D, para jugarse en vista cenital de cámara más bien centrada y que se puede mover al gusto, acercarse
+   y alejarse, y así añadiría un poco la forma de tercera persona»). El mundo abierto se ve solo con la cenital 3D:
+   - pellizcar acerca y aleja; dos dedos que giran la giran; dos dedos arriba o abajo la inclinan; doble toque arriba la endereza;
+   - el botón 🔍 (y la tecla C) pasan por cuatro acercamientos: de lejos, cenital, de cerca y casi tercera persona (de 20 a 60 px/m
+     la cámara baja y se va detrás del rumbo, js/34-camara.js);
+   - se fueron la ciudad 3D, la tercera y la primera persona, el dron, la maqueta, 🏁 Arcade y ⛰️ Vuelo como cámaras del mundo
+     abierto. Las 🏎️ Carreras retro (pseudo‑3D) siguen como su propio modo, y el mirador muestra su vista de cine unos segundos. */
+const CAMARAS = ['cenital'];
+const ZOOMS = [[4, '🛰️', 'de lejos'], [10, '🗺️', 'cenital'], [20, '🔎', 'de cerca'], [52, '🎮', 'casi tercera persona']];   /* px por metro (× la densidad de la pantalla) */
 /* 4.7 · cada cámara donde tiene sentido (el autor: «las vistas no tienen coherencia con cómo se adaptaron»): las cinco del mundo 3D
    siempre; 🏁 Arcade (la carretera pseudo-3D de OutRun) solo en las carreteras entre ciudades y en las carreras; ⛰️ Vuelo (Voxel
    Space) solo volando (jetpack). Si cambia el contexto, la cámara vuelve sola a la cenital 3D. */
-function camarasAqui() { const C = G.cuerpo, L = ['cenital', 'ciudad3d', 'tercera', 'primera', 'dron', 'maqueta']; if ((G.M && !G.M.esCiudad) || (G.Modos && G.Modos.m && G.Modos.m.id === 'carrera')) L.push('arcade'); if (C && C.veh.clase === 'aire') L.push('vuelo'); return L; }
-function siguienteCamara() { const L = camarasAqui(), i = L.indexOf(G.vistaId); G.vistaId = L[(i + 1) % L.length]; const v = G.vistas.usar(G.vistaId, G.E); G.ui.aviso(v.icon + ' ' + v.n, 1400, 'vista'); escribirG({ vista: G.vistaId }); }
-function camaraCoherente() { if (!G.vistas || G._sigCam) return; const L = camarasAqui(); if ((G.vistaId === 'arcade' || G.vistaId === 'vuelo') && !L.includes(G.vistaId)) { const ant = G.vistaId; G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); G.ui.aviso('🗺️ Vuelve la cenital 3D (' + (ant === 'vuelo' ? 'el vuelo es para el jetpack' : 'la cámara Arcade es para la carretera y las carreras') + ')', 1800, 'vista'); } }
+function camarasAqui() { return CAMARAS; }
+function zoomActual() { const z = G.camara ? G.camara.zoom / (G.dEf || 1) : 10; let i = 0, d = 1e9; ZOOMS.forEach((q, k) => { const e = Math.abs(Math.log(z / q[0])); if (e < d) { d = e; i = k; } }); return i; }
+function irZoom(i, aviso) { const Z = ZOOMS[(i + ZOOMS.length) % ZOOMS.length], z0 = G.camara.zoom, z1 = Z[0] * (G.dEf || 1), t0 = performance.now(); const paso = t => { const u = Math.min(1, (t - t0) / 450), e = u * u * (3 - 2 * u); G.camara.zoom = z0 * Math.pow(z1 / z0, e); if (u < 1) requestAnimationFrame(paso); }; requestAnimationFrame(paso); if (aviso !== false) G.ui.aviso(Z[1] + ' Cámara ' + Z[2] + ' · pellizca para acercar, gira con dos dedos', 1600, 'vista'); return Z; }
+function siguienteCamara() { if (G.vistaId !== 'cenital') { G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); } return irZoom(zoomActual() + 1); }   /* 5.5.0: el 🔍 acerca y aleja la cenital (ya no cambia de cámara) */
+function camaraCoherente() { /* 5.5.0: ya no hace falta: el jugador solo tiene la cenital (las pruebas del motor ponen otras vistas a mano para medir sus dibujos) */ }
 function menu() {
-  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'modos', texto: '🎮 Modos de juego (carreras, extremo, mandados, EnCicla, metro)' }, { id: 'rescate', texto: '🆘 Rescate (calle, grúa, taxi, estación, ambulancia, volver)' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia ? 'sí (esquiva paredes)' : 'no') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'flex', texto: '⚙️ Flexibilidad (control, giro, velocidad, cámara, mano, tamaño, calidad)' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'medir', texto: '📏 Medir el rendimiento (60 s, para el autor)' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
+  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'modos', texto: '🎮 Modos de juego (carreras, extremo, mandados, EnCicla, metro)' }, { id: 'rescate', texto: '🆘 Rescate (calle, grúa, taxi, estación, ambulancia, volver)' }, { id: 'cam', texto: '🔍 Cámara cenital: ' + ZOOMS[zoomActual()][2] + ' (toca para acercar o alejar)' }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia ? 'sí (esquiva paredes)' : 'no') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'flex', texto: '⚙️ Flexibilidad (control, giro, velocidad, cámara, mano, tamaño, calidad)' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'medir', texto: '📏 Medir el rendimiento (60 s, para el autor)' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
   if (G.hist) it.push({ id: 'reintentar', texto: '↩ Volver al último punto' }); it.push({ id: 'historia', texto: '📖 Historia (opcional)' }, { id: 'libre', texto: '🌎 Mundo abierto aquí' }, { id: 'portada', texto: '🏠 Portada' });
   G.ui.menu('Turno Cero · ' + planeta.def(G.id).nombre, it, async k => {
     if (k === 'asis') { G.asistencia = !G.asistencia; escribirG({ asistencia: G.asistencia }); G.ui.aviso(G.asistencia ? '🛞 Asistencia: el carro esquiva las paredes que vienen' : '🛞 Sin asistencia: todo depende de ti', 2200, 'asis'); return menu(); }
@@ -89,7 +100,7 @@ function tecla(k) {
 (function portada() {
   const S = leerG(), est = $('#estado');
   est.textContent = 'Listo · ' + Object.keys(MC_CIUDADES).length + ' ciudades reales y ' + planeta.anillo.filter(d => d.tipo === 'tramo').length + ' carreteras de la nada · ' + MC.Modelos.L.size + ' modelos 3D';
-  const arrancar = async fn => { Snd.ini(); $('#portada').hidden = true; iniciarInterfaz(); G.vistaId = leerG().vista || 'cenital'; try { await fn(); } catch (e) { MC.falla('inicio', e); $('#portada').hidden = false; est.textContent = 'No se pudo abrir el mundo: ' + e.message; } if (G.vistas && G.ui && !G.ui._mini) { G.ui.minimapa(G.vistas); } };
+  const arrancar = async fn => { Snd.ini(); $('#portada').hidden = true; iniciarInterfaz(); G.vistaId = 'cenital'; try { await fn(); } catch (e) { MC.falla('inicio', e); $('#portada').hidden = false; est.textContent = 'No se pudo abrir el mundo: ' + e.message; } if (G.vistas && G.ui && !G.ui._mini) { G.ui.minimapa(G.vistas); } };
   if (S.hist) { $('#bSeguir').hidden = false; const H = TC.HISTORIA[S.hist.cap]; $('#sSeguir').textContent = 'Acto ' + H.acto + ' · ' + H.titulo + ' · ' + (planeta.def(S.hist.mundo) || {}).nombre;
     $('#bSeguir').onclick = () => arrancar(async () => { const K = S.hist; Object.assign(G, { dinero: K.dinero, rep: K.rep || G.rep, flags: K.flags || {}, veh: K.veh || G.veh, tengo: K.tengo || G.tengo, evidencia: K.evidencia || 0, municion: K.municion || 0 }); G.check = K; await Historia.empezar(K.cap, K.i, { donde: { mundo: K.mundo, x: K.x, y: K.y, a: K.a }, sinIntro: true, sub: K.sub }); }); }
   $('#bHistoria').onclick = () => arrancar(async () => { escribirG({ hist: null }); await Historia.empezar(0); });
