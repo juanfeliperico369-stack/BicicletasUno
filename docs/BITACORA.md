@@ -42,7 +42,10 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
     | Huellas | 46,3 ms | 41,3 ms | 60–85 ms | **cumplida 3 de 3** |
 
 - **El informe:** `motorcity/reportes/2026-11-25-claude-fase3-cenital.md`.
-- **Falta:** el OK del autor para publicar (página y APK) y para pasar a `main`.
+- **Publicada el 25‑nov** (el autor pidió los enlaces y las APK al día):
+  - entró a `main` con el PR #4, y `publicar.yml` la publicó con las pruebas en verde (caché `juega-encicla-v3.9.0-606e1d30`);
+  - la APK está en la release v3.9.0 y en `descargas/JuegaEnCicla.apk`, que antes era la 3.4.0;
+  - `/metro/`, El Metro 1.0.0 que ya nada enlaza, se dejó como estaba: El Metro va en https://juanfeliperico369-stack.github.io/MetroZero/.
 
 ## 24-nov-2026 · v3.8.0 (sin cambio de versión) · El cenital nuevo en el modo libre, con bandera (Fase 2 del renacimiento cenital, Claude)
 - **Qué cambió:**
