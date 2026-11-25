@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* PRUEBA DE GEOMETRÍA EN EL JUEGO (Motor del Valle 1.3.0) · Node, sin dependencias.
+/* PRUEBA DE GEOMETRÍA EN EL JUEGO (Motor del Valle 1.3.1) · Node, sin dependencias.
    Lee los datos EXPORTADOS tal como los lee el juego y comprueba la ley de soberanía vial:
      · 0 edificios que pisen un corredor de capa 0: regla A del autor (ancho / 2 + 1,3 m en calles de carros; + 0,3 m en peatonales,
        escalas y ciclorrutas), y el carril del Metroplús y la vía del tranvía si están los corredores del juego (tools/cache/corredores.json);
@@ -8,11 +8,13 @@
      · 0 casas en el agua (salida/sanear/agua.json, el agua a cielo abierto del saneamiento), con más de 0,05 m² adentro;
      · el peso: edificios.js ≤ 4,6 MB y el HTML de El Metro ≤ 9,5 MB (MB = 1.000.000 bytes, lo más estricto).
    El Metro: node motor-valle/pruebas/geometria.mjs --elmetro RUTA_ELMETRO [--agua salida/sanear/agua.json] [--html RUTA/dist/index.html]
-   EnCicla:  node motor-valle/pruebas/geometria.mjs --encicla RUTA_ENCICLA [--agua …]   (edificios.bin + vias.bin; las casas confiables
-             marcadas, que no se recortan, se cuentan aparte)
+   EnCicla:  node motor-valle/pruebas/geometria.mjs --encicla RUTA_ENCICLA [--agua …] [--ligero]   (edificios.bin + vias.bin; las casas
+             confiables marcadas, que no se recortan, se cuentan aparte; con --ligero, edificios-ligero.bin, el que lee el juego desde la
+             1.3.1: uno o dos rectángulos por huella, cada 0,25 m; ahí la regla de los restos no aplica, porque se mide en el completo: un
+             rectángulo inscrito de menos de 12 m² es parte de un resto válido)
    Sale con 1 si algo falla. Imprime un JSON con las cifras. */
 import fs from 'node:fs'; import path from 'node:path'; import vm from 'node:vm'; import zlib from 'node:zlib';
-const A = process.argv.slice(2), opt = k => { const i = A.indexOf(k); return i >= 0 ? A[i + 1] : null; };
+const A = process.argv.slice(2), opt = k => { const i = A.indexOf(k); return i >= 0 ? A[i + 1] : null; }, LIG = A.includes('--ligero');
 const AQUI = path.dirname(new URL(import.meta.url).pathname), SAN = path.join(AQUI, '..', 'salida', 'sanear');
 const EM = opt('--elmetro'), EC = opt('--encicla'); if (!EM && !EC) { console.error('Uso: node motor-valle/pruebas/geometria.mjs --elmetro RUTA | --encicla RUTA'); process.exit(2); }
 const AGUA = opt('--agua') || path.join(SAN, 'agua.json'), TOL = .02, MB = 1e6, t0 = Date.now();
@@ -69,11 +71,11 @@ const pisa = P => {
 /* ---------- edificios (como 11-edificios.js · edifDe) ---------- */
 let E, b, archivo;
 if (EM) { archivo = path.join(EM, 'src/data/edificios.js'); const ctx = {}; vm.createContext(ctx); vm.runInContext(fs.readFileSync(archivo, 'utf8') + ';this.E=EDIFICIOS;', ctx); E = ctx.E; b = zlib.inflateRawSync(Buffer.from(E.data, 'base64')); }
-else { archivo = path.join(EC, 'src/data/edificios.bin'); E = JSON.parse(fs.readFileSync(path.join(EC, 'src/data/edificios.json'), 'utf8')); b = zlib.inflateRawSync(fs.readFileSync(archivo)); }
+else { const f = LIG ? 'edificios-ligero' : 'edificios'; archivo = path.join(EC, 'src/data', f + '.bin'); E = JSON.parse(fs.readFileSync(path.join(EC, 'src/data', f + '.json'), 'utf8')); b = zlib.inflateRawSync(fs.readFileSync(archivo)); }
 if (b.length < E.raw) throw new Error('edificios: inflado corto');
 const nR = E.nx * E.ny, cnt = new Int32Array(nR), i0 = new Int32Array(nR), p0 = new Int32Array(nR), q0 = new Int32Array(nR); const ri = lector(b); let ci = 0, cp = 0, cq = 0;
 for (let r = 0; r < nR; r++) { cnt[r] = ri(); const pb = ri(), qb = ri(); i0[r] = ci; p0[r] = cp; q0[r] = cq; ci += cnt[r]; cp += pb; cq += qb; }
-const Ls = E.len, oPos = Ls[0], oDim = oPos + Ls[1], oAng = oDim + Ls[2], oPis = oAng + Ls[3], oKin = oPis + Ls[4], oPol = oKin + Ls[5], oMar = E.marcas ? oPol + Ls[6] + (Ls[7] || 0) : -1;
+const V2 = !!E.ligero && E.v >= 2, QD = E.Qd || E.Q, Ls = E.len, oPos = Ls[0], oDim = oPos + Ls[1], oAng = oDim + Ls[2], oPis = oAng + Ls[3], oKin = oPis + Ls[4], oPol = oKin + Ls[5], oMar = E.ligero ? oPol : E.marcas ? oPol + Ls[6] + (Ls[7] || 0) : -1;
 /* agua */
 const aguaJ = fs.existsSync(AGUA) ? JSON.parse(fs.readFileSync(AGUA, 'utf8')) : null, ESC = aguaJ && aguaJ.unidad === 'cm' ? 100 : 10;
 const agua = aguaJ ? aguaJ.trozos.map(rs => rs.map(r => Float64Array.from(r, v => v / ESC))) : null, rejA = new Map();
@@ -90,19 +92,20 @@ const S = { edificios: 0, pisan: 0, marcadas_que_pisan: 0, penetracion_max_m: 0,
 const m = cor ? (k => k) : null;
 for (let ry = 0; ry < E.ny; ry++) for (let rx = 0; rx < E.nx; rx++) {
   const r = ry * E.nx + rx, n = cnt[r], X0 = rx * E.R, Y0 = ry * E.R; if (!n) continue;
-  ri.ir(oPos + p0[r]); let q = oPol + q0[r], px = 0, py = 0, pa = 0;
+  ri.ir(oPos + p0[r]); let q = (V2 ? oDim : oPol) + q0[r], px = 0, py = 0, pa = 0;   /* en la ligera v2, el tercer número del índice son los bytes de las medidas */
   const rq = () => { let v = 0, sh = 0, c; do { c = b[q++]; v += (c & 127) * 2 ** sh; sh += 7; } while (c & 128); return v; };
   for (let j = 0; j < n; j++) {
     const i = i0[r] + j; px += uz(ri()); py += uz(ri());
-    const hw = Math.max(.5, b[oDim + 2 * i] / E.Q), hd = Math.max(.5, b[oDim + 2 * i + 1] / E.Q); pa = (pa + b[oAng + i]) % 128;
+    const hw = Math.max(.5, (V2 ? rq() : b[oDim + 2 * i]) / QD), hd = Math.max(.5, (V2 ? rq() : b[oDim + 2 * i + 1]) / QD); pa = (pa + b[oAng + i]) % 128;
     const an = (pa + .5) * Math.PI / 128, ux = Math.cos(an), uy = Math.sin(an), kf = b[oKin + i], x = X0 + px / E.Q, y = Y0 + py / E.Q;
     let P;
-    if (kf & 16) { const nv = rq(); P = new Float64Array(nv * 2); let qx = px, qy = py; for (let v = 0; v < nv; v++) { qx += uz(rq()); qy += uz(rq()); P[2 * v] = X0 + qx / E.Q; P[2 * v + 1] = Y0 + qy / E.Q; } }
+    if ((kf & 16) && !E.ligero) { const nv = rq(); P = new Float64Array(nv * 2); let qx = px, qy = py; for (let v = 0; v < nv; v++) { qx += uz(rq()); qy += uz(rq()); P[2 * v] = X0 + qx / E.Q; P[2 * v + 1] = Y0 + qy / E.Q; } }
     else P = Float64Array.of(x - ux * hw + uy * hd, y - uy * hw - ux * hd, x + ux * hw + uy * hd, y + uy * hw - ux * hd, x + ux * hw - uy * hd, y + uy * hw + ux * hd, x - ux * hw - uy * hd, y - uy * hw + ux * hd);
     const marcada = oMar >= 0 && b[oMar + i] & 1, a = area(P); S.edificios++; S.area_m2 += a;
-    if (kf & 128) { S.recortados++; if (a < 12 - 1e-6) S.restos_menores_de_12++; else if (a < 16) S.recortados_de_12_a_16++; }
+    if (E.ligero) { if (V2 && (kf & 16)) S.segundos_rectangulos = (S.segundos_rectangulos || 0) + 1; if (kf & 128) { S.recortados++; if (a < 12 - 1e-6) S.rectangulos_recortados_menores_de_12 = (S.rectangulos_recortados_menores_de_12 || 0) + 1; } }   /* la regla de los restos se mide en el completo */
+    else if (kf & 128) { S.recortados++; if (a < 12 - 1e-6) S.restos_menores_de_12++; else if (a < 16) S.recortados_de_12_a_16++; }
     const [pen, k] = pisa(P);
-    if (pen > 0) { if (marcada) S.marcadas_que_pisan++; else { S.pisan++; S.por_tipo[k] = (S.por_tipo[k] || 0) + 1; S.penetracion_max_m = Math.max(S.penetracion_max_m, +pen.toFixed(2)); if (S.muestras.length < 12) S.muestras.push({ x: +x.toFixed(1), y: +y.toFixed(1), penetracion_m: +pen.toFixed(2), via: k, poligono: !!(kf & 16), recortado: !!(kf & 128) }); } }
+    if (pen > 0) { if (marcada) S.marcadas_que_pisan++; else { S.pisan++; S.por_tipo[k] = (S.por_tipo[k] || 0) + 1; S.penetracion_max_m = Math.max(S.penetracion_max_m, +pen.toFixed(2)); if (S.muestras.length < 12) S.muestras.push({ x: +x.toFixed(1), y: +y.toFixed(1), penetracion_m: +pen.toFixed(2), via: k, poligono: !E.ligero && !!(kf & 16), segundo: !!E.ligero && !!(kf & 16), recortado: !!(kf & 128) }); } }
     if (agua) { const w = aguaDe(P, hw, hd); if (w > .05) { S.en_agua++; if (S.muestras.length < 24) S.muestras.push({ x: +x.toFixed(1), y: +y.toFixed(1), agua_m2: +w.toFixed(3), poligono: !!(kf & 16), recortado: !!(kf & 128) }); } }
   }
 }

@@ -24,7 +24,7 @@ async function caso(nombre, rol, libre, flag, modo3d) {
     JE.game.start(rol, 1, Object.assign({ seed: 5, nov: NOVEDADES[0] }, libre ? { free: true } : {})); Mundo3D.poner(modo3d);
   }, [rol, libre, flag, modo3d]);
   await p.waitForTimeout(2600);
-  const r = await p.evaluate(() => { const d = document.getElementById('cenBruma'); return { bruma: !!(d && d.style.display !== 'none'), sombras: JE.cenital.n.sombras, siluetas: JE.cenital.n.siluetas, modo3d: Mundo3D.modo, gl: !!(Mundo3D.cv && !Mundo3D.cv.hidden), errores: JE.errors.slice() }; });
+  const r = await p.evaluate(() => { const d = document.getElementById('cenBruma'), H = JE.cenital.huellas, reales = [...CityMap.lotC.values()].filter(v => v.real).length; return { bruma: !!(d && d.style.display !== 'none'), sombras: JE.cenital.n.sombras, siluetas: JE.cenital.n.siluetas, modo3d: Mundo3D.modo, gl: !!(Mundo3D.cv && !Mundo3D.cv.hidden), huellas: H ? H.activo : null, trozosReales: reales, trozos: CityMap.lotC.size, errores: JE.errors.slice() }; });
   R.push(Object.assign({ caso: nombre, bandera: flag }, r)); if (r.errores.length) errores.push(...r.errores.map(e => nombre + ': ' + e));
   if (CAP) await p.screenshot({ path: path.join(CAP, `${flag ? 'despues' : 'antes'}-${nombre}.png`), timeout: 60000 });
   return r;
@@ -32,13 +32,14 @@ async function caso(nombre, rol, libre, flag, modo3d) {
 const falta = [];
 for (const flag of [false, true]) {
   const l2 = await caso('libre-2d', 'usuario', true, flag, null), l3 = await caso('libre-3p', 'usuario', true, flag, 'tercera'), of = await caso('balance-3p', 'balance', false, flag, 'tercera');
-  if (flag) { if (!l2.bruma) falta.push('modo libre 2D: sin bruma'); if (!l3.bruma || !(l3.sombras > 0) || !(l3.siluetas > 0)) falta.push('modo libre 3D: bruma ' + l3.bruma + ', sombras ' + l3.sombras + ', siluetas ' + l3.siluetas); }
-  else if (l2.bruma || l3.sombras || l3.siluetas) falta.push('con la bandera apagada cambió el modo libre');
-  if (of.bruma || of.sombras || of.siluetas) falta.push('el oficio Balance cambió (' + JSON.stringify(of) + ')');
+  if (flag) { if (!l2.bruma) falta.push('modo libre 2D: sin bruma'); if (!l3.bruma || !(l3.sombras > 0) || !(l3.siluetas > 0)) falta.push('modo libre 3D: bruma ' + l3.bruma + ', sombras ' + l3.sombras + ', siluetas ' + l3.siluetas);
+    if (l2.huellas !== null && (!l2.huellas || !(l2.trozosReales > 0) || l2.trozosReales !== l2.trozos)) falta.push('modo libre: los trozos no salen de las huellas reales (' + l2.trozosReales + ' de ' + l2.trozos + ')'); }
+  else if (l2.bruma || l3.sombras || l3.siluetas || l2.huellas || l2.trozosReales) falta.push('con la bandera apagada cambió el modo libre');
+  if (of.bruma || of.sombras || of.siluetas || of.huellas || of.trozosReales) falta.push('el oficio Balance cambió (' + JSON.stringify(of) + ')');
 }
 await b.close();
 if (errores.length) falta.push(errores.length + ' errores: ' + errores.slice(0, 3).join(' · '));
-console.log('caso          bandera  bruma  sombras  siluetas  3D');
-for (const r of R) console.log(r.caso.padEnd(13), (r.bandera ? 'sí' : 'no').padEnd(8), (r.bruma ? 'sí' : 'no').padEnd(6), String(r.sombras).padStart(7), String(r.siluetas).padStart(9), ' ', r.modo3d || '2D');
+console.log('caso          bandera  bruma  sombras  siluetas  huellas reales  3D');
+for (const r of R) console.log(r.caso.padEnd(13), (r.bandera ? 'sí' : 'no').padEnd(8), (r.bruma ? 'sí' : 'no').padEnd(6), String(r.sombras).padStart(7), String(r.siluetas).padStart(9), String(r.trozosReales + '/' + r.trozos).padStart(14), ' ', r.modo3d || '2D');
 console.log(falta.length ? 'FALLA · ' + falta.join(' | ') : 'BIEN · el cenital nuevo solo cambia el modo libre, y solo con la bandera');
 process.exit(falta.length ? 1 : 0);

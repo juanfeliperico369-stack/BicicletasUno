@@ -51,11 +51,11 @@ else if (cmd === 'encicla') {
   const out = prueba ? salida('encicla') : path.join(ROOT, 'src', 'data');
   py('build.py', { TILE: '10', OUT: out, VIAS_M: path.join(salida('sanear'), 'vias_m.bin') });
   if (!prueba) { py('sitios.py'); py('alturas.py'); const em = args[1] && !args[1].startsWith('--') ? args[1] : null; if (em) py('metroplus_elmetro.py', {}, [em]); }
-  // 1.3: huellas saneadas (edificios.bin) y la cota de sus vías (vias-cota.bin), SIN CONECTAR: tools/build.js no las mete al HTML
+  // 1.3: huellas saneadas (edificios.bin, y desde la 1.3.1 edificios-ligero.bin, que tools/build.js mete en el HTML) y la cota de sus vías (vias-cota.bin, sin conectar)
   sanear(out);
   py('huellas.py', { OUT: SAN }, ['--encicla', out]);
   py('rasante.py', { OUT: SAN }, ['--encicla', out]);
-  console.log('✓ Juega EnCicla: datos del mapa en', out, '(edificios.bin y vias-cota.bin, sin conectar)');
+  console.log('✓ Juega EnCicla: datos del mapa en', out, '(edificios.bin y edificios-ligero.bin; vias-cota.bin sin conectar)');
 }
 else if (cmd === 'elmetro') {
   const em = args[1] && !args[1].startsWith('--') ? args[1] : null; if (!em && !prueba) { console.error('Uso: node motor-valle/motor.mjs elmetro RUTA_A_ELMETRO [--prueba]'); process.exit(1); }

@@ -1,6 +1,6 @@
 {
- "version": "1.3.0",
- "fecha": "2026-11-24",
+ "version": "1.3.1",
+ "fecha": "2026-11-25",
  "fuente_de_verdad": "juanfeliperico369-stack/BicicletasUno (carpeta motor-valle/)",
  "copias": [
   "juanfeliperico369-stack/MetroZero (carpeta motor-valle/)"
@@ -38,7 +38,7 @@
    "sitios",
    "ciclorrutas",
    "estaciones_encicla",
-   "edificios.bin (sin conectar)",
+   "edificios.bin (completo) y edificios-ligero.bin (el que lee el juego: modo libre con la bandera del cenital)",
    "vias-cota.bin (sin conectar)"
   ],
   "elmetro": [
@@ -84,6 +84,11 @@
    "version": "1.3.0",
    "fecha": "2026-11-24",
    "que": "ley de soberanía vial (geo/sanear.py y geo/anchos.json): ninguna casa de capa 0 sobre una vía de capa 0 ni sobre el agua, con las casas confiables de OSM marcadas en geometry-conflicts.geojson; rasante de las vías (geo/rasante.py: cota única en los nodos y pendiente con tope); capas de puentes y túneles (geo/niveles.py); huellas saneadas para EnCicla (geo/huellas.py, sin conectar); pruebas de geometría (pruebas/); fuentes huellas y agua_niveles; ejes precisos de las vías (build.py con VIAS_M); subcomando sanear"
+  },
+  {
+   "version": "1.3.1",
+   "fecha": "2026-11-25",
+   "que": "renacimiento cenital, Fase 3: edificios-ligero.bin para Juega EnCicla (geo/huellas.py --ligero): un rectángulo por huella y, en las de polígono (recortadas o irregulares), el más grande que cabe adentro, ya cuantizado como lo lee el juego, comprobado contra los corredores; tools/build.js de EnCicla lo mete en el HTML y src/js/99z-huellas.js lo lee en el modo libre; geometria.mjs --ligero"
   }
  ],
  "saneamiento": {

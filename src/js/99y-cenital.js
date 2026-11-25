@@ -4,7 +4,7 @@
    (incluidos los cenitales: Usuario, Apoyo, Técnico, Balance y Supervisor), los turnos y los minijuegos siguen con el render
    de hoy: este archivo solo envuelve funciones y mira la bandera.
    La bandera: `?cenital` (o `?cenital=0`) en la dirección, Save.data.settings.cenital (1 o 0) o JE.cenital.forzar (pruebas).
-   En la Fase 2 viene apagada (PREDETERMINADA = 0); la Fase 3 la enciende. El guardado juegaencicla.v1 no cambia.
+   Desde la 3.9.0 (Fase 3) viene encendida (PREDETERMINADA = 1); en la Fase 2 venía apagada. El guardado juegaencicla.v1 no cambia.
    Lo que EnCicla ya tenía y se queda igual: la sombra de contacto del 2D (la elipse de blit bajo cada sprite), la silueta del
    ciclista encima cuando algo lo tapa en la ciudad 3D del 2D, y la cámara 2D con 1 − e^(−k·dt) (Ride.camara y Cam.tick).
    Con la bandera, en el modo libre:
@@ -17,7 +17,7 @@
    ===================================================================== */
 (function () {
   if (typeof Ride === 'undefined' || typeof Mundo3D === 'undefined') return;
-  const PREDETERMINADA = 0;   // Fase 3: 1
+  const PREDETERMINADA = 1;   // Fase 3 (3.9.0): encendida en el modo libre; ?cenital=0 o Save.data.settings.cenital = 0 la apagan
   const URL_ON = typeof location !== 'undefined' ? (/[?&]cenital=0\b/.test(location.search) ? 0 : /[?&]cenital\b/.test(location.search) ? 1 : null) : null;
   const CEN = JE.cenital = {
     forzar: null, n: { sombras: 0, siluetas: 0 },

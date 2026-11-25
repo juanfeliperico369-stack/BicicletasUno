@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.8.0 · compilado el 2026-11-25.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.9.0 · compilado el 2026-11-25.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.8.0)
+## 2.3 Estado actual (v3.9.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-25 | Claude Code | documento creado (v3.8.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-25 | Claude Code | documento creado (v3.9.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2265,6 +2265,43 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 ## BITÁCORA · Juega EnCicla
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
+
+### 25-nov-2026 · v3.9.0 · El cenital nuevo encendido en el modo libre, con las huellas reales del Valle (Fase 3 del renacimiento cenital, Claude)
+- **Qué cambió:**
+  - **La bandera del cenital, encendida** (`src/js/99y-cenital.js`, `PREDETERMINADA = 1`), **solo en el modo libre**: bruma, sombras de contacto, tu silueta y la cámara exponencial. Los 9 oficios, los turnos y los minijuegos siguen con el render de siempre. `?cenital=0` o `Save.data.settings.cenital = 0` la apagan; el guardado `juegaencicla.v1` no cambia.
+  - **Las huellas reales en el modo libre** (`src/js/99z-huellas.js`, nuevo y aditivo):
+    - con la bandera, los lotes inventados del paseo libre se cambian por las **625.880 huellas saneadas del Motor del Valle 1.3.1** (OpenStreetMap, Microsoft y Google);
+    - cada huella tiene la forma de un lote (4 esquinas, altura y colores), así que el 2D de los trozos y el 3D las dibujan sin cambiar: de 1 a 2 pisos son casas con techo, y de 3 o más, edificios;
+    - cada región de 160 m se arma una vez, y cada trozo dibuja también las huellas de sus vecinos que entran en él, sin costuras en los bordes;
+    - al entrar o salir del modo libre se vacían las cachés de lotes, trozos 2D y mallas 3D.
+  - **Los datos** (`src/data/edificios-ligero.bin` + `.json`, de `motor-valle/geo/huellas.py`, Motor del Valle 1.3.1):
+    - uno o dos rectángulos por huella, con centros y medidas cada 0,25 m;
+    - en las huellas de polígono (recortadas o irregulares, el 17 %), los rectángulos más grandes que caben adentro; el segundo cubre el otro brazo de una L y «sigue» al primero, con el mismo aspecto;
+    - **ningún rectángulo toca una vía, el Metroplús, el tranvía ni el agua**;
+    - `tools/build.js` lo mete en el HTML tal cual. Si falta, o si salió de otro `edificios.bin`, el modo libre sigue con los lotes.
+  - **Versión 3.9.0:** `src/js/00-core.js` y `app/android/app/build.gradle` (versionCode 30900).
+- **Cifras:**
+  - 667.644 rectángulos de 625.880 edificios;
+  - 41.764 huellas con segundo rectángulo;
+  - 260 huellas sin rectángulo posible (más delgadas que 1 m);
+  - área inscrita / polígono: mediana **0,805** (con un rectángulo y las medidas de 0,5 m de `edificios.bin` era 0,62);
+  - el HTML pasa de 5.678 KB a 9.990 KB.
+- **Probado:**
+  - `node tools/build.js`: 9.990 KB;
+  - `node tests/run.js`: **177 ✓ y 0 ✗**, con la regresión (5 ✓);
+    - «mundo 3D único» falló una vez cuando corrió al tiempo con otra prueba pesada: espera 700 ms a que se acomode la cámara;
+    - sola pasó 6 de 6, y la batería sola, completa;
+  - `node tests/cenital-libre.mjs`: BIEN. Con la bandera, el modo libre tiene bruma, sombras, silueta y huellas reales en 9 de 9 y 20 de 20 trozos; Balance no cambia; sin la bandera, nada cambia;
+  - `node motor-valle/pruebas/geometria.mjs --encicla . --ligero`: BIEN, con 0 de 667.644 rectángulos sobre un corredor (geometría exacta, 2 cm de tolerancia) y 0 en el agua;
+  - la compuerta (`tests/benchmark-2km-gpt6.mjs --cpu=4`, sin cambiarla; 3 rondas por variante, con la bandera):
+
+    | Variante | p95 media, Carrera 43A | p95 media, Las Palmas | Peor cuadro | Meta |
+    |---|---|---|---|---|
+    | Lotes | 49,7 ms | 38,8 ms | 72–102 ms | cumplida 1 de 3 |
+    | Huellas | 46,3 ms | 41,3 ms | 60–85 ms | **cumplida 3 de 3** |
+
+- **El informe:** `motorcity/reportes/2026-11-25-claude-fase3-cenital.md`.
+- **Falta:** el OK del autor para publicar (página y APK) y para pasar a `main`.
 
 ### 24-nov-2026 · v3.8.0 (sin cambio de versión) · El cenital nuevo en el modo libre, con bandera (Fase 2 del renacimiento cenital, Claude)
 - **Qué cambió:**
