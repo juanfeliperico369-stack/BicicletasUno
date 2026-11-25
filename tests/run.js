@@ -193,7 +193,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
     JE.headless = true; const P = new MGPausa({ rng: new RNG(2), has: () => false }, { lvl: 1 }); P.bot(0); let k = 0; while (!P.done && k < 30 * 90) { P.update(1 / 30); k++; } out.pausa = P.acc; JE.headless = false;
     out.err = JE.errors.slice(e0); UI.go('sHome'); return out;
   });
-  ok(g3.hibridocenital.q > 1 && g3['2dcenital'].q > 1 && g3.pixelpano.pano && !g3.err.length, 'gráficos híbrido y 2D con mapa dibujado, y vista panorámica sin errores ' + g3.err.join(' | '));
+  ok(g3.hibridocenital.q > 1 && g3['2dcenital'].q > 1 && !g3.pixelpano.pano && !g3.err.length, 'gráficos híbrido y 2D con mapa dibujado; la panorámica 2D ya no existe (un guardado viejo vuelve a la cámara única) ' + g3.err.join(' | '));
   ok(g3.music.join() === 'lofi,rock,jazz', 'música automática: lo-fi en menús, soft rock en turnos y jazz de noche (' + g3.music.join() + ')');
   ok(g3.e === 'mix,solo,mix,solo,mix,solo,mix,solo' && !g3.eLate && g3.eDay, 'corredores eléctricos: 4 pares mixta y solo eléctricas; servicio eléctrico hasta las 7 p. m.');
   ok(g3.tut, 'tutorial opcional con compañero (Maryi en Pausas Activas)');

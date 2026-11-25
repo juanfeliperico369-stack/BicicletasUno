@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.9.1 · compilado el 2026-11-25.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.10.0 · compilado el 2026-11-25.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.9.1)
+## 2.3 Estado actual (v3.10.0)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-25 | Claude Code | documento creado (v3.9.1) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-25 | Claude Code | documento creado (v3.10.0) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2265,6 +2265,34 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 ## BITÁCORA · Juega EnCicla
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
+
+### 25-nov-2026 · v3.10.0 (versionCode 31000) · La cámara única, la portada viva, el guardián del sonido y 🏆 Escalafón en la portada (Claude)
+- **Lo que pidió el autor** después de jugar la 3.9.0 (palabra por palabra en `motor-city/docs/PEDIDO-DEL-AUTOR-2026-11-25.md`, cuando se sincronice el motor; la fuente es motorcity):
+  - «EnCicla tiene un bug en la pantalla de inicio y es que no carga el panel de la animación»;
+  - la música sigue sonando al salir de la app;
+  - «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»: el mundo 3D en vista cenital, con la cámara centrada que se mueve, se acerca y se aleja («un poco la forma de tercera persona»);
+  - «haz que en EnCicla aparezca el escalafón como botón en la pantalla de inicio».
+- **Qué cambió:**
+  - **3.9.1, la portada viva** (`src/js/98z-portada-viva.js`):
+    - **la causa:** el mapa del Valle se arma de un solo tirón antes de `UI.init`, en 8,6 s con el CPU 4×, y la animación solo arrancaba al final;
+    - **ahora:** 10 cuadros del ciclo se animan con una transformación en pasos que mueve el compositor aunque el hilo principal esté ocupado;
+    - una píldora dice «Cargando el valle…», y un toque antes de tiempo se hace cuando el juego queda listo;
+    - `JE.arranque` guarda los tiempos del inicio.
+  - **3.9.1, el guardián del sonido** (`src/js/00b-sonido-guardian.js`, la misma pieza del motor):
+    - al salir de la app todo calla, en cualquier pantalla, y al volver sigue lo que sonaba;
+    - `MainActivity` pausa el WebView y avisa con `app:pausa` y `app:sigue`. Capacitor no lo pausaba: por eso la música seguía.
+  - **3.9.1, 🏆 Escalafón** (`src/js/98n-abierto.js`): el botón «Oficios y modos» de la portada ahora dice Escalafón y lleva directo a su pestaña, sin la bienvenida (sigue en Más › ¿Qué es EnCicla?).
+  - **3.10.0, la cámara única** (`src/js/99zz-camara-unica.js`, el último en cargar):
+    - en el mundo queda solo la cenital 3D, y se fueron la oblicua, la tercera y la primera persona, la panorámica 2D y la maqueta, con su selector, el botón 3D y la entrada de la pausa;
+    - el 🎥 pasa por cuatro acercamientos: de lejos, cenital, de cerca y casi tercera persona;
+    - desde el zoom 1,2 la cámara se inclina sola (hasta 0,62 en el tope, 2,7) y desde 1,9 se va detrás del rumbo;
+    - los guardados viejos vuelven a la cenital;
+    - el mundo 3D en WebGL queda para los miradores 🔭, y Pixel World sigue como estilo.
+- **Qué se probó:**
+  - `node tests/run.js`: el guardián, el escalafón directo, la bienvenida desde Más, la panorámica que ya no existe y el mirador con la cámara única;
+  - la portada con CPU 4×: 199 cuadros distintos del compositor mientras se arma el mapa;
+  - las cuatro cámaras en Chromium (412 × 860).
+- **Qué falta:** las fases A–E del pedido (carga, fluidez, controles, nada pintado en el suelo y el mundo en 3D de verdad), con el OK del autor.
 
 ### 25-nov-2026 · v3.9.0 (sin cambio de versión) · Motor City 5.4.0 y 5.4.1 en `motor-city/` (Claude)
 - **Qué cambió:** la copia de referencia del motor pasa de la 5.3.1 a la 5.4.0 con `node motor.mjs sincronizar` desde motorcity, la fuente de verdad. Trae los mundos saneados (5.3.2) y `MC.Pista`, las carreras retro pseudo‑3D de Turno Cero (5.4.0, Fase 4 del renacimiento cenital). Después pasa a la 5.4.1 (Fase 5: el garaje de Turno Cero, 📏 de las carreras retro y el arreglo de 📏).

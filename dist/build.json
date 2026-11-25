@@ -1,7 +1,7 @@
 {
- "version": "3.9.1",
- "hash": "111a9505",
- "cache": "juega-encicla-v3.9.1-111a9505",
+ "version": "3.10.0",
+ "hash": "2461b204",
+ "cache": "juega-encicla-v3.10.0-2461b204",
  "files": [
   "00-core.js",
   "00b-sonido-guardian.js",
@@ -100,11 +100,12 @@
   "99w-chunks-progresivos.js",
   "99x-capas-laterales.js",
   "99y-cenital.js",
-  "99z-huellas.js"
+  "99z-huellas.js",
+  "99zz-camara-unica.js"
  ],
  "bytes": {
-  "single": 10240246,
-  "web": 10241270,
-  "js": 10044462
+  "single": 10245225,
+  "web": 10246249,
+  "js": 10049441
  }
 }
