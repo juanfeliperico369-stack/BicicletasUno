@@ -47,15 +47,17 @@
   /* el boceto: un dibujo del trozo en baja resolución con los MISMOS colores del suelo detallado (piso, calles, verde, monte,
      agua, ladrillo y edificios; 8 × 8 muestras del mapa de casillas, agrandadas y suavizadas). Cuesta 64 lecturas por trozo y
      no carga nada al inicio. dx, dy, dw, dh: dónde dibujarlo (el trozo entero o su lugar en el búfer de la vista) */
-  const PB = [], BASE = [207, 201, 188];
-  [[[TT.MOUNT], [63, 122, 60]], [[TT.GRASS, TT.CANAL, TT.LAND], [105, 168, 78]], [[TT.PLAZA, TT.WALK, TT.STEPS], [221, 211, 189]],
-    [[TT.ROAD, TT.AVE, TT.AUTO, TT.BRIDGE, TT.CICLO], [142, 146, 154]], [[TT.BRICK], [169, 159, 145]], [[TT.BLDG, TT.STATION, TT.DEPOT], [159, 162, 167]],
-    [[TT.WATER], [63, 134, 200]]].forEach(([vs, c]) => { for (const v of vs) if (v != null) PB[v] = c; });
-  let bc = null, bx = null, bi = null;
+  const BASE = [207, 201, 188]; let PB = null, bc = null, bx = null, bi = null;
+  const paleta = () => { const P = [];
+    [[[TT.MOUNT], [63, 122, 60]], [[TT.GRASS, TT.CANAL, TT.LAND], [105, 168, 78]], [[TT.PLAZA, TT.WALK, TT.STEPS], [221, 211, 189]],
+      [[TT.ROAD, TT.AVE, TT.AUTO, TT.BRIDGE, TT.CICLO], [142, 146, 154]], [[TT.BRICK], [169, 159, 145]], [[TT.BLDG, TT.STATION, TT.DEPOT], [159, 162, 167]],
+      [[TT.WATER], [63, 134, 200]]].forEach(([vs, c]) => { for (const v of vs) if (v != null) P[v] = c; }); return P; };
   function boceto(M, ctx, cx, cy, dx, dy, dw, dh) {
-    const n = 8, K = CH / n, x0 = cx * CH, y0 = cy * CH;
-    if (!bc) { bc = document.createElement('canvas'); bc.width = bc.height = n; bx = bc.getContext('2d'); bi = bx && bx.createImageData(n, n); }
-    if (!bx || !bi) { ctx.fillStyle = '#cfc9bc'; ctx.fillRect(dx, dy, dw, dh); return; }
+    const n = 8, K = CH / n, x0 = cx * CH, y0 = cy * CH, respaldo = () => { ctx.fillStyle = '#cfc9bc'; ctx.fillRect(dx, dy, dw, dh); };
+    if (typeof TT === 'undefined' || typeof M.get !== 'function' || typeof ctx.drawImage !== 'function') return respaldo();   /* sin mapa (pruebas aisladas): el respaldo de siempre */
+    if (!PB) PB = paleta();
+    if (!bc) { bc = document.createElement('canvas'); bc.width = bc.height = n; bx = bc.getContext('2d'); bi = bx && typeof bx.createImageData === 'function' ? bx.createImageData(n, n) : null; }
+    if (!bx || !bi) return respaldo();
     const d = bi.data;
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const c = PB[M.get(x0 + i * K + (K >> 1), y0 + j * K + (K >> 1))] || BASE, o = (j * n + i) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255; }
     bx.putImageData(bi, 0, 0);
@@ -76,7 +78,7 @@
       if (!valido(t)) { cola.shift(); P.cancelados++; continue; }
       const a = reloj();
       let paso;
-      if (!t.it) { const w = document.createElement('canvas'); w.width = w.height = t.tam; const wc = w.getContext('2d', { alpha: false }); if (!wc) { t.obra = null; t.it = t.fab(t.ctx); } else { wc.imageSmoothingEnabled = false; t.obra = w; t.it = t.fab(wc); } }   /* 3.10.1: el lienzo de obra nace cuando le toca */
+      if (!t.it) { const w = typeof t.ctx.drawImage === 'function' ? document.createElement('canvas') : null; if (w) w.width = w.height = t.tam; const wc = w && w.getContext('2d', { alpha: false }); if (!wc) { t.obra = null; t.it = t.fab(t.ctx); } else { wc.imageSmoothingEnabled = false; t.obra = w; t.it = t.fab(wc); } }   /* 3.10.1: el lienzo de obra nace cuando le toca (sin drawImage, se pinta directo) */
       try { paso = t.it.next(); }
       catch (e) { cola.shift(); P.errores++; P.cancelados++; if (typeof console !== 'undefined') console.error('Chunk GPT-6', e); continue; }
       const ms = reloj() - a;
