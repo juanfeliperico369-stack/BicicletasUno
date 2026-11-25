@@ -2,8 +2,8 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
-## 25-nov-2026 · v3.9.0 (sin cambio de versión) · Motor City 5.4.0 en `motor-city/` (Claude)
-- **Qué cambió:** la copia de referencia del motor pasa de la 5.3.1 a la 5.4.0 con `node motor.mjs sincronizar` desde motorcity, la fuente de verdad. Trae los mundos saneados (5.3.2) y `MC.Pista`, las carreras retro pseudo‑3D de Turno Cero (5.4.0, Fase 4 del renacimiento cenital).
+## 25-nov-2026 · v3.9.0 (sin cambio de versión) · Motor City 5.4.0 y 5.4.1 en `motor-city/` (Claude)
+- **Qué cambió:** la copia de referencia del motor pasa de la 5.3.1 a la 5.4.0 con `node motor.mjs sincronizar` desde motorcity, la fuente de verdad. Trae los mundos saneados (5.3.2) y `MC.Pista`, las carreras retro pseudo‑3D de Turno Cero (5.4.0, Fase 4 del renacimiento cenital). Después pasa a la 5.4.1 (Fase 5: el garaje de Turno Cero, 📏 de las carreras retro y el arreglo de 📏).
 - **El juego no cambia:** su compilación no lee `motor-city/`, y el HTML sale igual (el mismo hash de caché).
 - **Probado:** `sincronizar --verificar` da «los archivos son iguales».
 

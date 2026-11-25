@@ -34,6 +34,7 @@
         this.activo = MC.Pista.entrar(Object.assign({
           circuito: id, cielo, noche, lienzo: d.querySelector('#retroCv'), capa: d, vueltas: 2, rivales: 5, nombre: 'Tú', color: (C.veh && C.veh.color) || '#d0202a',
           alTerminar: r => this.premio(r),
+          alEvento: e => { try { if (navigator.vibrate && (e.k === 'choque' || e.k === 'toque' || e.k === 'nitro')) navigator.vibrate(e.k === 'nitro' ? 40 : 25); } catch (er) { /* sin vibración */ } },   /* en el celular (también en el WebView de Android) */
           alSalir: () => { this.activo = null; G.enRetro = false; G.pausa = false; d.hidden = true; C.x = antes.x; C.y = antes.y; C.a = antes.a; C.v = 0; if (antes.veh && C.veh.id !== antes.veh) C.setVeh(antes.veh); G.camara.x = C.x; G.camara.y = C.y; t0 = performance.now(); MC.emit('modo:fin', { id: 'retro' }); },
           _alReiniciar: n => { this.activo = n; }
         }, op));
@@ -47,6 +48,17 @@
       MC.emit('modo:resultado', { id: 'retro', circuito: r.circuito, pos: r.posicion, t: r.tiempo, premio: p, record: rec.mejor });
     }
   };
+  /* 📏 Medir las carreras retro (Fase 5: 60 cuadros por segundo en el celular): el bot corre en Las Palmas y Medir (68-medir.js)
+     cuenta cada cuadro con su reloj y lo que tardó el dibujo de la pista, con su mismo panel y 📋. Se pide con G.Retro.medir() o con
+     ?medir=retro; el ?medir de siempre (las tres cámaras del mundo abierto) no cambia. */
+  if (G.Medir) {
+    const Md = G.Medir, TR0 = Md.TRAMOS, ct0 = Md.cambiarTramo, cu0 = Md.cuadro, te0 = Md.terminar;
+    Md.cambiarTramo = function (i) { if (this.TRAMOS[i][0] !== 'retro') return ct0.call(this, i); const A = this.activo; A.tramo = i; A.tramos = A.tramos || []; A.tramos[i] = { id: 'retro', n: this.TRAMOS[i][1], cuadros: [], dib: [] }; if (!Retro.activo) Retro.correr('palmas', { bot: true }); };
+    Md.cuadro = function (t) { const A = this.activo; if (A && this.TRAMOS[A.tramo] && this.TRAMOS[A.tramo][0] === 'retro' && G.vistas) G.vistas.ms = Retro.activo && Retro.activo.ultimoMs != null ? Retro.activo.ultimoMs : -1; return cu0.call(this, t); };
+    Md.terminar = function () { const retro = this.TRAMOS !== TR0; try { if (retro && Retro.activo) Retro.activo.salir(); return te0.call(this); } finally { if (retro) this.TRAMOS = TR0; } };
+    Retro.medir = () => { if (Md.activo) return false; Md.TRAMOS = [['retro', 'Carreras retro (Las Palmas)']]; Md.empezar(); return true; };
+    if (/[?&]medir=retro\b/.test(location.search)) Md.TRAMOS = [['retro', 'Carreras retro (Las Palmas)']];
+  }
   const empezar0 = Modos.empezar;
   Modos.empezar = function (id) { if (id !== 'retro') return empezar0.apply(this, arguments); if (this.m) this.terminar(null); return Retro.menu(); };   /* «modo:inicio» sale al empezar la carrera (Retro.correr) */
 })();

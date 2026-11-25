@@ -1,5 +1,34 @@
 # Bitácora de Motor City
 
+## 25-nov-2026 · 5.4.1 «Cápsulas» · Fase 5 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 5:**
+  - comprobar que el paso entre el mundo abierto cenital y las Carreras retro conserve el estado;
+  - la cápsula 3, solo la interfaz: el garaje y la colección en 2D pixel con las fichas de `MC.Taller`, el perfil de moto de `MC.Dinamica` y los ganchos de la capa aérea, todo sin cargar el núcleo;
+  - los controles táctiles para el WebView de Android, midiendo 60 cuadros por segundo con 📏.
+- **Hecho:**
+  - **🧰 Garaje y colección** (`juegos/getaway/71-garaje.js`, aditivo):
+    - cada vehículo va en una ficha con su dibujo de lado en pixel art (procedural, 64 × 28, agrandado sin suavizar) y las cifras de `MC.Taller.disenar`: velocidad máxima, 0–100, frenada desde 100, potencia por peso y consumo, con su ficha real;
+    - la moto trae su perfil de `MC.Dinamica` (reparto del peso, centro de masa, agarre y marchas; se inclina en las curvas);
+    - la pestaña «Capa aérea» trae lo que vuela (capa 2: jetpack, avioneta y avión), con su techo y su velocidad mínima. Solo cifras del motor: sin una ficha con alas reales no se inventa la pérdida. `G.Garaje.capaAerea()` es el gancho para la cápsula del aire;
+    - **sin cargar el núcleo:** se abre desde la portada (🧰) sin cargar ninguna ciudad, y el carro que eliges ahí es con el que empieza el mundo abierto;
+    - en el mundo abierto se abre desde 🎮 Modos, pausa el mundo y cambia el carro;
+    - la colección cuenta los kilómetros de cada vehículo mientras manejas (`turnocero` guarda `km`).
+  - **📏 de las carreras retro:** `G.Retro.medir()` o `?medir=retro` hacen correr al bot en Las Palmas, y Medir cuenta cada cuadro y el tiempo de dibujo de la pista (`MC.Pista.entrar` da `ultimoMs`), con el mismo panel y 📋. El `?medir` de siempre (las tres cámaras) no cambia.
+  - **En el celular:** vibración corta al chocar y con el nitro (`navigator.vibrate`, que el WebView de Android tiene); los controles táctiles de la 5.4.0 en las esquinas.
+  - **Arreglo de raíz en `68-medir.js`:** el sello de tiempo del cuadro (`requestAnimationFrame`) puede ser anterior al inicio de la medición; entonces daba `i = −1` y `TRAMOS[−1][0]` rompía. Era la carrera intermitente de `pruebas/medir.mjs` («Cannot read properties of undefined (reading '0')»), que se veía también en `main`.
+  - **Prueba nueva, `pruebas/capsulas.mjs`** (en `motor-city-qa.yml`).
+- **Probado:**
+  - `node pruebas/capsulas.mjs`: ✓ en 3 de 3 corridas:
+    - el garaje en la portada, sin ciudad: 6 fichas con dibujo, cifras y la moto, y 3 en la capa aérea;
+    - el mundo empieza en el carro elegido; el garaje en el mundo pausa y cambia el carro; los kilómetros suben;
+    - de ida y vuelta a las carreras, la posición, el rumbo, el carro, la plata, la búsqueda, el clima, la cámara y el modo quedan iguales, y el reloj no avanza mientras se corre;
+    - 📏 de las carreras: 60 fps y dibujo con p95 de unos 6 ms;
+    - el módulo retro y el garaje pesan juntos 71 KB (la meta era menos de 150);
+  - `node pruebas/medir.mjs`: ✓ en 3 de 3;
+  - `node pruebas/pista-retro.mjs`, `modos.mjs` y `getaway-contenido.mjs`: ✓;
+  - `node motor.mjs prueba` y `prueba --navegador` (**158 bien**): en verde.
+- **Falta:** la APK y pasar a `main`, con el OK del autor; medir en el celular del autor (📏 → «Carreras retro»).
+
 ## 25-nov-2026 · 5.4.0 «Carreras retro» · Fase 4 del renacimiento cenital (Claude)
 - **Lo que pide el prompt de relevo, Fase 4:**
   - `MC.Pista`, con la técnica clásica de segmentos, escrita desde cero (sala limpia), aparte de `MC.Arcade`, que se queda para la calle real;

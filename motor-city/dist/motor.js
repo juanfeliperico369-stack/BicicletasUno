@@ -1,4 +1,4 @@
-/* Motor City 5.4.0 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 5.4.1 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -30,7 +30,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '5.4.0',
+  version: '5.4.1',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -9725,9 +9725,10 @@ const Pista = (() => {
       const sp = S.jug.v / P.vmax, sg = segDe(P, S.jug.z); S.offs[0] += dt * sp * sg.curva * .0006; S.offs[1] += dt * sp * sg.curva * .0012; S.offs[2] += dt * sp * sg.curva * .0022;
       for (const e of S.ev) { if (e.k === 'fin' && !mostrado) { mostrado = true; if (op.alTerminar) try { op.alTerminar(res()); } catch (er) { if (typeof MC !== 'undefined' && MC.falla) MC.falla('Pista: al terminar', er); } setTimeout(resultado, 900); } if (op.alEvento) try { op.alEvento(e); } catch (er) { /* sin efecto */ } }
       S.ev.length = 0;
-      try { dibujar(g, W, H, S, amb); } catch (e) { if (typeof MC !== 'undefined' && MC.falla) MC.falla('Pista: dibujo', e); }
+      try { ret.ultimoMs = dibujar(g, W, H, S, amb).ms; } catch (e) { if (typeof MC !== 'undefined' && MC.falla) MC.falla('Pista: dibujo', e); }
     };
     const amb = { cielo: op.cielo, noche: op.noche };   /* el cielo y la noche del mundo abierto, si el juego los da */
+    const ret = { S, salir: () => salir(), resultado: () => res(), ultimoMs: null };   /* ultimoMs: lo que tardó el último dibujo (📏 Medir) */
     raf = requestAnimationFrame(cuadro);
     const res = () => ({ circuito: P.id, nombre: P.D.nombre, terminado: S.jug.fin != null, tiempo: S.jug.fin, posicion: S.jug.fin != null ? S.jug.pos : posicion(S, S.jug), de: S.todos.length, vueltas: S.jug.vueltas.slice(), mejorVuelta: S.jug.mejor });
     function resultado() {
@@ -9746,7 +9747,7 @@ const Pista = (() => {
       if (!activo) return; activo = false; cancelAnimationFrame(raf); removeEventListener('keydown', kd); removeEventListener('keyup', ku); removeEventListener('resize', tam);
       ui.remove(); if (!sinAviso) { capa.hidden = true; if (op.alSalir) op.alSalir(res()); }
     }
-    return { S, salir: () => salir(), resultado: res };
+    return ret;
   }
 
   return { SEG, ANCHO, VISTA, NIEBLA, CIRCUITOS, crear, crearDe, carrera, paso, bot, simular, dibujar, perfil, entrar, posicion, vista, cieloDe, M_POR_U };

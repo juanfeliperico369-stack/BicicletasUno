@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "ccr-4f6eeea5-yulqk1",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "25-nov-2026 · Fase 4 del «renacimiento cenital» hecha: MC.Pista (js/47-pista.js), las carreras retro pseudo-3D, y «🏎️ Carreras retro» en Turno Cero (juegos/getaway/70-retro.js); Motor City 5.4.0 (reportes/2026-11-25-claude-fase4-pista.md). Rama ccr-4f6eeea5-yulqk1. Sigue la Fase 5 (Turno Cero en cápsulas y en el celular).",
-  "estado": "Fase 4 en verde; sigue la Fase 5 (publicar, la APK y main esperan el OK del autor)",
-  "ultima_actualizacion_utc": "2026-11-25T09:30:00Z",
+  "fase_actual": "25-nov-2026 · las cinco fases del «renacimiento cenital» hechas; la última, la Fase 5: las cápsulas de Turno Cero, 🧰 el garaje (71-garaje.js) y 📏 de las carreras retro; Motor City 5.4.1 (reportes/2026-11-25-claude-fase5-capsulas.md). Rama ccr-4f6eeea5-yulqk1 en motorcity, BicicletasUno, MetroZero y RunRunZero.",
+  "estado": "Renacimiento cenital terminado y en verde; publicar (páginas y APK) y pasar a main esperan el OK del autor",
+  "ultima_actualizacion_utc": "2026-11-25T10:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -50,7 +50,9 @@
     "BicicletasUno/src/data/edificios.bin, edificios.json y vias-cota.bin",
     "js/47-pista.js",
     "juegos/getaway/70-retro.js",
-    "pruebas/pista-retro.mjs"
+    "pruebas/pista-retro.mjs",
+    "juegos/getaway/71-garaje.js",
+    "pruebas/capsulas.mjs"
   ],
   "no_toco": [
     "juegos/getaway/arte3d/",

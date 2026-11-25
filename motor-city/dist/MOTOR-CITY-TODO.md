@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.4.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.4.1 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -179,7 +179,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 | 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor; El Metro tiene los suyos desde su 3.1.0): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
 | 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`. El Metro lo hizo su propia sesión en la 3.1.0 «Fluido» (rama `ccr-2a67f935-oat714`). |
-| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fases 0 a 4 hechas (Claude). La 1 está aprobada; sigue la Fase 5 (Turno Cero en cápsulas y en el celular)** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. Fase 1 (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. **Fase 2** (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m): `reportes/2026-11-24-claude-fase2-cenital.md`. **Fase 3** (la bandera encendida; El Metro 3.9.0 y EnCicla 3.9.0, con las huellas reales en su modo libre; Motor del Valle 1.3.1): `reportes/2026-11-25-claude-fase3-cenital.md`. **Fase 4** (`MC.Pista`: carreras retro pseudo‑3D, y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0): `reportes/2026-11-25-claude-fase4-pista.md`. Todo en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Publicar y pasar a `main` esperan el OK del autor. |
+| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Las cinco fases hechas (Claude). La 1 está aprobada; publicar y pasar a `main` esperan el OK del autor** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. Fase 1 (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. **Fase 2** (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m): `reportes/2026-11-24-claude-fase2-cenital.md`. **Fase 3** (la bandera encendida; El Metro 3.9.0 y EnCicla 3.9.0, con las huellas reales en su modo libre; Motor del Valle 1.3.1): `reportes/2026-11-25-claude-fase3-cenital.md`. **Fase 4** (`MC.Pista`: carreras retro pseudo‑3D, y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0): `reportes/2026-11-25-claude-fase4-pista.md`. **Fase 5** (las cápsulas, 🧰 el garaje y 📏 de las carreras; Motor City 5.4.1): `reportes/2026-11-25-claude-fase5-capsulas.md`. Todo en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Publicar y pasar a `main` esperan el OK del autor. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -1176,6 +1176,24 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - `modos.mjs` ✓ (el umbral del ⏫ acelerador es intermitente, de antes).
 - **Esperan al autor:** la APK y pasar a `main`.
 - **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, puesto al día para la Fase 5.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Claude · 25‑nov‑2026 · Fase 5 del renacimiento cenital: las cápsulas, el garaje y 📏 en el celular (motor 5.4.1)
+- **Pedido del autor:** seguir con las fases siguientes («retoma y sigue»).
+- **Hecho** (rama `ccr-4f6eeea5-yulqk1`; **nada en `main`**):
+  - **🧰 Garaje y colección** (`juegos/getaway/71-garaje.js`, aditivo):
+    - fichas en 2D pixel con las cifras de `MC.Taller`, la moto con su perfil de `MC.Dinamica` y la capa aérea con sus ganchos (`G.Garaje.capaAerea()`);
+    - se abre desde la portada sin cargar ninguna ciudad (y el mundo empieza en el carro elegido), y desde 🎮 Modos en el mundo abierto;
+    - los kilómetros de cada vehículo.
+  - **📏 de las carreras retro** (`G.Retro.medir()`, `?medir=retro`) y vibración corta en el celular.
+  - **Arreglo de raíz de la carrera intermitente de 📏** (`68-medir.js`: el sello de `requestAnimationFrame` podía ser anterior al inicio y daba `TRAMOS[−1]`).
+  - `pruebas/capsulas.mjs` (en `motor-city-qa.yml`); Motor City 5.4.1.
+- **Probado:**
+  - `capsulas` ✓ y `medir` ✓, en 3 de 3 cada una;
+  - el paso entre cápsulas deja todo igual, y el reloj no avanza mientras se corre;
+  - `pista-retro`, `modos` y `getaway-contenido` ✓; `prueba` 146 bien y `prueba --navegador` 158 bien.
+- **Esperan al autor:** publicar las páginas y las APK (El Metro 3.9.0, EnCicla 3.9.0 y Turno Cero), pasar a `main` (con PR en BicicletasUno y MetroZero), medir en su celular con 📏 y el peso del HTML de EnCicla (9,99 MB).
+- **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, al día.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
 # MOTOR CITY · Documento único
@@ -3072,6 +3090,7 @@ Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limp
 | **2.0.0** | 19‑nov‑2026 | **Motor City.** La fuente de verdad pasa a `motorcity`.<br>• Mundo 2.0 en un solo archivo (MC4), con todas las huellas, sitios, pasos con nivel, transporte, lugares y tráfico.<br>• El motor en el navegador: personaje, vehículos, física, controles, cámara, 8 vistas más pixel, panorámica de perfil, WebGL, reglas del mundo y Run en la ciclovía.<br>• Banco de pruebas jugable y 54 pruebas.<br>• La tubería 1.x sigue igual (y ya lee cualquier ventana de ciudad). |
 | **5.3.2** | 24‑nov‑2026 | **Mundos saneados** (renacimiento cenital, Fase 2): `geo/territorio.py` con la ley de soberanía vial del Motor del Valle 1.3 (regla A; las casas de OSM conservan el andén de las calles menores, no el asfalto; puentes, túneles y vías cubiertas con su nivel en `VIASJ[5]`, que el cargador lee como `via.nivel`); Medellín, Guatapé y Nueva York regenerados con su agua y su PVS; la colisión con edificios sin la tolerancia de 1 m sobre la calle (`js/32-fisica.js`); prueba `pruebas/calles-libres.mjs`. |
 | **5.4.0** | 25‑nov‑2026 | **Carreras retro** (renacimiento cenital, Fase 4): `MC.Pista` (`js/47-pista.js`), las carreras pseudo‑3D por segmentos en circuitos, escritas desde cero (dos pasadas con `maxY` y `seg.clip`, niebla, franjas juntas por color, paralaje de 3 capas, el carro con 6 estados, rebufo, nitro, rivales con IA de carril, HUD, minimapa y controles táctiles; circuitos `palmas` y `regional`; `simular`, `bot` y `perfil` para las pruebas). En Turno Cero, «🏎️ Carreras retro» (`juegos/getaway/70-retro.js`). Prueba `pruebas/pista-retro.mjs`. |
+| **5.4.1** | 25‑nov‑2026 | **Cápsulas** (renacimiento cenital, Fase 5): en Turno Cero, 🧰 Garaje y colección (`juegos/getaway/71-garaje.js`: fichas en 2D pixel con `MC.Taller`, la moto con `MC.Dinamica` y la capa aérea; se abre desde la portada sin cargar ninguna ciudad); 📏 de las carreras retro (`G.Retro.medir()`, `?medir=retro`); `MC.Pista.entrar` da `ultimoMs`; arreglo de la carrera intermitente de 📏 (`68-medir.js`). Prueba `pruebas/capsulas.mjs`. |
 
 
 ---
@@ -4772,6 +4791,35 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 25-nov-2026 · 5.4.1 «Cápsulas» · Fase 5 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 5:**
+  - comprobar que el paso entre el mundo abierto cenital y las Carreras retro conserve el estado;
+  - la cápsula 3, solo la interfaz: el garaje y la colección en 2D pixel con las fichas de `MC.Taller`, el perfil de moto de `MC.Dinamica` y los ganchos de la capa aérea, todo sin cargar el núcleo;
+  - los controles táctiles para el WebView de Android, midiendo 60 cuadros por segundo con 📏.
+- **Hecho:**
+  - **🧰 Garaje y colección** (`juegos/getaway/71-garaje.js`, aditivo):
+    - cada vehículo va en una ficha con su dibujo de lado en pixel art (procedural, 64 × 28, agrandado sin suavizar) y las cifras de `MC.Taller.disenar`: velocidad máxima, 0–100, frenada desde 100, potencia por peso y consumo, con su ficha real;
+    - la moto trae su perfil de `MC.Dinamica` (reparto del peso, centro de masa, agarre y marchas; se inclina en las curvas);
+    - la pestaña «Capa aérea» trae lo que vuela (capa 2: jetpack, avioneta y avión), con su techo y su velocidad mínima. Solo cifras del motor: sin una ficha con alas reales no se inventa la pérdida. `G.Garaje.capaAerea()` es el gancho para la cápsula del aire;
+    - **sin cargar el núcleo:** se abre desde la portada (🧰) sin cargar ninguna ciudad, y el carro que eliges ahí es con el que empieza el mundo abierto;
+    - en el mundo abierto se abre desde 🎮 Modos, pausa el mundo y cambia el carro;
+    - la colección cuenta los kilómetros de cada vehículo mientras manejas (`turnocero` guarda `km`).
+  - **📏 de las carreras retro:** `G.Retro.medir()` o `?medir=retro` hacen correr al bot en Las Palmas, y Medir cuenta cada cuadro y el tiempo de dibujo de la pista (`MC.Pista.entrar` da `ultimoMs`), con el mismo panel y 📋. El `?medir` de siempre (las tres cámaras) no cambia.
+  - **En el celular:** vibración corta al chocar y con el nitro (`navigator.vibrate`, que el WebView de Android tiene); los controles táctiles de la 5.4.0 en las esquinas.
+  - **Arreglo de raíz en `68-medir.js`:** el sello de tiempo del cuadro (`requestAnimationFrame`) puede ser anterior al inicio de la medición; entonces daba `i = −1` y `TRAMOS[−1][0]` rompía. Era la carrera intermitente de `pruebas/medir.mjs` («Cannot read properties of undefined (reading '0')»), que se veía también en `main`.
+  - **Prueba nueva, `pruebas/capsulas.mjs`** (en `motor-city-qa.yml`).
+- **Probado:**
+  - `node pruebas/capsulas.mjs`: ✓ en 3 de 3 corridas:
+    - el garaje en la portada, sin ciudad: 6 fichas con dibujo, cifras y la moto, y 3 en la capa aérea;
+    - el mundo empieza en el carro elegido; el garaje en el mundo pausa y cambia el carro; los kilómetros suben;
+    - de ida y vuelta a las carreras, la posición, el rumbo, el carro, la plata, la búsqueda, el clima, la cámara y el modo quedan iguales, y el reloj no avanza mientras se corre;
+    - 📏 de las carreras: 60 fps y dibujo con p95 de unos 6 ms;
+    - el módulo retro y el garaje pesan juntos 71 KB (la meta era menos de 150);
+  - `node pruebas/medir.mjs`: ✓ en 3 de 3;
+  - `node pruebas/pista-retro.mjs`, `modos.mjs` y `getaway-contenido.mjs`: ✓;
+  - `node motor.mjs prueba` y `prueba --navegador` (**158 bien**): en verde.
+- **Falta:** la APK y pasar a `main`, con el OK del autor; medir en el celular del autor (📏 → «Carreras retro»).
 
 ### 25-nov-2026 · 5.4.0 «Carreras retro» · Fase 4 del renacimiento cenital (Claude)
 - **Lo que pide el prompt de relevo, Fase 4:**
