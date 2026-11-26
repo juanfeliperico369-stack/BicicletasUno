@@ -2,6 +2,16 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 26-nov-2026 · v3.11.0 (versionCode 31100) · 🧭 Modo turismo por el valle (Claude)
+- **Lo que pidió el autor:** «Agrega a El Metro y EnCicla un modo turismo de la ciudad y las estaciones para todos aquellos que no conozcan los sistemas del Valle de Aburrá».
+- **Qué cambió** (`src/js/99zz2-turismo.js`, aditivo; envuelve `UI.init`):
+  - un botón en la portada, debajo de 🏆 Escalafón: «🧭 Turismo por el valle»;
+  - primero, cómo funciona EnCicla, con los mismos consejos que el juego ya da (`TIPS`);
+  - después, 12 sitios para conocer (Plaza Botero, Palacio de la Cultura, Cerro Nutibara, Parque de los Pies Descalzos, Parque Explora, Jardín Botánico, Ciudad Universitaria, MAMM, Parque Lleras, Comuna 13, Museo Casa de la Memoria y Estadio). Cada uno trae su dato (`LM`), la estación EnCicla más cercana con la distancia a pie y un minimapa con los dos marcados;
+  - «🚲 Ir en bici» abre el modo libre junto a esa estación, para llegar pedaleando.
+- **Qué se probó:** `node tests/run.js` en verde, con la prueba nueva «🧭 modo turismo: 12 sitios con su estación EnCicla y el botón en la portada».
+- **Qué falta:** las fases B–E del pedido. La fase F (la lámina de la apertura y el cierre) queda **pendiente, solo como plan**, hasta que el autor diga que se agregue.
+
 ## 25-nov-2026 · v3.10.1 (versionCode 31001) · Fase A: la carga del mundo sin huecos (Claude)
 - **Lo que pidió el autor** (fase A del pedido aprobado, `motor-city/docs/PEDIDO-DEL-AUTOR-2026-11-25.md`): «El mundo en tercera persona no carga en totalidad ni aunque avances más, hay que pensar en formas ingeniosas para hacer la carga del mundo».
 - **Lo que se midió primero** (la compuerta de 2 km con CPU 4×, 3.10.0): de 32 a 40 trozos pedidos, **0 terminados** y de 21 a 40 cancelados. La cola iba en ronda (una etapa de cada trozo por turno): ninguno terminaba, y al moverse se botaban a medio hacer. Lo pendiente se veía como cuadros beige.
