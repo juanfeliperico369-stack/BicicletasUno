@@ -70,6 +70,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m)
   /* 3.11.0 · 🧭 modo turismo: 12 sitios con su estación EnCicla y el botón en la portada */
   const tur = await p.evaluate(() => { const P = JE.turismo.paradas(); return { n: P.length, conEst: P.every(x => x.est && x.est.m < 1500), boton: !!document.getElementById('bTurismo') }; });
   ok(tur.n === 12 && tur.conEst && tur.boton, '🧭 modo turismo: 12 sitios con su estación EnCicla y el botón en la portada ' + JSON.stringify(tur));
+  /* 3.11.1 · ningún comentario de línea se traga código (así se perdieron los árboles de las montañas desde el 18‑nov) */
+  { const { tragados } = await import('../tools/comentarios-tragados.mjs'), tg = tragados([require('path').join(__dirname, '..', 'src', 'js')]); ok(!tg.length, '🧹 ningún comentario de línea se traga código ' + JSON.stringify(tg.slice(0, 3))); }
   if (SHOTS) await p.screenshot({ path: path.join(OUT, 'escalafon.png') });
   await p.click('button[data-role=usuario][data-t="1"]'); ok(await p.isVisible('#sBrief'), 'briefing de Usuario');
   await p.click('#bGo'); await p.waitForTimeout(400); ok(await p.isVisible('#sGame'), 'juego iniciado');

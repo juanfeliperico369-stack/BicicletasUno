@@ -409,8 +409,12 @@ const Game = JE.game = {
       gm.classList.toggle('mini', !full);
       gm.innerHTML = L.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join('') + (!full && M.goals.length > 1 && ride ? `<div class="more">+${M.goals.length - 1} metas</div>` : '');
     }
-    this.layout(ride);
-    const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
+    /* 3.11.1: layout() lee el tamaño de la interfaz y obliga al navegador a recalcularla. Antes corría en cada cuadro (60 veces por
+       segundo); ahora solo cuando cambia algo que mueve la interfaz (pantalla, metas, botones, tamaño o lado del control), y además
+       cada medio segundo por si acaso. */
+    const lsig = [ride, View.w, View.h, gm.style.display, gm.className, this._gst, this._akL, JE.tam ? JE.tam.k() : 1, Ctrl.pad() ? Ctrl.side() : '-'].join('|');
+    this._layT = (this._layT || 0) - dt; if (lsig !== this._laySig || this._layT <= 0) { this._laySig = lsig; this._layT = .5; this.layout(ride); }
+    const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(','); this._akL = ak;
     if (ak !== this.actKey) { this.actKey = ak; this.barra(acts, M); }
   },
   /* los botones de acción (v2.1: 98r-hud.js los reemplaza por la barra según el contexto) */
