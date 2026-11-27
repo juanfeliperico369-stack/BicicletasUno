@@ -2,6 +2,11 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 27-nov-2026 · Plan de Reconstrucción 3D v6 («Efecto GTA · Valle de Aburrá»)
+- **Publicado:** `docs/PLAN-RECONSTRUCCION-3D-V6.md` alineado con el plan maestro y la base ejecutable `motorcity/motor-v6/`.
+- **Qué define:** migración fuera de los 100 archivos 2D parcheados y los 50 MB muertos de `motor-city/` hacia el núcleo 3D modular compartido (`motor-v6`), con topografía SRTM real, 9 texturas PBR de Medellín (114 KB), cámara cenital única con auto-seguimiento gradual, 12 Zonas Hero medidas (5.407 edificios reales), 5 Skateparks 3D + Paradas de Trucos + Parkour, escala SI estricta (ciclista 1,72 m / EnCicla 1,78 m) y 4 experiencias limpias sin reflujos DOM.
+- **Código legado tocado:** ninguno (el nuevo núcleo v6 se inició en `motorcity/motor-v6/`).
+
 ## 27-nov-2026 · Auditoría crítica y forense (solo documentación)
 - **Publicado:** `docs/AUDITORIA-CRITICA-2026-11-27.md` con capturas reales `412 × 860` en `docs/capturas/auditoria-2026-11-27/`.
 - **Hallazgos críticos:** 28 parches ejecutándose después de `99-boot.js` (`tools/build.js:10`); `Ride.prototype.update` envuelto 16 veces; 4+ reflows DOM por cuadro en `60-ui.js:430-442`; mundo 100 % 2D plano con estación «Parque Explora» sobre una cancha de fútbol y bloques `8×8` borrosos; 13 botones zombis de cámaras en `Más` + `⬢ Maqueta 2:1` vivo; teclado pegado en `MGMetro2D`/`MGPalmas`; 50 MB muertos de `motor-city/`; P10 (0 %) y P13 sin ruta hacia el sitio turístico; compuerta `benchmark-2km-gpt6.mjs` sin exigir `terminados > 0`.
