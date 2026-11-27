@@ -1,6 +1,6 @@
 # JUEGA ENCICLA · DOCUMENTO ÚNICO PARA IA (TODO EN UNO)
 
-> **Versión del juego v3.11.0 · compilado el 2026-11-26.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
+> **Versión del juego v3.11.1 · compilado el 2026-11-27.** Este documento reúne todo lo que una IA necesita para crear el **arte** y la **historia** de *Juega EnCicla*, el videojuego del sistema de bicicletas públicas del Valle de Aburrá: protocolo, contexto, roles, biblia de estilo, personajes, encargos con sus prompts, datos reales de EnCicla, huevos de pascua del Metro, correcciones, entregas, integración y galería de referencia. Los anexos traen los textos actuales de la historia, la guía del juego y la bitácora.
 >
 > **SI ERES UNA IA:**
 > 1. Empieza por la **parte 0 (PROTOCOLO)** y síguelo al pie de la letra.
@@ -137,7 +137,7 @@ Mostrar EnCicla, el sistema público de bicicletas del Valle de Aburrá, y a la 
 ## 2.2 Visión
 Un arcade **ligero y sin internet** (un solo archivo HTML, página instalable y APK de Android), jugable en cualquier celular, con el **mapa real** del valle, los **horarios reales** y la **cultura paisa**. Ser trabajador de EnCicla debe sentirse como un oficio heroico y cotidiano; ser usuario, como una aventura por la ciudad.
 
-## 2.3 Estado actual (v3.11.0)
+## 2.3 Estado actual (v3.11.1)
 - **12 oficios** con turnos y escalafón, más el **modo libre**: mundo abierto de 24 horas con préstamo, renovación y misiones.
 - Mapa real del valle: 133 estaciones, ciclorrutas, río, metro y **45 lugares** que se coleccionan como **postales**. Ciudad viva con peatones y tráfico, día y noche, lluvia.
 - Calendario real: festivos de Colombia y 13 fiestas (Feria de las Flores, Alumbrados, Velitas…).
@@ -1467,7 +1467,7 @@ Fotos con licencia libre encontradas con [Openverse](https://openverse.org) (Wik
 
 | Fecha | IA | Encargos | Estado | Notas |
 |---|---|---|---|---|
-| 2026-11-26 | Claude Code | documento creado (v3.11.0) | ✅ | primera versión de los encargos de arte e historia |
+| 2026-11-27 | Claude Code | documento creado (v3.11.1) | ✅ | primera versión de los encargos de arte e historia |
 
 ---
 
@@ -2265,6 +2265,26 @@ En pantallas bajas (horizontal) la ayuda de los minijuegos va arriba a la derech
 ## BITÁCORA · Juega EnCicla
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
+
+### 27-nov-2026 · Plan de Reconstrucción 3D v6 («Efecto GTA · Valle de Aburrá»)
+- **Publicado:** `docs/PLAN-RECONSTRUCCION-3D-V6.md` alineado con el plan maestro y la base ejecutable `motorcity/motor-v6/`.
+- **Qué define:** migración fuera de los 100 archivos 2D parcheados y los 50 MB muertos de `motor-city/` hacia el núcleo 3D modular compartido (`motor-v6`), con topografía SRTM real, 9 texturas PBR de Medellín (114 KB), cámara cenital única con auto-seguimiento gradual, 12 Zonas Hero medidas (5.407 edificios reales), 5 Skateparks 3D + Paradas de Trucos + Parkour, escala SI estricta (ciclista 1,72 m / EnCicla 1,78 m) y 4 experiencias limpias sin reflujos DOM.
+- **Código legado tocado:** ninguno (el nuevo núcleo v6 se inició en `motorcity/motor-v6/`).
+
+### 27-nov-2026 · Auditoría crítica y forense (solo documentación)
+- **Publicado:** `docs/AUDITORIA-CRITICA-2026-11-27.md` con capturas reales `412 × 860` en `docs/capturas/auditoria-2026-11-27/`.
+- **Hallazgos críticos:** 28 parches ejecutándose después de `99-boot.js` (`tools/build.js:10`); `Ride.prototype.update` envuelto 16 veces; 4+ reflows DOM por cuadro en `60-ui.js:430-442`; mundo 100 % 2D plano con estación «Parque Explora» sobre una cancha de fútbol y bloques `8×8` borrosos; 13 botones zombis de cámaras en `Más` + `⬢ Maqueta 2:1` vivo; teclado pegado en `MGMetro2D`/`MGPalmas`; 50 MB muertos de `motor-city/`; P10 (0 %) y P13 sin ruta hacia el sitio turístico; compuerta `benchmark-2km-gpt6.mjs` sin exigir `terminados > 0`.
+- **Código tocado:** ninguno.
+
+### 26-nov-2026 · v3.11.0 (versionCode 31100) · 🧭 Modo turismo por el valle (Claude)
+- **Lo que pidió el autor:** «Agrega a El Metro y EnCicla un modo turismo de la ciudad y las estaciones para todos aquellos que no conozcan los sistemas del Valle de Aburrá».
+- **Qué cambió** (`src/js/99zz2-turismo.js`, aditivo; envuelve `UI.init`):
+  - un botón en la portada, debajo de 🏆 Escalafón: «🧭 Turismo por el valle»;
+  - primero, cómo funciona EnCicla, con los mismos consejos que el juego ya da (`TIPS`);
+  - después, 12 sitios para conocer (Plaza Botero, Palacio de la Cultura, Cerro Nutibara, Parque de los Pies Descalzos, Parque Explora, Jardín Botánico, Ciudad Universitaria, MAMM, Parque Lleras, Comuna 13, Museo Casa de la Memoria y Estadio). Cada uno trae su dato (`LM`), la estación EnCicla más cercana con la distancia a pie y un minimapa con los dos marcados;
+  - «🚲 Ir en bici» abre el modo libre junto a esa estación, para llegar pedaleando.
+- **Qué se probó:** `node tests/run.js` en verde, con la prueba nueva «🧭 modo turismo: 12 sitios con su estación EnCicla y el botón en la portada».
+- **Qué falta:** las fases B–E del pedido. La fase F (la lámina de la apertura y el cierre) queda **pendiente, solo como plan**, hasta que el autor diga que se agregue.
 
 ### 25-nov-2026 · v3.10.1 (versionCode 31001) · Fase A: la carga del mundo sin huecos (Claude)
 - **Lo que pidió el autor** (fase A del pedido aprobado, `motor-city/docs/PEDIDO-DEL-AUTOR-2026-11-25.md`): «El mundo en tercera persona no carga en totalidad ni aunque avances más, hay que pensar en formas ingeniosas para hacer la carga del mundo».

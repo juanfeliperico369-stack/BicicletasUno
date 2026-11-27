@@ -1,7 +1,7 @@
 {
- "version": "3.11.0",
- "hash": "bdf3031d",
- "cache": "juega-encicla-v3.11.0-bdf3031d",
+ "version": "3.11.1",
+ "hash": "95ec1e9c",
+ "cache": "juega-encicla-v3.11.1-95ec1e9c",
  "files": [
   "00-core.js",
   "00b-sonido-guardian.js",
@@ -105,8 +105,8 @@
   "99zz2-turismo.js"
  ],
  "bytes": {
-  "single": 10256630,
-  "web": 10257654,
-  "js": 10060846
+  "single": 10257368,
+  "web": 10258392,
+  "js": 10061584
  }
 }

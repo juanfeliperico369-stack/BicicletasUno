@@ -447,7 +447,8 @@ Object.assign(CityMap, {
       if (v === TT.GRASS && r < (ens || verdeZ ? .5 : .3) && !this.lid.has(this.idx(x, y))) rad = .36 + (r < .1 ? .14 : 0);
       else if (verdeZ && v === TT.WALK && r < .32) rad = .3 + r * .4;
       else if (pk(x, y) && r < (verdeZ ? .3 : .1)) rad = .3 + r * .3;   // arboledas sobre los parqueaderos y las entradas de las unidades
-      else if (verdeZ && v === TT.BLDG && r < .34 && !cub.has(this.idx(x, y))) rad = .38 + r * .5;   // jardines entre las torres else if (v === TT.WALK && r < .14) rad = .26; else if (v === TT.MOUNT && r < .6) rad = .42 + r * .3;
+      else if (verdeZ && v === TT.BLDG && r < .34 && !cub.has(this.idx(x, y))) rad = .38 + r * .5;   // jardines entre las torres
+      else if (v === TT.WALK && r < .14) rad = .26; else if (v === TT.MOUNT && r < .6) rad = .42 + r * .3;   // 3.11.1: los árboles de los andenes y las montañas habían quedado dentro del comentario de arriba (desde el 18‑nov)
       if (!rad) continue; const X = x * TS + TS * (.3 + h2(x, y, 7) * .4), Y = y * TS + TS * (.3 + h2(x, y, 8) * .4), k = h2(x, y, 6), col = k < .05 ? '#f2c230' : k < .09 ? '#e88ab8' : v === TT.MOUNT ? '#2f6a33' : '#3f8a3f', R = rad * TS; if (this.sitG && !this.sitLibre(Math.floor(X / S), Math.floor(Y / S), X, Y)) continue;
       c.fillStyle = 'rgba(8,14,30,.28)'; c.beginPath(); c.arc(X + R * .35, Y + R * .4, R, 0, TAU); c.fill(); c.fillStyle = sombra18(col); c.beginPath(); c.arc(X, Y, R, 0, TAU); c.fill();
       c.fillStyle = col; c.beginPath(); c.arc(X - R * .15, Y - R * .15, R * .78, 0, TAU); c.fill(); c.fillStyle = k < .09 ? '#fff3a088' : '#ffffff2e'; c.beginPath(); c.arc(X - R * .35, Y - R * .35, R * .38, 0, TAU); c.fill();

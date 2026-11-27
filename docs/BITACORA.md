@@ -12,6 +12,17 @@ Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 - **Hallazgos críticos:** 28 parches ejecutándose después de `99-boot.js` (`tools/build.js:10`); `Ride.prototype.update` envuelto 16 veces; 4+ reflows DOM por cuadro en `60-ui.js:430-442`; mundo 100 % 2D plano con estación «Parque Explora» sobre una cancha de fútbol y bloques `8×8` borrosos; 13 botones zombis de cámaras en `Más` + `⬢ Maqueta 2:1` vivo; teclado pegado en `MGMetro2D`/`MGPalmas`; 50 MB muertos de `motor-city/`; P10 (0 %) y P13 sin ruta hacia el sitio turístico; compuerta `benchmark-2km-gpt6.mjs` sin exigir `terminados > 0`.
 - **Código tocado:** ninguno.
 
+## 27-nov-2026 · v3.11.1 (versionCode 31101) · Los árboles de las montañas vuelven y la interfaz deja de recalcularse en cada cuadro (Claude)
+- **De dónde sale:** las auditorías del 27‑nov (Gemini/Antigravity en `docs/AUDITORIA-CRITICA-2026-11-27.md` y Codex) y el OK del autor para arreglar antes de la muestra.
+- **Qué cambió:**
+  - `75-graficos.js:450`: **los árboles de los andenes y de las montañas no se dibujaban desde el 18‑nov.** Dos casos del `if` habían quedado dentro de un comentario de línea. Ya volvieron.
+  - `60-ui.js`: el HUD llamaba a `layout()` en cada cuadro, y eso obligaba al navegador a recalcular la interfaz 60 veces por segundo. Ahora solo corre cuando cambia algo que la mueve (la pantalla, las metas, los botones, el tamaño o el lado del control), y cada 0,5 s por si acaso.
+  - `tools/comentarios-tragados.mjs` (nuevo, en `tests/run.js`): busca código tragado por un comentario de línea en `src/js`.
+- **Revisado:** «Más» no muestra al jugador ningún botón de cámara vieja; solo quedan la cámara única 🎥 y la foto 📷.
+- **Qué se probó:**
+  - `node tests/run.js`: todas las pruebas pasaron, incluida la nueva;
+  - la compuerta de 2 km con el CPU 4×: META CUMPLIDA. En la Carrera 43A, p95 de 35,3 ms; en Las Palmas, p95 de 33,6 ms. Ningún cuadro pasó de 50 ms.
+
 ## 26-nov-2026 · v3.11.0 (versionCode 31100) · 🧭 Modo turismo por el valle (Claude)
 - **Lo que pidió el autor:** «Agrega a El Metro y EnCicla un modo turismo de la ciudad y las estaciones para todos aquellos que no conozcan los sistemas del Valle de Aburrá».
 - **Qué cambió** (`src/js/99zz2-turismo.js`, aditivo; envuelve `UI.init`):
