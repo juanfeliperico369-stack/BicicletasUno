@@ -2,6 +2,11 @@
 
 Formato: fecha · versión · qué cambió · qué se probó · qué falta.
 
+## 27-nov-2026 · Auditoría crítica y forense (solo documentación)
+- **Publicado:** `docs/AUDITORIA-CRITICA-2026-11-27.md` con capturas reales `412 × 860` en `docs/capturas/auditoria-2026-11-27/`.
+- **Hallazgos críticos:** 28 parches ejecutándose después de `99-boot.js` (`tools/build.js:10`); `Ride.prototype.update` envuelto 16 veces; 4+ reflows DOM por cuadro en `60-ui.js:430-442`; mundo 100 % 2D plano con estación «Parque Explora» sobre una cancha de fútbol y bloques `8×8` borrosos; 13 botones zombis de cámaras en `Más` + `⬢ Maqueta 2:1` vivo; teclado pegado en `MGMetro2D`/`MGPalmas`; 50 MB muertos de `motor-city/`; P10 (0 %) y P13 sin ruta hacia el sitio turístico; compuerta `benchmark-2km-gpt6.mjs` sin exigir `terminados > 0`.
+- **Código tocado:** ninguno.
+
 ## 26-nov-2026 · v3.11.0 (versionCode 31100) · 🧭 Modo turismo por el valle (Claude)
 - **Lo que pidió el autor:** «Agrega a El Metro y EnCicla un modo turismo de la ciudad y las estaciones para todos aquellos que no conozcan los sistemas del Valle de Aburrá».
 - **Qué cambió** (`src/js/99zz2-turismo.js`, aditivo; envuelve `UI.init`):
