@@ -592,7 +592,7 @@ const RED_M = {"fuente":"El Metro (MetroZero/src/data/red.js 2026-11 y rutas_cal
 /* =====================================================================
    JUEGA EN CICLA · núcleo (utilidades, guardado, sonido, entrada, vista)
    ===================================================================== */
-const JE = window.JE = { version: '3.11.0', errors: [], headless: false, arranque: { codigo: Math.round(performance.now()) } };   /* arranque: los tiempos del inicio en ms (3.9.1, 99-boot.js) */
+const JE = window.JE = { version: '3.11.1', errors: [], headless: false, arranque: { codigo: Math.round(performance.now()) } };   /* arranque: los tiempos del inicio en ms (3.9.1, 99-boot.js) */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -5856,8 +5856,12 @@ const Game = JE.game = {
       gm.classList.toggle('mini', !full);
       gm.innerHTML = L.map(g => { const ok = g.ok(); return `<div class="${ok ? 'ok' : ''} ${g.main ? 'main' : ''}">${ok ? '✓' : g.main ? '★' : '☆'} ${esc(g.txt)} · ${esc(g.prog())}</div>`; }).join('') + (!full && M.goals.length > 1 && ride ? `<div class="more">+${M.goals.length - 1} metas</div>` : '');
     }
-    this.layout(ride);
-    const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(',');
+    /* 3.11.1: layout() lee el tamaño de la interfaz y obliga al navegador a recalcularla. Antes corría en cada cuadro (60 veces por
+       segundo); ahora solo cuando cambia algo que mueve la interfaz (pantalla, metas, botones, tamaño o lado del control), y además
+       cada medio segundo por si acaso. */
+    const lsig = [ride, View.w, View.h, gm.style.display, gm.className, this._gst, this._akL, JE.tam ? JE.tam.k() : 1, Ctrl.pad() ? Ctrl.side() : '-'].join('|');
+    this._layT = (this._layT || 0) - dt; if (lsig !== this._laySig || this._layT <= 0) { this._laySig = lsig; this._layT = .5; this.layout(ride); }
+    const acts = M.sub ? [] : M.actions(), ak = acts.map(x => x.id + x.label).join(','); this._akL = ak;
     if (ak !== this.actKey) { this.actKey = ak; this.barra(acts, M); }
   },
   /* los botones de acción (v2.1: 98r-hud.js los reemplaza por la barra según el contexto) */
@@ -8388,7 +8392,8 @@ Object.assign(CityMap, {
       if (v === TT.GRASS && r < (ens || verdeZ ? .5 : .3) && !this.lid.has(this.idx(x, y))) rad = .36 + (r < .1 ? .14 : 0);
       else if (verdeZ && v === TT.WALK && r < .32) rad = .3 + r * .4;
       else if (pk(x, y) && r < (verdeZ ? .3 : .1)) rad = .3 + r * .3;   // arboledas sobre los parqueaderos y las entradas de las unidades
-      else if (verdeZ && v === TT.BLDG && r < .34 && !cub.has(this.idx(x, y))) rad = .38 + r * .5;   // jardines entre las torres else if (v === TT.WALK && r < .14) rad = .26; else if (v === TT.MOUNT && r < .6) rad = .42 + r * .3;
+      else if (verdeZ && v === TT.BLDG && r < .34 && !cub.has(this.idx(x, y))) rad = .38 + r * .5;   // jardines entre las torres
+      else if (v === TT.WALK && r < .14) rad = .26; else if (v === TT.MOUNT && r < .6) rad = .42 + r * .3;   // 3.11.1: los árboles de los andenes y las montañas habían quedado dentro del comentario de arriba (desde el 18‑nov)
       if (!rad) continue; const X = x * TS + TS * (.3 + h2(x, y, 7) * .4), Y = y * TS + TS * (.3 + h2(x, y, 8) * .4), k = h2(x, y, 6), col = k < .05 ? '#f2c230' : k < .09 ? '#e88ab8' : v === TT.MOUNT ? '#2f6a33' : '#3f8a3f', R = rad * TS; if (this.sitG && !this.sitLibre(Math.floor(X / S), Math.floor(Y / S), X, Y)) continue;
       c.fillStyle = 'rgba(8,14,30,.28)'; c.beginPath(); c.arc(X + R * .35, Y + R * .4, R, 0, TAU); c.fill(); c.fillStyle = sombra18(col); c.beginPath(); c.arc(X, Y, R, 0, TAU); c.fill();
       c.fillStyle = col; c.beginPath(); c.arc(X - R * .15, Y - R * .15, R * .78, 0, TAU); c.fill(); c.fillStyle = k < .09 ? '#fff3a088' : '#ffffff2e'; c.beginPath(); c.arc(X - R * .35, Y - R * .35, R * .38, 0, TAU); c.fill();
